@@ -364,7 +364,7 @@ namespace AutoUpdate
             this.MinimizeBox = false;
             this.Name = "FrmUpdate";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "自动更新 2.0.0.9";
+            this.Text = "自动更新 2.0.1.0";
             this.Load += new System.EventHandler(this.FrmUpdate_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
@@ -2071,86 +2071,110 @@ namespace AutoUpdate
                         AppendAllText($"[LastCopy] 警告: 源目录不存在: {sourcePath}");
                     }
                 }
-                AppendAllText("更新完成");
+                AppendAllText("文件复制完成，开始执行自我更新流程...");
 
-                try
+                // 关键：使用SelfUpdateHelper执行真正的自我更新
+                string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
+                AppendAllText($"[自我更新] 当前程序路径: {currentExePath}");
+                AppendAllText($"[自我更新] 临时更新路径: {tempUpdatePath}");
+
+                bool selfUpdateStarted = SelfUpdateHelper.StartUpdateHelper(currentExePath, tempUpdatePath);
+                
+                if (selfUpdateStarted)
                 {
-                    #region 为了实现版本管理只保留5个版本
-                    List<string> versions = new List<string>();
-                    AppendAllText($"[版本管理] 开始版本清理，最大保留版本数: {MaxVersionCount}");
-
-                    // 确保tempUpdatePath目录存在
-                    if (Directory.Exists(tempUpdatePath))
+                    AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
+                    Thread.Sleep(1000); // 给辅助进程一点启动时间
+                    
+                    // 正常退出主进程，让辅助进程接管更新
+                    Application.Exit();
+                    Environment.Exit(0);
+                }
+                else
+                {
+                    AppendAllText("警告：自我更新辅助进程启动失败，使用传统文件复制方式");
+                    
+                    // 如果自我更新失败，执行版本管理清理
+                    try
                     {
-                        AppendAllText($"[版本管理] 检查临时更新目录: {tempUpdatePath}");
-                        
-                        // 获取所有版本文件夹的路径
-                        string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
-                        AppendAllText($"[版本管理] 发现 {subDirectories.Length} 个版本目录");
-                        
-                        foreach (var subdir in subDirectories)
-                        {
-                            string verDir = Path.GetFileName(subdir);
-                            versions.Add(verDir);
-                            AppendAllText($"[版本管理] 发现版本目录: {verDir}");
-                        }
+                        #region 为了实现版本管理只保留5个版本
+                        List<string> versions = new List<string>();
+                        AppendAllText($"[版本管理] 开始版本清理，最大保留版本数: {MaxVersionCount}");
 
-                        if (versions.Count > 0)
+                        // 确保tempUpdatePath目录存在
+                        if (Directory.Exists(tempUpdatePath))
                         {
-                            // 删除较老的版本
-                            // 对版本号进行排序
-                            versions.Sort();
-                            AppendAllText($"[版本管理] 版本排序: {string.Join(", ", versions)}");
+                            AppendAllText($"[版本管理] 检查临时更新目录: {tempUpdatePath}");
                             
-                            int deleteCount = versions.Count - MaxVersionCount;
-                            AppendAllText($"[版本管理] 需要删除 {deleteCount} 个旧版本");
+                            // 获取所有版本文件夹的路径
+                            string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
+                            AppendAllText($"[版本管理] 发现 {subDirectories.Length} 个版本目录");
                             
-                            // 取最小的 保留最新的5个
-                            versions = versions.Take(deleteCount).ToList();
-
-                            // 遍历要删除的较老的版本号列表
-                            foreach (var version in versions)
+                            foreach (var subdir in subDirectories)
                             {
-                                // 使用Path.Combine安全构建路径
-                                string versionPath = Path.Combine(tempUpdatePath, version);
-                                if (Directory.Exists(versionPath))
-                                {
-                                    // 在调试模式下，列出要删除的文件
-                                    if (IsDebugMode)
-                                    {
-                                        var filesToDelete = Directory.GetFiles(versionPath, "*", SearchOption.AllDirectories);
-                                        AppendAllText($"[版本管理] 将删除版本 {version}，包含 {filesToDelete.Length} 个文件");
-                                    }
-                                    
-                                    System.IO.Directory.Delete(versionPath, true);
-                                    AppendAllText($"[版本管理] 已删除旧版本目录: {versionPath}");
-                                }
-                                else
-                                {
-                                    AppendAllText($"[版本管理] 警告: 版本目录不存在: {versionPath}");
-                                }
+                                string verDir = Path.GetFileName(subdir);
+                                versions.Add(verDir);
+                                AppendAllText($"[版本管理] 发现版本目录: {verDir}");
                             }
-                            
-                            AppendAllText($"[版本管理] 版本清理完成，保留了最新的 {MaxVersionCount} 个版本");
+
+                            if (versions.Count > 0)
+                            {
+                                // 删除较老的版本
+                                // 对版本号进行排序
+                                versions.Sort();
+                                AppendAllText($"[版本管理] 版本排序: {string.Join(", ", versions)}");
+                                
+                                int deleteCount = versions.Count - MaxVersionCount;
+                                AppendAllText($"[版本管理] 需要删除 {deleteCount} 个旧版本");
+                                
+                                // 取最小的 保留最新的5个
+                                versions = versions.Take(deleteCount).ToList();
+
+                                // 遍历要删除的较老的版本号列表
+                                foreach (var version in versions)
+                                {
+                                    // 使用Path.Combine安全构建路径
+                                    string versionPath = Path.Combine(tempUpdatePath, version);
+                                    if (Directory.Exists(versionPath))
+                                    {
+                                        // 在调试模式下，列出要删除的文件
+                                        if (IsDebugMode)
+                                        {
+                                            var filesToDelete = Directory.GetFiles(versionPath, "*", SearchOption.AllDirectories);
+                                            AppendAllText($"[版本管理] 将删除版本 {version}，包含 {filesToDelete.Length} 个文件");
+                                        }
+                                        
+                                        System.IO.Directory.Delete(versionPath, true);
+                                        AppendAllText($"[版本管理] 已删除旧版本目录: {versionPath}");
+                                    }
+                                    else
+                                    {
+                                        AppendAllText($"[版本管理] 警告: 版本目录不存在: {versionPath}");
+                                    }
+                                }
+                                
+                                AppendAllText($"[版本管理] 版本清理完成，保留了最新的 {MaxVersionCount} 个版本");
+                            }
+                            else
+                            {
+                                AppendAllText($"[版本管理] 没有发现版本目录，跳过清理");
+                            }
                         }
                         else
                         {
-                            AppendAllText($"[版本管理] 没有发现版本目录，跳过清理");
+                            AppendAllText($"[版本管理] 警告: 临时更新目录不存在: {tempUpdatePath}");
+                        }
+                        #endregion
+                    }
+                    catch (Exception exx)
+                    {
+                        AppendAllText($"[版本管理] 版本管理清理失败 - {exx.Message}");
+                        if (IsDebugMode)
+                        {
+                            AppendAllText($"[版本管理] 异常详情: {exx.StackTrace}");
                         }
                     }
-                    else
-                    {
-                        AppendAllText($"[版本管理] 警告: 临时更新目录不存在: {tempUpdatePath}");
-                    }
-                    #endregion
-                }
-                catch (Exception exx)
-                {
-                    AppendAllText($"[版本管理] 版本管理清理失败 - {exx.Message}");
-                    if (IsDebugMode)
-                    {
-                        AppendAllText($"[版本管理] 异常详情: {exx.StackTrace}");
-                    }
+                    
+                    AppendAllText("传统文件复制方式完成");
                 }
             }
             catch (Exception ex)

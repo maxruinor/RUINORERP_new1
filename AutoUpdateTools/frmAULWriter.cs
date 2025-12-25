@@ -512,7 +512,7 @@ namespace AULWriter
 
                 // 执行完整的目录对比
                 AppendLog("开始执行目录对比...");
-                DirectoryDiffResult diffResult = CompareDirectories(parameters.SourceFolder, doc, parameters.ExcludeUnnecessaryFiles);
+                DirectoryDiffResult diffResult = CompareDirectories(parameters.SourceFolder, parameters.TargetFolder, doc, parameters.ExcludeUnnecessaryFiles);
                 
                 // 记录对比结果
                 AppendLog($"目录对比完成：新增 {diffResult.NewFiles.Count} 个文件，修改 {diffResult.ModifiedFiles.Count} 个文件，删除 {diffResult.DeletedFiles.Count} 个文件");
@@ -547,18 +547,28 @@ namespace AULWriter
                 }
                 
                 // 确保DiffList包含所有差异文件
-                // 合并所有差异文件到diffList
-                diffList.Clear();
-                diffList.AddRange(diffResult.ModifiedFiles);
-                diffList.AddRange(diffResult.NewFiles);
-                diffList.AddRange(diffResult.DeletedFiles);
-                
-                // 计算没有变化的文件数量
-                int totalFiles = diffResult.ModifiedFiles.Count + diffResult.NewFiles.Count + diffResult.DeletedFiles.Count + diffResult.UnchangedFiles.Count;
-                
-                AppendLog($"差异文件统计：共 {diffList.Count} 个差异文件");
-                AppendLog($"其中：修改 {diffResult.ModifiedFiles.Count} 个，新增 {diffResult.NewFiles.Count} 个，删除 {diffResult.DeletedFiles.Count} 个，无变化 {diffResult.UnchangedFiles.Count} 个");
-                AppendLog($"总文件数：{totalFiles} 个");
+            // 合并所有差异文件到diffList，过滤掉应该被排除的文件
+            diffList.Clear();
+            
+            // 过滤修改的文件
+            var filteredModifiedFiles = diffResult.ModifiedFiles.Where(f => !ExcludeUnnecessaryFiles(f)).ToList();
+            diffList.AddRange(filteredModifiedFiles);
+            
+            // 过滤新增的文件
+            var filteredNewFiles = diffResult.NewFiles.Where(f => !ExcludeUnnecessaryFiles(f)).ToList();
+            diffList.AddRange(filteredNewFiles);
+            
+            // 过滤删除的文件（已经在ProcessDeletedFiles中过滤过，这里再次确认）
+            var filteredDeletedFiles = diffResult.DeletedFiles.Where(f => !ExcludeUnnecessaryFiles(f)).ToList();
+            diffList.AddRange(filteredDeletedFiles);
+            
+            // 计算没有变化的文件数量
+            int totalFiles = diffResult.ModifiedFiles.Count + diffResult.NewFiles.Count + diffResult.DeletedFiles.Count + diffResult.UnchangedFiles.Count;
+            
+            AppendLog($"差异文件统计：共 {diffList.Count} 个差异文件（已过滤排除规则）");
+            AppendLog($"原始差异统计：修改 {diffResult.ModifiedFiles.Count} 个，新增 {diffResult.NewFiles.Count} 个，删除 {diffResult.DeletedFiles.Count} 个，无变化 {diffResult.UnchangedFiles.Count} 个");
+            AppendLog($"过滤后差异统计：修改 {filteredModifiedFiles.Count} 个，新增 {filteredNewFiles.Count} 个，删除 {filteredDeletedFiles.Count} 个");
+            AppendLog($"总文件数：{totalFiles} 个");
 
             AppendLog("更新配置文件生成完成");
             e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
@@ -647,6 +657,13 @@ namespace AULWriter
             int deletedCount = 0;
             foreach (var fileName in deletedFiles)
             {
+                // 检查文件是否应该被排除
+                if (ExcludeUnnecessaryFiles(fileName))
+                {
+                    AppendLog($"忽略删除的文件：{fileName}（符合排除规则）");
+                    continue;
+                }
+                
                 // 从配置文件中移除删除的文件
                 var fileElement = doc.Descendants("File")
                     .FirstOrDefault(f => f.Attribute("Name").Value.Equals(fileName, StringComparison.OrdinalIgnoreCase));
@@ -660,7 +677,7 @@ namespace AULWriter
                 }
             }
             
-            AppendLog($"共处理 {deletedFiles.Count} 个需要删除的文件，成功移除 {deletedCount} 个");
+            AppendLog($"共处理 {deletedFiles.Count} 个需要删除的文件，成功移除 {deletedCount} 个，忽略 {deletedFiles.Count - deletedCount} 个（符合排除规则）");
         }
         
         /// <summary>
@@ -892,16 +909,28 @@ namespace AULWriter
             var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
             var targetPath = Path.Combine(parameters.TargetFolder, fileName);
 
+            AppendLog($"检查文件是否修改：{fileName}");
+            AppendLog($"源文件路径：{sourcePath}");
+            AppendLog($"目标文件路径：{targetPath}");
+
             // 如果源文件不存在，认为文件未修改（返回false）
             if (!File.Exists(sourcePath))
+            {
+                AppendLog($"源文件不存在，文件未修改：{fileName}");
                 return false;
+            }
 
             // 如果目标文件不存在但源文件存在，认为文件已修改
             if (!File.Exists(targetPath))
+            {
+                AppendLog($"目标文件不存在，文件已修改：{fileName}");
                 return true;
+            }
 
             // 两个文件都存在时，进行内容比较
-            return CompareFiles(sourcePath, targetPath);
+            bool isModified = CompareFiles(sourcePath, targetPath);
+            AppendLog($"文件比较结果 - {fileName}：{(isModified ? "已修改" : "未修改")}");
+            return isModified;
         }
 
         private bool CompareFiles(string sourcePath, string targetPath)
@@ -909,15 +938,27 @@ namespace AULWriter
             var sourceInfo = new FileInfo(sourcePath);
             var targetInfo = new FileInfo(targetPath);
 
+            AppendLog($"比较文件：{Path.GetFileName(sourcePath)}");
+            AppendLog($"源文件大小：{sourceInfo.Length}，修改时间：{sourceInfo.LastWriteTimeUtc}");
+            AppendLog($"目标文件大小：{targetInfo.Length}，修改时间：{targetInfo.LastWriteTimeUtc}");
+
             // 快速比较：文件大小和修改时间
             if (sourceInfo.Length != targetInfo.Length ||
                 sourceInfo.LastWriteTimeUtc != targetInfo.LastWriteTimeUtc)
             {
+                AppendLog("文件大小或修改时间不同，文件已修改");
                 return true;
             }
 
             // 精确比较：哈希值校验
-            return CalculateFileHash(sourcePath) != CalculateFileHash(targetPath);
+            string sourceHash = CalculateFileHash(sourcePath);
+            string targetHash = CalculateFileHash(targetPath);
+            AppendLog($"源文件哈希：{sourceHash}");
+            AppendLog($"目标文件哈希：{targetHash}");
+            
+            bool isModified = sourceHash != targetHash;
+            AppendLog($"哈希比较结果：{(isModified ? "已修改" : "未修改")}");
+            return isModified;
         }
 
 
@@ -1227,6 +1268,9 @@ namespace AULWriter
                 return;
             }
 
+            // 过滤document中的File元素，移除应该被排除的文件
+            FilterExcludedFilesFromDocument(document);
+
             // 更新DiffFileList，确保差异文件能在UI中显示
             DiffFileList.Clear();
             if (result.DiffList != null)
@@ -1251,6 +1295,42 @@ namespace AULWriter
             tabControl1.SelectedTab = tbpLastXml;
             btnDiff.Enabled = true;
             AppendLog("XML文件生成成功！");
+        }
+        
+        /// <summary>
+        /// 从文档中过滤掉应该被排除的文件
+        /// </summary>
+        /// <param name="document">XML文档</param>
+        private void FilterExcludedFilesFromDocument(XDocument document)
+        {
+            try
+            {
+                AppendLog("开始过滤文档中的排除文件...");
+                
+                // 获取所有File元素
+                var fileElements = document.Descendants("File").ToList();
+                int totalFiles = fileElements.Count;
+                int excludedCount = 0;
+                
+                // 遍历并移除应该被排除的文件
+                foreach (var fileElement in fileElements)
+                {
+                    var fileName = fileElement.Attribute("Name").Value;
+                    if (ExcludeUnnecessaryFiles(fileName))
+                    {
+                        fileElement.Remove();
+                        excludedCount++;
+                        AppendLog($"从文档中移除排除的文件：{fileName}");
+                    }
+                }
+                
+                AppendLog($"文档过滤完成：共 {totalFiles} 个文件，移除 {excludedCount} 个排除文件，保留 {totalFiles - excludedCount} 个文件");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"过滤文档中的排除文件失败：{ex.Message}");
+                Debug.WriteLine($"过滤文档中的排除文件失败：{ex.Message}");
+            }
         }
 
         private void ShowErrorMessage(string message)
@@ -1384,21 +1464,23 @@ namespace AULWriter
         /// 比较源目录和配置文件，生成完整的差异报告
         /// </summary>
         /// <param name="sourceDir">源目录路径</param>
+        /// <param name="targetDir">目标目录路径</param>
         /// <param name="configDoc">配置文件</param>
         /// <param name="excludePredicate">排除文件的谓词函数</param>
         /// <returns>目录差异结果</returns>
-        private DirectoryDiffResult CompareDirectories(string sourceDir, XDocument configDoc, Func<string, bool> excludePredicate)
+        private DirectoryDiffResult CompareDirectories(string sourceDir, string targetDir, XDocument configDoc, Func<string, bool> excludePredicate)
         {
             DirectoryDiffResult result = new DirectoryDiffResult();
             
             try
             {
-                // 扫描源目录中的所有文件
+                // 扫描源目录中的所有文件（已经应用了排除规则）
                 List<string> allFilesInSource = ScanDirectoryForNewFiles(sourceDir, excludePredicate);
                 
-                // 获取配置文件中的文件列表
+                // 获取配置文件中的文件列表，并过滤掉应该被排除的文件
                 var configFiles = configDoc.Descendants("File")
                     .Select(f => f.Attribute("Name").Value)
+                    .Where(f => !excludePredicate(f)) // 过滤掉应该被排除的文件
                     .ToList();
                 
                 // 找出新增文件（源目录有，配置文件没有）
@@ -1415,7 +1497,7 @@ namespace AULWriter
                     UpdateXmlParameters tempParams = new UpdateXmlParameters
                     {
                         SourceFolder = sourceDir,
-                        TargetFolder = sourceDir, // 使用源目录作为目标目录进行比较
+                        TargetFolder = targetDir, // 使用正确的目标目录进行比较
                         FileComparison = true,
                         ExcludeUnnecessaryFiles = excludePredicate
                     };
@@ -1423,6 +1505,7 @@ namespace AULWriter
                     if (IsFileModified(tempParams, file))
                     {
                         result.ModifiedFiles.Add(file);
+                        AppendLog($"检测到修改文件: {file}");
                     }
                     else
                     {
@@ -1433,6 +1516,7 @@ namespace AULWriter
             catch (Exception ex)
             {
                 Debug.WriteLine($"比较目录失败: {ex.Message}");
+                AppendLog($"比较目录失败: {ex.Message}");
             }
             
             return result;
@@ -1646,8 +1730,11 @@ namespace AULWriter
         {
             try
             {
+                AppendLog($"检查文件是否排除：{filePath}");
+                
                 // 获取排除文件列表
                 string[] files = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                AppendLog($"排除文件列表大小：{files.Length}");
                 
                 // 检查文件是否在排除列表中
                 foreach (string strCheck in files)
@@ -1657,9 +1744,12 @@ namespace AULWriter
                     if (string.IsNullOrEmpty(excludeFile))
                         continue;
                     
+                    AppendLog($"检查排除规则：{excludeFile}");
+                    
                     // 支持两种匹配方式：完全匹配和相对路径匹配
                     if (filePath.Trim().Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
                     {
+                        AppendLog($"文件 {filePath} 被排除：完全匹配排除规则 {excludeFile}");
                         return true;
                     }
                     
@@ -1667,6 +1757,7 @@ namespace AULWriter
                     string fileName = Path.GetFileName(filePath);
                     if (fileName.Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
                     {
+                        AppendLog($"文件 {filePath} 被排除：文件名匹配排除规则 {excludeFile}");
                         return true;
                     }
                 }
@@ -1682,18 +1773,32 @@ namespace AULWriter
                         .Where(ext => !string.IsNullOrEmpty(ext))
                         .ToArray();
                     
+                    AppendLog($"排除后缀名列表：{string.Join(", ", excludeExtensions)}");
+                    AppendLog($"文件扩展名：{extension}");
+                    
                     // 检查文件扩展名是否在排除列表中
                     if (excludeExtensions.Contains(extension))
                     {
+                        AppendLog($"文件 {filePath} 被排除：扩展名 {extension} 在排除列表中");
                         return true;
                     }
+                    else
+                    {
+                        AppendLog($"文件 {filePath} 未被排除：扩展名 {extension} 不在排除列表中");
+                    }
+                }
+                else
+                {
+                    AppendLog($"文件 {filePath} 未被排除：没有扩展名");
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"排除文件检查失败: {ex.Message}");
+                AppendLog($"排除文件检查失败: {ex.Message}");
             }
             
+            AppendLog($"文件 {filePath} 未被排除");
             return false;
         }
 
@@ -2544,6 +2649,77 @@ namespace AULWriter
         }
         
         /// <summary>
+        /// 复制指定的差异文件到目标目录
+        /// </summary>
+        /// <param name="diffFiles">差异文件列表</param>
+        /// <param name="sourceDir">源目录</param>
+        /// <param name="targetDir">目标目录</param>
+        /// <returns>成功复制的文件数量</returns>
+        private int CopyDiffFiles(List<string> diffFiles, string sourceDir, string targetDir)
+        {
+            int copySuccessCount = 0;
+            
+            try
+            {
+                if (diffFiles == null || diffFiles.Count == 0)
+                {
+                    AppendLog("没有需要复制的差异文件");
+                    return 0;
+                }
+                
+                AppendLog($"开始复制差异文件，共 {diffFiles.Count} 个文件");
+                
+                // 创建目标目录（如果不存在）
+                if (!Directory.Exists(targetDir))
+                {
+                    Directory.CreateDirectory(targetDir);
+                    AppendLog($"创建目标目录：{targetDir}");
+                }
+                
+                // 逐个复制差异文件
+                foreach (var fileName in diffFiles)
+                {
+                    string sourcePath = Path.Combine(sourceDir, fileName);
+                    string targetPath = Path.Combine(targetDir, fileName);
+                    
+                    // 确保目标文件所在的目录存在
+                    string targetFileDir = Path.GetDirectoryName(targetPath);
+                    if (!Directory.Exists(targetFileDir))
+                    {
+                        Directory.CreateDirectory(targetFileDir);
+                    }
+                    
+                    // 复制文件
+                    try
+                    {
+                        if (File.Exists(sourcePath))
+                        {
+                            File.Copy(sourcePath, targetPath, true);
+                            copySuccessCount++;
+                            AppendLog($"成功复制差异文件：{fileName}");
+                        }
+                        else
+                        {
+                            AppendLog($"警告：源文件不存在，跳过复制：{sourcePath}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendLog($"复制差异文件失败：{fileName}，错误：{ex.Message}");
+                    }
+                }
+                
+                AppendLog($"差异文件复制完成，成功复制 {copySuccessCount} 个文件，失败 {diffFiles.Count - copySuccessCount} 个文件");
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"复制差异文件失败，错误：{ex.Message}");
+            }
+            
+            return copySuccessCount;
+        }
+        
+        /// <summary>
         /// 复制配置文件中的所有文件到目标目录
         /// </summary>
         /// <param name="configDoc">配置文件文档</param>
@@ -2640,12 +2816,12 @@ namespace AULWriter
                 // 1. 解析最新的配置文件
                 newDoc = XDocument.Parse(txtLastXml.Text);
                 
-                // 2. 复制所有配置文件中的文件到目标目录
+                // 2. 复制差异文件到目标目录
                 AppendLog("开始发布流程...");
                 AppendLog($"从 {txtCompareSource.Text} 复制到 {txtTargetDirectory.Text}");
                 
-                // 3. 使用新方法复制所有配置文件中的文件
-                CopySuccessed = CopyAllConfigFiles(newDoc, txtCompareSource.Text, txtTargetDirectory.Text);
+                // 3. 使用新方法复制差异文件
+                CopySuccessed = CopyDiffFiles(DiffFileList, txtCompareSource.Text, txtTargetDirectory.Text);
             }
             
             if (chkTest.Checked)

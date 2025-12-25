@@ -116,7 +116,7 @@ namespace AutoUpdate
         /// </summary>
         /// <param name="serverXmlFile"></param>
         /// <param name="localXmlFile"></param>
-        /// <param name="updateFileList">Ҫ���µļ���</param>
+        /// <param name="updateFileList">更新文件清单</param>
         /// <returns></returns>
         /// <summary>
         /// 检查是否存在更新且未被跳过

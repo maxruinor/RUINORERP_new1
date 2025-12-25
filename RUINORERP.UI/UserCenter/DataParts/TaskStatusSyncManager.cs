@@ -146,6 +146,18 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="updates">需要分发的更新列表</param>
         private void DistributeUpdatesToSubscribers(List<TodoUpdate> updates)
         {
+            // 获取当前用户ID，用于过滤掉自己发起的更新
+            string currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString();
+            
+            // 过滤掉当前用户自己发起的更新，避免自我通知
+            var filteredUpdates = updates.Where(u => u.InitiatorUserId != currentUserId).ToList();
+            
+            // 如果没有需要处理的更新，直接返回
+            if (!filteredUpdates.Any())
+            {
+                return;
+            }
+            
             // 对订阅者进行分组，根据其感兴趣的业务类型
             var subscribersByBusinessType = new Dictionary<BizType, List<TodoSyncSubscriber>>();
             var globalSubscribers = new List<TodoSyncSubscriber>(); // 订阅所有业务类型的订阅者
@@ -177,7 +189,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     try
                     {
                         // 在UI线程上执行回调
-                        subscriber.InvokeCallback(updates);
+                        subscriber.InvokeCallback(filteredUpdates);
                     }
                     catch (Exception ex)
                     {
@@ -188,7 +200,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
 
             // 按业务类型分发更新
-            var updatesByBusinessType = updates.GroupBy(u => u.BusinessType).ToDictionary(g => g.Key, g => g.ToList());
+            var updatesByBusinessType = filteredUpdates.GroupBy(u => u.BusinessType).ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var kvp in updatesByBusinessType)
             {

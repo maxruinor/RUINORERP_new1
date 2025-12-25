@@ -619,77 +619,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 同步TodoUpdate到服务器并更新本地TodoList
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="updateType">更新类型</param>
-        /// <param name="operationDescription">操作描述</param>
-        /// <returns></returns>
-        protected async Task SyncTodoUpdateToServer(T entity, TodoUpdateType updateType, string operationDescription)
-        {
-            try
-            {
-                // 转换为TodoUpdate
-                var update = ConvertToTodoUpdate(entity, updateType);
-                if (update == null)
-                    return;
-
-                // 更新操作描述
-                update.OperationDescription = operationDescription;
-
-                // 1. 更新本地TodoList
-                var todoListManager = RUINORERP.UI.UserCenter.DataParts.TodoListManager.Instance;
-                if (todoListManager != null)
-                {
-                    todoListManager.ProcessUpdate(update);
-                }
-
-                // 2. 发送到服务器
-                var messageService = Startup.GetFromFac<RUINORERP.UI.Network.Services.MessageService>();
-                if (messageService != null)
-                {
-                    // 构造消息请求
-                    var messageRequest = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(
-                        MessageType.Business,
-                        new RUINORERP.Model.TransModel.MessageData
-                        {
-                            Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                            MessageType = MessageType.Business,
-                            Title = "任务状态变更",
-                            Content = update.OperationDescription,
-                            BizData = update,
-                            SendTime = DateTime.Now
-                        }
-                    );
-
-                    // 发送消息到服务器
-                    await messageService.SendCommandAsync(
-                        RUINORERP.PacketSpec.Commands.MessageCommands.SendTodoNotification,
-                        messageRequest
-                    );
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "同步Todo更新到服务器失败");
-                MainForm.Instance.uclog.AddLog("错误", $"同步Todo更新到服务器失败：{ex.Message}");
-            }
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         public BaseBillEditGeneric()
         {
@@ -2063,8 +1992,7 @@ namespace RUINORERP.UI.BaseForm
                         var deleteResult = await Delete();
                         if (deleteResult.Succeeded)
                         {
-                            // 同步到服务器
-                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.Deleted, "单据已删除");
+                            // 状态同步已在删除方法内部处理，无需重复调用
                             Add();
                         }
                     }
@@ -2205,8 +2133,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             //提交后别人可以审核 
                             UNLock();
-                            // 同步到服务器
-                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已提交");
+                            // 状态同步已在提交方法内部处理，无需重复调用
                         }
                     }
                     catch (Exception ex)
@@ -2239,8 +2166,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                            // 同步到服务器
-                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已审核");
+                            // 状态同步已在审核方法内部处理，无需重复调用
                         }
                     }
                     catch (Exception ex)
@@ -2265,8 +2191,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                            // 同步到服务器
-                            await SyncTodoUpdateToServer(EditEntity, TodoUpdateType.StatusChanged, "单据已反审");
+                            // 状态同步已在反审方法内部处理，无需重复调用
                         }
                     }
                     catch (Exception ex)
@@ -3576,11 +3501,11 @@ namespace RUINORERP.UI.BaseForm
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
 
-                    // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid);
+                    // 统一状态同步 - 反审操作
+                    var updateData = CreateTodoUpdate("反审", "单据已反审", pkid);
                     if (updateData != null)
                     {
-                        await SyncTodoStatusAsync(updateData, "结案");
+                        await SyncTodoStatusAsync(updateData, "反审");
                     }
 
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
@@ -5316,7 +5241,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                 {
-                    StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity, DataStatus.新建, "保存式提交时设置为新建状态");
+                    await StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity, DataStatus.新建, "保存式提交时设置为新建状态");
                     //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.新建);
                 }
                 if (ReflectionHelper.ExistPropertyName<T>(typeof(ApprovalStatus).Name))
@@ -6155,13 +6080,9 @@ namespace RUINORERP.UI.BaseForm
                 // 第一步：更新本地工作台（立即生效）
                 TodoSyncManager.Instance.PublishUpdate(update);
 
-                // 第二步：检查是否需要发送服务器通知
-                // 操作自己的单据时不发送消息提示，仅更新工作台Todolist
-                if (!IsCurrentUserOperation(update))
-                {
-                    // 发送到服务器（不发送给自己，避免重复通知）
-                    await SendTodoUpdateToServerAsync(update);
-                }
+                // 发送到服务器（不发送给自己，避免重复通知）
+                await SendTodoUpdateToServerAsync(update);
+
 
                 MainForm.Instance.logger?.LogDebug("状态同步完成 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",
                     operationType, update.BusinessType, update.BillId);
@@ -6172,54 +6093,6 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 检查是否为当前用户操作自己的单据
-        /// </summary>
-        /// <param name="update">任务更新数据</param>
-        /// <returns>是否为当前用户操作自己的单据</returns>
-        private bool IsCurrentUserOperation(TodoUpdate update)
-        {
-            try
-            {
-                // 获取当前用户信息
-                var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
-                if (currentUser == null)
-                {
-                    return false;
-                }
-
-                // 检查单据是否属于当前用户创建或负责
-                if (EditEntity != null)
-                {
-                    // 检查创建人是否为当前用户
-                    if (ReflectionHelper.ExistPropertyName<T>("CreateUserId"))
-                    {
-                        var createUserId = ReflectionHelper.GetPropertyValue(EditEntity, "CreateUserId")?.ToString();
-                        if (createUserId == currentUser.User_ID.ToString())
-                        {
-                            return true;
-                        }
-                    }
-
-                    // 检查负责人是否为当前用户
-                    if (ReflectionHelper.ExistPropertyName<T>("ResponsibleUserId"))
-                    {
-                        var responsibleUserId = ReflectionHelper.GetPropertyValue(EditEntity, "ResponsibleUserId")?.ToString();
-                        if (responsibleUserId == currentUser.User_ID.ToString())
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger?.LogError(ex, "检查当前用户操作时发生异常");
-                return false;
-            }
-        }
 
         /// <summary>
         /// 发送任务状态更新到服务器（优化版）- 使用消息中心而非弹窗
@@ -6238,11 +6111,13 @@ namespace RUINORERP.UI.BaseForm
                 // 构造消息数据 - 优化为使用消息中心而非弹窗
                 var messageData = new MessageData
                 {
-                    Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                    MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                     MessageType = MessageType.Business,
                     Title = "任务状态变更",
                     Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
                     BizData = update,
+                    SenderId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                    SenderName= MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                     SendTime = DateTime.Now,
                     // 设置消息为业务消息类型，直接加载到消息中心
                     IsPopupMessage = false // 禁止使用弹窗形式的消息提示

@@ -123,7 +123,7 @@ namespace RUINORERP.UI.IM
                 Content = MessageData.Content;
                 Title = MessageData.Title;
                 // 设置基本信息
-                if (txtSender != null) txtSender.Text = MessageData.Sender ?? "系统";
+                if (txtSender != null) txtSender.Text = MessageData.SenderName ?? "系统";
                 if (txtSubject != null) txtSubject.Text = MessageData.Title ?? "消息";
                 if (txtContent != null) txtContent.Text = MessageData.Content;
 

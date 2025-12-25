@@ -783,7 +783,7 @@ namespace RUINORERP.UI.BaseForm
                             MessageType.Business,
                             new RUINORERP.Model.TransModel.MessageData
                             {
-                                Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                                MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                                 MessageType = MessageType.Business,
                                 Title = "任务状态变更",
                                 Content = update.OperationDescription,

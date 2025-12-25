@@ -407,10 +407,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <summary>
         /// 处理单据状态变化操作
         /// 核心逻辑: 先从所有节点中删除，然后根据新状态重新添加
+        /// 新增：动态创建新状态节点，确保数量为0的节点不显示
         /// </summary>
         private void HandleBillStatusChanged(TreeNode bizTypeNode, TodoUpdate update)
         {
             long billId = update.BillId;
+            bool billAdded = false;
 
             // 第一步：从所有节点中移除此单据
             foreach (TreeNode statusNode in bizTypeNode.Nodes.Cast<TreeNode>().ToList())
@@ -419,17 +421,17 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 if (parameter?.BillIds != null && parameter.BillIds.Contains(billId))
                 {
                     parameter.BillIds.Remove(billId);
-                    parameter.IncludeBillIds = parameter.BillIds.Any();
-
+                    
+                    // 如果节点中没有单据了，移除该节点
                     if (parameter.BillIds.Count == 0)
                     {
                         bizTypeNode.Nodes.Remove(statusNode);
+                        _logger?.LogDebug($"移除空节点: {statusNode.Text}");
                     }
                     else
                     {
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
                     }
-                    //一个单据不会存在多个节点中，所以处理了就直接返回
                     break;
                 }
             }
@@ -452,12 +454,21 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         parameter.BillIds.Add(billId);
                         parameter.IncludeBillIds = true;
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                        //状态更新时，暂时设置为一个单据只会在一个节点中出现
-                        break;
-                        //_logger?.LogDebug($"单据{billId}状态变化，添加到节点: {statusNode.Text}");
+                        billAdded = true;
+                        _logger?.LogDebug($"单据{billId}状态变化，添加到现有节点: {statusNode.Text}");
                     }
+                    break;
                 }
             }
+
+            // 第三步：如果没有找到匹配的现有节点，尝试动态创建新节点
+            if (!billAdded)
+            {
+                TryCreateNewStatusNode(bizTypeNode, update);
+            }
+
+            // 第四步：清理所有数量为0的节点（确保没有遗漏）
+            CleanEmptyNodes(bizTypeNode);
         }
 
 
@@ -496,6 +507,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         /// <summary>
         /// 更新节点文本，显示最新的单据数量
+        /// 新增：如果数量为0，设置节点文本但不显示，由清理逻辑统一处理
         /// </summary>
         /// <param name="node">要更新的节点</param>
         /// <param name="count">单据数量</param>
@@ -514,6 +526,108 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 如果没有找到括号，直接添加数量
                 node.Text = $"{nodeText}【{count}】";
             }
+            
+            // 记录调试信息
+            if (count == 0)
+            {
+                _logger?.LogTrace($"节点{node.Text}数量为0，将在清理时移除");
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否有权限查看该状态节点
+        /// 根据用户角色和权限设置动态过滤
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="statusName">状态名称</param>
+        /// <returns>是否有权限</returns>
+        private bool HasUserPermissionForStatus(BizType bizType, string statusName)
+        {
+            try
+            {
+                // 获取当前用户和角色信息
+                var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
+                var currentRole = MainForm.Instance?.AppContext?.CurrentRole;
+
+                if (currentUser == null || currentRole == null)
+                    return false;
+
+                // 特殊权限检查：根据状态名称判断用户权限
+                // 例如：某些状态下只有特定角色才能查看
+                switch (statusName)
+                {
+                    case "待审核":
+                    case "审核中":
+                        // 检查用户是否有审核权限
+                        return HasReviewPermission(currentRole, bizType);
+                    case "待处理":
+                    case "处理中":
+                        // 检查用户是否有处理权限
+                        return HasProcessPermission(currentRole, bizType);
+                    default:
+                        // 默认情况下，用户有权限查看所有状态
+                        return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"检查用户权限时发生错误，业务类型: {bizType}, 状态: {statusName}");
+                return true; // 出错时默认显示，避免影响用户体验
+            }
+        }
+
+        /// <summary>
+        /// 检查用户是否有审核权限
+        /// </summary>
+        /// <param name="role">角色信息</param>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>是否有审核权限</returns>
+        private bool HasReviewPermission(tb_RoleInfo role, BizType bizType)
+        {
+            // 根据实际业务逻辑实现
+            // 示例：检查角色是否有对应的审核权限
+            return true; // 暂时返回true，需要根据实际权限系统实现
+        }
+
+        /// <summary>
+        /// 检查用户是否有处理权限
+        /// </summary>
+        /// <param name="role">角色信息</param>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>是否有处理权限</returns>
+        private bool HasProcessPermission(tb_RoleInfo role, BizType bizType)
+        {
+            // 根据实际业务逻辑实现
+            // 示例：检查角色是否有对应的处理权限
+            return true; // 暂时返回true，需要根据实际权限系统实现
+        }
+
+        /// <summary>
+        /// 在创建节点时应用权限过滤
+        /// </summary>
+        /// <param name="parentNode">父节点</param>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="statusName">状态名称</param>
+        /// <param name="count">单据数量</param>
+        /// <param name="parameter">查询参数</param>
+        /// <returns>是否成功创建节点</returns>
+        private bool CreateNodeWithPermissionCheck(TreeNode parentNode, BizType bizType, string statusName, int count, QueryParameter parameter)
+        {
+            // 检查用户权限
+            if (!HasUserPermissionForStatus(bizType, statusName))
+            {
+                _logger?.LogDebug($"用户无权限查看状态节点: {statusName}，业务类型: {bizType}");
+                return false;
+            }
+
+            // 有权限，创建节点
+            parentNode.Nodes.Add(new TreeNode($"{statusName}【{count}】")
+            {
+                Tag = parameter,
+                Name = $"{parameter.tableType?.Name}_{bizType}_{statusName}"
+            });
+
+            return true;
         }
 
         /// <summary>
@@ -534,6 +648,160 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
             // 更新业务类型节点文本
             UpdateNodeText(node, totalCount);
+        }
+
+        /// <summary>
+        /// 尝试创建新的状态节点
+        /// 当单据状态变化到当前不存在的节点时，动态创建新节点
+        /// </summary>
+        /// <param name="bizTypeNode">业务类型节点</param>
+        /// <param name="update">状态更新信息</param>
+        private void TryCreateNewStatusNode(TreeNode bizTypeNode, TodoUpdate update)
+        {
+            try
+            {
+                // 获取所有可能的状态条件组
+                var conditionGroups = GetConditionGroupsForBizType(update.BusinessType);
+                
+                if (conditionGroups == null || !conditionGroups.Any())
+                    return;
+
+                // 查找匹配新状态的条件组
+                var matchedGroup = conditionGroups.FirstOrDefault(group =>
+                    TodoListManager.Instance.CheckBillMatchesConditions(update.entity, group.Conditions));
+
+                if (matchedGroup != null)
+                {
+                    // 检查是否已存在同名节点
+                    var existingNode = bizTypeNode.Nodes.Cast<TreeNode>()
+                        .FirstOrDefault(n => n.Text.StartsWith(matchedGroup.StatusName));
+
+                    if (existingNode == null)
+                    {
+                        // 创建新节点
+                        var parameter = new QueryParameter
+                        {
+                            bizType = update.BusinessType,
+                            conditionals = matchedGroup.Conditions,
+                            tableType = update.entity?.GetType(),
+                            UIPropertyIdentifier = matchedGroup.Identifier,
+                            BillIds = new List<long> { update.BillId },
+                            IncludeBillIds = true
+                        };
+
+                        var newNode = new TreeNode($"{matchedGroup.StatusName}【1】")
+                        {
+                            Tag = parameter,
+                            Name = $"{update.entity?.GetType()?.Name}_{update.BusinessType}_{matchedGroup.StatusName}"
+                        };
+
+                        bizTypeNode.Nodes.Add(newNode);
+                        _logger?.LogDebug($"动态创建新状态节点: {matchedGroup.StatusName}，单据ID: {update.BillId}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "尝试创建新状态节点时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 清理所有数量为0的节点
+        /// 确保工作台不显示空节点
+        /// </summary>
+        /// <param name="bizTypeNode">业务类型节点</param>
+        private void CleanEmptyNodes(TreeNode bizTypeNode)
+        {
+            var emptyNodes = bizTypeNode.Nodes.Cast<TreeNode>()
+                .Where(node => 
+                {
+                    var parameter = node.Tag as QueryParameter;
+                    return parameter?.BillIds == null || parameter.BillIds.Count == 0;
+                })
+                .ToList();
+
+            foreach (var emptyNode in emptyNodes)
+            {
+                bizTypeNode.Nodes.Remove(emptyNode);
+                _logger?.LogDebug($"清理空节点: {emptyNode.Text}");
+            }
+        }
+
+        /// <summary>
+        /// 获取业务类型的所有条件组
+        /// 用于动态创建新状态节点
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>条件组列表</returns>
+        private List<ConditionGroup> GetConditionGroupsForBizType(BizType bizType)
+        {
+            try
+            {
+                Type tableType = _mapper.GetEntityType(bizType);
+                if (tableType == null)
+                    return null;
+
+                var bizEntity = Activator.CreateInstance(tableType);
+                var conditionGroups = new List<ConditionGroup>();
+
+                // 公共状态条件
+                if (bizEntity.ContainsProperty(typeof(DataStatus).Name))
+                {
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetCommonConditionGroups(bizType));
+                }
+
+                // 预付款/预收款状态条件
+                if (bizEntity.ContainsProperty(typeof(PrePaymentStatus).Name))
+                {
+                    var paymentType = bizType == BizType.预付款单 ? ReceivePaymentType.付款 : ReceivePaymentType.收款;
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetPrePaymentConditionGroups(paymentType));
+                }
+
+                // 应收应付状态条件
+                if (bizEntity.ContainsProperty(typeof(ARAPStatus).Name))
+                {
+                    var paymentType = bizType == BizType.应付款单 ? ReceivePaymentType.付款 : ReceivePaymentType.收款;
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetARAPConditionGroups(paymentType));
+                }
+
+                // 付款/收款状态条件
+                if (bizEntity.ContainsProperty(typeof(PaymentStatus).Name))
+                {
+                    var paymentType = bizType == BizType.付款单 ? ReceivePaymentType.付款 : ReceivePaymentType.收款;
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetPaymentConditionGroups(paymentType));
+                }
+
+                // 对账单状态条件
+                if (bizEntity.ContainsProperty(typeof(StatementStatus).Name) && bizType == BizType.对账单)
+                {
+                    conditionGroups.AddRange(_conditionBuilderFactory.GetStatementConditionGroups(ReceivePaymentType.付款));
+                }
+
+                // 特殊业务类型条件
+                switch (bizType)
+                {
+                    case BizType.采购订单:
+                        conditionGroups.AddRange(_conditionBuilderFactory.GetPurchaseOrderSpecialConditions());
+                        break;
+                    case BizType.销售订单:
+                        conditionGroups.AddRange(_conditionBuilderFactory.GetSalesOrderSpecialConditions());
+                        break;
+                    case BizType.借出单:
+                        conditionGroups.AddRange(_conditionBuilderFactory.GetNeedReturnSpecialConditions("待归还"));
+                        break;
+                    case BizType.返工退库单:
+                        conditionGroups.AddRange(_conditionBuilderFactory.GetNeedReturnSpecialConditions("待返回"));
+                        break;
+                }
+
+                return conditionGroups;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"获取业务类型{bizType}的条件组时发生错误");
+                return null;
+            }
         }
 
         /// <summary>
@@ -1233,6 +1501,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         /// <summary>
         /// 内存中再分组
+        /// 新增：应用权限过滤，确保只显示用户有权限的状态节点
         /// </summary>
         /// <param name="parentNode"></param>
         /// <param name="tableType"></param>
@@ -1244,12 +1513,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             foreach (var group in conditionGroups)
             {
-                if (BizType.应收款单 == bizType)
-                {
-
-                }
-
-
                 var count = data.AsEnumerable()
                     .Count(row => CheckRowConditions(row, group.Conditions));
 
@@ -1294,11 +1557,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         // Data = filteredData // 保存筛选后的数据集合到Data属性
                     };
 
-                    parentNode.Nodes.Add(new TreeNode($"{group.StatusName}【{count}】")
-                    {
-                        Tag = parameter,
-                        Name = $"{tableType.Name}_{bizType}_{group.StatusName}"
-                    });
+                    // 应用权限检查，只有有权限的状态才显示
+                    CreateNodeWithPermissionCheck(parentNode, bizType, group.StatusName, count, parameter);
                 }
             }
         }

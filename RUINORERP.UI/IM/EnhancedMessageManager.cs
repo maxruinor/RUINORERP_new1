@@ -322,9 +322,9 @@ namespace RUINORERP.UI.IM
         {
             var message = new MessageData
             {
-                Id = DateTime.Now.Ticks, // 使用时间戳作为唯一ID
+                MessageId = DateTime.Now.Ticks, // 使用时间戳作为唯一ID
                 Content = content,
-                Sender = sender,
+                SenderName = sender,
                 CreateTime = DateTime.Now,
                 IsRead = false,
                 MessageType = MessageType.System
@@ -739,7 +739,7 @@ namespace RUINORERP.UI.IM
                 if (message.BizType != BizType.无对应数据 && message.BizId > 0)
                 {
                     NavigateToBusinessDocument(message.BizType, message.BizId);
-                    MarkAsRead(message.Id);
+                    MarkAsRead(message.MessageId);
                 }
                 else
                 {
@@ -784,7 +784,7 @@ namespace RUINORERP.UI.IM
 
             AddLabelValuePair(tableLayoutPanel, 0, "业务类型:", message.BizType.ToString());
             AddLabelValuePair(tableLayoutPanel, 1, "标题:", message.Title ?? "");
-            AddLabelValuePair(tableLayoutPanel, 2, "发送者:", message.Sender ?? "");
+            AddLabelValuePair(tableLayoutPanel, 2, "发送者:", message.SenderName ?? "");
             AddLabelValuePair(tableLayoutPanel, 3, "发送时间:", message.CreateTime.ToString());
             AddLabelValuePair(tableLayoutPanel, 4, "状态:", message.IsRead ? "已读" : "未读");
 
@@ -841,7 +841,7 @@ namespace RUINORERP.UI.IM
                 {
                     if (row.DataBoundItem is MessageData message && !message.IsRead)
                     {
-                        MarkAsRead(message.Id);
+                        MarkAsRead(message.MessageId);
                         updatedCount++;
                     }
                 }
@@ -897,7 +897,7 @@ namespace RUINORERP.UI.IM
                         foreach (var message in selectedMessages)
                         {
                             bindingList.Remove(message);
-                            DeleteMessage(message.Id); // 使用DeleteMessage方法
+                            DeleteMessage(message.MessageId); // 使用DeleteMessage方法
                         }
 
                         MessageBox.Show($"已成功删除{selectedMessages.Count}条消息", "操作成功",

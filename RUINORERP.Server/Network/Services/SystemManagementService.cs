@@ -56,11 +56,11 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                    MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                     MessageType = MessageType.Prompt,
                     Title = title,
                     Content = message,
-                    Sender = "服务器消息",
+                    SenderName = "服务器消息",
                     ReceiverIds = new List<long> { long.TryParse(targetUserName, out long userId) ? userId : 0 },
                     SendTime = DateTime.Now
                 };

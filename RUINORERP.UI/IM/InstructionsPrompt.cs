@@ -63,7 +63,7 @@ namespace RUINORERP.UI.IM
         {
             if (MessageData != null)
             {
-                txtSender.Text = MessageData.Sender ?? "系统";
+                txtSender.Text = MessageData.SenderName ?? "系统";
                 txtSubject.Text = MessageData.Title ?? "系统通知";
                 txtContent.Text = MessageData.Content;
                 Content = MessageData.Content;
@@ -223,7 +223,7 @@ namespace RUINORERP.UI.IM
                     MessageData.BizId,
                     0, // MenuID
                     MessageData.SenderId, // 请求解锁的用户ID
-                    MessageData.Sender // 请求解锁的用户名
+                    MessageData.SenderName // 请求解锁的用户名
                 );
 
                 // 等待任务完成
@@ -330,7 +330,7 @@ namespace RUINORERP.UI.IM
                     MessageData.BizId,
                     0, // MenuID
                     MessageData.SenderId, // 请求解锁的用户ID
-                    MessageData.Sender // 请求解锁的用户名
+                    MessageData.SenderName // 请求解锁的用户名
                 );
 
                 // 等待任务完成

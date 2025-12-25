@@ -157,7 +157,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     var message = originalMessageData != null ?
                         new MessageData
                         {
-                            Id = originalMessageData.Id,
+                            MessageId = originalMessageData.MessageId,
                             MessageType = MessageType.Business,
                             Title = originalMessageData.Title,
                             Content = originalMessageData.Content,
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         } :
                         new MessageData
                         {
-                            Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                            MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                             MessageType = MessageType.Business,
                             Title = "任务状态变更",
                             Content = $"[{update.BusinessType}]{update.OperationDescription}",

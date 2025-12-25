@@ -89,9 +89,9 @@ namespace RUINORERP.UI.Network.Services
                 }
                 
                 // 消息去重处理
-                if (!IsMessageValid(messageData.Id))
+                if (!IsMessageValid(messageData.MessageId))
                 {
-                    _logger?.LogDebug("跳过重复的弹窗消息 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogDebug("跳过重复的弹窗消息 - ID: {MessageId}", messageData.MessageId);
                     return;
                 }
                 
@@ -102,7 +102,7 @@ namespace RUINORERP.UI.Network.Services
                 if (PopupMessageReceived == null)
                 {
                     _logger?.LogWarning("弹窗消息事件没有订阅者 - ID: {MessageId}, 标题: {Title}", 
-                        messageData.Id, messageData.Title);
+                        messageData.MessageId, messageData.Title);
                     // 手动调用弹窗显示方法作为备份
                     ShowPopupMessageDirectly(messageData);
                     return;
@@ -111,7 +111,7 @@ namespace RUINORERP.UI.Network.Services
                 // 触发事件
                 PopupMessageReceived.Invoke(messageData);
                 _logger?.LogDebug("触发弹窗消息事件 - ID: {MessageId}, 标题: {Title}", 
-                    messageData.Id, messageData.Title);
+                    messageData.MessageId, messageData.Title);
             }
             catch (Exception ex)
             {
@@ -179,7 +179,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _logger?.LogDebug("直接显示弹窗消息- 标题: {Title}", 
-                    messageData?.Id, messageData?.Title);
+                    messageData?.MessageId, messageData?.Title);
                 
                 // 检查是否在UI线程
                 if (SynchronizationContext.Current != null)
@@ -235,9 +235,9 @@ namespace RUINORERP.UI.Network.Services
                 }
                 
                 // 消息去重处理
-                if (!IsMessageValid(messageData.Id))
+                if (!IsMessageValid(messageData.MessageId))
                 {
-                    _logger?.LogDebug("跳过重复的业务消息 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogDebug("跳过重复的业务消息 - ID: {MessageId}", messageData.MessageId);
                     return;
                 }
                 
@@ -247,12 +247,12 @@ namespace RUINORERP.UI.Network.Services
                 // 检查事件订阅者
                 if (BusinessMessageReceived == null)
                 {
-                    _logger?.LogWarning("业务消息事件没有订阅者 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogWarning("业务消息事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
                 }
                 
                 // 触发事件
                 BusinessMessageReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发业务消息事件 - ID: {MessageId}", messageData.Id);
+                _logger?.LogDebug("触发业务消息事件 - ID: {MessageId}", messageData.MessageId);
             }
             catch (Exception ex)
             {
@@ -276,9 +276,9 @@ namespace RUINORERP.UI.Network.Services
                 }
                 
                 // 消息去重处理
-                if (!IsMessageValid(messageData.Id))
+                if (!IsMessageValid(messageData.MessageId))
                 {
-                    _logger?.LogDebug("跳过重复的部门消息 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogDebug("跳过重复的部门消息 - ID: {MessageId}", messageData.MessageId);
                     return;
                 }
                 
@@ -288,12 +288,12 @@ namespace RUINORERP.UI.Network.Services
                 // 检查事件订阅者
                 if (DepartmentMessageReceived == null)
                 {
-                    _logger?.LogWarning("部门消息事件没有订阅者 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogWarning("部门消息事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
                 }
                 
                 // 触发事件
                 DepartmentMessageReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发部门消息事件 - ID: {MessageId}", messageData.Id);
+                _logger?.LogDebug("触发部门消息事件 - ID: {MessageId}", messageData.MessageId);
             }
             catch (Exception ex)
             {
@@ -317,9 +317,9 @@ namespace RUINORERP.UI.Network.Services
                 }
                 
                 // 消息去重处理
-                if (!IsMessageValid(messageData.Id))
+                if (!IsMessageValid(messageData.MessageId))
                 {
-                    _logger?.LogDebug("跳过重复的广播消息 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogDebug("跳过重复的广播消息 - ID: {MessageId}", messageData.MessageId);
                     return;
                 }
                 
@@ -329,12 +329,12 @@ namespace RUINORERP.UI.Network.Services
                 // 检查事件订阅者
                 if (BroadcastMessageReceived == null)
                 {
-                    _logger?.LogWarning("广播消息事件没有订阅者 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogWarning("广播消息事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
                 }
                 
                 // 触发事件
                 BroadcastMessageReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发广播消息事件 - ID: {MessageId}", messageData.Id);
+                _logger?.LogDebug("触发广播消息事件 - ID: {MessageId}", messageData.MessageId);
             }
             catch (Exception ex)
             {
@@ -358,9 +358,9 @@ namespace RUINORERP.UI.Network.Services
                 }
                 
                 // 消息去重处理
-                if (!IsMessageValid(messageData.Id))
+                if (!IsMessageValid(messageData.MessageId))
                 {
-                    _logger?.LogDebug("跳过重复的系统通知 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogDebug("跳过重复的系统通知 - ID: {MessageId}", messageData.MessageId);
                     return;
                 }
                 
@@ -370,12 +370,12 @@ namespace RUINORERP.UI.Network.Services
                 // 检查事件订阅者
                 if (SystemNotificationReceived == null)
                 {
-                    _logger?.LogWarning("系统通知事件没有订阅者 - ID: {MessageId}", messageData.Id);
+                    _logger?.LogWarning("系统通知事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
                 }
                 
                 // 触发事件
                 SystemNotificationReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发系统通知事件 - ID: {MessageId}", messageData.Id);
+                _logger?.LogDebug("触发系统通知事件 - ID: {MessageId}", messageData.MessageId);
             }
             catch (Exception ex)
             {
@@ -711,8 +711,8 @@ namespace RUINORERP.UI.Network.Services
             }
 
             // 添加或更新消息
-            _localMessages[messageData.Id] = messageData;
-            _logger?.LogDebug("消息已保存到本地存储 - ID: {MessageId}", messageData.Id);
+            _localMessages[messageData.MessageId] = messageData;
+            _logger?.LogDebug("消息已保存到本地存储 - ID: {MessageId}", messageData.MessageId);
         }
 
         /// <summary>
@@ -915,13 +915,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 设置发送者信息（用于服务器端过滤）
                 var request = new MessageRequest(MessageType.Business, messageData);
-                
-                // 添加发送者信息，服务器端可以根据此信息决定是否发送给当前用户
-                request.Parameters = new Dictionary<string, object>
-                {
-                    { "SendToSelf", sendToSelf },
-                    { "SenderUserId", MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString() }
-                };
+            
 
                 var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendTodoNotification, request, ct);

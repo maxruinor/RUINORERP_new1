@@ -840,7 +840,7 @@ namespace RUINORERP.UI
                 return;
             }
             // 在这里可以更新UI，例如状态栏的未读消息计数
-            logger?.LogDebug($"消息状态已变更: {message.Id}, 已读: {message.IsRead}");
+            logger?.LogDebug($"消息状态已变更: {message.MessageId}, 已读: {message.IsRead}");
         }
 
         private KryptonPage NewIMList()

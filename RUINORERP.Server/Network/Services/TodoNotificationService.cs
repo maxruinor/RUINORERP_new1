@@ -4,6 +4,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace RUINORERP.Server.Network.Services
         /// 向相关用户推送任务状态变更通知
         /// </summary>
         /// <param name="update">任务状态更新信息</param>
-        public async Task NotifyTodoChangeAsync(TodoUpdate update)
+        public async Task NotifyTodoChangeAsync(TodoUpdate update, MessageData messageData)
         {
             try
             {
@@ -43,15 +44,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 构造推送消息
-                var messageData = new MessageData
-                {
-                    Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                    MessageType = MessageType.Business,
-                    Title = "任务状态变更",
-                    Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
-                    BizData = update,
-                    SendTime = DateTime.Now
-                };
+                messageData.SendTime = System.DateTime.UtcNow;
 
                 var request = new MessageRequest(MessageType.Business, messageData);
 
@@ -62,11 +55,13 @@ namespace RUINORERP.Server.Network.Services
                 {
                     if (session is SessionInfo sessionInfo)
                     {
-                        // 发送通知消息
-                        await _sessionService.SendCommandAsync(
-                            session.SessionID,
-                            MessageCommands.SendTodoNotification,
-                            request);
+                        if (sessionInfo.UserId == messageData.SenderId && messageData.SendToSelf == false)
+                        {
+                            continue; // 不向发送者自己推送通知
+                        }
+
+                        await _sessionService.SendPacketCoreAsync(sessionInfo, MessageCommands.SendTodoNotification, request, 5000);
+                        
                     }
                 }
 

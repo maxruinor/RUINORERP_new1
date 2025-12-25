@@ -109,7 +109,7 @@ namespace RUINORERP.UI.IM
                 item.Font = new Font(item.Font, FontStyle.Bold);
             }
 
-            item.Tag = message.Id; // 存储消息ID
+            item.Tag = message.MessageId; // 存储消息ID
             lstMessages.Items.Add(item);
         }
 
@@ -224,7 +224,7 @@ namespace RUINORERP.UI.IM
                 bool found = false;
                 foreach (ListViewItem item in lstMessages.Items)
                 {
-                    if (item.Tag != null && item.Tag.ToString() == message.Id.ToString())
+                    if (item.Tag != null && item.Tag.ToString() == message.MessageId.ToString())
                     {
                         found = true;
                         item.SubItems[3].Text = message.IsRead ? "已读" : "未读";
@@ -418,7 +418,7 @@ namespace RUINORERP.UI.IM
                 {
                     if (!message.IsRead)
                     {
-                        _messageManager.MarkAsRead(message.Id);
+                        _messageManager.MarkAsRead(message.MessageId);
                     }
                 }
             }
@@ -553,7 +553,7 @@ namespace RUINORERP.UI.IM
                 tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
                 // 添加标题和内容
-                AddDetailRow(tableLayoutPanel, 0, "发送者:", message.Sender ?? "系统");
+                AddDetailRow(tableLayoutPanel, 0, "发送者:", message.SenderName ?? "系统");
                 AddDetailRow(tableLayoutPanel, 1, "消息类型:", message.MessageType.ToString());
                 AddDetailRow(tableLayoutPanel, 2, "业务类型:", message.BizType.ToString());
                 AddDetailRow(tableLayoutPanel, 3, "业务ID:", message.BizId.ToString());

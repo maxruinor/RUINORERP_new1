@@ -258,7 +258,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     messageData.BizData is TodoUpdate update)
                 {
                     // 广播任务状态更新给相关用户
-                    await _TodoNotificationService.NotifyTodoChangeAsync(update);
+                    await _TodoNotificationService.NotifyTodoChangeAsync(update, messageData);
 
                     return MessageResponse.Success(request.CommandType, "任务状态通知处理成功");
                 }

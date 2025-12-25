@@ -143,7 +143,7 @@ namespace RUINORERP.UI.IM
         public void DeleteMessage(long id)
         {
             // 从列表中移除消息
-            _messages.RemoveAll(m => m.Id == id);
+            _messages.RemoveAll(m => m.MessageId == id);
             
             // 保存到持久化存储
             SaveMessages(_messages);
@@ -156,7 +156,7 @@ namespace RUINORERP.UI.IM
         public void DeleteMessages(IEnumerable<long> ids)
         {
             // 从列表中移除多条消息
-            _messages.RemoveAll(m => ids.Contains(m.Id));
+            _messages.RemoveAll(m => ids.Contains(m.MessageId));
             
             // 保存到持久化存储
             SaveMessages(_messages);
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.IM
         public void UpdateMessage(MessageData message)
         {
             // 查找消息
-            int index = _messages.FindIndex(m => m.Id == message.Id);
+            int index = _messages.FindIndex(m => m.MessageId == message.MessageId);
             
             // 如果找到消息，更新它
             if (index != -1)
@@ -197,7 +197,7 @@ namespace RUINORERP.UI.IM
         /// <returns>消息对象</returns>
         public MessageData GetMessageById(long id)
         {
-            return _messages.FirstOrDefault(m => m.Id == id);
+            return _messages.FirstOrDefault(m => m.MessageId == id);
         }
         
         /// <summary>

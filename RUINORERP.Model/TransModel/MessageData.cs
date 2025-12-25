@@ -17,32 +17,32 @@ namespace RUINORERP.Model.TransModel
         /// 默认状态，消息尚未被确认
         /// </summary>
         Unconfirmed = 0,
-        
+
         /// <summary>
         /// 已确认
         /// 消息已被接收方确认
         /// </summary>
         Confirmed = 1,
-        
+
         /// <summary>
         /// 已拒绝
         /// 消息被接收方拒绝
         /// </summary>
         Rejected = 2,
-        
+
         /// <summary>
         /// 处理中
         /// 消息正在处理中
         /// </summary>
         Processing = 3,
-        
+
         /// <summary>
         /// 已完成
         /// 消息相关的任务已完成
         /// </summary>
         Completed = 4
     }
-    
+
     /// <summary>
     /// 消息数据模型
     /// 替代旧的ReminderData类型，用于客户端与服务器之间的消息传递
@@ -52,7 +52,7 @@ namespace RUINORERP.Model.TransModel
         /// <summary>
         /// 消息ID
         /// </summary>
-        public long Id { get; set; }
+        public long MessageId { get; set; }
 
         /// <summary>
         /// 消息类型 - 使用统一的MessageType枚举
@@ -67,7 +67,14 @@ namespace RUINORERP.Model.TransModel
         /// <summary>
         /// 发送者名称
         /// </summary>
-        public string Sender { get; set; }
+        public string SenderName { get; set; }
+
+        /// <summary>
+        /// 是否发送给自己
+        /// 提醒类的可以发送给自己
+        /// </summary>
+        public bool SendToSelf { get; set; } = false;
+
 
         /// <summary>
         /// 接收者ID列表
@@ -103,29 +110,29 @@ namespace RUINORERP.Model.TransModel
         /// 发送时间
         /// </summary>
         public DateTime SendTime { get; set; }
-        
+
         /// <summary>
         /// 消息创建时间
         /// 与SendTime保持同步
         /// </summary>
         [JsonIgnore]
-        public DateTime CreateTime 
-        { 
-            get => SendTime; 
-            set => SendTime = value; 
+        public DateTime CreateTime
+        {
+            get => SendTime;
+            set => SendTime = value;
         }
-        
+
         /// <summary>
         /// 接收者ID的别名
         /// 为保持API兼容性保留
         /// </summary>
         [JsonIgnore]
-        public List<long> RecipientIds 
-        { 
-            get => ReceiverIds; 
-            set => ReceiverIds = value; 
+        public List<long> RecipientIds
+        {
+            get => ReceiverIds;
+            set => ReceiverIds = value;
         }
-        
+
         /// <summary>
         /// 是否已读
         /// </summary>
@@ -179,10 +186,10 @@ namespace RUINORERP.Model.TransModel
         {
             var data = new Dictionary<string, object>
             {
-                { "Id", Id },
+                { "Id", MessageId },
                 { "MessageType", MessageType },
                 { "SenderId", SenderId },
-                { "Sender", Sender },
+                { "Sender", SenderName },
                 { "ReceiverIds", ReceiverIds },
                 { "Title", Title },
                 { "Content", Content },
@@ -192,7 +199,7 @@ namespace RUINORERP.Model.TransModel
                 { "IsRead", IsRead },
                 { "NeedConfirmation", NeedConfirmation },
                 { "ConfirmStatus", ConfirmStatus }
-          
+
             };
 
             if (ConfirmTime.HasValue)
@@ -228,7 +235,7 @@ namespace RUINORERP.Model.TransModel
 
             // 基本属性赋值
             if (data.ContainsKey("Id") && data["Id"] != null)
-                messageData.Id = Convert.ToInt64(data["Id"]);
+                messageData.MessageId = Convert.ToInt64(data["Id"]);
 
             if (data.ContainsKey("MessageType") && data["MessageType"] != null)
             {
@@ -258,7 +265,7 @@ namespace RUINORERP.Model.TransModel
                 messageData.SenderId = Convert.ToInt64(data["SenderId"]);
 
             if (data.ContainsKey("Sender") && data["Sender"] != null)
-                messageData.Sender = data["Sender"].ToString();
+                messageData.SenderName = data["Sender"].ToString();
 
             if (data.ContainsKey("ReceiverIds") && data["ReceiverIds"] != null)
             {
@@ -294,7 +301,7 @@ namespace RUINORERP.Model.TransModel
             if (data.ContainsKey("ConfirmTime") && data["ConfirmTime"] != null)
                 messageData.ConfirmTime = Convert.ToDateTime(data["ConfirmTime"]);
 
-            
+
 
             if (data.ContainsKey("BizData") && data["BizData"] != null)
                 messageData.BizData = data["BizData"];
@@ -317,7 +324,7 @@ namespace RUINORERP.Model.TransModel
 
             return messageData;
         }
-        
+
         /// <summary>
         /// 标记消息为已读
         /// 更新已读状态并设置阅读时间
@@ -327,7 +334,7 @@ namespace RUINORERP.Model.TransModel
             IsRead = true;
             ReadTime = DateTime.Now;
         }
-        
+
         /// <summary>
         /// 标记消息为已处理
         /// 更新确认状态为已完成并设置确认时间
@@ -337,8 +344,8 @@ namespace RUINORERP.Model.TransModel
             ConfirmStatus = ConfirmStatus.Completed;
             ConfirmTime = DateTime.Now;
         }
-        
-      
+
+
         /// <summary>
         /// 阅读时间
         /// 兼容UI层使用的属性

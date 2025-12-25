@@ -171,8 +171,8 @@ namespace RUINORERP.UI.IM
                         await Task.Run(() =>
                         {
                             // 标记为已读
-                            MessageManager.MarkAsRead(MessageData.Id);
-                            Logger.LogDebug($"已更新消息状态: {MessageData.Id}, 确认状态: {status}");
+                            MessageManager.MarkAsRead(MessageData.MessageId);
+                            Logger.LogDebug($"已更新消息状态: {MessageData.MessageId}, 确认状态: {status}");
                         });
                     }
                 }

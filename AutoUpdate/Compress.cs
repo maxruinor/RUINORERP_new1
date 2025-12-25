@@ -180,7 +180,6 @@ namespace AutoUpdate
                 {
                     fsOut.Close();
                     fsOut.Dispose();
-                    //fsOut = null;
                 }
                 if (fsIn != null)
                 {

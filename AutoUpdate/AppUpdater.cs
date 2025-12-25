@@ -105,67 +105,8 @@ namespace AutoUpdate
         }
 
 
-        /// <summary>
-        /// 检查更新文件(旧版本)
-        /// </summary>
-        /// <param name="serverXmlFile"></param>
-        /// <param name="localXmlFile"></param>
-        /// <param name="updateFileList"></param>
-        /// <returns></returns>
-        [Obsolete]
-        public int CheckForUpdateOld(string serverXmlFile, string localXmlFile, out Hashtable updateFileList)
-        {
-            updateFileList = new Hashtable();
-            if (!File.Exists(localXmlFile) || !File.Exists(serverXmlFile))
-            {
-                return -1;
-            }
 
-            XmlFiles serverXmlFiles = new XmlFiles(serverXmlFile);
-            XmlFiles localXmlFiles = new XmlFiles(localXmlFile);
 
-            XmlNodeList newNodeList = serverXmlFiles.GetNodeList("AutoUpdater/Files");
-            XmlNodeList oldNodeList = localXmlFiles.GetNodeList("AutoUpdater/Files");
-
-            int k = 0;
-            for (int i = 0; i < newNodeList.Count; i++)
-            {
-                string[] fileList = new string[3];
-
-                string newFileName = newNodeList.Item(i).Attributes["Name"].Value.Trim();
-                string newVer = newNodeList.Item(i).Attributes["Ver"].Value.Trim();
-
-                ArrayList oldFileAl = new ArrayList();
-                for (int j = 0; j < oldNodeList.Count; j++)
-                {
-                    string oldFileName = oldNodeList.Item(j).Attributes["Name"].Value.Trim();
-                    string oldVer = oldNodeList.Item(j).Attributes["Ver"].Value.Trim();
-
-                    oldFileAl.Add(oldFileName);
-                    oldFileAl.Add(oldVer);
-
-                }
-                int pos = oldFileAl.IndexOf(newFileName);
-                if (pos == -1)
-                {
-                    fileList[0] = newFileName;
-                    fileList[1] = newVer;
-                    updateFileList.Add(k, fileList);
-                    k++;
-                }
-                else if (pos > -1 && newVer.CompareTo(oldFileAl[pos + 1].ToString()) > 0)
-                {
-                    fileList[0] = newFileName;
-                    fileList[1] = newVer;
-                    updateFileList.Add(k, fileList);
-                    k++;
-                }
-
-            }
-            return k;
-        }
-
-        private string _NewVersion = string.Empty;
         public string NewVersion { get; set; }
 
 
@@ -442,44 +383,20 @@ namespace AutoUpdate
             return VersionRollbackManager.CanRollback();
         }
 
-        public int CompareVersion(string Old_Version, string New_Version)
+        /// <summary>
+        /// 比较两个版本号
+        /// 使用.NET内置的Version类进行版本比较
+        /// </summary>
+        /// <param name="oldVersion">旧版本号</param>
+        /// <param name="newVersion">新版本号</param>
+        /// <returns>0表示相等，-1表示需要更新，1表示不需要更新</returns>
+        public int CompareVersion(string oldVersion, string newVersion)
         {
             try
             {
-                int version1Index = 0;//old
-                int version2Index = 0;//new
-
-                while (version1Index < Old_Version.Length || version2Index < New_Version.Length)
-                {
-                    long version1Num = 0;
-                    long version2Num = 0;
-
-                    while (version1Index < Old_Version.Length && Old_Version[version1Index] != '.')
-                    {
-                        version1Num = version1Num * 10 + (Old_Version[version1Index] - '0');
-                        version1Index++;
-                    }
-
-                    while (version2Index < New_Version.Length && New_Version[version2Index] != '.')
-                    {
-                        version2Num = version2Num * 10 + (New_Version[version2Index] - '0');
-                        version2Index++;
-                    }
-
-                    if (version1Num > version2Num)
-                    {
-                        return 1;
-                    }
-                    if (version1Num < version2Num)
-                    {
-                        return -1;
-                    }
-
-                    version2Index++;
-                    version1Index++;
-                }
-
-                return 0;
+                var v1 = new Version(oldVersion);
+                var v2 = new Version(newVersion);
+                return v1.CompareTo(v2);
             }
             catch (Exception ex)
             {

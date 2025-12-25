@@ -61,7 +61,7 @@ namespace AutoUpdate
         public FrmUpdate()
         {
             InitializeComponent();
-            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
             _main = this;
             frmDebug = new frmDebugInfo();
             
@@ -825,7 +825,6 @@ namespace AutoUpdate
                 }
                 
                 // 在界面上显示调试模式的状态选项
-                //UpdateDebugStatus();
                 if (frmDebug != null)
                 {
                     frmDebug.Visible = IsDebugMode;
@@ -1401,14 +1400,19 @@ namespace AutoUpdate
                 {
                     if (var.Value is string[] info)
                     {
-                        FileInfo fileInfo = new FileInfo(info[0]);
-                        if (fileInfo.Name == fileName && info[1] == VerNo && !needCopyFiles.Contains(file))
+                        string updateFileName = info[0];
+                        
+                        // 处理相对路径和绝对路径的匹配
+                        string updateFileBaseName = Path.GetFileName(updateFileName);
+                        
+                        // 直接比较文件名，忽略路径差异
+                        if (updateFileBaseName.Equals(fileName, StringComparison.OrdinalIgnoreCase) && 
+                            info[1] == VerNo && !needCopyFiles.Contains(file))
                         {
                             needCopyFiles.Add(file);
-                            AppendAllText($"[CopyFile] 找到需要复制的文件: {fileName} (版本: {VerNo})");
+                            AppendAllText($"[CopyFile] 找到需要复制的文件: {fileName} (更新文件: {updateFileName}, 版本: {VerNo})");
                         }
                     }
-
                 }
 
             }

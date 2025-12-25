@@ -696,16 +696,10 @@ namespace AULWriter
                             relativePath = relativePath.Substring(1);
                         }
                         
-                        // 获取文件扩展名，确保.zip文件不会被错误排除
+                        // 获取文件扩展名
                         string extension = Path.GetExtension(filePath).ToLower();
-                        if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
-                        {
-                            // 对于.zip文件，直接添加，不进行排除检查
-                            files.Add(relativePath);
-                            continue;
-                        }
                         
-                        // 检查是否需要排除
+                        // 检查是否需要排除（包括.zip文件）
                         if (excludePredicate(relativePath))
                         {
                             excludedFiles++;
@@ -767,15 +761,6 @@ namespace AULWriter
                 return true;
             }
 
-            // 扩展规则
-            var extension = Path.GetExtension(fileName).ToLower();
-            
-            // 对于.zip文件，我们不应该排除，所以添加一个特例
-            if (extension.Equals(".zip", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
             // 从配置中读取排除后缀名
             var excludeExtensions = txtExcludeExtensions.Text
                 .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
@@ -784,6 +769,7 @@ namespace AULWriter
                 .ToArray();
 
             // 检查文件扩展名
+            var extension = Path.GetExtension(fileName).ToLower();
             if (excludeExtensions.Contains(extension))
             {
                 AppendLog($"文件 {fileName} 被排除：扩展名 {extension} 在排除列表中");

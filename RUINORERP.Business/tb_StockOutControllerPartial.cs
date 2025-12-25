@@ -87,6 +87,39 @@ namespace RUINORERP.Business
                     #endregion
                     invUpdateList.Add(inv);
                 }
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
+                foreach (var inv in invUpdateList)
+                {
+                    // 找到对应的明细，获取数量变化
+                    var child = entity.tb_StockOutDetails.FirstOrDefault(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID);
+                    if (child != null)
+                    {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = inv.Inv_Cost;
+                        
+                        // 更新出库明细的成本为实时成本
+                        child.Cost = realtimeCost;
+                        child.SubtotalCostAmount = realtimeCost * child.Qty;
+                        
+                        // 创建库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.其他出库单;
+                        transaction.ReferenceId = entity.MainID;
+                        transaction.QuantityChange = -child.Qty; // 库存出库减少库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"库存出库单审核：{entity.BillNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+                        transactionList.Add(transaction);
+                    }
+                }
+
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
@@ -94,6 +127,10 @@ namespace RUINORERP.Business
                     _logger.Debug($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");
 
                 }
+
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
                 
 
                 //这部分是否能提出到上一级公共部分？
@@ -186,12 +223,45 @@ namespace RUINORERP.Business
                     return rs;
 
                 }
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
+                foreach (var inv in invUpdateList)
+                {
+                    // 找到对应的明细，获取数量变化
+                    var child = entity.tb_StockOutDetails.FirstOrDefault(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID);
+                    if (child != null)
+                    {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = inv.Inv_Cost;
+                        
+                        // 创建反向库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.其他出库单;
+                        transaction.ReferenceId = entity.MainID;
+                        transaction.QuantityChange = child.Qty; // 反审核增加库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"库存出库单反审核：{entity.BillNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+                        transactionList.Add(transaction);
+                    }
+                }
+
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (Counter == 0)
                 {
                     _logger.Debug($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
+
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 //==
 

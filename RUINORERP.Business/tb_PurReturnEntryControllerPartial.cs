@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -93,6 +93,8 @@ namespace RUINORERP.Business
                 }
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
                 foreach (tb_PurReturnEntryDetail child in entity.tb_PurReturnEntryDetails)
                 {
@@ -134,7 +136,26 @@ namespace RUINORERP.Business
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = inv.Inv_Cost;
+                    
+                    // 采购退货单明细没有成本相关属性，不需要更新
+                    
+                    // 创建库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.采购退货单;
+                    transaction.ReferenceId = entity.PurReEntry_ID;
+                    transaction.QuantityChange = child.Quantity; // 采购退货增加库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"采购退货单审核：{entity.PurReEntryNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                    transactionList.Add(transaction);
                 }
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -143,6 +164,10 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
+                
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
 
 
@@ -334,6 +359,9 @@ namespace RUINORERP.Business
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_PurReturnEntryDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -367,7 +395,24 @@ namespace RUINORERP.Business
 
                     #endregion
                     invUpdateList.Add(inv);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = inv.Inv_Cost;
+                    
+                    // 创建反向库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.采购退货单;
+                    transaction.ReferenceId = entity.PurReEntry_ID;
+                    transaction.QuantityChange = -child.Quantity; // 反审核减少库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"采购退货单反审核：{entity.PurReEntryNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                    transactionList.Add(transaction);
                 }
 
                 // 使用LINQ查询
@@ -392,6 +437,10 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.PurReEntryNo}更新库存结果为0行，请检查数据！");
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
 
 

@@ -152,6 +152,26 @@ namespace RUINORERP.Model.TransModel
         public Dictionary<string, object> ExtendedData { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
+        /// 是否为弹窗消息（默认false，所有消息直接加载到消息中心）
+        /// </summary>
+        public bool IsPopupMessage { get; set; } = false;
+
+        /// <summary>
+        /// 消息优先级（用于消息中心排序）
+        /// </summary>
+        public int Priority { get; set; } = 0;
+
+        /// <summary>
+        /// 是否自动添加到消息中心（默认true）
+        /// </summary>
+        public bool AutoAddToMessageCenter { get; set; } = true;
+
+        /// <summary>
+        /// 消息类别（用于消息中心分类）
+        /// </summary>
+        public string Category { get; set; } = "业务通知";
+
+        /// <summary>
         /// 转换为请求数据字典
         /// </summary>
         /// <returns>包含消息所有属性的字典</returns>

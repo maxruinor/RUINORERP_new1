@@ -45,7 +45,9 @@ namespace RUINORERP.Business
                 //更新库存  from 8 to   from-qty=to+qty;
 
                 List<tb_Inventory> invList = new List<tb_Inventory>();
-
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_ProdConversionDetails)
                 {
                     int TransferQty = child.ConversionQty;
@@ -70,7 +72,6 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"来源产品库存为：{invForm.Quantity}，拟转换数量为：{TransferQty}\r\n 系统设置不允许负库存， 请检查要转换出库数量的情况。";
-
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
@@ -133,8 +134,45 @@ namespace RUINORERP.Business
 
                     invList.Add(invForm);
                     invList.Add(invTo);
-
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCostFrom = invForm.Inv_Cost;
+                    decimal realtimeCostTo = invTo.Inv_Cost;
+                    
+                    // 转换单明细没有成本相关属性，不需要更新
+                    
+                    // 创建源产品的库存流水记录（减少库存）
+                    tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
+                    transactionFrom.ProdDetailID = invForm.ProdDetailID;
+                    transactionFrom.Location_ID = invForm.Location_ID;
+                    transactionFrom.BizType = (int)BizType.产品转换单;
+                    transactionFrom.ReferenceId = entity.ConversionID;
+                    transactionFrom.QuantityChange = -TransferQty; // 源产品减少库存
+                    transactionFrom.AfterQuantity = invForm.Quantity;
+                    transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
+                    transactionFrom.TransactionTime = DateTime.Now;
+                    transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionFrom.Notes = $"转换单审核：{entity.ConversionNo}，源产品出库：{invForm.tb_proddetail?.tb_prod?.CNName}，转换为：{invTo.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionFrom);
+                    
+                    // 创建目标产品的库存流水记录（增加库存）
+                    tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
+                    transactionTo.ProdDetailID = invTo.ProdDetailID;
+                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.BizType = (int)BizType.产品转换单;
+                    transactionTo.ReferenceId = entity.ConversionID;
+                    transactionTo.QuantityChange = TransferQty; // 目标产品增加库存
+                    transactionTo.AfterQuantity = invTo.Quantity;
+                    transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
+                    transactionTo.TransactionTime = DateTime.Now;
+                    transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionTo.Notes = $"转换单审核：{entity.ConversionNo}，目标产品入库：{invTo.tb_proddetail?.tb_prod?.CNName}，来自：{invForm.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionTo);
                 }
+                
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (InvMainCounter.ToInt() == 0)
@@ -246,6 +284,9 @@ namespace RUINORERP.Business
                 //反审核时 更新库存  from 8 to   from-qty=to+qty;===》  from+qty=to-qty
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
+                //创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 //将from的 数量 减少，to 数量增加  但是如果为负数。则实际相反
                 foreach (var child in entity.tb_ProdConversionDetails)
                 {
@@ -269,7 +310,6 @@ namespace RUINORERP.Business
                     if (TransferQty > 0)
                     {
                         invForm.LatestOutboundTime = System.DateTime.Now;
-
                     }
                     if (TransferQty < 0)
                     {
@@ -321,7 +361,43 @@ namespace RUINORERP.Business
                     }
                     #endregion
                     invList.Add(invTo);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCostFrom = invForm.Inv_Cost;
+                    decimal realtimeCostTo = invTo.Inv_Cost;
+                    
+                    // 创建源产品的反向库存流水记录（反审核时源产品增加库存）
+                    tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
+                    transactionFrom.ProdDetailID = invForm.ProdDetailID;
+                    transactionFrom.Location_ID = invForm.Location_ID;
+                    transactionFrom.BizType = (int)BizType.产品转换单;
+                    transactionFrom.ReferenceId = entity.ConversionID;
+                    transactionFrom.QuantityChange = TransferQty; // 反审核时源产品增加库存
+                    transactionFrom.AfterQuantity = invForm.Quantity;
+                    transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
+                    transactionFrom.TransactionTime = DateTime.Now;
+                    transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionFrom.Notes = $"转换单反审核：{entity.ConversionNo}，源产品反向调整：{invForm.tb_proddetail?.tb_prod?.CNName}，恢复数量：{TransferQty}";
+                    transactionList.Add(transactionFrom);
+                    
+                    // 创建目标产品的反向库存流水记录（反审核时目标产品减少库存）
+                    tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
+                    transactionTo.ProdDetailID = invTo.ProdDetailID;
+                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.BizType = (int)BizType.产品转换单;
+                    transactionTo.ReferenceId = entity.ConversionID;
+                    transactionTo.QuantityChange = -TransferQty; // 反审核时目标产品减少库存
+                    transactionTo.AfterQuantity = invTo.Quantity;
+                    transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
+                    transactionTo.TransactionTime = DateTime.Now;
+                    transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionTo.Notes = $"转换单反审核：{entity.ConversionNo}，目标产品反向调整：{invTo.tb_proddetail?.tb_prod?.CNName}，减少数量：{TransferQty}";
+                    transactionList.Add(transactionTo);
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)

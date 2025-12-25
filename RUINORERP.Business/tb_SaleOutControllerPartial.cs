@@ -510,10 +510,15 @@ namespace RUINORERP.Business
 
                     // 处理分组数据，更新库存记录的各字段
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+
                     foreach (var group in inventoryGroups)
                     {
-
                         var inv = group.Value.Inventory;
+                        // 记录原始库存数量，用于计算变化量
+                        int originalQty = inv.Quantity;
+                        decimal originalCost = inv.Inv_Cost;
+
                         // 累加数值字段
                         inv.Sale_Qty -= group.Value.OutQtySum.ToInt();
 
@@ -531,6 +536,21 @@ namespace RUINORERP.Business
                         // 计算衍生字段（如总成本）
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                         invUpdateList.Add(inv);
+
+                        // 创建库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.销售出库单;
+                        transaction.ReferenceId = entity.SaleOut_MainID;
+                        transaction.QuantityChange = -group.Value.OutQtySum.ToInt(); // 销售出库减少库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = inv.Inv_Cost;
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"销售出库单审核：{entity.SaleOutNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
+
+                        transactionList.Add(transaction);
                     }
 
                     DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -539,6 +559,10 @@ namespace RUINORERP.Business
                     {
                         _logger.Debug($"{entity.SaleOutNo}审核时，更新库存结果为0行，请检查数据！");
                     }
+
+                    // 记录库存流水
+                    tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                    await tranController.BatchRecordTransactions(transactionList);
 
 
 
@@ -978,15 +1002,36 @@ namespace RUINORERP.Business
                     }
                 }
                 // 处理分组数据，更新库存记录的各字段
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
+                    // 记录原始库存数量，用于计算变化量
+                    int originalQty = inv.Quantity;
+                    decimal originalCost = inv.Inv_Cost;
+
                     // 累加数值字段
                     inv.Sale_Qty += group.Value.OutQtySum.ToInt();
                     inv.Quantity += group.Value.OutQtySum.ToInt();
                     // 计算衍生字段（如总成本）
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
+
+                    // 创建库存流水记录（反审核，库存增加）
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.销售出库单;
+                    transaction.ReferenceId = entity.SaleOut_MainID;
+                    transaction.QuantityChange = group.Value.OutQtySum.ToInt(); // 反审核增加库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = inv.Inv_Cost;
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"销售出库单反审核：{entity.SaleOutNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
+
+                    transactionList.Add(transaction);
                 }
 
 
@@ -996,6 +1041,10 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.SaleOutNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
+
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 if (!entity.ReplaceOut)
                 {

@@ -890,6 +890,7 @@
     <Compile Include="CommonUI\frmGenericOpinion.Designer.cs">
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>
     </Compile>
+    <Compile Include="Common\AbstractGridViewDisplayTextResolver.cs" />
     <Compile Include="Common\BackgroundCacheManager.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />

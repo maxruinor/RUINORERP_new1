@@ -1,4 +1,4 @@
-﻿
+﻿﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -55,6 +55,9 @@ namespace RUINORERP.Business
                 }
                 List<tb_Inventory> invUpdateListFrom = new List<tb_Inventory>();
                 List<tb_Inventory> invUpdateListTo = new List<tb_Inventory>();
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_StockTransferDetails)
                 {
                     //先看库存表中是否存在记录。  
@@ -78,7 +81,6 @@ namespace RUINORERP.Business
                         invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
                         invFrom.LatestOutboundTime = System.DateTime.Now;
                         BusinessHelper.Instance.EditEntity(invFrom);
-
                     }
                     else
                     {
@@ -88,6 +90,23 @@ namespace RUINORERP.Business
                         return rmsr;
                     }
                     invUpdateListFrom.Add(invFrom);
+                    
+                    // 实时获取调出仓库的当前库存成本
+                    decimal realtimeCost = invFrom.Inv_Cost;
+                    
+                    // 创建调出仓库的库存流水记录
+                    tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
+                    transactionFrom.ProdDetailID = invFrom.ProdDetailID;
+                    transactionFrom.Location_ID = invFrom.Location_ID;
+                    transactionFrom.BizType = (int)BizType.调拨单;
+                    transactionFrom.ReferenceId = entity.StockTransferID;
+                    transactionFrom.QuantityChange = -child.Qty; // 调出减少库存
+                    transactionFrom.AfterQuantity = invFrom.Quantity;
+                    transactionFrom.UnitCost = realtimeCost; // 使用实时成本
+                    transactionFrom.TransactionTime = DateTime.Now;
+                    transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionFrom.Notes = $"调拨单审核：{entity.StockTransferNo}，调出仓库：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionFrom);
 
                     #endregion
 #warning 将来要更新。增加单据调拨费用，如运费杂费 入仓费，调拨的额外成本，如运费、装卸费， 出仓不管成本。入库类似采购一样算成本
@@ -106,7 +125,6 @@ namespace RUINORERP.Business
                     }
                     else
                     {
-
                         invTo = new tb_Inventory();
                         invTo.Location_ID = entity.Location_ID_to;
                         invTo.ProdDetailID = child.ProdDetailID;
@@ -123,10 +141,26 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.InitEntity(invTo);
                     }
                     invUpdateListTo.Add(invTo);
+                    
+                    // 创建调入仓库的库存流水记录
+                    tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
+                    transactionTo.ProdDetailID = invTo.ProdDetailID;
+                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.BizType = (int)BizType.调拨单;
+                    transactionTo.ReferenceId = entity.StockTransferID;
+                    transactionTo.QuantityChange = child.Qty; // 调入增加库存
+                    transactionTo.AfterQuantity = invTo.Quantity;
+                    transactionTo.UnitCost = realtimeCost; // 使用调出仓库的实时成本
+                    transactionTo.TransactionTime = DateTime.Now;
+                    transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionTo.Notes = $"调拨单审核：{entity.StockTransferNo}，调入仓库：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionTo);
                     #endregion
-
-
                 }
+                
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                  
 
@@ -200,6 +234,9 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_StockTransferDetails)
                 {
                     //先看库存表中是否存在记录。  
@@ -224,6 +261,26 @@ namespace RUINORERP.Business
                         return rmsr;
                     }
                     ReturnResults<tb_Inventory> rrfrom = await ctrinv.SaveOrUpdate(invFrom);
+                    
+                    if (rrfrom.Succeeded)
+                    {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = invFrom.Inv_Cost;
+                        
+                        // 创建调出仓库的反向库存流水记录（反审核时调出仓库增加库存）
+                        tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
+                        transactionFrom.ProdDetailID = invFrom.ProdDetailID;
+                        transactionFrom.Location_ID = invFrom.Location_ID;
+                        transactionFrom.BizType = (int)BizType.调拨单;
+                        transactionFrom.ReferenceId = entity.StockTransferID;
+                        transactionFrom.QuantityChange = child.Qty; // 反审核时调出仓库增加库存
+                        transactionFrom.AfterQuantity = invFrom.Quantity;
+                        transactionFrom.UnitCost = realtimeCost; // 使用实时成本
+                        transactionFrom.TransactionTime = DateTime.Now;
+                        transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transactionFrom.Notes = $"调拨单反审核：{entity.StockTransferNo}，调出仓库反向调整：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
+                        transactionList.Add(transactionFrom);
+                    }
 
                     #endregion
 
@@ -256,8 +313,31 @@ namespace RUINORERP.Business
 
                     #endregion
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invTo);
-
+                    
+                    if (rr.Succeeded)
+                    {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = invTo.Inv_Cost;
+                        
+                        // 创建调入仓库的反向库存流水记录（反审核时调入仓库减少库存）
+                        tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
+                        transactionTo.ProdDetailID = invTo.ProdDetailID;
+                        transactionTo.Location_ID = invTo.Location_ID;
+                        transactionTo.BizType = (int)BizType.调拨单;
+                        transactionTo.ReferenceId = entity.StockTransferID;
+                        transactionTo.QuantityChange = -child.Qty; // 反审核时调入仓库减少库存
+                        transactionTo.AfterQuantity = invTo.Quantity;
+                        transactionTo.UnitCost = realtimeCost; // 使用实时成本
+                        transactionTo.TransactionTime = DateTime.Now;
+                        transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transactionTo.Notes = $"调拨单反审核：{entity.StockTransferNo}，调入仓库反向调整：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
+                        transactionList.Add(transactionTo);
+                    }
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "反审";

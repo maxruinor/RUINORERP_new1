@@ -167,6 +167,9 @@ namespace RUINORERP.Business
                 #endregion
 
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_ProdReturningDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
@@ -209,8 +212,33 @@ namespace RUINORERP.Business
 
                     #endregion
                     invUpdateList.Add(inv);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = inv.Inv_Cost;
+                    
+                    // 更新归还明细的成本为实时成本
+                    child.Cost = realtimeCost;
+                    child.SubtotalCostAmount = realtimeCost * child.Qty;
+                    
+                    // 创建库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.归还单;
+                    transaction.ReferenceId = entity.ReturnID;
+                    transaction.QuantityChange = child.Qty; // 产品归还增加库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"产品归还单审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                    transactionList.Add(transaction);
                 }
+                
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 // 使用LINQ查询
                 var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
@@ -345,9 +373,11 @@ namespace RUINORERP.Business
 
                 #endregion
 
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_ProdReturningDetails)
                 {
-
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //标记是否有期初
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
@@ -379,9 +409,29 @@ namespace RUINORERP.Business
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
                     {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = inv.Inv_Cost;
+                        
+                        // 创建反向库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.归还单;
+                        transaction.ReferenceId = entity.ReturnID;
+                        transaction.QuantityChange = -child.Qty; // 反审核减少库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"产品归还单反审核：{entity.ReturnNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                        transactionList.Add(transaction);
                     }
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })

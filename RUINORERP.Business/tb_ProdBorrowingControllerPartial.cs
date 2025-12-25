@@ -1,4 +1,4 @@
-﻿
+﻿﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -48,10 +48,12 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                
+                // 创建库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
                 foreach (var child in entity.tb_ProdBorrowingDetails)
                 {
-
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                     if (inv != null)
@@ -89,9 +91,33 @@ namespace RUINORERP.Business
                     ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(inv);
                     if (rr.Succeeded)
                     {
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = inv.Inv_Cost;
+                        
+                        // 更新借出明细的成本为实时成本
+                        child.Cost = realtimeCost;
+                        child.SubtotalCostAmount = realtimeCost * child.Qty;
+                        
+                        // 创建库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.借出单;
+                        transaction.ReferenceId = entity.BorrowID;
+                        transaction.QuantityChange = -child.Qty; // 借出减少库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"借出单审核：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                        transactionList.Add(transaction);
                     }
                 }
+                
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -152,6 +178,9 @@ namespace RUINORERP.Business
                     return rsms;
                 }
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_ProdBorrowingDetails)
                 {
                     #region 库存表的更新 ，
@@ -162,7 +191,7 @@ namespace RUINORERP.Business
                         rsms.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
                         rsms.Succeeded = false;
                         return rsms;
-                         
+                          
                     }
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
@@ -172,6 +201,24 @@ namespace RUINORERP.Business
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = inv.Inv_Cost;
+                    
+                    // 创建反向库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.借出单;
+                    transaction.ReferenceId = entity.BorrowID;
+                    transaction.QuantityChange = child.Qty; // 反审核增加库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"借出单反审核：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+                    transactionList.Add(transaction);
                 }
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -179,6 +226,10 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.BorrowNo}更新库存结果为0行，请检查数据！");
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 
 

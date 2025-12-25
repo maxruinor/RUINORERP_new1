@@ -16,7 +16,6 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-using RUINORERP.Extensions.Middlewares;
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
@@ -31,7 +30,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 库存流水表
     /// </summary>
-    public partial class tb_InventoryTransactionController<T>:BaseController<T> where T : class
+    public partial class tb_InventoryTransactionController<T> : BaseController<T> where T : class
     {
         /// <summary>
         /// 记录库存流水
@@ -41,26 +40,40 @@ namespace RUINORERP.Business
             if (transaction == null)
                 throw new ArgumentNullException(nameof(transaction));
 
+            // 确保只有实际库存变化才记录流水
+            if (transaction.QuantityChange == 0)
+                return false;
+
+            // 设置交易时间
             transaction.TransactionTime = DateTime.Now;
 
+            // 执行插入操作
             return _unitOfWorkManage.GetDbClient().Insertable(transaction).ExecuteCommand() > 0;
         }
 
         /// <summary>
         /// 批量记录库存流水
         /// </summary>
-        public bool BatchRecordTransactions(List<tb_InventoryTransaction> transactions)
+        public async Task<bool> BatchRecordTransactions(List<tb_InventoryTransaction> transactions)
         {
             if (transactions == null || !transactions.Any())
                 return false;
 
+            // 过滤掉没有实际库存变化的记录
+            var validTransactions = transactions.Where(t => t.QuantityChange != 0).ToList();
+            if (!validTransactions.Any())
+                return false;
+
+            // 设置交易时间
             var now = DateTime.Now;
-            foreach (var tran in transactions)
+            foreach (var tran in validTransactions)
             {
                 tran.TransactionTime = now;
             }
 
-            return _unitOfWorkManage.GetDbClient().Insertable(transactions).ExecuteCommand() > 0;
+            // 执行批量插入操作
+            var rs = await _unitOfWorkManage.GetDbClient().Insertable(validTransactions).ExecuteReturnSnowflakeIdListAsync();
+            return rs.Count > 0;
         }
 
         /*
@@ -99,48 +112,30 @@ namespace RUINORERP.Business
         /// <summary>
         /// 获取指定时间点的库存
         /// </summary>
-        public decimal GetInventoryAtTime(string productId, string warehouseId, DateTime time)
+        public async Task<decimal> GetInventoryAtTime(long productId, long Location_ID, DateTime time)
         {
-            if (string.IsNullOrEmpty(productId))
-                throw new ArgumentNullException(nameof(productId));
-
-            if (string.IsNullOrEmpty(warehouseId))
-                throw new ArgumentNullException(nameof(warehouseId));
-
-            // 尝试从缓存获取
-            var cacheKey = $"InventoryAtTime_{productId}_{warehouseId}_{time:yyyyMMddHHmmss}";
-            var cachedValue = _cacheManager.Get(cacheKey);
-            if (cachedValue != null && decimal.TryParse(cachedValue.ToString(), out decimal cachedResult))
-            {
-                return cachedResult;
-            }
-
             // 查询时间点之前的最后一笔交易的库存
-            var result = _unitOfWorkManage.GetDbClient().Queryable<tb_InventoryTransaction>()
-                .Where(t => t.ProductId == productId
-                         && t.WarehouseId == warehouseId
+            var result = await _unitOfWorkManage.GetDbClient().Queryable<tb_InventoryTransaction>()
+                .Where(t => t.ProdDetailID == productId
+                         && t.Location_ID == Location_ID
                          && t.TransactionTime <= time)
                 .OrderBy(t => t.TransactionTime, OrderByType.Desc)
                 .Take(1)
                 .Select(t => t.AfterQuantity)
-                .FirstOrDefault();
+                .FirstAsync();
 
             // 缓存结果，有效期10分钟
             //_cacheManager.Add(cacheKey, result, TimeSpan.FromMinutes(10));
-
             return result;
         }
 
         /// <summary>
         /// 获取商品的库存流水记录
         /// </summary>
-        public List<tb_InventoryTransaction> GetProductTransactions(string productId, DateTime startTime, DateTime endTime)
+        public List<tb_InventoryTransaction> GetProductTransactions(long productId, DateTime startTime, DateTime endTime)
         {
-            if (string.IsNullOrEmpty(productId))
-                throw new ArgumentNullException(nameof(productId));
-
             return _unitOfWorkManage.GetDbClient().Queryable<tb_InventoryTransaction>()
-                .Where(t => t.ProductId == productId
+                .Where(t => t.ProdDetailID == productId
                          && t.TransactionTime >= startTime
                          && t.TransactionTime <= endTime)
                 .OrderBy(t => t.TransactionTime)

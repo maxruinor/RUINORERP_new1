@@ -24,47 +24,6 @@ namespace RUINORERP.Business.CommService
                   采购价格：从供应商处购买产品或物品时的价格。
                   生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
                   市场价格：参考市场上类似产品或物品的价格。
-                 
-        /// <summary>
-        /// TODO成本这块还需要完善
-        /// </summary>
-        /// <param name="_appContext"></param>
-        /// <param name="inv"></param>
-        /// <param name="currentCostPrice"></param>
-        public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
-        {
-            //注意！！！！！！！！
-            //要先算成本再赋值数量
-
-            Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
-            switch (m)
-            {
-                case 库存成本计算方式.先进先出法:
-                    inv.CostFIFO = currentCostPrice;
-                    inv.Inv_Cost = inv.CostFIFO;
-                    break;
-                case 库存成本计算方式.月加权平均:
-                    inv.CostMonthlyWA = currentCostPrice;
-                    inv.Inv_Cost = inv.CostMonthlyWA;
-                    break;
-                case 库存成本计算方式.移动加权平均法:
-                    inv.CostMovingWA = (currentCostPrice * currentQty + inv.Inv_Cost * inv.Quantity) / (currentQty + inv.Quantity);
-                    inv.Inv_Cost = inv.CostMovingWA;
-                    break;
-                case 库存成本计算方式.实际成本法:
-                    inv.Inv_AdvCost = currentCostPrice;
-                    inv.Inv_Cost = inv.Inv_AdvCost;
-                    break;
-
-                default:
-                    break;
-            }
-
-            if (inv.Inv_Cost < 0)
-            {
-                throw new Exception("库存成本不能小于0");
-            }
-        }
           */
 
         /// <summary>
@@ -82,14 +41,15 @@ namespace RUINORERP.Business.CommService
         public static void CostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty,
             decimal UntaxedUnitPrice, decimal UntaxedShippCost = 0)
         {
+            // 前置校验：当前操作数量不能为0（避免无意义操作）
+            if (currentQty == 0) throw new ArgumentException("当前操作数量不能为0");
+
             // 获取系统配置
             bool allowNegativeInventory = _appContext.SysConfig.CheckNegativeInventory;
             //新成本单价 = （原库存成本×原数量 + (采购不含税单价×采购数量 + 不含税运费)）/(原数量 + 采购数量 )
             // 先算成本再赋值数量（保持原有逻辑顺序）
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
-            // 前置校验：当前操作数量不能为0（避免无意义操作）
-            if (currentQty == 0) throw new ArgumentException("当前操作数量不能为0");
             // 计算新库存数量
             int newQty = inv.Quantity + currentQty;
             // 负库存检查（如果不允许负库存）
@@ -98,7 +58,11 @@ namespace RUINORERP.Business.CommService
                 throw new InvalidOperationException($"成本计算时，库存数量不能为负（操作后数量：{newQty}）");
             }
 
+            // 保存原始库存信息，用于计算成本变化
+            decimal originalCost = inv.Inv_Cost;
+            int originalQty = inv.Quantity;
 
+            // 执行成本计算
             switch (m)
             {
                 case 库存成本计算方式.先进先出法:
@@ -161,6 +125,8 @@ namespace RUINORERP.Business.CommService
                 throw new InvalidOperationException($"计算得到负库存成本（成本值：{inv.Inv_Cost}）");
             }
 
+            // 更新库存数量（注意：这里只更新内存中的数量，实际数据库更新由调用方处理）
+            inv.Quantity = newQty;
         }
 
 
@@ -202,13 +168,14 @@ namespace RUINORERP.Business.CommService
 
         public static void AntiCostCalculation(ApplicationContext _appContext, tb_Inventory inv, int currentQty, decimal currentCostPrice)
         {
+            // 前置校验：当前操作数量不能为0（反审核无意义操作）
+            if (currentQty == 0) throw new ArgumentException("反审核操作成本计算时，当前数量不能为0");
+
             // 获取系统配置
             bool allowNegativeInventory = _appContext.SysConfig.CheckNegativeInventory;
             // 先算成本再赋值数量（保持原有逻辑顺序）
             Global.库存成本计算方式 m = (Global.库存成本计算方式)_appContext.SysConfig.CostCalculationMethod;
 
-            // 前置校验：当前操作数量不能为0（反审核无意义操作）
-            if (currentQty == 0) throw new ArgumentException("反审核操作成本计算时，当前数量不能为0");
             // 计算新库存数量
             int newQty = inv.Quantity - currentQty;
 
@@ -294,6 +261,9 @@ namespace RUINORERP.Business.CommService
             {
                 throw new InvalidOperationException($"反审核计算得到负库存成本（成本值：{inv.Inv_Cost}），请检查操作数量或原成本价是否合理");
             }
+
+            // 更新库存数量（注意：这里只更新内存中的数量，实际数据库更新由调用方处理）
+            inv.Quantity = newQty;
         }
 
 

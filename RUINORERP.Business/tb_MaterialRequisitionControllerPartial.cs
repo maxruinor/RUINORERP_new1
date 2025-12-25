@@ -289,6 +289,8 @@ namespace RUINORERP.Business
 
                     #endregion
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                    // 创建库存流水记录列表
+                    List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
                     //因为要计算未发数量，所以要更新库存要在最后一步
                     foreach (var child in entity.tb_MaterialRequisitionDetails)
                     {
@@ -304,23 +306,21 @@ namespace RUINORERP.Business
                                 rrs.Succeeded = false;
                                 return rrs;
                             }
-                            //更新库存
+                            // 更新库存
                             inv.Quantity = inv.Quantity - child.ActualSentQty;
-                            //不可能为空
+                            // 不可能为空
                             tb_ManufacturingOrderDetail MoDeltail = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).FirstOrDefault();
                             if (MoDeltail != null)
                             {
-                                //所有对应的领料明细减少去制令单中的应该发的差。
+                                // 所有对应的领料明细减少去制令单中的应该发的差。
                                 decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitions
                                     .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
                                     .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
                                     .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID && c.Location_ID == inv.Location_ID).Sum(d => d.ActualSentQty));
 
-
                                 // 允许的误差阈值
                                 const decimal tolerance = 1.0m;
-                            
-
+                             
                                 // 超发量
                                 decimal overQty = totalActualSentQty - MoDeltail.ShouldSendQty;
 
@@ -333,7 +333,7 @@ namespace RUINORERP.Business
 
                                 if (realOver)
                                 {
-                                    //所有实发的数量不能大于应发的数量，除非是补料
+                                    // 所有实发的数量不能大于应发的数量，除非是补料
                                     if (!entity.ReApply)
                                     {
                                         string prodName = child.tb_proddetail.tb_prod.CNName + child.tb_proddetail.tb_prod.Specifications;
@@ -351,7 +351,6 @@ namespace RUINORERP.Business
                                 inv.NotOutQty -= child.ActualSentQty.ToInt();
                             }
 
-
                             BusinessHelper.Instance.EditEntity(inv);
                         }
                         else
@@ -362,11 +361,33 @@ namespace RUINORERP.Business
                             return rrs;
                         }
                         // CommService.CostCalculations.CostCalculation(_appContext, inv, child.TransactionPrice);
-                        //inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
+                        // inv.Inv_Cost = 0;//这里需要计算，根据系统设置中的算法计算。
                         inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                         inv.LatestOutboundTime = System.DateTime.Now;
                         #endregion
                         invUpdateList.Add(inv);
+                        
+                        // 实时获取当前库存成本
+                        decimal realtimeCost = inv.Inv_Cost;
+                        
+                        // 更新领料明细的成本为实时成本
+                        child.Cost = realtimeCost;
+                        child.SubtotalCost = realtimeCost * child.ActualSentQty;
+                        
+                        // 创建库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.生产领料单;
+                        transaction.ReferenceId = entity.MR_ID;
+                        transaction.QuantityChange = -child.ActualSentQty; // 生产领料减少库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"生产领料单审核：{entity.MaterialRequisitionNO}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+
+                        transactionList.Add(transaction);
                     }
                     DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -374,6 +395,10 @@ namespace RUINORERP.Business
                     {
                         _logger.Debug($"{entity.MaterialRequisitionNO}审核时，更新库存结果为0行，请检查数据！");
                     }
+                    
+                    // 记录库存流水
+                    tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                    await tranController.BatchRecordTransactions(transactionList);
 
                     //TODO: 制令单  怎么样才能结案
                     //领料单，如果来自于制令单，则要把领料出库数量累加到制令单中的已交数量 并且如果数量够则自动结案
@@ -468,6 +493,9 @@ namespace RUINORERP.Business
                 entity.ApprovalOpinions = $"由{_appContext.CurUserInfo.UserInfo.UserName}反审核";
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建反向库存流水记录列表
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
                 foreach (var child in entity.tb_MaterialRequisitionDetails)
                 {
                     #region 库存表的更新 ，
@@ -479,37 +507,59 @@ namespace RUINORERP.Business
                         rs.Succeeded = false;
                         return rs;
                     }
-                    //更新在途库存
-                    //反审，出库的要加回来，要卖的也要加回来
+                    // 更新在途库存
+                    // 反审，出库的要加回来，要卖的也要加回来
                     inv.Quantity = inv.Quantity + child.ActualSentQty;
-                    //不可能为空
-                    //tb_ManufacturingOrderDetail MoDeltail = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ProdDetailID == inv.ProdDetailID).FirstOrDefault();
-                    //if (MoDeltail != null)
-                    //{
-                    //所有对应的领料明细减少去制令单中的应该发的差。
-                    //是不是应该统计审核过的？
-                    //decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitionses
-                    //    .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
-                    //    .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
-                    //    .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID).Sum(d => d.ActualSentQty));
-                    //反审只是处理当前领料单的数量， 应发减去实发
+                    // 不可能为空
+                    // tb_ManufacturingOrderDetail MoDeltail = entity.tb_manufacturingorder.tb_ManufacturingOrderDetails.Where(c => c.ProdDetailID == inv.ProdDetailID).FirstOrDefault();
+                    // if (MoDeltail != null)
+                    // {
+                    // 所有对应的领料明细减少去制令单中的应该发的差。
+                    // 是不是应该统计审核过的？
+                    // decimal totalActualSentQty = entity.tb_manufacturingorder.tb_MaterialRequisitionses
+                    //     .Where(c => c.ApprovalResults.HasValue && c.ApprovalResults.Value == true)
+                    //     .Where(c => c.ApprovalStatus.HasValue && c.ApprovalStatus.Value == (int)ApprovalStatus.已审核 && (c.DataStatus == (int)DataStatus.确认 || c.DataStatus == (int)DataStatus.完结))
+                    //     .Sum(c => c.tb_MaterialRequisitionDetails.Where(c => c.ProdDetailID == inv.ProdDetailID).Sum(d => d.ActualSentQty));
+                    // 反审只是处理当前领料单的数量， 应发减去实发
 
                     inv.NotOutQty += child.ActualSentQty;
 
                     // }
-                    //最后出库时间要改回来，这里没有处理
-                    //inv.LatestStorageTime
+                    // 最后出库时间要改回来，这里没有处理
+                    // inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = inv.Inv_Cost;
+                    
+                    // 创建反向库存流水记录
+                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                        transaction.ProdDetailID = inv.ProdDetailID;
+                        transaction.Location_ID = inv.Location_ID;
+                        transaction.BizType = (int)BizType.生产领料单;
+                        transaction.ReferenceId = entity.MR_ID;
+                        transaction.QuantityChange = child.ActualSentQty; // 反审核增加库存
+                        transaction.AfterQuantity = inv.Quantity;
+                        transaction.UnitCost = realtimeCost; // 使用实时成本
+                        transaction.TransactionTime = DateTime.Now;
+                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                        transaction.Notes = $"生产领料单反审核：{entity.MaterialRequisitionNO}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
+                    transactionList.Add(transaction);
                 }
+                
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
                     _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
+                
+                // 记录反向库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
 
 

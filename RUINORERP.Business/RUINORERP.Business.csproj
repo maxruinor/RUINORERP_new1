@@ -55,8 +55,6 @@
     <Compile Remove="Services\LocalBizCodeGenerateService.cs" />
     <Compile Remove="StatusManagerService\FMPaymentStatusHelper.cs" />
     <Compile Remove="StatusManagerService\StatusManagerService.cs" />
-
-    <Compile Remove="tb_InventoryTransactionControllerPartial.cs" />
     <Compile Remove="tb_OpeningIinventoryController.cs" />
     <Compile Remove="tb_OpeningIinventory_detailController.cs" />
     <Compile Remove="tb_ProdBaseController.cs" />

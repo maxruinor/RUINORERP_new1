@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -402,6 +402,29 @@ namespace RUINORERP.Business
                     invUpdateList.Add(inv);
                 }
 
+                // 处理分组数据，更新库存记录的各字段
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
+                foreach (var group in inventoryGroups)
+                {
+                    var inv = group.Value.Inventory;
+                    
+                    // 创建库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.采购入库单;
+                    transaction.ReferenceId = entity.PurEntryID;
+                    transaction.QuantityChange = group.Value.PurQtySum.ToInt(); // 采购入库增加库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = inv.Inv_Cost;
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"采购入库单审核：{entity.PurEntryNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
+
+                    transactionList.Add(transaction);
+                }
+
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (invUpdateList.Count > 0 && Counter == 0)
@@ -409,6 +432,10 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     throw new Exception("入库时，库存更新数据为0，更新失败！");
                 }
+
+                // 记录库存流水
+                tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                await tranController.BatchRecordTransactions(transactionList);
 
                 if (BOM_SDetails.Any())
                 {
@@ -660,6 +687,29 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
+                // 处理分组数据，更新库存记录的各字段
+                List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
+                
+                foreach (var group in inventoryGroups)
+                {
+                    var inv = group.Value.Inventory;
+                    
+                    // 创建反向库存流水记录
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.采购入库单;
+                    transaction.ReferenceId = entity.PurEntryID;
+                    transaction.QuantityChange = -group.Value.PurQtySum.ToInt(); // 反审核减少库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = inv.Inv_Cost;
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
+
+                    transactionList.Add(transaction);
+                }
+
                 if (invUpdateList.Count > 0)
                 {
                     DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
@@ -669,6 +719,10 @@ namespace RUINORERP.Business
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("入库时，库存更新数据为0，更新失败！");
                     }
+                    
+                    // 记录库存流水
+                    tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
+                    await tranController.BatchRecordTransactions(transactionList);
                 }
 
                 if (BOM_SDetails.Count > 0)

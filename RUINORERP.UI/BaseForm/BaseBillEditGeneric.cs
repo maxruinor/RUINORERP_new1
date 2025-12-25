@@ -623,15 +623,18 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-                // 使用状态管理器检查操作权限
+                // 对于修改操作，不需要通过状态转换规则验证，直接检查当前状态是否允许编辑
+                if (action == MenuItemEnums.修改)
+                {
+                    // 使用StateManager的GetButtonState方法直接检查修改按钮状态
+                    return StateManager?.GetButtonState(entity, "toolStripbtnModify") ?? false;
+                }
+                
+                // 其他操作使用状态管理器检查
                 if (StateManager != null)
                 {
-                    // 获取当前实体的状态类型和状态值
-                    var statusType = StateManager.GetStatusType(entity);
-                    var status = entity.GetCurrentStatus();
-
                     // 使用状态管理器检查操作权限
-                    return _stateManager.CanExecuteActionWithMessage(EditEntity, action).CanExecute;
+                    return _stateManager.CanExecuteActionWithMessage(entity, action).CanExecute;
                 }
 
                 return false;
@@ -3300,23 +3303,12 @@ namespace RUINORERP.UI.BaseForm
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
-                    // 发送任务状态更新通知
-                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = TodoUpdate.Create(
-                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                        bizType,
-                        pkid,
-                        EditEntity
-                    );
-                    
-                    // 设置操作描述
-                    updateData.OperationDescription = "单据已结案";
-                    
-                    // 先更新本地工作台
-                    TodoSyncManager.Instance.PublishUpdate(updateData);
-                    
-                    // 然后发送到服务器（不发送给自己）
-                    await SendTodoUpdateToServerAsync(updateData, false);
+                    // 统一状态同步 - 结案操作
+                    var updateData = CreateTodoUpdate("结案", "单据已结案");
+                    if (updateData != null)
+                    {
+                        await SyncTodoStatusAsync(updateData, "结案");
+                    }
 
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
@@ -3526,23 +3518,12 @@ namespace RUINORERP.UI.BaseForm
                 {
                     reviewResult.Succeeded = rmr.Succeeded;
 
-                    // 发送任务状态更新通知
-                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = TodoUpdate.Create(
-                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                        bizType,
-                        pkid,
-                        EditEntity
-                    );
-                    
-                    // 设置操作描述
-                    updateData.OperationDescription = "单据已审核通过";
-                    
-                    // 先更新本地工作台
-                    TodoSyncManager.Instance.PublishUpdate(updateData);
-                    
-                    // 然后发送到服务器（不发送给自己）
-                    await SendTodoUpdateToServerAsync(updateData, false);
+                    // 统一状态同步 - 审核操作
+                    var updateData = CreateTodoUpdate("审核", "单据已审核通过");
+                    if (updateData != null)
+                    {
+                        await SyncTodoStatusAsync(updateData, "审核");
+                    }
 
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
                     {
@@ -3885,23 +3866,12 @@ namespace RUINORERP.UI.BaseForm
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
 
-                    // 发送任务状态更新通知
-                    var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                    var updateData = TodoUpdate.Create(
-                        PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                        bizType,
-                        pkid,
-                        EditEntity
-                    );
-                    
-                    // 设置操作描述
-                    updateData.OperationDescription = "单据已结案";
-                    
-                    // 先更新本地工作台
-                    TodoSyncManager.Instance.PublishUpdate(updateData);
-                    
-                    // 然后发送到服务器（不发送给自己）
-                    await SendTodoUpdateToServerAsync(updateData, false);
+                    // 统一状态同步 - 结案操作
+                    var updateData = CreateTodoUpdate("结案", "单据已结案");
+                    if (updateData != null)
+                    {
+                        await SyncTodoStatusAsync(updateData, "结案");
+                    }
 
                     //如果是出库单审核，则上传到服务器 锁定订单无法修改
                     if (ae.bizType == BizType.销售出库单)
@@ -5606,23 +5576,12 @@ namespace RUINORERP.UI.BaseForm
                         }
                         submitrs = true;
 
-                        // 发送任务状态更新通知 - 使用扩展的TodoUpdate
-                        var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                        var updateData = TodoUpdate.Create(
-                            PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                            bizType,
-                            pkid,
-                         EditEntity
-                        );
-                        
-                        // 设置操作描述
-                        updateData.OperationDescription = "单据已提交";
-                        
-                        // 先更新本地工作台
-                        TodoSyncManager.Instance.PublishUpdate(updateData);
-                        
-                        // 然后发送到服务器（不发送给自己）
-                        await SendTodoUpdateToServerAsync(updateData, false);
+                        // 统一状态同步 - 提交操作
+                        var updateData = CreateTodoUpdate("提交", "单据已提交");
+                        if (updateData != null)
+                        {
+                            await SyncTodoStatusAsync(updateData, "提交");
+                        }
                     }
                     else
                     {
@@ -6452,12 +6411,11 @@ namespace RUINORERP.UI.BaseForm
         #region 统一状态同步方法
 
         /// <summary>
-        /// 统一的状态同步方法 - 同步本地工作台并向服务器广播状态变更
+        /// 统一的状态同步方法 - 同步本地工作台并优化消息处理
         /// </summary>
         /// <param name="update">任务更新数据</param>
         /// <param name="operationType">操作类型（结案、审核、提交等）</param>
-        /// <param name="sendToSelf">是否发送给当前用户（默认为false，避免自己收到自己的通知）</param>
-        private async Task SyncTodoStatusAsync(TodoUpdate update, string operationType = "状态变更", bool sendToSelf = false)
+        private async Task SyncTodoStatusAsync(TodoUpdate update, string operationType = "状态变更")
         {
             try
             {
@@ -6473,11 +6431,16 @@ namespace RUINORERP.UI.BaseForm
                     update.OperationDescription = $"单据{operationType}";
                 }
 
-                // 第一步：更新本地工作台（立即生效，避免网络延迟）
+                // 第一步：更新本地工作台（立即生效）
                 TodoSyncManager.Instance.PublishUpdate(update);
                 
-                // 第二步：异步发送到服务器（不发送给自己，避免重复通知）
-                await SendTodoUpdateToServerAsync(update, sendToSelf);
+                // 第二步：检查是否需要发送服务器通知
+                // 操作自己的单据时不发送消息提示，仅更新工作台Todolist
+                if (!IsCurrentUserOperation(update))
+                {
+                    // 发送到服务器（不发送给自己，避免重复通知）
+                    await SendTodoUpdateToServerAsync(update);
+                }
 
                 MainForm.Instance.logger?.LogDebug("状态同步完成 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",
                     operationType, update.BusinessType, update.BillId);
@@ -6489,11 +6452,59 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 发送任务状态更新到服务器
+        /// 检查是否为当前用户操作自己的单据
         /// </summary>
         /// <param name="update">任务更新数据</param>
-        /// <param name="sendToSelf">是否发送给当前用户</param>
-        private async Task SendTodoUpdateToServerAsync(TodoUpdate update, bool sendToSelf = false)
+        /// <returns>是否为当前用户操作自己的单据</returns>
+        private bool IsCurrentUserOperation(TodoUpdate update)
+        {
+            try
+            {
+                // 获取当前用户信息
+                var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
+                if (currentUser == null)
+                {
+                    return false;
+                }
+
+                // 检查单据是否属于当前用户创建或负责
+                if (EditEntity != null)
+                {
+                    // 检查创建人是否为当前用户
+                    if (ReflectionHelper.ExistPropertyName<T>("CreateUserId"))
+                    {
+                        var createUserId = ReflectionHelper.GetPropertyValue(EditEntity, "CreateUserId")?.ToString();
+                        if (createUserId == currentUser.User_ID.ToString())
+                        {
+                            return true;
+                        }
+                    }
+
+                    // 检查负责人是否为当前用户
+                    if (ReflectionHelper.ExistPropertyName<T>("ResponsibleUserId"))
+                    {
+                        var responsibleUserId = ReflectionHelper.GetPropertyValue(EditEntity, "ResponsibleUserId")?.ToString();
+                        if (responsibleUserId == currentUser.User_ID.ToString())
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "检查当前用户操作时发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 发送任务状态更新到服务器（优化版）- 使用消息中心而非弹窗
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        private async Task SendTodoUpdateToServerAsync(TodoUpdate update)
         {
             try
             {
@@ -6503,7 +6514,7 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 构造消息数据
+                // 构造消息数据 - 优化为使用消息中心而非弹窗
                 var messageData = new MessageData
                 {
                     Id = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
@@ -6511,17 +6522,26 @@ namespace RUINORERP.UI.BaseForm
                     Title = "任务状态变更",
                     Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
                     BizData = update,
-                    SendTime = DateTime.Now
+                    SendTime = DateTime.Now,
+                    // 设置消息为业务消息类型，直接加载到消息中心
+                    IsPopupMessage = false // 禁止使用弹窗形式的消息提示
                 };
 
                 // 获取消息服务并发送
                 var messageService = Startup.GetFromFac<MessageService>();
                 if (messageService != null)
                 {
-                    var response = await messageService.SendTodoNotificationAsync(messageData, sendToSelf);
+                    // 发送消息但不发送给当前用户
+                    var response = await messageService.SendTodoNotificationAsync(messageData, false);
                     if (!response.IsSuccess)
                     {
                         MainForm.Instance.logger?.LogWarning("发送任务状态通知失败：{ErrorMessage}", response.ErrorMessage);
+                    }
+                    else
+                    {
+                        // 记录消息已发送到消息中心
+                        MainForm.Instance.logger?.LogDebug("任务状态通知已发送到消息中心 - 业务类型: {BusinessType}", 
+                            update.BusinessType);
                     }
                 }
                 else
@@ -6532,6 +6552,36 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 MainForm.Instance.logger?.LogError(ex, "发送任务状态更新时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 创建统一的任务状态更新数据
+        /// </summary>
+        /// <param name="operationType">操作类型</param>
+        /// <param name="operationDescription">操作描述</param>
+        /// <returns>任务状态更新数据</returns>
+        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription = null)
+        {
+            try
+            {
+                var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+                var updateData = TodoUpdate.Create(
+                    PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+                    bizType,
+                    pkid,
+                    EditEntity
+                );
+                
+                // 设置操作描述
+                updateData.OperationDescription = operationDescription ?? $"单据{operationType}";
+                
+                return updateData;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "创建任务状态更新数据时发生异常");
+                return null;
             }
         }
 

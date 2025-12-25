@@ -316,9 +316,6 @@ namespace RUINORERP.UI.BaseForm
                 // 4. 更新打印状态显示
                 UpdatePrintStatusDisplay(entity);
 
-                // 5. 更新子表操作权限
-                UpdateChildTableOperations(currentStatus, CurrentStatusType);
-
                 //6.权限控制
                 if (CurMenuInfo != null)
                 {
@@ -368,58 +365,44 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 获取当前编辑实体
                 var entity = EditEntity;
-                if (entity == null) return;
-                
-                // 获取按钮状态规则
-                var buttonRules = new Dictionary<string, bool>();
-                if (currentStatus != null && StateManager != null)
-                {
-                    try
-                    {
-                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, currentStatus);
-                    }
-                    catch (Exception ex)
-                    {
-                        // 出现异常时使用默认规则，避免UI功能失效
-                        System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
-                    }
-                }
+                if (entity == null || StateManager == null) return;
+
+                // 直接从StateManager获取所有按钮状态
+                var buttonStates = StateManager.GetUIControlStates(entity);
 
                 // 直接更新按钮状态
-                if (buttonRules != null && buttonRules.Count > 0)
+                if (buttonStates != null && buttonStates.Count > 0)
                 {
-                    foreach (var rule in buttonRules)
+                    foreach (var buttonState in buttonStates)
                     {
-                        var buttonName = rule.Key;
-                        var enabled = rule.Value;
+                        var buttonName = buttonState.Key;
+                        var enabled = buttonState.Value;
 
                         try
                         {
+                            // 查找控件并更新状态
                             var control = this.Controls.Find(buttonName, true).FirstOrDefault();
                             if (control != null)
                             {
                                 control.Enabled = enabled;
                                 continue;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger?.LogError(ex, "更新UI控件状态失败: {0}", ex.Message);
-                        }
 
-                        try
-                        {
-                            // 使用反射获取按钮控件并更新状态
-                            var buttonField = this.GetType().GetField(buttonName,
-                                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                            // 查找ToolStripButton控件
+                            var toolStripButton = FindToolStripButtonByName(buttonName);
+                            if (toolStripButton != null)
+                            {
+                                toolStripButton.Enabled = enabled;
+                                continue;
+                            }
 
+                            // 使用反射获取按钮字段并更新状态
+                            var buttonField = this.GetType().GetField(buttonName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                             if (buttonField != null)
                             {
                                 var button = buttonField.GetValue(this);
                                 if (button != null)
                                 {
-                                    // 只设置Enabled属性
-                                    // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
                                     var enabledProperty = button.GetType().GetProperty("Enabled");
                                     enabledProperty?.SetValue(button, enabled);
                                 }
@@ -499,59 +482,24 @@ namespace RUINORERP.UI.BaseForm
         {
             if (entity == null)
                 return false;
-
             try
             {
-                // 获取实体的当前状态
-                var currentStatus = StateManager.GetBusinessStatus(entity);
-                var currentStatusType = StateManager.GetStatusType(entity);
-                
-                // 对于修改操作，不需要通过状态转换规则验证，直接检查当前状态是否允许编辑
-                if (action == MenuItemEnums.修改)
+                // 遵循终态不可修改原则：如果是终态，所有修改操作都不允许
+                if (StateManager.IsFinalStatus(entity))
                 {
-                    // 使用StateManager的GetButtonState方法直接检查修改按钮状态
-                    return StateManager?.GetButtonState(entity, "toolStripbtnModify") ?? false;
-                }
-                
-                // 将操作转换为按钮名称
-                var buttonName = ConvertActionToButtonName(action);
-                if (!string.IsNullOrEmpty(buttonName))
-                {
-                    // 使用GlobalStateRulesManager检查按钮状态
-                    var buttonRules = new Dictionary<string, bool>();
-                    if (currentStatus != null)
-                    {
-                        try
-                        {
-                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType, currentStatus);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 出现异常时使用默认规则，避免UI功能失效
-                            System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
-                        }
-                    }
-                    
-                    if (buttonRules.TryGetValue(buttonName, out var enabled))
-                    {
-                        return enabled;
-                    }
-                }
-                
-                // 其他操作使用状态管理器检查
-                if (StateManager != null)
-                {
-                    // 使用状态管理器检查操作权限
-                    return _stateManager.CanExecuteActionWithMessage(entity, action).CanExecute;
+                    // 终态只允许查询和打印等只读操作
+                    return action == MenuItemEnums.查询 || action == MenuItemEnums.打印 || action == MenuItemEnums.导出;
                 }
 
-                return false;
+                // 其他操作直接使用StateManager检查
+                return StateManager?.CanExecuteActionWithMessage(entity, action).CanExecute ?? false;
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "检查操作可执行性失败: {Action}, {Error}", action, ex.Message);
                 return false; // 出错时默认不允许操作
             }
+
         }
 
         /// <summary>
@@ -736,75 +684,9 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>
-        /// 根据状态更新子表操作 - 使用UIControlRules统一管理
-        /// </summary>
-        /// <param name="status">当前数据状态</param>
-        protected virtual void UpdateChildTableOperations(Enum currentStatus, Type CurrentStatusType)
-        {
-            try
-            {
-                var entity = EditEntity;
-                if (entity == null) return;
-
-                // 使用UIControlRules获取子表操作权限
-                bool canAdd, canEdit, canDelete;
-
-                var buttonRules = new Dictionary<string, bool>();
-                if (currentStatus != null)
-                {
-                    try
-                    {
-                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, currentStatus);
-                    }
-                    catch (Exception ex)
-                    {
-                        // 出现异常时使用默认规则，避免UI功能失效
-                        System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
-                    }
-
-                }
-
-                // 检查是否允许子表操作
-                canAdd = buttonRules.TryGetValue("toolStripbtnAdd", out var addEnabled) && addEnabled;
-                canEdit = buttonRules.TryGetValue("toolStripbtnModify", out var editEnabled) && editEnabled;
-                canDelete = buttonRules.TryGetValue("toolStripbtnDelete", out var deleteEnabled) && deleteEnabled;
-
-                // 启用/禁用子表操作
-                EnableChildTableOperations(canAdd, canEdit, canDelete);
-
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新子表操作权限失败: {ex.Message}", ex);
-
-                // 出错时默认禁用子表操作
-                EnableChildTableOperations(false, false, false);
-            }
-        }
 
 
 
-
-        /// <summary>
-        /// 启用或禁用子表操作
-        /// </summary>
-        /// <param name="allowAdd">是否允许添加</param>
-        /// <param name="allowEdit">是否允许编辑</param>
-        /// <param name="allowDelete">是否允许删除</param>
-        protected virtual void EnableChildTableOperations(bool allowAdd, bool allowEdit, bool allowDelete)
-        {
-            // 这里可以根据实际的子表控件进行操作
-            // 例如：设置子表的只读状态、禁用添加/删除按钮等
-
-            // 示例代码（需要根据实际控件进行调整）：
-            // if (gridViewChild != null)
-            // {
-            //     gridViewChild.ReadOnly = !allowEdit;
-            //     gridViewChild.AllowUserToAddRows = allowAdd;
-            //     gridViewChild.AllowUserToDeleteRows = allowDelete;
-            // }
-        }
 
 
 
@@ -3132,7 +3014,7 @@ namespace RUINORERP.UI.BaseForm
                 if (rs.Succeeded)
                 {
                     // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案",pkid);
+                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
@@ -4001,8 +3883,8 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            var edit = StateManager.CanExecuteActionWithMessage(editEntity, MenuItemEnums.修改);
-            if (!edit.CanExecute)
+            var edit = StateManager.CanModifyWithMessage(editEntity);
+            if (!edit.CanModify)
             {
                 MessageBox.Show(edit.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 toolStripbtnModify.Enabled = false;
@@ -5152,6 +5034,17 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
                 return rss;
             }
+
+            var canDelete = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.删除);
+            if (!canDelete.CanExecute)
+            {
+                return new ReturnResults<T>()
+                {
+                    Succeeded = false,
+                    ErrorMsg = canDelete.Message
+                };
+            }
+
 
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
             {
@@ -6389,7 +6282,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="operationType">操作类型</param>
         /// <param name="operationDescription">操作描述</param>
         /// <returns>任务状态更新数据</returns>
-        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription , long pkid)
+        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription, long pkid)
         {
             try
             {

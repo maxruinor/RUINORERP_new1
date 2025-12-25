@@ -144,22 +144,12 @@ namespace RUINORERP.Model.Base.StatusManager
         void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null);
 
         /// <summary>
-        /// 获取UI控件变更
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="action">操作类型</param>
-        /// <returns>UI控件变更</returns>
-        Dictionary<string, bool> GetUIControlChanges(BaseEntity entity, MenuItemEnums action);
-
-
-
-        /// <summary>
-        /// 判断指定实体是否可以修改
+        /// 判断指定实体是否可以修改，并返回详细消息
         /// </summary>
         /// <typeparam name="TEntity">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <returns>是否可以修改</returns>
-        bool CanModify<TEntity>(TEntity entity) where TEntity : BaseEntity;
+        /// <returns>是否可以修改及详细消息</returns>
+        (bool CanModify, string Message) CanModifyWithMessage<TEntity>(TEntity entity) where TEntity : BaseEntity;
 
         /// <summary>
         /// 判断指定实体的业务状态是否为终态

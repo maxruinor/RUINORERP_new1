@@ -34,11 +34,6 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ILogger<UnifiedStateManager> _logger;
 
         /// <summary>
-        /// 状态转换规则字典
-        /// </summary>
-        private Dictionary<Type, Dictionary<object, List<object>>> _transitionRules;
-
-        /// <summary>
         /// 状态转换事件
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
@@ -57,9 +52,6 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 初始化所有规则
             InitializeAllRules();
-
-            // 复制规则字典到本地缓存
-            _transitionRules = new Dictionary<Type, Dictionary<object, List<object>>>(GlobalStateRulesManager.Instance.StateTransitionRules.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionary(innerKvp => innerKvp.Key, innerKvp => innerKvp.Value)));
         }
 
         /// <summary>
@@ -673,6 +665,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 验证操作权限（通过UI操作类型）
+        /// 优化版本：针对不同操作类型采用不同判断逻辑
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
@@ -688,6 +681,32 @@ namespace RUINORERP.Model.Base.StatusManager
             // 获取当前状态
             var currentStatus = GetBusinessStatus(entity, statusType);
             
+            // 根据操作类型采用不同的判断逻辑
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                    // 修改操作：检查当前状态是否允许修改
+                    return CanModifyWithMessage(entity, currentStatus, statusType);
+                    
+                case MenuItemEnums.删除:
+                    // 删除操作：检查当前状态是否允许删除
+                    return CanDeleteWithMessage(entity, currentStatus, statusType);
+                    
+                case MenuItemEnums.保存:
+                    // 保存操作：通常总是允许，除非是终态
+                    return CanSaveWithMessage(entity, currentStatus, statusType);
+                    
+                default:
+                    // 其他操作（提交、审核、反审等）：使用状态转换验证
+                    return CanExecuteStateTransitionAction(entity, action, currentStatus, statusType);
+            }
+        }
+
+        /// <summary>
+        /// 验证状态转换类操作权限（提交、审核、反审等）
+        /// </summary>
+        private (bool CanExecute, string Message) CanExecuteStateTransitionAction(BaseEntity entity, MenuItemEnums action, object currentStatus, Type statusType)
+        {
             // 获取目标状态
             var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
             if (targetStatus == null)
@@ -705,6 +724,55 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (true, GetSuccessMessage(action));
             else
                 return (false, validationResult.ErrorMessage ?? "操作失败");
+        }
+
+        /// <summary>
+        /// 验证修改操作权限
+        /// </summary>
+        private (bool CanExecute, string Message) CanModifyWithMessage(BaseEntity entity, object currentStatus, Type statusType)
+        {
+            // 检查是否为终态状态
+            bool isFinalStatus = IsFinalStatus(entity);
+            if (isFinalStatus)
+                return (false, "终态状态下不允许修改");
+
+            // 检查是否允许修改
+            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
+            
+            // 检查提交后是否允许修改
+            if (canModify && !GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(canModify))
+                return (false, "已提交状态下不允许修改");
+
+            return (true, "可以修改当前记录");
+        }
+
+        /// <summary>
+        /// 验证删除操作权限
+        /// </summary>
+        private (bool CanExecute, string Message) CanDeleteWithMessage(BaseEntity entity, object currentStatus, Type statusType)
+        {
+            // 检查是否为终态状态
+            bool isFinalStatus = IsFinalStatus(entity);
+            if (isFinalStatus)
+                return (false, "终态状态下不允许删除");
+
+            // 检查是否允许删除
+            var canDelete = CanExecuteAction(entity, MenuItemEnums.删除);
+            
+            return canDelete ? (true, "可以删除当前记录") : (false, "当前状态下不允许删除");
+        }
+
+        /// <summary>
+        /// 验证保存操作权限
+        /// </summary>
+        private (bool CanExecute, string Message) CanSaveWithMessage(BaseEntity entity, object currentStatus, Type statusType)
+        {
+            // 检查是否为终态状态
+            bool isFinalStatus = IsFinalStatus(entity);
+            if (isFinalStatus)
+                return (false, "终态状态下不允许保存");
+
+            return (true, "可以保存当前记录");
         }
 
         /// <summary>
@@ -739,20 +807,6 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 获取操作权限规则
-        /// </summary>
-        /// <param name="statusType">状态类型</param>
-        /// <param name="statusValue">状态值</param>
-        /// <returns>操作权限列表</returns>
-        private List<MenuItemEnums> GetActionPermissionRules(Type statusType, object statusValue)
-        {
-            // 使用GlobalStateRulesManager中定义的规则
-            return GlobalStateRulesManager.Instance.ActionPermissionRules.ContainsKey(statusType) &&
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType].ContainsKey(statusValue) ?
-                   GlobalStateRulesManager.Instance.ActionPermissionRules[statusType][statusValue] : new List<MenuItemEnums>();
-        }
-        
-        /// <summary>
         /// 通过UI操作类型验证实体状态转换是否合法
         /// </summary>
         /// <param name="entity">实体对象</param>
@@ -771,10 +825,10 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取当前状态
                 var currentStatus = GetBusinessStatus(entity, statusType);
                 
-            // 获取目标状态
-            var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
-            if (targetStatus == null)
-                return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
+                // 获取目标状态
+                var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
+                if (targetStatus == null)
+                    return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
                 
                 // 验证状态转换
                 var result = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
@@ -785,8 +839,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 return Task.FromResult(StateTransitionResult.Denied($"验证状态转换时发生错误: {ex.Message}"));
             }
         }
-
-
 
         /// <summary>
         /// 获取操作成功消息
@@ -820,100 +872,13 @@ namespace RUINORERP.Model.Base.StatusManager
             }
         }
 
-        /// <summary>
-        /// 获取操作失败消息
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="action">操作类型</param>
-        /// <returns>失败消息</returns>
-        private string GetFailureMessage(BaseEntity entity, MenuItemEnums action)
-        {
-            if (entity == null)
-                return "实体不存在，无法执行操作";
-
-            var statusType = GetStatusType(entity);
-            if (statusType == null)
-                return "当前状态不允许执行此操作";
-
-            object statusValue = GetBusinessStatus(entity, statusType);
-
-            if (statusType == typeof(DataStatus))
-                return GetDataStatusFailureMessage((DataStatus)statusValue, action);
-
-            return "当前状态不允许执行此操作";
-        }
-
-        /// <summary>
-        /// 获取数据状态操作失败消息
-        /// </summary>
-        /// <param name="status">数据状态</param>
-        /// <param name="action">操作类型</param>
-        /// <returns>失败消息</returns>
-        private string GetDataStatusFailureMessage(DataStatus status, MenuItemEnums action)
-        {
-            switch (status)
-            {
-                case DataStatus.草稿:
-                    switch (action)
-                    {
-                        case MenuItemEnums.删除:
-                            return "草稿状态下不能删除";
-                        case MenuItemEnums.反审:
-                            return "草稿状态下不能反审核";
-                        case MenuItemEnums.关闭:
-                            return "草稿状态下不能关闭";
-                        default:
-                            return "草稿状态下不能执行此操作";
-                    }
-                case DataStatus.新建:
-                    switch (action)
-                    {
-                        case MenuItemEnums.删除:
-                            return "已提交状态下不能删除";
-                        case MenuItemEnums.修改:
-                            return "已提交状态下不能编辑";
-                        case MenuItemEnums.新增:
-                            return "已提交状态下不能新建";
-                        default:
-                            return "已提交状态下不能执行此操作";
-                    }
-                case DataStatus.确认:
-                    switch (action)
-                    {
-                        case MenuItemEnums.删除:
-                            return "已审核状态下不能删除";
-                        case MenuItemEnums.修改:
-                            return "已审核状态下不能编辑";
-                        case MenuItemEnums.提交:
-                            return "已审核状态下不能提交";
-                        default:
-                            return "已审核状态下不能执行此操作";
-                    }
-                case DataStatus.完结:
-                    switch (action)
-                    {
-                        case MenuItemEnums.删除:
-                            return "已关闭状态下不能删除";
-                        case MenuItemEnums.修改:
-                            return "已关闭状态下不能编辑";
-                        case MenuItemEnums.提交:
-                            return "已关闭状态下不能提交";
-                        case MenuItemEnums.审核:
-                            return "已关闭状态下不能审核";
-                        default:
-                            return "已关闭状态下不能执行此操作";
-                    }
-                default:
-                    return "当前状态不允许执行此操作";
-            }
-        }
-
         #endregion
 
         #region UI控制方法
 
         /// <summary>
-        /// 获取UI控件状态
+        /// 获取UI控件状态 - 统一接口版本
+        /// 使用GlobalStateRulesManager的公共方法获取按钮状态，避免直接访问内部字段
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <returns>UI控件状态</returns>
@@ -924,21 +889,26 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 创建结果字典
                 var result = new Dictionary<string, bool>();
 
-                // 尝试获取状态规则管理器的按钮状态并转换格式
+                // 获取实体的状态类型
                 var statusType = GetStatusType(entity);
                 if (statusType == null)
                 {
                     return result;
                 }
+                
                 // 获取实体的业务状态值
                 object businessStatus = GetBusinessStatus(entity, statusType);
+                if (businessStatus == null)
+                {
+                    return result;
+                }
                 
-                var buttonStates = GlobalStateRulesManager.Instance.UIButtonRules.TryGetValue(statusType, out var statusRules) &&
-                              businessStatus != null && statusRules.TryGetValue(businessStatus, out var buttonRules) ?
-                              buttonRules : new Dictionary<string, bool>();
+                // 使用GlobalStateRulesManager的公共方法获取按钮规则，避免直接访问UIButtonRules
+                var buttonStates = GlobalStateRulesManager.Instance.GetButtonRules(statusType, businessStatus);
+                
+                // 复制按钮状态到结果字典
                 foreach (var state in buttonStates)
                 {
-                    // 使用已有的元组值
                     result[state.Key] = state.Value;
                 }
 
@@ -978,41 +948,6 @@ namespace RUINORERP.Model.Base.StatusManager
             }
         }
 
-        /// <summary>
-        /// 获取UI控件变更
-        /// </summary>
-        /// <param name="entity">实体对象</param>
-        /// <param name="action">操作类型</param>
-        /// <returns>UI控件变更</returns>
-        public Dictionary<string, bool> GetUIControlChanges(BaseEntity entity, MenuItemEnums action)
-        {
-            if (entity == null)
-                return new Dictionary<string, bool>();
-
-            // 获取当前UI状态
-            var currentStates = GetUIControlStates(entity);
-
-            // 模拟执行操作后的UI状态
-            var postActionStates = new Dictionary<string, bool>();
-
-            // 根据操作类型预测UI状态变更
-            // 这里需要根据实际业务逻辑实现
-
-            // 比较并返回变更
-            var changes = new Dictionary<string, bool>();
-            foreach (var state in currentStates)
-            {
-                if (postActionStates.TryGetValue(state.Key, out var newState) && state.Value != newState)
-                {
-                    changes[state.Key] = newState;
-                }
-            }
-
-            return changes;
-        }
-        
-       
-
         #endregion
 
         #region 新增方法 - 状态终态判断
@@ -1040,10 +975,40 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (businessStatus == null)
                     return false;
 
-                // 使用反射调用GlobalStateRulesManager的IsFinalStatus方法
-                var methodInfo = typeof(GlobalStateRulesManager).GetMethod("IsFinalStatus", BindingFlags.Public | BindingFlags.Instance);
-                var genericMethod = methodInfo?.MakeGenericMethod(statusType);
-                return genericMethod != null && (bool)genericMethod.Invoke(GlobalStateRulesManager.Instance, new[] { businessStatus });
+                // 针对不同状态类型进行终态判断
+                if (statusType == typeof(DataStatus))
+                {
+                    DataStatus dataStatus = (DataStatus)businessStatus;
+                    return dataStatus == DataStatus.完结 || dataStatus == DataStatus.作废;
+                }
+                else if (statusType == typeof(PaymentStatus))
+                {
+                    PaymentStatus paymentStatus = (PaymentStatus)businessStatus;
+                    return paymentStatus == PaymentStatus.已支付;
+                }
+                else if (statusType == typeof(RefundStatus))
+                {
+                    RefundStatus refundStatus = (RefundStatus)businessStatus;
+                    return refundStatus == RefundStatus.已退款已退货 || refundStatus == RefundStatus.已退款未退货 || refundStatus == RefundStatus.部分退款退货;
+                }
+                else if (statusType == typeof(PrePaymentStatus))
+                {
+                    PrePaymentStatus prepayStatus = (PrePaymentStatus)businessStatus;
+                    return prepayStatus == PrePaymentStatus.已结案;
+                }
+                else if (statusType == typeof(ARAPStatus))
+                {
+                    ARAPStatus arapStatus = (ARAPStatus)businessStatus;
+                    return arapStatus == ARAPStatus.全部支付 || arapStatus == ARAPStatus.已冲销;
+                }
+                else if (statusType == typeof(StatementStatus))
+                {
+                    StatementStatus statementStatus = (StatementStatus)businessStatus;
+                    return statementStatus == StatementStatus.全部结清 || statementStatus == StatementStatus.已作废;
+                }
+
+                // 默认情况下，不是终态
+                return false;
             }
             catch (Exception ex)
             {
@@ -1053,12 +1018,12 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 判断指定实体是否可以修改
+        /// 判断指定实体是否可以修改，并返回详细消息
         /// </summary>
         /// <typeparam name="TEntity">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
-        /// <returns>是否可以修改</returns>
-        public bool CanModify<TEntity>(TEntity entity) where TEntity : BaseEntity
+        /// <returns>是否可以修改及详细消息</returns>
+        public (bool CanModify, string Message) CanModifyWithMessage<TEntity>(TEntity entity) where TEntity : BaseEntity
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
@@ -1066,15 +1031,15 @@ namespace RUINORERP.Model.Base.StatusManager
             // 检查是否为终态状态
             bool isFinalStatus = IsFinalStatus<TEntity>(entity);
             if (isFinalStatus)
-                return false;
+                return (false, "终态状态下不允许修改");
 
             var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
 
             // 检查提交后是否允许修改
             if (canModify && !GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(canModify))
-                return false;
+                return (false, "已提交状态下不允许修改");
 
-            return true;
+            return (true, "可以修改当前记录");
         }
  
 
@@ -1091,12 +1056,6 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 清除事件订阅
             StatusChanged = null;
-
-            // 清除状态缓存管理器中的相关缓存
-
-            // 清理规则字典
-            if (_transitionRules != null)
-                _transitionRules.Clear();
         }
 
         #endregion

@@ -150,7 +150,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 获取UI按钮状态规则字典（只读）- 仅包含Enabled状态
         /// </summary>
-        public IReadOnlyDictionary<Type, Dictionary<object, Dictionary<string, bool>>> UIButtonRules =>
+        private IReadOnlyDictionary<Type, Dictionary<object, Dictionary<string, bool>>> UIButtonRules =>
             _uiButtonRules;
 
         /// <summary>

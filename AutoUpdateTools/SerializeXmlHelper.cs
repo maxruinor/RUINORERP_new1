@@ -8,7 +8,7 @@ namespace AutoUpdateTools
     /// <summary>
     /// XML序列化和反序列化辅助类
     /// </summary>
-    class SerializeXmlHelper
+    public static class SerializeXmlHelper
     {
         /// <summary>
         /// 序列化指定类型的对象到指定的Xml文件
@@ -16,25 +16,44 @@ namespace AutoUpdateTools
         /// <typeparam name="T">要序列化的对象类型</typeparam>
         /// <param name="obj">要序列化的对象</param>
         /// <param name="xmlFileName">保存对象数据的完整文件名</param>
+        /// <exception cref="ArgumentNullException">当obj为null或xmlFileName为空时抛出</exception>
+        /// <exception cref="IOException">当文件操作失败时抛出</exception>
         public static void SerializeXml<T>(T obj, string xmlFileName)
         {
-            if (obj == null || string.IsNullOrEmpty(xmlFileName)) return;
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj), "要序列化的对象不能为空");
+            }
+            
+            if (string.IsNullOrEmpty(xmlFileName))
+            {
+                throw new ArgumentNullException(nameof(xmlFileName), "XML文件名不能为空");
+            }
             
             lock (xmlFileName)
             {
                 try
                 {
-                    string dir = Path.GetDirectoryName(xmlFileName);
-                    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    // 确保目录存在
+                    string directory = Path.GetDirectoryName(xmlFileName);
+                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                     {
-                        Directory.CreateDirectory(dir);
+                        Directory.CreateDirectory(directory);
+                        System.Diagnostics.Debug.WriteLine($"创建目录: {directory}");
                     }
+                    
+                    // 序列化对象到XML字符串
                     string xmlContent = SerializeObject<T>(obj);
+                    
+                    // 写入文件
                     FileHelper.WriteFile(xmlFileName, xmlContent, Encoding.UTF8);
+                    System.Diagnostics.Debug.WriteLine($"成功序列化对象到XML文件: {xmlFileName}");
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"序列化对象到XML文件失败: {ex.Message}");
+                    string errorMessage = $"序列化对象到XML文件失败: {xmlFileName}, 错误: {ex.Message}";
+                    System.Diagnostics.Debug.WriteLine(errorMessage);
+                    throw new IOException(errorMessage, ex);
                 }
             }
         }
@@ -45,23 +64,28 @@ namespace AutoUpdateTools
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="obj">要序列化的对象</param>
         /// <returns>XML字符串</returns>
+        /// <exception cref="ArgumentNullException">当obj为null时抛出</exception>
         public static string SerializeObject<T>(T obj)
         {
-            if (obj == null) return string.Empty;
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj), "要序列化的对象不能为空");
+            }
 
             try
             {
-                using (var strWriter = new StringWriter())
+                using (var stringWriter = new StringWriter())
                 {
                     var serializer = new XmlSerializer(typeof(T));
-                    serializer.Serialize(strWriter, obj);
-                    return strWriter.ToString();
+                    serializer.Serialize(stringWriter, obj);
+                    return stringWriter.ToString();
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"序列化对象失败: {ex.Message}");
-                return string.Empty;
+                string errorMessage = $"序列化对象失败, 类型: {typeof(T).FullName}, 错误: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine(errorMessage);
+                throw;
             }
         }
 
@@ -71,9 +95,15 @@ namespace AutoUpdateTools
         /// <typeparam name="T">反序列化的对象类型</typeparam>
         /// <param name="xmlFileName">保存对象数据的文件名</param>
         /// <returns>返回反序列化出的对象实例</returns>
+        /// <exception cref="ArgumentNullException">当xmlFileName为空时抛出</exception>
+        /// <exception cref="FileNotFoundException">当xmlFileName指定的文件不存在时抛出</exception>
+        /// <exception cref="IOException">当文件操作失败时抛出</exception>
         public static T DeserializeXml<T>(string xmlFileName)
         {
-            if (string.IsNullOrEmpty(xmlFileName)) return default(T);
+            if (string.IsNullOrEmpty(xmlFileName))
+            {
+                throw new ArgumentNullException(nameof(xmlFileName), "XML文件名不能为空");
+            }
             
             lock (xmlFileName)
             {
@@ -81,19 +111,22 @@ namespace AutoUpdateTools
                 {
                     if (!File.Exists(xmlFileName))
                     {
-                        System.Diagnostics.Debug.WriteLine("序列化文件不存在!");
-                        return default(T);
+                        string errorMessage = $"序列化文件不存在: {xmlFileName}";
+                        System.Diagnostics.Debug.WriteLine(errorMessage);
+                        throw new FileNotFoundException(errorMessage, xmlFileName);
                     }
-                    else
-                    {
-                        string xmlContent = FileHelper.ReadFile(xmlFileName, Encoding.UTF8);
-                        return DeserializeObject<T>(xmlContent);
-                    }
+                    
+                    // 读取文件内容
+                    string xmlContent = FileHelper.ReadFile(xmlFileName, Encoding.UTF8);
+                    
+                    // 反序列化为对象
+                    return DeserializeObject<T>(xmlContent);
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"反序列化XML文件失败: {ex.Message}");
-                    return default(T);
+                    string errorMessage = $"反序列化XML文件失败: {xmlFileName}, 错误: {ex.Message}";
+                    System.Diagnostics.Debug.WriteLine(errorMessage);
+                    throw;
                 }
             }
         }
@@ -104,22 +137,27 @@ namespace AutoUpdateTools
         /// <typeparam name="T">对象类型</typeparam>
         /// <param name="xmlString">XML字符串</param>
         /// <returns>反序列化的对象</returns>
+        /// <exception cref="ArgumentNullException">当xmlString为空时抛出</exception>
         public static T DeserializeObject<T>(string xmlString)
         {
-            if (string.IsNullOrEmpty(xmlString)) return default(T);
+            if (string.IsNullOrEmpty(xmlString))
+            {
+                throw new ArgumentNullException(nameof(xmlString), "XML字符串不能为空");
+            }
 
             try
             {
-                using (var strReader = new StringReader(xmlString))
+                using (var stringReader = new StringReader(xmlString))
                 {
                     var serializer = new XmlSerializer(typeof(T));
-                    return (T)serializer.Deserialize(strReader);
+                    return (T)serializer.Deserialize(stringReader);
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"反序列化对象失败: {ex.Message}");
-                return default(T);
+                string errorMessage = $"反序列化对象失败, 类型: {typeof(T).FullName}, 错误: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine(errorMessage);
+                throw;
             }
         }
     }

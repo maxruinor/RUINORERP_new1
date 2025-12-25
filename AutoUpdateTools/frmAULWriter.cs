@@ -1722,49 +1722,55 @@ namespace AULWriter
         #region [排除不需要的文件]
 
         /// <summary>
-        /// 排除不需要的文件
+        /// 检查文件是否应该被排除
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>为真则排除</returns>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>如果文件应该被排除则返回true，否则返回false</returns>
         private bool ExcludeUnnecessaryFiles(string filePath)
         {
+            if (string.IsNullOrEmpty(filePath))
+            {
+                AppendLog("文件路径为空，不排除");
+                return false;
+            }
+            
             try
             {
                 AppendLog($"检查文件是否排除：{filePath}");
                 
                 // 获取排除文件列表
-                string[] files = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                AppendLog($"排除文件列表大小：{files.Length}");
+                string[] excludeFiles = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                AppendLog($"排除文件列表大小：{excludeFiles.Length}");
                 
                 // 检查文件是否在排除列表中
-                foreach (string strCheck in files)
+                foreach (string excludeRule in excludeFiles)
                 {
                     // 移除空白行
-                    string excludeFile = strCheck.Trim();
-                    if (string.IsNullOrEmpty(excludeFile))
+                    string trimmedRule = excludeRule.Trim();
+                    if (string.IsNullOrEmpty(trimmedRule))
                         continue;
                     
-                    AppendLog($"检查排除规则：{excludeFile}");
+                    AppendLog($"检查排除规则：{trimmedRule}");
                     
                     // 支持两种匹配方式：完全匹配和相对路径匹配
-                    if (filePath.Trim().Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
+                    if (filePath.Trim().Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
-                        AppendLog($"文件 {filePath} 被排除：完全匹配排除规则 {excludeFile}");
+                        AppendLog($"文件 {filePath} 被排除：完全匹配排除规则 {trimmedRule}");
                         return true;
                     }
                     
                     // 检查文件名是否匹配（不考虑路径）
                     string fileName = Path.GetFileName(filePath);
-                    if (fileName.Equals(excludeFile, StringComparison.OrdinalIgnoreCase))
+                    if (fileName.Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
-                        AppendLog($"文件 {filePath} 被排除：文件名匹配排除规则 {excludeFile}");
+                        AppendLog($"文件 {filePath} 被排除：文件名匹配排除规则 {trimmedRule}");
                         return true;
                     }
                 }
                 
                 // 检查文件扩展名是否在排除列表中
-                var extension = Path.GetExtension(filePath).ToLower();
-                if (!string.IsNullOrEmpty(extension))
+                var fileExtension = Path.GetExtension(filePath).ToLower();
+                if (!string.IsNullOrEmpty(fileExtension))
                 {
                     // 从配置中读取排除后缀名
                     var excludeExtensions = txtExcludeExtensions.Text
@@ -1774,17 +1780,17 @@ namespace AULWriter
                         .ToArray();
                     
                     AppendLog($"排除后缀名列表：{string.Join(", ", excludeExtensions)}");
-                    AppendLog($"文件扩展名：{extension}");
+                    AppendLog($"文件扩展名：{fileExtension}");
                     
                     // 检查文件扩展名是否在排除列表中
-                    if (excludeExtensions.Contains(extension))
+                    if (excludeExtensions.Contains(fileExtension))
                     {
-                        AppendLog($"文件 {filePath} 被排除：扩展名 {extension} 在排除列表中");
+                        AppendLog($"文件 {filePath} 被排除：扩展名 {fileExtension} 在排除列表中");
                         return true;
                     }
                     else
                     {
-                        AppendLog($"文件 {filePath} 未被排除：扩展名 {extension} 不在排除列表中");
+                        AppendLog($"文件 {filePath} 未被排除：扩展名 {fileExtension} 不在排除列表中");
                     }
                 }
                 else
@@ -1794,8 +1800,9 @@ namespace AULWriter
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"排除文件检查失败: {ex.Message}");
-                AppendLog($"排除文件检查失败: {ex.Message}");
+                string errorMessage = $"检查文件排除规则失败: {filePath}, 错误: {ex.Message}";
+                Debug.WriteLine(errorMessage);
+                AppendLog(errorMessage);
             }
             
             AppendLog($"文件 {filePath} 未被排除");

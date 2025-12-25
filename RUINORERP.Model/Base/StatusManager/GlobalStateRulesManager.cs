@@ -30,9 +30,6 @@ namespace RUINORERP.Model.Base.StatusManager
     /// 
     /// // 或设置为灵活模式（提交后允许修改）
     /// GlobalStateRulesManager.Instance.SetSubmitModifyRuleMode(SubmitModifyRuleMode.灵活模式);
-    /// 
-    /// // 检查是否允许在特定状态下修改
-    /// bool canModify = GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(isSubmittedStatus);
     /// \endcode
     /// </remarks>
     public sealed class GlobalStateRulesManager
@@ -865,24 +862,6 @@ namespace RUINORERP.Model.Base.StatusManager
             return new Dictionary<string, bool>(buttonRules);
         }
 
-        /// <summary>
-        /// 检查提交后是否允许修改
-        /// 根据全局模式设置和状态判断
-        /// </summary>
-        /// <param name="isSubmittedStatus">是否为已提交状态</param>
-        /// <returns>是否允许修改</returns>
-        public bool AllowModifyAfterSubmit(bool isSubmittedStatus)
-        {
-            // 如果不是已提交状态，始终允许修改
-            if (!isSubmittedStatus)
-                return true;
-
-            // 根据全局模式设置判断
-            // 严格模式：提交后不允许修改
-            // 灵活模式：提交后允许修改
-            return submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-        }
-
         #endregion
 
         #region 操作权限规则方法
@@ -907,7 +886,6 @@ namespace RUINORERP.Model.Base.StatusManager
             // 为ARAPStatus添加操作权限规则
             AddARAPStatusActionPermissionRules();
 
-        
         }
 
         /// <summary>
@@ -938,7 +916,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
- 
+
 
         /// <summary>
         /// 添加PaymentStatus操作权限规则
@@ -1392,7 +1370,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.作废) return DataStatus.作废;
                 return currentStatus;
             }
-            
+
             // 如果是PrePaymentStatus类型，映射对应的状态
             if (statusType == typeof(PrePaymentStatus))
             {
@@ -1402,7 +1380,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.结案) return PrePaymentStatus.已结案;
                 return currentStatus;
             }
-            
+
             // 如果是ARAPStatus类型，映射对应的状态
             if (statusType == typeof(ARAPStatus))
             {
@@ -1411,7 +1389,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.反审) return ARAPStatus.待审核;
                 return currentStatus;
             }
-            
+
             // 如果是PaymentStatus类型，映射对应的状态
             if (statusType == typeof(PaymentStatus))
             {
@@ -1420,7 +1398,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.反审) return PaymentStatus.待审核;
                 return currentStatus;
             }
-            
+
             // 如果是StatementStatus类型，映射对应的状态
             if (statusType == typeof(StatementStatus))
             {

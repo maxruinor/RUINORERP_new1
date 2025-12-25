@@ -740,7 +740,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
             
             // 检查提交后是否允许修改
-            if (canModify && !GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(canModify))
+            if (canModify && !AllowModifyAfterSubmit(canModify))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");
@@ -1036,16 +1036,100 @@ namespace RUINORERP.Model.Base.StatusManager
             var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
 
             // 检查提交后是否允许修改
-            if (canModify && !GlobalStateRulesManager.Instance.AllowModifyAfterSubmit(canModify))
+            if (canModify && !AllowModifyAfterSubmit(canModify))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");
         }
  
 
+        /// <summary>
+        /// 检查是否需要关键操作二次确认
+        /// 用于对关键操作（如删除已审核单据、作废单据等）进行二次确认
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型（如"delete", "cancel", "reverseReview"等）</param>
+        /// <returns>是否需要二次确认</returns>
+        public bool NeedConfirmationForCriticalOperation<T>(T status, string operationType) where T : struct
+        {
+            return GlobalStateRulesManager.Instance.NeedConfirmationForCriticalOperation(status, operationType);
+        }
+
+        /// <summary>
+        /// 获取关键操作确认提示信息
+        /// 用于UI层调用以显示适当的二次确认对话框
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型</param>
+        /// <returns>确认提示信息文本</returns>
+        public string GetCriticalOperationConfirmationMessage<T>(T status, string operationType) where T : struct
+        {
+            return GlobalStateRulesManager.Instance.GetCriticalOperationConfirmationMessage(status, operationType);
+        }
+
+        /// <summary>
+        /// 记录状态变更操作日志
+        /// 用于记录所有关键状态变更，便于审计追踪
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="fromStatus">原始状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        public void LogStatusChangeOperation<T>(long entityId, string entityType, T fromStatus, T toStatus, long operatorId, string operatorName, string remarks = "") where T : struct
+        {
+            GlobalStateRulesManager.Instance.LogStatusChangeOperation(entityId, entityType, fromStatus, toStatus, operatorId, operatorName, remarks);
+        }
+
+        /// <summary>
+        /// 记录关键操作
+        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// </summary>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="operationType">操作类型</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        public void LogCriticalOperation(long entityId, string entityType, string operationType, long operatorId, string operatorName, string remarks = "")
+        {
+            GlobalStateRulesManager.Instance.LogCriticalOperation(entityId, entityType, operationType, operatorId, operatorName, remarks);
+        }
+
+        /// <summary>
+        /// 获取状态类型的描述信息
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>状态类型描述</returns>
+        public string GetStatusTypeDescription(Type statusType)
+        {
+            return GlobalStateRulesManager.Instance.GetStatusTypeDescription(statusType);
+        }
+
+        /// <summary>
+        /// 检查提交后是否允许修改
+        /// 根据全局模式设置和状态判断
+        /// </summary>
+        /// <param name="isSubmittedStatus">是否为已提交状态</param>
+        /// <returns>是否允许修改</returns>
+        public bool AllowModifyAfterSubmit(bool isSubmittedStatus)
+        {
+            // 如果不是已提交状态，始终允许修改
+            if (!isSubmittedStatus)
+                return true;
+
+            // 根据全局模式设置判断
+            // 严格模式：提交后不允许修改
+            // 灵活模式：提交后允许修改
+            return GlobalStateRulesManager.Instance.submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+        }
+
         #endregion
-
-
 
         #region 释放资源
 

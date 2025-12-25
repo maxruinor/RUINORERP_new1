@@ -179,7 +179,68 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>验证结果</returns>
         Task<StateTransitionResult> ValidateActionTransitionAsync(BaseEntity entity, MenuItemEnums action);
 
- 
+        /// <summary>
+        /// 检查是否需要关键操作二次确认
+        /// 用于对关键操作（如删除已审核单据、作废单据等）进行二次确认
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型（如"delete", "cancel", "reverseReview"等）</param>
+        /// <returns>是否需要二次确认</returns>
+        bool NeedConfirmationForCriticalOperation<T>(T status, string operationType) where T : struct;
+
+        /// <summary>
+        /// 获取关键操作确认提示信息
+        /// 用于UI层调用以显示适当的二次确认对话框
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态</param>
+        /// <param name="operationType">操作类型</param>
+        /// <returns>确认提示信息文本</returns>
+        string GetCriticalOperationConfirmationMessage<T>(T status, string operationType) where T : struct;
+
+        /// <summary>
+        /// 记录状态变更操作日志
+        /// 用于记录所有关键状态变更，便于审计追踪
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="fromStatus">原始状态</param>
+        /// <param name="toStatus">目标状态</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        void LogStatusChangeOperation<T>(long entityId, string entityType, T fromStatus, T toStatus, long operatorId, string operatorName, string remarks = "") where T : struct;
+
+        /// <summary>
+        /// 记录关键操作
+        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// </summary>
+        /// <param name="entityId">实体ID</param>
+        /// <param name="entityType">实体类型名称</param>
+        /// <param name="operationType">操作类型</param>
+        /// <param name="operatorId">操作用户ID</param>
+        /// <param name="operatorName">操作用户名称</param>
+        /// <param name="remarks">备注信息</param>
+        void LogCriticalOperation(long entityId, string entityType, string operationType, long operatorId, string operatorName, string remarks = "");
+
+        /// <summary>
+        /// 获取状态类型的描述信息
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>状态类型描述</returns>
+        string GetStatusTypeDescription(Type statusType);
+
+        /// <summary>
+        /// 检查提交后是否允许修改
+        /// 根据全局模式设置和状态判断
+        /// </summary>
+        /// <param name="isSubmittedStatus">是否为已提交状态</param>
+        /// <returns>是否允许修改</returns>
+        bool AllowModifyAfterSubmit(bool isSubmittedStatus);
+
+
     }
 }
 

@@ -358,9 +358,10 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 更新按钮状态 - 协调多个职责单一的子方法
+        /// 更新按钮状态 - 简化版，直接在一个方法中处理所有逻辑
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
+        /// <param name="CurrentStatusType">当前状态类型</param>
         protected void UpdateAllButtonStates(Enum currentStatus, Type CurrentStatusType)
         {
             try
@@ -368,37 +369,14 @@ namespace RUINORERP.UI.BaseForm
                 // 获取当前编辑实体
                 var entity = EditEntity;
                 if (entity == null) return;
-                //根据规则判断按钮状态
-                UpdateButtonStatesUsingUIRules(currentStatus, CurrentStatusType);
-
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
-
-                DisableAllButtons();
-            }
-        }
-
-        /// <summary>
-        /// 使用UIControlRules更新按钮状态
-        /// </summary>
-        /// <param name="currentStatus">当前数据状态</param>
-        private void UpdateButtonStatesUsingUIRules(Enum currentStatus, Type CurrentStatusType)
-        {
-            if (EditEntity == null || StateManager == null) return;
-            // 获取按钮状态规则
-            // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
-            var buttonRules = new Dictionary<string, bool>();
-            if (currentStatus != null)
-            {
-                // 获取当前状态值
-                var statusValue = currentStatus;
-                if (statusValue != null)
+                
+                // 获取按钮状态规则
+                var buttonRules = new Dictionary<string, bool>();
+                if (currentStatus != null && StateManager != null)
                 {
                     try
                     {
-                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, statusValue);
+                        buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(CurrentStatusType, currentStatus);
                     }
                     catch (Exception ex)
                     {
@@ -406,10 +384,59 @@ namespace RUINORERP.UI.BaseForm
                         System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
                     }
                 }
-            }
 
-            // 更新按钮状态
-            UpdateButtonStatesFromRules(buttonRules);
+                // 直接更新按钮状态
+                if (buttonRules != null && buttonRules.Count > 0)
+                {
+                    foreach (var rule in buttonRules)
+                    {
+                        var buttonName = rule.Key;
+                        var enabled = rule.Value;
+
+                        try
+                        {
+                            var control = this.Controls.Find(buttonName, true).FirstOrDefault();
+                            if (control != null)
+                            {
+                                control.Enabled = enabled;
+                                continue;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "更新UI控件状态失败: {0}", ex.Message);
+                        }
+
+                        try
+                        {
+                            // 使用反射获取按钮控件并更新状态
+                            var buttonField = this.GetType().GetField(buttonName,
+                                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+                            if (buttonField != null)
+                            {
+                                var button = buttonField.GetValue(this);
+                                if (button != null)
+                                {
+                                    // 只设置Enabled属性
+                                    // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
+                                    var enabledProperty = button.GetType().GetProperty("Enabled");
+                                    enabledProperty?.SetValue(button, enabled);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "更新按钮状态失败: {ButtonName}", buttonName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
+                DisableAllButtons();
+            }
         }
 
 
@@ -436,73 +463,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 根据规则字典更新按钮状态
-        /// </summary>
-        /// <param name="buttonRules">按钮规则字典 - 仅包含Enabled状态
-        /// 注意：Visible状态由权限系统统一管理，不在此处理
-        /// </param>
-        private void UpdateButtonStatesFromRules(Dictionary<string, bool> buttonRules)
-        {
-            if (buttonRules == null || buttonRules.Count == 0) return;
 
-            // 更新按钮状态
-            foreach (var rule in buttonRules)
-            {
-                var buttonName = rule.Key;
-                var enabled = rule.Value;
-
-                UpdateButtonState(buttonName, enabled);
-            }
-        }
-
-        /// <summary>
-        /// 更新单个按钮的状态
-        /// 注意：按照系统设计规范，此处只控制按钮的Enabled状态
-        /// Visible状态由权限系统统一管理，不在此处理
-        /// </summary>
-        /// <param name="buttonName">按钮名称</param>
-        /// <param name="enabled">是否启用</param>
-        private void UpdateButtonState(string buttonName, bool enabled)
-        {
-            try
-            {
-                var control = this.Controls.Find(buttonName, true).FirstOrDefault();
-                if (control != null)
-                {
-                    control.Enabled = enabled;
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新UI控件状态失败: {0}", ex.Message);
-            }
-
-
-            try
-            {
-                // 使用反射获取按钮控件并更新状态
-                var buttonField = this.GetType().GetField(buttonName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-                if (buttonField != null)
-                {
-                    var button = buttonField.GetValue(this);
-                    if (button != null)
-                    {
-                        // 只设置Enabled属性
-                        // 注意：Visible属性由权限系统统一控制，不在状态管理中处理
-                        var enabledProperty = button.GetType().GetProperty("Enabled");
-                        enabledProperty?.SetValue(button, enabled);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "更新按钮状态失败: {ButtonName}", buttonName);
-            }
-        }
 
 
 
@@ -544,28 +505,25 @@ namespace RUINORERP.UI.BaseForm
                 // 获取实体的当前状态
                 var currentStatus = StateManager.GetBusinessStatus(entity);
                 var currentStatusType = StateManager.GetStatusType(entity);
+                
+                // 对于修改操作，不需要通过状态转换规则验证，直接检查当前状态是否允许编辑
+                if (action == MenuItemEnums.修改)
+                {
+                    // 使用StateManager的GetButtonState方法直接检查修改按钮状态
+                    return StateManager?.GetButtonState(entity, "toolStripbtnModify") ?? false;
+                }
+                
                 // 将操作转换为按钮名称
                 var buttonName = ConvertActionToButtonName(action);
-                if (string.IsNullOrEmpty(buttonName))
+                if (!string.IsNullOrEmpty(buttonName))
                 {
-                    // 如果无法转换，使用状态管理器检查
-                    return CheckActionWithStateManager(action, entity);
-                }
-
-                // 使用GlobalStateRulesManager检查按钮状态
-                // 获取实体状态的实际值，确保传递非空的值类型给GetButtonRules
-                var buttonRules = new Dictionary<string, bool>();
-                if (currentStatus != null)
-                {
-                    // 获取当前状态值
-                    var statusValue = currentStatus;
-                    if (statusValue != null)
+                    // 使用GlobalStateRulesManager检查按钮状态
+                    var buttonRules = new Dictionary<string, bool>();
+                    if (currentStatus != null)
                     {
-                        // 使用动态调用，根据状态值类型自动匹配泛型类型
                         try
                         {
-                            // GlobalStateRulesManager的GetButtonRules方法内部已实现自动类型转换
-                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType, statusValue);
+                            buttonRules = GlobalStateRulesManager.Instance.GetButtonRules(currentStatusType, currentStatus);
                         }
                         catch (Exception ex)
                         {
@@ -573,14 +531,21 @@ namespace RUINORERP.UI.BaseForm
                             System.Diagnostics.Debug.WriteLine($"获取按钮规则异常: {ex.Message}");
                         }
                     }
+                    
+                    if (buttonRules.TryGetValue(buttonName, out var enabled))
+                    {
+                        return enabled;
+                    }
                 }
-                if (buttonRules.TryGetValue(buttonName, out var enabled))
+                
+                // 其他操作使用状态管理器检查
+                if (StateManager != null)
                 {
-                    return enabled;
+                    // 使用状态管理器检查操作权限
+                    return _stateManager.CanExecuteActionWithMessage(entity, action).CanExecute;
                 }
 
-                // 如果UIControlRules中没有相关规则，回退到状态管理器
-                return CheckActionWithStateManager(action, entity);
+                return false;
             }
             catch (Exception ex)
             {
@@ -613,38 +578,7 @@ namespace RUINORERP.UI.BaseForm
             };
         }
 
-        /// <summary>
-        /// 使用状态管理器检查操作权限
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <returns>是否可执行</returns>
-        private bool CheckActionWithStateManager(MenuItemEnums action, T entity)
-        {
-            try
-            {
-                // 对于修改操作，不需要通过状态转换规则验证，直接检查当前状态是否允许编辑
-                if (action == MenuItemEnums.修改)
-                {
-                    // 使用StateManager的GetButtonState方法直接检查修改按钮状态
-                    return StateManager?.GetButtonState(entity, "toolStripbtnModify") ?? false;
-                }
-                
-                // 其他操作使用状态管理器检查
-                if (StateManager != null)
-                {
-                    // 使用状态管理器检查操作权限
-                    return _stateManager.CanExecuteActionWithMessage(entity, action).CanExecute;
-                }
 
-                return false;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "使用状态管理器检查操作权限失败: {Action}, {Error}", action, ex.Message);
-                return false;
-            }
-        }
 
 
 
@@ -700,7 +634,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 获取业务类型
                 var bizType = RUINORERP.Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
-                
+
                 // 创建TodoUpdate对象
                 TodoUpdate update = TodoUpdate.Create(
                     updateType,
@@ -1715,17 +1649,7 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <returns>业务状态对象</returns>
-        private object GetBusinessStatus(BaseEntity entity)
-        {
-            try
-            {
-                return StateManager.GetBusinessStatus(entity);
-            }
-            catch
-            {
-                return null; // 出现异常时返回null，避免影响主流程
-            }
-        }
+
 
 
 
@@ -1809,63 +1733,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>根据业务状态启用或禁用操作按钮（已重构）</summary>
-        /// <param name="status">业务状态枚举值</param>
-        /// <remarks>
-        /// 此方法已重构为使用V3状态管理系统而不是硬编码逻辑。
-        /// 不再直接设置按钮状态，而是更新当前状态并委托给状态管理系统处理。
-        /// </remarks>
-        private async Task EnableOperationsBasedOnStatusAsync(Enum status)
-        {
-            if (status == null) return;
 
-            try
-            {
-
-
-                // 更新当前状态
-                _currentBusinessStatus = status;
-
-                // 调用状态管理系统更新所有按钮状态
-                // TODO 后面来实现
-
-                // 让子类有机会进行额外处理
-                await OnAfterStatusChangedAsync(status);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "根据业务状态更新操作按钮时发生异常: {ex.Message}", ex);
-                // 出错时尝试禁用所有按钮以避免状态不一致
-                DisableAllBusinessButtons();
-            }
-        }
-
-        /// <summary>
-        /// 禁用所有业务相关按钮
-        /// 当状态管理系统出现异常时使用此方法作为安全机制
-        /// </summary>
-        private void DisableAllBusinessButtons()
-        {
-            try
-            {
-                var businessButtons = new ToolStripButton[]
-                {
-                    toolStripbtnModify, toolStripButtonSave, toolStripbtnSubmit,
-                    toolStripbtnReview, toolStripBtnReverseReview,
-                    toolStripButtonCaseClosed, toolStripbtnDelete
-                };
-
-                foreach (var button in businessButtons)
-                {
-                    if (button != null)
-                        button.Enabled = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "禁用业务按钮时发生异常", ex);
-            }
-        }
 
         /// <summary>
         /// 当业务状态发生变化后调用的虚方法
@@ -1880,47 +1748,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-        /// <summary>设置实体状态属性值（异步版本）</summary>
-        /// <typeparam name="TStatus">状态枚举类型</typeparam>
-        /// <param name="entity">单据实体对象</param>
-        /// <param name="status">状态枚举值</param>
-        /// <returns>异步任务</returns>
-        private async Task SetEntityStatusAsync<TStatus>(BaseEntity entity, TStatus status) where TStatus : Enum
-        {
-            try
-            {
-                if (entity == null)
-                {
-                    logger?.LogWarning("SetEntityStatusAsync: 实体对象为空，跳过状态设置");
-                    return;
-                }
 
-                string propertyName = typeof(TStatus).Name;
-                if (entity.ContainsProperty(propertyName))
-                {
-                    // 记录状态变更前的日志
-                    object oldValue = entity.GetPropertyValue(propertyName);
-
-                    // 设置新状态值
-                    ReflectionHelper.SetPropertyValue(entity, propertyName, (int)(object)status);
-
-                    // 触发状态变更后的回调
-                    await OnAfterStatusChangedAsync(status).ConfigureAwait(false);
-                    // TODO 后面来实现
-                    // await UpdateAllButtonStatesAsync().ConfigureAwait(false);
-                }
-                else
-                {
-                    logger?.LogWarning("SetEntityStatusAsync: 实体[{EntityType}]不包含属性[{PropertyName}]",
-                        entity.GetType().Name, propertyName);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "设置实体状态失败: {Message}", ex.Message);
-                throw;
-            }
-        }
 
 
 
@@ -3304,7 +3132,7 @@ namespace RUINORERP.UI.BaseForm
                 if (rs.Succeeded)
                 {
                     // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案");
+                    var updateData = CreateTodoUpdate("结案", "单据已结案",pkid);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
@@ -3519,7 +3347,7 @@ namespace RUINORERP.UI.BaseForm
                     reviewResult.Succeeded = rmr.Succeeded;
 
                     // 统一状态同步 - 审核操作
-                    var updateData = CreateTodoUpdate("审核", "单据已审核通过");
+                    var updateData = CreateTodoUpdate("审核", "单据已审核通过", pkid);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "审核");
@@ -3867,7 +3695,7 @@ namespace RUINORERP.UI.BaseForm
                     rs = true;
 
                     // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案");
+                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
@@ -5577,7 +5405,7 @@ namespace RUINORERP.UI.BaseForm
                         submitrs = true;
 
                         // 统一状态同步 - 提交操作
-                        var updateData = CreateTodoUpdate("提交", "单据已提交");
+                        var updateData = CreateTodoUpdate("提交", "单据已提交", pkid);
                         if (updateData != null)
                         {
                             await SyncTodoStatusAsync(updateData, "提交");
@@ -6433,7 +6261,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 第一步：更新本地工作台（立即生效）
                 TodoSyncManager.Instance.PublishUpdate(update);
-                
+
                 // 第二步：检查是否需要发送服务器通知
                 // 操作自己的单据时不发送消息提示，仅更新工作台Todolist
                 if (!IsCurrentUserOperation(update))
@@ -6540,7 +6368,7 @@ namespace RUINORERP.UI.BaseForm
                     else
                     {
                         // 记录消息已发送到消息中心
-                        MainForm.Instance.logger?.LogDebug("任务状态通知已发送到消息中心 - 业务类型: {BusinessType}", 
+                        MainForm.Instance.logger?.LogDebug("任务状态通知已发送到消息中心 - 业务类型: {BusinessType}",
                             update.BusinessType);
                     }
                 }
@@ -6561,7 +6389,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="operationType">操作类型</param>
         /// <param name="operationDescription">操作描述</param>
         /// <returns>任务状态更新数据</returns>
-        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription = null)
+        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription , long pkid)
         {
             try
             {
@@ -6572,10 +6400,10 @@ namespace RUINORERP.UI.BaseForm
                     pkid,
                     EditEntity
                 );
-                
+
                 // 设置操作描述
                 updateData.OperationDescription = operationDescription ?? $"单据{operationType}";
-                
+
                 return updateData;
             }
             catch (Exception ex)

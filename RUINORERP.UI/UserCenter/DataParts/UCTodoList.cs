@@ -95,11 +95,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 // 将当前组件引用传递给TodoListManager，便于其更新UI
                 TodoListManager.Instance.SetTodoListControl(this);
-                
-                if (_logger != null)
-                {
-                    _logger.LogInformation("TodoListManager初始化完成");
-                }
             }
             catch (Exception ex)
             {
@@ -139,26 +134,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
             return TablePrimaryKeyCache.TryGetValue(tableName, out var primaryKeys)
                 && primaryKeys?.Count > 0;
         }
-        // 获取表的主键列表
-        public IReadOnlyCollection<string> GetPrimaryKeys(string tableName)
-        {
-            if (TablePrimaryKeyCache.TryGetValue(tableName, out var primaryKeys))
-                return primaryKeys;
 
-            // 如果缓存中不存在，从数据源加载并添加到缓存
-            primaryKeys = LoadPrimaryKeysFromDatabase(tableName);
-            AddOrUpdateTablePrimaryKeys(tableName, primaryKeys);
 
-            return primaryKeys;
-        }
-
-        // 从数据库加载主键列表的方法（需自行实现）
-        private HashSet<string> LoadPrimaryKeysFromDatabase(string tableName)
-        {
-            // 实际项目中，这里应该从数据库或其他数据源获取主键列表
-            // 示例代码仅作演示
-            return new HashSet<string>();
-        }
 
         #endregion
         private async void UCTodoList_Load(object sender, EventArgs e)
@@ -200,7 +177,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 注册状态更新回调
             TodoSyncManager.Instance.Subscribe(_syncSubscriberKey, HandleTodoUpdates, allBizTypes);
 
-            _logger.LogInformation("待办事项列表实时同步已初始化");
         }
 
         /// <summary>
@@ -535,75 +511,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
         /// <summary>
-        /// 检查用户是否有权限查看该状态节点
-        /// 根据用户角色和权限设置动态过滤
-        /// </summary>
-        /// <param name="bizType">业务类型</param>
-        /// <param name="statusName">状态名称</param>
-        /// <returns>是否有权限</returns>
-        private bool HasUserPermissionForStatus(BizType bizType, string statusName)
-        {
-            try
-            {
-                // 获取当前用户和角色信息
-                var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
-                var currentRole = MainForm.Instance?.AppContext?.CurrentRole;
-
-                if (currentUser == null || currentRole == null)
-                    return false;
-
-                // 特殊权限检查：根据状态名称判断用户权限
-                // 例如：某些状态下只有特定角色才能查看
-                switch (statusName)
-                {
-                    case "待审核":
-                    case "审核中":
-                        // 检查用户是否有审核权限
-                        return HasReviewPermission(currentRole, bizType);
-                    case "待处理":
-                    case "处理中":
-                        // 检查用户是否有处理权限
-                        return HasProcessPermission(currentRole, bizType);
-                    default:
-                        // 默认情况下，用户有权限查看所有状态
-                        return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"检查用户权限时发生错误，业务类型: {bizType}, 状态: {statusName}");
-                return true; // 出错时默认显示，避免影响用户体验
-            }
-        }
-
-        /// <summary>
-        /// 检查用户是否有审核权限
-        /// </summary>
-        /// <param name="role">角色信息</param>
-        /// <param name="bizType">业务类型</param>
-        /// <returns>是否有审核权限</returns>
-        private bool HasReviewPermission(tb_RoleInfo role, BizType bizType)
-        {
-            // 根据实际业务逻辑实现
-            // 示例：检查角色是否有对应的审核权限
-            return true; // 暂时返回true，需要根据实际权限系统实现
-        }
-
-        /// <summary>
-        /// 检查用户是否有处理权限
-        /// </summary>
-        /// <param name="role">角色信息</param>
-        /// <param name="bizType">业务类型</param>
-        /// <returns>是否有处理权限</returns>
-        private bool HasProcessPermission(tb_RoleInfo role, BizType bizType)
-        {
-            // 根据实际业务逻辑实现
-            // 示例：检查角色是否有对应的处理权限
-            return true; // 暂时返回true，需要根据实际权限系统实现
-        }
-
-        /// <summary>
-        /// 在创建节点时应用权限过滤
+        /// 创建状态节点
+        /// 权限检查在业务类型层面已处理，状态同步更新时无需再次检查权限
         /// </summary>
         /// <param name="parentNode">父节点</param>
         /// <param name="bizType">业务类型</param>
@@ -611,16 +520,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
         /// <param name="count">单据数量</param>
         /// <param name="parameter">查询参数</param>
         /// <returns>是否成功创建节点</returns>
-        private bool CreateNodeWithPermissionCheck(TreeNode parentNode, BizType bizType, string statusName, int count, QueryParameter parameter)
+        private bool CreateStatusNode(TreeNode parentNode, BizType bizType, string statusName, int count, QueryParameter parameter)
         {
-            // 检查用户权限
-            if (!HasUserPermissionForStatus(bizType, statusName))
-            {
-                _logger?.LogDebug($"用户无权限查看状态节点: {statusName}，业务类型: {bizType}");
-                return false;
-            }
-
-            // 有权限，创建节点
+            // 直接创建节点，权限检查在业务类型层面已处理
             parentNode.Nodes.Add(new TreeNode($"{statusName}【{count}】")
             {
                 Tag = parameter,
@@ -1501,7 +1403,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         /// <summary>
         /// 内存中再分组
-        /// 新增：应用权限过滤，确保只显示用户有权限的状态节点
+        /// 权限检查在业务类型层面已处理，状态同步更新时无需再次检查权限
         /// </summary>
         /// <param name="parentNode"></param>
         /// <param name="tableType"></param>
@@ -1557,8 +1459,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         // Data = filteredData // 保存筛选后的数据集合到Data属性
                     };
 
-                    // 应用权限检查，只有有权限的状态才显示
-                    CreateNodeWithPermissionCheck(parentNode, bizType, group.StatusName, count, parameter);
+                    // 直接创建状态节点，权限检查在业务类型层面已处理
+                    CreateStatusNode(parentNode, bizType, group.StatusName, count, parameter);
                 }
             }
         }

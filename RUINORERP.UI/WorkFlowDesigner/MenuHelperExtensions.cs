@@ -53,8 +53,8 @@ namespace RUINORERP.UI.WorkFlowDesigner
         {
             try
             {
-                // 异步转同步
-                OpenMenuAsync(menuId, logger).Wait();
+                // 异步转同步，使用ConfigureAwait(false)避免上下文捕获导致的死锁
+                OpenMenuAsync(menuId, logger).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

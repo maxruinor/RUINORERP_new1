@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -192,11 +192,8 @@ namespace RUINORERP.UI
                 var workAction = (Func<BackgroundWorker, Task>)e.Argument; // 修改为 Func<Task>
                 SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-                // 同步执行异步操作
-                Task.Run(async () =>
-                {
-                    await workAction(_worker).ConfigureAwait(false);
-                }).GetAwaiter().GetResult();
+                // 同步执行异步操作，使用ConfigureAwait(false)避免上下文捕获
+                workAction(_worker).ConfigureAwait(false).GetAwaiter().GetResult();
 
                 e.Result = null;
             }

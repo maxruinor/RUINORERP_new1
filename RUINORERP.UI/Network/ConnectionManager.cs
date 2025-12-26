@@ -604,8 +604,8 @@ namespace RUINORERP.UI.Network
                 {
                     // 同步方式停止重连任务
                     StopReconnectTask();
-                    // 同步断开连接
-                    bool disconnectResult = DisconnectInternalAsync().GetAwaiter().GetResult();
+                    // 同步断开连接，使用ConfigureAwait(false)避免上下文捕获导致的死锁
+                    bool disconnectResult = DisconnectInternalAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                     _logger?.LogDebug("连接断开{Result}", disconnectResult ? "成功" : "失败");
                 }
                 catch (Exception ex)

@@ -202,7 +202,7 @@ namespace RUINORERP.UI.IM
             this.Close();
         }
 
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
             try
             {
@@ -219,15 +219,12 @@ namespace RUINORERP.UI.IM
                 }
 
                 // 调用同意解锁方法
-                var task = lockManagementService.AgreeUnlockAsync(
+                await lockManagementService.AgreeUnlockAsync(
                     MessageData.BizId,
                     0, // MenuID
                     MessageData.SenderId, // 请求解锁的用户ID
                     MessageData.SenderName // 请求解锁的用户名
                 );
-
-                // 等待任务完成
-                task.GetAwaiter().GetResult();
 
                 MessageBox.Show("已向服务器发送了同意解锁请求", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -309,7 +306,7 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 拒绝解锁请求
         /// </summary>
-        private void RefuseUnLock()
+        private async Task RefuseUnLockAsync()
         {
             try
             {
@@ -326,15 +323,12 @@ namespace RUINORERP.UI.IM
                 }
 
                 // 调用拒绝解锁方法
-                var task = lockManagementService.RefuseUnlockAsync(
+                await lockManagementService.RefuseUnlockAsync(
                     MessageData.BizId,
                     0, // MenuID
                     MessageData.SenderId, // 请求解锁的用户ID
                     MessageData.SenderName // 请求解锁的用户名
                 );
-
-                // 等待任务完成
-                task.GetAwaiter().GetResult();
 
                 MessageBox.Show("已向锁定者发送了拒绝解锁请求", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

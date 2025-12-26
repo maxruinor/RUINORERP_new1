@@ -102,7 +102,8 @@ namespace RUINORERP.UI.ProductEAV
                 // 如果已经有属性，加载对应的属性值
                 if (_EditEntity.Property_ID.HasValue)
                 {
-                    LoadPropertyValues(_EditEntity.Property_ID.Value);
+                    // 异步加载属性值，避免阻塞UI线程
+                    LoadPropertyValuesSync(_EditEntity.Property_ID.Value);
                 }
                 
                 // 属性和属性值可以编辑
@@ -208,15 +209,7 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
-        /// <summary>
-        /// 根据产品加载产品详情（同步版本，用于事件处理）
-        /// </summary>
-        /// <param name="prodBaseId"></param>
-        private void LoadProdDetails(long prodBaseId)
-        {
-            // 调用异步版本的同步包装
-            LoadProdDetailsAsync(prodBaseId).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+
 
         /// <summary>
         /// 根据属性加载属性值（异步版本）
@@ -276,14 +269,68 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
+
+
         /// <summary>
-        /// 根据属性加载属性值（同步版本，用于事件处理）
+        /// 根据属性加载属性值（同步版本，用于BindData方法）
         /// </summary>
         /// <param name="propertyId"></param>
-        private void LoadPropertyValues(long propertyId)
+        private void LoadPropertyValuesSync(long propertyId)
         {
-            // 调用异步版本的同步包装
-            LoadPropertyValuesAsync(propertyId).ConfigureAwait(false).GetAwaiter().GetResult();
+            if (propertyId <= 0)
+            {
+                return;
+            }
+            
+            try
+            {
+                // 直接同步查询数据库，避免异步死锁问题
+                var values = MainForm.Instance.AppContext.Db
+                    .Queryable<tb_ProdPropertyValue>()
+                    .Where(v => v.Property_ID == propertyId)
+                    .OrderBy(v => v.SortOrder)
+                    .ToList();
+                
+                if (values != null && values.Count > 0)
+                {
+                    // 创建一个BindingSource来管理数据绑定
+                    BindingSource bs = new BindingSource();
+                    bs.DataSource = values;
+                    
+                    // 使用ComboBoxHelper初始化下拉列表，确保正确的数据绑定
+                    ComboBoxHelper.InitDropList(bs, cmbPropertyValue, "PropertyValueID", "PropertyValueName", ComboBoxStyle.DropDownList, false);
+                    
+                    // 创建数据绑定
+                    var binding = new Binding("SelectedValue", _EditEntity, "PropertyValueID", true, DataSourceUpdateMode.OnValidation);
+                    
+                    // 添加数据转换处理
+                    binding.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+                    binding.Parse += (s, args) => args.Value = args.Value == null || (long)args.Value == -1 ? null : args.Value;
+                    
+                    // 添加绑定到下拉框
+                    cmbPropertyValue.DataBindings.Add(binding);
+                }
+                else
+                {
+                    // 如果没有找到相关属性值，清空下拉框
+                    cmbPropertyValue.DataSource = null;
+                    cmbPropertyValue.Items.Clear();
+                    // 添加一个空选项，提示用户
+                    cmbPropertyValue.Items.Add("暂无属性值");
+                    cmbPropertyValue.SelectedIndex = 0;
+                    cmbPropertyValue.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("加载属性值失败：" + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 确保界面状态一致
+                cmbPropertyValue.DataSource = null;
+                cmbPropertyValue.Items.Clear();
+                cmbPropertyValue.Items.Add("加载失败");
+                cmbPropertyValue.SelectedIndex = 0;
+                cmbPropertyValue.Enabled = false;
+            }
         }
 
         /// <summary>
@@ -344,7 +391,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cmbProduct_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbProduct_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cmbProduct.SelectedIndex >= 0 && cmbProduct.SelectedItem is tb_Prod selectedProduct)
             {
@@ -355,7 +402,7 @@ namespace RUINORERP.UI.ProductEAV
                     cmbProdDetail.DataBindings.Clear();
                     
                     // 加载对应产品的详情列表
-                    LoadProdDetails(selectedProduct.ProdBaseID);
+                    await LoadProdDetailsAsync(selectedProduct.ProdBaseID);
                     
                     // 清空之前选择的产品详情和相关属性
                     cmbProdDetail.SelectedIndex = -1;
@@ -384,7 +431,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cmbProperty_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbProperty_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cmbProperty.SelectedIndex >= 0 && cmbProperty.SelectedItem is tb_ProdProperty selectedProperty)
             {
@@ -395,7 +442,7 @@ namespace RUINORERP.UI.ProductEAV
                     cmbPropertyValue.DataBindings.Clear();
                     
                     // 加载对应属性的属性值列表
-                    LoadPropertyValues(selectedProperty.Property_ID);
+                    await LoadPropertyValuesAsync(selectedProperty.Property_ID);
                     
                     // 清空之前选择的属性值
                     cmbPropertyValue.SelectedIndex = -1;

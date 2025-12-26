@@ -1124,60 +1124,55 @@ namespace RUINORERP.UI.SysConfig
 
                         try
                         {
-                            // 同步执行异步方法
-                            Task.Run(async () =>
+                            #region 耗时业务代码
+
+                            tb_P4Menu pm = new tb_P4Menu();
+                            // 加锁访问 role.tb_P4Menus
+                            lock (_menuLock)
                             {
-                                #region 耗时业务代码
-
-                                tb_P4Menu pm = new tb_P4Menu();
-                                // 加锁访问 role.tb_P4Menus
-                                lock (_menuLock)
+                                pm = role.tb_P4Menus.FirstOrDefault(c => c.MenuID == item.MenuID && c.RoleID == role.RoleID);
+                            }
+                            if (pm == null)
+                            {
+                                pm = new tb_P4Menu();
+                            }
+                            else
+                            {
+                                if (item.MenuType == "行为菜单")
                                 {
-                                    pm = role.tb_P4Menus.FirstOrDefault(c => c.MenuID == item.MenuID && c.RoleID == role.RoleID);
-                                }
-                                if (pm == null)
-                                {
-                                    pm = new tb_P4Menu();
-                                }
-                                else
-                                {
-                                    if (item.MenuType == "行为菜单")
+                                    #region 每个菜单 都添加按钮和字段
+                                    if (item.MenuID == 1920107280263680000)
                                     {
-                                        #region 每个菜单 都添加按钮和字段
-                                        if (item.MenuID == 1920107280263680000)
-                                        {
 
-                                        }
-
-                                        List<tb_P4Button> p4Buttons = await InitBtnByRole(role, item, true);
-
-
-                                        List<tb_P4Field> p4Fields = await InitFiledByRole(role, item, true);
-
-
-                                        #endregion
                                     }
-                                }
-                                pm.RoleID = role.RoleID;
-                                pm.MenuID = item.MenuID;
-                                pm.ModuleID = item.ModuleID;
-                                if (Selected)
-                                {
-                                    pm.IsVisble = Selected;
-                                }
-                                else
-                                {
-                                    pm.IsVisble = false;
-                                }
-                                pm.IsVisble = item.IsVisble;
-                                BusinessHelper.Instance.InitEntity(pm);
-                                if (pm.P4Menu_ID == 0)
-                                {
-                                    Newplist.Add(pm);
-                                }
-                                #endregion
 
-                            }).Wait(); // 同步等待任务完成
+                                    List<tb_P4Button> p4Buttons = await InitBtnByRole(role, item, true);
+
+
+                                    List<tb_P4Field> p4Fields = await InitFiledByRole(role, item, true);
+
+
+                                    #endregion
+                                }
+                            }
+                            pm.RoleID = role.RoleID;
+                            pm.MenuID = item.MenuID;
+                            pm.ModuleID = item.ModuleID;
+                            if (Selected)
+                            {
+                                pm.IsVisble = Selected;
+                            }
+                            else
+                            {
+                                pm.IsVisble = false;
+                            }
+                            pm.IsVisble = item.IsVisble;
+                            BusinessHelper.Instance.InitEntity(pm);
+                            if (pm.P4Menu_ID == 0)
+                            {
+                                Newplist.Add(pm);
+                            }
+                            #endregion
                         }
                         catch (Exception exx)
                         {

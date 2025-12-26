@@ -684,8 +684,8 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                // 停止服务
-                StopAsync().GetAwaiter().GetResult();
+                // 停止服务，使用ConfigureAwait(false)避免上下文捕获导致的死锁
+                StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                 // 释放定时器
                 _lockRefreshTimer?.Dispose();

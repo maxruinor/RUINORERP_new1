@@ -138,7 +138,8 @@ namespace AutoUpdate
                     // 记录版本历史
                     if (!string.IsNullOrEmpty(version.Version))
                     {
-                        versionHistoryManager.RecordNewVersion(version.Version, version.InstallTime);
+                        string folderName = $"{version.Version}_{version.InstallTime.ToString("yyyyMMddHHmmss")}";
+                        versionHistoryManager.RecordNewVersion(version.Version, folderName, null, null, version.InstallTime);
                     }
 
                     // 清理临时目录

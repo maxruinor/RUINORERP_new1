@@ -5,6 +5,8 @@ using System.Net;
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.Linq;
+using System.IO.Compression;
+using System.Text;
 
 namespace AutoUpdate
 {
@@ -92,7 +94,152 @@ namespace AutoUpdate
                     return false;
                 }
 
-                // 3. 从服务器获取目标版本的更新包
+                // 3. 获取目标版本的文件夹路径
+                string targetVersionFolder = versionHistoryManager.GetVersionFolderPath(targetVersion);
+                bool rollbackSuccess = false;
+                
+                if (!string.IsNullOrEmpty(targetVersionFolder) && Directory.Exists(targetVersionFolder))
+                {
+                    // 3.1 从本地版本目录回滚
+                    Debug.WriteLine($"从本地版本目录回滚: {targetVersionFolder}");
+                    rollbackSuccess = RollbackFromLocalVersion(targetVersion, targetVersionEntry);
+                }
+                else if (!string.IsNullOrEmpty(UpdateServerUrl))
+                {
+                    // 3.2 从服务器下载目标版本进行回滚
+                    Debug.WriteLine($"从服务器下载目标版本进行回滚: {targetVersion}");
+                    rollbackSuccess = RollbackFromServer(targetVersion);
+                }
+                else
+                {
+                    Debug.WriteLine("无法回滚，本地版本目录不存在且未配置更新服务器URL");
+                    return false;
+                }
+
+                if (rollbackSuccess)
+                {
+                    // 4. 更新当前版本配置
+                    UpdateCurrentVersionConfig(targetVersion);
+                    
+                    // 5. 更新版本历史记录
+                    versionHistoryManager.RecordNewVersion(targetVersion, targetVersionEntry.FolderName, targetVersionEntry.Files, targetVersionEntry.Checksum);
+                    Debug.WriteLine($"版本回滚成功，当前版本: {targetVersion}");
+                    
+                    return true;
+                }
+                else
+                {
+                    Debug.WriteLine("版本回滚失败");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"执行版本回滚失败: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 从本地版本目录回滚
+        /// </summary>
+        /// <param name="targetVersion">目标版本号</param>
+        /// <param name="targetVersionEntry">目标版本条目</param>
+        /// <returns>回滚是否成功</returns>
+        private bool RollbackFromLocalVersion(string targetVersion, VersionEntry targetVersionEntry)
+        {
+            try
+            {
+                string targetVersionFolder = versionHistoryManager.GetVersionFolderPath(targetVersion);
+                if (string.IsNullOrEmpty(targetVersionFolder) || !Directory.Exists(targetVersionFolder))
+                {
+                    Debug.WriteLine($"本地版本目录不存在: {targetVersionFolder}");
+                    return false;
+                }
+                
+                // 1. 获取应用程序根目录
+                string appRootDir = AppDomain.CurrentDomain.BaseDirectory;
+                
+                // 2. 备份当前版本
+                string backupDir = Path.Combine(appRootDir, "Backup_Rollback_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+                Debug.WriteLine($"开始备份当前版本到: {backupDir}");
+                BackupCurrentVersion(appRootDir, backupDir);
+                Debug.WriteLine("当前版本备份完成");
+                
+                try
+                {
+                    // 3. 从版本目录复制文件到应用程序目录
+                    Debug.WriteLine($"开始从版本目录复制文件: {targetVersionFolder} -> {appRootDir}");
+                    
+                    // 获取版本目录中的所有文件
+                    string[] versionFiles = Directory.GetFiles(targetVersionFolder, "*.*");
+                    
+                    foreach (string file in versionFiles)
+                    {
+                        string fileName = Path.GetFileName(file);
+                        string destFile = Path.Combine(appRootDir, fileName);
+                        
+                        // 如果目标文件存在，先尝试删除
+                        if (File.Exists(destFile))
+                        {
+                            try
+                            {
+                                File.Delete(destFile);
+                            }
+                            catch (IOException)
+                            {
+                                // 文件可能被锁定，尝试重命名后删除
+                                string tempPath = destFile + ".old";
+                                if (File.Exists(tempPath))
+                                {
+                                    File.Delete(tempPath);
+                                }
+                                File.Move(destFile, tempPath);
+                            }
+                        }
+                        
+                        // 复制文件
+                        File.Copy(file, destFile, true);
+                        Debug.WriteLine($"复制文件: {file} -> {destFile}");
+                    }
+                    
+                    Debug.WriteLine("从本地版本目录复制文件完成");
+                    
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    // 回滚失败，恢复备份
+                    Debug.WriteLine($"从本地版本目录回滚失败，开始恢复备份: {ex.Message}");
+                    RestoreFromBackup(appRootDir, backupDir);
+                    return false;
+                }
+                finally
+                {
+                    // 清理备份目录
+                    if (Directory.Exists(backupDir))
+                    {
+                        Directory.Delete(backupDir, true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"从本地版本目录回滚失败: {ex.Message}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 从服务器下载目标版本进行回滚
+        /// </summary>
+        /// <param name="targetVersion">目标版本号</param>
+        /// <returns>回滚是否成功</returns>
+        private bool RollbackFromServer(string targetVersion)
+        {
+            try
+            {
+                // 1. 从服务器获取目标版本的更新包
                 string updatePackagePath = DownloadUpdatePackage(targetVersion);
                 if (string.IsNullOrEmpty(updatePackagePath))
                 {
@@ -100,24 +247,98 @@ namespace AutoUpdate
                     return false;
                 }
 
-                // 4. 解压并安装目标版本
+                // 2. 安装目标版本
                 bool installSuccess = InstallVersion(updatePackagePath);
                 if (!installSuccess)
                 {
                     Debug.WriteLine("安装目标版本失败");
                     return false;
                 }
-
-                // 5. 更新版本历史记录
-                versionHistoryManager.RecordNewVersion(targetVersion);
-                Debug.WriteLine($"版本回滚成功，当前版本: {targetVersion}");
-
+                
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"执行版本回滚失败: {ex.Message}");
+                Debug.WriteLine($"从服务器回滚失败: {ex.Message}");
                 return false;
+            }
+        }
+        
+        /// <summary>
+        /// 备份当前版本
+        /// </summary>
+        /// <param name="currentDir">当前版本目录</param>
+        /// <param name="backupDir">备份目录</param>
+        private void BackupCurrentVersion(string currentDir, string backupDir)
+        {
+            try
+            {
+                // 确保备份目录存在
+                Directory.CreateDirectory(backupDir);
+                
+                // 备份核心文件
+                string[] filesToBackup = Directory.GetFiles(currentDir, "AutoUpdate.*")
+                    .Where(file => Path.GetExtension(file) == ".exe" || Path.GetExtension(file) == ".dll" || Path.GetExtension(file) == ".config")
+                    .ToArray();
+                
+                foreach (string file in filesToBackup)
+                {
+                    string destFile = Path.Combine(backupDir, Path.GetFileName(file));
+                    File.Copy(file, destFile, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"备份当前版本失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 从备份恢复
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        /// <param name="backupDir">备份目录</param>
+        private void RestoreFromBackup(string targetDir, string backupDir)
+        {
+            try
+            {
+                // 复制备份文件到目标目录
+                string[] backupFiles = Directory.GetFiles(backupDir, "*.*");
+                foreach (string backupFile in backupFiles)
+                {
+                    string destFile = Path.Combine(targetDir, Path.GetFileName(backupFile));
+                    
+                    // 如果目标文件存在，先删除
+                    if (File.Exists(destFile))
+                    {
+                        File.Delete(destFile);
+                    }
+                    
+                    // 复制备份文件
+                    File.Copy(backupFile, destFile, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"从备份恢复失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 更新当前版本配置
+        /// </summary>
+        /// <param name="version">版本号</param>
+        private void UpdateCurrentVersionConfig(string version)
+        {
+            try
+            {
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CurrentVersion.txt");
+                File.WriteAllText(configPath, version);
+                Debug.WriteLine($"更新当前版本配置成功: {version}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"更新当前版本配置失败: {ex.Message}");
             }
         }
 
@@ -179,28 +400,16 @@ namespace AutoUpdate
 
                 try
                 {
-                    // 使用系统命令解压（简单实现，实际项目中可能需要使用专业解压库）
+                    // 使用ZipArchive解压更新包
                     Debug.WriteLine($"开始解压更新包: {packagePath}");
-                    ProcessStartInfo psi = new ProcessStartInfo
+                    using (FileStream zipFileStream = new FileStream(packagePath, FileMode.Open, FileAccess.Read))
+                    using (ZipArchive archive = new ZipArchive(zipFileStream, ZipArchiveMode.Read))
                     {
-                        FileName = "powershell.exe",
-                        Arguments = $"-Command \"Expand-Archive -Path '{packagePath}' -DestinationPath '{tempExtractDir}' -Force\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    };
-
-                    using (Process process = Process.Start(psi))
-                    {
-                        process.WaitForExit();
-                        if (process.ExitCode != 0)
-                        {
-                            Debug.WriteLine("解压更新包失败");
-                            return false;
-                        }
+                        archive.ExtractToDirectory(tempExtractDir);
                     }
+                    Debug.WriteLine("更新包解压完成");
 
-                    // 复制文件到应用程序目录（简单实现，实际项目中可能需要更复杂的文件替换逻辑）
+                    // 复制文件到应用程序目录
                     Debug.WriteLine("开始安装更新文件");
                     CopyDirectory(tempExtractDir, appRootDir);
 

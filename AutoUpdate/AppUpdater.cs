@@ -293,7 +293,8 @@ namespace AutoUpdate
                 if (updateResult > 0)
                 {
                     // 记录更新前的版本历史
-                    VersionHistoryManager.RecordNewVersion(this.NewVersion);
+                    string folderName = $"{this.NewVersion}_{DateTime.Now.ToString("yyyyMMddHHmmss")}";
+                    VersionHistoryManager.RecordNewVersion(this.NewVersion, folderName);
                     Debug.WriteLine($"已记录版本更新历史: {this.NewVersion}");
 
                     // 此处应调用实际的更新方法

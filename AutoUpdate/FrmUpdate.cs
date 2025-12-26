@@ -647,6 +647,9 @@ namespace AutoUpdate
                     AppendAllText($"获取回滚版本列表失败: {ex.Message}");
                 }
 
+                // 更新ListView的列
+                UpdateRollbackListViewColumns();
+                
                 if (hasRollbackVersions)
                 {
                     // 有可回滚版本时显示版本列表
@@ -654,7 +657,9 @@ namespace AutoUpdate
                     foreach (VersionEntry ver in rollbackVersions)
                     {
                         ListViewItem item = new ListViewItem(ver.Version);
-                        item.SubItems.Add(ver.InstallTime.ToString());
+                        item.SubItems.Add(ver.InstallTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                        item.SubItems.Add(ver.FolderName ?? "");
+                        item.SubItems.Add(ver.Files != null ? ver.Files.Count.ToString() : "0");
                         item.Tag = ver;
                         lvUpdateList.Items.Add(item);
                     }
@@ -691,6 +696,19 @@ namespace AutoUpdate
             {
                 AppendAllText($"显示回滚模式时出错: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// 更新回滚模式下的ListView列
+        /// </summary>
+        private void UpdateRollbackListViewColumns()
+        {
+            lvUpdateList.Columns.Clear();
+            
+            lvUpdateList.Columns.Add("版本号", 120, HorizontalAlignment.Left);
+            lvUpdateList.Columns.Add("安装时间", 150, HorizontalAlignment.Left);
+            lvUpdateList.Columns.Add("版本文件夹", 180, HorizontalAlignment.Left);
+            lvUpdateList.Columns.Add("文件数量", 80, HorizontalAlignment.Center);
         }
 
         private void btnRollback_Click(object sender, EventArgs e)

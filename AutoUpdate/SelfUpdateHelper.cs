@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace AutoUpdate
 {
@@ -68,6 +69,7 @@ namespace AutoUpdate
             string sourceDir = string.Empty;
             string targetDir = string.Empty;
             string exeName = string.Empty;
+            string checksum = string.Empty;
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -90,6 +92,11 @@ namespace AutoUpdate
                     exeName = args[i + 1].Trim('"');
                     i++;
                 }
+                if (args[i] == "--checksum" && i + 1 < args.Length)
+                {
+                    checksum = args[i + 1].Trim('"');
+                    i++;
+                }
             }
 
             // 验证参数
@@ -99,24 +106,76 @@ namespace AutoUpdate
                 return;
             }
 
+            // 日志文件路径
+            string logFilePath = Path.Combine(targetDir, "AutoUpdateLog.txt");
+            WriteLog(logFilePath, "开始执行自身更新...");
+
             // 等待主进程退出
-            WriteLog(Path.Combine(targetDir, "AutoUpdateLog.txt"), "等待主进程退出...");
+            WriteLog(logFilePath, "等待主进程退出...");
             Thread.Sleep(2000); // 等待2秒，确保主进程已退出
 
             try
             {
-                // 执行文件替换
-                ReplaceFiles(sourceDir, targetDir);
+                // 1. 验证更新包完整性
+                if (!string.IsNullOrEmpty(checksum))
+                {
+                    WriteLog(logFilePath, $"验证更新包完整性，预期校验和: {checksum}");
+                    string actualChecksum = CalculateDirectoryChecksum(sourceDir);
+                    if (actualChecksum != checksum)
+                    {
+                        WriteLog(logFilePath, $"更新包完整性验证失败，实际校验和: {actualChecksum}");
+                        return;
+                    }
+                    WriteLog(logFilePath, "更新包完整性验证通过");
+                }
 
-                // 重启主进程
-                string mainExePath = Path.Combine(targetDir, exeName);
-                WriteLog(Path.Combine(targetDir, "AutoUpdateLog.txt"), $"更新完成，准备重启: {mainExePath}");
-                
-                Process.Start(mainExePath);
+                // 2. 备份当前版本
+                string backupDir = Path.Combine(targetDir, "Backup_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+                WriteLog(logFilePath, $"开始备份当前版本到: {backupDir}");
+                BackupCurrentVersion(targetDir, backupDir, exeName);
+                WriteLog(logFilePath, "当前版本备份完成");
+
+                try
+                {
+                    // 3. 执行文件替换
+                    ReplaceFiles(sourceDir, targetDir);
+                    WriteLog(logFilePath, "文件替换完成");
+
+                    // 4. 验证更新结果
+                    string mainExePath = Path.Combine(targetDir, exeName);
+                    if (File.Exists(mainExePath))
+                    {
+                        WriteLog(logFilePath, $"更新完成，准备重启: {mainExePath}");
+                        
+                        // 5. 更新版本记录
+                        UpdateVersionRecord(targetDir, sourceDir);
+                        
+                        // 6. 重启主进程
+                        Process.Start(mainExePath);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException($"更新失败，主程序文件不存在: {mainExePath}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 7. 更新失败，执行回滚
+                    WriteLog(logFilePath, $"更新失败，开始回滚到备份版本: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}");
+                    RollbackToBackup(targetDir, backupDir);
+                    WriteLog(logFilePath, "回滚完成，重启应用程序");
+                    
+                    // 重启主进程
+                    string mainExePath = Path.Combine(targetDir, exeName);
+                    if (File.Exists(mainExePath))
+                    {
+                        Process.Start(mainExePath);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                WriteLog(Path.Combine(targetDir, "AutoUpdateLog.txt"), $"执行更新失败: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}");
+                WriteLog(logFilePath, $"执行更新失败: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}");
             }
         }
 
@@ -207,6 +266,159 @@ namespace AutoUpdate
         public static bool IsSelfUpdateRequested(string[] args)
         {
             return args != null && args.Contains("--self-update");
+        }
+        
+        /// <summary>
+        /// 计算目录的校验和
+        /// </summary>
+        /// <param name="directoryPath">目录路径</param>
+        /// <returns>目录校验和</returns>
+        private static string CalculateDirectoryChecksum(string directoryPath)
+        {
+            try
+            {
+                // 获取目录中的所有文件，按路径排序
+                string[] files = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories)
+                    .OrderBy(file => file)
+                    .ToArray();
+                
+                // 创建SHA256哈希计算器
+                using (SHA256 sha256 = SHA256.Create())
+                {
+                    // 计算所有文件的哈希值
+                    foreach (string file in files)
+                    {
+                        using (FileStream stream = File.OpenRead(file))
+                        {
+                            byte[] fileHash = sha256.ComputeHash(stream);
+                            sha256.TransformBlock(fileHash, 0, fileHash.Length, fileHash, 0);
+                        }
+                    }
+                    
+                    // 完成哈希计算
+                    sha256.TransformFinalBlock(new byte[0], 0, 0);
+                    
+                    // 将哈希值转换为十六进制字符串
+                    StringBuilder sb = new StringBuilder();
+                    foreach (byte b in sha256.Hash)
+                    {
+                        sb.Append(b.ToString("x2"));
+                    }
+                    
+                    return sb.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"计算目录校验和失败: {directoryPath}, 错误: {ex.Message}");
+                return string.Empty;
+            }
+        }
+        
+        /// <summary>
+        /// 备份当前版本
+        /// </summary>
+        /// <param name="currentDir">当前版本目录</param>
+        /// <param name="backupDir">备份目录</param>
+        /// <param name="exeName">主程序名称</param>
+        private static void BackupCurrentVersion(string currentDir, string backupDir, string exeName)
+        {
+            try
+            {
+                // 确保备份目录存在
+                Directory.CreateDirectory(backupDir);
+                
+                // 备份核心文件
+                string[] filesToBackup = Directory.GetFiles(currentDir, "AutoUpdate.*")
+                    .Where(file => Path.GetExtension(file) == ".exe" || Path.GetExtension(file) == ".dll" || Path.GetExtension(file) == ".config")
+                    .ToArray();
+                
+                foreach (string file in filesToBackup)
+                {
+                    string destFile = Path.Combine(backupDir, Path.GetFileName(file));
+                    File.Copy(file, destFile, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"备份当前版本失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 回滚到备份版本
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        /// <param name="backupDir">备份目录</param>
+        private static void RollbackToBackup(string targetDir, string backupDir)
+        {
+            try
+            {
+                // 复制备份文件到目标目录
+                string[] backupFiles = Directory.GetFiles(backupDir, "*.*");
+                foreach (string backupFile in backupFiles)
+                {
+                    string destFile = Path.Combine(targetDir, Path.GetFileName(backupFile));
+                    
+                    // 如果目标文件存在，先删除
+                    if (File.Exists(destFile))
+                    {
+                        File.Delete(destFile);
+                    }
+                    
+                    // 复制备份文件
+                    File.Copy(backupFile, destFile, true);
+                }
+                
+                // 清理备份目录
+                Directory.Delete(backupDir, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"回滚到备份版本失败: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 更新版本记录
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        /// <param name="sourceDir">源目录</param>
+        private static void UpdateVersionRecord(string targetDir, string sourceDir)
+        {
+            try
+            {
+                // 获取当前版本信息
+                string currentVersion = File.ReadAllText(Path.Combine(targetDir, "CurrentVersion.txt"), Encoding.UTF8);
+                
+                // 创建版本文件夹管理器
+                VersionFolderManager folderManager = new VersionFolderManager();
+                VersionHistoryManager historyManager = new VersionHistoryManager();
+                
+                // 创建版本文件夹
+                string folderName = folderManager.CreateVersionFolder(currentVersion);
+                
+                // 复制更新后的核心文件到版本文件夹
+                string[] coreFiles = Directory.GetFiles(targetDir, "AutoUpdate.*")
+                    .Where(file => Path.GetExtension(file) == ".exe" || Path.GetExtension(file) == ".dll" || Path.GetExtension(file) == ".config")
+                    .ToArray();
+                
+                foreach (string file in coreFiles)
+                {
+                    folderManager.CopyFileToVersionFolder(file, folderName);
+                }
+                
+                // 获取版本文件列表和校验和
+                List<string> files = folderManager.GetVersionFiles(folderName);
+                string checksum = folderManager.CalculateVersionChecksum(folderName);
+                
+                // 记录版本信息
+                historyManager.RecordNewVersion(currentVersion, folderName, files, checksum);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"更新版本记录失败: {ex.Message}");
+            }
         }
     }
 }

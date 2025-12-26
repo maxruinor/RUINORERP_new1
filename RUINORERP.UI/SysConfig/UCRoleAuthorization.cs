@@ -1098,7 +1098,7 @@ namespace RUINORERP.UI.SysConfig
 
             // 使用状态栏进度条
 
-            ProgressManager.Instance.RunAsync(worker =>
+            ProgressManager.Instance.RunAsync(async worker =>
             {
                 try
                 {

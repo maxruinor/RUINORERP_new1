@@ -1109,7 +1109,7 @@ namespace RUINORERP.UI.SysConfig
                         if (worker.CancellationPending)
                         {
                             worker.ReportProgress(0, "Operation cancelled");
-                            return Task.CompletedTask;
+                            return;
                         }
 
 
@@ -1185,7 +1185,7 @@ namespace RUINORERP.UI.SysConfig
                         if (worker.CancellationPending)
                         {
                             worker.ReportProgress(100, "Cancelled");
-                            return Task.CompletedTask;
+                            return;
                         }
                     }
                     // 最终强制报告100%
@@ -1199,7 +1199,7 @@ namespace RUINORERP.UI.SysConfig
                     worker.ReportProgress(100, $"Error: {ex.Message}");
                 }
 
-                return Task.CompletedTask;
+                return;
             }, (cancelled, error) =>
                 {
                     if (error != null) MessageBox.Show(error.Message);

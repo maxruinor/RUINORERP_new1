@@ -34,11 +34,6 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         public ProdParameter ProductParameter { get; set; }
 
         /// <summary>
-        /// SKU相关参数 - 用于SKU编码生成的特定参数
-        /// </summary>
-        public ProdParameter SKUParameter { get; set; }
-
-        /// <summary>
         /// 条码相关参数 - 用于条码生成的特定参数
         /// </summary>
         public BarCodeParameter BarCodeParameter { get; set; }
@@ -69,10 +64,7 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
 
         public tb_Prod prod { get; set; }
 
-        /// <summary>
-        /// 自定义前缀 - 产品编码的自定义前缀部分
-        /// </summary>
-        public string PrefixParaConst { get; set; }
+        public tb_ProdDetail prodDetail { get; set; }
 
         /// <summary>
         /// 是否包含日期 - 是否在产品编码中包含日期部分

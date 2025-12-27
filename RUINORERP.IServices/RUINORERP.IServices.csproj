@@ -25,6 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
+    <ProjectReference Include="..\RUINORERP.PacketSpec\RUINORERP.PacketSpec.csproj" />
   </ItemGroup>
 
 </Project>

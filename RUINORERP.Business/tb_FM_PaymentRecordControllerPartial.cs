@@ -240,8 +240,8 @@ namespace RUINORERP.Business
                     if (!entity.PayeeInfoID.HasValue && !entity.IsFromPlatform.Value)
                     {
                         var configManagerService = _appContext.GetRequiredService<IConfigManagerService>();
-                       var _validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
-                        if(_validatorConfig.收付款账户必填)
+                        var _validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();
+                        if (_validatorConfig.收付款账户必填)
                         {
                             rmrs.ErrorMsg = $"{entity.PaymentNo}付款时，对方的收款信息必填!";
                             rmrs.Succeeded = false;
@@ -1112,7 +1112,7 @@ namespace RUINORERP.Business
                                     if (prePayment.LocalRefundAmount == prePayment.LocalPrepaidAmount || prePayment.ForeignRefundAmount == prePayment.ForeignPrepaidAmount)
                                     {
                                         //全退款
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.已结案;
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额退款;
                                         prePayment.IsAvailable = false;
                                     }
 

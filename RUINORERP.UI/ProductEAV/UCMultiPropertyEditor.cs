@@ -1190,7 +1190,7 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     tb_ProdDetail ppg = new tb_ProdDetail();
                                     ppg.GroupName = "";
-                                    ppg.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No,EditEntity);
+                                    ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
                                     bindingSourceSKU明细.Add(ppg);
                                 }
 
@@ -1370,7 +1370,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (item.SKU.IsNullOrEmpty())
                 {
-                    item.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync (BaseInfoType.SKU_No,EditEntity);
+                    item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
                     if (item.ActionStatus == ActionStatus.新增)
                     {
                         item.ProdDetailID = 0;

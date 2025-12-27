@@ -51,9 +51,9 @@ namespace RUINORERP.UI.ProductEAV
         tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
         tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
-                
+
         tb_BoxRulesController<tb_BoxRules> ctrBoxRules = Startup.GetFromFac<tb_BoxRulesController<tb_BoxRules>>();
-      
+
         /// <summary>
         /// 网格显示文本解析器，用于设置特殊的映射关系
         /// </summary>
@@ -948,7 +948,7 @@ namespace RUINORERP.UI.ProductEAV
                                         if (EditEntity.Category_ID.HasValue && EditEntity.ProductNo.Trim().Length > 0)
                                         {
                                             EditEntity.tb_ProdDetails.Add(ppg);
-                                            ppg.SKU =await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
+                                            ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
                                         }
                                         bindingSourceList.Add(ppg);
                                     }
@@ -1923,13 +1923,13 @@ namespace RUINORERP.UI.ProductEAV
                     tb_ProdDetail ppg = new tb_ProdDetail();
                     ppg.GroupName = newItem;
                     EditEntity.tb_ProdDetails.Add(ppg);
-                    ppg.SKU = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
+                    ppg.SKU = await bizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
                     if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
                     {
                         //补码
                         // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
                         // 这样即使产品名称相同，由于SKU编号不同，生成的条码也会不同
-                        ppg.BarCode =await clientBizCodeService.GenerateBarCodeAsync(ppg.SKU);
+                        ppg.BarCode = await clientBizCodeService.GenerateBarCodeAsync(ppg.SKU);
                     }
                     bindingSourceList.Add(ppg);
                 }
@@ -1956,7 +1956,7 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         tb_ProdDetail ppg = new tb_ProdDetail();
                         ppg.GroupName = item;
-                        ppg.SKU = await clientBizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.SKU_No, EditEntity);
+                        ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
                         bindingSourceList.Add(ppg);
 
                     }

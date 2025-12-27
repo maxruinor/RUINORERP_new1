@@ -729,21 +729,59 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的产品相关编码</returns>
         public async Task<string> GenerateProductRelatedCodeAsync(
-            BaseInfoType baseInfoType, 
+            BaseInfoType baseInfoType,
             tb_Prod prod,
-            string PrefixParaConst = null, 
-            int seqLength = 3, 
-            bool includeDate = false, 
+            string PrefixParaConst = null,
+            int seqLength = 3,
+            bool includeDate = false,
             CancellationToken ct = default)
         {
             // 调用带有attributeInfos参数的方法，传递null作为默认值
             return await GenerateProductRelatedCodeWithAttributesAsync(
-                baseInfoType, 
-                prod, 
+                baseInfoType,
+                prod,
+                null,
                 null, // 没有attributeInfos参数，传递null
-                PrefixParaConst, 
-                seqLength, 
-                includeDate, 
+                PrefixParaConst,
+                seqLength,
+                includeDate,
+                ct);
+        }
+
+        /// <summary>
+        /// 生成产品相关编码（产品编号、SKU编号、简码等）
+        /// 支持SKU属性更新逻辑：
+        /// - 编辑已有产品（ProdDetailID > 0）：SKU永远不变
+        /// - 新增产品详情（ProdDetailID == 0）：
+        ///   - 如果SKU已有值 → 使用 UpdateSKUAttributePart 更新（保持序号不变，只更新属性部分）
+        ///   - 如果SKU为空 → 使用 GenerateProductRelatedCodeWithAttributesAsync 生成全新SKU
+        /// </summary>
+        /// <param name="baseInfoType">基础信息类型</param>
+        /// <param name="prod">产品实体</param>
+        /// <param name="attributeInfos">属性信息列表（可选，用于SKU编码生成）</param>
+        /// <param name="PrefixParaConst">前缀参数常量</param>
+        /// <param name="seqLength">序号长度</param>
+        /// <param name="includeDate">是否包含日期</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>生成的产品相关编码</returns>
+        public async Task<string> GenerateProductSKUCodeAsync(
+            BaseInfoType baseInfoType,
+            tb_Prod prod,
+            tb_ProdDetail prodDetail = null,
+            //  List<ProductAttributeInfo> AttributeInfos = null,
+            int seqLength = 3,
+            bool includeDate = false,
+            CancellationToken ct = default)
+        {
+            // 调用带有attributeInfos参数的方法，传递null作为默认值
+            return await GenerateProductRelatedCodeWithAttributesAsync(
+                baseInfoType,
+                prod,
+                prodDetail,
+                null, // 没有attributeInfos参数，传递null
+                null,
+                seqLength,
+                includeDate,
                 ct);
         }
 
@@ -759,45 +797,43 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="ct">取消令牌</param>
         /// <returns>生成的产品相关编码</returns>
         public async Task<string> GenerateProductRelatedCodeWithAttributesAsync(
-            BaseInfoType baseInfoType, 
-            tb_Prod prod, 
+            BaseInfoType baseInfoType,
+            tb_Prod prod,
+            tb_ProdDetail prodDetail,
             List<ProductAttributeInfo> attributeInfos = null,
-            string PrefixParaConst = null, 
-            int seqLength = 3, 
-            bool includeDate = false, 
+            string PrefixParaConst = null,
+            int seqLength = 3,
+            bool includeDate = false,
             CancellationToken ct = default)
         {
 
             switch (baseInfoType)
             {
                 case BaseInfoType.ProductNo:
-                    return  _productSKUCodeGenerator.GenerateProdNoAsync(prod);
-                    
+                    return _productSKUCodeGenerator.GenerateProdNoAsync(prod);
+
                 case BaseInfoType.ShortCode:
-                    return  _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
+                    return _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
                 case BaseInfoType.SKU_No:
                     #region SKU
+                   
                     // SKU编码生成逻辑
                     // 编辑已有产品（ProdDetailID > 0）：SKU永远不变
                     // 注意：ProdDetailID 来自于 prod.tb_ProdDetails 集合中的详情实体
-                    if (prod?.tb_ProdDetails != null && prod.tb_ProdDetails.Count > 0)
+                    if (prodDetail != null && prodDetail.ProdDetailID > 0)
                     {
-                        var detail = prod.tb_ProdDetails.FirstOrDefault();
-                        if (detail != null && detail.ProdDetailID > 0)
-                        {
-                            // 编辑模式：如果产品详情已保存（ProdDetailID > 0），SKU不再改变
-                            return ""; // 返回空字符串表示不生成新SKU
-                        }
+                        // 编辑模式：如果产品详情已保存（ProdDetailID > 0），SKU不再改变
+                        return prodDetail.SKU; // 返回原来的
                     }
 
                     // 新增产品详情（ProdDetailID == 0）
                     // 检查是否需要更新SKU属性部分
-                    string existingSku = GetExistingSkuFromProdDetail(prod);
-                    
+                    string existingSku = prodDetail.SKU;
+
                     if (!string.IsNullOrEmpty(existingSku))
                     {
                         // 如果SKU已有值，则更新SKU属性部分（保持序号不变）
-                        if ((attributeInfos != null && attributeInfos.Count > 0) || 
+                        if ((attributeInfos != null && attributeInfos.Count > 0) ||
                             (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
                         {
                             // 使用属性信息或产品属性关系更新SKU
@@ -812,7 +848,7 @@ namespace RUINORERP.Server.Services.BizCode
                     else
                     {
                         // SKU为空，生成全新的SKU
-                        if ((attributeInfos != null && attributeInfos.Count > 0) || 
+                        if ((attributeInfos != null && attributeInfos.Count > 0) ||
                             (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
                         {
                             // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
@@ -846,6 +882,7 @@ namespace RUINORERP.Server.Services.BizCode
             return "";
 
         }
+
 
         /// <summary>
         /// 从产品实体中读取现有的SKU值

@@ -78,13 +78,11 @@ namespace RUINORERP.UI.ProductEAV.Core
         /// <summary>
         /// 生成单个SKU码
         /// </summary>
-        public async Task<string> GenerateSingleSkuAsync(tb_Prod product)
+        public async Task<string> GenerateSingleSkuAsync(tb_Prod product, tb_ProdDetail prodDetail = null)
         {
             try
             {
-                var sku = await _bizCodeService.GenerateProductRelatedCodeAsync(
-                    BaseInfoType.SKU_No,
-                    product);
+                var sku = await _bizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, product, prodDetail);
 
                 return sku ?? $"SKU_{DateTime.Now.Ticks}";
             }

@@ -81,7 +81,14 @@ namespace RUINORERP.UI.Common
         // 添加支持DI注入的构造函数
         public GridViewDisplayHelper(IEntityCacheManager cacheManager)
         {
-            _cacheManager = cacheManager;
+            if (_cacheManager == null)
+            {
+                if (cacheManager == null)
+                {
+                    cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                }
+                _cacheManager = cacheManager;
+            }
         }
 
         // 改为私有字段，并添加null检查的属性访问器

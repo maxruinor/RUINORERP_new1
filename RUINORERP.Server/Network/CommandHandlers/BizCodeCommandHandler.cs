@@ -156,20 +156,42 @@ namespace RUINORERP.Server.Network.CommandHandlers
             try
             {
                 // 尝试将字符串转换为枚举类型
+                if (request.BaseInfoType == BaseInfoType.SKU_No)
+                {
+                    string baseInfoNo = string.Empty;
 
-                string baseInfoNo = string.Empty;
-                // 使用常量参数生成编号
-                if (request.ProductParameter != null)
-                {
-                    baseInfoNo = await _bizCodeService.GenerateProductRelatedCodeAsync(request.BaseInfoType, request.ProductParameter.prod);
+                    // 使用常量参数生成编号
+                    if (request.ProductParameter != null)
+                    {
+                        baseInfoNo = await _bizCodeService.GenerateProductSKUCodeAsync(request.BaseInfoType, request.ProductParameter.prod, request.ProductParameter.prodDetail);
+                    }
+                    // 返回成功响应
+                    return new BizCodeResponse
+                    {
+                        IsSuccess = true,
+                        GeneratedCode = baseInfoNo,
+                        Message = "产品相关信息编号生成成功"
+                    };
                 }
-                // 返回成功响应
-                return new BizCodeResponse
+                else
                 {
-                    IsSuccess = true,
-                    GeneratedCode = baseInfoNo,
-                    Message = "产品相关信息编号生成成功"
-                };
+                    string baseInfoNo = string.Empty;
+
+                    // 使用常量参数生成编号
+                    if (request.ProductParameter != null)
+                    {
+                        baseInfoNo = await _bizCodeService.GenerateProductRelatedCodeAsync(request.BaseInfoType, request.ProductParameter.prod, request.ParaConst);
+                    }
+                    // 返回成功响应
+                    return new BizCodeResponse
+                    {
+                        IsSuccess = true,
+                        GeneratedCode = baseInfoNo,
+                        Message = "产品相关信息编号生成成功"
+                    };
+                }
+
+
             }
             catch (Exception ex)
             {
@@ -201,7 +223,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 string barcode = await _bizCodeService.GenerateBarCodeAsync(request.BarCodeParameter.OriginalCode,
                     request.BarCodeParameter.PaddingChar);
 
-            
+
                 // 返回成功响应
                 return new BizCodeResponse
                 {

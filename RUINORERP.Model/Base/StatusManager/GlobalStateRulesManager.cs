@@ -283,10 +283,12 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [PrePaymentStatus.草稿] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.草稿 },
                 [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 },
-                [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销, PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
-                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
-                [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.已结案 },
-                [PrePaymentStatus.全额核销] = new List<object> { PrePaymentStatus.已结案 }
+                [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销 },
+                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
+                [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
+                [PrePaymentStatus.全额核销] = new List<object> { }, // 终态，不可转换
+                [PrePaymentStatus.部分退款] = new List<object> { PrePaymentStatus.全额退款 },
+                [PrePaymentStatus.全额退款] = new List<object> { }  // 终态，不可转换
             };
         }
 
@@ -654,10 +656,11 @@ namespace RUINORERP.Model.Base.StatusManager
             // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
             AddStandardButtonRules(PrePaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.部分核销, addEnabled: false, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.部分核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.全额核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.已结案, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.部分退款, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.全额退款, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
         /// <summary>
@@ -957,7 +960,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+                [PrePaymentStatus.部分退款] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.全额退款] = new List<MenuItemEnums> { }
             };
 
             var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
@@ -968,7 +972,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                [PrePaymentStatus.已结案] = new List<MenuItemEnums> { }
+                [PrePaymentStatus.部分退款] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.全额退款] = new List<MenuItemEnums> { }
             };
 
             _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
@@ -1128,7 +1133,7 @@ namespace RUINORERP.Model.Base.StatusManager
             else if (statusType == typeof(PrePaymentStatus))
             {
                 PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
-                return prepayStatus == PrePaymentStatus.已结案;
+                return prepayStatus == PrePaymentStatus.全额核销 || prepayStatus == PrePaymentStatus.全额退款;
             }
             else if (statusType == typeof(ARAPStatus))
             {
@@ -1377,7 +1382,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.提交) return PrePaymentStatus.待审核;
                 if (action == MenuItemEnums.审核) return PrePaymentStatus.已生效;
                 if (action == MenuItemEnums.反审) return PrePaymentStatus.待审核;
-                if (action == MenuItemEnums.结案) return PrePaymentStatus.已结案;
                 return currentStatus;
             }
 

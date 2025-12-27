@@ -322,7 +322,7 @@ namespace RUINORERP.UI.FM
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((ARAPStatus)item.PrePaymentStatus).ToString()}】 无法生成{((ReceivePaymentType)selectlist[0].ReceivePaymentType).ToString()}单。").Append("\r\n");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成{((ReceivePaymentType)selectlist[0].ReceivePaymentType).ToString()}单。").Append("\r\n");
                     counter++;
                 }
             }
@@ -439,7 +439,7 @@ namespace RUINORERP.UI.FM
                 else
                 {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((ARAPStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单。").Append("\r\n");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单。").Append("\r\n");
                     counter++;
                 }
             }

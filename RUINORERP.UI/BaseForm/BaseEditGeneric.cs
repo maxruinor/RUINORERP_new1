@@ -38,11 +38,18 @@ namespace RUINORERP.UI.BaseForm
     public partial class BaseEditGeneric<T> : KryptonForm where T : class
     {
 
-            protected readonly IEntityCacheManager _cacheManager;
+        protected readonly IEntityCacheManager _cacheManager;
 
         public BaseEditGeneric(IEntityCacheManager cacheManager = null)
         {
-            _cacheManager = cacheManager;
+            if (_cacheManager == null)
+            {
+                if (cacheManager == null)
+                {
+                    cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                }
+                _cacheManager = cacheManager;
+            }
             InitializeComponent();
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
@@ -105,7 +112,7 @@ namespace RUINORERP.UI.BaseForm
         //[System.ComponentModel.Description("提示帮助事件")]
         //public event ShowHelp OnShowHelp;
 
- 
+
 
 
         /// <summary>
@@ -276,14 +283,14 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else
                             {
-                               //实际到这里是错的
-                                binding =  new Binding("SelectedValue", obj, ktb.ValueMember, true, DataSourceUpdateMode.OnValidation);
+                                //实际到这里是错的
+                                binding = new Binding("SelectedValue", obj, ktb.ValueMember, true, DataSourceUpdateMode.OnValidation);
                                 ktb.DataBindings.Add(binding);
                                 RUINORERP.Common.Helper.ReflectionHelper.SetPropertyValue(obj, ktb.ValueMember, selectValue);
                             }
 
 
-                  
+
                         }
 
                     }
@@ -319,7 +326,7 @@ namespace RUINORERP.UI.BaseForm
             string tipTxt = string.Empty;
             //时长timeout默认值设置的是3000ms(也就是3秒)
             int timeout = 3000;
-            
+
             // 确保定时器被正确释放
             if (_timeoutTimer4tips != null)
             {
@@ -342,7 +349,7 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 #region F1
-                if (ActiveControl==null)
+                if (ActiveControl == null)
                 {
                     return;
                 }
@@ -439,13 +446,13 @@ namespace RUINORERP.UI.BaseForm
         {
             List<string> requiredFields = new List<string>();
             Type entityType = typeof(T);
-            
+
             // 遍历验证规则，识别所有必填验证器
             foreach (var item in rules)
             {
                 string colName = item.PropertyName;
                 var rr = item.Components;
-                
+
                 foreach (var com in item.Components)
                 {
                     // 使用统一的必填验证器判断方法，传入属性名和实体类型
@@ -468,7 +475,7 @@ namespace RUINORERP.UI.BaseForm
                         string fieldName = control.DataBindings[0].BindingMemberInfo.BindingField;
                         // 检查是否是必填字段
                         string requiredField = requiredFields.FirstOrDefault(c => c == fieldName);
-                        
+
                         if (requiredField.IsNotEmptyOrNull())
                         {
                             ApplyRequiredFieldStyle(control);
@@ -514,11 +521,11 @@ namespace RUINORERP.UI.BaseForm
                 case "NotEmptyValidator":
                 case "NotNullValidator":
                     return true;
-                    
+
                 case "PredicateValidator":
                     // 对于外键验证器，需要检查属性是否为可空类型
                     return IsRequiredForeignKeyValidator(component, propertyName, entityType);
-                    
+
                 default:
                     return false;
             }

@@ -23,8 +23,8 @@ namespace AULWriter
             base.Dispose(disposing);
         }
 
-        // 添加日志显示控制checkbox
-        private System.Windows.Forms.CheckBox chkShowLog;
+   
+
 
         #region Windows 窗体设计器生成的代码
 
@@ -40,6 +40,7 @@ namespace AULWriter
             this.panel1 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.chkShowLog = new System.Windows.Forms.CheckBox();
             this.chkTest = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnDiff = new System.Windows.Forms.Button();
@@ -152,16 +153,6 @@ namespace AULWriter
             this.label1.TabIndex = 0;
             this.label1.Text = "AutoUpdaterList Writer";
             // 
-            // chkShowLog
-            // 
-            this.chkShowLog.AutoSize = true;
-            this.chkShowLog.Location = new System.Drawing.Point(936, 11);
-            this.chkShowLog.Name = "chkShowLog";
-            this.chkShowLog.Size = new System.Drawing.Size(72, 16);
-            this.chkShowLog.TabIndex = 14;
-            this.chkShowLog.Text = "显示日志";
-            this.chkShowLog.UseVisualStyleBackColor = true;
-            // 
             // panel2
             // 
             this.panel2.Controls.Add(this.chkShowLog);
@@ -180,12 +171,22 @@ namespace AULWriter
             this.panel2.Size = new System.Drawing.Size(1269, 237);
             this.panel2.TabIndex = 1;
             // 
+            // chkShowLog
+            // 
+            this.chkShowLog.AutoSize = true;
+            this.chkShowLog.Location = new System.Drawing.Point(908, 18);
+            this.chkShowLog.Name = "chkShowLog";
+            this.chkShowLog.Size = new System.Drawing.Size(72, 16);
+            this.chkShowLog.TabIndex = 14;
+            this.chkShowLog.Text = "显示日志";
+            this.chkShowLog.UseVisualStyleBackColor = true;
+            // 
             // chkTest
             // 
             this.chkTest.AutoSize = true;
             this.chkTest.Checked = true;
             this.chkTest.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkTest.Location = new System.Drawing.Point(586, 11);
+            this.chkTest.Location = new System.Drawing.Point(586, 18);
             this.chkTest.Name = "chkTest";
             this.chkTest.Size = new System.Drawing.Size(72, 16);
             this.chkTest.TabIndex = 13;
@@ -195,7 +196,7 @@ namespace AULWriter
             // btnCancel
             // 
             this.btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnCancel.Location = new System.Drawing.Point(443, 9);
+            this.btnCancel.Location = new System.Drawing.Point(443, 15);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(40, 23);
             this.btnCancel.TabIndex = 12;
@@ -205,7 +206,7 @@ namespace AULWriter
             // 
             // btnDiff
             // 
-            this.btnDiff.Location = new System.Drawing.Point(1178, 12);
+            this.btnDiff.Location = new System.Drawing.Point(1178, 15);
             this.btnDiff.Name = "btnDiff";
             this.btnDiff.Size = new System.Drawing.Size(51, 23);
             this.btnDiff.TabIndex = 8;
@@ -215,7 +216,7 @@ namespace AULWriter
             // 
             // btnLoadPreCurrentVer
             // 
-            this.btnLoadPreCurrentVer.Location = new System.Drawing.Point(12, 9);
+            this.btnLoadPreCurrentVer.Location = new System.Drawing.Point(12, 15);
             this.btnLoadPreCurrentVer.Name = "btnLoadPreCurrentVer";
             this.btnLoadPreCurrentVer.Size = new System.Drawing.Size(121, 23);
             this.btnLoadPreCurrentVer.TabIndex = 9;
@@ -228,7 +229,7 @@ namespace AULWriter
             this.chk文件比较.AutoSize = true;
             this.chk文件比较.Checked = true;
             this.chk文件比较.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chk文件比较.Location = new System.Drawing.Point(182, 12);
+            this.chk文件比较.Location = new System.Drawing.Point(182, 18);
             this.chk文件比较.Name = "chk文件比较";
             this.chk文件比较.Size = new System.Drawing.Size(72, 16);
             this.chk文件比较.TabIndex = 4;
@@ -239,7 +240,7 @@ namespace AULWriter
             // button_save_config
             // 
             this.button_save_config.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.button_save_config.Location = new System.Drawing.Point(1015, 11);
+            this.button_save_config.Location = new System.Drawing.Point(1008, 15);
             this.button_save_config.Name = "button_save_config";
             this.button_save_config.Size = new System.Drawing.Size(101, 23);
             this.button_save_config.TabIndex = 3;
@@ -250,7 +251,7 @@ namespace AULWriter
             // btnrelease
             // 
             this.btnrelease.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnrelease.Location = new System.Drawing.Point(664, 8);
+            this.btnrelease.Location = new System.Drawing.Point(664, 15);
             this.btnrelease.Name = "btnrelease";
             this.btnrelease.Size = new System.Drawing.Size(113, 23);
             this.btnrelease.TabIndex = 1;
@@ -261,7 +262,7 @@ namespace AULWriter
             // btnGenerateNewlist
             // 
             this.btnGenerateNewlist.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
-            this.btnGenerateNewlist.Location = new System.Drawing.Point(326, 8);
+            this.btnGenerateNewlist.Location = new System.Drawing.Point(326, 15);
             this.btnGenerateNewlist.Name = "btnGenerateNewlist";
             this.btnGenerateNewlist.Size = new System.Drawing.Size(111, 23);
             this.btnGenerateNewlist.TabIndex = 0;
@@ -1027,6 +1028,7 @@ namespace AULWriter
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.CheckBox chkTest;
+        private System.Windows.Forms.CheckBox chkShowLog;
         private System.Windows.Forms.TabPage tabPageDiffFile;
         private System.Windows.Forms.DataGridView dgvDiffFiles;
         private System.Windows.Forms.DataGridViewCheckBoxColumn colSelect;

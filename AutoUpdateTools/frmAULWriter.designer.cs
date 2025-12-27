@@ -1,4 +1,4 @@
-﻿namespace AULWriter
+namespace AULWriter
 {
     partial class frmAULWriter
     {
@@ -22,6 +22,9 @@
             }
             base.Dispose(disposing);
         }
+
+        // 添加日志显示控制checkbox
+        private System.Windows.Forms.CheckBox chkShowLog;
 
         #region Windows 窗体设计器生成的代码
 
@@ -149,8 +152,19 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "AutoUpdaterList Writer";
             // 
+            // chkShowLog
+            // 
+            this.chkShowLog.AutoSize = true;
+            this.chkShowLog.Location = new System.Drawing.Point(936, 11);
+            this.chkShowLog.Name = "chkShowLog";
+            this.chkShowLog.Size = new System.Drawing.Size(72, 16);
+            this.chkShowLog.TabIndex = 14;
+            this.chkShowLog.Text = "显示日志";
+            this.chkShowLog.UseVisualStyleBackColor = true;
+            // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.chkShowLog);
             this.panel2.Controls.Add(this.chkTest);
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.btnDiff);

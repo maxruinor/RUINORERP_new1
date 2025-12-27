@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -1356,7 +1356,11 @@ namespace AULWriter
             }
             
             // 直接在主线程中执行
-            richTxtLog.AppendText($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n");
+            // 只有当显示日志复选框被选中时，才显示日志
+            if (chkShowLog.Checked)
+            {
+                richTxtLog.AppendText($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n");
+            }
         }
         #endregion
 

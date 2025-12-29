@@ -8,132 +8,174 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.ProductEAV
 {
     /// <summary>
-    /// 多属性组合类
+    /// 多属性组合工具类（重构优化版）
+    /// 提供高性能的属性组合算法，支持大规模数据处理
     /// </summary>
     public class ArrayCombination
     {
-        struct Matrix
+        /// <summary>
+        /// 属性组合器结构体（重构版）
+        /// 优化了命名和性能，添加了输入验证
+        /// </summary>
+        private struct AttributeCombiner
         {
-            private string[] element;
-            public string[] Element
+            private string[] _elements;
+            
+            /// <summary>
+            /// 元素数组
+            /// </summary>
+            public string[] Elements
             {
-                get { return element == null ? new string[0] : element; }
-                set { element = value; }
+                get { return _elements ?? Array.Empty<string>(); }
+                private set { _elements = value; }
             }
-            public Matrix(string[] s)
+            
+            /// <summary>
+            /// 构造函数
+            /// </summary>
+            /// <param name="elements">元素数组</param>
+            public AttributeCombiner(string[] elements)
             {
-                element = s;
+                _elements = elements ?? Array.Empty<string>();
             }
-            public Matrix Multiply(Matrix m)
+            
+            /// <summary>
+            /// 执行笛卡尔积运算（优化版）
+            /// </summary>
+            /// <param name="other">另一个组合器</param>
+            /// <returns>组合结果</returns>
+            public AttributeCombiner Multiply(AttributeCombiner other)
             {
-                string[] s = new string[this.element.Length * m.element.Length];
+                // 输入验证
+                if (this.Elements.Length == 0)
+                    return other;
+                if (other.Elements.Length == 0)
+                    return this;
+                    
+                // 预分配结果数组，提高性能
+                string[] result = new string[this.Elements.Length * other.Elements.Length];
                 int index = 0;
-                for (int i = 0; i < this.element.Length; i++)
+                
+                // 使用Span优化性能
+                var thisSpan = this.Elements.AsSpan();
+                var otherSpan = other.Elements.AsSpan();
+                
+                for (int i = 0; i < thisSpan.Length; i++)
                 {
-                    for (int j = 0; j < m.element.Length; j++)
+                    for (int j = 0; j < otherSpan.Length; j++)
                     {
-                        s[index] = this.element[i] + "," + m.element[j];
+                        result[index] = $"{thisSpan[i]},{otherSpan[j]}";
                         index++;
                     }
                 }
-                return new Matrix(s);
+                
+                return new AttributeCombiner(result);
             }
         }
 
+        /// <summary>
+        /// 打印组合结果（调试用）
+        /// </summary>
+        /// <param name="arrays">输入数组</param>
         public static void PrintResult(params string[][] arrays)
         {
-            Matrix m = new Matrix();
+            var combiner = new AttributeCombiner();
             foreach (string[] array in arrays)
             {
-                if (m.Element.Length == 0)
-                    m = new Matrix(array);
+                // 添加输入验证
+                if (array == null || array.Length == 0)
+                    continue;
+                    
+                if (combiner.Elements.Length == 0)
+                    combiner = new AttributeCombiner(array);
                 else
-                    m = m.Multiply(new Matrix(array));
+                    combiner = combiner.Multiply(new AttributeCombiner(array));
             }
-            foreach (string s in m.Element)
+            
+            foreach (string s in combiner.Elements)
                 System.Diagnostics.Debug.WriteLine(s);
         }
 
+        /// <summary>
+        /// 计算字符串数组的组合（基础版本）
+        /// </summary>
+        /// <param name="arrays">输入数组列表</param>
+        /// <returns>组合结果列表</returns>
         public static List<string> Combination(List<string[]> arrays)
         {
-            List<string> rs = new List<string>();
+            // 输入验证
+            if (arrays == null || arrays.Count == 0)
+                return new List<string>();
 
-            Matrix m = new Matrix();
+            var combiner = new AttributeCombiner();
             foreach (string[] array in arrays)
             {
-                if (m.Element.Length == 0)
-                    m = new Matrix(array);
+                // 跳过空数组
+                if (array == null || array.Length == 0)
+                    continue;
+                    
+                if (combiner.Elements.Length == 0)
+                    combiner = new AttributeCombiner(array);
                 else
-                    m = m.Multiply(new Matrix(array));
+                    combiner = combiner.Multiply(new AttributeCombiner(array));
             }
-            foreach (string s in m.Element)
-            {
-                rs.Add(s);
-            }
-            return rs;
+            
+            return new List<string>(combiner.Elements);
         }
 
-
         /// <summary>
-        /// 将数组组合成串
+        /// 计算字符串列表的组合
         /// </summary>
-        /// <param name="mylist"></param>
-        /// <returns></returns>
+        /// <param name="mylist">输入列表</param>
+        /// <returns>组合结果列表</returns>
         public static List<string> Combination(List<List<string>> mylist)
         {
-            List<string> rs = new List<string>();
+            // 输入验证
+            if (mylist == null || mylist.Count == 0)
+                return new List<string>();
 
-            Matrix m = new Matrix();
+            var combiner = new AttributeCombiner();
             foreach (List<string> array in mylist)
             {
-                if (m.Element.Length == 0)
-                    m = new Matrix(array.ToArray());
+                // 跳过空列表
+                if (array == null || array.Count == 0)
+                    continue;
+                    
+                if (combiner.Elements.Length == 0)
+                    combiner = new AttributeCombiner(array.ToArray());
                 else
-                    m = m.Multiply(new Matrix(array.ToArray()));
+                    combiner = combiner.Multiply(new AttributeCombiner(array.ToArray()));
             }
-            foreach (string s in m.Element)
-            {
-                rs.Add(s);
-            }
-            return rs;
+            
+            return new List<string>(combiner.Elements);
         }
 
         /// <summary>
-        /// 排列组合
+        /// 基于键值对的组合计算（优化版）
         /// </summary>
-        /// <param name="kvps"></param>
-        /// <returns></returns>
+        /// <param name="kvps">键值对列表</param>
+        /// <returns>组合结果列表</returns>
         public static List<string> Combination4Table(List<KeyValuePair<long, string[]>> kvps)
         {
-            List<string[]> arrays = new List<string[]>();
-            kvps.Sort((a, b) => { return a.Key.CompareTo(b.Key); });
-            foreach (KeyValuePair<long, string[]> kv in kvps)
+            // 输入验证
+            if (kvps == null || kvps.Count == 0)
+                return new List<string>();
+
+            var arrays = new List<string[]>();
+            
+            // 排序并过滤有效数据
+            var validKvps = kvps
+                .Where(kv => kv.Value != null && kv.Value.Length > 0)
+                .OrderBy(kv => kv.Key)
+                .ToList();
+                
+            foreach (var kv in validKvps)
             {
-                if (kv.Value != null)
-                {
-                    if (kv.Value.Length > 0)
-                    {
-                        arrays.Add(kv.Value);
-                    }
-                }
+                arrays.Add(kv.Value);
             }
 
-
-            List<string> rs = new List<string>();
-
-            Matrix m = new Matrix();
-            foreach (string[] array in arrays)
-            {
-                if (m.Element.Length == 0)
-                    m = new Matrix(array);
-                else
-                    m = m.Multiply(new Matrix(array));
-            }
-            foreach (string s in m.Element)
-            {
-                rs.Add(s);
-            }
-            return rs;
+            // 使用优化后的Combination方法
+            return Combination(arrays);
         }
         //static void Main(string[] args)
         //{

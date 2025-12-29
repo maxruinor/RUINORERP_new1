@@ -58,7 +58,11 @@ namespace RUINORERP.Server.Services.BizCode
         }
         #endregion
 
-
+        // 属性值代码映射表（静态一次性初始化，避免重复初始化）
+        private static readonly Lazy<Dictionary<string, string>> _valueCodeMap = new Lazy<Dictionary<string, string>>(
+            () => InitializeValueCodeMapStatic(), 
+            System.Threading.LazyThreadSafetyMode.ExecutionAndPublication
+        );
 
         /// <summary>
         /// 生成基于属性的SKU编码
@@ -404,7 +408,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 遍历所有属性信息
                 foreach (var attrInfo in attributeInfos)
                 {
-                    if (attrInfo.tb_prodproperty==null || string.IsNullOrEmpty(attrInfo.tb_prodproperty.PropertyName))
+                    if (attrInfo.tb_prodproperty == null || string.IsNullOrEmpty(attrInfo.tb_prodproperty.PropertyName))
                     {
                         continue;
                     }
@@ -563,6 +567,47 @@ namespace RUINORERP.Server.Services.BizCode
                 return "X"; // 默认值代码
             }
 
+            // 使用Lazy模式访问属性值代码映射表（线程安全且性能优化）
+            if (_valueCodeMap.Value.TryGetValue(propertyValueName, out string code))
+            {
+                return code;
+            }
+
+            // 如果映射表中没有，则尝试生成代码
+            try
+            {
+                // 如果是数字，直接使用
+                if (decimal.TryParse(propertyValueName, out decimal numValue))
+                {
+                    return propertyValueName;
+                }
+
+                // 如果包含数字，提取数字部分
+                var numericPart = System.Text.RegularExpressions.Regex.Match(propertyValueName, @"\d+");
+                if (numericPart.Success)
+                {
+                    return numericPart.Value;
+                }
+
+                // 使用NPinyin获取中文首字母
+                return Pinyin.GetInitials(propertyValueName.Substring(0, 1)).ToUpper();
+            }
+            catch
+            {
+                // 如果处理失败，返回前两个字符
+                return propertyValueName.Length > 2
+                    ? propertyValueName.Substring(0, 2).ToUpper()
+                    : propertyValueName.ToUpper();
+            }
+        }
+
+        /// <summary>
+        /// 初始化属性值代码映射表（静态版本）
+        /// 包含常用属性值的标准化代码映射
+        /// </summary>
+        /// <returns>属性值代码映射表</returns>
+        private static Dictionary<string, string> InitializeValueCodeMapStatic()
+        {
             // 常用属性值映射表
             var valueCodeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
@@ -1018,39 +1063,7 @@ namespace RUINORERP.Server.Services.BizCode
                 { "内存卡读取速度", "SPEED" },
                 { "显示屏亮度", "BRIGHT" }
             };
-
-            // 尝试从映射表中获取
-            if (valueCodeMap.TryGetValue(propertyValueName, out string code))
-            {
-                return code;
-            }
-
-            // 如果映射表中没有，则尝试生成代码
-            try
-            {
-                // 如果是数字，直接使用
-                if (decimal.TryParse(propertyValueName, out decimal numValue))
-                {
-                    return propertyValueName;
-                }
-
-                // 如果包含数字，提取数字部分
-                var numericPart = System.Text.RegularExpressions.Regex.Match(propertyValueName, @"\d+");
-                if (numericPart.Success)
-                {
-                    return numericPart.Value;
-                }
-
-                // 使用NPinyin获取中文首字母
-                return Pinyin.GetInitials(propertyValueName.Substring(0, 1)).ToUpper();
-            }
-            catch
-            {
-                // 如果处理失败，返回前两个字符
-                return propertyValueName.Length > 2
-                    ? propertyValueName.Substring(0, 2).ToUpper()
-                    : propertyValueName.ToUpper();
-            }
+            return valueCodeMap;
         }
 
         /// <summary>

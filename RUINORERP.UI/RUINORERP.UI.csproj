@@ -2344,12 +2344,6 @@
     <Compile Include="ProductEAV\UCProductAttrRelationEdit.Designer.cs">
       <DependentUpon>UCProductAttrRelationEdit.cs</DependentUpon>
     </Compile>
-    <Compile Include="ProductEAV\UCProductAttrRelationList.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ProductEAV\UCProductAttrRelationList.Designer.cs">
-      <DependentUpon>UCProductAttrRelationList.cs</DependentUpon>
-    </Compile>
     <Compile Include="ProductEAV\Utils\PropertyCombinationHelper.cs" />
     <Compile Include="Services\ClientSystemInfoService.cs" />
     <Compile Include="SmartReminderClient\DetailForm.cs">
@@ -4377,9 +4371,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCProductAttrRelationEdit.resx">
       <DependentUpon>UCProductAttrRelationEdit.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ProductEAV\UCProductAttrRelationList.resx">
-      <DependentUpon>UCProductAttrRelationList.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCProductList.resx">
       <DependentUpon>UCProductList.cs</DependentUpon>

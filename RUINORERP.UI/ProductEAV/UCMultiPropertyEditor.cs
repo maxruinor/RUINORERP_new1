@@ -95,6 +95,9 @@ namespace RUINORERP.UI.ProductEAV
             var list = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_Prod>()
                 .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
                 .Includes(a => a.tb_ProdDetails, b => b.tb_Prod_Attr_Relations, c => c.tb_prodpropertyvalue, d => d.tb_prodproperty)
+                .AsNavQueryable()//加这个前面,超过三级在前面加这一行，并且第四级无VS智能提示，但是可以用
+                .Includes(a => a.tb_ProdDetails, b => b.tb_Prod_Attr_Relations, c => c.tb_prodproperty)
+                .Includes(c => c.tb_Prod_Attr_Relations, e => e.tb_prodproperty)
                 .Includes(c => c.tb_Prod_Attr_Relations, d => d.tb_prodpropertyvalue, e => e.tb_prodproperty)
                 .Includes(c => c.tb_Prod_Attr_Relations, d => d.tb_proddetail)
                 .Where(exp)
@@ -433,6 +436,7 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
 
+            /*
             // 生成所有可能的属性组合
             var newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
 
@@ -448,9 +452,89 @@ namespace RUINORERP.UI.ProductEAV
 
             // 处理需要添加的组合
             HandleCombinationsToAdd(combinationsToAdd);
+            */
+
+            // 获取当前已有的属性组合
+            var existingCombinations = GetExistingAttributeCombinations();
+
+            // 获取选中的属性组ID列表
+            var selectedGroupIds = selectedAttributeGroups.Select(g => g.Property.Property_ID).ToList();
+
+            // 获取现有属性组合中使用的属性组ID列表
+            var existingGroupIds = new HashSet<long>();
+            foreach (var combination in existingCombinations)
+            {
+                foreach (var prop in combination.Properties)
+                {
+                    existingGroupIds.Add(prop.Property.Property_ID);
+                }
+            }
+
+            // 判断是否是添加全新属性
+            bool isAddingNewProperty = selectedGroupIds.Except(existingGroupIds).Any();
+
+            // 生成属性组合
+            List<AttributeCombination> newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
+
+            // 使用AttributeCombinationComparer来比较组合
+            var comparer = new AttributeCombinationComparer();
+
+            // 根据不同场景处理组合
+            List<AttributeCombination> combinationsToAdd;
+            List<AttributeCombination> combinationsToRemove;
+
+            if (isAddingNewProperty)
+            {
+                // 场景1：添加全新属性 - 保留原有组合，只添加新组合
+                // 当添加新属性时，我们需要删除所有现有组合（因为它们缺少新属性），
+                // 并添加包含新属性的完整组合集合
+                combinationsToRemove = existingCombinations.ToList();
+                combinationsToAdd = newCombinations;
+            }
+            else
+            {
+                // 场景2：在已有属性中添加新属性值 - 排除已存在的组合
+                combinationsToAdd = newCombinations.Except(existingCombinations, comparer).ToList();
+                combinationsToRemove = existingCombinations.Except(newCombinations, comparer).ToList();
+            }
+
+            // 处理需要删除的组合
+            HandleCombinationsToRemove(combinationsToRemove);
+
+            // 处理需要添加的组合
+            HandleCombinationsToAdd(combinationsToAdd);
 
             treeGridView1.Refresh();
+
+            this.btnOk.Enabled = true;
         }
+
+
+
+        private async Task CreateSKUAsync(tb_ProdDetail item)
+        {
+
+            //判断明细是不是修改       
+            //如果关系数据中关系ID大于0则是原来的。与包含=0的总数比较。如果不一致。则说明有修改
+            if (item.tb_Prod_Attr_Relations.Count != item.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).Count())
+            {
+                if (item.ActionStatus != ActionStatus.新增)
+                {
+                    item.ActionStatus = ActionStatus.修改;
+                }
+
+            }
+            if (item.SKU.IsNullOrEmpty())
+            {
+                item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
+                if (item.ActionStatus == ActionStatus.新增)
+                {
+                    item.ProdDetailID = 0;
+                }
+            }
+
+        }
+
 
         /// <summary>
         /// 获取当前选中的所有属性组和属性值
@@ -646,7 +730,7 @@ namespace RUINORERP.UI.ProductEAV
         /// 处理需要添加的属性组合
         /// </summary>
         /// <param name="combinationsToAdd">需要添加的组合列表</param>
-        private void HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd)
+        private async Task HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd)
         {
             // 检查是否是从单属性转换为多属性的情况，获取原始SKU信息
             tb_ProdDetail originalSkuDetail = null;
@@ -668,7 +752,7 @@ namespace RUINORERP.UI.ProductEAV
                 var newDetail = new tb_ProdDetail
                 {
                     ProdBaseID = EditEntity.ProdBaseID,
-                    ProdDetailID = skuRowId, // 临时ID，保存到DB前会重新设置
+                    ProdDetailID = 0,// skuRowId, // 临时ID，保存到DB前会重新设置
                     ActionStatus = ActionStatus.新增,
                     Is_enabled = true,
                     Is_available = true,
@@ -726,7 +810,7 @@ namespace RUINORERP.UI.ProductEAV
                         Property_ID = attrValuePair.Property.Property_ID,
                         PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
                         ProdBaseID = EditEntity.ProdBaseID,
-                        ProdDetailID = skuRowId,
+                        ProdDetailID = 0,// skuRowId,
                         ActionStatus = ActionStatus.新增,
                         tb_prodproperty = attrValuePair.Property,
                         tb_prodpropertyvalue = attrValuePair.PropertyValue
@@ -746,7 +830,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 // 添加到产品详情列表
                 EditEntity.tb_ProdDetails.Add(newDetail);
-
+                await CreateSKUAsync(newDetail);
                 isFirstCombination = false;
             }
         }
@@ -1641,29 +1725,6 @@ namespace RUINORERP.UI.ProductEAV
             //生成属性后 所有的属性值都按一个规则排序，再比较是否有相同的。如果有则提示不能保存。
 
 
-
-            //如果SKU为空。则是新的数据 detailid=0;
-            foreach (var item in EditEntity.tb_ProdDetails)
-            {
-                //判断明细是不是修改       
-                //如果关系数据中关系ID大于0则是原来的。与包含=0的总数比较。如果不一致。则说明有修改
-                if (item.tb_Prod_Attr_Relations.Count != item.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).Count())
-                {
-                    if (item.ActionStatus != ActionStatus.新增)
-                    {
-                        item.ActionStatus = ActionStatus.修改;
-                    }
-
-                }
-                if (item.SKU.IsNullOrEmpty())
-                {
-                    item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
-                    if (item.ActionStatus == ActionStatus.新增)
-                    {
-                        item.ProdDetailID = 0;
-                    }
-                }
-            }
 
             tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
             ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();

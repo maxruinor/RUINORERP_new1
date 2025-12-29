@@ -1229,379 +1229,407 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
+        /// 获取实体字段名称和描述列表，用于GridView显示
+        /// 优化版本：提高性能，排除导航属性
         /// </summary>
-        /// <param name="types"></param>
-        /// <returns></returns>
+        /// <param name="PrimaryKey">是否包含主键字段</param>
+        /// <param name="types">实体类型数组</param>
+        /// <returns>字段名称和描述字典</returns>
         public static ConcurrentDictionary<string, string> GetFieldNameList(bool PrimaryKey = false, params Type[] types)
         {
             ConcurrentDictionary<string, string> fieldNameList = new ConcurrentDictionary<string, string>();
-            SugarColumn entityAttr;
+            
             foreach (var type in types)
             {
-                foreach (PropertyInfo field in type.GetProperties())
+                // 获取所有属性，排除导航属性（IsIgnore = true）
+                var properties = type.GetProperties()
+                    .Where(p => !IsNavigationProperty(p))
+                    .ToList();
+                
+                foreach (PropertyInfo field in properties)
                 {
-                    bool brow = true;
-                    var attributes = field.GetCustomAttributes(true);
-                    if (attributes.Contains(new BrowsableAttribute(false)))
+                    // 直接获取SugarColumn特性，避免遍历所有特性
+                    var sugarColumn = field.GetCustomAttribute<SugarColumn>();
+                    if (sugarColumn == null)
                     {
-                        brow = false;
-                        // Checks to see if the value of the BrowsableAttribute is Yes.
-                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
-                        //{
-                        //    brow = false;
-                        //}
+                        continue;
                     }
-
-                    foreach (Attribute attr in field.GetCustomAttributes(true))
+                    
+                    // 检查BrowsableAttribute
+                    bool isBrowsable = IsPropertyBrowsable(field);
+                    
+                    // 应用过滤条件
+                    if (!IsValidColumn(sugarColumn, PrimaryKey, isBrowsable))
                     {
-                        //if (attr is BrowsableAttribute)
-                        //{
-                        //    BrowsableAttribute browAttr = attr as BrowsableAttribute;
-                        //    if (!browAttr.Browsable)
-                        //    {
-                        //        brow = false;
-                        //    }
-                        //}
-
-                        entityAttr = attr as SugarColumn;
-                        if (null != entityAttr)
-                        {
-                            if (entityAttr.ColumnDescription == null)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.IsIdentity)
-                            {
-                                continue;
-                            }
-                            if (!PrimaryKey && entityAttr.IsPrimaryKey)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
-                            {
-                                fieldNameList.TryAdd(field.Name, entityAttr.ColumnDescription);
-                            }
-                        }
-
+                        continue;
                     }
-
-
-
+                    
+                    // 添加有效字段
+                    fieldNameList.TryAdd(field.Name, sugarColumn.ColumnDescription);
                 }
-
             }
-
-
-
-
+            
             return fieldNameList;
         }
+        
+        /// <summary>
+        /// 判断属性是否为导航属性（应该排除）
+        /// </summary>
+        /// <param name="property">属性信息</param>
+        /// <returns>是否为导航属性</returns>
+        private static bool IsNavigationProperty(PropertyInfo property)
+        {
+            // 检查IsIgnore特性
+            var sugarColumn = property.GetCustomAttribute<SugarColumn>();
+            if (sugarColumn?.IsIgnore == true)
+            {
+                return true;
+            }
+            
+            // 检查Navigate特性
+            var navigateAttr = property.GetCustomAttribute<Navigate>();
+            if (navigateAttr != null)
+            {
+                return true;
+            }
+            
+            // 检查属性类型是否为集合类型（通常是导航属性）
+            if (property.PropertyType.IsGenericType && 
+                typeof(System.Collections.IEnumerable).IsAssignableFrom(property.PropertyType))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// 检查属性是否可浏览
+        /// </summary>
+        /// <param name="property">属性信息</param>
+        /// <returns>是否可浏览</returns>
+        private static bool IsPropertyBrowsable(PropertyInfo property)
+        {
+            var browsableAttr = property.GetCustomAttribute<BrowsableAttribute>();
+            return browsableAttr == null || browsableAttr.Browsable;
+        }
+        
+        /// <summary>
+        /// 检查字段是否有效
+        /// </summary>
+        /// <param name="sugarColumn">SugarColumn特性</param>
+        /// <param name="includePrimaryKey">是否包含主键</param>
+        /// <param name="isBrowsable">是否可浏览</param>
+        /// <returns>是否有效</returns>
+        private static bool IsValidColumn(SugarColumn sugarColumn, bool includePrimaryKey, bool isBrowsable)
+        {
+            // 检查基本条件
+            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            {
+                return false;
+            }
+            
+            // 排除自增字段
+            if (sugarColumn.IsIdentity)
+            {
+                return false;
+            }
+            
+            // 检查主键处理
+            if (!includePrimaryKey && sugarColumn.IsPrimaryKey)
+            {
+                return false;
+            }
+            
+            // 检查是否可浏览
+            if (!isBrowsable)
+            {
+                return false;
+            }
+            
+            return true;
+        }
 
+        /// <summary>
+        /// 获取字段名称和描述列表（包含可见性信息）
+        /// 优化版本：提高性能，复用已有逻辑
+        /// </summary>
+        /// <param name="types">实体类型数组</param>
+        /// <returns>字段名称、描述和可见性字典</returns>
         public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(params Type[] types)
         {
             return GetFieldNameColList(false, types);
         }
 
         /// <summary>
-        /// SugarColumn  依赖了这个特性来获取列名
+        /// 获取字段名称和描述列表（包含可见性信息）
+        /// 优化版本：提高性能，复用已有逻辑
         /// </summary>
-        /// <param name="types"></param>
-        /// <returns></returns>
+        /// <param name="IncludePK">是否包含主键字段</param>
+        /// <param name="types">实体类型数组</param>
+        /// <returns>字段名称、描述和可见性字典</returns>
         public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(bool IncludePK = false, params Type[] types)
         {
             ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
-            SugarColumn entityAttr;
+            
             foreach (var type in types)
             {
-                foreach (PropertyInfo field in type.GetProperties())
+                // 复用GetFieldNameList方法的逻辑
+                var properties = type.GetProperties()
+                    .Where(p => !IsNavigationProperty(p))
+                    .ToList();
+                
+                foreach (PropertyInfo field in properties)
                 {
-                    bool brow = true;
-                    var attributes = field.GetCustomAttributes(true);
-                    if (attributes.Contains(new BrowsableAttribute(false)))
+                    var sugarColumn = field.GetCustomAttribute<SugarColumn>();
+                    if (sugarColumn == null)
                     {
-                        brow = false;
-                        // Checks to see if the value of the BrowsableAttribute is Yes.
-                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
-                        //{
-                        //    brow = false;
-                        //}
+                        continue;
                     }
-                    foreach (Attribute attr in field.GetCustomAttributes(true))
+                    
+                    bool isBrowsable = IsPropertyBrowsable(field);
+                    
+                    // 应用过滤条件，复用已有逻辑
+                    if (!IsValidColumnForColList(sugarColumn, IncludePK, isBrowsable))
                     {
-                        //if (attr is BrowsableAttribute)
-                        //{
-                        //    BrowsableAttribute browAttr = attr as BrowsableAttribute;
-                        //    if (!browAttr.Browsable)
-                        //    {
-                        //        brow = false;
-                        //    }
-                        //}
-
-                        entityAttr = attr as SugarColumn;
-                        if (null != entityAttr)
-                        {
-                            if (entityAttr.ColumnDescription == null)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.IsIdentity)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.IsPrimaryKey)
-                            {   //逻辑处理时可能要主键
-                                if (IncludePK)
-                                {
-                                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, true));
-                                }
-                                else
-                                {
-                                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, false));
-                                }
-
-                            }
-                            if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
-                            {
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(entityAttr.ColumnDescription, true));
-                            }
-                        }
-
+                        continue;
                     }
-
-
-
+                    
+                    // 确定可见性：主键根据IncludePK参数决定，其他字段默认可见
+                    bool isVisible = true;
+                    if (sugarColumn.IsPrimaryKey)
+                    {
+                        isVisible = IncludePK;
+                    }
+                    
+                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(sugarColumn.ColumnDescription, isVisible));
                 }
-
             }
-
+            
             return fieldNameList;
+        }
+        
+        /// <summary>
+        /// 检查字段是否有效（用于GetFieldNameColList方法）
+        /// </summary>
+        /// <param name="sugarColumn">SugarColumn特性</param>
+        /// <param name="includePrimaryKey">是否包含主键</param>
+        /// <param name="isBrowsable">是否可浏览</param>
+        /// <returns>是否有效</returns>
+        private static bool IsValidColumnForColList(SugarColumn sugarColumn, bool includePrimaryKey, bool isBrowsable)
+        {
+            // 检查基本条件
+            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            {
+                return false;
+            }
+            
+            // 排除自增字段
+            if (sugarColumn.IsIdentity)
+            {
+                return false;
+            }
+            
+            // 检查是否可浏览
+            if (!isBrowsable)
+            {
+                return false;
+            }
+            
+            // 对于主键字段，根据includePrimaryKey参数决定
+            if (sugarColumn.IsPrimaryKey)
+            {
+                return includePrimaryKey;
+            }
+            
+            return true;
         }
 
         /// <summary>
         /// 获取outlook列的显示控制列表
+        /// 优化版本：提高性能，复用已有逻辑
         /// </summary>
-        /// <param name="types"></param>
-        /// <returns></returns>
+        /// <param name="types">实体类型数组</param>
+        /// <returns>列显示控制器列表</returns>
         public static List<ColDisplayController> GetColumnDisplayList(params Type[] types)
         {
             List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
-
-            SugarColumn entityAttr;
+            
             foreach (var type in types)
             {
-                foreach (PropertyInfo field in type.GetProperties())
+                // 复用已有的属性过滤逻辑
+                var properties = type.GetProperties()
+                    .Where(p => !IsNavigationProperty(p))
+                    .ToList();
+                
+                foreach (PropertyInfo field in properties)
                 {
-                    ColDisplayController col = new ColDisplayController();
-
-                    bool Browsable = true;
-                    var attributes = field.GetCustomAttributes(true);
-                    if (attributes.Contains(new BrowsableAttribute(false)))
-                    {
-                        Browsable = false;
-                        continue;
-                        // Checks to see if the value of the BrowsableAttribute is Yes.
-                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
-                        //{
-                        //    brow = false;
-                        //}
-                    }
-
-                    if (attributes.Contains(new DisplayTextAttribute(false)))
-                    {
-                        Browsable = false;
-                        continue;
-                        // Checks to see if the value of the BrowsableAttribute is Yes.
-                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
-                        //{
-                        //    brow = false;
-                        //}
-                    }
-
-                    if (attributes.Contains(new DisplayTextAttribute(true)))
-                    {
-                        Browsable = true;
-                    }
-
-
-                    var objects = attributes.Where(x => x is SugarColumn).ToArray();
-                    if (objects.Length == 0)
+                    var sugarColumn = field.GetCustomAttribute<SugarColumn>();
+                    if (sugarColumn == null)
                     {
                         continue;
                     }
-                    else
+                    
+                    bool isBrowsable = IsPropertyBrowsable(field);
+                    
+                    // 创建列控制器
+                    ColDisplayController col = new ColDisplayController
                     {
-                        SugarColumn sugarColumn = new();
-                        sugarColumn.IsIgnore = true;
-                        if (attributes.Contains(sugarColumn))
-                        {
-                            continue;
-                        }
-                    }
-                    //foreach (Attribute attr in field.GetCustomAttributes(true))
-                    foreach (Attribute attr in objects)
+                        BelongingObjectName = type.Name,
+                        ColName = field.Name,
+                        ColDisplayText = sugarColumn.ColumnDescription ?? string.Empty,
+                        ColDisplayIndex = columnDisplayControllers.Count
+                    };
+                    
+                    // 设置数据库类型
+                    if (sugarColumn.SqlParameterDbType != null)
                     {
-
-                        entityAttr = attr as SugarColumn;
-                        if (null != entityAttr)
-                        {
-                            if (entityAttr.SqlParameterDbType != null)
-                            {
-                                col.DataPropertyName = entityAttr.SqlParameterDbType.ToString();
-                            }
-                            col.BelongingObjectName = type.Name;
-                            //类型
-                            if (entityAttr.ColumnDescription == null)
-                            {
-
-                                col.ColDisplayIndex = 0;
-                                col.Visible = false;//默认不显示主键
-                                col.ColName = field.Name;
-                                col.Disable = true;
-                                columnDisplayControllers.Add(col);
-                                continue;
-                            }
-                            if (entityAttr.IsIgnore)
-                            {
-                                col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = false;//默认不显示主键
-                                col.ColName = field.Name;
-                                col.Disable = true;
-                                if (Browsable)
-                                {
-                                    col.Disable = false;
-                                }
-                                columnDisplayControllers.Add(col);
-                                continue;
-                            }
-
-                            if (entityAttr.IsIdentity)
-                            {
-
-                                col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
-                                col.ColName = field.Name;
-                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
-                                columnDisplayControllers.Add(col);
-                                continue;
-                            }
-                            if (entityAttr.IsPrimaryKey)
-                            {   //逻辑处理时可能要主键
-
-                                col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = false;//默认不显示主键
-                                col.IsPrimaryKey = true;
-                                col.ColName = field.Name;
-                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
-                                columnDisplayControllers.Add(col);
-                                continue;
-                            }
-
-                            if (entityAttr.ColumnDescription.Trim().Length > 0 && Browsable)
-                            {
-
-                                col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = true;
-                                col.ColName = field.Name;
-                                columnDisplayControllers.Add(col);
-                            }
-                            else
-                            {
-                                //逻辑处理时可能要主键
-
-                                col.ColDisplayText = entityAttr.ColumnDescription;
-                                col.ColDisplayIndex = columnDisplayControllers.Count;
-                                col.Visible = (entityAttr.ColumnDescription.Trim().Length > 0) ? true : false;
-                                col.ColName = field.Name;
-                                col.Disable = (entityAttr.ColumnDescription.Trim().Length > 0) ? false : true;
-                                columnDisplayControllers.Add(col);
-                            }
-                        }
-
+                        col.DataPropertyName = sugarColumn.SqlParameterDbType.ToString();
                     }
-
-
-
+                    
+                    // 确定列的可视性和禁用状态
+                    bool isVisible = IsColumnVisible(sugarColumn, isBrowsable);
+                    bool isDisabled = IsColumnDisabled(sugarColumn, isBrowsable);
+                    
+                    col.Visible = isVisible;
+                    col.Disable = isDisabled;
+                    col.IsPrimaryKey = sugarColumn.IsPrimaryKey;
+                    
+                    columnDisplayControllers.Add(col);
                 }
-
             }
+            
             return columnDisplayControllers;
+        }
+        
+        /// <summary>
+        /// 确定列是否可见
+        /// </summary>
+        /// <param name="sugarColumn">SugarColumn特性</param>
+        /// <param name="isBrowsable">是否可浏览</param>
+        /// <returns>是否可见</returns>
+        private static bool IsColumnVisible(SugarColumn sugarColumn, bool isBrowsable)
+        {
+            // 基本条件检查
+            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            {
+                return false;
+            }
+            
+            // 忽略字段或自增字段不显示
+            if (sugarColumn.IsIgnore || sugarColumn.IsIdentity)
+            {
+                return false;
+            }
+            
+            // 主键默认不显示
+            if (sugarColumn.IsPrimaryKey)
+            {
+                return false;
+            }
+            
+            // 检查是否可浏览
+            return isBrowsable;
+        }
+        
+        /// <summary>
+        /// 确定列是否禁用
+        /// </summary>
+        /// <param name="sugarColumn">SugarColumn特性</param>
+        /// <param name="isBrowsable">是否可浏览</param>
+        /// <returns>是否禁用</returns>
+        private static bool IsColumnDisabled(SugarColumn sugarColumn, bool isBrowsable)
+        {
+            // 如果不可浏览，则禁用
+            if (!isBrowsable)
+            {
+                return true;
+            }
+            
+            // 描述为空时禁用
+            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            {
+                return true;
+            }
+            
+            // 忽略字段或自增字段禁用
+            if (sugarColumn.IsIgnore || sugarColumn.IsIdentity)
+            {
+                return true;
+            }
+            
+            return false;
         }
 
 
 
         /// <summary>
-        /// outlook分析时列需要取类型
+        /// 获取字段名称和SugarColumn特性列表
+        /// 优化版本：提高性能，复用已有逻辑
         /// </summary>
-        /// <param name="types"></param>
-        /// <returns></returns>
+        /// <param name="types">实体类型数组</param>
+        /// <returns>字段名称、描述和SugarColumn特性字典</returns>
         public static ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>> GetFieldNamePropertyInfoList(params Type[] types)
         {
             ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>>();
-            SugarColumn entityAttr;
+            
             foreach (var type in types)
             {
-                foreach (PropertyInfo field in type.GetProperties())
+                // 复用已有的属性过滤逻辑
+                var properties = type.GetProperties()
+                    .Where(p => !IsNavigationProperty(p))
+                    .ToList();
+                
+                foreach (PropertyInfo field in properties)
                 {
-                    bool brow = true;
-                    var attributes = field.GetCustomAttributes(true);
-                    if (attributes.Contains(new BrowsableAttribute(false)))
+                    var sugarColumn = field.GetCustomAttribute<SugarColumn>();
+                    if (sugarColumn == null)
                     {
-                        brow = false;
-                        // Checks to see if the value of the BrowsableAttribute is Yes.
-                        //if (attributes[typeof(BrowsableAttribute)].Equals(BrowsableAttribute.No))
-                        //{
-                        //    brow = false;
-                        //}
+                        continue;
                     }
-                    foreach (Attribute attr in field.GetCustomAttributes(true))
+                    
+                    bool isBrowsable = IsPropertyBrowsable(field);
+                    
+                    // 应用过滤条件
+                    if (!IsValidColumnForPropertyInfo(sugarColumn, isBrowsable))
                     {
-                        //if (attr is BrowsableAttribute)
-                        //{
-                        //    BrowsableAttribute browAttr = attr as BrowsableAttribute;
-                        //    if (!browAttr.Browsable)
-                        //    {
-                        //        brow = false;
-                        //    }
-                        //}
-
-                        entityAttr = attr as SugarColumn;
-                        if (null != entityAttr)
-                        {
-                            if (entityAttr.ColumnDescription == null)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.IsIdentity)
-                            {
-                                continue;
-                            }
-                            if (entityAttr.IsPrimaryKey)
-                            {   //逻辑处理时可能要主键
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, SugarColumn>(entityAttr.ColumnDescription, entityAttr));
-                            }
-                            if (entityAttr.ColumnDescription.Trim().Length > 0 && brow)
-                            {
-                                fieldNameList.TryAdd(field.Name, new KeyValuePair<string, SugarColumn>(entityAttr.ColumnDescription, entityAttr));
-                            }
-                        }
-
+                        continue;
                     }
-
-
-
+                    
+                    fieldNameList.TryAdd(field.Name, new KeyValuePair<string, SugarColumn>(sugarColumn.ColumnDescription, sugarColumn));
                 }
-
             }
-
-
-
-
+            
             return fieldNameList;
+        }
+        
+        /// <summary>
+        /// 检查字段是否有效（用于GetFieldNamePropertyInfoList方法）
+        /// </summary>
+        /// <param name="sugarColumn">SugarColumn特性</param>
+        /// <param name="isBrowsable">是否可浏览</param>
+        /// <returns>是否有效</returns>
+        private static bool IsValidColumnForPropertyInfo(SugarColumn sugarColumn, bool isBrowsable)
+        {
+            // 检查基本条件
+            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            {
+                return false;
+            }
+            
+            // 排除自增字段
+            if (sugarColumn.IsIdentity)
+            {
+                return false;
+            }
+            
+            // 检查是否可浏览
+            if (!isBrowsable)
+            {
+                return false;
+            }
+            
+            return true;
         }
 
 

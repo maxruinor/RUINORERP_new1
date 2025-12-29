@@ -32,7 +32,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
         /// </summary>
-        [SugarColumn(IsIgnore = true)]
+        [SugarColumn(IsIgnore = true, ColumnDescription = "多属性组合")]
         [Browsable(true)]
         public string PropertyGroupName { get; set; }
 

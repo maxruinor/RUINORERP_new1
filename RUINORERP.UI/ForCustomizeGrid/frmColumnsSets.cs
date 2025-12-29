@@ -23,6 +23,9 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
         public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
+
+        public List<ColDisplayController> InitColumnDisplays { get; set; } = new List<ColDisplayController>();
+
         public ColDisplayController[] oldColumnDisplays;
 
         ContextMenuStrip contentMenu1;
@@ -36,62 +39,15 @@ namespace RUINORERP.UI.ForCustomizeGrid
             listView1.DragOver += listView1_DragOver;
             listView1.DragDrop += listView1_DragDrop;
             listView1.DragLeave += listView1_DragLeave;
-            //遍历hashtable 分别加载到两个listview  
-            //IDictionaryEnumerator myEnumerator = YesTable.GetEnumerator();
-            //while (myEnumerator.MoveNext())
-            //{
-            //    listView1.Items.Insert(0, new ListViewItem(myEnumerator.Value.ToString()));
-            //}
+
 
             listView1.Columns.Add("显示列名");
             listView1.Columns[0].TextAlign = HorizontalAlignment.Center;
             listView1.Columns[0].Width = -2; //-1 -2 
-            /*
-            ColumnDisplays.Sort((left, right) =>
-            {
-                int x = 0;
-                if (left.ColDisplayIndex > right.ColDisplayIndex)
-                    x = 1;
-                else if (left.ColDisplayIndex == right.ColDisplayIndex)
-                    x = 0;
-                else
-                    x = -1;
 
-                return x;
-            });
-            */
-            //控制显示的顺序和表格中显示的一样 sort比方这个比较详细介绍 https://blog.csdn.net/qq_42672770/article/details/123344526
-            /*
-            ColumnDisplays.Sort((left, right) =>
-            {
-                int x = 0;
-                if (left.ColDisplayIndex > right.ColDisplayIndex)
-                    x = 1;
-                else if (left.ColDisplayIndex == right.ColDisplayIndex)
-                    x = 0;
-                else
-                    x = -1;
-
-                return x;
-            });
-            */
             #region 
 
-            //peopleList.Sort((left, right) =>
-            //{
-            //    //先按姓名排序，如果姓名相同再按年龄排序
-            //    int x = left.Name.CompareTo(right.Name);
-            //    if (x == 0)
-            //    {
-            //        if (left.Age > right.Age)
-            //            x = 1;
-            //        else if (left.Age == right.Age)
-            //            x = 0;
-            //        else
-            //            x = -1;
-            //    }
-            //    return x;
-            //});
+
             #endregion
             oldColumnDisplays = new ColDisplayController[ColumnDisplays.Count];
             ColumnDisplays.CopyTo(oldColumnDisplays);
@@ -122,14 +78,7 @@ namespace RUINORERP.UI.ForCustomizeGrid
             tt.ReshowDelay = 200;
             tt.ShowAlways = true;
 
-            //tt.SetToolTip(pictureBox_down, "下移选中字段（已选择字段列表）");  
-            //tt.SetToolTip(pictureBox_downdown, "置底选中字段（已选择字段列表）");  
-            //tt.SetToolTip(pictureBox_left, "左移选中字段");  
-            //tt.SetToolTip(pictureBox_right, "右移选中字段");  
-            //tt.SetToolTip(pictureBox_up, "上移选中字段（已选择字段列表）");  
-            //tt.SetToolTip(pictureBox_upup, "置顶选中字段（已选择字段列表）");  
-            //tt.SetToolTip(listView1, "双击从未选择字段列表中移除");  
-            //tt.SetToolTip(listView2, "双击从已选择字段列表中移除");  
+
 
             contentMenu1 = new ContextMenuStrip();
             contentMenu1.Items.Add("全选");
@@ -167,27 +116,7 @@ namespace RUINORERP.UI.ForCustomizeGrid
             if (item != null)
                 item.Selected = true;
 
-            /*
-            System.Drawing.Point ptScreen = new System.Drawing.Point(e.X, e.Y);
-            System.Drawing.Point pt = listView1.PointToClient(ptScreen);
-            ListViewItem item = listView1.GetItemAt(pt.X, pt.Y);
 
-            int targetIndex = listView1.InsertionMark.NearestIndex(pt);
-            if (targetIndex > -1)
-            {
-                System.Drawing.Rectangle itemBounds = listView1.GetItemRect(targetIndex);
-                if (pt.X > itemBounds.Left + (itemBounds.Width / 2))
-                {
-                    listView1.InsertionMark.AppearsAfterItem = true;
-                }
-                else
-                {
-                    listView1.InsertionMark.AppearsAfterItem = false;
-                }
-            }
-            listView1.InsertionMark.Index = targetIndex;
-            //if (item != null)
-            //    item.Checked = true;*/
         }
 
 
@@ -205,31 +134,7 @@ namespace RUINORERP.UI.ForCustomizeGrid
             }
             listView1.Items.Insert(TargetItem.Index, (ListViewItem)draggedItem.Clone());
             listView1.Items.Remove(draggedItem);
-            /*
-            int targetIndex = listView1.InsertionMark.Index;
-            if (targetIndex == -1)
-            {
-                return;
-            }
-            if (listView1.InsertionMark.AppearsAfterItem)
-            {
-                targetIndex++;
-            }
 
-            ListViewItem draggedItem = (ListViewItem)e.Data.GetData(typeof(ListViewItem));
-            //Point ptScreen = new Point(e.X, e.Y);
-            //Point pt = listView1.PointToClient(ptScreen);
-            //ListViewItem targetItem = listView1.GetItemAt(pt.X, pt.Y);//拖动的项将放置于该项之前
-
-            //if (null == targetItem || targetItem == draggedItem)
-            //    return;
-
-            // NeedForFix: 项实际已经交换，但是显示没有交换
-            listView1.BeginUpdate();
-
-            listView1.Items.Insert(targetIndex, (ListViewItem)draggedItem.Clone());
-            listView1.Items.Remove(draggedItem);
-            listView1.EndUpdate();*/
         }
 
         private void listView1_DragLeave(object sender, EventArgs e)
@@ -381,20 +286,18 @@ namespace RUINORERP.UI.ForCustomizeGrid
         public Type DataSourceType { get; set; }
 
 
-
-        private void btnMoreSetting_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnRestoreDefaultConfig_Click(object sender, EventArgs e)
         {
 
             if (InitializeDefaultColumn != null)
             {
-                InitializeDefaultColumn(ColumnDisplays);
+                InitializeDefaultColumn(InitColumnDisplays);
             }
-
-            //UIBizSrvice.SetGridViewAsync(DataSourceType, DataGridViewSetTarget, CurMenuInfo, true);
-
-            //这里初始化时，注意要以显示到可以操作的列为基准。（比方有些列BuildInvisibleCols在这个方法硬编码不显示，则默认这里也不会显示）
-            // UIBizSrvice.InitDataGridViewColumnDisplays(ColumnDisplays, dataGridView, gridviewType, CurMenuInfo, InvisibleCols);
-            // LoadColumnDisplayList();
         }
     }
 }

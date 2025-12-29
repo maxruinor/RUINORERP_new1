@@ -511,18 +511,32 @@ namespace RUINORERP.Model
         [XmlIgnore]
         public List<tb_FS_FileStorageInfo> FileStorageInfoList { get; set; } = new List<tb_FS_FileStorageInfo>();
 
+        /// <summary>
+        /// 生成字段名称列表（优化版本）
+        /// 排除导航属性和忽略字段，提高性能
+        /// </summary>
+        /// <param name="type">实体类型</param>
+        /// <returns>字段名称和描述字典</returns>
         private static ConcurrentDictionary<string, string> GenerateFieldNameList(Type type)
         {
             if (_fieldNameListCache.TryGetValue(type, out var fieldNameList))
             {
                 return fieldNameList;
             }
+            
             fieldNameList = new ConcurrentDictionary<string, string>();
-            foreach (var property in type.GetProperties())
+            
+            // 优化：先获取所有属性，然后过滤排除导航属性
+            var properties = type.GetProperties()
+                .Where(p => !IsNavigationProperty(p))
+                .ToList();
+            
+            foreach (var property in properties)
             {
                 var sugarColumnAttr = property.GetCustomAttribute<SugarColumn>(false);
                 if (sugarColumnAttr != null && !string.IsNullOrEmpty(sugarColumnAttr.ColumnDescription))
                 {
+                    // 保留原始逻辑：主键字段的处理保持不变
                     if (sugarColumnAttr.IsPrimaryKey)
                     {
                         //  PrimaryKeyColName = sugarColumnAttr.ColumnName;
@@ -530,8 +544,38 @@ namespace RUINORERP.Model
                     fieldNameList.TryAdd(property.Name, sugarColumnAttr.ColumnDescription);
                 }
             }
+            
             _fieldNameListCache[type] = fieldNameList;
             return fieldNameList;
+        }
+        
+        /// <summary>
+        /// 判断属性是否为导航属性（复用UIHelper中的逻辑）
+        /// </summary>
+        /// <param name="property">属性信息</param>
+        /// <returns>是否为导航属性</returns>
+        private static bool IsNavigationProperty(PropertyInfo property)
+        {
+            var sugarColumn = property.GetCustomAttribute<SugarColumn>();
+            if (sugarColumn?.IsIgnore == true)
+            {
+                return true;
+            }
+            
+            var navigateAttr = property.GetCustomAttribute<Navigate>();
+            if (navigateAttr != null)
+            {
+                return true;
+            }
+            
+            // 排除常见的基础属性
+            var baseSkipProperties = new[] { "StatusEvaluator", "FieldNameList", "HelpInfos", "RowImage", "ActionStatus", "Selected", "Childs" };
+            if (baseSkipProperties.Contains(property.Name))
+            {
+                return true;
+            }
+            
+            return false;
         }
 
         /// <summary>

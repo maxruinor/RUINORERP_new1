@@ -2344,13 +2344,16 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
 
-            //这里是不是与那个缓存 初始化时的那个字段重复？
-            ///显示列表对应的中文
-            FieldNameList = UIHelper.GetFieldNameList<T>();
-
             //重构？
             dataGridView1.XmlFileName = tableName;
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
+            
+            //同样为dataGridView1添加PropertyGroupName属性
+            if (typeof(T) == typeof(tb_ProdDetail))
+            {
+                KeyValuePair<string, bool> fieldInfo = new KeyValuePair<string, bool>("多属性组合", true);
+                this.dataGridView1.FieldNameList.TryAdd("PropertyGroupName", fieldInfo);
+            }
 
             HashSet<string> InvisibleCols = new HashSet<string>();
 

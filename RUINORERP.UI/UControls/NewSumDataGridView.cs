@@ -1185,24 +1185,6 @@ namespace RUINORERP.UI.UControls
         private void CustomizeGrid_InitializeDefaultColumnCustomizeGrid(List<ColDisplayController> ColumnDisplays)
         {
             //初始化列，有两种 一种是数据库中的。一种是xml文件的
-            if (NeedSaveColumnsXml)
-            {
-                //ColumnDisplays = customizeGrid.LoadColumnsListByCdc();
-                ColumnDisplays.Clear();
-                foreach (DataGridViewColumn dc in Columns)
-                {
-                    ColDisplayController cdc = new ColDisplayController();
-                    cdc.ColDisplayText = dc.HeaderText;
-                    cdc.ColDisplayIndex = dc.DisplayIndex;
-                    cdc.ColWidth = dc.Width;
-                    cdc.ColName = dc.Name;
-                    cdc.IsFixed = dc.Frozen;
-                    cdc.Visible = dc.Visible;
-                    cdc.DataPropertyName = dc.DataPropertyName;
-                    ColumnDisplays.Add(cdc);
-                }
-
-            }
             BindColumnStyle();
         }
 
@@ -1511,8 +1493,13 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 绑定列样式
         /// </summary>
-        public void BindColumnStyle()
+        public void BindColumnStyle(List<ColDisplayController> ColumnDisplays = null)
         {
+            if (ColumnDisplays==null)
+            {
+                ColumnDisplays = this.ColumnDisplays;
+            }
+
             if (this.Columns == null || this.Columns.Count == 0) return;
             this.SuspendLayout();
             try
@@ -1524,16 +1511,6 @@ namespace RUINORERP.UI.UControls
                     selectedColumn.Visible = UseSelectedColumn;
                     selectedColumn.ReadOnly = !UseSelectedColumn;
                 }
-
-
-                //foreach (var item in InvisibleCols)
-                //{
-                //    ColumnDisplayController cdcInv = ColumnDisplays.Where(c => c.ColName == item).FirstOrDefault();
-                //    if (cdcInv != null)
-                //    {
-                //        cdcInv.Disable = true;
-                //    }
-                //}
                 ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
                 ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
                 if (cdc != null)
@@ -1549,7 +1526,6 @@ namespace RUINORERP.UI.UControls
                     {
                         Columns[cdc.ColName].ReadOnly = true;
                     }
-
                 }
                 else
                 {
@@ -1576,7 +1552,6 @@ namespace RUINORERP.UI.UControls
 
                         #region 设置列
 
-
                         Columns[displayController.ColName].HeaderText = displayController.ColDisplayText;
                         if (displayController.ColDisplayIndex < ColumnCount)
                         {
@@ -1584,13 +1559,7 @@ namespace RUINORERP.UI.UControls
                         }
                         Columns[displayController.ColName].Width = displayController.ColWidth;
 
-                        //Columns[displayController.ColName].Visible = displayController.Visible;
                         Columns[displayController.ColName].Visible = displayController.Visible && !displayController.Disable;
-
-                        //if (displayController.ColName != "Selected")
-                        //{
-                        //    Columns[displayController.ColName].ReadOnly = true;
-                        //}
 
                         if (displayController.ColName == "Selected")
                         {
@@ -1619,7 +1588,6 @@ namespace RUINORERP.UI.UControls
                             Columns[displayController.ColName].ReadOnly = this.ReadOnly;
                         }
                         #endregion
-
 
                     }
 

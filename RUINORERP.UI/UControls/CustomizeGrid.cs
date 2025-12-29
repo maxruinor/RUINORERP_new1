@@ -1,11 +1,13 @@
-﻿using System;
+﻿using FastReport.DevComponents.DotNetBar.Controls;
+using HLH.WinControl.Mycontrol;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using System.Collections.Concurrent;
-using System.Linq;
 
 namespace RUINORERP.UI.UControls
 {
@@ -149,7 +151,13 @@ namespace RUINORERP.UI.UControls
 
 
         RUINORERP.Common.Helper.XmlHelper manager = new RUINORERP.Common.Helper.XmlHelper();
-        public List<ColDisplayController> LoadColumnsListByCdc()
+        /// <summary>
+        /// 加载列配置列表
+        /// 当init=true时，如果配置文件存在则先删除，再生成默认配置
+        /// </summary>
+        /// <param name="init">是否初始化：true时删除现有配置文件并生成默认配置</param>
+        /// <returns>列显示控制器列表</returns>
+        public List<ColDisplayController> LoadColumnsListByCdc(bool init = false)
         {
             List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>();
 
@@ -161,15 +169,22 @@ namespace RUINORERP.UI.UControls
                     this.XmlFileNamecdc = "defaultColfilecdc.xml";
                 }
                 string filepath = System.IO.Path.Combine(Application.StartupPath + "\\ColumnsConfig", this.XmlFileNamecdc.ToString());
+
                 //判断目录是否存在
                 if (!System.IO.Directory.Exists(Application.StartupPath + "\\ColumnsConfig"))
                 {
                     System.IO.Directory.CreateDirectory(Application.StartupPath + "\\ColumnsConfig");
                 }
+
+                // 如果init=true且配置文件存在，则先删除配置文件
+                if (init && System.IO.File.Exists(filepath))
+                {
+                    System.IO.File.Delete(filepath);
+                }
+
                 string s = "";
                 if (System.IO.File.Exists(filepath))
                 {
-
                     if (!System.IO.File.Exists(filepath))
                         s = "不存在相应的目录";
                     else
@@ -181,18 +196,40 @@ namespace RUINORERP.UI.UControls
             }
             catch (Exception ex)
             {
-
-
+                // 记录异常但不中断流程
+                System.Diagnostics.Debug.WriteLine($"加载列配置失败: {ex.Message}");
             }
+
             if (ColumnDisplays == null)
             {
                 ColumnDisplays = new List<ColDisplayController>();
             }
-            if (NeedSaveColumnsXml)
+
+            // 如果需要保存列配置，并且列配置为空（可能是init=true删除了配置文件，或者配置文件不存在）
+            if (NeedSaveColumnsXml && (ColumnDisplays.Count == 0 || init))
             {
-                //如果没有值，则加载默认的全部？
-                if (ColumnDisplays.Count == 0)
+                // 生成默认的列配置
+                ColumnDisplays = GenerateDefaultColumnConfig();
+
+                // 保存默认配置
+                SaveColumnsList(ColumnDisplays);
+            }
+
+            return ColumnDisplays;
+        }
+
+        /// <summary>
+        /// 生成默认的列配置
+        /// </summary>
+        /// <returns>默认列显示控制器列表</returns>
+        private List<ColDisplayController> GenerateDefaultColumnConfig()
+        {
+            List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>(); if (targetDataGridView != null)
+            {
+                if (targetDataGridView.FieldNameList != null && targetDataGridView.FieldNameList.Count > 0)
                 {
+
+
                     foreach (DataGridViewColumn dc in targetDataGridView.Columns)
                     {
                         ColDisplayController cdc = new ColDisplayController();
@@ -201,11 +238,23 @@ namespace RUINORERP.UI.UControls
                         cdc.ColWidth = dc.Width;
                         cdc.ColName = dc.Name;
                         cdc.IsFixed = dc.Frozen;
-                        cdc.Visible = dc.Visible;
+                        if (targetDataGridView.FieldNameList.ContainsKey(cdc.ColName))
+                        {
+                            KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(cdc.ColName, false);
+                            targetDataGridView.FieldNameList.TryGetValue(cdc.ColName, out Newkv);
+                            cdc.Visible = Newkv.Value;
+                        }
+                        else
+                        {
+                            cdc.Visible = dc.Visible;
+                        }
                         cdc.DataPropertyName = dc.DataPropertyName;
                         ColumnDisplays.Add(cdc);
                     }
                 }
+
+
+
             }
 
             return ColumnDisplays;
@@ -363,6 +412,11 @@ namespace RUINORERP.UI.UControls
                            select col;
 
                 set.ColumnDisplays = cols.ToList();
+                if (NeedSaveColumnsXml)
+                {
+                    set.InitColumnDisplays = LoadColumnsListByCdc(true);
+                }
+
 
                 set.InitializeDefaultColumn += Set_InitializeDefaultColumn;
 

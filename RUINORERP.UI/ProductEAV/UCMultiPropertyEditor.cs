@@ -1476,7 +1476,7 @@ namespace RUINORERP.UI.ProductEAV
                                 if (EditEntity.ActionStatus != ActionStatus.加载)
                                 {
                                     tb_ProdDetail ppg = new tb_ProdDetail();
-                                    ppg.GroupName = "";
+                                    ppg.PropertyGroupName = "";
                                     ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
                                     bindingSourceSKU明细.Add(ppg);
                                 }

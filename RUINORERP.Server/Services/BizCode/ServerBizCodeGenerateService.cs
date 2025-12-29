@@ -741,7 +741,6 @@ namespace RUINORERP.Server.Services.BizCode
                 baseInfoType,
                 prod,
                 null,
-                null, // 没有attributeInfos参数，传递null
                 PrefixParaConst,
                 seqLength,
                 includeDate,
@@ -768,7 +767,6 @@ namespace RUINORERP.Server.Services.BizCode
             BaseInfoType baseInfoType,
             tb_Prod prod,
             tb_ProdDetail prodDetail = null,
-            //  List<ProductAttributeInfo> AttributeInfos = null,
             int seqLength = 3,
             bool includeDate = false,
             CancellationToken ct = default)
@@ -778,7 +776,6 @@ namespace RUINORERP.Server.Services.BizCode
                 baseInfoType,
                 prod,
                 prodDetail,
-                null, // 没有attributeInfos参数，传递null
                 null,
                 seqLength,
                 includeDate,
@@ -800,7 +797,6 @@ namespace RUINORERP.Server.Services.BizCode
             BaseInfoType baseInfoType,
             tb_Prod prod,
             tb_ProdDetail prodDetail,
-            List<ProductAttributeInfo> attributeInfos = null,
             string PrefixParaConst = null,
             int seqLength = 3,
             bool includeDate = false,
@@ -816,7 +812,7 @@ namespace RUINORERP.Server.Services.BizCode
                     return _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
                 case BaseInfoType.SKU_No:
                     #region SKU
-                   
+
                     // SKU编码生成逻辑
                     // 编辑已有产品（ProdDetailID > 0）：SKU永远不变
                     // 注意：ProdDetailID 来自于 prod.tb_ProdDetails 集合中的详情实体
@@ -833,11 +829,10 @@ namespace RUINORERP.Server.Services.BizCode
                     if (!string.IsNullOrEmpty(existingSku))
                     {
                         // 如果SKU已有值，则更新SKU属性部分（保持序号不变）
-                        if ((attributeInfos != null && attributeInfos.Count > 0) ||
-                            (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
+                        if (prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
                         {
                             // 使用属性信息或产品属性关系更新SKU
-                            return _productSKUCodeGenerator.UpdateSKUAttributePart(existingSku, prod);
+                            return _productSKUCodeGenerator.UpdateSKUAttributePart(existingSku, prod, prodDetail);
                         }
                         else
                         {
@@ -848,12 +843,11 @@ namespace RUINORERP.Server.Services.BizCode
                     else
                     {
                         // SKU为空，生成全新的SKU
-                        if ((attributeInfos != null && attributeInfos.Count > 0) ||
-                            (prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0))
+                        if (prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
                         {
                             // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
                             // 优先使用attributeInfos，如果为空则使用prod内部的属性关系
-                            return _productSKUCodeGenerator.GenerateSKUCodeAsync(prod, attributeInfos);
+                            return _productSKUCodeGenerator.GenerateSKUCodeAsync(prod, prodDetail);
                         }
                         else
                         {

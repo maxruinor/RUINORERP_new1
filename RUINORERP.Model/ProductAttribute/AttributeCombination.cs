@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RUINORERP.Model.ProductAttribute
 {
@@ -24,5 +25,7 @@ namespace RUINORERP.Model.ProductAttribute
         {
             Properties = new List<AttributeValuePair>();
         }
+        
+       
     }
 }

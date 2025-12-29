@@ -4,6 +4,7 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.Model.ProductAttribute;
 
 namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
 {
@@ -29,7 +30,7 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         public string ParaConst { get; set; }
 
         /// <summary>
-        /// 产品相关参数 - 用于产品编码生成的特定参数
+        /// 产品SKU相关参数 - 用于SKU编码生成的特定参数
         /// </summary>
         public ProdParameter ProductParameter { get; set; }
 
@@ -58,6 +59,7 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
     /// <summary>
     /// SKU编码参数类
     /// 用于传递SKU编码生成所需的特定参数
+    /// 注意：此类已被AttributeCombination替代，建议使用AttributeCombination类
     /// </summary>
     public class ProdParameter
     {
@@ -75,38 +77,9 @@ namespace RUINORERP.PacketSpec.Models.BizCodeGenerate
         /// 序号长度 - SKU序号的固定长度
         /// </summary>
         public int SeqLength { get; set; } = 3;
-
-        /// <summary>
-        /// 属性信息列表 - 用于SKU编码生成时获取属性名称和值
-        /// </summary>
-        public List<ProductAttributeInfo> AttributeInfos { get; set; }
     }
 
-    /// <summary>
-    /// 产品属性信息 - 包含属性名称和值，用于SKU编码生成
-    /// </summary>
-    public class ProductAttributeInfo
-    {
-        /// <summary>
-        /// 属性ID
-        /// </summary>
-        public long PropertyId { get; set; }
-
-        /// <summary>
-        /// 属性名称（中文）
-        /// </summary>
-        public string PropertyName { get; set; }
-
-        /// <summary>
-        /// 属性值ID
-        /// </summary>
-        public long PropertyValueId { get; set; }
-
-        /// <summary>
-        /// 属性值名称（中文）
-        /// </summary>
-        public string PropertyValueName { get; set; }
-    }
+ 
 
     /// <summary>
     /// 条码参数类

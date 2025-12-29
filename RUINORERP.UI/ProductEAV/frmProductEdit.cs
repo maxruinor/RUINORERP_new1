@@ -631,14 +631,14 @@ namespace RUINORERP.UI.ProductEAV
 
                     #region 生成属性关系
                     //多属性
-                    if (!string.IsNullOrEmpty(epd.GroupName))
+                    if (!string.IsNullOrEmpty(epd.PropertyGroupName))
                     {
                         //明细超过一行，则为多属性。否则是单属性，或groupName有值就是多属性了
                         List<tb_Prod_Attr_Relation> RelationList = new List<tb_Prod_Attr_Relation>();
                         //有多个属性值是，则是复合特性
-                        if (epd.GroupName.Contains(","))
+                        if (epd.PropertyGroupName.Contains(","))
                         {
-                            foreach (string propertyValueName in epd.GroupName.Split(','))
+                            foreach (string propertyValueName in epd.PropertyGroupName.Split(','))
                             {
                                 tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
                                 rela.ActionStatus = detail.ActionStatus;
@@ -655,7 +655,7 @@ namespace RUINORERP.UI.ProductEAV
                         }
                         else
                         {
-                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.GroupName);
+                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.PropertyGroupName);
                             rela.ActionStatus = detail.ActionStatus;
                             if (baseInfo.ProdBaseID > 0)
                             {
@@ -1018,7 +1018,7 @@ namespace RUINORERP.UI.ProductEAV
                                     if (EditEntity.ActionStatus != ActionStatus.加载)
                                     {
                                         tb_ProdDetail ppg = new tb_ProdDetail();
-                                        ppg.GroupName = "";
+                                        ppg.PropertyGroupName = "";
                                         // 验证生成产品编号规则所需的前置条件
                                         string validationMessage3 = ValidateProductCodeGeneration(EditEntity);
                                         if (!string.IsNullOrEmpty(validationMessage3))
@@ -1727,7 +1727,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 //使用现有的tb_ProdDetail对象，添加GroupName临时字段
-                ppg.GroupName = groupName;
+                ppg.PropertyGroupName = groupName;
                 bindingSourceList.Add(ppg);
                 ppg.ActionStatus = ActionStatus.加载;
             }
@@ -2134,7 +2134,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 创建新的产品详情
                 tb_ProdDetail newDetail = new tb_ProdDetail
                 {
-                    GroupName = groupName,
+                    PropertyGroupName = groupName,
                     Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID,
                     Created_at = DateTime.Now,
                     ActionStatus = ActionStatus.新增,

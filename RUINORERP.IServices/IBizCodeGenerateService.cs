@@ -1,12 +1,13 @@
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.ProductAttribute;
+using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.Global;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Model;
-using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 
 namespace RUINORERP.IServices
 {

@@ -33,8 +33,8 @@ namespace RUINORERP.Model
         /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
         /// </summary>
         [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public string GroupName { get; set; }
+        [Browsable(true)]
+        public string PropertyGroupName { get; set; }
 
         /// <summary>
         /// 产品信息显示文本

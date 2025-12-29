@@ -17,6 +17,7 @@ using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.BizCodeGenerate;
+using RUINORERP.Model.ProductAttribute;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -117,33 +118,14 @@ namespace RUINORERP.UI.Network.Services
             var request = new BizCodeRequest { BaseInfoType = baseInfoType, ParaConst = PrefixParaConst };
 
             // 准备属性信息列表（用于SKU编码生成）
-            List<ProductAttributeInfo> attributeInfos = null;
             if (baseInfoType == BaseInfoType.SKU_No && prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0)
             {
-                attributeInfos = new List<ProductAttributeInfo>();
                 foreach (var relation in prod.tb_Prod_Attr_Relations)
                 {
                     // 确保有属性ID和属性值ID
                     if (relation.Property_ID.HasValue && relation.PropertyValueID.HasValue)
                     {
-                        var attrInfo = new ProductAttributeInfo
-                        {
-                            PropertyId = relation.Property_ID.Value,
-                            PropertyValueId = relation.PropertyValueID.Value
-                        };
-
-                        // 如果导航属性已加载，直接从导航属性获取名称
-                        if (relation.tb_prodproperty != null)
-                        {
-                            attrInfo.PropertyName = relation.tb_prodproperty.PropertyName;
-                        }
-
-                        if (relation.tb_prodpropertyvalue != null)
-                        {
-                            attrInfo.PropertyValueName = relation.tb_prodpropertyvalue.PropertyValueName;
-                        }
-
-                        attributeInfos.Add(attrInfo);
+                         
                     }
                 }
             }
@@ -153,7 +135,6 @@ namespace RUINORERP.UI.Network.Services
                 prod = prod,
                 SeqLength = seqLength,
                 IncludeDate = includeDate,
-                AttributeInfos = attributeInfos
             };
 
             request.ProductParameter = ProductParameter;
@@ -196,33 +177,14 @@ namespace RUINORERP.UI.Network.Services
             var request = new BizCodeRequest { BaseInfoType = baseInfoType };
 
             // 准备属性信息列表（用于SKU编码生成）
-            List<ProductAttributeInfo> attributeInfos = null;
-            if (baseInfoType == BaseInfoType.SKU_No && prod.tb_Prod_Attr_Relations != null && prod.tb_Prod_Attr_Relations.Count > 0)
+            if (baseInfoType == BaseInfoType.SKU_No && prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
             {
-                attributeInfos = new List<ProductAttributeInfo>();
-                foreach (var relation in prod.tb_Prod_Attr_Relations)
+                foreach (var relation in prodDetail.tb_Prod_Attr_Relations)
                 {
                     // 确保有属性ID和属性值ID
                     if (relation.Property_ID.HasValue && relation.PropertyValueID.HasValue)
                     {
-                        var attrInfo = new ProductAttributeInfo
-                        {
-                            PropertyId = relation.Property_ID.Value,
-                            PropertyValueId = relation.PropertyValueID.Value
-                        };
-
-                        // 如果导航属性已加载，直接从导航属性获取名称
-                        if (relation.tb_prodproperty != null)
-                        {
-                            attrInfo.PropertyName = relation.tb_prodproperty.PropertyName;
-                        }
-
-                        if (relation.tb_prodpropertyvalue != null)
-                        {
-                            attrInfo.PropertyValueName = relation.tb_prodpropertyvalue.PropertyValueName;
-                        }
-
-                        attributeInfos.Add(attrInfo);
+                        
                     }
                 }
             }
@@ -233,7 +195,6 @@ namespace RUINORERP.UI.Network.Services
                 prodDetail = prodDetail,
                 SeqLength = seqLength,
                 IncludeDate = includeDate,
-                AttributeInfos = attributeInfos
             };
 
             request.ProductParameter = ProductParameter;

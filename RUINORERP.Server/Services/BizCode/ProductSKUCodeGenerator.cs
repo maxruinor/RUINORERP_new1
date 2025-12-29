@@ -48,7 +48,7 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="logger">日志记录器</param>
         /// <param name="bnrFactory">编号生成工厂，用于直接生成序号，避免循环依赖</param>
         /// <param name="db">数据库客户端，用于查询产品信息</param>
-        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, IEntityCacheManager entityCacheManager, 
+        public ProductSKUCodeGenerator(ILogger<ProductSKUCodeGenerator> logger, IEntityCacheManager entityCacheManager,
         BNRFactory bnrFactory, ISqlSugarClient db)
         {
             _entityCacheManager = entityCacheManager;
@@ -69,9 +69,9 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="prod">产品实体，包含产品信息和属性</param>
         /// <param name="attributeInfos">属性信息列表（可选，用于生成属性组合码）</param>
         /// <returns>生成的SKU编码</returns>
-        public string GenerateSKUCodeAsync(tb_Prod prod, List<ProductAttributeInfo> attributeInfos = null)
+        public string GenerateSKUCodeAsync(tb_Prod prod, tb_ProdDetail prodDetail)
         {
-            if (prod == null)
+            if (prod == null || prodDetail == null)
             {
                 _logger.LogError("产品信息为空，无法生成SKU编码");
                 return GenerateDefaultSKUCodeAsync("");
@@ -94,9 +94,9 @@ namespace RUINORERP.Server.Services.BizCode
                 // 3. 获取属性组合码（按需变长）
                 // 如果传入了属性信息列表，优先使用，否则使用产品内部的属性关系
                 string attributeCode = string.Empty;
-                if (attributeInfos != null && attributeInfos.Count > 0)
+                if (prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
                 {
-                    attributeCode = GetAttributeCombinationCode(attributeInfos);
+                    attributeCode = GetAttributeCombinationCode(prodDetail.tb_Prod_Attr_Relations);
                 }
                 else
                 {
@@ -134,12 +134,12 @@ namespace RUINORERP.Server.Services.BizCode
         /// <param name="existingSku">现有的SKU编码</param>
         /// <param name="prod">更新后的产品实体</param>
         /// <returns>更新后的SKU编码</returns>
-        public string UpdateSKUAttributePart(string existingSku, tb_Prod prod)
+        public string UpdateSKUAttributePart(string existingSku, tb_Prod prod, tb_ProdDetail prodDetail)
         {
             if (string.IsNullOrEmpty(existingSku))
             {
                 // 如果现有SKU为空，则生成全新的SKU
-                return GenerateSKUCodeAsync(prod);
+                return GenerateSKUCodeAsync(prod, prodDetail);
             }
 
             try
@@ -390,7 +390,7 @@ namespace RUINORERP.Server.Services.BizCode
         /// </summary>
         /// <param name="attributeInfos">属性信息列表</param>
         /// <returns>属性组合码</returns>
-        private string GetAttributeCombinationCode(List<ProductAttributeInfo> attributeInfos)
+        private string GetAttributeCombinationCode(List<tb_Prod_Attr_Relation> attributeInfos)
         {
             if (attributeInfos == null || attributeInfos.Count == 0)
             {
@@ -404,13 +404,13 @@ namespace RUINORERP.Server.Services.BizCode
                 // 遍历所有属性信息
                 foreach (var attrInfo in attributeInfos)
                 {
-                    if (string.IsNullOrEmpty(attrInfo.PropertyName) || string.IsNullOrEmpty(attrInfo.PropertyValueName))
+                    if (attrInfo.tb_prodproperty==null || string.IsNullOrEmpty(attrInfo.tb_prodproperty.PropertyName))
                     {
                         continue;
                     }
 
                     // 生成属性代码
-                    string attrCode = GenerateAttributeCode(attrInfo.PropertyName, attrInfo.PropertyValueName);
+                    string attrCode = GenerateAttributeCode(attrInfo.tb_prodproperty.PropertyName, attrInfo.tb_prodpropertyvalue.PropertyValueName);
                     if (!string.IsNullOrEmpty(attrCode))
                     {
                         attributeCodes.Add(attrCode);
@@ -563,7 +563,7 @@ namespace RUINORERP.Server.Services.BizCode
                 return "X"; // 默认值代码
             }
 
-            // 常用属性值映射表
+            // 常用属性值映射表1
             var valueCodeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 // 颜色值

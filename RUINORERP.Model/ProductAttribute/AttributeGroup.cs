@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RUINORERP.Model.ProductAttribute
 {
@@ -23,6 +24,19 @@ namespace RUINORERP.Model.ProductAttribute
         public AttributeGroup()
         {
             SelectedValues = new List<tb_ProdPropertyValue>();
+        }
+        
+        /// <summary>
+        /// 转换为AttributeValuePair列表，兼容AttributeCombination的使用场景
+        /// </summary>
+        /// <returns>AttributeValuePair列表</returns>
+        public List<AttributeValuePair> ToAttributeValuePairList()
+        {
+            return SelectedValues.Select(v => new AttributeValuePair
+            {
+                Property = Property,
+                PropertyValue = v
+            }).ToList();
         }
     }
 }

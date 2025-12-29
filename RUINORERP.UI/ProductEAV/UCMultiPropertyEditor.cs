@@ -52,6 +52,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+           
         }
         private ClientBizCodeService clientBizCodeService;
         private void btnQueryForGoods_Click(object sender, EventArgs e)
@@ -119,6 +120,11 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UCMultiPropertyEditor_Load(object sender, EventArgs e)
         {
+            if (!this.DesignMode)
+            {
+                this.cmbPropertyType.SelectedIndexChanged += async (sender, e) => await cmbPropertyType_SelectedIndexChanged(sender, e);
+            }
+
             ImgCol.DefaultCellStyle.NullValue = null;
 
             // load image strip
@@ -421,7 +427,7 @@ namespace RUINORERP.UI.ProductEAV
             #endregion
         }
 
-        private void CheckBox_CheckStateChanged(object sender, EventArgs e)
+        private async void CheckBox_CheckStateChanged(object sender, EventArgs e)
         {
             CheckBox cb = sender as CheckBox;
             if (cb == null || !(cb.Tag is tb_ProdPropertyValue ppv))
@@ -429,110 +435,133 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
 
-            // 获取当前选中的所有属性组和属性值
-            var selectedAttributeGroups = GetSelectedAttributeGroups();
-            if (selectedAttributeGroups.Count == 0)
+            try
             {
-                return;
-            }
+                // 禁用UI交互，防止重复操作
+                this.Enabled = false;
 
-            /*
-            // 生成所有可能的属性组合
-            var newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
-
-            // 获取当前已有的属性组合
-            var existingCombinations = GetExistingAttributeCombinations();
-
-            // 比较新旧组合，找出需要添加和删除的组合
-            var combinationsToAdd = newCombinations.Except(existingCombinations, new AttributeCombinationComparer()).ToList();
-            var combinationsToRemove = existingCombinations.Except(newCombinations, new AttributeCombinationComparer()).ToList();
-
-            // 处理需要删除的组合
-            HandleCombinationsToRemove(combinationsToRemove);
-
-            // 处理需要添加的组合
-            HandleCombinationsToAdd(combinationsToAdd);
-            */
-
-            // 获取当前已有的属性组合
-            var existingCombinations = GetExistingAttributeCombinations();
-
-            // 获取选中的属性组ID列表
-            var selectedGroupIds = selectedAttributeGroups.Select(g => g.Property.Property_ID).ToList();
-
-            // 获取现有属性组合中使用的属性组ID列表
-            var existingGroupIds = new HashSet<long>();
-            foreach (var combination in existingCombinations)
-            {
-                foreach (var prop in combination.Properties)
+                // 获取当前选中的所有属性组和属性值
+                var selectedAttributeGroups = GetSelectedAttributeGroups();
+                if (selectedAttributeGroups.Count == 0)
                 {
-                    existingGroupIds.Add(prop.Property.Property_ID);
+                    return;
                 }
+
+                // 获取当前已有的属性组合
+                var existingCombinations = GetExistingAttributeCombinations();
+
+                // 获取选中的属性组ID列表
+                var selectedGroupIds = selectedAttributeGroups.Select(g => g.Property.Property_ID).ToList();
+
+                // 获取现有属性组合中使用的属性组ID列表
+                var existingGroupIds = new HashSet<long>();
+                foreach (var combination in existingCombinations)
+                {
+                    foreach (var prop in combination.Properties)
+                    {
+                        existingGroupIds.Add(prop.Property.Property_ID);
+                    }
+                }
+
+                // 判断是否是添加全新属性
+                bool isAddingNewProperty = selectedGroupIds.Except(existingGroupIds).Any();
+
+                // 生成属性组合
+                List<AttributeCombination> newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
+
+                // 使用AttributeCombinationComparer来比较组合
+                var comparer = new AttributeCombinationComparer();
+
+                // 根据不同场景处理组合
+                List<AttributeCombination> combinationsToAdd;
+                List<AttributeCombination> combinationsToRemove;
+
+                if (isAddingNewProperty)
+                {
+                    // 场景1：添加全新属性 - 保留原有组合，只添加新组合
+                    // 当添加新属性时，我们需要删除所有现有组合（因为它们缺少新属性），
+                    // 并添加包含新属性的完整组合集合
+                    combinationsToRemove = existingCombinations.ToList();
+                    combinationsToAdd = newCombinations;
+                }
+                else
+                {
+                    // 场景2：在已有属性中添加新属性值 - 排除已存在的组合
+                    combinationsToAdd = newCombinations.Except(existingCombinations, comparer).ToList();
+                    combinationsToRemove = existingCombinations.Except(newCombinations, comparer).ToList();
+                }
+
+                // 处理需要删除的组合
+                HandleCombinationsToRemove(combinationsToRemove);
+
+                // 处理需要添加的组合 - 异步等待完成
+                await HandleCombinationsToAdd(combinationsToAdd);
+
+                treeGridView1.Refresh();
+                this.btnOk.Enabled = true;
             }
-
-            // 判断是否是添加全新属性
-            bool isAddingNewProperty = selectedGroupIds.Except(existingGroupIds).Any();
-
-            // 生成属性组合
-            List<AttributeCombination> newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
-
-            // 使用AttributeCombinationComparer来比较组合
-            var comparer = new AttributeCombinationComparer();
-
-            // 根据不同场景处理组合
-            List<AttributeCombination> combinationsToAdd;
-            List<AttributeCombination> combinationsToRemove;
-
-            if (isAddingNewProperty)
+            catch (Exception ex)
             {
-                // 场景1：添加全新属性 - 保留原有组合，只添加新组合
-                // 当添加新属性时，我们需要删除所有现有组合（因为它们缺少新属性），
-                // 并添加包含新属性的完整组合集合
-                combinationsToRemove = existingCombinations.ToList();
-                combinationsToAdd = newCombinations;
+                // 记录异常并提示用户
+                MainForm.Instance.uclog.AddLog($"属性选择发生错误: {ex.Message}");
+                MessageBox.Show($"处理属性选择时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            else
+            finally
             {
-                // 场景2：在已有属性中添加新属性值 - 排除已存在的组合
-                combinationsToAdd = newCombinations.Except(existingCombinations, comparer).ToList();
-                combinationsToRemove = existingCombinations.Except(newCombinations, comparer).ToList();
+                // 恢复UI交互
+                this.Enabled = true;
             }
-
-            // 处理需要删除的组合
-            HandleCombinationsToRemove(combinationsToRemove);
-
-            // 处理需要添加的组合
-            HandleCombinationsToAdd(combinationsToAdd);
-
-            treeGridView1.Refresh();
-
-            this.btnOk.Enabled = true;
         }
 
 
 
+        /// <summary>
+        /// 异步创建SKU代码
+        /// </summary>
+        /// <param name="item">产品明细对象</param>
+        /// <returns>异步任务</returns>
         private async Task CreateSKUAsync(tb_ProdDetail item)
         {
-
-            //判断明细是不是修改       
-            //如果关系数据中关系ID大于0则是原来的。与包含=0的总数比较。如果不一致。则说明有修改
-            if (item.tb_Prod_Attr_Relations.Count != item.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).Count())
+            try
             {
-                if (item.ActionStatus != ActionStatus.新增)
+                //判断明细是不是修改       
+                //如果关系数据中关系ID大于0则是原来的。与包含=0的总数比较。如果不一致。则说明有修改
+                if (item.tb_Prod_Attr_Relations.Count != item.tb_Prod_Attr_Relations.Where(c => c.RAR_ID > 0).Count())
                 {
-                    item.ActionStatus = ActionStatus.修改;
+                    if (item.ActionStatus != ActionStatus.新增)
+                    {
+                        item.ActionStatus = ActionStatus.修改;
+                    }
                 }
-
+                
+                if (item.SKU.IsNullOrEmpty())
+                {
+                    // 生成SKU代码，包含错误处理
+                    item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
+                    
+                    // 验证生成的SKU是否有效
+                    if (string.IsNullOrEmpty(item.SKU))
+                    {
+                        throw new InvalidOperationException("SKU代码生成失败，返回值为空");
+                    }
+                    
+                    if (item.ActionStatus == ActionStatus.新增)
+                    {
+                        item.ProdDetailID = 0;
+                    }
+                }
             }
-            if (item.SKU.IsNullOrEmpty())
+            catch (Exception ex)
             {
-                item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
-                if (item.ActionStatus == ActionStatus.新增)
-                {
-                    item.ProdDetailID = 0;
-                }
+                // 记录SKU生成错误
+                MainForm.Instance.uclog.AddLog($"SKU生成失败 - 产品: {EditEntity?.CNName ?? "未知"}, 明细: {item.ProdDetailID}, 错误: {ex.Message}");
+                
+                // 设置默认SKU，避免UI显示异常
+                item.SKU = $"SKU_ERROR_{DateTime.Now:yyyyMMddHHmmss}";
+                
+                // 重新抛出异常，让调用方处理
+                throw;
             }
-
         }
 
 

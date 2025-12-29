@@ -706,7 +706,7 @@ namespace RUINORERP.UI.ProductEAV
                     newDetail.ProdDetailID = originalSkuDetail.ProdDetailID;
                     newDetail.SalePublish = originalSkuDetail.SalePublish;
                     newDetail.Standard_Price = originalSkuDetail.Standard_Price;
-    
+
                 }
 
                 // 创建TreeGrid节点
@@ -1342,7 +1342,7 @@ namespace RUINORERP.UI.ProductEAV
                         //循环所有属性，如果有值则选中并且不可以修改
                         if (EditEntity.tb_Prod_Attr_Relations != null && EditEntity.tb_Prod_Attr_Relations.Count > 1)//要多属性的时候才需要
                         {
-                            var propertys = EditEntity.tb_Prod_Attr_Relations.Select(c => c.Property_ID.Value).Distinct().ToList();
+                            var propertys = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).Select(c => c.Property_ID.Value).Distinct().ToList();
                             foreach (var item in propertys)
                             {
                                 var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();

@@ -9,7 +9,6 @@ using ObjectsComparer;
 using RUINOR.WinFormsUI;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
-using RUINORERP.Business;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.CollectionExtension;
@@ -1979,6 +1978,124 @@ namespace RUINORERP.UI.ProductEAV
             foreach (var node in treeGridView1.Nodes)
             {
                 node.Collapse();
+            }
+        }
+
+        /// <summary>
+        /// TreeGridView单元格双击事件处理
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void treeGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+
+            try
+            {
+                // 获取当前选中的节点
+                var currentNode = treeGridView1.CurrentNode;
+                if (currentNode == null)
+                {
+                    return;
+                }
+
+                // 判断节点类型并处理
+                if (currentNode.Tag is tb_Prod_Attr_Relation relation)
+                {
+                    // 双击属性关系节点，打开编辑对话框
+                    EditAttributeRelation(relation);
+                }
+                else if (currentNode.Tag is tb_ProdDetail prodDetail)
+                {
+                    // 双击产品明细节点，可以扩展功能，如查看明细详情
+                    // 这里暂时不处理，后续可根据需求扩展
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"双击属性关系时发生错误: {ex.Message}");
+                MessageBox.Show($"处理属性关系时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 编辑属性关系菜单项点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void 编辑属性关系ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 获取当前选中的节点
+                var currentNode = treeGridView1.CurrentNode;
+                if (currentNode == null)
+                {
+                    MessageBox.Show("请先选择要编辑的属性关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 判断节点类型
+                if (currentNode.Tag is tb_Prod_Attr_Relation relation)
+                {
+                    // 打开编辑对话框
+                    EditAttributeRelation(relation);
+                }
+                else
+                {
+                    MessageBox.Show("只能编辑属性关系节点", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"编辑属性关系时发生错误: {ex.Message}");
+                MessageBox.Show($"编辑属性关系时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 编辑属性关系
+        /// </summary>
+        /// <param name="relation">要编辑的属性关系</param>
+        private void EditAttributeRelation(tb_Prod_Attr_Relation relation)
+        {
+            try
+            {
+                // 创建编辑窗体
+                using (var editForm = new UCProductAttrRelationEdit())
+                {
+                    // 设置窗体标题
+                    editForm.Text = $"编辑属性关系 - {EditEntity?.CNName ?? "未知产品"}";
+                    
+                    // 绑定数据到编辑窗体
+                    editForm.BindData(relation);
+                    
+                    // 显示对话框
+                    if (editForm.ShowDialog() == DialogResult.OK)
+                    {
+                        // 更新实体状态
+                        if (relation.ActionStatus == ActionStatus.加载)
+                        {
+                            relation.ActionStatus = ActionStatus.修改;
+                        }
+                        
+                        // 刷新TreeGridView显示
+                        treeGridView1.Refresh();
+                        
+                        // 启用保存按钮
+                        this.btnOk.Enabled = true;
+                        
+                        MainForm.Instance.ShowStatusText("属性关系编辑成功");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"编辑属性关系失败: {ex.Message}");
+                MessageBox.Show($"编辑属性关系失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

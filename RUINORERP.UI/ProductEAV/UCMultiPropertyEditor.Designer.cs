@@ -81,6 +81,7 @@ namespace RUINORERP.UI.ProductEAV
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.imageStrip = new System.Windows.Forms.ImageList(this.components);
             this.contextMenuStripTreeGrid = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.编辑属性关系ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除SKU明细toolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.删除属性值ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -529,6 +530,7 @@ namespace RUINORERP.UI.ProductEAV
             this.treeGridView1.Size = new System.Drawing.Size(979, 504);
             this.treeGridView1.TabIndex = 3;
             this.treeGridView1.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.treeGridView1_CellPainting);
+            this.treeGridView1.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.treeGridView1_CellDoubleClick);
             // 
             // ImgCol
             // 
@@ -658,13 +660,21 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.contextMenuStripTreeGrid.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.contextMenuStripTreeGrid.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.编辑属性关系ToolStripMenuItem,
             this.删除SKU明细toolStripMenuItem,
             this.删除属性值ToolStripMenuItem,
             this.toolStripSeparator1,
             this.toolStripMI全部展开,
             this.toolStripMI全部折叠});
             this.contextMenuStripTreeGrid.Name = "contextMenuStrip1";
-            this.contextMenuStripTreeGrid.Size = new System.Drawing.Size(148, 98);
+            this.contextMenuStripTreeGrid.Size = new System.Drawing.Size(148, 120);
+            // 
+            // 编辑属性关系ToolStripMenuItem
+            // 
+            this.编辑属性关系ToolStripMenuItem.Name = "编辑属性关系ToolStripMenuItem";
+            this.编辑属性关系ToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.编辑属性关系ToolStripMenuItem.Text = "编辑属性关系";
+            this.编辑属性关系ToolStripMenuItem.Click += new System.EventHandler(this.编辑属性关系ToolStripMenuItem_Click);
             // 
             // 删除SKU明细toolStripMenuItem
             // 
@@ -809,6 +819,7 @@ namespace RUINORERP.UI.ProductEAV
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ImageList imageStrip;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripTreeGrid;
+        private System.Windows.Forms.ToolStripMenuItem 编辑属性关系ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 删除属性值ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 删除SKU明细toolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

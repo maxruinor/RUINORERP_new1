@@ -8,7 +8,6 @@ using ObjectsComparer;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
-using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
 using RUINORERP.Common.Extensions;
@@ -16,6 +15,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.ProductAttribute;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
@@ -103,12 +103,32 @@ namespace RUINORERP.UI.ProductEAV
                                                Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
         #endregion
 
+        /// <summary>
+        /// 加载状态标志，用于跟踪异步数据是否已加载完成
+        /// </summary>
+        private bool _isDataLoaded = false;
+        
+        /// <summary>
+        /// 用于同步异步加载完成事件
+        /// </summary>
+        private readonly TaskCompletionSource<bool> _dataLoadedTcs = new TaskCompletionSource<bool>();
+        
         public frmProductEdit()
         {
             InitializeComponent();
             if (!this.DesignMode)
             {
+                // 初始化属性列表，避免空引用异常
+                prodpropList = new List<tb_ProdProperty>();
+                prodpropValueList = new List<tb_ProdPropertyValue>();
+                categorylist = new List<tb_ProdCategories>();
+                
+                // 绑定表单Load事件
                 this.Load += async (sender, e) => await UCProductEdit_LoadAsync(sender, e);
+                
+                // 异步加载数据
+                LoadDataAsync();
+                
                 kryptonNavigator1.Button.ButtonDisplayLogic = ButtonDisplayLogic.None;
                 kryptonPageMain.ClearFlags(KryptonPageFlags.All);
                 kryptonPage2.ClearFlags(KryptonPageFlags.All);
@@ -133,6 +153,36 @@ namespace RUINORERP.UI.ProductEAV
             pictureBox1.DragEnter += new DragEventHandler(pictureBox1_DragEnter);
             pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
 
+        }
+        
+        /// <summary>
+        /// 异步加载数据
+        /// </summary>
+        private async Task LoadDataAsync()
+        {
+            try
+            {
+                // 异步加载数据
+                categorylist = await mca.QueryAsync();
+                prodpropValueList = await mcPropertyValue.QueryByNavAsync(c => true);
+                prodpropList = await mcProperty.QueryAsync();
+                
+                // 设置加载状态为完成
+                _isDataLoaded = true;
+                _dataLoadedTcs.TrySetResult(true);
+                
+                // 数据加载完成后，更新UI
+                if (EditEntity != null)
+                {
+                    // 如果已经调用了BindData，重新加载SKU列表
+                    LoadBaseInfoSKUList(EditEntity);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog("错误", $"加载数据失败: {ex.Message}");
+                _dataLoadedTcs.TrySetResult(false);
+            }
         }
 
         private void pictureBox1_DragEnter(object sender, DragEventArgs e)
@@ -222,10 +272,8 @@ namespace RUINORERP.UI.ProductEAV
 
         private async Task UCProductEdit_LoadAsync(object sender, EventArgs e)
         {
-            categorylist = await mca.QueryAsync();
-            prodpropValueList = await mcPropertyValue.QueryByNavAsync(c => true);
-            prodpropList = await mcProperty.QueryAsync();
-            //flowLayoutPanel1.AutoScroll = true;
+            // 等待数据加载完成
+            await _dataLoadedTcs.Task;
             UIProdCateHelper.BindToTreeViewNoRootNode(categorylist, txtcategory_ID.TreeView);
             // AddTopPage();
             // Do not allow the document pages to be closed or made auto hidden/docked
@@ -467,91 +515,81 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="removeList">如果有删除的行，则标识出来为删除状态</param>
         /// <returns></returns>
+        /// <summary>
+        /// 获取产品属性关系列表
+        /// 直接使用产品详情的属性关系列表，确保包含完整的属性信息
+        /// </summary>
+        /// <param name="removeList">需要删除的产品详情列表</param>
+        /// <returns>属性关系列表</returns>
         private List<tb_Prod_Attr_Relation> GetRelations(List<tb_ProdDetail> removeList)
         {
-            //明细超过一行，则为多属性。否则是单属性，或groupName有值就是多属性了
-            List<tb_Prod_Attr_Relation> RelationList = new List<tb_Prod_Attr_Relation>();
+            List<tb_Prod_Attr_Relation> relationList = new List<tb_Prod_Attr_Relation>();
+
+            // 处理所有产品详情的属性关系
             foreach (var item in bindingSourceList)
             {
-                if (item is tb_ProdDetail)
+                if (item is tb_ProdDetail detail)
                 {
-                    tb_ProdDetail epd = item as tb_ProdDetail;
-                    //多属性
-                    if (!string.IsNullOrEmpty(epd.GroupName))
+                    // 直接使用产品详情中的属性关系列表
+                    foreach (var relation in detail.tb_Prod_Attr_Relations)
                     {
-                        //有多个属性值是，则是复合特性
-                        if (epd.GroupName.Contains(","))
+                        // 确保属性关系包含完整的属性信息
+                        if (relation.Property_ID > 0 && relation.PropertyValueID > 0)
                         {
-                            foreach (string propertyValueName in epd.GroupName.Split(','))
+                            // 如果属性或属性值对象未加载，从缓存中获取
+                            if (relation.tb_prodproperty == null)
                             {
-                                tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
-                                rela.ActionStatus = epd.ActionStatus;
-                                RelationList.Add(rela);
+                                relation.tb_prodproperty = prodpropList.FirstOrDefault(p => p.Property_ID == relation.Property_ID);
                             }
+                            if (relation.tb_prodpropertyvalue == null)
+                            {
+                                relation.tb_prodpropertyvalue = prodpropValueList.FirstOrDefault(pv => pv.PropertyValueID == relation.PropertyValueID);
+                            }
+
+                            // 设置关系的操作状态
+                            relation.ActionStatus = detail.ActionStatus;
+                            relationList.Add(relation);
                         }
-                        else
-                        {
-                            tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.GroupName);
-                            rela.ActionStatus = epd.ActionStatus;
-                            RelationList.Add(rela);
-                        }
-
                     }
-                    else
-                    {
-                        //单属性
-
-                        #region
-                        tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-
-                        var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
-                        //rela.Property_ID = -1;
-                        //rela.PropertyValueID = -1;
-                        //tb_Prod_Attr_Relation relaTemp = detail.tb_Prod_Attr_Relations.FirstOrDefault(w => w.PropertyValueID == ppv.PropertyValueID);
-                        //if (relaTemp != null)
-                        //{
-                        //    rela = relaTemp;
-                        //}
-                        rela.ActionStatus = detail.ActionStatus;
-                        //详情中才保存了要更新的数据
-                        rela.tb_proddetail = detail;
-
-                        //关系表中 只保存了 属性及值。
-                        //var ra = detail.tb_Prod_Attr_Relations.FirstOrDefault(w => w.Property_ID == ppv.Property_ID && w.PropertyValueID == ppv.PropertyValueID);
-                        //if (ra != null)
-                        //{
-                        //    rela.RAR_ID = ra.RAR_ID;
-                        //}
-
-                        #endregion
-
-
-
-                        RelationList.Add(rela);
-
-                    }
-
                 }
             }
 
+            // 处理需要删除的产品详情的属性关系
             foreach (var item in removeList)
             {
-                tb_ProdDetail epd = item as tb_ProdDetail;
-                foreach (string propertyValueName in epd.GroupName.Split(','))
+                foreach (var relation in item.tb_Prod_Attr_Relations)
                 {
-                    //关系表中 只保存了 属性及值。
-                    tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
-                    rela.ActionStatus = ActionStatus.删除;
-                    RelationList.Add(rela);
-                }
+                    // 确保属性关系包含完整的属性信息
+                    if (relation.Property_ID > 0 && relation.PropertyValueID > 0)
+                    {
+                        // 如果属性或属性值对象未加载，从缓存中获取
+                        if (relation.tb_prodproperty == null)
+                        {
+                            relation.tb_prodproperty = prodpropList.FirstOrDefault(p => p.Property_ID == relation.Property_ID);
+                        }
+                        if (relation.tb_prodpropertyvalue == null)
+                        {
+                            relation.tb_prodpropertyvalue = prodpropValueList.FirstOrDefault(pv => pv.PropertyValueID == relation.PropertyValueID);
+                        }
 
+                        // 设置关系为删除状态
+                        relation.ActionStatus = ActionStatus.删除;
+                        relationList.Add(relation);
+                    }
+                }
             }
-            return RelationList;
+
+            return relationList;
         }
 
 
 
-        //这个方法比较耗时
+        /// <summary>
+        /// 获取产品明细和属性关系列表
+        /// </summary>
+        /// <param name="baseInfo">产品基本信息</param>
+        /// <param name="removeList">需要删除的产品明细列表</param>
+        /// <returns>包含完整属性关系的产品明细列表</returns>
         private List<tb_ProdDetail> GetDetailsAndRelations(tb_Prod baseInfo, List<tb_ProdDetail> removeList)
         {
             List<tb_ProdDetail> details = new List<tb_ProdDetail>();
@@ -563,28 +601,35 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     tb_ProdDetail epd = item as tb_ProdDetail;
                     tb_ProdDetail detail = new tb_ProdDetail();
-
                     //为null的不需要，不然会覆盖
                     detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
-
+                    detail.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
+                    // 设置创建/修改信息
                     if (detail.ProdDetailID == 0)
                     {
+                        // 新增产品明细
                         detail.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                         detail.Created_at = DateTime.Now;
+                        detail.ActionStatus = ActionStatus.新增;
                     }
                     else
                     {
+                        // 编辑现有产品明细
                         detail.Modified_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                         detail.Modified_at = DateTime.Now;
+                        if (detail.ActionStatus == ActionStatus.加载)
+                        {
+                            detail.ActionStatus = ActionStatus.修改;
+                        }
                     }
 
-                    if (detail.ActionStatus == ActionStatus.无操作 || detail.ActionStatus == ActionStatus.加载)
+                    if (detail.ActionStatus == ActionStatus.无操作)
                     {
                         details.Add(detail);
                         continue;
                     }
 
-                    #region 生成关系
+                    #region 生成属性关系
                     //多属性
                     if (!string.IsNullOrEmpty(epd.GroupName))
                     {
@@ -596,7 +641,7 @@ namespace RUINORERP.UI.ProductEAV
                             foreach (string propertyValueName in epd.GroupName.Split(','))
                             {
                                 tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, propertyValueName);
-                                rela.ActionStatus = epd.ActionStatus;
+                                rela.ActionStatus = detail.ActionStatus;
                                 if (baseInfo.ProdBaseID > 0)
                                 {
                                     rela.ProdBaseID = baseInfo.ProdBaseID;
@@ -611,7 +656,15 @@ namespace RUINORERP.UI.ProductEAV
                         else
                         {
                             tb_Prod_Attr_Relation rela = SKUDetailToRelateion(item as tb_ProdDetail, prodpropValueList, epd.GroupName);
-                            rela.ActionStatus = epd.ActionStatus;
+                            rela.ActionStatus = detail.ActionStatus;
+                            if (baseInfo.ProdBaseID > 0)
+                            {
+                                rela.ProdBaseID = baseInfo.ProdBaseID;
+                            }
+                            if (detail.ProdDetailID > 0)
+                            {
+                                rela.ProdDetailID = detail.ProdDetailID;
+                            }
                             RelationList.Add(rela);
                         }
                         detail.tb_Prod_Attr_Relations.AddRange(RelationList);
@@ -619,20 +672,23 @@ namespace RUINORERP.UI.ProductEAV
                     else
                     {
                         #region 单属性
-                        tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-                        //单属性要保持为null 不然db外键冲突
-                        //rela.Property_ID = -1;
-                        //rela.PropertyValueID = -1;
-                        rela.ActionStatus = detail.ActionStatus;
-                        if (baseInfo.ProdBaseID > 0)
+                        if (detail.tb_Prod_Attr_Relations.Count == 0)
                         {
-                            rela.ProdBaseID = baseInfo.ProdBaseID;
+                            tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
+                            //单属性要保持为null 不然db外键冲突
+                            //rela.Property_ID = -1;
+                            //rela.PropertyValueID = -1;
+                            rela.ActionStatus = detail.ActionStatus;
+                            if (baseInfo.ProdBaseID > 0)
+                            {
+                                rela.ProdBaseID = baseInfo.ProdBaseID;
+                            }
+                            if (detail.ProdDetailID > 0)
+                            {
+                                rela.ProdDetailID = detail.ProdDetailID;
+                            }
+                            detail.tb_Prod_Attr_Relations.Add(rela);
                         }
-                        if (detail.ProdDetailID > 0)
-                        {
-                            rela.ProdDetailID = detail.ProdDetailID;
-                        }
-                        detail.tb_Prod_Attr_Relations.Add(rela);
                         #endregion
                     }
                     #endregion
@@ -642,8 +698,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
 
-            //多属性才可能被删除一些明细,这里实际是将 删除的。和没有删除的分成两部分，前面是保留的，这里是删除移除的。
-            //重新合并。保持状态，后面看是实际删除还是逻辑删除
+            //处理需要删除的产品明细
             foreach (var item in removeList)
             {
                 if (item.ProdDetailID > 0)
@@ -651,6 +706,11 @@ namespace RUINORERP.UI.ProductEAV
                     tb_ProdDetail removeDetail = new tb_ProdDetail();
                     removeDetail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
                     removeDetail.ActionStatus = ActionStatus.删除;
+                    //设置所有关联的属性关系为删除状态
+                    foreach (var relation in removeDetail.tb_Prod_Attr_Relations)
+                    {
+                        relation.ActionStatus = ActionStatus.删除;
+                    }
                     details.Add(removeDetail);
                 }
             }
@@ -689,36 +749,54 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 将SKU表格中显示的明细转换为关系行
+        /// 将SKU表格中显示的明细转换为属性关系
+        /// 确保返回的属性关系包含完整的属性信息
         /// </summary>
-        /// <param name="item"></param>
-        /// <param name="prodPropertyValues"></param>
-        /// <param name="propertyValueName"></param>
-        /// <returns></returns>
+        /// <param name="item">产品详情对象</param>
+        /// <param name="prodPropertyValues">属性值列表</param>
+        /// <param name="propertyValueName">属性值名称</param>
+        /// <returns>包含完整属性信息的属性关系</returns>
         private tb_Prod_Attr_Relation SKUDetailToRelateion(tb_ProdDetail item, List<tb_ProdPropertyValue> prodPropertyValues, string propertyValueName)
         {
-            tb_Prod_Attr_Relation rela = new tb_Prod_Attr_Relation();
-
-            var detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(item);
-            tb_ProdPropertyValue ppv = prodPropertyValues.FirstOrDefault(p => p.PropertyValueName == propertyValueName);
-            rela.Property_ID = ppv.Property_ID;
-            rela.PropertyValueID = ppv.PropertyValueID;
-            tb_Prod_Attr_Relation relaTemp = detail.tb_Prod_Attr_Relations.FirstOrDefault(w => w.PropertyValueID == ppv.PropertyValueID);
-            if (relaTemp != null)
+            // 确保参数有效
+            if (item == null || string.IsNullOrEmpty(propertyValueName))
             {
-                rela = relaTemp;
+                return new tb_Prod_Attr_Relation();
             }
-            rela.ActionStatus = detail.ActionStatus;
-            //详情中才保存了要更新的数据
-            //rela.tb_ProdDetail = detail;
 
-            //关系表中 只保存了 属性及值。
-            var ra = detail.tb_Prod_Attr_Relations.FirstOrDefault(w => w.Property_ID == ppv.Property_ID && w.PropertyValueID == ppv.PropertyValueID);
-            if (ra != null)
+            tb_Prod_Attr_Relation relation = new tb_Prod_Attr_Relation();
+
+            // 根据属性值名称查找属性值对象
+            tb_ProdPropertyValue propertyValue = prodPropertyValues.FirstOrDefault(pv => pv.PropertyValueName == propertyValueName);
+            if (propertyValue == null)
             {
-                rela.RAR_ID = ra.RAR_ID;
+                return relation;
             }
-            return rela;
+
+            // 设置属性关系的基本信息
+            relation.Property_ID = propertyValue.Property_ID;
+            relation.PropertyValueID = propertyValue.PropertyValueID;
+
+            // 设置属性关系的操作状态
+            relation.ActionStatus = item.ActionStatus;
+
+            // 确保属性对象已加载
+            relation.tb_prodpropertyvalue = propertyValue;
+
+            // 加载属性对象
+            relation.tb_prodproperty = prodpropList.FirstOrDefault(p => p.Property_ID == propertyValue.Property_ID);
+
+            // 检查现有关系中是否已存在相同的属性关系
+            var existingRelation = item.tb_Prod_Attr_Relations.FirstOrDefault(r =>
+                r.Property_ID == propertyValue.Property_ID && r.PropertyValueID == propertyValue.PropertyValueID);
+
+            if (existingRelation != null)
+            {
+                // 如果存在现有关系，使用其ID
+                relation.RAR_ID = existingRelation.RAR_ID;
+            }
+
+            return relation;
         }
 
         private tb_Prod _EditEntity;
@@ -885,10 +963,15 @@ namespace RUINORERP.UI.ProductEAV
             }
             base.BindData(entity);
             dataGridView1.NeedSaveColumnsXml = true;
+            
+            // 等待数据加载完成，然后再加载SKU列表
+            await _dataLoadedTcs.Task;
+            
+            // 数据加载完成后，执行依赖数据的操作
             LoadBaseInfoSKUList(_EditEntity);
             listView1.UpdateUI();
             Task task_2 = Task.Run(task_Help);
-            //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
+            //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
 
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
@@ -1409,6 +1492,10 @@ namespace RUINORERP.UI.ProductEAV
                 BindToSkulistGrid(new List<tb_ProdDetail>());
                 bindingSourceList.ListChanged += BindingSourceList_ListChanged;
             }
+            
+            // 清空现有数据，避免重复加载
+            bindingSourceList.Clear();
+            
             //显示表格内容 根据sku更新
             LoadRelationToEavSku(entityProdBase);
             #endregion
@@ -1449,6 +1536,14 @@ namespace RUINORERP.UI.ProductEAV
         private List<KeyValuePair<long, string[]>> _attrGoups = new List<KeyValuePair<long, string[]>>();
 
         //UCSKUlist ucskulist = new UCSKUlist();
+
+        #region 属性组合辅助类
+
+        /// <summary>
+        /// 属性值对，包含属性和属性值的完整信息
+        /// </summary>
+
+        #endregion
         private void btnAddProperty_Click(object sender, EventArgs e)
         {
             if (cmb属性.SelectedItem == null)
@@ -1607,10 +1702,14 @@ namespace RUINORERP.UI.ProductEAV
             #region 新思路
             foreach (tb_ProdDetail detail in entityProdBase.tb_ProdDetails)
             {
+                tb_ProdDetail ppg = MainForm.Instance.mapper.Map<tb_ProdDetail>(detail);
+                ppg.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
+
                 List<tb_Prod_Attr_Relation> pars = relations.FindAll(w => w.ProdDetailID == detail.ProdDetailID).ToList();
                 string groupName = string.Empty;
                 foreach (tb_Prod_Attr_Relation par in pars)
                 {
+                    ppg.tb_Prod_Attr_Relations.Add(par);
                     if (par.Property_ID != null && par.PropertyValueID != null)
                     {
                         tb_ProdPropertyValue ppv = prodpropValueList.FirstOrDefault(f => f.PropertyValueID == par.PropertyValueID);
@@ -1620,7 +1719,6 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         groupName = "";
                     }
-
                 }
                 groupName = groupName.TrimEnd(',');
                 if (groupName.Split(',').Length > 0)
@@ -1629,15 +1727,12 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 //使用现有的tb_ProdDetail对象，添加GroupName临时字段
-                tb_ProdDetail ppg = MainForm.Instance.mapper.Map<tb_ProdDetail>(detail);
                 ppg.GroupName = groupName;
                 bindingSourceList.Add(ppg);
                 ppg.ActionStatus = ActionStatus.加载;
             }
 
             #endregion
-
-
 
             if (!isMultProperty)
             {
@@ -1870,98 +1965,218 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 else
                 {
-
                     KeyValuePair<long, string[]> kvpf = exitkvps.FirstOrDefault();
                     attrGoups.Remove(kvpf);
                     attrGoups.Add(kvp);
-
                 }
             }
             return attrGoups;
         }
 
+        /// <summary>
+        /// 生成完整的属性组合，包含属性ID、属性名称、属性值ID和属性值名称
+        /// </summary>
+        /// <param name="lv">属性选择列表视图</param>
+        /// <returns>完整的属性组合列表</returns>
+        private List<AttributeCombination> GenerateAttributeCombinations(TileListView lv)
+        {
+            // 获取所有选中的属性组和属性值
+            List<List<AttributeValuePair>> attributeGroups = new List<List<AttributeValuePair>>();
+
+            foreach (TileGroup g in lv.Groups)
+            {
+                tb_ProdProperty property = g.BusinessData as tb_ProdProperty;
+                if (property == null)
+                    continue;
+
+                List<AttributeValuePair> attributeValues = new List<AttributeValuePair>();
+
+                foreach (CheckBox lvitem in g.Items)
+                {
+                    if (lvitem.Checked && lvitem.Tag is tb_ProdPropertyValue propertyValue)
+                    {
+                        attributeValues.Add(new AttributeValuePair
+                        {
+                            Property = property,
+                            PropertyValue = propertyValue
+                        });
+                    }
+                }
+
+                if (attributeValues.Count > 0)
+                {
+                    attributeGroups.Add(attributeValues);
+                }
+            }
+
+            // 如果没有选中的属性组，返回空列表
+            if (attributeGroups.Count == 0)
+            {
+                return new List<AttributeCombination>();
+            }
+
+            // 生成所有可能的属性组合
+            List<AttributeCombination> combinations = new List<AttributeCombination>();
+
+            // 初始化第一个属性组的组合
+            foreach (var value in attributeGroups[0])
+            {
+                combinations.Add(new AttributeCombination
+                {
+                    Properties = new List<AttributeValuePair> { value }
+                });
+            }
+
+            // 处理后续属性组，生成所有组合
+            for (int i = 1; i < attributeGroups.Count; i++)
+            {
+                var tempCombinations = new List<AttributeCombination>();
+
+                foreach (var existingCombination in combinations)
+                {
+                    foreach (var value in attributeGroups[i])
+                    {
+                        var newCombination = new AttributeCombination
+                        {
+                            Properties = new List<AttributeValuePair>(existingCombination.Properties)
+                        };
+
+                        newCombination.Properties.Add(value);
+
+                        tempCombinations.Add(newCombination);
+                    }
+                }
+
+                combinations = tempCombinations;
+            }
+
+            return combinations;
+        }
+
+        /// <summary>
+        /// 从现有产品详情中获取属性组合
+        /// </summary>
+        /// <returns>现有属性组合列表</returns>
+        private List<AttributeCombination> GetExistingAttributeCombinations()
+        {
+            List<AttributeCombination> existingCombinations = new List<AttributeCombination>();
+
+            foreach (var item in bindingSourceList)
+            {
+                if (item is tb_ProdDetail detail)
+                {
+                    var combination = new AttributeCombination
+                    {
+                        ProductDetail = detail,
+                        Properties = new List<AttributeValuePair>()
+                    };
+
+                    // 如果有属性关系，从属性关系中获取完整信息
+                    if (detail.tb_Prod_Attr_Relations != null && detail.tb_Prod_Attr_Relations.Count > 0)
+                    {
+                        foreach (var relation in detail.tb_Prod_Attr_Relations)
+                        {
+                            if (relation.tb_prodproperty != null && relation.tb_prodpropertyvalue != null)
+                            {
+                                combination.Properties.Add(new AttributeValuePair
+                                {
+                                    Property = relation.tb_prodproperty,
+                                    PropertyValue = relation.tb_prodpropertyvalue
+                                });
+                            }
+                        }
+                    }
+
+                    existingCombinations.Add(combination);
+                }
+            }
+
+            return existingCombinations;
+        }
+
 
         private async void CreateSKUList()
         {
-            List<tb_ProdDetail> propGroups = new List<tb_ProdDetail>();
-            if (bindingSourceList.DataSource is List<tb_ProdDetail>)
-            {
-                propGroups = bindingSourceList.DataSource as List<tb_ProdDetail>;
-            }
             // 从依赖注入容器中获取服务实例
             var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            var clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
 
+            // 生成新的属性组合
+            List<AttributeCombination> newCombinations = GenerateAttributeCombinations(listView1);
 
-            //如果存在则更新，
-            // List<string> rs = ArrayCombination.Combination4Table(para);
-            //目前在数据库端控制属性值表中的名称不能重复。再通过对应的值名找对应的属性值ID和属性ID
-            List<string> newMix = ArrayCombination.Combination4Table(AttrGoups);
-            ////Intersect 交集，Except 差集，Union 并集 Distinct去重 如果是值类型可以直接用，如果是引用类型则要重写 
-            //参考凯旋游戏中的 差集合等处理再加上排序
-            //按组合先后排序？
-            List<string> oldMix = new List<string>();
-            foreach (tb_ProdDetail epd in propGroups)
+            // 获取现有属性组合
+            List<AttributeCombination> existingCombinations = GetExistingAttributeCombinations();
+
+            // 比较新旧组合，找出需要添加和删除的组合
+            var combinationsToAdd = newCombinations.Except(existingCombinations, new AttributeCombinationComparer()).ToList();
+            var combinationsToRemove = existingCombinations.Except(newCombinations, new AttributeCombinationComparer()).ToList();
+            // 处理需要删除的组合
+            foreach (var combination in combinationsToRemove)
             {
-                oldMix.Add(epd.GroupName);
+                // 查找对应的产品详情
+                tb_ProdDetail detailToRemove = combination.ProductDetail;
+
+                if (detailToRemove != null)
+                {
+                    // 从绑定源中移除
+                    bindingSourceList.Remove(detailToRemove);
+                    // 将删除的SKU行暂时加入临时列表
+                    removeSkuList.Add(detailToRemove);
+                }
             }
 
-            var Item交集 = newMix.Intersect(oldMix);// 交集
-                                                  //如果交集没有，则认为新的，与旧的完全不一样。把旧的全删除
-            if (Item交集.Count() == 0)
+            // 处理需要添加的组合
+            foreach (var combination in combinationsToAdd)
             {
-                foreach (var old in oldMix)
-                {
-                    //更新删除
-                    tb_ProdDetail ep = propGroups.FirstOrDefault(w => w.GroupName == old.Trim());
-                    bindingSourceList.Remove(ep);
-                    //将删除的sku行 暂时加入一个临时列表中
-                    removeSkuList.Add(ep);
-                }
-                //添加新的
-                foreach (var newItem in newMix)
-                {
-                    tb_ProdDetail ppg = new tb_ProdDetail();
-                    ppg.GroupName = newItem;
-                    EditEntity.tb_ProdDetails.Add(ppg);
-                    ppg.SKU = await bizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
-                    if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
-                    {
-                        //补码
-                        // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
-                        // 这样即使产品名称相同，由于SKU编号不同，生成的条码也会不同
-                        ppg.BarCode = await clientBizCodeService.GenerateBarCodeAsync(ppg.SKU);
-                    }
-                    bindingSourceList.Add(ppg);
-                }
-            }
-            else
-            {
-                //如果组合少了，则删除？
-                if (newMix.Count < oldMix.Count)
-                {
-                    var Item差集 = oldMix.Except(newMix);
-                    foreach (var item in Item差集)
-                    {
-                        //更新删除
-                        tb_ProdDetail ep = propGroups.FirstOrDefault(w => w.GroupName == item.Trim());
-                        bindingSourceList.Remove(ep);
-                        //将删除的sku行 暂时加入一个临时列表中
-                        removeSkuList.Add(ep);
-                    }
-                }
-                else
-                {
-                    var Item差集 = newMix.Except(oldMix);
-                    foreach (var item in Item差集)
-                    {
-                        tb_ProdDetail ppg = new tb_ProdDetail();
-                        ppg.GroupName = item;
-                        ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
-                        bindingSourceList.Add(ppg);
+                // 生成GroupName
+                string groupName = string.Join(",", combination.Properties.Select(p => p.PropertyValue.PropertyValueName));
 
+                // 创建新的产品详情
+                tb_ProdDetail newDetail = new tb_ProdDetail
+                {
+                    GroupName = groupName,
+                    Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID,
+                    Created_at = DateTime.Now,
+                    ActionStatus = ActionStatus.新增,
+                    Is_enabled = true,
+                    Is_available = true,
+                    tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>()
+                };
+
+                // 添加属性关系
+                foreach (var attrValuePair in combination.Properties)
+                {
+                    // 直接使用AttributeValuePair中的属性和属性值对象
+                    if (attrValuePair.Property != null && attrValuePair.PropertyValue != null)
+                    {
+                        tb_Prod_Attr_Relation relation = new tb_Prod_Attr_Relation
+                        {
+                            Property_ID = attrValuePair.Property.Property_ID,
+                            PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
+                            ActionStatus = ActionStatus.新增,
+                            tb_prodproperty = attrValuePair.Property,
+                            tb_prodpropertyvalue = attrValuePair.PropertyValue
+                        };
+
+                        newDetail.tb_Prod_Attr_Relations.Add(relation);
                     }
                 }
 
+                // 添加到产品详情列表
+                EditEntity.tb_ProdDetails.Add(newDetail);
+
+                // 生成SKU编码
+                newDetail.SKU = await bizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, newDetail);
+
+                // 如果需要生成条码
+                if (MainForm.Instance.AppContext.SysConfig.UseBarCode)
+                {
+                    // 使用SKU编号作为条码生成的原始编码，确保条码与产品的唯一性关联
+                    newDetail.BarCode = await clientBizCodeService.GenerateBarCodeAsync(newDetail.SKU);
+                }
+
+                // 添加到绑定源
+                bindingSourceList.Add(newDetail);
             }
         }
 

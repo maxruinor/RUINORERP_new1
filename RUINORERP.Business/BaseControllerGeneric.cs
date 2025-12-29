@@ -1,48 +1,48 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using AutoMapper;
+using CacheManager.Core;
+using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.Common;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.IRepository.Base;
+using RUINORERP.IServices;
 using RUINORERP.IServices.BASE;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices;
-using RUINORERP.Services;
-using RUINORERP.Repository.Base;
-using RUINORERP.IRepository.Base;
-using RUINORERP.Global;
-using RUINORERP.Model.Context;
-using System.Linq.Expressions;
-
-using SqlSugar;
-using System.ComponentModel;
-using RUINORERP.Business.Processor;
-using RUINORERP.Common.Helper;
-using System.Reflection;
-//using Magicodes.ExporterAndImporter.Core.Extension;
-using System.Drawing.Printing;
-using System.Runtime.InteropServices;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
-using Expression = System.Linq.Expressions.Expression;
-using RUINORERP.Common;
-using RUINORERP.Global.CustomAttribute;
-using System.Linq.Dynamic.Core;
-using SharpYaml.Tokens;
-using RUINORERP.Business.CommService;
-using System.Web.UI.WebControls;
-using AutoMapper;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.RowLevelAuthService;
-using System.Collections;
 using RUINORERP.Model.Base.StatusManager;
-using RUINORERP.Business.Cache;
+using RUINORERP.Model.Context;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.Repository.Base;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using SharpYaml.Tokens;
+using SqlSugar;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+//using Magicodes.ExporterAndImporter.Core.Extension;
+using System.Drawing.Printing;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Web.UI.WebControls;
+using Expression = System.Linq.Expressions.Expression;
 
 namespace RUINORERP.Business
 {
@@ -72,15 +72,14 @@ namespace RUINORERP.Business
         {
             _logger = logger;
             _unitOfWorkManage = unitOfWorkManage;
-            StateManager= appContext.GetRequiredService<IUnifiedStateManager>();
+            StateManager = appContext.GetRequiredService<IUnifiedStateManager>();
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
             _tableSchemaManager = appContext.GetRequiredService<ITableSchemaManager>();
             BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
-
-            // mapper = AutoMapper.AutoMapperConfig.RegisterMappings().CreateMapper();
+            _cacheManager = appContext.GetRequiredService<IEntityCacheManager>();
             mapper = appContext.GetRequiredService<IMapper>();
         }
 
@@ -291,7 +290,7 @@ namespace RUINORERP.Business
             return Task.CompletedTask;
         }
 
-   
+
         /// <summary>
         /// 获取操作描述
         /// </summary>
@@ -310,7 +309,7 @@ namespace RUINORERP.Business
             };
         }
 
-      
+
         #endregion
 
         /// <summary>

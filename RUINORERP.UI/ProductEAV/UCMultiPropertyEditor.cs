@@ -9,6 +9,7 @@ using ObjectsComparer;
 using RUINOR.WinFormsUI;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
+using RUINORERP.Business;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.CollectionExtension;
@@ -17,6 +18,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
+using RUINORERP.Model.ProductAttribute;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
@@ -413,23 +415,368 @@ namespace RUINORERP.UI.ProductEAV
                 //}
             }
 
-
-
             #endregion
         }
 
         private void CheckBox_CheckStateChanged(object sender, EventArgs e)
         {
-            #region 思路 与GetAttrGoups(listView1) 不一样，因为选择状态问题
             CheckBox cb = sender as CheckBox;
-            //List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Name);
+            if (cb == null || !(cb.Tag is tb_ProdPropertyValue ppv))
+            {
+                return;
+            }
+
+            // 获取当前选中的所有属性组和属性值
+            var selectedAttributeGroups = GetSelectedAttributeGroups();
+            if (selectedAttributeGroups.Count == 0)
+            {
+                return;
+            }
+
+            // 生成所有可能的属性组合
+            var newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
+
+            // 获取当前已有的属性组合
+            var existingCombinations = GetExistingAttributeCombinations();
+
+            // 比较新旧组合，找出需要添加和删除的组合
+            var combinationsToAdd = newCombinations.Except(existingCombinations, new AttributeCombinationComparer()).ToList();
+            var combinationsToRemove = existingCombinations.Except(newCombinations, new AttributeCombinationComparer()).ToList();
+
+            // 处理需要删除的组合
+            HandleCombinationsToRemove(combinationsToRemove);
+
+            // 处理需要添加的组合
+            HandleCombinationsToAdd(combinationsToAdd);
+
+            treeGridView1.Refresh();
+        }
+
+        /// <summary>
+        /// 获取当前选中的所有属性组和属性值
+        /// </summary>
+        /// <returns>属性组列表，每个属性组包含属性信息和选中的属性值</returns>
+        private List<AttributeGroup> GetSelectedAttributeGroups()
+        {
+            var attributeGroups = new List<AttributeGroup>();
+
+            // 遍历所有属性组
+            foreach (TileGroup group in listView1.Groups)
+            {
+                if (group.BusinessData is tb_ProdProperty property)
+                {
+                    var selectedValues = new List<tb_ProdPropertyValue>();
+
+                    // 遍历属性组中的所有属性值检查框
+                    foreach (CheckBox item in group.Items)
+                    {
+                        if (item.Checked && item.Tag is tb_ProdPropertyValue propertyValue)
+                        {
+                            selectedValues.Add(propertyValue);
+                        }
+                    }
+
+                    // 如果当前属性组有选中的值，则添加到结果列表
+                    if (selectedValues.Count > 0)
+                    {
+                        attributeGroups.Add(new AttributeGroup
+                        {
+                            Property = property,
+                            SelectedValues = selectedValues
+                        });
+                    }
+                }
+            }
+
+            return attributeGroups;
+        }
+
+        /// <summary>
+        /// 生成所有可能的属性组合
+        /// </summary>
+        /// <param name="attributeGroups">属性组列表</param>
+        /// <returns>所有可能的属性组合</returns>
+        private List<AttributeCombination> GenerateAttributeCombinations(List<AttributeGroup> attributeGroups)
+        {
+            var combinations = new List<AttributeCombination>();
+
+            // 如果没有属性组，返回空列表
+            if (attributeGroups.Count == 0)
+            {
+                return combinations;
+            }
+
+            // 初始化第一个属性组的组合
+            foreach (var value in attributeGroups[0].SelectedValues)
+            {
+                combinations.Add(new AttributeCombination
+                {
+                    Properties = new List<AttributeValuePair>
+                    {
+                        new AttributeValuePair
+                        {
+                            Property = attributeGroups[0].Property,
+                            PropertyValue = value
+                        }
+                    }
+                });
+            }
+
+            // 处理后续属性组，生成所有组合
+            for (int i = 1; i < attributeGroups.Count; i++)
+            {
+                var tempCombinations = new List<AttributeCombination>();
+
+                foreach (var existingCombination in combinations)
+                {
+                    foreach (var value in attributeGroups[i].SelectedValues)
+                    {
+                        var newCombination = new AttributeCombination
+                        {
+                            Properties = new List<AttributeValuePair>(existingCombination.Properties)
+                        };
+
+                        newCombination.Properties.Add(new AttributeValuePair
+                        {
+                            Property = attributeGroups[i].Property,
+                            PropertyValue = value
+                        });
+
+                        tempCombinations.Add(newCombination);
+                    }
+                }
+
+                combinations = tempCombinations;
+            }
+
+            return combinations;
+        }
+
+        /// <summary>
+        /// 获取当前已有的属性组合
+        /// </summary>
+        /// <returns>已有的属性组合列表</returns>
+        private List<AttributeCombination> GetExistingAttributeCombinations()
+        {
+            var existingCombinations = new List<AttributeCombination>();
+
+            // 从TreeGrid中获取现有的产品详情
+            foreach (TreeGridNode node in treeGridView1.Nodes)
+            {
+                if (node.Tag is tb_ProdDetail detail)
+                {
+                    var combination = new AttributeCombination
+                    {
+                        Properties = new List<AttributeValuePair>(),
+                        ProductDetail = detail
+                    };
+
+                    // 遍历产品详情的所有属性关系
+                    foreach (TreeGridNode subNode in node.Nodes)
+                    {
+                        if (subNode.Tag is tb_Prod_Attr_Relation relation)
+                        {
+                            combination.Properties.Add(new AttributeValuePair
+                            {
+                                Property = relation.tb_prodproperty,
+                                PropertyValue = relation.tb_prodpropertyvalue
+                            });
+                        }
+                    }
+
+                    // 如果组合有属性，则添加到结果列表
+                    if (combination.Properties.Count > 0)
+                    {
+                        //属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
+                        if (combination.Properties.Where(c => c.Property != null).ToList().Count > 0)
+                        {
+                            existingCombinations.Add(combination);
+                        }
+
+                    }
+                }
+            }
+
+            return existingCombinations;
+        }
+
+        /// <summary>
+        /// 处理需要删除的属性组合
+        /// </summary>
+        /// <param name="combinationsToRemove">需要删除的组合列表</param>
+        private void HandleCombinationsToRemove(List<AttributeCombination> combinationsToRemove)
+        {
+            foreach (var combination in combinationsToRemove)
+            {
+                if (combination.ProductDetail != null)
+                {
+                    // 从TreeGrid中移除对应的节点
+                    TreeGridNode nodeToRemove = treeGridView1.Nodes.FirstOrDefault(n => n.Tag == combination.ProductDetail);
+                    if (nodeToRemove != null)
+                    {
+                        // 如果是新增的产品详情，直接删除
+                        if (combination.ProductDetail.ActionStatus == ActionStatus.新增)
+                        {
+                            // 移除所有子节点对应的属性关系
+                            foreach (TreeGridNode subNode in nodeToRemove.Nodes)
+                            {
+                                if (subNode.Tag is tb_Prod_Attr_Relation relation)
+                                {
+                                    EditEntity.tb_Prod_Attr_Relations.Remove(relation);
+                                }
+                            }
+
+                            // 移除产品详情
+                            EditEntity.tb_ProdDetails.Remove(combination.ProductDetail);
+                            treeGridView1.Nodes.Remove(nodeToRemove);
+                        }
+                        // 如果是已存在的产品详情，标记为删除
+                        else
+                        {
+                            combination.ProductDetail.ActionStatus = ActionStatus.删除;
+                            nodeToRemove.Cells[6].Value = "删除";
+                            nodeToRemove.ImageIndex = 3; // 删除图标
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 处理需要添加的属性组合
+        /// </summary>
+        /// <param name="combinationsToAdd">需要添加的组合列表</param>
+        private void HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd)
+        {
+            // 检查是否是从单属性转换为多属性的情况，获取原始SKU信息
+            tb_ProdDetail originalSkuDetail = null;
+            if (EditEntity.tb_Prod_Attr_Relations.Count == 1)
+            {
+                ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
+                if (pt == ProductAttributeType.可配置多属性 && EditEntity.tb_Prod_Attr_Relations[0].Property_ID == null)
+                {
+                    // 从单属性转换为多属性，获取原始产品详情
+                    originalSkuDetail = EditEntity.tb_ProdDetails.FirstOrDefault();
+                }
+            }
+
+            bool isFirstCombination = true;
+            foreach (var combination in combinationsToAdd)
+            {
+                // 创建新的产品详情
+                long skuRowId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                var newDetail = new tb_ProdDetail
+                {
+                    ProdBaseID = EditEntity.ProdBaseID,
+                    ProdDetailID = skuRowId, // 临时ID，保存到DB前会重新设置
+                    ActionStatus = ActionStatus.新增,
+                    Is_enabled = true,
+                    Is_available = true,
+                    Created_at = DateTime.Now,
+                    Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID,
+                    tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>()
+                };
+
+                // 如果是第一个组合且存在原始SKU信息，继承原始SKU
+                // /第一个组合设为默认
+                if (isFirstCombination && originalSkuDetail != null)
+                {
+                    newDetail.SKU = originalSkuDetail.SKU;
+                    // 复制其他相关字段
+                    newDetail.ProdBaseID = originalSkuDetail.ProdBaseID;
+                    newDetail.PrimaryKeyID = originalSkuDetail.PrimaryKeyID;
+                    newDetail.BarCode = originalSkuDetail.BarCode;
+                    newDetail.Weight = originalSkuDetail.Weight;
+                    newDetail.BOM_ID = originalSkuDetail.BOM_ID;
+                    newDetail.DataStatus = originalSkuDetail.DataStatus;
+                    newDetail.Created_at = originalSkuDetail.Created_at;
+                    newDetail.Created_by = originalSkuDetail.Created_by;
+                    BusinessHelper.Instance.EditEntity(newDetail); // 初始化编辑信息
+                    newDetail.Discount_Price = originalSkuDetail.Discount_Price;
+                    newDetail.Image = originalSkuDetail.Image;
+                    newDetail.Images = originalSkuDetail.Images;
+                    newDetail.ImagesPath = originalSkuDetail.ImagesPath;
+                    newDetail.Is_available = originalSkuDetail.Is_available;
+                    newDetail.Is_enabled = originalSkuDetail.Is_enabled;
+                    newDetail.Market_Price = originalSkuDetail.Market_Price;
+                    newDetail.Modified_at = originalSkuDetail.Modified_at;
+                    newDetail.Modified_by = originalSkuDetail.Modified_by;
+
+                    newDetail.Notes = originalSkuDetail.Notes;
+                    newDetail.ProdDetailID = originalSkuDetail.ProdDetailID;
+                    newDetail.SalePublish = originalSkuDetail.SalePublish;
+                    newDetail.Standard_Price = originalSkuDetail.Standard_Price;
+    
+                }
+
+                // 创建TreeGrid节点
+                Font boldFont = new Font(treeGridView1.DefaultCellStyle.Font, FontStyle.Bold);
+                TreeGridNode node = treeGridView1.Nodes.Add(skuRowId, 0, "", GetPropertiesText(combination),
+                    newDetail.SKU != null ? newDetail.SKU : "等待生成", EditEntity.CNName, "新增", newDetail.Is_enabled);
+                node.NodeName = skuRowId.ToString();
+                node.ImageIndex = 1; // 新增图标
+                node.Tag = newDetail;
+                node.DefaultCellStyle.Font = boldFont;
+
+                // 为每个属性值创建属性关系
+                foreach (var attrValuePair in combination.Properties)
+                {
+                    var relation = new tb_Prod_Attr_Relation
+                    {
+                        Property_ID = attrValuePair.Property.Property_ID,
+                        PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
+                        ProdBaseID = EditEntity.ProdBaseID,
+                        ProdDetailID = skuRowId,
+                        ActionStatus = ActionStatus.新增,
+                        tb_prodproperty = attrValuePair.Property,
+                        tb_prodpropertyvalue = attrValuePair.PropertyValue
+                    };
+
+                    // 添加到产品详情和编辑实体
+                    newDetail.tb_Prod_Attr_Relations.Add(relation);
+                    EditEntity.tb_Prod_Attr_Relations.Add(relation);
+
+                    // 创建子节点
+                    long rowId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                    TreeGridNode subNode = node.Nodes.Add(rowId, relation.RAR_ID, attrValuePair.Property.PropertyName, attrValuePair.PropertyValue.PropertyValueName, "", "", "新增");
+                    subNode.NodeName = rowId.ToString();
+                    subNode.Tag = relation;
+                    subNode.ImageIndex = 1; // 新增图标
+                }
+
+                // 添加到产品详情列表
+                EditEntity.tb_ProdDetails.Add(newDetail);
+
+                isFirstCombination = false;
+            }
+        }
+
+        /// <summary>
+        /// 根据属性组合生成显示文本
+        /// </summary>
+        /// <param name="combination">属性组合</param>
+        /// <returns>显示文本</returns>
+        private string GetPropertiesText(AttributeCombination combination)
+        {
+            return string.Join(",", combination.Properties.Select(p => p.PropertyValue.PropertyValueName));
+        }
+
+        /// <summary>
+        /// 检查框状态改变事件处理
+        /// 简化的多属性组合生成逻辑，确保包含完整的属性信息
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        [Obsolete]
+        private void CheckBox_CheckStateChanged_old(object sender, EventArgs e)
+        {
+            // 获取触发事件的检查框
+            CheckBox cb = sender as CheckBox;
+
             List<KeyValuePair<long, string[]>> attrGoupsByID = GetAttrGoupsByIDName(listView1, g => g.GroupID, lvitem => lvitem.Text);
 
             List<string> NewMixByListView = ArrayCombination.Combination4Table(attrGoupsByID);
-#if DEBUG
-            //attrGoupsByName = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Text);
-            //List<string> newMixName = ArrayCombination.Combination4Table(attrGoupsByName);
-#endif
+
 
             //要比较的集合数据
             List<string> OldMixByTreeGrid = new List<string>();
@@ -597,8 +944,7 @@ namespace RUINORERP.UI.ProductEAV
                                             detail.tb_Prod_Attr_Relations.Add(par);
                                             node.Cells[3].Value = GetPropertiesText(detail.tb_Prod_Attr_Relations);
 
-                                            //加载属性值时，勾选对应的属性值
-                                            //listView1.SetItemChecked(par.tb_prodpropertyvalue.tb_prodproperty.Property_ID.ToString(), par.tb_prodpropertyvalue.PropertyValueName, true);
+
 
                                             #endregion
                                         }
@@ -654,67 +1000,7 @@ namespace RUINORERP.UI.ProductEAV
                                     {
 
                                     }
-                                    /*
-                                    List<long> PVlist = new List<long>();
-                                    var list = EditEntity.tb_Prod_Attr_Relations.Where(c => MItem.Contains(c.PropertyValueID.ToString())).ToList();
-                                    //判断是否已经存在，定义一个集合，用于存储属性值，如果正好少一个属性值，则添加就是的勾选的那个值。
-                                    foreach (string value in values)
-                                    {
-                                        if (EditEntity.tb_Prod_Attr_Relations.Any(c => c.PropertyValueID.ToString() == value))
-                                        {
-                                            PVlist.Add(value.ToLong());
-                                        }
-                                    }
-                                    if (PVlist.Count == values.Length - 1)
-                                    {
-                                        //添加
-                                        //找到哪一行的产品明细的节点
-                                        List<long> prodDeitalIds = new List<long>();
-                                        foreach (long pvid in PVlist)
-                                        {
-                                            //将属性值ID转换为产品明细ID。再分组找到对应的明细
-                                            EditEntity.tb_Prod_Attr_Relations.Where(c => c.PropertyValueID.ToString() == pvid.ToString()).ToList().ForEach(c => prodDeitalIds.Add(c.ProdDetailID.Value));
-                                        }
 
-                                        // 找到 prodDeitalID 中唯一值的数量与 PVlist 长度相同的值
-                                        var uniqueProdDeitalIDs = prodDeitalIds
-                                            .Distinct() // 移除重复项
-                                            .Where(id => prodDeitalIds.Count(x => x == id) == PVlist.Count) // 筛选出每个出现次数与 PVlist 长度相同的 ID
-                                            .ToList();
-
-                                        //应该只有一个值
-                                        foreach (var prodDeitalId in uniqueProdDeitalIDs)
-                                        {
-                                            TreeGridNode node = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == prodDeitalId.ToString());
-                                            if (node != null)
-                                            {
-                                                tb_ProdDetail detailData = node.Tag is tb_ProdDetail ? node.Tag as tb_ProdDetail : new tb_ProdDetail();
-                                                //添加
-                                                node.Cells[6].Value = "编辑";
-                                                node.Cells[3].Value = prop;
-                                                node.ImageIndex = 2;
-                                                node.NodeName = prodDeitalId.ToString();//标记节点ID，实际就是产品明细ID 等待生成
-
-                                                tb_Prod_Attr_Relation par = new tb_Prod_Attr_Relation();
-                                                par.PropertyValueID = ppv.PropertyValueID;
-                                                par.Property_ID = ppv.Property_ID;
-                                                par.ProdBaseID = EditEntity.ProdBaseID;
-                                                par.tb_prodproperty = ppv.tb_prodproperty;
-                                                par.ProdDetailID = prodDeitalId;//等待生成
-                                                EditEntity.tb_Prod_Attr_Relations.Add(par);
-                                                detailData.tb_Prod_Attr_Relations.Add(par);
-                                                long rowid = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                                                TreeGridNode subnode = node.Nodes.Add(rowid, par.RAR_ID, ppv.tb_prodproperty.PropertyName, ppv.PropertyValueName, "", "", "新增");
-                                                subnode.NodeName = rowid.ToString();//标记节点ID， 
-                                                subnode.Tag = par;
-                                                subnode.ImageIndex = 1;
-                                                //加载属性值时，勾选对应的属性值
-                                                // listView1.SetItemChecked(par.tb_prodpropertyvalue.tb_prodproperty.Property_ID.ToString(), par.tb_prodpropertyvalue.PropertyValueName, true);
-
-                                            }
-                                        }
-                                    }
-                                    */
                                 }
                             }
 
@@ -881,7 +1167,8 @@ namespace RUINORERP.UI.ProductEAV
                     #endregion
                 }
             }
-            #endregion
+
+
         }
 
         private string GetPropertiesText(List<tb_Prod_Attr_Relation> list)

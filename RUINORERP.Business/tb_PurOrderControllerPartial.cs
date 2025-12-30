@@ -6,34 +6,34 @@
 // 作者：Watson
 // 时间：12/01/2023 18:04:35
 // **************************************
-using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
-using FluentValidation.Results;
-using RUINORERP.Services;
-
-using RUINORERP.Model.Base;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Context;
-using System.Linq;
-using RUINORERP.Global;
-using SqlSugar;
-using RUINORERP.Business.Security;
-using RUINORERP.Extensions;
 using AutoMapper;
-using RUINORERP.Business.CommService;
-using RUINORERP.Global.EnumExt;
-using System.Collections;
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.DB;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Extensions;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using SqlSugar;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Business
 {
@@ -618,6 +618,7 @@ namespace RUINORERP.Business
             AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
             if (authorizeController.EnableFinancialModule())
             {
+
                 #region 生成预付款单 
 
                 #region 生成预付款单条件判断检测
@@ -669,78 +670,149 @@ namespace RUINORERP.Business
 
                     }
                 }
-
-
                 #endregion
 
-
-                // 外币相关处理 正确是 外币时一定要有汇率
-                decimal exchangeRate = 1; // 获取销售订单的汇率
-                if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                if (entity.PayStatus == (int)PayStatus.未付款 || entity.PayStatus == (int)PayStatus.部分预付)
                 {
-                    exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
-                                                        // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                        // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
-                }
-
-                //正常来说。不能重复生成。即使退款也只会有一个对应订单的预付款单。 一个预付款单可以对应正负两个收款单。
-                // 生成预付款单前 检测
-                var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity, PrepaidAmount);
-                if (PreReceivedPayment.LocalPrepaidAmount > 0)
-                {
-                    ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
-                    if (!rmpay.Succeeded)
+                    // 验证预付金额是否超过订单总金额
+                    var paymentCheck = await CheckOrderPaymentWithMessage(PrepaidAmount, entity);
+                    if (!paymentCheck.CanDo)
                     {
-
-                        // 处理预付款单生成失败的情况
                         rmrs.Succeeded = false;
                         _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                        rmrs.ErrorMsg = paymentCheck.Message;
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
                             _logger.Debug(rmrs.ErrorMsg);
                         }
+                        return rmrs;
                     }
-                    else
-                    {
-                        rmrs.ReturnObject = rmpay.ReturnObject;
-                        /*
-                        if (_appContext.FMConfig.AutoAuditPrePayment)
-                        {
-                            #region 自动审核预付款
-                            //销售订单审核时自动将预付款单设为"已生效"状态
-                            PreReceivedPayment.ApprovalOpinions = "再次收到预付款，系统自动审核";
-                            PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
-                            PreReceivedPayment.ApprovalResults = true;
-                            ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
-                            if (!autoApproval.Succeeded)
-                            {
-                                rmrs.Succeeded = false;
-                                _unitOfWorkManage.RollbackTran();
-                                rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                if (_appContext.SysConfig.ShowDebugInfo)
-                                {
-                                    _logger.Debug(rmrs.ErrorMsg);
-                                }
-                            }
-                            else
-                            {
-                                rmrs.ReturnObject = autoApproval.ReturnObject;
-                                FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预付款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
-                            }
-                            #endregion
-                        }
-                        */
-                    }
-                }
 
-                #endregion
+                    // 外币相关处理 正确是 外币时一定要有汇率
+                    decimal exchangeRate = 1; // 获取销售订单的汇率
+                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
+                    {
+                        exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
+                                                            // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                                            // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                    }
+
+                    //正常来说。不能重复生成。即使退款也只会有一个对应订单的预付款单。 一个预付款单可以对应正负两个收款单。
+                    // 生成预付款单前 检测
+                    var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                    var PreReceivedPayment = await ctrpay.BuildPreReceivedPaymentAsync(entity, PrepaidAmount);
+                    if (PreReceivedPayment.LocalPrepaidAmount > 0)
+                    {
+                        ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrpay.SaveOrUpdate(PreReceivedPayment);
+                        if (!rmpay.Succeeded)
+                        {
+
+                            // 处理预付款单生成失败的情况
+                            rmrs.Succeeded = false;
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = $"预付款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.Debug(rmrs.ErrorMsg);
+                            }
+                        }
+                        else
+                        {
+                            rmrs.ReturnObject = rmpay.ReturnObject;
+                            rmrs.Succeeded = true;
+                            /*
+                            if (_appContext.FMConfig.AutoAuditPrePayment)
+                            {
+                                #region 自动审核预付款
+                                //销售订单审核时自动将预付款单设为"已生效"状态
+                                PreReceivedPayment.ApprovalOpinions = "再次收到预付款，系统自动审核";
+                                PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.已审核;
+                                PreReceivedPayment.ApprovalResults = true;
+                                ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrpay.ApprovalAsync(PreReceivedPayment);
+                                if (!autoApproval.Succeeded)
+                                {
+                                    rmrs.Succeeded = false;
+                                    _unitOfWorkManage.RollbackTran();
+                                    rmrs.ErrorMsg = $"预付款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                    if (_appContext.SysConfig.ShowDebugInfo)
+                                    {
+                                        _logger.Debug(rmrs.ErrorMsg);
+                                    }
+                                }
+                                else
+                                {
+                                    rmrs.ReturnObject = autoApproval.ReturnObject;
+                                    FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预付款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                }
+                                #endregion
+                            }
+                            */
+                        }
+                    }
+
+                    #endregion
+                }
+                else
+                {
+                    rmrs.Succeeded = false;
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.ErrorMsg = "只有未付款或部分预付的订单才能生成预付款单";
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.Debug(rmrs.ErrorMsg);
+                    }
+                    return rmrs;
+                }
             }
             return rmrs;
         }
 
+        /// <summary>
+        /// 检查对应的订单的预付金额是否有超过订单金额的情况
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="action"></param>
+        /// <returns></returns>
+        public async Task<(bool CanDo, string Message)> CheckOrderPaymentWithMessage(decimal PrepaidAmount, tb_PurOrder entity)
+        {
+            // 检查1：订单订金+当前预付金额 ≤ 订单总金额
+            if (entity.Deposit + PrepaidAmount > entity.TotalAmount)
+            {
+                return (false, $"当前预付金额与订单订金之和已经超过订单总金额");
+            }
+
+            // 检查2：已生效的预付款单金额+当前预付金额 ≤ 订单总金额
+            List<tb_FM_PreReceivedPayment> prePaidList = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()
+                .Where(m => m.SourceBizType == (int)BizType.采购订单 && m.SourceBillId == entity.PurOrder_ID)
+                .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.已生效)
+                .ToListAsync();
+            decimal totalPrePaid = prePaidList.Sum(c => c.LocalPrepaidAmount);
+            if (totalPrePaid + PrepaidAmount > entity.TotalAmount)
+            {
+                return (false, $"当前预付金额与已预付款之和已经超过订单总金额");
+            }
+
+            // 检查3：已支付的支付记录金额+当前预付金额 ≤ 订单总金额
+            List<tb_FM_PaymentRecord> paymentRecords = await _appContext.Db.CopyNew().Queryable<tb_FM_PaymentRecord>()
+                .Where(m => m.SourceBillNos.Contains(entity.PurOrderNo))
+                .Where(c => c.PaymentStatus == (int)PaymentStatus.已支付)
+                .Where(c => !c.IsReversed)
+                .ToListAsync();
+            decimal totalPaidAmount = paymentRecords.Sum(c => c.TotalLocalAmount);
+            if (totalPaidAmount + PrepaidAmount > entity.TotalAmount)
+            {
+                return (false, $"当前预付金额与已支付金额之和已经超过订单总金额");
+            }
+
+            // 检查4：订单订金+已生效预付款+已支付金额+当前预付金额 ≤ 订单总金额
+            if (entity.Deposit + totalPrePaid + totalPaidAmount + PrepaidAmount > entity.TotalAmount)
+            {
+                return (false, $"当前预付金额与订单订金、已预付款及已支付金额之和已经超过订单总金额");
+            }
+
+            return (true, $"");
+        }
 
 
         /// <summary>
@@ -890,16 +962,7 @@ namespace RUINORERP.Business
 
                 //要添加外币金额的运费
                 entity.ForeignTotalAmount = entity.ForeignTotalAmount + entity.ForeignShipCost;
-
-                //if (order.Arrival_date.HasValue)
-                //{
-                //    entity.EntryDate = order.Arrival_date.Value;
-                //}
-                //else
-                //{
                 entity.EntryDate = System.DateTime.Now;
-                //}
-
                 entity.PrintStatus = 0;
                 BusinessHelper.Instance.InitEntity(entity);
 
@@ -917,8 +980,6 @@ namespace RUINORERP.Business
         }
         public async override Task<List<T>> GetPrintDataSource(long MainID)
         {
-            //var queryable = _appContext.Db.Queryable<tb_SaleOrderDetail>();
-            //var list = _appContext.Db.Queryable(queryable).LeftJoin<View_ProdDetail>((o, d) => o.ProdDetailID == d.ProdDetailID).Select(o => o).ToList();
             List<tb_PurOrder> list = await _appContext.Db.CopyNew().Queryable<tb_PurOrder>().Where(m => m.PurOrder_ID == MainID)
                              .Includes(a => a.tb_customervendor)
                             .Includes(a => a.tb_employee)

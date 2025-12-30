@@ -669,7 +669,6 @@ namespace RUINORERP.UI
         }
         string UpdatefilePath = "UpdateLog.txt";
 
-
         /// <summary>
         /// 系统更新方法
         /// </summary>
@@ -1103,7 +1102,7 @@ namespace RUINORERP.UI
             {
                 System.Diagnostics.Debug.WriteLine($"客户端表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
             }
-            this.Text = "企业数字化集成ERP v3.2" + "-" + Program.ERPVersion;
+            this.Text = "企业数字化集成ERP ver3.2" + "-" + Program.ERPVersion;
             //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {

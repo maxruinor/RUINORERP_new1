@@ -56,13 +56,8 @@ namespace AutoUpdate
         [STAThread]
         static int Main(string[] args)
         {
-            // 检查是否需要执行自身更新
-            if (SelfUpdateHelper.IsSelfUpdateRequested(args))
-            {
-                // 执行自身更新逻辑
-                SelfUpdateHelper.ExecuteSelfUpdate(args);
-                return 0;
-            }
+            // AutoUpdate程序不再处理自我更新，专注于更新主程序
+            // 自我更新由专门的AutoUpdateUpdater处理
 
             // 正常启动更新程序
             Application.EnableVisualStyles();

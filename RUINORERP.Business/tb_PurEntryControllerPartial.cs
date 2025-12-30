@@ -404,11 +404,11 @@ namespace RUINORERP.Business
 
                 // 处理分组数据，更新库存记录的各字段
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                
+
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
-                    
+
                     // 创建库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
@@ -420,8 +420,15 @@ namespace RUINORERP.Business
                     transaction.UnitCost = inv.Inv_Cost;
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                    transaction.Notes = $"采购入库单审核：{entity.PurEntryNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
-
+                    View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(inv.ProdDetailID);
+                    if (obj != null)
+                    {
+                        transaction.Notes = $"采购入库单审核：{entity.PurEntryNo}，产品：{obj.SKU}-{obj.CNName}";
+                    }
+                    else
+                    {
+                        transaction.Notes = $"采购入库单审核：{entity.PurEntryNo}";
+                    }
                     transactionList.Add(transaction);
                 }
 
@@ -460,8 +467,8 @@ namespace RUINORERP.Business
                 }
 
                 if (PriceRecords.Count > 0)
-                { 
-                     
+                {
+
                     // 更新价格记录表  是不是 批量更新  或 批量插入？
                     DbHelper<tb_PriceRecord> PriceRecorddbHelper = _appContext.GetRequiredService<DbHelper<tb_PriceRecord>>();
                     var PriceRecordCounter = await PriceRecorddbHelper.BaseDefaultAddElseUpdateAsync(PriceRecords);
@@ -647,7 +654,7 @@ namespace RUINORERP.Business
                         var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
                         // 递归更新所有上级BOM的成本
                         await ctrbom.UpdateParentBOMsAsync(group.Key.ProdDetailID, inv.Inv_Cost);
-                      
+
                     }
 
                     #endregion
@@ -689,11 +696,11 @@ namespace RUINORERP.Business
 
                 // 处理分组数据，更新库存记录的各字段
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                
+
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
-                    
+
                     // 创建反向库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
@@ -705,7 +712,18 @@ namespace RUINORERP.Business
                     transaction.UnitCost = inv.Inv_Cost;
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                    transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
+
+                    View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(inv.ProdDetailID);
+                    if (obj != null)
+                    {
+                        transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}，产品：{obj.SKU}-{obj.CNName}";
+                    }
+                    else
+                    {
+                        transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}";
+                    }
+
+                  
 
                     transactionList.Add(transaction);
                 }
@@ -719,7 +737,7 @@ namespace RUINORERP.Business
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("入库时，库存更新数据为0，更新失败！");
                     }
-                    
+
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                     await tranController.BatchRecordTransactions(transactionList);

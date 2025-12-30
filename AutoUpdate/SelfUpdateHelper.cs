@@ -16,22 +16,32 @@ namespace AutoUpdate
     public class SelfUpdateHelper
     {
         /// <summary>
-        /// 启动辅助进程进行自身更新
+        /// 启动AutoUpdateUpdater来更新AutoUpdate程序自身
         /// </summary>
         /// <param name="updaterExePath">当前更新程序的路径</param>
         /// <param name="newFilesPath">新文件所在的临时目录</param>
-        /// <returns>是否成功启动辅助进程</returns>
-        public static bool StartUpdateHelper(string updaterExePath, string newFilesPath)
+        /// <returns>是否成功启动更新器</returns>
+        public static bool StartAutoUpdateUpdater(string updaterExePath, string newFilesPath)
         {
             try
             {
-                // 准备更新命令
-                string arguments = $"--self-update --source-dir \"{newFilesPath}\" --target-dir \"{Path.GetDirectoryName(updaterExePath)}\" --exe-name \"{Path.GetFileName(updaterExePath)}\"";
+                // 查找AutoUpdateUpdater.exe
+                string targetDir = Path.GetDirectoryName(updaterExePath);
+                string autoUpdateUpdaterPath = Path.Combine(targetDir, "AutoUpdateUpdater.exe");
+                
+                if (!File.Exists(autoUpdateUpdaterPath))
+                {
+                    WriteLog("AutoUpdateLog.txt", $"AutoUpdateUpdater.exe不存在：{autoUpdateUpdaterPath}");
+                    return false;
+                }
 
-                // 启动辅助进程
+                // 准备更新命令
+                string arguments = $"--source-dir \"{newFilesPath}\" --target-dir \"{targetDir}\" --exe-name \"{Path.GetFileName(updaterExePath)}\"";
+
+                // 启动AutoUpdateUpdater
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
-                    FileName = updaterExePath,
+                    FileName = autoUpdateUpdaterPath,
                     Arguments = arguments,
                     CreateNoWindow = false,
                     WindowStyle = ProcessWindowStyle.Hidden,
@@ -41,6 +51,7 @@ namespace AutoUpdate
                 Process updateProcess = Process.Start(startInfo);
                 if (updateProcess != null)
                 {
+                    WriteLog("AutoUpdateLog.txt", "AutoUpdateUpdater已成功启动");
                     return true;
                 }
                 return false;
@@ -51,7 +62,7 @@ namespace AutoUpdate
                 string logFilePath = Path.Combine(Path.GetDirectoryName(updaterExePath), "AutoUpdateLog.txt");
                 try
                 {
-                    string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [ERROR] 启动更新辅助进程失败: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}\r\n";
+                    string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [ERROR] 启动AutoUpdateUpdater失败: {ex.Message}\r\n堆栈跟踪: {ex.StackTrace}\r\n";
                     File.AppendAllText(logFilePath, logEntry);
                 }
                 catch { }
@@ -71,38 +82,126 @@ namespace AutoUpdate
             string exeName = string.Empty;
             string checksum = string.Empty;
 
+            WriteLog("AutoUpdateLog.txt", $"开始解析命令行参数，参数数量: {args.Length}");
+            
+            // 调试输出所有参数
+            string allArgs = string.Join(" ", args.Select((arg, index) => $"[{index}]={arg}"));
+            WriteLog("AutoUpdateLog.txt", $"所有参数: {allArgs}");
+            
+            // 简化参数解析逻辑，直接处理所有可能的格式
             for (int i = 0; i < args.Length; i++)
             {
+                WriteLog("AutoUpdateLog.txt", $"解析参数[{i}]: {args[i]}");
+                
                 if (args[i] == "--self-update")
                 {
+                    WriteLog("AutoUpdateLog.txt", "检测到自我更新标志");
                     continue;
                 }
-                if (args[i] == "--source-dir" && i + 1 < args.Length)
+                
+                // 处理所有可能的参数格式
+                string arg = args[i];
+                if (arg.StartsWith("--source-dir"))
                 {
-                    sourceDir = args[i + 1].Trim('"');
-                    i++;
+                    if (arg == "--source-dir" && i + 1 < args.Length)
+                    {
+                        sourceDir = args[i + 1].Trim('"');
+                        i++;
+                        WriteLog("AutoUpdateLog.txt", $"解析到源目录(格式1): {sourceDir}");
+                    }
+                    else if (arg.StartsWith("--source-dir="))
+                    {
+                        sourceDir = arg.Substring("--source-dir=".Length).Trim('"');
+                        WriteLog("AutoUpdateLog.txt", $"解析到源目录(格式2): {sourceDir}");
+                    }
                 }
-                if (args[i] == "--target-dir" && i + 1 < args.Length)
+                else if (arg.StartsWith("--target-dir"))
                 {
-                    targetDir = args[i + 1].Trim('"');
-                    i++;
+                    if (arg == "--target-dir" && i + 1 < args.Length)
+                    {
+                        targetDir = args[i + 1].Trim('"');
+                        i++;
+                        WriteLog("AutoUpdateLog.txt", $"解析到目标目录(格式1): {targetDir}");
+                    }
+                    else if (arg.StartsWith("--target-dir="))
+                    {
+                        targetDir = arg.Substring("--target-dir=".Length).Trim('"');
+                        WriteLog("AutoUpdateLog.txt", $"解析到目标目录(格式2): {targetDir}");
+                    }
                 }
-                if (args[i] == "--exe-name" && i + 1 < args.Length)
+                else if (arg.StartsWith("--exe-name"))
                 {
-                    exeName = args[i + 1].Trim('"');
-                    i++;
+                    if (arg == "--exe-name" && i + 1 < args.Length)
+                    {
+                        exeName = args[i + 1].Trim('"');
+                        i++;
+                        WriteLog("AutoUpdateLog.txt", $"解析到可执行文件名(格式1): {exeName}");
+                    }
+                    else if (arg.StartsWith("--exe-name="))
+                    {
+                        exeName = arg.Substring("--exe-name=".Length).Trim('"');
+                        WriteLog("AutoUpdateLog.txt", $"解析到可执行文件名(格式2): {exeName}");
+                    }
                 }
-                if (args[i] == "--checksum" && i + 1 < args.Length)
+                else if (arg.StartsWith("--checksum"))
                 {
-                    checksum = args[i + 1].Trim('"');
-                    i++;
+                    if (arg == "--checksum" && i + 1 < args.Length)
+                    {
+                        checksum = args[i + 1].Trim('"');
+                        i++;
+                        WriteLog("AutoUpdateLog.txt", $"解析到校验和(格式1): {checksum}");
+                    }
+                    else if (arg.StartsWith("--checksum="))
+                    {
+                        checksum = arg.Substring("--checksum=".Length).Trim('"');
+                        WriteLog("AutoUpdateLog.txt", $"解析到校验和(格式2): {checksum}");
+                    }
                 }
             }
 
             // 验证参数
+            WriteLog("AutoUpdateLog.txt", $"参数验证 - 源目录: {sourceDir}, 目标目录: {targetDir}, 可执行文件名: {exeName}");
+            
+            // 如果目标目录为空，尝试使用当前目录
+            if (string.IsNullOrEmpty(targetDir))
+            {
+                targetDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                WriteLog("AutoUpdateLog.txt", $"使用当前目录作为目标目录: {targetDir}");
+            }
+            
+            // 如果可执行文件名为空，尝试使用当前程序名
+            if (string.IsNullOrEmpty(exeName))
+            {
+                exeName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName);
+                WriteLog("AutoUpdateLog.txt", $"使用当前程序名作为可执行文件名: {exeName}");
+            }
+            
             if (string.IsNullOrEmpty(sourceDir) || string.IsNullOrEmpty(targetDir) || string.IsNullOrEmpty(exeName))
             {
-                WriteLog(Path.Combine(targetDir, "AutoUpdateLog.txt"), "更新参数无效，无法执行自身更新");
+                WriteLog("AutoUpdateLog.txt", "更新参数无效，无法执行自身更新");
+                WriteLog("AutoUpdateLog.txt", $"最终参数 - 源目录: {sourceDir}, 目标目录: {targetDir}, 可执行文件名: {exeName}");
+                
+                // 更新失败时，确保启动主程序
+                StartERPApplication(targetDir);
+                return;
+            }
+            
+            // 验证目录是否存在
+            if (!Directory.Exists(sourceDir))
+            {
+                WriteLog("AutoUpdateLog.txt", $"源目录不存在: {sourceDir}");
+                
+                // 更新失败时，确保启动主程序
+                StartERPApplication(targetDir);
+                return;
+            }
+            
+            if (!Directory.Exists(targetDir))
+            {
+                WriteLog("AutoUpdateLog.txt", $"目标目录不存在: {targetDir}");
+                
+                // 更新失败时，确保启动主程序
+                StartERPApplication(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
                 return;
             }
 
@@ -110,9 +209,39 @@ namespace AutoUpdate
             string logFilePath = Path.Combine(targetDir, "AutoUpdateLog.txt");
             WriteLog(logFilePath, "开始执行自身更新...");
 
-            // 等待主进程退出
+            // 等待主进程退出，采用逐步等待策略
             WriteLog(logFilePath, "等待主进程退出...");
-            Thread.Sleep(2000); // 等待2秒，确保主进程已退出
+            
+            // 尝试等待多次，每次间隔检查进程状态
+            int maxWaitAttempts = 10;
+            int waitInterval = 500; // 500毫秒
+            
+            for (int i = 0; i < maxWaitAttempts; i++)
+            {
+                Thread.Sleep(waitInterval);
+                
+                // 检查主进程是否已经退出
+                string currentProcessName = Path.GetFileNameWithoutExtension(exeName);
+                Process[] runningProcesses = Process.GetProcessesByName(currentProcessName);
+                
+                // 排除当前进程（自我更新进程）
+                runningProcesses = runningProcesses.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
+                
+                if (runningProcesses.Length == 0)
+                {
+                    WriteLog(logFilePath, $"主进程已退出，等待时间: {(i + 1) * waitInterval}ms");
+                    break;
+                }
+                else
+                {
+                    WriteLog(logFilePath, $"等待主进程退出... 剩余进程数: {runningProcesses.Length}, 尝试次数: {i + 1}");
+                }
+                
+                if (i == maxWaitAttempts - 1)
+                {
+                    WriteLog(logFilePath, "警告: 主进程未完全退出，但将继续执行更新");
+                }
+            }
 
             try
             {
@@ -150,7 +279,10 @@ namespace AutoUpdate
                         // 5. 更新版本记录
                         UpdateVersionRecord(targetDir, sourceDir);
                         
-                        // 6. 重启主进程
+                        // 6. 启动ERP系统（如果存在）
+                        StartERPApplication(targetDir);
+                        
+                        // 7. 重启主进程
                         Process.Start(mainExePath);
                     }
                     else
@@ -252,12 +384,134 @@ namespace AutoUpdate
         {
             try
             {
+                // 确保日志文件路径有效
+                if (string.IsNullOrEmpty(logFilePath))
+                {
+                    logFilePath = "AutoUpdateLog.txt";
+                }
+                
+                // 如果 logFilePath 不包含路径，则使用当前目录
+                if (!Path.IsPathRooted(logFilePath))
+                {
+                    string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                    logFilePath = Path.Combine(currentDir, logFilePath);
+                }
+                
+                // 确保日志目录存在
+                string logDir = Path.GetDirectoryName(logFilePath);
+                if (!string.IsNullOrEmpty(logDir) && !Directory.Exists(logDir))
+                {
+                    Directory.CreateDirectory(logDir);
+                }
+                
                 string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [UPDATE] {message}\r\n";
                 File.AppendAllText(logFilePath, logEntry);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // 如果写入日志失败，尝试在控制台输出
+                Console.WriteLine($"[ERROR] 写入日志失败: {ex.Message}");
+                Console.WriteLine($"[DEBUG] 消息内容: {message}");
+            }
         }
 
+        /// <summary>
+        /// 启动ERP系统应用程序
+        /// </summary>
+        /// <param name="targetDir">目标目录</param>
+        private static void StartERPApplication(string targetDir)
+        {
+            try
+            {
+                WriteLog("AutoUpdateLog.txt", $"[ERP启动] 开始启动ERP系统应用程序...");
+                
+                // 尝试从配置文件获取入口程序路径
+                string configFile = Path.Combine(targetDir, "AutoUpdaterList.xml");
+                string mainAppExe = "企业数字化集成ERP.exe";
+                
+                if (File.Exists(configFile))
+                {
+                    try
+                    {
+                        var xmlFiles = new XmlFiles(configFile);
+                        string entryPoint = xmlFiles.GetNodeValue("//EntryPoint");
+                        if (!string.IsNullOrEmpty(entryPoint))
+                        {
+                            mainAppExe = entryPoint;
+                            WriteLog("AutoUpdateLog.txt", $"[ERP启动] 从配置文件读取主程序路径: {mainAppExe}");
+                        }
+                        else
+                        {
+                            WriteLog("AutoUpdateLog.txt", $"[ERP启动] 使用默认主程序路径: {mainAppExe}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog("AutoUpdateLog.txt", $"[ERP启动] 读取配置文件失败: {ex.Message}，使用默认路径");
+                    }
+                }
+                
+                // 确保路径是完整的绝对路径
+                if (!Path.IsPathRooted(mainAppExe))
+                {
+                    mainAppExe = Path.Combine(targetDir, mainAppExe);
+                    WriteLog("AutoUpdateLog.txt", $"[ERP启动] 转换为绝对路径: {mainAppExe}");
+                }
+                
+                // 检查程序是否存在
+                if (File.Exists(mainAppExe))
+                {
+                    WriteLog("AutoUpdateLog.txt", $"[ERP启动] 找到主程序文件，准备启动...");
+                    
+                    // 启动进程
+                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe);
+                    startInfo.WorkingDirectory = Path.GetDirectoryName(mainAppExe);
+                    startInfo.UseShellExecute = true;
+                    
+                    // 添加启动参数
+                    string arguments = $"--updated-from-auto-update";
+                    startInfo.Arguments = arguments;
+                    
+                    WriteLog("AutoUpdateLog.txt", $"[ERP启动] 工作目录: {startInfo.WorkingDirectory}");
+                    WriteLog("AutoUpdateLog.txt", $"[ERP启动] 启动参数: {arguments}");
+                    
+                    Process process = Process.Start(startInfo);
+                    
+                    if (process != null && !process.HasExited)
+                    {
+                        WriteLog("AutoUpdateLog.txt", $"[ERP启动] ERP系统启动成功，进程ID: {process.Id}");
+                        WriteLog("AutoUpdateLog.txt", $"[ERP启动] 进程名称: {process.ProcessName}");
+                        
+                        // 等待进程启动完成
+                        Thread.Sleep(2000);
+                        
+                        // 检查进程是否仍在运行
+                        if (!process.HasExited)
+                        {
+                            WriteLog("AutoUpdateLog.txt", "[ERP启动] ERP系统已成功启动并正在运行");
+                        }
+                        else
+                        {
+                            WriteLog("AutoUpdateLog.txt", "[ERP启动] 警告: ERP系统启动后立即退出");
+                        }
+                    }
+                    else
+                    {
+                        WriteLog("AutoUpdateLog.txt", "[ERP启动] 错误: 无法启动ERP系统进程");
+                    }
+                }
+                else
+                {
+                    WriteLog("AutoUpdateLog.txt", $"[ERP启动] 错误: 主程序文件不存在: {mainAppExe}");
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateLog.txt", $"[ERP启动] ERP系统启动失败: {ex.Message}");
+                WriteLog("AutoUpdateLog.txt", $"[ERP启动] 异常详情: {ex.StackTrace}");
+            }
+        }
+        
         /// <summary>
         /// 检查是否需要执行自身更新
         /// </summary>

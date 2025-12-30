@@ -548,8 +548,15 @@ namespace RUINORERP.Business
                         transaction.UnitCost = inv.Inv_Cost;
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"销售出库单审核：{entity.SaleOutNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
-
+                        View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(inv.ProdDetailID);
+                        if (obj != null)
+                        {
+                            transaction.Notes = $"销售出库单审核：{entity.SaleOutNo}，产品：{obj.SKU}-{obj.CNName}";
+                        }
+                        else
+                        {
+                            transaction.Notes = $"采购入库单审核：{entity.SaleOutNo}";
+                        }
                         transactionList.Add(transaction);
                     }
 
@@ -1029,8 +1036,15 @@ namespace RUINORERP.Business
                     transaction.UnitCost = inv.Inv_Cost;
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                    transaction.Notes = $"销售出库单反审核：{entity.SaleOutNo}，产品：{inv.tb_proddetail.tb_prod.CNName}";
-
+                    View_ProdDetail obj = _cacheManager.GetEntity<View_ProdDetail>(inv.ProdDetailID);
+                    if (obj != null)
+                    {
+                        transaction.Notes = $"销售出库单反审核：{entity.SaleOutNo}，产品：{obj.SKU}-{obj.CNName}";
+                    }
+                    else
+                    {
+                        transaction.Notes = $"销售出库单反审核：{entity.SaleOutNo}";
+                    }
                     transactionList.Add(transaction);
                 }
 

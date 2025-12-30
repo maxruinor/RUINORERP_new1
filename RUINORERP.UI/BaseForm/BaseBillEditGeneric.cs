@@ -98,6 +98,7 @@ using RUINORERP.Business.CommService;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using System.Windows.Markup.Localizer;
+using RUINORERP.SecurityTool;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1995,6 +1996,10 @@ namespace RUINORERP.UI.BaseForm
                             // 状态同步已在删除方法内部处理，无需重复调用
                             Add();
                         }
+                        else
+                        {
+                            MainForm.Instance.ShowStatusText(deleteResult.ErrorMsg);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -2063,7 +2068,9 @@ namespace RUINORERP.UI.BaseForm
                                     var canSave = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
                                     if (!canSave.CanExecute)
                                     {
-                                        MainForm.Instance.uclog.AddLog(canSave.Message);
+                                        // 使用更友好的消息框显示保存权限验证结果
+                                        MessageBox.Show(canSave.Message, "保存权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        MainForm.Instance.uclog.AddLog($"保存操作被拒绝：{canSave.Message}");
                                         return;
                                     }
                                     //如果有审核状态才去判断
@@ -3808,10 +3815,12 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            var edit = StateManager.CanModifyWithMessage(editEntity);
-            if (!edit.CanModify)
+            var edit = StateManager.CanExecuteActionWithMessage(editEntity, MenuItemEnums.修改);
+            if (!edit.CanExecute)
             {
-                MessageBox.Show(edit.Message, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                // 使用更友好的消息框显示修改权限验证结果
+                MessageBox.Show(edit.Message, "修改权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MainForm.Instance.uclog.AddLog($"修改操作被拒绝：{edit.Message}");
                 toolStripbtnModify.Enabled = false;
                 toolStripButtonSave.Enabled = false;
                 return;
@@ -4963,6 +4972,9 @@ namespace RUINORERP.UI.BaseForm
             var canDelete = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.删除);
             if (!canDelete.CanExecute)
             {
+                // 使用更友好的消息框显示删除权限验证结果
+                MessageBox.Show(canDelete.Message, "删除权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MainForm.Instance.uclog.AddLog($"删除操作被拒绝：{canDelete.Message}");
                 return new ReturnResults<T>()
                 {
                     Succeeded = false,

@@ -143,20 +143,28 @@ namespace RUINORERP.UI.PSI.PUR
 
                         if (MessageBox.Show($"针对采购订单：{PurOrder.SOrderNo}，确定向供应商{PurOrder.tb_customervendor.CVName}:预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
-                           var ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+                            var ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
                             var rs = await ctr.ManualPrePayment(inputForm.InputContent.ObjToDecimal(), PurOrder);
-                            MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-
-                            string Flag = string.Empty;
-                            Flag = SharedFlag.Flag2.ToString();
-                         
-                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment) 
-                            && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag).FirstOrDefault();
-                            if (RelatedMenuInfo != null)
+                            if (rs.Succeeded)
                             {
-                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+
+                                string Flag = string.Empty;
+                                Flag = SharedFlag.Flag2.ToString();
+
+                                tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_FM_PreReceivedPayment)
+                                && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag).FirstOrDefault();
+                                if (RelatedMenuInfo != null)
+                                {
+                                    await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                }
+                                return;
                             }
-                            return;
+                            else
+                            {
+                                MessageBox.Show($"{rs.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            }
+
                         }
                     }
                 }
@@ -188,14 +196,14 @@ namespace RUINORERP.UI.PSI.PUR
                     }
 
                     tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry =await ctr.PurOrderTotb_PurEntry(item);
+                    tb_PurEntry purEntry = await ctr.PurOrderTotb_PurEntry(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_PurEntry) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                      await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
+                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
                     }
                     return;
                 }
@@ -278,7 +286,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
                     tb_PurOrderController<tb_PurOrder> ctrPurOrder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry =await ctrPurOrder.PurOrderTotb_PurEntry(item);
+                    tb_PurEntry purEntry = await ctrPurOrder.PurOrderTotb_PurEntry(item);
                     if (purEntry.tb_PurEntryDetails.Count > 0)
                     {
                         ReturnMainSubResults<tb_PurEntry> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_PurEntry>(purEntry);

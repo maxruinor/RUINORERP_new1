@@ -1,4 +1,5 @@
 using AutoUpdateTools;
+using FastReport.Data;
 using FastReport.DevComponents.DotNetBar.Controls;
 using Force.DeepCloner;
 using Krypton.Navigator;
@@ -43,7 +44,9 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace RUINORERP.UI.ProductEAV
 {
-
+    /// <summary>
+    /// 对于单个产品SKU来说，我们要处理的是产品明细下面的关系
+    /// </summary>
     [MenuAttrAssemblyInfo("多属性编辑", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCMultiPropertyEditor : UCBaseClass
     {
@@ -51,7 +54,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-           
+
         }
         private ClientBizCodeService clientBizCodeService;
         private void btnQueryForGoods_Click(object sender, EventArgs e)
@@ -233,9 +236,6 @@ namespace RUINORERP.UI.ProductEAV
             }
             AddProdProperty(ppv, prodpropValueList);
             ControlBtn(ProductAttributeType.可配置多属性);
-            // List<KeyValuePair<long, string[]>> attrGoupsByName = GetAttrGoups(listView1, g => g.GroupID, lvitem => lvitem.Text);
-            //this.attrGoupsByName = attrGoupsByName;
-            //CreateSKUList();
         }
 
         /// <summary>
@@ -417,10 +417,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 keys = keys.Trim(',');
                 names = names.Trim(',');
-                //if (!string.IsNullOrEmpty(names))
-                //{
-                //    propertyEavList.TryAdd(ppv.Property_ID.ToString(), names);
-                //}
+               
             }
 
             #endregion
@@ -532,18 +529,18 @@ namespace RUINORERP.UI.ProductEAV
                         item.ActionStatus = ActionStatus.修改;
                     }
                 }
-                
+
                 if (item.SKU.IsNullOrEmpty())
                 {
                     // 生成SKU代码，包含错误处理
                     item.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, item);
-                    
+
                     // 验证生成的SKU是否有效
                     if (string.IsNullOrEmpty(item.SKU))
                     {
                         throw new InvalidOperationException("SKU代码生成失败，返回值为空");
                     }
-                    
+
                     if (item.ActionStatus == ActionStatus.新增)
                     {
                         item.ProdDetailID = 0;
@@ -554,10 +551,10 @@ namespace RUINORERP.UI.ProductEAV
             {
                 // 记录SKU生成错误
                 MainForm.Instance.uclog.AddLog($"SKU生成失败 - 产品: {EditEntity?.CNName ?? "未知"}, 明细: {item.ProdDetailID}, 错误: {ex.Message}");
-                
+
                 // 设置默认SKU，避免UI显示异常
                 item.SKU = $"SKU_ERROR_{DateTime.Now:yyyyMMddHHmmss}";
-                
+
                 // 重新抛出异常，让调用方处理
                 throw;
             }
@@ -760,12 +757,15 @@ namespace RUINORERP.UI.ProductEAV
         /// <param name="combinationsToAdd">需要添加的组合列表</param>
         private async Task HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd)
         {
+            // 创建TreeGrid节点
+            Font boldFont = new Font(treeGridView1.DefaultCellStyle.Font, FontStyle.Bold);
+
             // 检查是否是从单属性转换为多属性的情况，获取原始SKU信息
             tb_ProdDetail originalSkuDetail = null;
             if (EditEntity.tb_Prod_Attr_Relations.Count == 1)
             {
                 ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
-                if (pt == ProductAttributeType.可配置多属性 && EditEntity.tb_Prod_Attr_Relations[0].Property_ID == null)
+                if (EditEntity.PropertyType == (int)ProductAttributeType.单属性 && pt == ProductAttributeType.可配置多属性 && EditEntity.tb_Prod_Attr_Relations[0].Property_ID == null)
                 {
                     // 从单属性转换为多属性，获取原始产品详情
                     originalSkuDetail = EditEntity.tb_ProdDetails.FirstOrDefault();
@@ -796,6 +796,7 @@ namespace RUINORERP.UI.ProductEAV
                     newDetail.SKU = originalSkuDetail.SKU;
                     // 复制其他相关字段
                     newDetail.ProdBaseID = originalSkuDetail.ProdBaseID;
+                    newDetail.ProdDetailID = originalSkuDetail.ProdDetailID;
                     newDetail.PrimaryKeyID = originalSkuDetail.PrimaryKeyID;
                     newDetail.BarCode = originalSkuDetail.BarCode;
                     newDetail.Weight = originalSkuDetail.Weight;
@@ -815,20 +816,10 @@ namespace RUINORERP.UI.ProductEAV
                     newDetail.Modified_by = originalSkuDetail.Modified_by;
 
                     newDetail.Notes = originalSkuDetail.Notes;
-                    newDetail.ProdDetailID = originalSkuDetail.ProdDetailID;
                     newDetail.SalePublish = originalSkuDetail.SalePublish;
                     newDetail.Standard_Price = originalSkuDetail.Standard_Price;
 
                 }
-
-                // 创建TreeGrid节点
-                Font boldFont = new Font(treeGridView1.DefaultCellStyle.Font, FontStyle.Bold);
-                TreeGridNode node = treeGridView1.Nodes.Add(skuRowId, 0, "", GetPropertiesText(combination),
-                    newDetail.SKU != null ? newDetail.SKU : "等待生成", EditEntity.CNName, "新增", newDetail.Is_enabled);
-                node.NodeName = skuRowId.ToString();
-                node.ImageIndex = 1; // 新增图标
-                node.Tag = newDetail;
-                node.DefaultCellStyle.Font = boldFont;
 
                 // 为每个属性值创建属性关系
                 foreach (var attrValuePair in combination.Properties)
@@ -838,27 +829,80 @@ namespace RUINORERP.UI.ProductEAV
                         Property_ID = attrValuePair.Property.Property_ID,
                         PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
                         ProdBaseID = EditEntity.ProdBaseID,
-                        ProdDetailID = 0,// skuRowId,
+                        ProdDetailID = newDetail.ProdDetailID,// skuRowId,
                         ActionStatus = ActionStatus.新增,
                         tb_prodproperty = attrValuePair.Property,
                         tb_prodpropertyvalue = attrValuePair.PropertyValue
                     };
 
-                    // 添加到产品详情和编辑实体
-                    newDetail.tb_Prod_Attr_Relations.Add(relation);
-                    EditEntity.tb_Prod_Attr_Relations.Add(relation);
+                    //如果由单属性转换过来的，第一个则为默认的
 
+                    if (isFirstCombination && originalSkuDetail != null)
+                    {
+                        relation.RAR_ID = originalSkuDetail.tb_Prod_Attr_Relations[0].RAR_ID;
+                        relation.ActionStatus = ActionStatus.修改;
+                    }
+
+                    // 添加到产品详情和编辑实体
+                    if (!newDetail.tb_Prod_Attr_Relations.Any(c => c.RAR_ID == relation.RAR_ID))
+                    {
+                        newDetail.tb_Prod_Attr_Relations.Add(relation);
+                    }
+                    else
+                    {
+
+                        var oldRelation = newDetail.tb_Prod_Attr_Relations.FirstOrDefault(c => c.RAR_ID == relation.RAR_ID);
+                        if (oldRelation != null)
+                        {
+                            oldRelation.Property_ID = relation.Property_ID;
+                            oldRelation.PropertyValueID = relation.PropertyValueID;
+                            oldRelation.tb_prodproperty = relation.tb_prodproperty;
+                            oldRelation.tb_prodpropertyvalue = relation.tb_prodpropertyvalue;
+                        }
+
+                    }
+
+                    if (string.IsNullOrEmpty(newDetail.SKU))
+                    {
+                        await CreateSKUAsync(newDetail);
+                    }
+                    // 添加到产品关系
+                    if (!EditEntity.tb_Prod_Attr_Relations.Any(c => c.RAR_ID == relation.RAR_ID))
+                    {
+                        EditEntity.tb_Prod_Attr_Relations.Add(relation);
+                    }
+                }
+
+                TreeGridNode node = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == newDetail.ProdDetailID.ToString());
+                if (node == null)
+                {
+                    node = treeGridView1.Nodes.Add(skuRowId, 0, "", GetPropertiesText(combination),
+                      newDetail.SKU != null ? newDetail.SKU : "等待生成", EditEntity.CNName, "新增", newDetail.Is_enabled);
+                    node.NodeName = skuRowId.ToString();
+                    node.ImageIndex = 1; // 新增图标
+                    node.Tag = newDetail;
+                    node.DefaultCellStyle.Font = boldFont;
+                }
+
+                foreach (var relation in newDetail.tb_Prod_Attr_Relations)
+                {
                     // 创建子节点
-                    long rowId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                    TreeGridNode subNode = node.Nodes.Add(rowId, relation.RAR_ID, attrValuePair.Property.PropertyName, attrValuePair.PropertyValue.PropertyValueName, "", "", "新增");
-                    subNode.NodeName = rowId.ToString();
-                    subNode.Tag = relation;
-                    subNode.ImageIndex = 1; // 新增图标
+                    TreeGridNode subNode = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == relation.RAR_ID.ToString());
+                    if (subNode == null)
+                    {
+                        subNode = node.Nodes.Add(relation.RAR_ID, relation.RAR_ID, relation.tb_prodproperty.PropertyName, relation.tb_prodpropertyvalue.PropertyValueName, "", "", "新增");
+                        subNode.NodeName = relation.RAR_ID.ToString();
+                        subNode.Tag = relation;
+                        subNode.ImageIndex = 1; // 新增图标
+                    }
+
                 }
 
                 // 添加到产品详情列表
-                EditEntity.tb_ProdDetails.Add(newDetail);
-                await CreateSKUAsync(newDetail);
+                if (!EditEntity.tb_ProdDetails.Any(c => c.ProdDetailID == newDetail.ProdDetailID))
+                {
+                    EditEntity.tb_ProdDetails.Add(newDetail);
+                }
                 isFirstCombination = false;
             }
         }
@@ -1457,16 +1501,14 @@ namespace RUINORERP.UI.ProductEAV
                             var propertys = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).Select(c => c.Property_ID.Value).Distinct().ToList();
                             foreach (var item in propertys)
                             {
-                                var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();
+                                var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue && c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();
                                 foreach (var pv in pvs)
                                 {
                                     var group = listView1.Groups.FirstOrDefault(c => c.GroupID == item.ToString());
                                     if (group != null)
                                     {
-                                        //group.Items.FirstOrDefault(c => c.Name == pv.ToString()).Checked = true;
                                         group.Items.FirstOrDefault(c => c.Name == pv.ToString()).Enabled = false;
                                     }
-
                                 }
                             }
                         }
@@ -2069,10 +2111,10 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     // 设置窗体标题
                     editForm.Text = $"编辑属性关系 - {EditEntity?.CNName ?? "未知产品"}";
-                    
+
                     // 绑定数据到编辑窗体
                     editForm.BindData(relation);
-                    
+
                     // 显示对话框
                     if (editForm.ShowDialog() == DialogResult.OK)
                     {
@@ -2081,13 +2123,13 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             relation.ActionStatus = ActionStatus.修改;
                         }
-                        
+
                         // 刷新TreeGridView显示
                         treeGridView1.Refresh();
-                        
+
                         // 启用保存按钮
                         this.btnOk.Enabled = true;
-                        
+
                         MainForm.Instance.ShowStatusText("属性关系编辑成功");
                     }
                 }

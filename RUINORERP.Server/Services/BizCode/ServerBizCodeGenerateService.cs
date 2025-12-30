@@ -811,7 +811,7 @@ namespace RUINORERP.Server.Services.BizCode
                 case BaseInfoType.ShortCode:
                     return _productSKUCodeGenerator.GenerateShortCodeAsync(prod);
                 case BaseInfoType.SKU_No:
-                    #region SKU
+                    #region SKU  对于单个产品SKU来说，我们要处理的是产品明细下面的关系
 
                     // SKU编码生成逻辑
                     // 编辑已有产品（ProdDetailID > 0）：SKU永远不变

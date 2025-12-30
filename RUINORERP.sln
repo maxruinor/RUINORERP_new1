@@ -85,6 +85,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Plugin.OfficeAssi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RUINORERP.Plugin.AlibabaStoreManager", "RUINORERP.Plugin.AlibabaStoreManager\RUINORERP.Plugin.AlibabaStoreManager.csproj", "{5E58A5EF-D03F-45C4-BFAB-D461FF2F375D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoUpdateUpdater", "AutoUpdateUpdater\AutoUpdateUpdater.csproj", "{12345678-1234-1234-1234-123456789ABC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Automata|Any CPU = Automata|Any CPU
@@ -2033,6 +2035,54 @@ Global
 		{5E58A5EF-D03F-45C4-BFAB-D461FF2F375D}.Release|x64.Build.0 = Release|Any CPU
 		{5E58A5EF-D03F-45C4-BFAB-D461FF2F375D}.Release|x86.ActiveCfg = Release|Any CPU
 		{5E58A5EF-D03F-45C4-BFAB-D461FF2F375D}.Release|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Automata|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Canary|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|x64.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Debug|x86.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|Any CPU.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|Any CPU.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|x64.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|x64.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|x86.ActiveCfg = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Installer|x86.Build.0 = Debug|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.LogoSyntax|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Main items|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Nightly|x86.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|x64.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|x64.Build.0 = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|x86.ActiveCfg = Release|Any CPU
+		{12345678-1234-1234-1234-123456789ABC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -68,6 +68,8 @@ namespace AULWriter
             this.txtExpt = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.txtExcludeExtensions = new System.Windows.Forms.TextBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.txtExcludeDirectories = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnDest = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
@@ -330,6 +332,8 @@ namespace AULWriter
             this.tbpBase.Controls.Add(this.txtExpt);
             this.tbpBase.Controls.Add(this.label9);
             this.tbpBase.Controls.Add(this.txtExcludeExtensions);
+            this.tbpBase.Controls.Add(this.label10);
+            this.tbpBase.Controls.Add(this.txtExcludeDirectories);
             this.tbpBase.Controls.Add(this.label4);
             this.tbpBase.Controls.Add(this.btnDest);
             this.tbpBase.Controls.Add(this.label3);
@@ -473,8 +477,27 @@ namespace AULWriter
             this.txtExcludeExtensions.Multiline = true;
             this.txtExcludeExtensions.Name = "txtExcludeExtensions";
             this.txtExcludeExtensions.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtExcludeExtensions.Size = new System.Drawing.Size(806, 73);
+            this.txtExcludeExtensions.Size = new System.Drawing.Size(286, 73);
             this.txtExcludeExtensions.TabIndex = 20;
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(562, 359);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(65, 12);
+            this.label10.TabIndex = 21;
+            this.label10.Text = "排除目录：";
+            // 
+            // txtExcludeDirectories
+            // 
+            this.txtExcludeDirectories.AllowDrop = true;
+            this.txtExcludeDirectories.Location = new System.Drawing.Point(644, 359);
+            this.txtExcludeDirectories.Multiline = true;
+            this.txtExcludeDirectories.Name = "txtExcludeDirectories";
+            this.txtExcludeDirectories.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtExcludeDirectories.Size = new System.Drawing.Size(286, 73);
+            this.txtExcludeDirectories.TabIndex = 22;
             // 
             // label4
             // 
@@ -1046,8 +1069,8 @@ namespace AULWriter
         private System.Windows.Forms.Label labelSearch;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox txtExcludeExtensions;
-
-        
+        private System.Windows.Forms.TextBox txtExcludeDirectories;
+        private System.Windows.Forms.Label label10;
     }
 }
 

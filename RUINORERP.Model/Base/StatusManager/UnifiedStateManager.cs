@@ -666,6 +666,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 验证操作权限（通过UI操作类型）
         /// 优化版本：针对不同操作类型采用不同判断逻辑
+        /// 明确区分状态转换类操作和无目标状态操作
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
@@ -675,55 +676,121 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 return (false, "实体不能为空");
 
-            // 获取状态类型
+            // 获取状态类型和当前状态
             var statusType = GetStatusType(entity);
-            
-            // 获取当前状态
             var currentStatus = GetBusinessStatus(entity, statusType);
-            
-            // 根据操作类型采用不同的判断逻辑
-            switch (action)
+
+            // 首先判断操作类型，采用不同的验证策略
+            if (GlobalStateRulesManager.IsStateTransitionAction(action))
             {
-                case MenuItemEnums.修改:
-                    // 修改操作：检查当前状态是否允许修改
-                    return CanModifyWithMessage(entity, currentStatus, statusType);
-                    
-                case MenuItemEnums.删除:
-                    // 删除操作：检查当前状态是否允许删除
-                    return CanDeleteWithMessage(entity, currentStatus, statusType);
-                    
-                case MenuItemEnums.保存:
-                    // 保存操作：通常总是允许，除非是终态
-                    return CanSaveWithMessage(entity, currentStatus, statusType);
-                    
-                default:
-                    // 其他操作（提交、审核、反审等）：使用状态转换验证
-                    return CanExecuteStateTransitionAction(entity, action, currentStatus, statusType);
+                // 状态转换类操作：需要验证状态转换的合法性
+                return CanExecuteStateTransitionAction(entity, action, currentStatus, statusType);
+            }
+            else if (GlobalStateRulesManager.IsNonStateTransitionAction(action))
+            {
+                // 无目标状态操作：仅基于当前状态和规则判断
+                return CanExecuteNonStateTransitionAction(entity, action, currentStatus, statusType);
+            }
+            else
+            {
+                // 未知操作类型：默认不允许
+                return (false, $"不支持的操作类型：{action}");
+            }
+        }
+
+        /// <summary>
+        /// 验证无目标状态操作权限（修改、删除、保存等）
+        /// 仅基于当前状态和全局规则进行判断，不涉及状态转换验证
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <param name="currentStatus">当前状态</param>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>验证结果</returns>
+        private (bool CanExecute, string Message) CanExecuteNonStateTransitionAction(BaseEntity entity, MenuItemEnums action, object currentStatus, Type statusType)
+        {
+            if (currentStatus == null)
+                return (false, "无法获取当前状态");
+
+            try
+            {
+                // 使用反射调用GlobalStateRulesManager的泛型方法
+                var method = typeof(GlobalStateRulesManager).GetMethod("CanExecuteNonStateTransitionAction");
+                var genericMethod = method.MakeGenericMethod(statusType);
+                var canExecute = (bool)genericMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+
+                // 获取执行条件说明
+                var conditionMethod = typeof(GlobalStateRulesManager).GetMethod("GetNonStateTransitionActionCondition");
+                var genericConditionMethod = conditionMethod.MakeGenericMethod(statusType);
+                var conditionMessage = (string)genericConditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+
+                if (canExecute)
+                {
+                    // 对于修改操作，还需要检查提交后修改规则
+                    if (action == MenuItemEnums.修改)
+                    {
+                        var modifyCheck = CanModifyWithMessage(entity, currentStatus, statusType);
+                        return modifyCheck.CanExecute ? (true, conditionMessage) : modifyCheck;
+                    }
+
+                    return (true, conditionMessage);
+                }
+                else
+                {
+                    return (false, conditionMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"验证无目标状态操作权限时发生异常：{action}");
+                return (false, $"验证操作权限时发生错误：{ex.Message}");
             }
         }
 
         /// <summary>
         /// 验证状态转换类操作权限（提交、审核、反审等）
+        /// 需要验证状态转换的合法性，并获取相应的执行条件说明
         /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="action">操作类型</param>
+        /// <param name="currentStatus">当前状态</param>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>验证结果</returns>
         private (bool CanExecute, string Message) CanExecuteStateTransitionAction(BaseEntity entity, MenuItemEnums action, object currentStatus, Type statusType)
         {
-            // 获取目标状态
-            var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
-            if (targetStatus == null)
-                return (false, $"无法映射操作类型 '{action}' 到状态值");
-            
-            // 如果目标状态为当前状态，返回提示
-            if (Equals(currentStatus, targetStatus))
-                return (true, GetSuccessMessage(action));
-            
-            // 验证状态转换
-            var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
-            
-            // 根据操作类型和当前状态返回相应的消息
-            if (validationResult.IsSuccess)
-                return (true, GetSuccessMessage(action));
-            else
-                return (false, validationResult.ErrorMessage ?? "操作失败");
+            if (currentStatus == null)
+                return (false, "无法获取当前状态");
+
+            try
+            {
+                // 获取目标状态
+                var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
+                if (targetStatus == null)
+                    return (false, $"无法映射操作类型 '{action}' 到状态值");
+                
+                // 如果目标状态为当前状态，返回提示
+                if (Equals(currentStatus, targetStatus))
+                    return (true, GetSuccessMessage(action));
+                
+                // 验证状态转换
+                var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
+                
+                // 获取执行条件说明
+                var conditionMethod = typeof(GlobalStateRulesManager).GetMethod("GetStateTransitionActionCondition");
+                var genericConditionMethod = conditionMethod.MakeGenericMethod(statusType);
+                var conditionMessage = (string)genericConditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+
+                // 根据验证结果返回相应的消息
+                if (validationResult.IsSuccess)
+                    return (true, conditionMessage);
+                else
+                    return (false, validationResult.ErrorMessage ?? conditionMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"验证状态转换类操作权限时发生异常：{action}");
+                return (false, $"验证操作权限时发生错误：{ex.Message}");
+            }
         }
 
         /// <summary>
@@ -757,9 +824,12 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (false, "终态状态下不允许删除");
 
             // 检查是否允许删除
-            var canDelete = CanExecuteAction(entity, MenuItemEnums.删除);
-            
-            return canDelete ? (true, "可以删除当前记录") : (false, "当前状态下不允许删除");
+            //var canDelete = CanExecuteAction(entity, MenuItemEnums.删除);
+
+            //可以修改才允许删除
+            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
+
+            return canModify ? (true, "可以删除当前记录") : (false, "当前状态下不允许删除");
         }
 
         /// <summary>

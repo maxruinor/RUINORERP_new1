@@ -200,6 +200,57 @@ namespace RUINORERP.Model.Base.StatusManager
 
         #endregion
 
+        #region 操作分类常量
+
+        /// <summary>
+        /// 状态转换类操作 - 有明确目标状态的操作
+        /// </summary>
+        public static readonly MenuItemEnums[] StateTransitionActions = new[]
+        {
+            MenuItemEnums.提交,
+            MenuItemEnums.审核,
+            MenuItemEnums.反审,
+            MenuItemEnums.结案,
+            MenuItemEnums.反结案,
+            MenuItemEnums.作废
+        };
+
+        /// <summary>
+        /// 无目标状态操作 - 仅基于当前状态判断权限的操作
+        /// </summary>
+        public static readonly MenuItemEnums[] NonStateTransitionActions = new[]
+        {
+            MenuItemEnums.新增,
+            MenuItemEnums.修改,
+            MenuItemEnums.删除,
+            MenuItemEnums.保存,
+            MenuItemEnums.查询,
+            MenuItemEnums.打印,
+            MenuItemEnums.导出
+        };
+
+        /// <summary>
+        /// 判断操作是否为状态转换类操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否为状态转换类操作</returns>
+        public static bool IsStateTransitionAction(MenuItemEnums action)
+        {
+            return StateTransitionActions.Contains(action);
+        }
+
+        /// <summary>
+        /// 判断操作是否为无目标状态操作
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否为无目标状态操作</returns>
+        public static bool IsNonStateTransitionAction(MenuItemEnums action)
+        {
+            return NonStateTransitionActions.Contains(action);
+        }
+
+        #endregion
+
         #region 状态转换规则方法
 
         /// <summary>
@@ -1097,6 +1148,106 @@ namespace RUINORERP.Model.Base.StatusManager
             return allowedActions.Contains(action);
         }
 
+        /// <summary>
+        /// 检查是否允许执行无目标状态操作（修改、删除、保存等）
+        /// 仅基于当前状态和全局规则进行判断，不涉及状态转换验证
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态值</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否允许执行操作</returns>
+        public bool CanExecuteNonStateTransitionAction<T>(T status, MenuItemEnums action) where T : struct
+        {
+            // 如果不是无目标状态操作，直接返回false
+            if (!IsNonStateTransitionAction(action))
+                return false;
+
+            // 使用标准的操作权限检查
+            return CanExecuteAction(status, action);
+        }
+
+        /// <summary>
+        /// 检查是否允许执行状态转换类操作（提交、审核、反审等）
+        /// 需要验证状态转换的合法性
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态值</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>是否允许执行操作</returns>
+        public bool CanExecuteStateTransitionAction<T>(T status, MenuItemEnums action) where T : struct
+        {
+            // 如果不是状态转换类操作，直接返回false
+            if (!IsStateTransitionAction(action))
+                return false;
+
+            // 使用标准的操作权限检查
+            return CanExecuteAction(status, action);
+        }
+
+        /// <summary>
+        /// 获取无目标状态操作的执行条件说明
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态值</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>执行条件说明</returns>
+        public string GetNonStateTransitionActionCondition<T>(T status, MenuItemEnums action) where T : struct
+        {
+            var statusType = typeof(T);
+            var statusName = Enum.GetName(statusType, status);
+
+            switch (action)
+            {
+                case MenuItemEnums.修改:
+                    return $"状态为【{statusName}】的单据可以修改";
+                case MenuItemEnums.删除:
+                    return $"状态为【{statusName}】的单据可以删除";
+                case MenuItemEnums.保存:
+                    return $"状态为【{statusName}】的单据可以保存";
+                case MenuItemEnums.新增:
+                    return "随时可以新增单据";
+                case MenuItemEnums.查询:
+                    return "所有状态的单据都可以查询";
+                case MenuItemEnums.打印:
+                    return "所有状态的单据都可以打印";
+                case MenuItemEnums.导出:
+                    return "所有状态的单据都可以导出";
+                default:
+                    return $"当前状态【{statusName}】不支持{action}操作";
+            }
+        }
+
+        /// <summary>
+        /// 获取状态转换类操作的执行条件说明
+        /// </summary>
+        /// <typeparam name="T">状态类型</typeparam>
+        /// <param name="status">当前状态值</param>
+        /// <param name="action">操作类型</param>
+        /// <returns>执行条件说明</returns>
+        public string GetStateTransitionActionCondition<T>(T status, MenuItemEnums action) where T : struct
+        {
+            var statusType = typeof(T);
+            var statusName = Enum.GetName(statusType, status);
+
+            switch (action)
+            {
+                case MenuItemEnums.提交:
+                    return $"状态为【{statusName}】的单据可以提交审核";
+                case MenuItemEnums.审核:
+                    return $"状态为【{statusName}】的单据可以审核通过";
+                case MenuItemEnums.反审:
+                    return $"状态为【{statusName}】的单据可以取消审核";
+                case MenuItemEnums.结案:
+                    return $"状态为【{statusName}】的单据可以结案";
+                case MenuItemEnums.反结案:
+                    return $"状态为【{statusName}】的单据可以取消结案";
+                case MenuItemEnums.作废:
+                    return $"状态为【{statusName}】的单据可以作废";
+                default:
+                    return $"当前状态【{statusName}】不支持{action}操作";
+            }
+        }
+
         #endregion
 
         #region 新增方法 - 状态终态判断
@@ -1268,10 +1419,9 @@ namespace RUINORERP.Model.Base.StatusManager
                 throw new InvalidOperationException("无法获取状态管理器实例");
 
             var statusType = stateManager.GetStatusType(entity);
-
             // 获取当前状态
-            var currentStatus = entity.GetPropertyValue(statusType.Name);
-
+        
+            var currentStatus = entity.GetCurrentStatus();
             // 尝试使用自定义处理器
             var customKey = $"{statusType.FullName}_{action}";
             lock (_syncLock)
@@ -1356,6 +1506,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 内部状态映射逻辑
         /// 根据状态类型和操作类型返回目标状态值
+        /// UI上的操作后将会变成的状态值
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="currentStatus">当前状态值</param>

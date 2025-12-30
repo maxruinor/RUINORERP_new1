@@ -61,15 +61,8 @@ namespace AutoUpdate
         public FrmUpdate()
         {
             InitializeComponent();
-             System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
             _main = this;
-            frmDebug = new frmDebugInfo();
-            
-            // 设置调试模式标志
-            frmDebug.IsDebugMode = IsDebugMode;
-            
-            // 设置窗口标题
-            frmDebug.Text = IsDebugMode ? "调试信息 - 调试模式" : "调试信息";
         }
 
         /// <summary>
@@ -364,7 +357,7 @@ namespace AutoUpdate
             this.MinimizeBox = false;
             this.Name = "FrmUpdate";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "自动更新 2.0.1.0";
+            this.Text = "自动更新 2.0.1.1";
             this.Load += new System.EventHandler(this.FrmUpdate_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.panel1.ResumeLayout(false);
@@ -377,15 +370,9 @@ namespace AutoUpdate
 
 
         #region 属性设置
-        /// <summary>
-        /// 调试模式标志
-        /// </summary>
-        public bool IsDebugMode { get; set; }
-
-        /// <summary>
-        /// 测试模式标志 - 用于验证自我更新功能
-        /// </summary>
-        public bool IsTestMode { get; set; }
+        // 生产环境不需要调试和测试模式
+        public bool IsDebugMode { get; set; } = false;
+        public bool IsTestMode { get; } = false;
         #endregion
 
         private string updateUrl = string.Empty;
@@ -420,9 +407,8 @@ namespace AutoUpdate
         int _Next = 0;
         public int Next { get { return _Next; } set { _Next = value; } }
 
-        // 日志文件路径
-        private string filePath = "UpdateLog.txt";
-        private string debugfilePath = "UpdateLog.log";
+        // 日志文件路径 - 使用统一的AutoUpdateLog.txt
+        private string UpdateLogfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AutoUpdateLog.txt");
         /// <summary>
         /// 写入日志信息，更新时会在当前目录创建一个文本文件进行记录
         /// 第一次写入时创建文件
@@ -543,11 +529,8 @@ namespace AutoUpdate
             }
             catch (Exception ex)
             {
-                // 只有在调试模式下才记录错误日志
-                if (IsDebugMode)
-                {
-                    System.IO.File.AppendAllLines(debugfilePath, new string[] { "检查回滚版本时发生错误:", ex.Message, ex.StackTrace });
-                }
+                // 记录错误日志
+                System.IO.File.AppendAllLines(UpdateLogfilePath, new string[] { "检查回滚版本时发生错误:", ex.Message, ex.StackTrace });
             }
         }
 
@@ -649,7 +632,7 @@ namespace AutoUpdate
 
                 // 更新ListView的列
                 UpdateRollbackListViewColumns();
-                
+
                 if (hasRollbackVersions)
                 {
                     // 有可回滚版本时显示版本列表
@@ -697,14 +680,14 @@ namespace AutoUpdate
                 AppendAllText($"显示回滚模式时出错: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 更新回滚模式下的ListView列
         /// </summary>
         private void UpdateRollbackListViewColumns()
         {
             lvUpdateList.Columns.Clear();
-            
+
             lvUpdateList.Columns.Add("版本号", 120, HorizontalAlignment.Left);
             lvUpdateList.Columns.Add("安装时间", 150, HorizontalAlignment.Left);
             lvUpdateList.Columns.Add("版本文件夹", 180, HorizontalAlignment.Left);
@@ -829,18 +812,19 @@ namespace AutoUpdate
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
-        {            // 检查是否按下 Ctrl+D
+        {
+            // 检查是否按下 Ctrl+D
             if (e.Control && e.KeyCode == Keys.D)
             {
                 IsDebugMode = !IsDebugMode;
-                
+
                 // 更新调试窗口的IsDebugMode属性
                 if (frmDebug != null)
                 {
                     frmDebug.IsDebugMode = IsDebugMode;
                     frmDebug.Text = IsDebugMode ? "调试信息 - 调试模式" : "调试信息";
                 }
-                
+
                 // 在界面上显示调试模式的状态选项
                 if (frmDebug != null)
                 {
@@ -848,6 +832,7 @@ namespace AutoUpdate
                 }
             }
             // 检查是否按下回车键，并且完成按钮可见且启用
+
             else if (e.KeyCode == Keys.Enter && btnFinish.Visible && btnFinish.Enabled)
             {
                 // 触发完成按钮的点击事件
@@ -885,7 +870,7 @@ namespace AutoUpdate
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
 
-            File.WriteAllText(filePath, "取消更新");
+            File.WriteAllText(UpdateLogfilePath, "取消更新");
             this.Close();
             Application.ExitThread();
             Application.Exit();
@@ -907,7 +892,7 @@ namespace AutoUpdate
 
             if (availableUpdate > 0)
             {
-                File.WriteAllText(filePath, "正在更新");
+                File.WriteAllText(UpdateLogfilePath, "正在更新");
 
                 btnNext.Enabled = false;
                 try
@@ -932,78 +917,30 @@ namespace AutoUpdate
             {
                 // 无更新时的处理
                 AppendAllText("没有可用的更新!");
-                
-                // 在调试模式下记录详细信息
-                if (IsDebugMode && frmDebug != null)
-                {
-                    frmDebug.AppendLog("没有可用的更新，准备启动主程序");
-                }
-                
+
                 if (string.IsNullOrEmpty(mainAppExe))
                 {
                     mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
-                    
-                    // 记录获取到的程序路径到文件日志
                     AppendAllText($"从配置文件获取主程序路径: {mainAppExe}");
-                    
-                    // 在调试模式下记录获取到的程序路径
-                    if (IsDebugMode && frmDebug != null)
-                    {
-                        frmDebug.AppendLog($"从配置文件获取主程序路径: {mainAppExe}");
-                    }
                 }
-                
-                // 记录程序路径检查到文件日志
+
                 AppendAllText($"检查主程序文件是否存在: {mainAppExe}");
                 AppendAllText($"当前工作目录: {Directory.GetCurrentDirectory()}");
                 AppendAllText($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
-                
-                // 在调试模式下记录程序路径检查
-                if (IsDebugMode && frmDebug != null)
-                {
-                    frmDebug.AppendLog($"检查主程序文件是否存在: {mainAppExe}");
-                    frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
-                    frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
-                }
-                
+
                 if (System.IO.File.Exists(mainAppExe))
                 {
-                    // 记录启动信息到文件日志
                     AppendAllText($"主程序文件存在，准备启动: {mainAppExe}");
-                    
-                    // 在调试模式下记录启动信息
-                    if (IsDebugMode && frmDebug != null)
-                    {
-                        frmDebug.AppendLog($"主程序文件存在，准备启动: {mainAppExe}");
-                    }
-                    
                     Process.Start(mainAppExe);
-                    
-                    // 记录启动成功到文件日志
                     AppendAllText("主程序启动成功");
-                    
-                    // 在调试模式下记录启动成功
-                    if (IsDebugMode && frmDebug != null)
-                    {
-                        frmDebug.AppendLog("主程序启动成功");
-                    }
                 }
                 else
                 {
                     string errorMsg = "系统找不到指定的文件路径: " + mainAppExe;
-                    
-                    // 记录错误信息到文件日志
                     AppendAllText($"错误: {errorMsg}");
-                    
-                    // 在调试模式下记录错误信息
-                    if (IsDebugMode && frmDebug != null)
-                    {
-                        frmDebug.AppendLog($"错误: {errorMsg}");
-                    }
-                    
                     MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-                
+
                 this.Close();
                 this.Dispose();
             }
@@ -1106,24 +1043,24 @@ namespace AutoUpdate
 
                         CreateDirtory(tempPath);
                         FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
-                fs.Write(bufferbyte, 0, bufferbyte.Length);
-                srm.Close();
-                srmReader.Close();
-                fs.Close();
-                
-                // 计算下载文件的哈希值并验证
-                string fileHash = AppUpdater.CalculateFileHash(tempPath);
-                if (!string.IsNullOrEmpty(fileHash))
-                {
-                    content += $" 状态:下载完毕, MD5: {fileHash}";
-                }
-                else
-                {
-                    content += " 状态:下载完毕, 哈希值计算失败";
-                }
-                
-                contents.Add(System.DateTime.Now.ToString() + " " + content);
-                PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
+                        fs.Write(bufferbyte, 0, bufferbyte.Length);
+                        srm.Close();
+                        srmReader.Close();
+                        fs.Close();
+
+                        // 计算下载文件的哈希值并验证
+                        string fileHash = AppUpdater.CalculateFileHash(tempPath);
+                        if (!string.IsNullOrEmpty(fileHash))
+                        {
+                            content += $" 状态:下载完毕, MD5: {fileHash}";
+                        }
+                        else
+                        {
+                            content += " 状态:下载完毕, 哈希值计算失败";
+                        }
+
+                        contents.Add(System.DateTime.Now.ToString() + " " + content);
+                        PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
                     }
                     catch (WebException ex)
                     {
@@ -1187,15 +1124,6 @@ namespace AutoUpdate
                 // 写入日志文件
                 System.IO.File.AppendAllText(logFilePath, logEntry);
 
-                // 在调试模式下，额外在调试窗口中显示
-                if (IsDebugMode && frmDebug != null && !frmDebug.IsDisposed)
-                {
-                    frmDebug.AppendLog(logEntry);
-                }
-
-                // 控制台输出
-                System.Diagnostics.Debug.WriteLine(logEntry.TrimEnd('\r', '\n'));
-
                 // 限制日志文件大小，超过1MB时清理旧日志
                 MaintainLogFileSize();
             }
@@ -1221,7 +1149,7 @@ namespace AutoUpdate
             {
                 // 格式化日志条目，包含时间戳和错误级别
                 string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [ERROR] {content}";
-                
+
                 // 如果有异常，添加异常信息
                 if (ex != null)
                 {
@@ -1241,15 +1169,6 @@ namespace AutoUpdate
 
                 // 写入日志文件
                 System.IO.File.AppendAllText(logFilePath, logEntry);
-
-                // 在调试模式下，额外在调试窗口中显示
-                if (IsDebugMode && frmDebug != null && !frmDebug.IsDisposed)
-                {
-                    frmDebug.AppendLog(logEntry);
-                }
-
-                // 控制台输出
-                System.Diagnostics.Debug.WriteLine(logEntry.TrimEnd('\r', '\n'));
 
                 // 限制日志文件大小，超过1MB时清理旧日志
                 MaintainLogFileSize();
@@ -1324,7 +1243,7 @@ namespace AutoUpdate
             // 只有在调试模式下才维护日志文件
             if (!IsDebugMode)
                 return;
-                
+
             try
             {
                 const long MaxLogSize = 1024 * 1024; // 1MB
@@ -1398,32 +1317,32 @@ namespace AutoUpdate
             string[] allfiles = Directory.GetFiles(sourcePath);
             AppendAllText($"[CopyFile] 源目录包含 {allfiles.Length} 个文件");
             AppendAllText($"[CopyFile] htUpdateFile 包含 {htUpdateFile.Count} 个条目");
-            
+
             // 遍历所有文件并找出需要备份的文件
             foreach (string file in allfiles)
             {
                 // 获取文件名
                 string fileName = Path.GetFileName(file);
-                
+
                 // 在调试模式下，列出所有文件
                 if (IsDebugMode)
                 {
                     var fileInfo = new FileInfo(file);
                     AppendAllText($"[CopyFile] 检查文件: {fileName} ({fileInfo.Length} 字节)");
                 }
-                
+
                 // 检查文件是否存在于 Hashtable 中
                 foreach (DictionaryEntry var in htUpdateFile)
                 {
                     if (var.Value is string[] info)
                     {
                         string updateFileName = info[0];
-                        
+
                         // 处理相对路径和绝对路径的匹配
                         string updateFileBaseName = Path.GetFileName(updateFileName);
-                        
+
                         // 直接比较文件名，忽略路径差异
-                        if (updateFileBaseName.Equals(fileName, StringComparison.OrdinalIgnoreCase) && 
+                        if (updateFileBaseName.Equals(fileName, StringComparison.OrdinalIgnoreCase) &&
                             info[1] == VerNo && !needCopyFiles.Contains(file))
                         {
                             needCopyFiles.Add(file);
@@ -1436,7 +1355,7 @@ namespace AutoUpdate
 
             string[] files = needCopyFiles.ToArray();
             AppendAllText($"[CopyFile] 需要复制 {files.Length} 个文件");
-            
+
             //注意：从版本目录获取的所有文件中 只复制在更新列表中的文件进行覆盖
 
             // 初始化进度条（只在有文件需要复制时）
@@ -1449,10 +1368,10 @@ namespace AutoUpdate
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
-            
+
             // 优化文件处理顺序：先处理压缩文件，再处理普通文件
             // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
-            var orderedFiles = files.OrderByDescending(f => 
+            var orderedFiles = files.OrderByDescending(f =>
             {
                 string extension = Path.GetExtension(f).ToLower();
                 return extension == ".zip" || extension == ".rar" ? 1 : 0;
@@ -1463,18 +1382,19 @@ namespace AutoUpdate
                 string file = orderedFiles[i];
                 try
                 {
-                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
-                    
+                    AppendAllText($"[CopyFile] 处理文件 {i + 1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
+
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (file == Path.Combine(sourcePath, currentexeName))
+                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
+                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
                     {
                         //MessageBox.Show("正在更新自身");
-                        AppendAllText($"[CopyFile] 跳过自身更新文件: {file}");
+                        AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
                         continue;
                     }
-                    
+
                     // 在调试模式下，显示文件详细信息
                     if (IsDebugMode)
                     {
@@ -1482,25 +1402,25 @@ namespace AutoUpdate
                         AppendAllText($"[CopyFile] 文件大小: {sourceFileInfo.Length} 字节");
                         AppendAllText($"[CopyFile] 文件修改时间: {sourceFileInfo.LastWriteTime}");
                     }
-                    
+
                     //http://sevenzipsharp.codeplex.com/
                     //如果是压缩文件则解压，否则直接复制
                     string fileName = System.IO.Path.GetFileName(file);
                     if (System.IO.Path.GetExtension(fileName).ToLower() == ".zip")
                     {
                         AppendAllText($"[CopyFile] 解压ZIP文件: {fileName}");
-                        
+
                         //System.IO.Compression.ZipFile.ExtractToDirectory(System.IO.Path.Combine(sourcePath, fileName), objPath); 
                         string zipPathWithName = System.IO.Path.Combine(sourcePath, fileName);
                         //MessageBox.Show("zipPathWithName:" + zipPathWithName);
                         //MessageBox.Show("objPath:" + objPath);
-                        
+
                         // 在调试模式下，显示ZIP文件内容
                         if (IsDebugMode)
                         {
                             var zipFileInfo = new FileInfo(zipPathWithName);
                             AppendAllText($"[CopyFile] ZIP文件大小: {zipFileInfo.Length} 字节");
-                            
+
                             using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
                             {
                                 AppendAllText($"[CopyFile] ZIP包含 {archive.Entries.Count} 个文件");
@@ -1514,7 +1434,7 @@ namespace AutoUpdate
                                 }
                             }
                         }
-                        
+
                         using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
                         {
                             archive.ExtractToDirectory(objPath, true);
@@ -1524,12 +1444,12 @@ namespace AutoUpdate
                     else if (System.IO.Path.GetExtension(fileName).ToLower() == ".rar")
                     {
                         AppendAllText($"[CopyFile] 解压RAR文件: {fileName}");
-                       
+
 
                         RARToFileEmail(objPath, System.IO.Path.Combine(sourcePath, fileName));
 
-                       
-                        
+
+
                         AppendAllText($"[CopyFile] RAR文件解压完成");
 
                     }
@@ -1537,23 +1457,23 @@ namespace AutoUpdate
                     {
                         string destFile = System.IO.Path.Combine(objPath, fileName);
                         AppendAllText($"[CopyFile] 复制普通文件: {fileName}");
-                        
+
                         // 在调试模式下，检查目标文件是否存在
                         if (IsDebugMode && File.Exists(destFile))
                         {
                             var destFileInfo = new FileInfo(destFile);
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
-                        
+
                         File.Copy(file, destFile, true);
-                        
+
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
                         {
                             var copiedFileInfo = new FileInfo(destFile);
                             var sourceFileInfo = new FileInfo(file);
                             AppendAllText($"[CopyFile] 复制后文件大小: {copiedFileInfo.Length} 字节");
-                            
+
                             if (copiedFileInfo.Length == sourceFileInfo.Length)
                             {
                                 AppendAllText($"[CopyFile] 文件大小验证通过");
@@ -1563,7 +1483,7 @@ namespace AutoUpdate
                                 AppendAllText($"[CopyFile] 警告: 文件大小不匹配，可能复制不完整");
                             }
                         }
-                        
+
                         PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{file}到{destFile}");
                         contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
                         AppendAllText($"[CopyFile] 文件复制成功: {fileName}");
@@ -1598,14 +1518,14 @@ namespace AutoUpdate
 
             string[] dirs = Directory.GetDirectories(sourcePath);
             AppendAllText($"[CopyFile] 发现 {dirs.Length} 个子目录");
-            
+
             for (int i = 0; i < dirs.Length; i++)
             {
                 string[] childdir = dirs[i].Split('\\');
                 string childDirName = childdir[childdir.Length - 1];
                 // 使用Path.Combine安全构建路径，避免双反斜杠问题
                 string destSubDir = Path.Combine(objPath, childDirName);
-                AppendAllText($"[CopyFile] 处理子目录 {i+1}/{dirs.Length}: {childDirName}");
+                AppendAllText($"[CopyFile] 处理子目录 {i + 1}/{dirs.Length}: {childDirName}");
 
                 // 确保目标子目录存在
                 if (!Directory.Exists(destSubDir))
@@ -1620,9 +1540,9 @@ namespace AutoUpdate
 
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
-              
+
             }
-            
+
             AppendAllLines(contents);
             AppendAllText($"[CopyFile] 文件复制完成，版本: {VerNo}");
         }
@@ -1654,20 +1574,20 @@ namespace AutoUpdate
 
             string[] allfiles = Directory.GetFiles(sourcePath);
             AppendAllText($"[CopyFile] 源目录包含 {allfiles.Length} 个文件");
-            
+
             // 遍历所有文件并找出需要备份的文件
             foreach (string file in allfiles)
             {
                 // 获取文件名
                 string fileName = Path.GetFileName(file);
-                
+
                 // 在调试模式下，列出所有文件
                 if (IsDebugMode)
                 {
                     var fileInfo = new FileInfo(file);
                     AppendAllText($"[CopyFile] 检查文件: {fileName} ({fileInfo.Length} 字节)");
                 }
-                
+
                 // 检查文件是否存在于 Hashtable 中
                 foreach (DictionaryEntry var in htUpdateFile)
                 {
@@ -1687,7 +1607,7 @@ namespace AutoUpdate
 
             string[] files = needCopyFiles.ToArray();
             AppendAllText($"[CopyFile] 需要复制 {files.Length} 个文件");
-            
+
             //注意：从版本目录获取的所有文件中 只复制在更新列表中的文件进行覆盖
 
             // 初始化进度条（只在有文件需要复制时）
@@ -1700,10 +1620,10 @@ namespace AutoUpdate
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
-            
+
             // 优化文件处理顺序：先处理压缩文件，再处理普通文件
             // 这样可以确保单个文件的精确更新优先于压缩包中的批量更新
-            var orderedFiles = files.OrderByDescending(f => 
+            var orderedFiles = files.OrderByDescending(f =>
             {
                 string extension = Path.GetExtension(f).ToLower();
                 return extension == ".zip" || extension == ".rar" ? 1 : 0;
@@ -1714,17 +1634,18 @@ namespace AutoUpdate
                 string file = orderedFiles[i];
                 try
                 {
-                    AppendAllText($"[CopyFile] 处理文件 {i+1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
-                    
+                    AppendAllText($"[CopyFile] 处理文件 {i + 1}/{orderedFiles.Length}: {Path.GetFileName(file)}");
+
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    if (file == Path.Combine(sourcePath, currentexeName))
+                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
+                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
                     {
-                        AppendAllText($"[CopyFile] 跳过自身更新文件: {file}");
+                        AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);
                         continue;
                     }
-                    
+
                     // 在调试模式下，显示文件详细信息
                     if (IsDebugMode)
                     {
@@ -1732,7 +1653,7 @@ namespace AutoUpdate
                         AppendAllText($"[CopyFile] 文件大小: {sourceFileInfo.Length} 字节");
                         AppendAllText($"[CopyFile] 文件修改时间: {sourceFileInfo.LastWriteTime}");
                     }
-                    
+
                     //http://sevenzipsharp.codeplex.com/
                     //如果是压缩文件则解压，否则直接复制
                     string fileName = System.IO.Path.GetFileName(file);
@@ -1743,13 +1664,13 @@ namespace AutoUpdate
                         string zipPathWithName = System.IO.Path.Combine(sourcePath, fileName);
                         //MessageBox.Show("zipPathWithName:" + zipPathWithName);
                         //MessageBox.Show("objPath:" + objPath);
-                        
+
                         // 在调试模式下，显示ZIP文件内容
                         if (IsDebugMode)
                         {
                             var zipFileInfo = new FileInfo(zipPathWithName);
                             AppendAllText($"[CopyFile] ZIP文件大小: {zipFileInfo.Length} 字节");
-                            
+
                             using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
                             {
                                 AppendAllText($"[CopyFile] ZIP包含 {archive.Entries.Count} 个文件");
@@ -1763,7 +1684,7 @@ namespace AutoUpdate
                                 }
                             }
                         }
-                        
+
                         using (ZipArchive archive = ZipFile.OpenRead(zipPathWithName))
                         {
                             archive.ExtractToDirectory(objPath, true);
@@ -1790,7 +1711,7 @@ namespace AutoUpdate
                         //        tmp.ExtractFiles(objPath, tmp.ArchiveFileData[f].Index);
                         //    }
                         //}
-                        
+
                         AppendAllText($"[CopyFile] RAR文件解压完成");
 
                     }
@@ -1798,23 +1719,23 @@ namespace AutoUpdate
                     {
                         string destFile = System.IO.Path.Combine(objPath, fileName);
                         AppendAllText($"[CopyFile] 复制普通文件: {fileName}");
-                        
+
                         // 在调试模式下，检查目标文件是否存在
                         if (IsDebugMode && File.Exists(destFile))
                         {
                             var destFileInfo = new FileInfo(destFile);
                             AppendAllText($"[CopyFile] 目标文件已存在，大小: {destFileInfo.Length} 字节");
                         }
-                        
+
                         File.Copy(file, destFile, true);
-                        
+
                         // 在调试模式下，验证复制后的文件
                         if (IsDebugMode)
                         {
                             var copiedFileInfo = new FileInfo(destFile);
                             var sourceFileInfo = new FileInfo(file);
                             AppendAllText($"[CopyFile] 复制后文件大小: {copiedFileInfo.Length} 字节");
-                            
+
                             if (copiedFileInfo.Length == sourceFileInfo.Length)
                             {
                                 AppendAllText($"[CopyFile] 文件大小验证通过");
@@ -1824,7 +1745,7 @@ namespace AutoUpdate
                                 AppendAllText($"[CopyFile] 警告: 文件大小不匹配，可能复制不完整");
                             }
                         }
-                        
+
                         PrintInfoLog(System.DateTime.Now.ToString() + $"复制文件从{file}到{destFile}");
                         contents.Add(System.DateTime.Now.ToString() + "复制文件成功:" + file);
                         AppendAllText($"[CopyFile] 文件复制成功: {fileName}");
@@ -1859,14 +1780,14 @@ namespace AutoUpdate
 
             string[] dirs = Directory.GetDirectories(sourcePath);
             AppendAllText($"[CopyFile] 发现 {dirs.Length} 个子目录");
-            
+
             for (int i = 0; i < dirs.Length; i++)
             {
                 string[] childdir = dirs[i].Split('\\');
                 string childDirName = childdir[childdir.Length - 1];
                 // 使用Path.Combine安全构建路径，避免双反斜杠问题
                 string destSubDir = Path.Combine(objPath, childDirName);
-                AppendAllText($"[CopyFile] 处理子目录 {i+1}/{dirs.Length}: {childDirName}");
+                AppendAllText($"[CopyFile] 处理子目录 {i + 1}/{dirs.Length}: {childDirName}");
 
                 // 确保目标子目录存在
                 if (!Directory.Exists(destSubDir))
@@ -1884,7 +1805,7 @@ namespace AutoUpdate
                 //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
                 //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
             }
-            
+
             AppendAllLines(contents);
             AppendAllText($"[CopyFile] 文件复制完成");
         }
@@ -1966,23 +1887,25 @@ namespace AutoUpdate
         {
             if (IsTestMode)
             {
-                // 测试模式 - 模拟自我更新流程
-                AppendAllText("===== 测试模式：模拟自我更新流程 =====");
-                TestLastCopyFunction();
-                
+                // 测试模式 - 直接执行真实更新流程
+                AppendAllText("===== 测试模式：执行真实更新流程 =====");
+
+                // 直接调用真实的LastCopy方法进行测试
+                LastCopy();
+
                 // 在调试模式下标记更新完成但不关闭窗口
                 if (IsDebugMode && frmDebug != null)
                 {
-                    frmDebug.MarkUpdateCompleted(true, "测试模式模拟更新完成");
+                    frmDebug.MarkUpdateCompleted(true, "测试模式更新完成");
                     AppendAllText("调试模式: 窗口将保持打开状态，您可以手动关闭此窗口。");
                 }
                 else
                 {
-                    MessageBox.Show("自我更新功能测试完成，详细日志已记录。\n请检查日志文件了解模拟更新过程。", "测试完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("更新功能测试完成，详细日志已记录。\n请检查日志文件了解更新过程。", "测试完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 mainResult = 0;
-                
+
                 // 非调试模式下关闭窗口
                 if (!IsDebugMode)
                 {
@@ -1994,31 +1917,46 @@ namespace AutoUpdate
 
             // 正常模式 - 执行实际的自我更新
             AppendAllText("开始执行自我更新...");
-            LastCopy();
-            Thread.Sleep(500);
+
+            // 执行文件复制，但检查自我更新是否成功
+            bool selfUpdateSuccess = false;
+            try
+            {
+                LastCopy();
+                // 如果LastCopy没有退出程序，说明自我更新失败，使用传统方式
+                Thread.Sleep(500);
+                selfUpdateSuccess = false;
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"自我更新执行异常: {ex.Message}");
+                selfUpdateSuccess = false;
+            }
+
             var (version, updateTime, url) = ParseXmlInfo("AutoUpdaterList.xml");
 
             System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
             System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
 
+            // 无论自我更新是否成功，都要启动主程序
             StartEntryPointExe(NewVersion);
 
             mainResult = 0;
-            
+
             // 在调试模式下标记更新完成但不关闭窗口
             if (IsDebugMode && frmDebug != null)
             {
                 frmDebug.MarkUpdateCompleted(true, $"主程序已启动，版本: {version}");
                 AppendAllText("调试模式: 窗口将保持打开状态，您可以手动关闭此窗口。");
             }
-            
+
             // 非调试模式下关闭窗口
             if (!IsDebugMode)
             {
                 this.Close();
                 this.Dispose();
             }
-           
+
         }
 
 
@@ -2053,12 +1991,12 @@ namespace AutoUpdate
 
                 AppendAllText($"[LastCopy] htUpdateFile 包含 {htUpdateFile.Count} 个文件记录");
                 AppendAllText($"[LastCopy] versionDirList 包含 {versionDirList.Count} 个版本目录");
-                
+
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
                     string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
-                    AppendAllText($"[LastCopy] 处理版本 {i+1}/{versionDirList.Count}: {versionDirList[i]}");
+                    AppendAllText($"[LastCopy] 处理版本 {i + 1}/{versionDirList.Count}: {versionDirList[i]}");
                     AppendAllText($"[LastCopy] 源路径: {sourcePath}");
 
                     // 确保源路径存在
@@ -2079,7 +2017,7 @@ namespace AutoUpdate
                                 AppendAllText($"[LastCopy] ... 以及其他 {files.Length - 10} 个文件");
                             }
                         }
-                        
+
                         CopyFile(sourcePath, targetDir, versionDirList[i]);
                         AppendAllText($"[LastCopy] 成功复制版本目录: {sourcePath} 到 {targetDir}");
                     }
@@ -2090,18 +2028,22 @@ namespace AutoUpdate
                 }
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
 
-                // 关键：使用SelfUpdateHelper执行真正的自我更新
+                // 关键：使用AutoUpdateUpdater来更新AutoUpdate程序自身
                 string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
-                AppendAllText($"[自我更新] 当前程序路径: {currentExePath}");
-                AppendAllText($"[自我更新] 临时更新路径: {tempUpdatePath}");
+                AppendAllText($"[AutoUpdate更新] 当前程序路径: {currentExePath}");
+                AppendAllText($"[AutoUpdate更新] 临时更新路径: {tempUpdatePath}");
 
-                bool selfUpdateStarted = SelfUpdateHelper.StartUpdateHelper(currentExePath, tempUpdatePath);
-                
+                selfUpdateStarted = SelfUpdateHelper.StartAutoUpdateUpdater(currentExePath, tempUpdatePath);
+
                 if (selfUpdateStarted)
                 {
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
-                    Thread.Sleep(1000); // 给辅助进程一点启动时间
                     
+                    // 在退出前确保配置文件已复制到根目录
+                    EnsureConfigFileCopied();
+                    
+                    Thread.Sleep(1000); // 给辅助进程一点启动时间
+
                     // 正常退出主进程，让辅助进程接管更新
                     Application.Exit();
                     Environment.Exit(0);
@@ -2110,6 +2052,12 @@ namespace AutoUpdate
                 {
                     AppendAllText("警告：自我更新辅助进程启动失败，使用传统文件复制方式");
                     
+                    // 自我更新失败后，确保配置文件正确复制到根目录
+                    EnsureConfigFileCopied();
+                    
+                    // 启动ERP系统
+                    StartERPApplication();
+
                     // 如果自我更新失败，执行版本管理清理
                     try
                     {
@@ -2121,11 +2069,11 @@ namespace AutoUpdate
                         if (Directory.Exists(tempUpdatePath))
                         {
                             AppendAllText($"[版本管理] 检查临时更新目录: {tempUpdatePath}");
-                            
+
                             // 获取所有版本文件夹的路径
                             string[] subDirectories = Directory.GetDirectories(tempUpdatePath);
                             AppendAllText($"[版本管理] 发现 {subDirectories.Length} 个版本目录");
-                            
+
                             foreach (var subdir in subDirectories)
                             {
                                 string verDir = Path.GetFileName(subdir);
@@ -2139,10 +2087,10 @@ namespace AutoUpdate
                                 // 对版本号进行排序
                                 versions.Sort();
                                 AppendAllText($"[版本管理] 版本排序: {string.Join(", ", versions)}");
-                                
+
                                 int deleteCount = versions.Count - MaxVersionCount;
                                 AppendAllText($"[版本管理] 需要删除 {deleteCount} 个旧版本");
-                                
+
                                 // 取最小的 保留最新的5个
                                 versions = versions.Take(deleteCount).ToList();
 
@@ -2159,7 +2107,7 @@ namespace AutoUpdate
                                             var filesToDelete = Directory.GetFiles(versionPath, "*", SearchOption.AllDirectories);
                                             AppendAllText($"[版本管理] 将删除版本 {version}，包含 {filesToDelete.Length} 个文件");
                                         }
-                                        
+
                                         System.IO.Directory.Delete(versionPath, true);
                                         AppendAllText($"[版本管理] 已删除旧版本目录: {versionPath}");
                                     }
@@ -2168,7 +2116,7 @@ namespace AutoUpdate
                                         AppendAllText($"[版本管理] 警告: 版本目录不存在: {versionPath}");
                                     }
                                 }
-                                
+
                                 AppendAllText($"[版本管理] 版本清理完成，保留了最新的 {MaxVersionCount} 个版本");
                             }
                             else
@@ -2190,7 +2138,7 @@ namespace AutoUpdate
                             AppendAllText($"[版本管理] 异常详情: {exx.StackTrace}");
                         }
                     }
-                    
+
                     AppendAllText("传统文件复制方式完成");
                 }
             }
@@ -2215,7 +2163,7 @@ namespace AutoUpdate
             string autoupdatePath = string.Empty;
             var autoupdate = filesList.Where(c => c.Key.Contains(currentexeName)).FirstOrDefault();
             AppendAllText($"[自我更新] 检查AutoUpdate程序是否需要更新");
-            
+
             if (autoupdate.Key != null && !string.IsNullOrEmpty(autoupdate.Value))
             {
                 AppendAllText($"[自我更新] 发现AutoUpdate更新文件");
@@ -2227,7 +2175,7 @@ namespace AutoUpdate
                 int retryCount = 0;
                 const int maxRetry = 3;
                 bool updateSuccess = false;
-                
+
                 AppendAllText($"[自我更新] 当前程序路径: {filename}");
                 AppendAllText($"[自我更新] 更新文件路径: {autoupdate.Value}");
                 AppendAllText($"[自我更新] 备份文件路径: {backupFileName}");
@@ -2246,7 +2194,7 @@ namespace AutoUpdate
                             AppendAllText($"[自我更新] 新文件不存在: {autoupdate.Value}");
                             throw new FileNotFoundException("更新文件不存在", autoupdate.Value);
                         }
-                        
+
                         // 在调试模式下，显示文件大小信息
                         if (IsDebugMode)
                         {
@@ -2292,7 +2240,7 @@ namespace AutoUpdate
                         {
                             updateSuccess = true;
                             AppendAllText($"[自我更新] 更新成功，新文件已就位: {filename}");
-                            
+
                             // 在调试模式下，验证更新后的文件信息
                             if (IsDebugMode)
                             {
@@ -2363,7 +2311,7 @@ namespace AutoUpdate
             AppendAllText($"[配置更新] 更新配置文件: {Path.GetFileName(localXmlFile)}");
             AppendAllText($"[配置更新] 源文件: {serverXmlFile}");
             AppendAllText($"[配置更新] 目标文件: {localXmlFile}");
-            
+
             try
             {
                 // 在调试模式下，检查文件大小和修改时间
@@ -2379,7 +2327,7 @@ namespace AutoUpdate
                     {
                         AppendAllText($"[配置更新] 警告: 源文件不存在");
                     }
-                    
+
                     if (File.Exists(localXmlFile))
                     {
                         var targetInfo = new FileInfo(localXmlFile);
@@ -2391,10 +2339,10 @@ namespace AutoUpdate
                         AppendAllText($"[配置更新] 目标文件不存在，将创建新文件");
                     }
                 }
-                
+
                 File.Copy(serverXmlFile, localXmlFile, true);
                 AppendAllText($"[配置更新] 配置文件更新成功");
-                
+
                 // 在调试模式下，验证更新后的文件
                 if (IsDebugMode && File.Exists(localXmlFile))
                 {
@@ -2773,9 +2721,9 @@ namespace AutoUpdate
         /// </summary>
         public void UpdateAndDownLoadFile()
         {
-            
-                // 使用类级别的htUpdateFile变量
-                htUpdateFile.Clear();
+
+            // 使用类级别的htUpdateFile变量
+            htUpdateFile.Clear();
             try
             {
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
@@ -2880,17 +2828,27 @@ namespace AutoUpdate
                 if (needSelfUpdate)
                 {
                     AppendAllText("检测到更新程序需要更新，准备执行自身更新");
-                    
+
                     // 执行自身更新
-                    bool updateSuccess = SelfUpdateHelper.StartUpdateHelper(
+                    bool updateSuccess = SelfUpdateHelper.StartAutoUpdateUpdater(
                         currentExePath,
                         tempUpdatePath
                     );
 
                     if (updateSuccess)
                     {
-                        AppendAllText("自身更新辅助进程已启动，准备退出当前进程");
-                        // 退出当前进程，让辅助进程执行更新
+                        AppendAllText("自身更新辅助进程已启动，等待辅助进程初始化...");
+
+                        // 给辅助进程足够的时间启动和初始化
+                        Thread.Sleep(3000);
+
+                        AppendAllText("主进程准备退出，让辅助进程执行更新");
+
+                        // 确保所有资源释放后再退出
+                        this.Close();
+                        this.Dispose();
+
+                        // 优雅退出应用程序
                         Application.ExitThread();
                         Application.Exit();
                         return;
@@ -2898,19 +2856,62 @@ namespace AutoUpdate
                     else
                     {
                         AppendErrorText("启动自身更新辅助进程失败，将使用传统方式更新");
-                        
+
                         // 使用传统方式更新（仅作为备选方案）
                         if (System.IO.File.Exists(System.IO.Path.Combine(tempUpdatePath, currentExeName)))
                         {
-                            string filename = Assembly.GetExecutingAssembly().Location;
-                            File.Move(filename, filename + ".delete");                    // 1
-                            File.Copy(System.IO.Path.Combine(tempUpdatePath, currentExeName), filename);                // 2
+                            try
+                            {
+                                string filename = Assembly.GetExecutingAssembly().Location;
+                                string tempFilename = filename + ".temp";
+                                string backupFilename = filename + ".backup";
+
+                                // 更安全的传统更新方式
+                                AppendAllText($"[传统更新] 开始更新自身文件: {filename}");
+
+                                // 1. 先复制到临时文件
+                                File.Copy(System.IO.Path.Combine(tempUpdatePath, currentExeName), tempFilename, true);
+
+                                // 2. 备份原文件
+                                if (File.Exists(filename))
+                                {
+                                    File.Copy(filename, backupFilename, true);
+                                }
+
+                                // 3. 删除原文件
+                                File.Delete(filename);
+
+                                // 4. 移动临时文件到目标位置
+                                File.Move(tempFilename, filename);
+
+                                // 5. 清理备份文件（可选）
+                                if (File.Exists(backupFilename))
+                                {
+                                    File.Delete(backupFilename);
+                                }
+
+                                AppendAllText("[传统更新] 自身文件更新成功");
+                            }
+                            catch (Exception ex)
+                            {
+                                AppendErrorText("[传统更新] 自身文件更新失败", ex);
+                            }
                         }
                     }
                 }
 
                 // 复制其他文件
                 CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
+
+                // 确保配置文件被正确更新到根目录
+                string tempConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                if (File.Exists(tempConfigFile))
+                {
+                    File.Copy(tempConfigFile, targetConfigFile, true);
+                    AppendAllText($"[配置更新] 配置文件已更新到根目录");
+                }
+
                 System.IO.Directory.Delete(tempUpdatePath, true);
                 AppendAllText("更新应用成功");
             }
@@ -2936,22 +2937,22 @@ namespace AutoUpdate
             if (string.IsNullOrEmpty(mainAppExe))
             {
                 mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
-                
+
                 // 在调试模式下记录获取到的程序路径
                 if (IsDebugMode && frmDebug != null)
                 {
                     frmDebug.AppendLog($"从配置文件获取主程序路径: {mainAppExe}");
                 }
             }
-            
+
             IsMainAppRun();
-            
+
             // 在调试模式下记录检查结果
             if (IsDebugMode && frmDebug != null)
             {
                 frmDebug.AppendLog($"主程序是否已运行: {(IsMainAppRun() ? "是" : "否")}");
             }
-            
+
             //return;
             if (System.IO.File.Exists(mainAppExe))
             {
@@ -2961,7 +2962,7 @@ namespace AutoUpdate
                     string arguments = tempUpdatePath;
                     // 将参数转换为"|"分隔的字符串
                     arguments = String.Join("|", args);
-                    
+
                     // 在调试模式下记录启动参数
                     if (IsDebugMode && frmDebug != null)
                     {
@@ -2972,7 +2973,7 @@ namespace AutoUpdate
 
                     // 创建进程启动信息
                     ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
-                    
+
                     // 在调试模式下记录进程启动信息
                     if (IsDebugMode && frmDebug != null)
                     {
@@ -2981,7 +2982,7 @@ namespace AutoUpdate
 
                     // 启动主程序
                     Process process = Process.Start(startInfo);
-                    
+
                     // 在调试模式下记录进程信息
                     if (IsDebugMode && frmDebug != null)
                     {
@@ -2992,7 +2993,7 @@ namespace AutoUpdate
 
                     // 记录日志
                     AppendAllText($"成功启动主程序: {mainAppExe} 参数: {arguments}");
-                    
+
                     // 在调试模式下添加成功日志
                     if (IsDebugMode && frmDebug != null)
                     {
@@ -3003,7 +3004,7 @@ namespace AutoUpdate
                 {
                     // 记录错误日志
                     AppendAllText($"启动主程序失败: {ex.Message}");
-                    
+
                     // 在调试模式下记录详细错误信息
                     if (IsDebugMode && frmDebug != null)
                     {
@@ -3011,7 +3012,7 @@ namespace AutoUpdate
                         frmDebug.AppendLog($"异常类型: {ex.GetType().Name}");
                         frmDebug.AppendLog($"异常堆栈: {ex.StackTrace}");
                     }
-                    
+
                     MessageBox.Show($"启动主程序失败: {ex.Message}", "启动错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -3019,7 +3020,7 @@ namespace AutoUpdate
             {
                 string errorMsg = $"系统找不到指定的文件路径: {mainAppExe}";
                 AppendAllText(errorMsg);
-                
+
                 // 在调试模式下记录详细错误信息
                 if (IsDebugMode && frmDebug != null)
                 {
@@ -3027,7 +3028,7 @@ namespace AutoUpdate
                     frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
                     frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
                 }
-                
+
                 MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             //MessageBox.Show(mainAppExe);
@@ -3038,6 +3039,11 @@ namespace AutoUpdate
 
 
         private bool skipCurrentVersion = false;
+
+        /// <summary>
+        /// 标记是否已启动自我更新流程
+        /// </summary>
+        private bool selfUpdateStarted = false;
 
         /// <summary>
         /// 是否跳过当前版本如果跳过功能成功执行设为false,强制更新则跳过按钮失效
@@ -3060,11 +3066,11 @@ namespace AutoUpdate
             // 只有在调试模式下才写入日志
             if (!IsDebugMode)
                 return;
-                
+
             try
             {
                 string logContent = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n";
-                System.IO.File.AppendAllText(filePath, logContent);
+                System.IO.File.AppendAllText(UpdateLogfilePath, logContent);
             }
             catch { }
         }
@@ -3122,7 +3128,7 @@ namespace AutoUpdate
                 }
 
                 // 保留原有功能，确保向后兼容
-                File.WriteAllText(filePath, "跳过当前版本");
+                File.WriteAllText(UpdateLogfilePath, "跳过当前版本");
 
                 // 设置跳过版本状态
                 mainResult = -9; // 使用标准的跳过版本返回值
@@ -3155,58 +3161,6 @@ namespace AutoUpdate
 
 
         #region 测试辅助功能
-
-        /// <summary>
-        /// 测试LastCopy功能的模拟执行
-        /// </summary>
-        private void TestLastCopyFunction()
-        {
-            try
-            {
-                string currentExecutable = AppDomain.CurrentDomain.BaseDirectory + currentexeName;
-                string backupExecutable = currentExecutable + ".delete";
-
-                // 模拟文件操作流程
-                AppendAllText($"[模拟] 当前执行程序: {currentExecutable}");
-                AppendAllText($"[模拟] 备份文件路径: {backupExecutable}");
-                AppendAllText($"[模拟] 假设的新版本文件: {currentExecutable}.new");
-
-                // 检查当前文件是否可访问
-                if (System.IO.File.Exists(currentExecutable))
-                {
-                    FileInfo fi = new FileInfo(currentExecutable);
-                    AppendAllText($"[验证] 当前文件信息 - 大小: {fi.Length} 字节, 版本: {GetFileVersion(currentExecutable)}");
-                }
-
-                // 模拟文件锁定检查
-                AppendAllText("[模拟] 执行文件锁定检查...");
-                AppendAllText("[模拟] 文件可正常访问，无锁定");
-
-                // 模拟重命名和复制流程
-                AppendAllText("[模拟] 执行文件重命名: AutoUpdate.exe -> AutoUpdate.exe.delete");
-                AppendAllText("[模拟] 执行文件复制: AutoUpdate.exe.new -> AutoUpdate.exe");
-
-                // 模拟文件完整性验证
-                AppendAllText("[模拟] 执行文件完整性验证...");
-                AppendAllText("[模拟] 文件大小一致，完整性验证通过");
-
-                // 模拟重试机制测试
-                AppendAllText("[模拟] 测试重试机制...");
-                AppendAllText("[模拟] 重试逻辑正常工作");
-
-                // 总结测试结果
-                AppendAllText("===== 测试总结 =====");
-                AppendAllText("✓ 自我更新流程验证通过");
-                AppendAllText("✓ 重试机制工作正常");
-                AppendAllText("✓ 文件完整性验证逻辑正常");
-                AppendAllText("✓ 错误处理机制已实现");
-                AppendAllText("✓ 日志记录功能工作正常");
-            }
-            catch (Exception ex)
-            {
-                AppendAllText($"测试过程中发生错误: {ex.Message}");
-            }
-        }
 
         /// <summary>
         /// 获取文件版本信息
@@ -3348,6 +3302,188 @@ namespace AutoUpdate
 
             AppendAllText("===== 自我更新功能验证完成 =====");
         }
+        #endregion
+
+        #region 修复配置文件和ERP启动问题
+
+        /// <summary>
+        /// 确保配置文件正确复制到根目录
+        /// 解决AutoUpdaterList.xml文件下载到临时目录但没有复制到根目录的问题
+        /// </summary>
+        private void EnsureConfigFileCopied()
+        {
+            try
+            {
+                AppendAllText("[配置修复] 开始确保配置文件正确复制...");
+                
+                // 源文件路径（临时目录）
+                string sourceConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                
+                // 目标文件路径（根目录）
+                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                
+                AppendAllText($"[配置修复] 源配置文件: {sourceConfigFile}");
+                AppendAllText($"[配置修复] 目标配置文件: {targetConfigFile}");
+                
+                if (File.Exists(sourceConfigFile))
+                {
+                    // 检查目标文件是否存在，如果存在则比较版本
+                    if (File.Exists(targetConfigFile))
+                    {
+                        var sourceInfo = new FileInfo(sourceConfigFile);
+                        var targetInfo = new FileInfo(targetConfigFile);
+                        
+                        // 如果源文件较新，则复制
+                        if (sourceInfo.LastWriteTime > targetInfo.LastWriteTime || 
+                            sourceInfo.Length != targetInfo.Length)
+                        {
+                            File.Copy(sourceConfigFile, targetConfigFile, true);
+                            AppendAllText($"[配置修复] 配置文件已更新到根目录 (源文件较新)");
+                        }
+                        else
+                        {
+                            AppendAllText($"[配置修复] 配置文件已是最新版本，无需更新");
+                        }
+                    }
+                    else
+                    {
+                        // 目标文件不存在，直接复制
+                        File.Copy(sourceConfigFile, targetConfigFile, true);
+                        AppendAllText($"[配置修复] 配置文件已复制到根目录");
+                    }
+                    
+                    // 验证复制结果
+                    if (File.Exists(targetConfigFile))
+                    {
+                        var targetInfo = new FileInfo(targetConfigFile);
+                        AppendAllText($"[配置修复] 配置文件复制成功，文件大小: {targetInfo.Length} 字节");
+                    }
+                    else
+                    {
+                        AppendAllText($"[配置修复] 警告: 配置文件复制后验证失败");
+                    }
+                }
+                else
+                {
+                    AppendAllText($"[配置修复] 警告: 源配置文件不存在: {sourceConfigFile}");
+                }
+                
+                AppendAllText("[配置修复] 配置文件处理完成");
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[配置修复] 配置文件处理失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 启动ERP系统应用程序
+        /// 解决更新完成后没有启动主入口程序的问题
+        /// </summary>
+        private void StartERPApplication()
+        {
+            try
+            {
+                AppendAllText("[ERP启动] 开始启动ERP系统应用程序...");
+                
+                // 从配置文件获取入口程序路径
+                if (string.IsNullOrEmpty(mainAppExe))
+                {
+                    if (updaterXmlFiles != null)
+                    {
+                        mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
+                        AppendAllText($"[ERP启动] 从配置文件获取主程序路径: {mainAppExe}");
+                    }
+                    else
+                    {
+                        // 如果配置文件对象不存在，尝试直接读取配置文件
+                        string configFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                        if (File.Exists(configFile))
+                        {
+                            var tempXmlFiles = new XmlFiles(configFile);
+                            mainAppExe = tempXmlFiles.GetNodeValue("//EntryPoint");
+                            AppendAllText($"[ERP启动] 从配置文件读取主程序路径: {mainAppExe}");
+                        }
+                    }
+                }
+                
+                // 如果无法从配置文件获取，使用默认值
+                if (string.IsNullOrEmpty(mainAppExe))
+                {
+                    mainAppExe = "企业数字化集成ERP.exe";
+                    AppendAllText($"[ERP启动] 使用默认主程序路径: {mainAppExe}");
+                }
+                
+                // 确保路径是完整的绝对路径
+                if (!Path.IsPathRooted(mainAppExe))
+                {
+                    mainAppExe = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mainAppExe);
+                    AppendAllText($"[ERP启动] 转换为绝对路径: {mainAppExe}");
+                }
+                
+                // 检查程序是否存在
+                if (File.Exists(mainAppExe))
+                {
+                    AppendAllText($"[ERP启动] 找到主程序文件，准备启动...");
+                    
+                    // 启动进程
+                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe);
+                    startInfo.WorkingDirectory = Path.GetDirectoryName(mainAppExe);
+                    startInfo.UseShellExecute = true;
+                    
+                    // 添加启动参数（如果有）
+                    string arguments = $"--updated-from-version={NewVersion}";
+                    startInfo.Arguments = arguments;
+                    
+                    AppendAllText($"[ERP启动] 工作目录: {startInfo.WorkingDirectory}");
+                    AppendAllText($"[ERP启动] 启动参数: {arguments}");
+                    
+                    Process process = Process.Start(startInfo);
+                    
+                    if (process != null && !process.HasExited)
+                    {
+                        AppendAllText($"[ERP启动] ERP系统启动成功，进程ID: {process.Id}");
+                        AppendAllText($"[ERP启动] 进程名称: {process.ProcessName}");
+                        
+                        // 等待进程启动完成
+                        Thread.Sleep(2000);
+                        
+                        // 检查进程是否仍在运行
+                        if (!process.HasExited)
+                        {
+                            AppendAllText("[ERP启动] ERP系统已成功启动并正在运行");
+                        }
+                        else
+                        {
+                            AppendAllText("[ERP启动] 警告: ERP系统启动后立即退出");
+                        }
+                    }
+                    else
+                    {
+                        AppendAllText("[ERP启动] 错误: 无法启动ERP系统进程");
+                    }
+                }
+                else
+                {
+                    AppendAllText($"[ERP启动] 错误: 主程序文件不存在: {mainAppExe}");
+                    
+                    // 尝试在当前目录查找
+                    string alternativePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "企业数字化集成ERP.exe");
+                    if (File.Exists(alternativePath))
+                    {
+                        AppendAllText($"[ERP启动] 找到备选程序文件: {alternativePath}");
+                        mainAppExe = alternativePath;
+                        StartERPApplication(); // 递归调用
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[ERP启动] ERP系统启动失败: {ex.Message}");
+                AppendAllText($"[ERP启动] 异常详情: {ex.StackTrace}");
+            }
+        }
+
         #endregion
     }
 }

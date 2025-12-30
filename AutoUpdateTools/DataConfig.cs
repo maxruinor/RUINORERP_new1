@@ -63,5 +63,10 @@ namespace AutoUpdateTools
         /// 排除的文件后缀名集合，使用换行分隔
         /// </summary>
         public string ExcludeExtensions { get; set; } = ".log\n.cache\n.tmp\n.bak";
+        
+        /// <summary>
+        /// 排除的目录集合，使用换行分隔
+        /// </summary>
+        public string ExcludeDirectories { get; set; } = "";
     }
 }

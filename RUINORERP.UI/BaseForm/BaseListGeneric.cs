@@ -231,6 +231,49 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver { get; set; }
 
+        #region 分页功能相关属性和字段
+        
+        /// <summary>
+        /// 是否启用分页功能
+        /// </summary>
+        [Browsable(true)]
+        [Description("启用分页功能")]
+        public bool EnablePagination { get; set; } = false;
+
+        /// <summary>
+        /// 自动启用分页的阈值（默认1000条记录）
+        /// </summary>
+        [Browsable(true)]
+        [Description("自动启用分页的阈值")]
+        public int AutoPaginationThreshold { get; set; } = 1000;
+
+        /// <summary>
+        /// 当前页码
+        /// </summary>
+        private int _currentPageIndex = 1;
+
+        /// <summary>
+        /// 页面大小
+        /// </summary>
+        private int _pageSize = 20;
+
+        /// <summary>
+        /// 总记录数
+        /// </summary>
+        private long _totalCount = 0;
+
+        /// <summary>
+        /// 分页信息
+        /// </summary>
+        public NewSumDataGridView.PaginationInfo Pagination => new NewSumDataGridView.PaginationInfo
+        {
+            PageIndex = _currentPageIndex,
+            PageSize = _pageSize,
+            TotalCount = _totalCount
+        };
+
+        #endregion
+
         public BaseListGeneric()
         {
             InitializeComponent();

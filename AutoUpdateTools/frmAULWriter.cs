@@ -439,6 +439,18 @@ namespace AULWriter
                         }
                     }
                     txtExcludeExtensions.Text = sbExcludeExt.ToString();
+                    
+                    // 加载排除目录配置
+                    StringBuilder sbExcludeDir = new StringBuilder();
+                    if (!string.IsNullOrEmpty(dataConfig.ExcludeDirectories))
+                    {
+                        string[] dirFiles = dataConfig.ExcludeDirectories.Split(new string[] { "\n" }, StringSplitOptions.None);
+                        foreach (var item in dirFiles)
+                        {
+                            sbExcludeDir.Append(item).Append("\r\n");
+                        }
+                    }
+                    txtExcludeDirectories.Text = sbExcludeDir.ToString();
 
                 }
             }
@@ -1345,6 +1357,10 @@ namespace AULWriter
             AppendLog(message);
         }
 
+        /// <summary>
+        /// 将日志消息添加到日志控件中，最新消息显示在第一行
+        /// </summary>
+        /// <param name="message">日志消息</param>
         private void AppendLog(string message)
         {
             // 检查是否需要跨线程调用
@@ -1355,11 +1371,18 @@ namespace AULWriter
                 return;
             }
             
-            // 直接在主线程中执行
             // 只有当显示日志复选框被选中时，才显示日志
             if (chkShowLog.Checked)
             {
-                richTxtLog.AppendText($"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n");
+                // 在文本开头插入新日志，实现反向显示（最新在最上面）
+                string logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}\r\n";
+                richTxtLog.SelectionStart = 0;
+                richTxtLog.SelectionLength = 0;
+                richTxtLog.SelectedText = logEntry;
+                
+                // 保持滚动条在最顶部，显示最新日志
+                richTxtLog.SelectionStart = 0;
+                richTxtLog.ScrollToCaret();
             }
         }
         #endregion
@@ -1756,18 +1779,39 @@ namespace AULWriter
                     
                     AppendLog($"检查排除规则：{trimmedRule}");
                     
-                    // 支持两种匹配方式：完全匹配和相对路径匹配
+                    // 支持四种匹配方式：
+                    // 1. 完全匹配
                     if (filePath.Trim().Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
                         AppendLog($"文件 {filePath} 被排除：完全匹配排除规则 {trimmedRule}");
                         return true;
                     }
                     
-                    // 检查文件名是否匹配（不考虑路径）
+                    // 2. 文件名匹配（不考虑路径）
                     string fileName = Path.GetFileName(filePath);
                     if (fileName.Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
                         AppendLog($"文件 {filePath} 被排除：文件名匹配排除规则 {trimmedRule}");
+                        return true;
+                    }
+                }
+                
+                // 检查排除目录设置
+                string[] excludeDirectories = txtExcludeDirectories.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                AppendLog($"排除目录列表大小：{excludeDirectories.Length}");
+                
+                foreach (string excludeDirRule in excludeDirectories)
+                {
+                    string trimmedRule = excludeDirRule.Trim();
+                    if (string.IsNullOrEmpty(trimmedRule))
+                        continue;
+                    
+                    AppendLog($"检查排除目录规则：{trimmedRule}");
+                    
+                    // 3. 目录匹配（新增功能）
+                    if (IsDirectoryExcluded(filePath, trimmedRule))
+                    {
+                        AppendLog($"文件 {filePath} 被排除：所在目录匹配排除规则 {trimmedRule}");
                         return true;
                     }
                 }
@@ -1813,6 +1857,55 @@ namespace AULWriter
             return false;
         }
 
+        /// <summary>
+        /// 检查文件所在目录是否被排除
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="excludeRule">排除规则</param>
+        /// <returns>如果目录被排除则返回true</returns>
+        private bool IsDirectoryExcluded(string filePath, string excludeRule)
+        {
+            try
+            {
+                // 检查排除规则是否为目录模式（以斜杠或反斜杠结尾）
+                if (excludeRule.EndsWith("\\") || excludeRule.EndsWith("/"))
+                {
+                    string directoryPath = Path.GetDirectoryName(filePath) ?? string.Empty;
+                    string normalizedRule = excludeRule.TrimEnd('\\', '/');
+                    
+                    // 检查文件是否在排除目录中
+                    if (directoryPath.StartsWith(normalizedRule, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                    
+                    // 检查目录名是否匹配（不区分大小写）
+                    string directoryName = Path.GetFileName(directoryPath) ?? string.Empty;
+                    if (directoryName.Equals(normalizedRule, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    // 检查文件路径是否包含排除目录（通配符模式）
+                    if (filePath.Contains("\\" + excludeRule + "\\") ||
+                        filePath.Contains("/" + excludeRule + "/") ||
+                        filePath.StartsWith(excludeRule + "\\") ||
+                        filePath.StartsWith(excludeRule + "/"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"检查目录排除规则失败: {excludeRule}, 错误: {ex.Message}");
+            }
+            
+            return false;
+        }
+
 
         #endregion [排除不需要的文件]
 
@@ -1853,6 +1946,7 @@ namespace AULWriter
                 dataConfig.BaseExeVersion = txtBaseExeVersion.Text;
                 dataConfig.UseBaseExeVersion = chkUseBaseVersion.Checked;
                 dataConfig.ExcludeExtensions = txtExcludeExtensions.Text;
+                dataConfig.ExcludeDirectories = txtExcludeDirectories.Text;
                 string path = configFilePath;
                 SerializeXmlHelper.SerializeXml(dataConfig, path);
             }
@@ -2687,9 +2781,12 @@ namespace AULWriter
                     AppendLog($"创建目标目录：{targetDir}");
                 }
                 
+     
+                
                 // 逐个复制差异文件
-                foreach (var fileName in diffFiles)
+                for (int i = 0; i < diffFiles.Count; i++)
                 {
+                    var fileName = diffFiles[i];
                     string sourcePath = Path.Combine(sourceDir, fileName);
                     string targetPath = Path.Combine(targetDir, fileName);
                     
@@ -2718,9 +2815,13 @@ namespace AULWriter
                     {
                         AppendLog($"复制差异文件失败：{fileName}，错误：{ex.Message}");
                     }
+                    
+                   
                 }
                 
                 AppendLog($"差异文件复制完成，成功复制 {copySuccessCount} 个文件，失败 {diffFiles.Count - copySuccessCount} 个文件");
+                
+            
             }
             catch (Exception ex)
             {
@@ -3125,6 +3226,5 @@ namespace AULWriter
         public List<string> DiffItems { get; set; }
     }
     #endregion
-
 
 }

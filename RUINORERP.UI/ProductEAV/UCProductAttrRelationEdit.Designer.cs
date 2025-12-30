@@ -109,7 +109,6 @@ namespace RUINORERP.UI.ProductEAV
             this.cmbProperty.Name = "cmbProperty";
             this.cmbProperty.Size = new System.Drawing.Size(200, 21);
             this.cmbProperty.TabIndex = 10;
-            this.cmbProperty.SelectedIndexChanged += new System.EventHandler(this.cmbProperty_SelectedIndexChanged);
             // 
             // cmbProdDetail
             // 

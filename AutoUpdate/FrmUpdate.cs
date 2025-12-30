@@ -832,7 +832,6 @@ namespace AutoUpdate
         {            // 检查是否按下 Ctrl+D
             if (e.Control && e.KeyCode == Keys.D)
             {
-                // 切换调试模式
                 IsDebugMode = !IsDebugMode;
                 
                 // 更新调试窗口的IsDebugMode属性

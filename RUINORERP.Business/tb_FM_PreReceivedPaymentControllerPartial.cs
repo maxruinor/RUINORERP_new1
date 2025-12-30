@@ -602,6 +602,7 @@ namespace RUINORERP.Business
             payable.ApprovalOpinions = "";
             payable.Modified_at = null;
             payable.Modified_by = null;
+            payable.PrePayDate = System.DateTime.Now;
             if (entity.tb_projectgroup != null)
             {
                 payable.DepartmentID = entity.tb_projectgroup.DepartmentID;
@@ -615,7 +616,6 @@ namespace RUINORERP.Business
             payable.SourceBillNo = entity.PurOrderNo;
             payable.SourceBillId = entity.PurOrder_ID;
             payable.Currency_ID = entity.Currency_ID;
-            payable.PrePayDate = entity.PurDate;
             payable.ExchangeRate = exchangeRate;
             payable.LocalPrepaidAmountInWords = string.Empty;
             if (PrepaidAmount == 0)

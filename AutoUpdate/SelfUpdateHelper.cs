@@ -35,10 +35,11 @@ namespace AutoUpdate
                     return false;
                 }
 
-                // 准备更新命令
-                string arguments = $"--source-dir \"{newFilesPath}\" --target-dir \"{targetDir}\" --exe-name \"{Path.GetFileName(updaterExePath)}\"";
+                // 准备更新命令 - 使用等号格式确保参数解析一致性
+                string arguments = $"--source-dir=\"{newFilesPath}\" --target-dir=\"{targetDir}\" --exe-name=\"{Path.GetFileName(updaterExePath)}\"";
 
                 // 启动AutoUpdateUpdater
+                WriteLog("AutoUpdateLog.txt", $"启动AutoUpdateUpdater，参数: {arguments}");
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = autoUpdateUpdaterPath,

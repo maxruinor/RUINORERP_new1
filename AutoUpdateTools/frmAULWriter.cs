@@ -1201,15 +1201,23 @@ namespace AULWriter
 
         }
 
+        /// <summary>
+        /// 更新进度条
+        /// </summary>
+        /// <param name="data">进度数据</param>
         private void UpdateProgressBar(ProgressData data)
-        {    // 更新进度条
-            //if (data.TotalFiles > 0)
-            //    prbProd.Maximum = data.TotalFiles;
+        {
+            if (prbProd.InvokeRequired)
+            {
+                prbProd.Invoke(new Action<ProgressData>(UpdateProgressBar), data);
+                return;
+            }
 
-            //prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
             // 初始化进度条
             if (data.TotalFiles > 0 && prbProd.Maximum != data.TotalFiles)
             {
+                prbProd.Visible = true;
+                prbProd.Minimum = 0;
                 prbProd.Maximum = data.TotalFiles;
             }
 
@@ -1217,10 +1225,36 @@ namespace AULWriter
             if (data.Processed > 0)
             {
                 prbProd.Value = Math.Min(data.Processed, prbProd.Maximum);
+                
+                // 显示简洁进度信息
+                if (data.Processed % 10 == 0 || data.Processed == data.TotalFiles)
+                {
+                    AppendLog($"进度: {data.Processed}/{data.TotalFiles} 文件");
+                }
             }
 
+            // 强制刷新UI
+            prbProd.Refresh();
+            Application.DoEvents();
+        }
 
+        /// <summary>
+        /// 完成进度条显示
+        /// </summary>
+        private void CompleteProgressBar()
+        {
+            if (prbProd.InvokeRequired)
+            {
+                prbProd.Invoke(new Action(CompleteProgressBar));
+                return;
+            }
 
+            prbProd.Value = prbProd.Maximum;
+            AppendLog($"任务完成: 共处理 {prbProd.Maximum} 个文件");
+            
+            // 延迟后隐藏进度条
+            System.Threading.Thread.Sleep(500);
+            prbProd.Visible = false;
         }
 
         private void UpdateLastUpdateTime(XDocument doc)
@@ -2547,10 +2581,37 @@ namespace AULWriter
 
             //排序
             Array.Sort(files);
+
+            // 初始化进度条
+            var progressData = new ProgressData
+            {
+                TotalFiles = files.Length,
+                Processed = 0,
+                DiffItems = new List<string>()
+            };
+            
+            prbProd.Visible = true;
+            prbProd.Minimum = 0;
+            prbProd.Maximum = files.Length;
+            prbProd.Value = 0;
+            
+            AppendLog($"开始文件对比，共 {files.Length} 个文件");
             List<string> list = files.ToList();
             var XElementFiles = doc.Descendants("File");
+            int processedFiles = 0;
+            int totalFiles = XElementFiles.Count();
+            
             foreach (XElement fileElement in XElementFiles)
             {
+                processedFiles++;
+                
+                // 更新进度条
+                prbProd.Value = processedFiles;
+                if (processedFiles % 10 == 0 || processedFiles == totalFiles)
+                {
+                    AppendLog($"对比进度: {processedFiles}/{totalFiles}");
+                }
+                
                 string fileName = fileElement.Attribute("Name").Value;
                 if (list.Count > 0 && !list.Contains(fileName))
                 {
@@ -2631,26 +2692,43 @@ namespace AULWriter
                 list.Remove(fileName);
             }
 
-            foreach (var item in list)
+            // 处理新增文件，并更新进度条
+            int newFilesCount = list.Count;
+            if (newFilesCount > 0)
             {
-                //如果文件在排除列表中,忽略。不添加
-                if (ExcludeUnnecessaryFiles(item))
+                AppendLog($"开始处理新增文件，共 {newFilesCount} 个");
+                
+                int newFileIndex = 0;
+                foreach (var item in list)
                 {
-                    continue;
+                    newFileIndex++;
+                    
+                    // 更新进度条（叠加到已处理的文件数上）
+                    prbProd.Value = processedFiles + newFileIndex;
+                    
+                    //如果文件在排除列表中,忽略。不添加
+                    if (ExcludeUnnecessaryFiles(item))
+                    {
+                        continue;
+                    }
+                    //添加新的文件到这个xml的File节点下面
+                    XElement newFileElement = new XElement("File");
+                    newFileElement.SetAttributeValue("Ver", "1.0.0.0");
+                    newFileElement.SetAttributeValue("Name", item);
+                    var FilesElement = doc.Descendants("Files").FirstOrDefault();
+                    FilesElement.Add(newFileElement);
+                    DiffFileList.Add(item);
+                    txtDiff.AppendText(item + "\r\n");
                 }
-                //添加新的文件到这个xml的File节点下面
-                XElement newFileElement = new XElement("File");
-                newFileElement.SetAttributeValue("Ver", "1.0.0.0");
-                newFileElement.SetAttributeValue("Name", item);
-                var FilesElement = doc.Descendants("Files").FirstOrDefault();
-                FilesElement.Add(newFileElement);
-                DiffFileList.Add(item);
-                txtDiff.AppendText(item + "\r\n");
             }
 
-
             txtLastXml.Text = doc.ToString();
-            richTxtLog.AppendText("生成最新的XML文件结果成功。请继续发布才是真正完成\r\n");
+            
+            // 完成进度条
+            CompleteProgressBar();
+            
+            AppendLog("文件对比完成，共发现 " + DiffFileList.Count + " 个差异文件");
+            AppendLog("生成最新的XML文件结果成功。请继续发布才是真正完成");
 
             //}
             //else
@@ -2774,14 +2852,18 @@ namespace AULWriter
                 
                 AppendLog($"开始复制差异文件，共 {diffFiles.Count} 个文件");
                 
+                // 初始化进度条
+                prbProd.Visible = true;
+                prbProd.Minimum = 0;
+                prbProd.Maximum = diffFiles.Count;
+                prbProd.Value = 0;
+                
                 // 创建目标目录（如果不存在）
                 if (!Directory.Exists(targetDir))
                 {
                     Directory.CreateDirectory(targetDir);
                     AppendLog($"创建目标目录：{targetDir}");
                 }
-                
-     
                 
                 // 逐个复制差异文件
                 for (int i = 0; i < diffFiles.Count; i++)
@@ -2816,10 +2898,18 @@ namespace AULWriter
                         AppendLog($"复制差异文件失败：{fileName}，错误：{ex.Message}");
                     }
                     
-                   
+                    // 更新进度条
+                    prbProd.Value = i + 1;
+                    if ((i + 1) % 10 == 0 || (i + 1) == diffFiles.Count)
+                    {
+                        AppendLog($"复制进度: {i + 1}/{diffFiles.Count}");
+                    }
                 }
                 
                 AppendLog($"差异文件复制完成，成功复制 {copySuccessCount} 个文件，失败 {diffFiles.Count - copySuccessCount} 个文件");
+                
+                // 完成进度条
+                CompleteProgressBar();
                 
             
             }
@@ -2857,6 +2947,12 @@ namespace AULWriter
                 
                 AppendLog($"开始复制配置文件中的所有文件，共 {allFilesInConfig.Count} 个文件");
                 
+                // 初始化进度条
+                prbProd.Visible = true;
+                prbProd.Minimum = 0;
+                prbProd.Maximum = allFilesInConfig.Count;
+                prbProd.Value = 0;
+                
                 // 创建目标目录（如果不存在）
                 if (!Directory.Exists(targetDir))
                 {
@@ -2865,8 +2961,9 @@ namespace AULWriter
                 }
                 
                 // 逐个复制文件
-                foreach (var fileName in allFilesInConfig)
+                for (int i = 0; i < allFilesInConfig.Count; i++)
                 {
+                    var fileName = allFilesInConfig[i];
                     string sourcePath = Path.Combine(sourceDir, fileName);
                     string targetPath = Path.Combine(targetDir, fileName);
                     
@@ -2895,9 +2992,19 @@ namespace AULWriter
                     {
                         AppendLog($"复制文件失败：{fileName}，错误：{ex.Message}");
                     }
+                    
+                    // 更新进度条
+                    prbProd.Value = i + 1;
+                    if ((i + 1) % 10 == 0 || (i + 1) == allFilesInConfig.Count)
+                    {
+                        AppendLog($"复制进度: {i + 1}/{allFilesInConfig.Count}");
+                    }
                 }
                 
                 AppendLog($"文件复制完成，成功复制 {copySuccessCount} 个文件，失败 {allFilesInConfig.Count - copySuccessCount} 个文件");
+                
+                // 完成进度条
+                CompleteProgressBar();
             }
             catch (Exception ex)
             {

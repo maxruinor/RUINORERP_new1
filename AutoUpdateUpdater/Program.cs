@@ -70,20 +70,10 @@ namespace AutoUpdateUpdater
                 {
                     // 更新成功，清理配置文件
                     CleanupConfigFile(configFilePath);
+                    WriteLog("AutoUpdateUpdaterLog.txt", "AutoUpdate更新成功，准备启动ERP主程序");
                     
-                    // 启动更新后的AutoUpdate.exe
-                    // 优先使用配置中直接指定的路径，如果没有则使用默认路径
-                    string newAutoUpdatePath = !string.IsNullOrEmpty(config.AutoUpdateExePath) ? 
-                        config.AutoUpdateExePath : Path.Combine(targetDir, exeName);
-                    
-                    if (File.Exists(newAutoUpdatePath))
-                    {
-                        Process.Start(newAutoUpdatePath);
-                    }
-                    else
-                    {
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"AutoUpdate.exe文件不存在: {newAutoUpdatePath}");
-                    }
+                    // 更新成功后直接启动ERP主程序，而不是AutoUpdate.exe
+                    StartERPApplication();
                     
                     Application.Exit();
                 }

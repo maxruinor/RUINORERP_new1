@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Security.Cryptography;
+using Newtonsoft.Json;
 
 namespace AutoUpdate
 {
@@ -35,15 +36,41 @@ namespace AutoUpdate
                     return false;
                 }
 
-                // 准备更新命令 - 使用等号格式确保参数解析一致性
-                string arguments = $"--source-dir=\"{newFilesPath}\" --target-dir=\"{targetDir}\" --exe-name=\"{Path.GetFileName(updaterExePath)}\"";
-
-                // 启动AutoUpdateUpdater
-                WriteLog("AutoUpdateLog.txt", $"启动AutoUpdateUpdater，参数: {arguments}");
+                // 使用配置文件方式传递参数，避免命令行参数解析问题
+                string configFilePath = Path.Combine(targetDir, "AutoUpdateUpdaterConfig.json");
+                
+                // 创建配置对象并保存到文件（带重试机制）
+                // 直接指定AutoUpdate.exe的完整路径，避免搜索版本目录
+                var config = new UpdateConfig
+                {
+                    SourceDir = newFilesPath,
+                    TargetDir = targetDir,
+                    ExeName = Path.GetFileName(updaterExePath),
+                    CreatedTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    // 直接指定AutoUpdate.exe的完整路径
+                    AutoUpdateExePath = Path.Combine(targetDir, "AutoUpdate.exe")
+                };
+                
+                // 使用Newtonsoft.Json序列化
+                string configJson = JsonConvert.SerializeObject(config, Formatting.Indented);
+                
+                // 使用安全的文件写入方法，避免锁定问题
+                bool writeSuccess = SafeWriteFile(configFilePath, configJson, 3, 500);
+                
+                if (!writeSuccess)
+                {
+                    WriteLog("AutoUpdateLog.txt", $"创建配置文件失败: {configFilePath}");
+                    return false;
+                }
+                
+                WriteLog("AutoUpdateLog.txt", $"创建配置文件成功: {configFilePath}");
+                WriteLog("AutoUpdateLog.txt", $"配置内容: sourceDir={newFilesPath}, targetDir={targetDir}, exeName={Path.GetFileName(updaterExePath)}");
+                
+                // 启动AutoUpdateUpdater（无参数，通过配置文件传递）
                 ProcessStartInfo startInfo = new ProcessStartInfo
                 {
                     FileName = autoUpdateUpdaterPath,
-                    Arguments = arguments,
+                    Arguments = "", // 不使用命令行参数
                     CreateNoWindow = false,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     UseShellExecute = true
@@ -635,6 +662,89 @@ namespace AutoUpdate
         }
         
         /// <summary>
+        /// 安全的文件写入方法（带重试机制）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="content">文件内容</param>
+        /// <param name="maxRetries">最大重试次数</param>
+        /// <param name="retryDelay">重试延迟（毫秒）</param>
+        /// <returns>是否写入成功</returns>
+        private static bool SafeWriteFile(string filePath, string content, int maxRetries = 3, int retryDelay = 500)
+        {
+            for (int attempt = 0; attempt < maxRetries; attempt++)
+            {
+                try
+                {
+                    // 先写入临时文件，再重命名，避免锁定问题
+                    string tempFilePath = filePath + ".tmp";
+                    
+                    using (var stream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    using (var writer = new StreamWriter(stream))
+                    {
+                        writer.Write(content);
+                    }
+                    
+                    // 如果目标文件存在，先删除
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                    
+                    // 重命名临时文件为目标文件
+                    File.Move(tempFilePath, filePath);
+                    
+                    return true;
+                }
+                catch (IOException ex) when (attempt < maxRetries - 1)
+                {
+                    WriteLog("AutoUpdateLog.txt", $"文件写入失败（尝试 {attempt + 1}/{maxRetries}）: {ex.Message}");
+                    Thread.Sleep(retryDelay);
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("AutoUpdateLog.txt", $"文件写入失败（最终）: {ex.Message}");
+                    return false;
+                }
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 安全的文件读取方法（带重试机制）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <param name="maxRetries">最大重试次数</param>
+        /// <param name="retryDelay">重试延迟（毫秒）</param>
+        /// <returns>文件内容，读取失败返回空字符串</returns>
+        private static string SafeReadFile(string filePath, int maxRetries = 3, int retryDelay = 500)
+        {
+            for (int attempt = 0; attempt < maxRetries; attempt++)
+            {
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(stream))
+                    {
+                        return reader.ReadToEnd();
+                    }
+                }
+                catch (IOException ex) when (attempt < maxRetries - 1)
+                {
+                    WriteLog("AutoUpdateLog.txt", $"文件读取失败（尝试 {attempt + 1}/{maxRetries}）: {ex.Message}");
+                    Thread.Sleep(retryDelay);
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("AutoUpdateLog.txt", $"文件读取失败（最终）: {ex.Message}");
+                    return string.Empty;
+                }
+            }
+            
+            return string.Empty;
+        }
+
+        /// <summary>
         /// 更新版本记录
         /// </summary>
         /// <param name="targetDir">目标目录</param>
@@ -675,5 +785,6 @@ namespace AutoUpdate
                 Debug.WriteLine($"更新版本记录失败: {ex.Message}");
             }
         }
+
     }
 }

@@ -177,6 +177,9 @@
       <Name>System.XML</Name>
     </Reference>
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompressedUpdateTester.cs" />
@@ -189,6 +192,7 @@
     </Compile>
     <Compile Include="SelfUpdateHelper.cs" />
     <Compile Include="SkipVersionManager.cs" />
+    <Compile Include="UpdateConfig.cs" />
     <Compile Include="VersionHistoryManager.cs" />
     <Compile Include="VersionFolderManager.cs" />
     <Compile Include="VersionRollbackManager.cs" />

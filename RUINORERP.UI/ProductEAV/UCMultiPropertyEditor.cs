@@ -654,7 +654,7 @@ namespace RUINORERP.UI.ProductEAV
             // 初始化第一个属性组的组合
             foreach (var value in attributeGroups[0].SelectedValues)
             {
-                combinations.Add(new AttributeCombination
+                var combination = new AttributeCombination
                 {
                     Properties = new List<AttributeValuePair>
                     {
@@ -664,7 +664,12 @@ namespace RUINORERP.UI.ProductEAV
                             PropertyValue = value
                         }
                     }
-                });
+                };
+                // 排序属性列表
+                combination.Properties = combination.Properties
+                    .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
+                    .ToList();
+                combinations.Add(combination);
             }
 
             // 处理后续属性组，生成所有组合
@@ -686,6 +691,11 @@ namespace RUINORERP.UI.ProductEAV
                             Property = attributeGroups[i].Property,
                             PropertyValue = value
                         });
+
+                        // 排序属性列表
+                        newCombination.Properties = newCombination.Properties
+                            .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
+                            .ToList();
 
                         tempCombinations.Add(newCombination);
                     }
@@ -732,6 +742,11 @@ namespace RUINORERP.UI.ProductEAV
                     // 如果组合有属性，则添加到结果列表
                     if (combination.Properties.Count > 0)
                     {
+                        // 排序属性列表
+                        combination.Properties = combination.Properties
+                            .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
+                            .ToList();
+                            
                         //属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
                         if (combination.Properties.Where(c => c.Property != null).ToList().Count > 0)
                         {

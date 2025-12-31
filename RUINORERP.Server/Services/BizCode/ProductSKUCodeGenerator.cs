@@ -691,9 +691,7 @@ namespace RUINORERP.Server.Services.BizCode
                 { "64G", "64G" },
                 { "128G", "128G" },
                 { "256G", "256G" },
-                { "2G+16G", "2G16G" },
-                { "3G+32G", "3G32G" },
-                { "4G+64G", "4G64G" },
+      
                 
                 // 电池容量
                 { "1000ma", "1A" },

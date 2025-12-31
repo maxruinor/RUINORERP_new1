@@ -75,7 +75,32 @@ namespace RUINORERP.UI.IM
             _messageCheckTimer.Tick += MessageCheckTimer_Tick;
 
             InitializeMessageService();
+            InitializePersistence(); // 初始化持久化功能
             _messageCheckTimer.Start();
+        }
+
+        /// <summary>
+        /// 初始化持久化功能
+        /// </summary>
+        private void InitializePersistence()
+        {
+            try
+            {
+                // 从持久化存储加载消息
+                var persistedMessages = _persistenceManager.GetAllMessages();
+                if (persistedMessages.Count > 0)
+                {
+                    _logger.LogDebug($"从持久化存储加载了{persistedMessages.Count}条消息");
+                }
+                else
+                {
+                    _logger.LogDebug("持久化存储中没有消息数据");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "初始化持久化功能时发生异常");
+            }
         }
 
         /// <summary>
@@ -198,7 +223,14 @@ namespace RUINORERP.UI.IM
         // 处理接收到的业务消息
         private void OnBusinessMessageReceived(MessageData messageData)
         {
+            // 处理业务逻辑
             ProcessBusinessMessage(messageData);
+            
+            // 触发未读消息计数变更事件，通知UI更新
+            UpdateUnreadMessageCount();
+            
+            // 触发消息状态变更事件，通知消息列表刷新
+            OnMessageStatusChanged(messageData);
         }
 
         // 处理接收到的部门消息
@@ -255,6 +287,8 @@ namespace RUINORERP.UI.IM
             var message = GetMessageById(id);
             if (message != null)
             {
+                // 更新持久化存储中的消息状态
+                _persistenceManager.UpdateMessage(message);
                 OnMessageStatusChanged(message);
             }
         }
@@ -310,6 +344,9 @@ namespace RUINORERP.UI.IM
             if (message == null)
                 return;
 
+            // 保存到持久化存储
+            _persistenceManager.AddMessage(message);
+
             // 更新未读消息计数并触发事件
             UpdateUnreadMessageCount();
 
@@ -350,7 +387,7 @@ namespace RUINORERP.UI.IM
                         ShowNoticePrompt(messageData);
                         break;
                     case MessageType.Business:
-                        ShowBusinessMessagePrompt(messageData);
+                        //ShowBusinessMessagePrompt(messageData);
                         break;
                 }
             }

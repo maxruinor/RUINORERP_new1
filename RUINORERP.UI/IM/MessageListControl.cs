@@ -25,6 +25,9 @@ namespace RUINORERP.UI.IM
         private Timer _notificationTimer;
         private int _unreadCount = 0;
         private bool _isAnimating = false;
+        private NotifyIcon _bubbleNotifyIcon;
+        private Timer _bubbleTimer;
+        private bool _isBubbleVisible = false;
 
         /// <summary>
         /// 当用户点击消息时触发的事件
@@ -51,6 +54,9 @@ namespace RUINORERP.UI.IM
             // 初始化通知定时器
             _notificationTimer = new Timer { Interval = 3000 }; // 3秒
             _notificationTimer.Tick += NotificationTimer_Tick;
+
+            // 初始化气泡通知
+            InitializeBubbleNotification();
 
             // 订阅消息管理器的事件
             _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
@@ -172,10 +178,11 @@ namespace RUINORERP.UI.IM
             }
 
             // 处理未读消息数量变化
+            int oldCount = _unreadCount;
             UpdateUnreadCount();
 
-            // 未读消息数量增加时刷新消息列表
-            if (count > _unreadCount)
+            // 未读消息数量增加时刷新消息列表和显示动态提示
+            if (count > oldCount)
             {
                 // 播放声音提示
                 PlayNotificationSound();
@@ -185,6 +192,9 @@ namespace RUINORERP.UI.IM
 
                 // 启动动画通知
                 StartNotificationAnimation();
+
+                // 显示气泡提示
+                ShowBubbleNotification(count);
 
                 // 注意：自动弹窗功能由EnhancedMessageManager负责处理
                 // 这里只更新列表UI，不显示弹窗
@@ -268,6 +278,104 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
+        /// 初始化气泡通知
+        /// </summary>
+        private void InitializeBubbleNotification()
+        {
+            // 创建气泡通知图标
+            _bubbleNotifyIcon = new NotifyIcon
+            {
+                Icon = SystemIcons.Information,
+                Visible = false,
+                BalloonTipIcon = ToolTipIcon.Info
+            };
+
+            // 气泡点击事件
+            _bubbleNotifyIcon.BalloonTipClicked += (s, e) =>
+            {
+                // 点击气泡时显示消息中心
+                ShowMessageCenterTab();
+                HideBubbleNotification();
+            };
+
+            // 气泡定时器
+            _bubbleTimer = new Timer { Interval = 5000 }; // 5秒后自动隐藏
+            _bubbleTimer.Tick += (s, e) =>
+            {
+                HideBubbleNotification();
+            };
+        }
+
+        /// <summary>
+        /// 显示气泡通知
+        /// </summary>
+        /// <param name="unreadCount">未读消息数量</param>
+        private void ShowBubbleNotification(int unreadCount)
+        {
+            if (_isBubbleVisible) return;
+
+            try
+            {
+                _bubbleNotifyIcon.BalloonTipTitle = "新消息通知";
+                _bubbleNotifyIcon.BalloonTipText = $"您有{unreadCount}条未读消息，点击查看详情";
+                _bubbleNotifyIcon.Visible = true;
+                _bubbleNotifyIcon.ShowBalloonTip(3000); // 显示3秒
+
+                _isBubbleVisible = true;
+                _bubbleTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示气泡通知时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 隐藏气泡通知
+        /// </summary>
+        private void HideBubbleNotification()
+        {
+            if (!_isBubbleVisible) return;
+
+            try
+            {
+                _bubbleTimer.Stop();
+                _bubbleNotifyIcon.Visible = false;
+                _isBubbleVisible = false;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"隐藏气泡通知时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 显示消息中心标签页
+        /// </summary>
+        private void ShowMessageCenterTab()
+        {
+            try
+            {
+                // 查找主窗体中的消息中心标签页并激活
+                var mainForm = this.FindForm() as MainForm;
+                if (mainForm != null)
+                {
+                    // 通过反射或其他方式激活消息中心标签页
+                    // 这里需要根据实际的MainForm实现来调用
+                    mainForm.Invoke(new Action(() =>
+                    {
+                        // 激活消息中心标签页的逻辑
+                        // 具体实现依赖于MainForm的标签页管理方式
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示消息中心标签页时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 通知定时器事件处理
         /// </summary>
         private void NotificationTimer_Tick(object sender, EventArgs e)
@@ -296,10 +404,61 @@ namespace RUINORERP.UI.IM
                         // 触发消息点击事件
                         MessageClicked?.Invoke(this, new MessageClickedEventArgs(message));
 
+                        // 使用MessagePrompt显示消息内容
+                        ShowMessageWithPrompt(message);
+
                         // 处理业务导航
                         NavigateToBusiness(message);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 使用MessagePrompt显示消息内容
+        /// </summary>
+        /// <param name="message">消息对象</param>
+        private void ShowMessageWithPrompt(MessageData message)
+        {
+            try
+            {
+                if (message == null) return;
+
+                // 使用依赖注入获取MessagePrompt实例
+                var messagePrompt = Startup.GetFromFac<MessagePrompt>();
+                if (messagePrompt != null)
+                {
+                    messagePrompt.MessageData = message;
+                    
+                    // 显示消息提示窗口
+                    if (Application.OpenForms.Count > 0)
+                    {
+                        Application.OpenForms[0].Invoke(new Action(() =>
+                        {
+                            messagePrompt.Show();
+                            messagePrompt.TopMost = true;
+                        }));
+                    }
+                }
+                else
+                {
+                    // 如果无法从依赖注入获取，创建新实例
+                    var prompt = new MessagePrompt(message, _messageManager);
+                    if (Application.OpenForms.Count > 0)
+                    {
+                        Application.OpenForms[0].Invoke(new Action(() =>
+                        {
+                            prompt.Show();
+                            prompt.TopMost = true;
+                        }));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"使用MessagePrompt显示消息时发生错误: {ex.Message}");
+                MessageBox.Show($"显示消息详情时发生错误: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

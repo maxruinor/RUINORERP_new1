@@ -85,7 +85,7 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(181, 340);
+            this.btnCancel.Location = new System.Drawing.Point(181, 360);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
@@ -94,7 +94,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(51, 340);
+            this.btnOk.Location = new System.Drawing.Point(51, 360);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 12;
@@ -129,7 +129,8 @@
             this.txtContent.Location = new System.Drawing.Point(74, 82);
             this.txtContent.Multiline = true;
             this.txtContent.Name = "txtContent";
-            this.txtContent.Size = new System.Drawing.Size(308, 128);
+            this.txtContent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtContent.Size = new System.Drawing.Size(308, 200);
             this.txtContent.TabIndex = 11;
             // 
             // kryptonGroupBoxCurrentNode
@@ -146,7 +147,7 @@
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblUnitName);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblDesc);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtContent);
-            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(414, 311);
+            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(414, 330);
             this.kryptonGroupBoxCurrentNode.TabIndex = 14;
             this.kryptonGroupBoxCurrentNode.Values.Heading = "消息概览";
             // 
@@ -167,13 +168,13 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(441, 379);
+            this.kryptonPanel1.Size = new System.Drawing.Size(441, 400);
             this.kryptonPanel1.TabIndex = 5;
             // 
             // btnWaitReminder
             // 
             this.btnWaitReminder.KryptonContextMenu = this.kryptonContextMenu1;
-            this.btnWaitReminder.Location = new System.Drawing.Point(306, 340);
+            this.btnWaitReminder.Location = new System.Drawing.Point(306, 360);
             this.btnWaitReminder.Name = "btnWaitReminder";
             this.btnWaitReminder.Size = new System.Drawing.Size(90, 25);
             this.btnWaitReminder.TabIndex = 69;
@@ -194,7 +195,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(441, 379);
+            this.ClientSize = new System.Drawing.Size(441, 400);
             this.Controls.Add(this.kryptonPanel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;

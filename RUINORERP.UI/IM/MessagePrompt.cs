@@ -87,11 +87,8 @@ namespace RUINORERP.UI.IM
         private void InitializeForm()
         {
             // 可以在这里添加额外的初始化代码
-            // 设置窗体的初始位置为屏幕右下角
-            this.SetDesktopLocation(
-                Screen.PrimaryScreen.WorkingArea.Width - this.Width,
-                Screen.PrimaryScreen.WorkingArea.Height - this.Height
-            );
+            // 设置窗体自动适应内容大小
+            this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
@@ -202,19 +199,72 @@ namespace RUINORERP.UI.IM
 
         private void MessagePrompt_Load(object sender, EventArgs e)
         {
-
-
-
-
             txtContent.Text = Content;
             lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            // 确保窗体在显示时位于屏幕右下角
-            this.SetDesktopLocation(
-                Screen.PrimaryScreen.WorkingArea.Width - this.Width,
-                Screen.PrimaryScreen.WorkingArea.Height - this.Height
-            );
+            
+            // 根据内容自动调整文本框大小
+            AdjustContentTextBoxSize();
+            
+            // 自适应窗体位置，显示在屏幕中央偏下位置
+            PositionFormCentered();
 
             AddCommandForWait();
+        }
+
+        /// <summary>
+        /// 根据内容自动调整窗体大小
+        /// </summary>
+        private void AdjustContentTextBoxSize()
+        {
+            if (txtContent != null && !string.IsNullOrEmpty(Content))
+            {
+                // 计算文本所需的高度
+                using (Graphics g = txtContent.CreateGraphics())
+                {
+                    SizeF textSize = g.MeasureString(Content, txtContent.Font, txtContent.Width - 20);
+                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 50; // 增加边距
+                    
+                    // 设置最小和最大高度
+                    int minHeight = 200;
+                    int maxHeight = 800; // 增加最大高度限制
+                    
+                    int newHeight = Math.Max(minHeight, Math.Min(maxHeight, requiredHeight));
+                    
+                    // 调整文本框高度
+                    txtContent.Height = newHeight;
+                    
+                    // 调整GroupBox大小
+                    kryptonGroupBoxCurrentNode.Height = newHeight + 100; // 增加额外空间
+                    
+                    // 调整窗体大小
+                    this.Height = kryptonGroupBoxCurrentNode.Height + 100; // 按钮区域高度
+                    
+                    // 调整按钮位置
+                    btnOk.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
+                    btnCancel.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
+                    btnWaitReminder.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
+                    
+                    // 调整Panel大小
+                    kryptonPanel1.Height = this.Height;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将窗体定位在屏幕中央偏下位置
+        /// </summary>
+        private void PositionFormCentered()
+        {
+            this.StartPosition = FormStartPosition.Manual;
+            
+            // 计算窗体位置（屏幕中央偏下）
+            int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+            int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+            
+            int formX = (screenWidth - this.Width) / 2;
+            int formY = (screenHeight - this.Height) * 2 / 3; // 偏下位置
+            
+            this.SetDesktopLocation(formX, formY);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

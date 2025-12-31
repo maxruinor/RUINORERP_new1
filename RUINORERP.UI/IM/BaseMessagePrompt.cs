@@ -17,7 +17,7 @@ namespace RUINORERP.UI.IM
     /// 消息显示组件基类
     /// 提供统一的消息显示和处理功能
     /// </summary>
-    public abstract class BaseMessagePrompt : KryptonForm
+    public class BaseMessagePrompt : KryptonForm
     {
         /// <summary>
         /// 消息数据
@@ -41,15 +41,21 @@ namespace RUINORERP.UI.IM
         
         /// <summary>
         /// 初始化组件
-        /// 子类必须实现此方法来初始化UI组件
+        /// 子类可以重写此方法来初始化UI组件
         /// </summary>
-        protected abstract void InitializeComponents();
+        protected virtual void InitializeComponents()
+        {
+            // 默认实现为空，子类可以根据需要重写
+        }
         
         /// <summary>
         /// 更新消息显示
-        /// 子类必须实现此方法来根据消息数据更新UI
+        /// 子类可以重写此方法来根据消息数据更新UI
         /// </summary>
-        protected abstract void UpdateMessageDisplay();
+        protected virtual void UpdateMessageDisplay()
+        {
+            // 默认实现为空，子类可以根据需要重写
+        }
         
         /// <summary>
         /// 显示消息
@@ -86,13 +92,19 @@ namespace RUINORERP.UI.IM
         /// 设置发送者文本
         /// </summary>
         /// <param name="text">发送者名称</param>
-        public abstract void SetSenderText(string text);
+        public virtual void SetSenderText(string text)
+        {
+            // 默认实现为空，子类可以根据需要重写
+        }
         
         /// <summary>
         /// 设置主题文本
         /// </summary>
         /// <param name="text">消息主题</param>
-        public abstract void SetSubjectText(string text);
+        public virtual void SetSubjectText(string text)
+        {
+            // 默认实现为空，子类可以根据需要重写
+        }
         
         /// <summary>
         /// 定位窗体
@@ -186,7 +198,7 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 构造函数
         /// </summary>
-        protected BaseMessagePrompt()
+        public BaseMessagePrompt()
         {
             // 获取服务实例
             MenuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -206,7 +218,7 @@ namespace RUINORERP.UI.IM
         /// <param name="messageData">消息数据</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="messageManager">消息管理器</param>
-        protected BaseMessagePrompt(MessageData messageData, ILogger<BaseMessagePrompt> logger = null, EnhancedMessageManager messageManager = null)
+        public BaseMessagePrompt(MessageData messageData, ILogger<BaseMessagePrompt> logger = null, EnhancedMessageManager messageManager = null)
             : this()
         {
             MessageData = messageData;

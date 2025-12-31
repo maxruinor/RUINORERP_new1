@@ -498,7 +498,6 @@ namespace AutoUpdate
                 }
 
                 tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
-                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
 
                 // 下载完成后检查是否有更新
@@ -2812,6 +2811,7 @@ namespace AutoUpdate
         /// <summary>
         /// 应用更新，实现可靠的自身更新机制
         /// 采用双进程方式确保自身更新的可靠性
+        /// 先复制所有其他文件，最后处理自我更新
         /// </summary>
         public void ApplyApp()
         {
@@ -2825,9 +2825,28 @@ namespace AutoUpdate
                 // 检查是否需要自身更新
                 bool needSelfUpdate = File.Exists(System.IO.Path.Combine(tempUpdatePath, currentExeName));
 
+                AppendAllText("开始应用更新...");
+                
+                // 第一步：复制所有其他文件（除了自动更新程序自身）
+                AppendAllText("正在复制其他更新文件...");
+                
+                // 设置标志，告诉CopyFile方法跳过自我更新文件
+                selfUpdateStarted = false;
+                CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
+
+                // 确保配置文件被正确更新到根目录
+                string tempConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                if (File.Exists(tempConfigFile))
+                {
+                    File.Copy(tempConfigFile, targetConfigFile, true);
+                    AppendAllText($"[配置更新] 配置文件已更新到根目录");
+                }
+
+                // 第二步：最后处理自我更新（如果需要）
                 if (needSelfUpdate)
                 {
-                    AppendAllText("检测到更新程序需要更新，准备执行自身更新");
+                    AppendAllText("检测到更新程序需要更新，准备执行自身更新（最后执行）");
 
                     // 执行自身更新
                     bool updateSuccess = SelfUpdateHelper.StartAutoUpdateUpdater(
@@ -2843,6 +2862,9 @@ namespace AutoUpdate
                         Thread.Sleep(3000);
 
                         AppendAllText("主进程准备退出，让辅助进程执行更新");
+
+                        // 清理临时目录（辅助进程会处理后续的复制）
+                        System.IO.Directory.Delete(tempUpdatePath, true);
 
                         // 确保所有资源释放后再退出
                         this.Close();
@@ -2900,18 +2922,7 @@ namespace AutoUpdate
                     }
                 }
 
-                // 复制其他文件
-                CopyFile(tempUpdatePath, AppDomain.CurrentDomain.BaseDirectory);
-
-                // 确保配置文件被正确更新到根目录
-                string tempConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
-                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
-                if (File.Exists(tempConfigFile))
-                {
-                    File.Copy(tempConfigFile, targetConfigFile, true);
-                    AppendAllText($"[配置更新] 配置文件已更新到根目录");
-                }
-
+                // 清理临时目录
                 System.IO.Directory.Delete(tempUpdatePath, true);
                 AppendAllText("更新应用成功");
             }

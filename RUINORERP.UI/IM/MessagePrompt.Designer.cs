@@ -69,14 +69,16 @@
             // 
             // txtSender
             // 
-            this.txtSender.Location = new System.Drawing.Point(74, 7);
+            this.txtSender.Location = new System.Drawing.Point(86, 10);
+            this.txtSender.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.txtSender.Name = "txtSender";
-            this.txtSender.Size = new System.Drawing.Size(306, 23);
+            this.txtSender.Size = new System.Drawing.Size(477, 23);
             this.txtSender.TabIndex = 68;
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(10, 7);
+            this.kryptonLabel1.Location = new System.Drawing.Point(12, 10);
+            this.kryptonLabel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(49, 20);
             this.kryptonLabel1.TabIndex = 67;
@@ -85,32 +87,36 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(181, 360);
+            this.btnCancel.Location = new System.Drawing.Point(224, 468);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(90, 25);
+            this.btnCancel.Size = new System.Drawing.Size(105, 35);
             this.btnCancel.TabIndex = 13;
             this.btnCancel.Values.Text = "关闭";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(51, 360);
+            this.btnOk.Location = new System.Drawing.Point(72, 468);
+            this.btnOk.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(90, 25);
+            this.btnOk.Size = new System.Drawing.Size(105, 35);
             this.btnOk.TabIndex = 12;
             this.btnOk.Values.Text = "查看";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // txtSubject
             // 
-            this.txtSubject.Location = new System.Drawing.Point(74, 34);
+            this.txtSubject.Location = new System.Drawing.Point(86, 48);
+            this.txtSubject.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.txtSubject.Name = "txtSubject";
-            this.txtSubject.Size = new System.Drawing.Size(306, 23);
+            this.txtSubject.Size = new System.Drawing.Size(477, 23);
             this.txtSubject.TabIndex = 9;
             // 
             // lblUnitName
             // 
-            this.lblUnitName.Location = new System.Drawing.Point(10, 34);
+            this.lblUnitName.Location = new System.Drawing.Point(12, 48);
+            this.lblUnitName.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.lblUnitName.Name = "lblUnitName";
             this.lblUnitName.Size = new System.Drawing.Size(36, 20);
             this.lblUnitName.TabIndex = 8;
@@ -118,7 +124,8 @@
             // 
             // lblDesc
             // 
-            this.lblDesc.Location = new System.Drawing.Point(10, 82);
+            this.lblDesc.Location = new System.Drawing.Point(12, 83);
+            this.lblDesc.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.lblDesc.Name = "lblDesc";
             this.lblDesc.Size = new System.Drawing.Size(36, 20);
             this.lblDesc.TabIndex = 10;
@@ -126,16 +133,18 @@
             // 
             // txtContent
             // 
-            this.txtContent.Location = new System.Drawing.Point(74, 82);
+            this.txtContent.Location = new System.Drawing.Point(86, 83);
+            this.txtContent.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             this.txtContent.Multiline = true;
             this.txtContent.Name = "txtContent";
             this.txtContent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtContent.Size = new System.Drawing.Size(308, 200);
+            this.txtContent.Size = new System.Drawing.Size(477, 312);
             this.txtContent.TabIndex = 11;
             // 
             // kryptonGroupBoxCurrentNode
             // 
-            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(12, 12);
+            this.kryptonGroupBoxCurrentNode.Location = new System.Drawing.Point(14, 17);
+            this.kryptonGroupBoxCurrentNode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.kryptonGroupBoxCurrentNode.Name = "kryptonGroupBoxCurrentNode";
             // 
             // kryptonGroupBoxCurrentNode.Panel
@@ -147,13 +156,14 @@
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblUnitName);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.lblDesc);
             this.kryptonGroupBoxCurrentNode.Panel.Controls.Add(this.txtContent);
-            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(414, 330);
+            this.kryptonGroupBoxCurrentNode.Size = new System.Drawing.Size(583, 425);
             this.kryptonGroupBoxCurrentNode.TabIndex = 14;
             this.kryptonGroupBoxCurrentNode.Values.Heading = "消息概览";
             // 
             // lblSendTime
             // 
-            this.lblSendTime.Location = new System.Drawing.Point(74, 218);
+            this.lblSendTime.Location = new System.Drawing.Point(86, 309);
+            this.lblSendTime.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.lblSendTime.Name = "lblSendTime";
             this.lblSendTime.Size = new System.Drawing.Size(6, 2);
             this.lblSendTime.TabIndex = 70;
@@ -167,16 +177,18 @@
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(441, 400);
+            this.kryptonPanel1.Size = new System.Drawing.Size(618, 527);
             this.kryptonPanel1.TabIndex = 5;
             // 
             // btnWaitReminder
             // 
             this.btnWaitReminder.KryptonContextMenu = this.kryptonContextMenu1;
-            this.btnWaitReminder.Location = new System.Drawing.Point(306, 360);
+            this.btnWaitReminder.Location = new System.Drawing.Point(370, 468);
+            this.btnWaitReminder.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btnWaitReminder.Name = "btnWaitReminder";
-            this.btnWaitReminder.Size = new System.Drawing.Size(90, 25);
+            this.btnWaitReminder.Size = new System.Drawing.Size(105, 35);
             this.btnWaitReminder.TabIndex = 69;
             this.btnWaitReminder.Values.Text = "稍候提醒";
             this.btnWaitReminder.Click += new System.EventHandler(this.btnWaitReminder_Click);
@@ -193,13 +205,14 @@
             // 
             // MessagePrompt
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(441, 400);
+            this.ClientSize = new System.Drawing.Size(618, 527);
             this.Controls.Add(this.kryptonPanel1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.MaximumSize = new System.Drawing.Size(931, 1400);
+            this.MinimumSize = new System.Drawing.Size(616, 267);
             this.Name = "MessagePrompt";
             this.Text = "智能提醒";
             this.Load += new System.EventHandler(this.MessagePrompt_Load);

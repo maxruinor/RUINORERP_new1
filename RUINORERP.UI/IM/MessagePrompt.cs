@@ -202,8 +202,8 @@ namespace RUINORERP.UI.IM
             txtContent.Text = Content;
             lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             
-            // 根据内容自动调整文本框大小
-            AdjustContentTextBoxSize();
+            // 简单直接的方法：让文本框自动调整大小
+            AdjustContentSizeSimple();
             
             // 自适应窗体位置，显示在屏幕中央偏下位置
             PositionFormCentered();
@@ -212,40 +212,51 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 根据内容自动调整窗体大小
+        /// 简单直接的内容大小调整方法
+        /// 保留设计器中的默认大小，只在内容过长时调整高度
         /// </summary>
-        private void AdjustContentTextBoxSize()
+        private void AdjustContentSizeSimple()
         {
             if (txtContent != null && !string.IsNullOrEmpty(Content))
             {
+                // 直接设置文本框为自动调整大小模式
+                txtContent.AutoSize = false;
+                
                 // 计算文本所需的高度
                 using (Graphics g = txtContent.CreateGraphics())
                 {
                     SizeF textSize = g.MeasureString(Content, txtContent.Font, txtContent.Width - 20);
-                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 50; // 增加边距
+                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 20;
                     
-                    // 设置最小和最大高度
-                    int minHeight = 200;
-                    int maxHeight = 800; // 增加最大高度限制
+                    // 设置合理的文本框高度，但不超过最大限制
+                    int newTextBoxHeight = Math.Max(200, Math.Min(600, requiredHeight));
+                    txtContent.Height = newTextBoxHeight;
                     
-                    int newHeight = Math.Max(minHeight, Math.Min(maxHeight, requiredHeight));
+                    // 计算新的GroupBox高度
+                    int newGroupBoxHeight = newTextBoxHeight + 120;
                     
-                    // 调整文本框高度
-                    txtContent.Height = newHeight;
-                    
-                    // 调整GroupBox大小
-                    kryptonGroupBoxCurrentNode.Height = newHeight + 100; // 增加额外空间
-                    
-                    // 调整窗体大小
-                    this.Height = kryptonGroupBoxCurrentNode.Height + 100; // 按钮区域高度
+                    // 只有在内容高度超过默认设计高度时才调整窗体大小
+                    // 设计器默认窗体高度是527，GroupBox高度是425
+                    if (newGroupBoxHeight > 425)
+                    {
+                        // 调整GroupBox高度
+                        kryptonGroupBoxCurrentNode.Height = newGroupBoxHeight;
+                        
+                        // 调整窗体高度，保持与设计器比例一致
+                        this.Height = newGroupBoxHeight + 102; // 527 - 425 = 102
+                    }
+                    else
+                    {
+                        // 使用设计器中的默认大小
+                        kryptonGroupBoxCurrentNode.Height = 425;
+                        this.Height = 527; // 设计器默认高度
+                    }
                     
                     // 调整按钮位置
-                    btnOk.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
-                    btnCancel.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
-                    btnWaitReminder.Top = kryptonGroupBoxCurrentNode.Bottom + 10;
-                    
-                    // 调整Panel大小
-                    kryptonPanel1.Height = this.Height;
+                    int buttonY = kryptonGroupBoxCurrentNode.Bottom + 10;
+                    btnOk.Top = buttonY;
+                    btnCancel.Top = buttonY;
+                    btnWaitReminder.Top = buttonY;
                 }
             }
         }

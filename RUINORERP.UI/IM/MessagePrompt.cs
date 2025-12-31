@@ -186,12 +186,14 @@ namespace RUINORERP.UI.IM
             // 将消息标签添加到流布局面板
             messageFlowLayoutPanel.Controls.Add(messageLabel);
 
+            // 注释掉窗体大小调整逻辑，保持窗体设计时的默认大小
             // 调整窗体大小以适应消息
-            this.Width = messageFlowLayoutPanel.Width + messageFlowLayoutPanel.Padding.Horizontal;
-            this.Height = messageFlowLayoutPanel.Height + messageFlowLayoutPanel.Padding.Vertical;
+            // this.Width = messageFlowLayoutPanel.Width + messageFlowLayoutPanel.Padding.Horizontal;
+            // this.Height = messageFlowLayoutPanel.Height + messageFlowLayoutPanel.Padding.Vertical;
 
+            // 注释掉计时器启动，避免循环调用导致窗体高度不断变化
             // 计时器启动，用于在一定时间后隐藏消息
-            messageTimer.Start();
+            // messageTimer.Start();
         }
 
         QueryParameter parameter { get; set; }
@@ -212,43 +214,6 @@ namespace RUINORERP.UI.IM
             AddCommandForWait();
         }
 
-        /// <summary>
-        /// 简单直接的内容大小调整方法
-        /// 确保内容完全显示，同时保持窗体美观
-        /// </summary>
-        private void AdjustContentSizeSimple()
-        {
-            if (txtContent != null && !string.IsNullOrEmpty(Content))
-            {
-                // 计算文本所需的高度
-                using (Graphics g = txtContent.CreateGraphics())
-                {
-                    SizeF textSize = g.MeasureString(Content, txtContent.Font, txtContent.Width - 20);
-                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 40; // 增加更多边距
-                    
-                    // 设置合理的文本框高度，确保内容完全显示
-                    int newTextBoxHeight = Math.Max(300, Math.Min(800, requiredHeight));
-                    txtContent.Height = newTextBoxHeight;
-                    
-                    // 调整GroupBox高度
-                    int newGroupBoxHeight = newTextBoxHeight + 120;
-                    kryptonGroupBoxCurrentNode.Height = newGroupBoxHeight;
-                    
-                    // 调整窗体高度，确保所有内容都能显示
-                    // 总高度 = GroupBox高度 + 按钮区域高度 + 额外边距
-                    int newFormHeight = newGroupBoxHeight + 120;
-                    
-                    // 确保窗体高度足够显示所有内容
-                    this.Height = Math.Max(600, newFormHeight); // 设置最小高度为600
-                    
-                    // 调整按钮位置，确保在窗体底部
-                    int buttonY = this.Height - 60; // 距离底部60像素
-                    btnOk.Top = buttonY;
-                    btnCancel.Top = buttonY;
-                    btnWaitReminder.Top = buttonY;
-                }
-            }
-        }
 
         /// <summary>
         /// 将窗体定位在屏幕中央偏下位置

@@ -1,4 +1,5 @@
 using AutoUpdateTools;
+using ExCSS;
 using FastReport.Data;
 using FastReport.DevComponents.DotNetBar.Controls;
 using Force.DeepCloner;
@@ -7,7 +8,9 @@ using Krypton.Workspace;
 using MathNet.Numerics.LinearAlgebra.Complex.Solvers;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using ObjectsComparer;
+using RUINOR.Core;
 using RUINOR.WinFormsUI;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
@@ -746,7 +749,7 @@ namespace RUINORERP.UI.ProductEAV
                         combination.Properties = combination.Properties
                             .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
                             .ToList();
-                            
+
                         //属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
                         if (combination.Properties.Where(c => c.Property != null).ToList().Count > 0)
                         {
@@ -1093,6 +1096,7 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     foreach (var DetailRelation in combination.ProductDetail.tb_Prod_Attr_Relations)
                     {
+
                         // 创建子节点
                         TreeGridNode subNode = node.Nodes.FirstOrDefault(c => c.NodeName == DetailRelation.RAR_ID.ToString());
                         if (subNode == null)
@@ -1774,7 +1778,7 @@ namespace RUINORERP.UI.ProductEAV
                                     //删除
                                     if (MessageBox.Show("确定删除该SKU对应的属性值吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                                     {
-                                        int counter = await MainForm.Instance.AppContext.Db.Deleteable(Prod_Attr_Relation).ExecuteCommandAsync(); ;
+                                        int counter = await MainForm.Instance.AppContext.Db.Deleteable(Prod_Attr_Relation).ExecuteCommandAsync();
                                         if (counter > 0)
                                         {
                                             //如果有外键引用了。会出错。这里删除没有问题。
@@ -1951,6 +1955,7 @@ namespace RUINORERP.UI.ProductEAV
                     // 设置窗体标题
                     editForm.Text = $"编辑属性关系 - {EditEntity?.CNName ?? "未知产品"}";
 
+
                     // 绑定数据到编辑窗体
                     editForm.BindData(relation);
 
@@ -1961,6 +1966,53 @@ namespace RUINORERP.UI.ProductEAV
                         if (relation.ActionStatus == ActionStatus.加载)
                         {
                             relation.ActionStatus = ActionStatus.修改;
+                        }
+
+                        //编辑的是关系，
+                        TreeGridNode node = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == relation.ProdDetailID.ToString());
+                        if (node != null)
+                        {
+                            // 创建子节点
+                            TreeGridNode subNode = node.Nodes.FirstOrDefault(c => c.NodeName == relation.RAR_ID.ToString());
+                            if (subNode != null)
+                            {
+                                subNode.NodeName = relation.RAR_ID.ToString();
+
+                                subNode.ImageIndex = 2; // 新增图标
+
+                                var ProdProperty = CacheManager.GetEntity<tb_ProdProperty>(relation.Property_ID);
+                                if (ProdProperty != null)
+                                {
+                                    subNode.Cells[2].Value = ProdProperty.PropertyName;
+                                }
+                                var ProdPropertyValue = CacheManager.GetEntity<tb_ProdPropertyValue>(relation.PropertyValueID);
+                                if (ProdPropertyValue != null)
+                                {
+                                    subNode.Cells[3].Value = ProdPropertyValue.PropertyValueName;
+                                }
+                                relation.tb_prodproperty = ProdProperty;
+                                relation.tb_prodpropertyvalue = ProdPropertyValue;
+                                subNode.Tag = relation;
+
+                            }
+
+                            var attr_Relations = new List<tb_Prod_Attr_Relation>();
+
+                            foreach (var item in node.Nodes)
+                            {
+                                if (item.Tag is tb_Prod_Attr_Relation _Attr_Relation)
+                                {
+                                    attr_Relations.Add(_Attr_Relation);
+                                }
+                            }
+
+                            string DisplayPropText = string.Empty;
+                            var array = attr_Relations
+                                .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                                .ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                            DisplayPropText = string.Join(",", array);
+
+                            node.Cells[3].Value = DisplayPropText;
                         }
 
                         // 刷新TreeGridView显示

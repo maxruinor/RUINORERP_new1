@@ -34,7 +34,11 @@ namespace RUINORERP.UI.ProductEAV
         public UCProductAttrRelationEdit()
         {
             InitializeComponent();
-            _attrService = new ProductAttrService();
+            if (!DesignMode)
+            {
+                _attrService = new ProductAttrService();
+            }
+            
         }
 
         private tb_Prod_Attr_Relation _EditEntity;
@@ -51,7 +55,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 新增时的初始化
                 _EditEntity.isdeleted = false;
             }
-
+            
             // 绑定基本数据
             DataBindingHelper.BindData4TextBox<tb_Prod_Attr_Relation>(entity, t => t.RAR_ID.ToString(), txtRAR_ID, BindDataType4TextBox.Text, true);
 
@@ -100,10 +104,7 @@ namespace RUINORERP.UI.ProductEAV
                 DataBindingHelper.BindData4Cmb<tb_ProdProperty>(entity, k => k.Property_ID, v => v.PropertyName, cmbProperty);
                 DataBindingHelper.BindData4Cmb<tb_ProdPropertyValue>(entity, k => k.PropertyValueID, v => v.PropertyValueName, cmbPropertyValue);
 
-                //// 加载属性列表
-                //var properties = await _attrService.GetAllPropertiesAsync();
-                //DataBindingHelper.BindData4Cmb<tb_ProdProperty>(properties, k => k.Property_ID, v => v.PropertyName, cmbProperty);
-
+       
                 // 如果已经有属性，异步加载对应的属性值
                 if (_EditEntity.Property_ID.HasValue)
                 {
@@ -244,8 +245,6 @@ namespace RUINORERP.UI.ProductEAV
                 cmbProdDetail.Enabled = false;
             }
         }
-
-
 
         /// <summary>
         /// 根据属性加载属性值（异步版本）1
@@ -474,7 +473,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (base.Validator())
+            if (base.Validator(_EditEntity))
             {
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;

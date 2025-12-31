@@ -38,5 +38,29 @@ namespace RUINORERP.Model.ProductAttribute
                 PropertyValue = v
             }).ToList();
         }
+        
+        /// <summary>
+        /// 将属性组转换为字符串表示，格式为：属性名称: 属性值1, 属性值2, ...
+        /// </summary>
+        /// <returns>属性组的字符串表示</returns>
+        public override string ToString()
+        {
+            if (Property != null)
+            {
+                string propertyName = Property.PropertyName;
+                
+                if (SelectedValues != null && SelectedValues.Any())
+                {
+                    string values = string.Join(", ", SelectedValues.Select(v => v.PropertyValueName));
+                    return $"{propertyName}: {values}";
+                }
+                else
+                {
+                    return $"{propertyName}: 未选择属性值";
+                }
+            }
+            
+            return "无效属性组";
+        }
     }
 }

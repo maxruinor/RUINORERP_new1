@@ -814,9 +814,9 @@ namespace RUINORERP.Server.Services.BizCode
                     #region SKU  对于单个产品SKU来说，我们要处理的是产品明细下面的关系
 
                     // SKU编码生成逻辑
-                    // 编辑已有产品（ProdDetailID > 0）：SKU永远不变
+                    // 编辑已有产品（ProdDetailID > 0）：SKU永远不变, 多属性编辑器时
                     // 注意：ProdDetailID 来自于 prod.tb_ProdDetails 集合中的详情实体
-                    if (prodDetail != null && prodDetail.ProdDetailID > 0)
+                    if ((prodDetail != null && prodDetail.ProdDetailID > 0)|| !string.IsNullOrEmpty(prodDetail.SKU))
                     {
                         // 编辑模式：如果产品详情已保存（ProdDetailID > 0），SKU不再改变
                         return prodDetail.SKU; // 返回原来的

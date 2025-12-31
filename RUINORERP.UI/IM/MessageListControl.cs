@@ -430,15 +430,16 @@ namespace RUINORERP.UI.IM
                 {
                     messagePrompt.MessageData = message;
                     
-                    // 显示消息提示窗口
-                    if (Application.OpenForms.Count > 0)
-                    {
-                        Application.OpenForms[0].Invoke(new Action(() =>
+                        // 显示消息提示窗口
+                        if (Application.OpenForms.Count > 0)
                         {
-                            messagePrompt.Show();
-                            messagePrompt.TopMost = true;
-                        }));
-                    }
+                            Application.OpenForms[0].Invoke(new Action(() =>
+                            {
+                                // 确保窗体使用默认大小显示
+                                messagePrompt.StartPosition = FormStartPosition.CenterScreen;
+                                messagePrompt.ShowDialog();
+                            }));
+                        }
                 }
                 else
                 {
@@ -448,8 +449,9 @@ namespace RUINORERP.UI.IM
                     {
                         Application.OpenForms[0].Invoke(new Action(() =>
                         {
-                            prompt.Show();
-                            prompt.TopMost = true;
+                            // 确保窗体使用默认大小显示
+                            prompt.StartPosition = FormStartPosition.CenterScreen;
+                            prompt.ShowDialog();
                         }));
                     }
                 }

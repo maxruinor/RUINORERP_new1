@@ -202,10 +202,11 @@ namespace RUINORERP.UI.IM
             txtContent.Text = Content;
             lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             
-            // 简单直接的方法：让文本框自动调整大小
-            AdjustContentSizeSimple();
+            // 确保窗体使用设计时的默认大小，而不是自动调整
+            // 移除自动调整大小逻辑，保持窗体设计时的标准高度
+            // AdjustContentSizeSimple(); // 注释掉自动调整大小的代码
             
-            // 自适应窗体位置，显示在屏幕中央偏下位置
+            // 自适应窗体位置，显示在屏幕中央
             PositionFormCentered();
 
             AddCommandForWait();
@@ -213,47 +214,35 @@ namespace RUINORERP.UI.IM
 
         /// <summary>
         /// 简单直接的内容大小调整方法
-        /// 保留设计器中的默认大小，只在内容过长时调整高度
+        /// 确保内容完全显示，同时保持窗体美观
         /// </summary>
         private void AdjustContentSizeSimple()
         {
             if (txtContent != null && !string.IsNullOrEmpty(Content))
             {
-                // 直接设置文本框为自动调整大小模式
-                txtContent.AutoSize = false;
-                
                 // 计算文本所需的高度
                 using (Graphics g = txtContent.CreateGraphics())
                 {
                     SizeF textSize = g.MeasureString(Content, txtContent.Font, txtContent.Width - 20);
-                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 20;
+                    int requiredHeight = (int)Math.Ceiling(textSize.Height) + 40; // 增加更多边距
                     
-                    // 设置合理的文本框高度，但不超过最大限制
-                    int newTextBoxHeight = Math.Max(200, Math.Min(600, requiredHeight));
+                    // 设置合理的文本框高度，确保内容完全显示
+                    int newTextBoxHeight = Math.Max(300, Math.Min(800, requiredHeight));
                     txtContent.Height = newTextBoxHeight;
                     
-                    // 计算新的GroupBox高度
+                    // 调整GroupBox高度
                     int newGroupBoxHeight = newTextBoxHeight + 120;
+                    kryptonGroupBoxCurrentNode.Height = newGroupBoxHeight;
                     
-                    // 只有在内容高度超过默认设计高度时才调整窗体大小
-                    // 设计器默认窗体高度是527，GroupBox高度是425
-                    if (newGroupBoxHeight > 425)
-                    {
-                        // 调整GroupBox高度
-                        kryptonGroupBoxCurrentNode.Height = newGroupBoxHeight;
-                        
-                        // 调整窗体高度，保持与设计器比例一致
-                        this.Height = newGroupBoxHeight + 102; // 527 - 425 = 102
-                    }
-                    else
-                    {
-                        // 使用设计器中的默认大小
-                        kryptonGroupBoxCurrentNode.Height = 425;
-                        this.Height = 527; // 设计器默认高度
-                    }
+                    // 调整窗体高度，确保所有内容都能显示
+                    // 总高度 = GroupBox高度 + 按钮区域高度 + 额外边距
+                    int newFormHeight = newGroupBoxHeight + 120;
                     
-                    // 调整按钮位置
-                    int buttonY = kryptonGroupBoxCurrentNode.Bottom + 10;
+                    // 确保窗体高度足够显示所有内容
+                    this.Height = Math.Max(600, newFormHeight); // 设置最小高度为600
+                    
+                    // 调整按钮位置，确保在窗体底部
+                    int buttonY = this.Height - 60; // 距离底部60像素
                     btnOk.Top = buttonY;
                     btnCancel.Top = buttonY;
                     btnWaitReminder.Top = buttonY;

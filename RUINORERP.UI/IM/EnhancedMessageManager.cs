@@ -91,6 +91,17 @@ namespace RUINORERP.UI.IM
                 if (persistedMessages.Count > 0)
                 {
                     _logger.LogDebug($"从持久化存储加载了{persistedMessages.Count}条消息");
+                    
+                    // 将持久化的消息同步到消息服务（仅同步到MessageService，不重复保存到持久化）
+                    foreach (var message in persistedMessages)
+                    {
+                        // 确保消息在消息服务中存在
+                        if (_messageService.GetMessageById(message.MessageId) == null)
+                        {
+                            // 直接保存到MessageService的本地存储，避免重复保存到持久化文件
+                            SaveMessageToMessageServiceOnly(message);
+                        }
+                    }
                 }
                 else
                 {
@@ -100,6 +111,60 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 _logger.LogError(ex, "初始化持久化功能时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 仅将消息保存到MessageService的本地存储（不保存到持久化文件）
+        /// 用于从持久化文件加载消息时避免重复保存
+        /// </summary>
+        /// <param name="message">消息对象</param>
+        private void SaveMessageToMessageServiceOnly(MessageData message)
+        {
+            try
+            {
+                // 使用反射调用MessageService的内部保存方法
+                var saveMethod = _messageService.GetType().GetMethod("SaveMessageToLocalStorage", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (saveMethod != null)
+                {
+                    saveMethod.Invoke(_messageService, new object[] { message });
+                    _logger.LogDebug($"消息已同步到MessageService本地存储 - ID: {message.MessageId}");
+                }
+                else
+                {
+                    // 如果反射失败，使用备用方案：直接调用MessageService的OnMessageReceived方法
+                    // 这会触发消息处理流程，但需要注意避免重复触发事件
+                    _logger.LogWarning("无法通过反射保存消息到MessageService，使用备用方案");
+                    
+                    // 根据消息类型调用相应的处理方法
+                    switch (message.MessageType)
+                    {
+                        case MessageType.Prompt:
+                            _messageService.OnPopupMessageReceived(message);
+                            break;
+                        case MessageType.Business:
+                            _messageService.OnBusinessMessageReceived(message);
+                            break;
+                        //case MessageType.:
+                        //    _messageService.OnDepartmentMessageReceived(message);
+                        //    break;
+                        case MessageType.Broadcast:
+                            _messageService.OnBroadcastMessageReceived(message);
+                            break;
+                        case MessageType.System:
+                            _messageService.OnSystemNotificationReceived(message);
+                            break;
+                        default:
+                            _messageService.OnPopupMessageReceived(message);
+                            break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"保存消息到MessageService时发生异常 - ID: {message.MessageId}");
             }
         }
 
@@ -211,6 +276,9 @@ namespace RUINORERP.UI.IM
             {
                 if (messageData != null)
                 {
+                    // 保存到持久化存储
+                    _persistenceManager.AddMessage(messageData);
+                    
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -223,14 +291,27 @@ namespace RUINORERP.UI.IM
         // 处理接收到的业务消息
         private void OnBusinessMessageReceived(MessageData messageData)
         {
-            // 处理业务逻辑
-            ProcessBusinessMessage(messageData);
-            
-            // 触发未读消息计数变更事件，通知UI更新
-            UpdateUnreadMessageCount();
-            
-            // 触发消息状态变更事件，通知消息列表刷新
-            OnMessageStatusChanged(messageData);
+            try
+            {
+                if (messageData != null)
+                {
+                    // 保存到持久化存储
+                    _persistenceManager.AddMessage(messageData);
+                    
+                    // 处理业务逻辑
+                    ProcessBusinessMessage(messageData);
+                    
+                    // 触发未读消息计数变更事件，通知UI更新
+                    UpdateUnreadMessageCount();
+                    
+                    // 触发消息状态变更事件，通知消息列表刷新
+                    OnMessageStatusChanged(messageData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理业务消息时发生错误");
+            }
         }
 
         // 处理接收到的部门消息
@@ -238,7 +319,13 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                // 部门消息由MessageService直接处理，我们不需要额外操作
+                if (messageData != null)
+                {
+                    // 保存到持久化存储
+                    _persistenceManager.AddMessage(messageData);
+                    
+                    // 部门消息由MessageService直接处理，我们不需要额外操作
+                }
             }
             catch (Exception ex)
             {
@@ -249,13 +336,39 @@ namespace RUINORERP.UI.IM
         // 处理接收到的广播消息
         private void OnBroadcastMessageReceived(MessageData messageData)
         {
-            ShowDefaultMessagePrompt(messageData);
+            try
+            {
+                if (messageData != null)
+                {
+                    // 保存到持久化存储
+                    _persistenceManager.AddMessage(messageData);
+                    
+                    ShowDefaultMessagePrompt(messageData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理广播消息时发生错误");
+            }
         }
 
         // 处理接收到的系统通知
         private void OnSystemNotificationReceived(MessageData messageData)
         {
-            ShowDefaultMessagePrompt(messageData);
+            try
+            {
+                if (messageData != null)
+                {
+                    // 保存到持久化存储
+                    _persistenceManager.AddMessage(messageData);
+                    
+                    ShowDefaultMessagePrompt(messageData);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理系统通知时发生错误");
+            }
         }
 
 
@@ -271,7 +384,40 @@ namespace RUINORERP.UI.IM
         // 获取所有消息
         public List<MessageData> GetAllMessages()
         {
-            return _messageService.GetMessages(1, int.MaxValue);
+            try
+            {
+                // 从消息服务获取实时消息
+                var serviceMessages = _messageService.GetMessages(1, int.MaxValue);
+                
+                // 从持久化存储获取历史消息
+                var persistedMessages = _persistenceManager.GetAllMessages();
+                
+                // 合并消息列表，优先使用实时消息
+                var allMessages = new List<MessageData>();
+                
+                // 先添加服务消息
+                allMessages.AddRange(serviceMessages);
+                
+                // 然后添加持久化消息，排除重复的消息
+                foreach (var persistedMessage in persistedMessages)
+                {
+                    if (!allMessages.Any(m => m.MessageId == persistedMessage.MessageId))
+                    {
+                        allMessages.Add(persistedMessage);
+                    }
+                }
+                
+                _logger?.LogDebug($"获取到{allMessages.Count}条消息（服务:{serviceMessages.Count}, 持久化:{persistedMessages.Count}）");
+                
+                return allMessages;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "获取所有消息时发生错误");
+                
+                // 如果出错，尝试从服务获取消息
+                return _messageService.GetMessages(1, int.MaxValue);
+            }
         }
 
         // 根据ID获取消息

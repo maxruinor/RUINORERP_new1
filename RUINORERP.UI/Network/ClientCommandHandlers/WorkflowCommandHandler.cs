@@ -214,8 +214,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     if (messageRequest.Data != null)
                     {
+                        if (messageRequest.Data is ReminderData data)
+                        {
+                            return data;
+                        }
                         // 如果数据是字符串（JSON格式），反序列化
-                        if (messageRequest.Data is string jsonData)
+                        else if (messageRequest.Data is string jsonData)
                         {
                             var reminderInfo = JsonSerializer.Deserialize<ReminderData>(jsonData);
                             if (reminderInfo != null)

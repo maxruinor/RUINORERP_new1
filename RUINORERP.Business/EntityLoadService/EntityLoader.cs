@@ -198,14 +198,6 @@ namespace RUINORERP.Business.BizMapperService
                 }
 
 
-                // 修改前的错误代码
-                //string paramName = fieldName;
-                //object paramObj = new Dictionary<string, object>
-                //{
-                //    [paramName] = billNo
-                //};
-                //queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", paramObj });
-
                 // 修改后的正确代码
                 // 动态调用 Where
                 queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", param });

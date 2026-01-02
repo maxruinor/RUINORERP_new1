@@ -83,7 +83,7 @@ namespace RUINORERP.UI.Common
             ComplexTargtetField.Add(new KeyValuePair<string, string>(_ExpBizType.GetMemberInfo().Name, _ExpBillNo.GetMemberInfo().Name));
         }
 
-       
+
 
 
 
@@ -280,7 +280,7 @@ namespace RUINORERP.UI.Common
                         {
                             OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                         }
-                       
+
                     }
 
                 }
@@ -407,7 +407,7 @@ namespace RUINORERP.UI.Common
                     //双击打开的目标是自己时，就是传入查询当前的实体，其它的，就要下面去查询了。通过：GuideToForm
                     if (RelatedMenuInfo != null)
                     {
-                       await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
                     }
                     else
                     {
@@ -436,13 +436,16 @@ namespace RUINORERP.UI.Common
                 return;
             }
 
-            // 加载实体数据
-            //var order = _loader.LoadEntity(tableName, billno);
-            //if (order != null)
-            //{
-            //    menuPowerHelper.ExecuteEvents(RelatedMenuInfo, order);
-            //    return;
-            //}
+            if (tableName == typeof(tb_BuyingRequisition).Name)
+            {
+                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BuyingRequisition>()
+                    .Includes(c => c.tb_BuyingRequisitionDetails)
+                    .WhereIF(billno.GetType() == typeof(long), c => c.PuRequisition_ID == billno.ToLong())
+                    .WhereIF(billno.GetType() == typeof(string), c => c.PuRequisitionNo == billno.ToString())
+                    .Single();
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+            }
+
 
             if (tableName == typeof(tb_SaleOutRe).Name)
             {
@@ -471,7 +474,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.ExpenseMainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.ExpenseNo == billno.ToString())
                     .Single();
-               await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_ProductionPlan).Name)
@@ -548,7 +551,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.MOID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.MONO == billno.ToString())
                     .Single();
-                await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_SaleOrder).Name)
@@ -568,7 +571,7 @@ namespace RUINORERP.UI.Common
                     .WhereIF(billno.GetType() == typeof(long), c => c.SaleOut_MainID == billno.ToLong())
                     .WhereIF(billno.GetType() == typeof(string), c => c.SaleOutNo == billno.ToString())
                     .Single();
-                await  menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
             }
 
             if (tableName == typeof(tb_PurOrder).Name)

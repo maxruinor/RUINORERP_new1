@@ -1,5 +1,8 @@
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
+using Netron.Neon.TextEditor.Actions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
@@ -9,6 +12,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
@@ -116,33 +120,33 @@ namespace RUINORERP.UI.IM
             try
             {
                 if (MessageData == null) return;
-                
+
                 // 设置消息基础内容
                 Content = MessageData.Content ?? "";
                 Title = MessageData.Title ?? "智能提醒";
-                
+
                 // 设置窗体标题，包含消息ID确保唯一性
                 this.Text = $"{Title} - 消息ID:{MessageData.MessageId}";
-                
+
                 // 设置发送者信息
-                if (txtSender != null) 
+                if (txtSender != null)
                 {
                     txtSender.Text = !string.IsNullOrEmpty(MessageData.SenderName) ? MessageData.SenderName : "系统";
                 }
-                
+
                 // 设置消息主题
-                if (txtSubject != null) 
+                if (txtSubject != null)
                 {
                     txtSubject.Text = !string.IsNullOrEmpty(MessageData.Title) ? MessageData.Title : "无标题";
                 }
-                
+
                 // 设置消息内容
-                if (txtContent != null) 
+                if (txtContent != null)
                 {
                     string content = !string.IsNullOrEmpty(MessageData.Content) ? MessageData.Content : "无内容";
                     txtContent.Text = content;
                 }
-                
+
                 // 设置发送时间显示
                 if (lblSendTime != null)
                 {
@@ -151,13 +155,13 @@ namespace RUINORERP.UI.IM
                     lblSendTime.Location = new Point(86, 83 + txtContent.Height + 10);
                     lblSendTime.Size = new Size(200, 20);
                 }
-                
+
                 // 根据消息类型设置不同的显示样式和按钮状态
                 switch (MessageData.MessageType)
-                {                    
+                {
                     case MessageType.Approve:
                         // 审批消息：显示查看按钮
-                        if (btnOk != null) 
+                        if (btnOk != null)
                         {
                             btnOk.Values.Text = "查看审批";
                             btnOk.Visible = true;
@@ -165,7 +169,7 @@ namespace RUINORERP.UI.IM
                         break;
                     case MessageType.Task:
                         // 任务消息：显示查看按钮
-                        if (btnOk != null) 
+                        if (btnOk != null)
                         {
                             btnOk.Values.Text = "查看任务";
                             btnOk.Visible = true;
@@ -173,7 +177,7 @@ namespace RUINORERP.UI.IM
                         break;
                     case MessageType.Notice:
                         // 通知消息：显示查看按钮
-                        if (btnOk != null) 
+                        if (btnOk != null)
                         {
                             btnOk.Values.Text = "查看详情";
                             btnOk.Visible = true;
@@ -181,24 +185,24 @@ namespace RUINORERP.UI.IM
                         break;
                     default:
                         // 默认消息类型
-                        if (btnOk != null) 
+                        if (btnOk != null)
                         {
                             btnOk.Values.Text = "查看";
                             btnOk.Visible = true;
                         }
                         break;
                 }
-                
+
                 // 设置确认相关控件的可见性
                 if (MessageData.NeedConfirmation)
                 {
                     // 需要确认的消息：显示确认按钮和拒绝按钮（如果有的话）
-                    if (btnOk != null) 
+                    if (btnOk != null)
                     {
                         btnOk.Values.Text = "确认";
                         btnOk.Visible = true;
                     }
-                    
+
                     // 显示稍候提醒按钮
                     if (btnWaitReminder != null)
                     {
@@ -224,7 +228,7 @@ namespace RUINORERP.UI.IM
                         this.Text += $" - {MessageData.BizType} (ID: {MessageData.BizId})";
                     }
                 }
-                
+
                 // 根据消息状态设置界面样式
                 if (MessageData.IsRead)
                 {
@@ -287,10 +291,10 @@ namespace RUINORERP.UI.IM
                 // 确保窗体使用设计时的默认大小，而不是自动调整
                 // 移除自动调整大小逻辑，保持窗体设计时的标准高度
                 // AdjustContentSizeSimple(); // 注释掉自动调整大小的代码
-                
+
                 // 首先更新消息显示
                 UpdateMessageDisplay();
-                
+
                 // 自适应窗体位置，显示在屏幕中央
                 PositionFormCentered();
 
@@ -310,10 +314,10 @@ namespace RUINORERP.UI.IM
         {
             // 使用窗体设计时的默认大小，而不是自动调整
             this.StartPosition = FormStartPosition.CenterScreen;
-            
+
             // 移除手动计算位置的逻辑，直接使用CenterScreen
             // 这样可以确保窗体使用设计时的默认大小显示
-            
+
             // // 计算窗体位置（屏幕中央偏下）
             // int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
             // int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
@@ -337,6 +341,20 @@ namespace RUINORERP.UI.IM
         {
             //计划提醒，则把要提醒的计划查出条件找到
             Type tableType = EntityMappingHelper.GetEntityType(MessageData.BizType);
+
+            var entityInfo = EntityMappingHelper.GetEntityInfo(MessageData.BizType);
+            TodoUpdate todoUpdate = new TodoUpdate();
+            if (MessageData.BizData is TodoUpdate update)
+            {
+                todoUpdate = update;
+            }
+            else if (MessageData.BizData is JObject)
+            {
+                // 将BizData转换为具体类型
+                todoUpdate = JsonConvert.DeserializeObject<TodoUpdate>(MessageData.BizData.ObjToString());
+            }
+
+
             //找到要提醒的数据
             var conModel = new List<IConditionalModel>();
             // conModel.Add(new ConditionalModel { FieldName = "DataStatus", ConditionalType = ConditionalType.Equal, FieldValue = "3", CSharpTypeName = "int" });
@@ -358,7 +376,6 @@ namespace RUINORERP.UI.IM
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(parameter.tableType.Name + "Processor");
             QueryFilter queryFilter = baseProcessor.GetQueryFilter();
 
-
             //这里知道ID 在这里虚拟一下主键的查询条件。将ID给过去。一次性查询。或 时间也给过去。
             //应该是给计划特殊处理。指令系统用上？
             QueryField queryField = new QueryField();
@@ -375,11 +392,15 @@ namespace RUINORERP.UI.IM
             {
                 MenuPowerHelper menuPowerHelper;
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                GridViewRelated gridViewRelated = Startup.GetFromFac<GridViewRelated>();
 
-                menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
-                await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
+                //menuPowerHelper.OnSetQueryConditionsDelegate += MenuPowerHelper_OnSetQueryConditionsDelegate;
+                //await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, instance, parameter);
+
+                gridViewRelated.OpenTargetEntity(RelatedBillMenuInfo, entityInfo.TableName, todoUpdate.BillId);
+
                 //要卸载，不然会多次执行
-                menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
+                //menuPowerHelper.OnSetQueryConditionsDelegate -= MenuPowerHelper_OnSetQueryConditionsDelegate;
                 // 将消息标记为已处理状态（处理后视为已读）
                 ResponseToServer(true);
                 this.DialogResult = DialogResult.OK;
@@ -464,12 +485,12 @@ namespace RUINORERP.UI.IM
         {
             if (string.IsNullOrEmpty(content) || string.IsNullOrEmpty(billNo))
                 return false;
-            
+
             // 检查是否包含明确的单据编号标识
-            if (content.Contains($"单据编号: {billNo}") || content.Contains($"单号: {billNo}") || 
+            if (content.Contains($"单据编号: {billNo}") || content.Contains($"单号: {billNo}") ||
                 content.Contains($"编号: {billNo}") || content.Contains($"BillNo: {billNo}"))
                 return true;
-            
+
             // 检查是否包含单据编号本身（避免误判）
             // 只有当单据编号在内容中独立出现时才认为是重复
             if (content.Contains(billNo))
@@ -481,15 +502,15 @@ namespace RUINORERP.UI.IM
                     // 检查前一个字符
                     if (index > 0 && char.IsLetterOrDigit(content[index - 1]))
                         return false;
-                    
+
                     // 检查后一个字符
                     if (index + billNo.Length < content.Length && char.IsLetterOrDigit(content[index + billNo.Length]))
                         return false;
-                    
+
                     return true;
                 }
             }
-            
+
             return false;
         }
 

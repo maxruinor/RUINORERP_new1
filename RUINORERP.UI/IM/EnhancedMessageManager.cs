@@ -493,13 +493,14 @@ namespace RUINORERP.UI.IM
             if (message == null)
                 return;
 
-
-
             // 保存到持久化存储
             _persistenceManager.AddMessage(message);
 
             // 更新未读消息计数并触发事件
             UpdateUnreadMessageCount();
+
+            // 触发消息状态变更事件，通知UI刷新消息列表
+            OnMessageStatusChanged(message);
 
             // 异步处理业务逻辑
             Task.Run(() => ProcessBusinessMessage(message));
@@ -1118,6 +1119,37 @@ namespace RUINORERP.UI.IM
             };
 
             dataGridView.DataSource = new BindingList<MessageData>(filteredMessages);
+        }
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        public void ClearAllMessages()
+        {
+            try
+            {
+                // 获取所有消息
+                var allMessages = GetAllMessages();
+                
+                if (allMessages.Count == 0)
+                {
+                    _logger.LogDebug("没有消息需要清除");
+                    return;
+                }
+
+                // 使用持久化管理器清除所有消息
+                _persistenceManager.ClearAllMessages();
+                
+                // 触发未读消息计数变更事件
+                UnreadMessageCountChanged?.Invoke(this, 0);
+                
+                _logger.LogInformation($"已成功清除所有{allMessages.Count}条消息");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清除所有消息时发生异常");
+                throw new Exception($"清除所有消息失败: {ex.Message}", ex);
+            }
         }
 
         // 释放资源

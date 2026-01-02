@@ -231,13 +231,14 @@ namespace RUINORERP.UI.IM
             }
             else
             {
-                // 更新消息列表中的对应项
-                bool found = false;
+                // 检查是否为新增消息（消息ID不在当前列表中）
+                bool isNewMessage = true;
                 foreach (ListViewItem item in lstMessages.Items)
                 {
                     if (item.Tag != null && item.Tag.ToString() == message.MessageId.ToString())
                     {
-                        found = true;
+                        isNewMessage = false;
+                        // 更新现有消息项
                         item.SubItems[3].Text = message.IsRead ? "已读" : "未读";
 
                         if (message.IsRead)
@@ -254,8 +255,8 @@ namespace RUINORERP.UI.IM
                     }
                 }
 
-                // 如果未找到消息项，重新加载整个列表
-                if (!found)
+                // 如果是新消息，重新加载整个列表以显示新消息
+                if (isNewMessage)
                 {
                     LoadMessages();
                 }
@@ -704,7 +705,7 @@ namespace RUINORERP.UI.IM
                 }
 
                 // 工作流提醒消息通常包含业务ID和业务类型
-                if (message.BizId > 0 && !string.IsNullOrEmpty(message.BizType?.ToString()))
+                if (message.BizId > 0 && !string.IsNullOrEmpty(message.BizType.ToString()))
                 {
                     // 尝试导航到对应的业务窗体
                     await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
@@ -885,6 +886,134 @@ namespace RUINORERP.UI.IM
             _messageManager.MarkAllAsRead();
             LoadMessages(); // 重新加载以更新UI
         }
+
+
+        #region 清空消息功能
+
+        /// <summary>
+        /// 清除30天前的消息
+        /// </summary>
+        private void menuClear30Days_Click(object sender, EventArgs e)
+        {
+            ClearMessagesByDays(30);
+        }
+
+        /// <summary>
+        /// 清除60天前的消息
+        /// </summary>
+        private void menuClear60Days_Click(object sender, EventArgs e)
+        {
+            ClearMessagesByDays(60);
+        }
+
+        /// <summary>
+        /// 清除180天前的消息
+        /// </summary>
+        private void menuClear180Days_Click(object sender, EventArgs e)
+        {
+            ClearMessagesByDays(180);
+        }
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        private void menuClearAll_Click(object sender, EventArgs e)
+        {
+            ClearAllMessages();
+        }
+
+        /// <summary>
+        /// 按天数清除消息
+        /// </summary>
+        /// <param name="days">天数</param>
+        private void ClearMessagesByDays(int days)
+        {
+            try
+            {
+                var cutoffDate = DateTime.Now.AddDays(-days);
+
+                // 确认对话框
+                var result = MessageBox.Show($"确定要清除{cutoffDate:yyyy-MM-dd}之前的所有消息吗？\n\n此操作将删除所有{cutoffDate:yyyy-MM-dd}之前的消息，包括持久化数据。",
+                    "确认清除消息", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 清除指定天数前的消息
+                var messagesToDelete = _messageManager.GetAllMessages()
+                    .Where(m => m.SendTime < cutoffDate)
+                    .ToList();
+
+                if (messagesToDelete.Count == 0)
+                {
+                    MessageBox.Show($"没有找到{cutoffDate:yyyy-MM-dd}之前的消息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 执行清除操作
+                foreach (var message in messagesToDelete)
+                {
+                    _messageManager.DeleteMessage(message.MessageId);
+                }
+
+                // 重新加载消息列表
+                LoadMessages();
+
+                MessageBox.Show($"已成功清除{cutoffDate:yyyy-MM-dd}之前的{messagesToDelete.Count}条消息。",
+                    "清除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"清除消息时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"清除消息失败: {ex.ToString()}");
+            }
+        }
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        private void ClearAllMessages()
+        {
+            try
+            {
+                // 确认对话框
+                var result = MessageBox.Show("确定要清除所有消息吗？\n\n此操作将删除所有消息，包括持久化数据，且无法恢复。",
+                    "确认清除所有消息", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                var allMessages = _messageManager.GetAllMessages();
+
+                if (allMessages.Count == 0)
+                {
+                    MessageBox.Show("当前没有可清除的消息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 执行清除所有消息操作
+                _messageManager.ClearAllMessages();
+
+                // 重新加载消息列表
+                LoadMessages();
+
+                MessageBox.Show($"已成功清除所有{allMessages.Count}条消息。",
+                    "清除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"清除所有消息时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"清除所有消息失败: {ex.ToString()}");
+            }
+        }
+
+        #endregion
+
+
     }
 
     /// <summary>
@@ -905,5 +1034,9 @@ namespace RUINORERP.UI.IM
         {
             Message = message;
         }
+
+
+     
     }
+
 }

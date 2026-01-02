@@ -206,6 +206,38 @@ namespace RUINORERP.UI.IM
             return _messages.FirstOrDefault(m => m.MessageId == id);
         }
 
+ 
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        public void ClearAllMessages()
+        {
+            try
+            {
+                // 清空内存中的消息列表
+                _messages.Clear();
+                
+                // 清空持久化文件
+                var persistenceData = new MessagePersistenceData
+                {
+                    Version = DATA_VERSION,
+                    LastUpdated = DateTime.Now,
+                    Messages = new List<MessageData>()
+                };
+                
+                string jsonContent = JsonConvert.SerializeObject(persistenceData, Formatting.Indented);
+                File.WriteAllText(_dataPath, jsonContent);
+                
+                Console.WriteLine("已成功清除所有消息");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"清除所有消息时发生错误: {ex.Message}");
+                throw new Exception($"清除所有消息失败: {ex.Message}", ex);
+            }
+        }
+
         /// <summary>
         /// 消息持久化数据结构
         /// </summary>

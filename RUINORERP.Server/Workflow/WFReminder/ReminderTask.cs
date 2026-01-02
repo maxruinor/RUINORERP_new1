@@ -124,7 +124,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                         ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
                                     });
                                 
-                                // 发送工作流提醒命令 - 使用新的发送方法
+                                // 发送工作流提醒命令 - 使用正确的工作流命令
                                 var messageData = new
                                 {
                                     Command = "WORKFLOW_REMINDER",
@@ -134,7 +134,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 var request = new MessageRequest(MessageType.Unknown, messageData);
                                 var success = _sessionService.SendCommandAsync(
                                     session.SessionID, 
-                                    MessageCommands.SendMessageToUser, 
+                                    WorkflowCommands.WorkflowReminder, 
                                     request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
                                 
                                 if (success)

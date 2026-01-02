@@ -251,6 +251,12 @@ namespace RUINORERP.UI.Network.DI
                 .AsSelf()
                 .InstancePerLifetimeScope();
 
+            // 注册工作流命令处理器
+            builder.RegisterType<WorkflowCommandHandler>()
+                .As<IClientCommandHandler>()
+                .AsSelf()
+                .InstancePerLifetimeScope();
+
             //builder.RegisterType<BusinessNotificationHandler>()
             //    .As<IClientCommandHandler>()
             //    .AsSelf()

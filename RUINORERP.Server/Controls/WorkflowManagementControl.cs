@@ -22,6 +22,7 @@ using RUINORERP.Server.Comm;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using RUINORERP.Business.Cache;
+using RUINORERP.Server.BizService;
 
 namespace RUINORERP.Server.Controls
 {
@@ -221,10 +222,263 @@ namespace RUINORERP.Server.Controls
             if (e.RowIndex >= 0 && e.RowIndex < WorkflowList.Count)
             {
                 var selectedWorkflow = WorkflowList[e.RowIndex];
-                // 可以在这里添加查看详细信息的逻辑
-                MessageBox.Show($"工作流详细信息:\nID: {selectedWorkflow.Id}\n业务类型: {selectedWorkflow.BizType}\n状态: {selectedWorkflow.Status}", 
-                    "工作流详情", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ShowWorkflowDetails(selectedWorkflow);
             }
+        }
+
+        /// <summary>
+        /// 获取当前选中的工作流数据
+        /// </summary>
+        /// <returns>选中的工作流数据</returns>
+        private ReminderData GetSelectedWorkflow()
+        {
+            if (dataGridViewWorkflows.SelectedRows.Count > 0)
+            {
+                var selectedRow = dataGridViewWorkflows.SelectedRows[0];
+                if (selectedRow.Index >= 0 && selectedRow.Index < WorkflowList.Count)
+                {
+                    return WorkflowList[selectedRow.Index];
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 立即触发提醒按钮点击事件
+        /// </summary>
+        private async void btnTriggerReminder_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var selectedWorkflow = GetSelectedWorkflow();
+                if (selectedWorkflow == null)
+                {
+                    MessageBox.Show("请先选择一个工作流", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                await TriggerReminderWorkflowAsync(selectedWorkflow);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"触发提醒时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 右键菜单-立即触发提醒
+        /// </summary>
+        private async void toolStripMenuItemTriggerReminder_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var selectedWorkflow = GetSelectedWorkflow();
+                if (selectedWorkflow == null)
+                {
+                    MessageBox.Show("请先选择一个工作流", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                await TriggerReminderWorkflowAsync(selectedWorkflow);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"触发提醒时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 右键菜单-查看详情
+        /// </summary>
+        private void toolStripMenuItemViewDetails_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var selectedWorkflow = GetSelectedWorkflow();
+                if (selectedWorkflow == null)
+                {
+                    MessageBox.Show("请先选择一个工作流", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                ShowWorkflowDetails(selectedWorkflow);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"查看详情时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 直接执行提醒任务逻辑
+        /// </summary>
+        /// <param name="reminderData">提醒数据</param>
+        private async Task TriggerReminderWorkflowAsync(ReminderData reminderData)
+        {
+            try
+            {
+                // 确认是否要直接触发提醒
+                var result = MessageBox.Show($"是否立即触发此提醒？\n业务ID: {reminderData.BizKeyID}\n主题: {reminderData.RemindSubject}", 
+                    "确认触发提醒", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 直接执行ReminderTask的提醒逻辑
+                await ExecuteReminderTaskLogic(reminderData);
+                
+                MessageBox.Show("提醒已成功触发！", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                
+                // 刷新显示
+                RefreshWorkflowData();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"触发提醒失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 执行ReminderTask的提醒逻辑
+        /// </summary>
+        /// <param name="reminderData">提醒数据</param>
+        private async Task ExecuteReminderTaskLogic(ReminderData reminderData)
+        {
+            try
+            {
+                // 获取ISessionService实例
+                var sessionService = Startup.GetFromFac<RUINORERP.Server.Network.Interfaces.Services.ISessionService>();
+                
+                // 获取DataServiceChannel实例
+                var dataServiceChannel = Startup.GetFromFac<DataServiceChannel>();
+
+                // 获取当前选中的提醒数据
+                ReminderData exData = null;
+                frmMainNew.Instance.ReminderBizDataList.TryGetValue(reminderData.BizPrimaryKey, out exData);
+                
+                if (exData == null)
+                {
+                    throw new Exception("未找到对应的提醒数据");
+                }
+
+                // 检查提醒是否已取消或到期
+                if (exData.Status == Model.MessageStatus.Cancel)
+                {
+                    throw new Exception("该提醒已被取消");
+                }
+
+                if (exData.EndTime < DateTime.Now)
+                {
+                    // 提醒到期了
+                    dataServiceChannel.ProcessCRMFollowUpPlansData(exData, true);
+                    throw new Exception("该提醒已到期");
+                }
+
+                // 执行提醒逻辑 - 模拟ReminderTask.Run方法的核心逻辑
+                var sessions = sessionService.GetAllUserSessions();
+                bool hasSent = false;
+                
+                foreach (var session in sessions)
+                {
+                    if (exData.ReceiverUserIDs != null && exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
+                    {
+                        try
+                        {
+                            // 增加提醒次数
+                            exData.RemindTimes++;
+                            
+                            // 构建提醒消息
+                            var reminderDataMsg = new
+                            {
+                                SendTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                                ReminderData = exData,
+                                ForcePopup = true
+                            };
+                            
+                            var messageJson = System.Text.Json.JsonSerializer.Serialize(reminderDataMsg,
+                                new System.Text.Json.JsonSerializerOptions
+                                {
+                                    // 忽略循环引用
+                                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                                });
+                            
+                            // 发送工作流提醒命令
+                            var messageData = new
+                            {
+                                Command = "WORKFLOW_REMINDER",
+                                Data = messageJson
+                            };
+
+                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Notice, messageData);
+                            var success = await sessionService.SendCommandAsync(
+                                session.SessionID, 
+                                RUINORERP.PacketSpec.Commands.WorkflowCommands.WorkflowReminder, 
+                                request);
+                            
+                            if (success)
+                            {
+                                // 更新数据
+                                frmMainNew.Instance.ReminderBizDataList.TryUpdate(reminderData.BizPrimaryKey, exData, exData);
+                                hasSent = true;
+                                
+                                if (frmMainNew.Instance.IsDebug)
+                                {
+                                    frmMainNew.Instance.PrintInfoLog($"手动触发提醒推送到{session.UserName}");
+                                }
+                            }
+                            else
+                            {
+                                frmMainNew.Instance.PrintInfoLog($"发送提醒到用户 {session.UserName} 失败");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            frmMainNew.Instance.PrintInfoLog($"手动触发提醒推送失败: {session.UserName} - {ex.Message}");
+                        }
+                    }
+                }
+
+                if (!hasSent)
+                {
+                    throw new Exception("未找到有效的接收用户或发送失败");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"执行提醒任务逻辑失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 显示工作流详细信息
+        /// </summary>
+        /// <param name="workflow">工作流数据</param>
+        private void ShowWorkflowDetails(ReminderData workflow)
+        {
+            var details = new StringBuilder();
+            details.AppendLine($"ID: {workflow.Id}");
+            details.AppendLine($"业务类型: {workflow.BizType}");
+            details.AppendLine($"业务主键: {workflow.BizPrimaryKey}");
+            details.AppendLine($"业务ID: {workflow.BizKeyID}");
+            details.AppendLine($"状态: {workflow.Status}");
+            details.AppendLine($"优先级: {workflow.Priority}");
+            details.AppendLine($"提醒主题: {workflow.RemindSubject}");
+            details.AppendLine($"提醒内容: {workflow.ReminderContent}");
+            details.AppendLine($"开始时间: {workflow.StartTime}");
+            details.AppendLine($"结束时间: {workflow.EndTime}");
+            details.AppendLine($"提醒间隔: {workflow.RemindInterval}分钟");
+            details.AppendLine($"发送时间: {workflow.SendTime}");
+            details.AppendLine($"工作流ID: {workflow.WorkflowId ?? "未启动"}");
+            details.AppendLine($"是否已读: {workflow.IsRead}");
+            
+            if (workflow.ReceiverUserIDs != null && workflow.ReceiverUserIDs.Count > 0)
+            {
+                details.AppendLine($"接收用户ID: {string.Join(", ", workflow.ReceiverUserIDs)}");
+            }
+
+            MessageBox.Show(details.ToString(), "工作流详情", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void dataGridViewWorkflows_DataError(object sender, DataGridViewDataErrorEventArgs e)

@@ -28,6 +28,11 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.contextMenuStripWorkflows = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemTriggerReminder = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItemViewDetails = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainerMain = new System.Windows.Forms.SplitContainer();
             this.groupBoxWorkflowList = new System.Windows.Forms.GroupBox();
             this.dataGridViewWorkflows = new System.Windows.Forms.DataGridView();
@@ -50,6 +55,7 @@ namespace RUINORERP.Server.Controls
             this.btnPushTest = new System.Windows.Forms.Button();
             this.btnStartReminderWorkflow = new System.Windows.Forms.Button();
             this.btnStartSafetyStockWorkflow = new System.Windows.Forms.Button();
+            this.btnTriggerReminder = new System.Windows.Forms.Button();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -99,7 +105,36 @@ namespace RUINORERP.Server.Controls
             this.tabPageApproval.SuspendLayout();
             this.tabPageEvent.SuspendLayout();
             this.tabPageOtherTests.SuspendLayout();
+            this.contextMenuStripWorkflows.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // contextMenuStripWorkflows
+            // 
+            this.contextMenuStripWorkflows.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemTriggerReminder,
+            this.toolStripSeparator1,
+            this.toolStripMenuItemViewDetails});
+            this.contextMenuStripWorkflows.Name = "contextMenuStripWorkflows";
+            this.contextMenuStripWorkflows.Size = new System.Drawing.Size(181, 76);
+            // 
+            // toolStripMenuItemTriggerReminder
+            // 
+            this.toolStripMenuItemTriggerReminder.Name = "toolStripMenuItemTriggerReminder";
+            this.toolStripMenuItemTriggerReminder.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemTriggerReminder.Text = "立即触发提醒";
+            this.toolStripMenuItemTriggerReminder.Click += new System.EventHandler(this.toolStripMenuItemTriggerReminder_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+            // 
+            // toolStripMenuItemViewDetails
+            // 
+            this.toolStripMenuItemViewDetails.Name = "toolStripMenuItemViewDetails";
+            this.toolStripMenuItemViewDetails.Size = new System.Drawing.Size(180, 22);
+            this.toolStripMenuItemViewDetails.Text = "查看详情";
+            this.toolStripMenuItemViewDetails.Click += new System.EventHandler(this.toolStripMenuItemViewDetails_Click);
             // 
             // splitContainerMain
             // 
@@ -157,6 +192,7 @@ namespace RUINORERP.Server.Controls
             this.workflowIdDataGridViewTextBoxColumn,
             this.reminderTimeDataGridViewTextBoxColumn,
             this.messageDataGridViewTextBoxColumn});
+            this.dataGridViewWorkflows.ContextMenuStrip = this.contextMenuStripWorkflows;
             this.dataGridViewWorkflows.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewWorkflows.Location = new System.Drawing.Point(3, 19);
             this.dataGridViewWorkflows.Name = "dataGridViewWorkflows";
@@ -167,6 +203,7 @@ namespace RUINORERP.Server.Controls
             // 
             // groupBoxWorkflowActions
             // 
+            this.groupBoxWorkflowActions.Controls.Add(this.btnTriggerReminder);
             this.groupBoxWorkflowActions.Controls.Add(this.btnClearCompleted);
             this.groupBoxWorkflowActions.Controls.Add(this.btnRefresh);
             this.groupBoxWorkflowActions.Controls.Add(this.tabControlWorkflowTests);
@@ -178,9 +215,19 @@ namespace RUINORERP.Server.Controls
             this.groupBoxWorkflowActions.TabStop = false;
             this.groupBoxWorkflowActions.Text = "工作流操作";
             // 
+            // btnTriggerReminder
+            // 
+            this.btnTriggerReminder.Location = new System.Drawing.Point(183, 19);
+            this.btnTriggerReminder.Name = "btnTriggerReminder";
+            this.btnTriggerReminder.Size = new System.Drawing.Size(90, 23);
+            this.btnTriggerReminder.TabIndex = 3;
+            this.btnTriggerReminder.Text = "立即触发提醒";
+            this.btnTriggerReminder.UseVisualStyleBackColor = true;
+            this.btnTriggerReminder.Click += new System.EventHandler(this.btnTriggerReminder_Click);
+            // 
             // btnClearCompleted
             // 
-            this.btnClearCompleted.Location = new System.Drawing.Point(93, 19);
+            this.btnClearCompleted.Location = new System.Drawing.Point(279, 19);
             this.btnClearCompleted.Name = "btnClearCompleted";
             this.btnClearCompleted.Size = new System.Drawing.Size(84, 23);
             this.btnClearCompleted.TabIndex = 2;
@@ -609,11 +656,18 @@ namespace RUINORERP.Server.Controls
             this.tabPageEvent.ResumeLayout(false);
             this.tabPageEvent.PerformLayout();
             this.tabPageOtherTests.ResumeLayout(false);
+            this.contextMenuStripWorkflows.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
 
         #endregion
+
+        private System.Windows.Forms.Button btnTriggerReminder;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripWorkflows;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemTriggerReminder;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemViewDetails;
 
         private System.Windows.Forms.SplitContainer splitContainerMain;
         private System.Windows.Forms.GroupBox groupBoxWorkflowList;

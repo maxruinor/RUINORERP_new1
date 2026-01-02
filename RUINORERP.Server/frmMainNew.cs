@@ -117,6 +117,9 @@ namespace RUINORERP.Server
         //保存系统所有提醒的业务数据配置,系统每分钟检测。
         public ConcurrentDictionary<long, ReminderData> ReminderBizDataList = new ConcurrentDictionary<long, ReminderData>();
 
+        // 提醒工作流调度器
+        private RUINORERP.Server.Workflow.ReminderWorkflowScheduler _reminderScheduler;
+
         /// <summary>
         /// 保存启动的工作流队列 2023-11-18
         /// 暂时用的是通过C端传的单号来找到对应的流程号。实际不科学
@@ -2287,6 +2290,15 @@ namespace RUINORERP.Server
                     // 加载提醒数据
                     DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
                     loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+
+                    // 启动提醒工作流调度器
+                    _reminderScheduler = new RUINORERP.Server.Workflow.ReminderWorkflowScheduler(
+                        WorkflowHost, 
+                        loadService,
+                        Startup.GetFromFac<Microsoft.Extensions.Logging.ILogger<RUINORERP.Server.Workflow.ReminderWorkflowScheduler>>()
+                    );
+                    _reminderScheduler.Start();
+                    PrintInfoLog("提醒工作流调度器已启动");
 
                     // 启动每日执行的定时任务
                     GlobalScheduledData globalScheduled = new GlobalScheduledData();

@@ -346,9 +346,9 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
     /// </summary>
     public class SafetyStockWorkflow : IWorkflow<SafetyStockData>
     {
-        private readonly ILogger<ReminderWorkflow> _logger;
+        private readonly ILogger<SafetyStockWorkflow> _logger;
 
-        public SafetyStockWorkflow(ILogger<ReminderWorkflow> logger)
+        public SafetyStockWorkflow(ILogger<SafetyStockWorkflow> logger)
         {
             _logger = logger;
         }

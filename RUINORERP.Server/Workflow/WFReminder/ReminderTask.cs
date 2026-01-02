@@ -103,35 +103,18 @@ namespace RUINORERP.Server.Workflow.WFReminder
                     var sessions = _sessionService.GetAllUserSessions();
                     foreach (var session in sessions)
                     {
-                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
+                        if (exData.ReceiverUserIDs.Contains(session.UserInfo.Employee_ID))
                         {
                             try
                             {
                                 exData.RemindTimes++;
                                 
-                                // 构建提醒消息
-                                var reminderData = new
-                                {
-                                    SendTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                                    ReminderData = exData,
-                                    ForcePopup = true
-                                };
-                                
-                                var messageJson = System.Text.Json.JsonSerializer.Serialize(reminderData,
-                                    new System.Text.Json.JsonSerializerOptions
-                                    {
-                                        // 忽略循环引用
-                                        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-                                    });
+                 
                                 
                                 // 发送工作流提醒命令 - 使用正确的工作流命令
-                                var messageData = new
-                                {
-                                    Command = "WORKFLOW_REMINDER",
-                                    Data = messageJson
-                                };
+                   
 
-                                var request = new MessageRequest(MessageType.Unknown, messageData);
+                                var request = new MessageRequest(MessageType.Reminder, exData);
                                 var success = _sessionService.SendCommandAsync(
                                     session.SessionID, 
                                     WorkflowCommands.WorkflowReminder, 

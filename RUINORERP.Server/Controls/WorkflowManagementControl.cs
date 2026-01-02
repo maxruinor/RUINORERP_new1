@@ -382,36 +382,13 @@ namespace RUINORERP.Server.Controls
                 
                 foreach (var session in sessions)
                 {
-                    if (exData.ReceiverUserIDs != null && exData.ReceiverUserIDs.Contains(session.UserInfo.UserID))
+                    if (exData.ReceiverUserIDs != null && exData.ReceiverUserIDs.Contains(session.UserInfo.Employee_ID))
                     {
                         try
                         {
                             // 增加提醒次数
                             exData.RemindTimes++;
-                            
-                            // 构建提醒消息
-                            var reminderDataMsg = new
-                            {
-                                SendTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                                ReminderData = exData,
-                                ForcePopup = true
-                            };
-                            
-                            var messageJson = System.Text.Json.JsonSerializer.Serialize(reminderDataMsg,
-                                new System.Text.Json.JsonSerializerOptions
-                                {
-                                    // 忽略循环引用
-                                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-                                });
-                            
-                            // 发送工作流提醒命令
-                            var messageData = new
-                            {
-                                Command = "WORKFLOW_REMINDER",
-                                Data = messageJson
-                            };
-
-                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Notice, messageData);
+                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Reminder, exData);
                             var success = await sessionService.SendCommandAsync(
                                 session.SessionID, 
                                 RUINORERP.PacketSpec.Commands.WorkflowCommands.WorkflowReminder, 

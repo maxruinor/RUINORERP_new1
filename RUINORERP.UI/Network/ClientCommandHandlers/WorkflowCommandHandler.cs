@@ -217,10 +217,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         // 如果数据是字符串（JSON格式），反序列化
                         if (messageRequest.Data is string jsonData)
                         {
-                            var reminderInfo = JsonSerializer.Deserialize<ReminderInfo>(jsonData);
-                            if (reminderInfo?.ReminderData != null)
+                            var reminderInfo = JsonSerializer.Deserialize<ReminderData>(jsonData);
+                            if (reminderInfo != null)
                             {
-                                return reminderInfo.ReminderData;
+                                return reminderInfo;
                             }
                         }
                         // 如果数据是字典，从中提取
@@ -308,14 +308,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             }
         }
 
-        /// <summary>
-        /// 辅助类，用于反序列化工作流提醒数据
-        /// </summary>
-        private class ReminderInfo
-        {
-            public ReminderData ReminderData { get; set; }
-            public string SendTime { get; set; }
-            public bool ForcePopup { get; set; }
-        }
+       
     }
 }

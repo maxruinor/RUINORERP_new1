@@ -59,6 +59,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             InitializeComponent();
             clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+            DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_Prod));
 
         }
         private ClientBizCodeService clientBizCodeService;
@@ -67,6 +68,8 @@ namespace RUINORERP.UI.ProductEAV
             Query();
         }
 
+
+        public GridViewDisplayTextResolver DisplayTextResolver;
         protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
         {
             int WM_KEYDOWN = 256;
@@ -130,6 +133,7 @@ namespace RUINORERP.UI.ProductEAV
             if (!this.DesignMode)
             {
                 this.cmbPropertyType.SelectedIndexChanged += async (sender, e) => await cmbPropertyType_SelectedIndexChanged(sender, e);
+                DisplayTextResolver.Initialize(dataGridViewProd);
             }
 
             ImgCol.DefaultCellStyle.NullValue = null;

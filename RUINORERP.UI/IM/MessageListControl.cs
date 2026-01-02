@@ -499,6 +499,10 @@ namespace RUINORERP.UI.IM
                         // 显示通知详情
                         ShowNoticeDetail(message);
                         break;
+                    case RUINORERP.Model.TransModel.MessageType.Reminder:
+                        // 导航到工作流提醒相关的业务窗体
+                        await NavigateToWorkflowReminderForm(message);
+                        break;
                         // 其他类型的导航...
                 }
             }
@@ -682,6 +686,39 @@ namespace RUINORERP.UI.IM
             {
                 MessageBox.Show($"导航到任务表单时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 System.Diagnostics.Debug.WriteLine($"导航到任务表单失败: {ex.ToString()}");
+            }
+        }
+
+        /// <summary>
+        /// 导航到工作流提醒相关的业务窗体
+        /// </summary>
+        /// <param name="message">工作流提醒消息</param>
+        private async Task NavigateToWorkflowReminderForm(RUINORERP.Model.TransModel.MessageData message)
+        {
+            try
+            {
+                if (message == null)
+                {
+                    MessageBox.Show("消息为空，无法导航到工作流提醒表单", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 工作流提醒消息通常包含业务ID和业务类型
+                if (message.BizId > 0 && !string.IsNullOrEmpty(message.BizType?.ToString()))
+                {
+                    // 尝试导航到对应的业务窗体
+                    await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
+                }
+                else
+                {
+                    // 如果没有具体的业务信息，显示消息详情
+                    ShowNoticeDetail(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导航到工作流提醒表单时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"导航到工作流提醒表单失败: {ex.ToString()}");
             }
         }
 

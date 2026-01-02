@@ -158,6 +158,10 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 创建并显示消息提示窗体
                 var messageData = CreateMessageDataFromReminder(reminderData);
+                
+                // 将工作流提醒消息添加到IM消息系统，实现持久化
+                AddWorkflowReminderToIMSystem(messageData);
+                
                 var messagePrompt = new RUINORERP.UI.IM.MessagePrompt(messageData);
                 
                 // 设置窗体属性
@@ -170,6 +174,33 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "显示工作流提醒时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 将工作流提醒消息添加到IM消息系统
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        private void AddWorkflowReminderToIMSystem(MessageData messageData)
+        {
+            try
+            {
+                // 获取消息管理器实例
+                var messageManager = Startup.GetFromFac<RUINORERP.UI.IM.EnhancedMessageManager>();
+                if (messageManager != null)
+                {
+                    // 将工作流提醒消息添加到消息管理器，实现持久化
+                    messageManager.AddMessage(messageData);
+                    _logger.LogDebug("工作流提醒消息已添加到IM消息系统并持久化");
+                }
+                else
+                {
+                    _logger.LogWarning("无法获取消息管理器实例，工作流提醒消息未添加到IM系统");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "将工作流提醒消息添加到IM消息系统时发生异常");
             }
         }
 

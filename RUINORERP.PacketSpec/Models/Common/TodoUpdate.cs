@@ -33,7 +33,7 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <summary>
         /// 实体对象引用
         /// </summary>
-        //public object entity { get; set; } = new object();
+        public object entity { get; set; } = new object();
 
         /// <summary>
         /// 条件匹配值集合
@@ -77,7 +77,7 @@ namespace RUINORERP.PacketSpec.Models.Common
                 BusinessType = bizType,
                 BillId = billId,
                 BillNo= bilno,
-                //entity = entity,
+                entity = entity,
                 StatusType = statusType,
                 BusinessStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(),
@@ -106,7 +106,7 @@ namespace RUINORERP.PacketSpec.Models.Common
                 BusinessType = update.BusinessType,
                 BillId = update.BillId,
                 BillNo=update.BillNo,
-                //entity = entity ?? new BaseEntity(),
+                entity = entity ?? new BaseEntity(),
                 StatusType = statusType,
                 BusinessStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(update.AdditionalData),

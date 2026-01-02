@@ -501,7 +501,7 @@ namespace RUINORERP.UI.BaseForm
                             UpdateType = updateType,
                             BusinessType = bizType,
                             BillId = billId,
-                            entity = entity, // 添加实体对象引用
+                           // entity = entity, // 添加实体对象引用
                             StatusType = nameof(DataStatus),
                             BusinessStatusValue = entity.GetPropertyValue(nameof(DataStatus))
                         };

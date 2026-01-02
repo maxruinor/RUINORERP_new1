@@ -17,22 +17,22 @@ namespace RUINORERP.UI.IM
         /// 消息数据文件名
         /// </summary>
         private const string MESSAGE_FILE_NAME = "messages.json";
-        
+
         /// <summary>
         /// 数据版本号
         /// </summary>
         private const string DATA_VERSION = "1.0";
-        
+
         /// <summary>
         /// 数据保存路径
         /// </summary>
         private string _dataPath;
-        
+
         /// <summary>
         /// 消息列表
         /// </summary>
         private List<MessageData> _messages;
-        
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -40,21 +40,21 @@ namespace RUINORERP.UI.IM
         {
             // 获取应用程序执行目录
             string appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            
+
             // 创建data文件夹
             string dataDirectory = Path.Combine(appDirectory, "data");
             if (!Directory.Exists(dataDirectory))
             {
                 Directory.CreateDirectory(dataDirectory);
             }
-            
+
             // 设置数据文件路径
             _dataPath = Path.Combine(dataDirectory, MESSAGE_FILE_NAME);
-            
+
             // 加载消息数据
             _messages = LoadMessages();
         }
-        
+
         /// <summary>
         /// 加载消息数据
         /// </summary>
@@ -68,19 +68,19 @@ namespace RUINORERP.UI.IM
                 {
                     return new List<MessageData>();
                 }
-                
+
                 // 读取文件内容
                 string jsonContent = File.ReadAllText(_dataPath);
-                
+
                 // 反序列化JSON数据
                 var messageData = JsonConvert.DeserializeObject<MessagePersistenceData>(jsonContent);
-                
+
                 // 如果数据版本不匹配，返回空列表
                 if (messageData?.Version != DATA_VERSION)
                 {
                     return new List<MessageData>();
                 }
-                
+
                 return messageData.Messages ?? new List<MessageData>();
             }
             catch (Exception ex)
@@ -90,7 +90,7 @@ namespace RUINORERP.UI.IM
                 return new List<MessageData>();
             }
         }
-        
+
         /// <summary>
         /// 保存消息数据
         /// </summary>
@@ -106,13 +106,13 @@ namespace RUINORERP.UI.IM
                     LastUpdated = DateTime.Now,
                     Messages = messages
                 };
-                
+
                 // 序列化JSON数据
                 string jsonContent = JsonConvert.SerializeObject(messageData, Formatting.Indented);
-                
+
                 // 写入文件
                 File.WriteAllText(_dataPath, jsonContent);
-                
+
                 // 更新内存中的消息列表
                 _messages = messages;
             }
@@ -122,20 +122,21 @@ namespace RUINORERP.UI.IM
                 Console.WriteLine($"保存消息数据失败: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 添加消息
         /// </summary>
         /// <param name="message">消息对象</param>
         public void AddMessage(MessageData message)
         {
+            message.BizData = null; // 清除BizData以节省存储空间
             // 添加消息到列表
             _messages.Add(message);
-            
+
             // 保存到持久化存储
             SaveMessages(_messages);
         }
-        
+
         /// <summary>
         /// 删除消息
         /// </summary>
@@ -144,11 +145,11 @@ namespace RUINORERP.UI.IM
         {
             // 从列表中移除消息
             _messages.RemoveAll(m => m.MessageId == id);
-            
+
             // 保存到持久化存储
             SaveMessages(_messages);
         }
-        
+
         /// <summary>
         /// 删除多条消息
         /// </summary>
@@ -157,11 +158,11 @@ namespace RUINORERP.UI.IM
         {
             // 从列表中移除多条消息
             _messages.RemoveAll(m => ids.Contains(m.MessageId));
-            
+
             // 保存到持久化存储
             SaveMessages(_messages);
         }
-        
+
         /// <summary>
         /// 更新消息
         /// </summary>
@@ -170,17 +171,17 @@ namespace RUINORERP.UI.IM
         {
             // 查找消息
             int index = _messages.FindIndex(m => m.MessageId == message.MessageId);
-            
+
             // 如果找到消息，更新它
             if (index != -1)
             {
                 _messages[index] = message;
-                
+
                 // 保存到持久化存储
                 SaveMessages(_messages);
             }
         }
-        
+
         /// <summary>
         /// 获取所有消息
         /// </summary>
@@ -189,7 +190,7 @@ namespace RUINORERP.UI.IM
         {
             return _messages;
         }
-        
+
         /// <summary>
         /// 根据ID获取消息
         /// </summary>
@@ -199,7 +200,7 @@ namespace RUINORERP.UI.IM
         {
             return _messages.FirstOrDefault(m => m.MessageId == id);
         }
-        
+
         /// <summary>
         /// 消息持久化数据结构
         /// </summary>
@@ -210,13 +211,13 @@ namespace RUINORERP.UI.IM
             /// </summary>
             [JsonProperty("version")]
             public string Version { get; set; }
-            
+
             /// <summary>
             /// 最后更新时间
             /// </summary>
             [JsonProperty("lastUpdated")]
             public DateTime LastUpdated { get; set; }
-            
+
             /// <summary>
             /// 消息列表
             /// </summary>

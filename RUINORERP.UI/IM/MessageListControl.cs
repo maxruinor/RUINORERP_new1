@@ -434,7 +434,7 @@ namespace RUINORERP.UI.IM
                     if (message.BizData is TodoUpdate todoUpdate)
                     {
 
-                        messagePrompt.Content = $"【{todoUpdate.BillNo}】-" + message.Content;
+                        message.Content = $"【{todoUpdate.BillNo}】-" + message.Content;
                     }
 
                     var EntityInfo = EntityMappingHelper.GetEntityInfo(message.BizType);

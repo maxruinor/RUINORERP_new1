@@ -121,8 +121,8 @@ namespace RUINORERP.UI.IM
                 Content = MessageData.Content ?? "";
                 Title = MessageData.Title ?? "智能提醒";
                 
-                // 设置窗体标题
-                this.Text = Title;
+                // 设置窗体标题，包含消息ID确保唯一性
+                this.Text = $"{Title} - 消息ID:{MessageData.MessageId}";
                 
                 // 设置发送者信息
                 if (txtSender != null) 
@@ -140,13 +140,6 @@ namespace RUINORERP.UI.IM
                 if (txtContent != null) 
                 {
                     string content = !string.IsNullOrEmpty(MessageData.Content) ? MessageData.Content : "无内容";
-                    
-                    //// 如果单据编号不为空，添加到消息内容中
-                    //if (!string.IsNullOrEmpty(MessageData.BillNo))
-                    //{
-                    //    content += $"\r\n\r\n单据编号: {MessageData.BillNo}";
-                    //}
-                    
                     txtContent.Text = content;
                 }
                 
@@ -460,6 +453,45 @@ namespace RUINORERP.UI.IM
             WaitReminder(sender);
         }
 
+
+        /// <summary>
+        /// 检查消息内容中是否已经包含单据编号
+        /// </summary>
+        /// <param name="content">消息内容</param>
+        /// <param name="billNo">单据编号</param>
+        /// <returns>是否已经包含单据编号</returns>
+        private bool ContainsBillNo(string content, string billNo)
+        {
+            if (string.IsNullOrEmpty(content) || string.IsNullOrEmpty(billNo))
+                return false;
+            
+            // 检查是否包含明确的单据编号标识
+            if (content.Contains($"单据编号: {billNo}") || content.Contains($"单号: {billNo}") || 
+                content.Contains($"编号: {billNo}") || content.Contains($"BillNo: {billNo}"))
+                return true;
+            
+            // 检查是否包含单据编号本身（避免误判）
+            // 只有当单据编号在内容中独立出现时才认为是重复
+            if (content.Contains(billNo))
+            {
+                // 检查前后字符，确保不是其他文本的一部分
+                int index = content.IndexOf(billNo);
+                if (index >= 0)
+                {
+                    // 检查前一个字符
+                    if (index > 0 && char.IsLetterOrDigit(content[index - 1]))
+                        return false;
+                    
+                    // 检查后一个字符
+                    if (index + billNo.Length < content.Length && char.IsLetterOrDigit(content[index + billNo.Length]))
+                        return false;
+                    
+                    return true;
+                }
+            }
+            
+            return false;
+        }
 
         /// <summary>
         /// 响应服务器，更新消息状态

@@ -603,13 +603,13 @@ namespace RUINORERP.UI.BaseForm
                 switch (updateType)
                 {
                     case TodoUpdateType.StatusChanged:
-                        update.OperationDescription = "单据状态已变更";
+                        update.OperationDescription =  $"【{billNo}】单据状态已变更";
                         break;
                     case TodoUpdateType.Deleted:
-                        update.OperationDescription = "单据已删除";
+                        update.OperationDescription = $"【{billNo}】单据已删除";
                         break;
                     case TodoUpdateType.Created:
-                        update.OperationDescription = "单据已创建";
+                        update.OperationDescription = $"【{billNo}】单据已创建";
                         break;
                 }
 

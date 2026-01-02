@@ -67,6 +67,7 @@ namespace RUINORERP.UI.IM
             this.lstMessages.UseCompatibleStateImageBehavior = false;
             this.lstMessages.View = System.Windows.Forms.View.Details;
             this.lstMessages.ItemActivate += new System.EventHandler(this.lstMessages_ItemClick);
+            this.lstMessages.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDoubleClick);
             
             // colContent
             this.colContent.Text = "内容";

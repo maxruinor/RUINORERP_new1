@@ -417,6 +417,38 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
+        /// 消息列表项双击事件处理
+        /// </summary>
+        private void lstMessages_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            // 获取点击的项
+            var hitTestInfo = lstMessages.HitTest(e.Location);
+            if (hitTestInfo.Item != null)
+            {
+                var selectedItem = hitTestInfo.Item;
+                if (selectedItem.Tag is long messageId)
+                {
+                    // 获取消息对象
+                    var message = _messageManager.GetMessageById(messageId);
+                    if (message != null)
+                    {
+                        // 标记为已读
+                        _messageManager.MarkAsRead(messageId);
+
+                        // 触发消息点击事件
+                        MessageClicked?.Invoke(this, new MessageClickedEventArgs(message));
+
+                        // 使用MessagePrompt显示消息内容
+                        ShowMessageWithPrompt(message);
+
+                        // 处理业务导航
+                        NavigateToBusiness(message);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 使用MessagePrompt显示消息内容
         /// </summary>
         /// <param name="message">消息对象</param>

@@ -59,7 +59,7 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 更新消息显示
         /// </summary>
-        protected override void UpdateMessageDisplay()
+        public override void UpdateMessageDisplay()
         {
             if (MessageData != null)
             {

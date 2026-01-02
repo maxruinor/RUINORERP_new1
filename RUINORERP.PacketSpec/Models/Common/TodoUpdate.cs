@@ -27,10 +27,13 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// </summary>
         public long BillId { get; set; }
 
+
+        public string BillNo { get; set; }
+
         /// <summary>
         /// 实体对象引用
         /// </summary>
-        public object entity { get; set; } = new object();
+        //public object entity { get; set; } = new object();
 
         /// <summary>
         /// 条件匹配值集合
@@ -62,6 +65,7 @@ namespace RUINORERP.PacketSpec.Models.Common
             TodoUpdateType updateType,
             BizType bizType,
             long billId,
+            string bilno,
             object entity,
             string statusType = null,
             object businessStatusValue = null
@@ -72,7 +76,8 @@ namespace RUINORERP.PacketSpec.Models.Common
                 UpdateType = updateType,
                 BusinessType = bizType,
                 BillId = billId,
-                entity = entity,
+                BillNo= bilno,
+                //entity = entity,
                 StatusType = statusType,
                 BusinessStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(),
@@ -100,7 +105,8 @@ namespace RUINORERP.PacketSpec.Models.Common
                 UpdateType = update.UpdateType,
                 BusinessType = update.BusinessType,
                 BillId = update.BillId,
-                entity = entity ?? new BaseEntity(),
+                BillNo=update.BillNo,
+                //entity = entity ?? new BaseEntity(),
                 StatusType = statusType,
                 BusinessStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(update.AdditionalData),
@@ -142,5 +148,5 @@ namespace RUINORERP.PacketSpec.Models.Common
         }
     }
 
-    
+
 }

@@ -138,7 +138,7 @@
             this.txtContent.Multiline = true;
             this.txtContent.Name = "txtContent";
             this.txtContent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtContent.Size = new System.Drawing.Size(477, 312);
+            this.txtContent.Size = new System.Drawing.Size(477, 263);
             this.txtContent.TabIndex = 11;
             // 
             // kryptonGroupBoxCurrentNode

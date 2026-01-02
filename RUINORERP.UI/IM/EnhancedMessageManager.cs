@@ -54,16 +54,19 @@ namespace RUINORERP.UI.IM
         /// </summary>
         public event EventHandler<int> UnreadMessageCountChanged;
 
+
+        private readonly IEntityMappingService _entityBizMappingService;
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="messageService">消息服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService)
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService,  IEntityMappingService entityBizMappingService)
         {
             _logger = logger;
             _messageService = messageService;
 
+            _entityBizMappingService = entityBizMappingService;
             // 初始化消息持久化管理器
             _persistenceManager = new MessagePersistenceManager();
 
@@ -489,6 +492,8 @@ namespace RUINORERP.UI.IM
         {
             if (message == null)
                 return;
+
+
 
             // 保存到持久化存储
             _persistenceManager.AddMessage(message);

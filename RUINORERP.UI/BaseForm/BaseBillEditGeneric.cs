@@ -581,6 +581,10 @@ namespace RUINORERP.UI.BaseForm
                 if (billId <= 0)
                     return null;
 
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
+
                 // 获取业务类型
                 var bizType = RUINORERP.Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
 
@@ -589,6 +593,7 @@ namespace RUINORERP.UI.BaseForm
                     updateType,
                     bizType,
                     billId,
+                    billNo,
                     entity,
                     nameof(DataStatus),
                     entity.GetPropertyValue(nameof(DataStatus))
@@ -2945,8 +2950,12 @@ namespace RUINORERP.UI.BaseForm
                 ReturnResults<bool> rs = await ctr.BatchCloseCaseAsync(needCloseCases);
                 if (rs.Succeeded)
                 {
+                    var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                    string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
+
                     // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid);
+                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid, billNo);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
@@ -3159,9 +3168,12 @@ namespace RUINORERP.UI.BaseForm
                 if (rmr.Succeeded)
                 {
                     reviewResult.Succeeded = rmr.Succeeded;
+                    var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                    string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                     // 统一状态同步 - 审核操作
-                    var updateData = CreateTodoUpdate("审核", "单据已审核通过", pkid);
+                    var updateData = CreateTodoUpdate("审核", "单据已审核通过", pkid, billNo);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "审核");
@@ -3507,9 +3519,12 @@ namespace RUINORERP.UI.BaseForm
                 {
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     rs = true;
+                    var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                    string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                     // 统一状态同步 - 反审操作
-                    var updateData = CreateTodoUpdate("反审", "单据已反审", pkid);
+                    var updateData = CreateTodoUpdate("反审", "单据已反审", pkid, billNo);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "反审");
@@ -4724,11 +4739,17 @@ namespace RUINORERP.UI.BaseForm
                 var statusType = StateManager.GetStatusType(entity);
                 var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
 
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
+
+
                 // 创建更新数据，传入正确的状态类型和值
                 var updateData = TodoUpdate.Create(
                     originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                     bizType,
                     pkid,
+                     billNo,
                   EditEntity
                 );
 
@@ -5029,12 +5050,17 @@ namespace RUINORERP.UI.BaseForm
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
+                        var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                        string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
+
                         // 发送任务状态删除通知 - 使用扩展的TodoUpdate
                         var bizType = EntityMappingHelper.GetBillData<T>(editEntity as T).BizType;
                         var updateData = TodoUpdate.Create(
                             PacketSpec.Enums.Core.TodoUpdateType.Deleted,
                             bizType,
                             PKValue.ToLong(),
+                            billNo,
                             EditEntity
                         );
 
@@ -5233,9 +5259,12 @@ namespace RUINORERP.UI.BaseForm
                             }
                         }
                         submitrs = true;
+                        var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                        string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                         // 统一状态同步 - 提交操作
-                        var updateData = CreateTodoUpdate("提交", "单据已提交", pkid);
+                        var updateData = CreateTodoUpdate("提交", "单据已提交", pkid, billNo);
                         if (updateData != null)
                         {
                             await SyncTodoStatusAsync(updateData, "提交");
@@ -6129,7 +6158,7 @@ namespace RUINORERP.UI.BaseForm
                     Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
                     BizData = update,
                     SenderId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                    SenderName= MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                    SenderName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
                     SendTime = DateTime.Now,
                     // 设置消息为业务消息类型，直接加载到消息中心
                     IsPopupMessage = false // 禁止使用弹窗形式的消息提示
@@ -6169,7 +6198,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="operationType">操作类型</param>
         /// <param name="operationDescription">操作描述</param>
         /// <returns>任务状态更新数据</returns>
-        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription, long pkid)
+        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription, long pkid, string billno)
         {
             try
             {
@@ -6178,6 +6207,7 @@ namespace RUINORERP.UI.BaseForm
                     PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
                     bizType,
                     pkid,
+                    billno,
                     EditEntity
                 );
 

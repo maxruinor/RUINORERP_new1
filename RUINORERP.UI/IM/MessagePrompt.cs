@@ -87,8 +87,8 @@ namespace RUINORERP.UI.IM
         private void InitializeForm()
         {
             // 可以在这里添加额外的初始化代码
-            // 设置窗体自动适应内容大小
-            this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            // 移除窗体自动适应内容大小设置，使用设计时的默认大小
+            // this.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             // 初始化消息流布局面板
             messageFlowLayoutPanel = new FlowLayoutPanel
@@ -111,49 +111,131 @@ namespace RUINORERP.UI.IM
         /// 更新消息显示
         /// 根据消息数据更新UI组件
         /// </summary>
-        protected override void UpdateMessageDisplay()
+        public override void UpdateMessageDisplay()
         {
             try
             {
-
                 if (MessageData == null) return;
-                Content = MessageData.Content;
-                Title = MessageData.Title;
-                // 设置基本信息
-                if (txtSender != null) txtSender.Text = MessageData.SenderName ?? "系统";
-                if (txtSubject != null) txtSubject.Text = MessageData.Title ?? "消息";
-                if (txtContent != null) txtContent.Text = MessageData.Content;
+                
+                // 设置消息基础内容
+                Content = MessageData.Content ?? "";
 
-                // 根据消息类型设置不同的显示样式
+                string billNo=
+                Title = MessageData.Title ?? "智能提醒";
+                
+                // 设置窗体标题
+                this.Text = Title;
+                
+                // 设置发送者信息
+                if (txtSender != null) 
+                {
+                    txtSender.Text = !string.IsNullOrEmpty(MessageData.SenderName) ? MessageData.SenderName : "系统";
+                }
+                
+                // 设置消息主题
+                if (txtSubject != null) 
+                {
+                    txtSubject.Text = !string.IsNullOrEmpty(MessageData.Title) ? MessageData.Title : "无标题";
+                }
+                
+                // 设置消息内容
+                if (txtContent != null) 
+                {
+                    txtContent.Text = !string.IsNullOrEmpty(MessageData.Content) ? MessageData.Content : "无内容";
+                }
+                
+                // 设置发送时间显示
+                if (lblSendTime != null)
+                {
+                    lblSendTime.Text = MessageData.SendTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    // 调整发送时间标签位置，使其显示在内容文本框下方
+                    lblSendTime.Location = new Point(86, 83 + txtContent.Height + 10);
+                    lblSendTime.Size = new Size(200, 20);
+                }
+                
+                // 根据消息类型设置不同的显示样式和按钮状态
                 switch (MessageData.MessageType)
                 {                    
-                    //case MessageType.Prompt:
-                    //    this.Icon = Properties.Resources.info;
-                    //    break;
-                    //case MessageType.BusinessData:
-                    //    this.Icon = Properties.Resources.Business;
-                    //    break;
-                    //case MessageType.System:
-                    //    this.Icon = Properties.Resources.System;
-                    //    break;
-                    //default:
-                    //    this.Icon = Properties.Resources.Message;
-                    //    break;
+                    case MessageType.Approve:
+                        // 审批消息：显示查看按钮
+                        if (btnOk != null) 
+                        {
+                            btnOk.Values.Text = "查看审批";
+                            btnOk.Visible = true;
+                        }
+                        break;
+                    case MessageType.Task:
+                        // 任务消息：显示查看按钮
+                        if (btnOk != null) 
+                        {
+                            btnOk.Values.Text = "查看任务";
+                            btnOk.Visible = true;
+                        }
+                        break;
+                    case MessageType.Notice:
+                        // 通知消息：显示查看按钮
+                        if (btnOk != null) 
+                        {
+                            btnOk.Values.Text = "查看详情";
+                            btnOk.Visible = true;
+                        }
+                        break;
+                    default:
+                        // 默认消息类型
+                        if (btnOk != null) 
+                        {
+                            btnOk.Values.Text = "查看";
+                            btnOk.Visible = true;
+                        }
+                        break;
                 }
                 
                 // 设置确认相关控件的可见性
                 if (MessageData.NeedConfirmation)
                 {
-                    // 显示确认按钮等控件
-                    //if (btnConfirm != null) btnConfirm.Visible = true;
-                    //if (btnReject != null) btnReject.Visible = true;
+                    // 需要确认的消息：显示确认按钮和拒绝按钮（如果有的话）
+                    if (btnOk != null) 
+                    {
+                        btnOk.Values.Text = "确认";
+                        btnOk.Visible = true;
+                    }
+                    
+                    // 显示稍候提醒按钮
+                    if (btnWaitReminder != null)
+                    {
+                        btnWaitReminder.Visible = true;
+                    }
+                }
+                else
+                {
+                    // 不需要确认的消息：隐藏稍候提醒按钮
+                    if (btnWaitReminder != null)
+                    {
+                        btnWaitReminder.Visible = false;
+                    }
                 }
 
                 // 显示业务相关信息
                 if (MessageData.BizId >= 0)
                 {
                     // 可以在这里显示业务数据相关信息
-                    
+                    // 例如，在窗体标题中显示业务类型和ID
+                    if (!string.IsNullOrEmpty(this.Text) && !this.Text.Contains("业务"))
+                    {
+                        this.Text += $" - {MessageData.BizType} (ID: {MessageData.BizId})";
+                    }
+                }
+                
+                // 根据消息状态设置界面样式
+                if (MessageData.IsRead)
+                {
+                    // 已读消息：使用较淡的颜色
+                    this.BackColor = Color.FromArgb(240, 240, 240);
+                }
+                else
+                {
+                    // 未读消息：使用较醒目的颜色
+                    this.BackColor = Color.FromArgb(255, 255, 220);
                 }
             }
             catch (Exception ex)
@@ -201,35 +283,46 @@ namespace RUINORERP.UI.IM
 
         private void MessagePrompt_Load(object sender, EventArgs e)
         {
-            txtContent.Text = Content;
-            lblSendTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            
-            // 确保窗体使用设计时的默认大小，而不是自动调整
-            // 移除自动调整大小逻辑，保持窗体设计时的标准高度
-            // AdjustContentSizeSimple(); // 注释掉自动调整大小的代码
-            
-            // 自适应窗体位置，显示在屏幕中央
-            PositionFormCentered();
+            try
+            {
+                // 确保窗体使用设计时的默认大小，而不是自动调整
+                // 移除自动调整大小逻辑，保持窗体设计时的标准高度
+                // AdjustContentSizeSimple(); // 注释掉自动调整大小的代码
+                
+                // 首先更新消息显示
+                UpdateMessageDisplay();
+                
+                // 自适应窗体位置，显示在屏幕中央
+                PositionFormCentered();
 
-            AddCommandForWait();
+                AddCommandForWait();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "加载MessagePrompt窗体时发生错误");
+            }
         }
 
 
         /// <summary>
-        /// 将窗体定位在屏幕中央偏下位置
+        /// 将窗体定位在屏幕中央位置
         /// </summary>
         private void PositionFormCentered()
         {
-            this.StartPosition = FormStartPosition.Manual;
+            // 使用窗体设计时的默认大小，而不是自动调整
+            this.StartPosition = FormStartPosition.CenterScreen;
             
-            // 计算窗体位置（屏幕中央偏下）
-            int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
-            int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+            // 移除手动计算位置的逻辑，直接使用CenterScreen
+            // 这样可以确保窗体使用设计时的默认大小显示
             
-            int formX = (screenWidth - this.Width) / 2;
-            int formY = (screenHeight - this.Height) * 2 / 3; // 偏下位置
-            
-            this.SetDesktopLocation(formX, formY);
+            // // 计算窗体位置（屏幕中央偏下）
+            // int screenWidth = Screen.PrimaryScreen.WorkingArea.Width;
+            // int screenHeight = Screen.PrimaryScreen.WorkingArea.Height;
+            // 
+            // int formX = (screenWidth - this.Width) / 2;
+            // int formY = (screenHeight - this.Height) * 2 / 3; // 偏下位置
+            // 
+            // this.SetDesktopLocation(formX, formY);
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

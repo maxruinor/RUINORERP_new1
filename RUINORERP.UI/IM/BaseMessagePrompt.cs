@@ -39,6 +39,9 @@ namespace RUINORERP.UI.IM
         /// </summary>
         protected MenuPowerHelper MenuPowerHelper;
         
+
+        
+
         /// <summary>
         /// 初始化组件
         /// 子类可以重写此方法来初始化UI组件
@@ -47,12 +50,12 @@ namespace RUINORERP.UI.IM
         {
             // 默认实现为空，子类可以根据需要重写
         }
-        
+
         /// <summary>
         /// 更新消息显示
         /// 子类可以重写此方法来根据消息数据更新UI
         /// </summary>
-        protected virtual void UpdateMessageDisplay()
+        public virtual void UpdateMessageDisplay()
         {
             // 默认实现为空，子类可以根据需要重写
         }
@@ -155,7 +158,7 @@ namespace RUINORERP.UI.IM
             this.StartPosition = FormStartPosition.Manual;
             
             // 设置窗口大小
-            this.ClientSize = new Size(400, 280);
+            //this.ClientSize = new Size(400, 280);
             
             // 设置窗口标题
             this.Text = "系统消息";

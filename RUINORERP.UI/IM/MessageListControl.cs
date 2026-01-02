@@ -428,18 +428,21 @@ namespace RUINORERP.UI.IM
                 var messagePrompt = Startup.GetFromFac<MessagePrompt>();
                 if (messagePrompt != null)
                 {
+                    // 设置MessageData属性以触发消息显示更新
                     messagePrompt.MessageData = message;
-                    
-                        // 显示消息提示窗口
-                        if (Application.OpenForms.Count > 0)
+                    //var EntityInfo = EntityMappingHelper.GetEntityInfo(message.BizType);
+                    // 显示消息提示窗口
+                    if (Application.OpenForms.Count > 0)
+                    {
+                        Application.OpenForms[0].Invoke(new Action(() =>
                         {
-                            Application.OpenForms[0].Invoke(new Action(() =>
-                            {
-                                // 确保窗体使用默认大小显示
-                                messagePrompt.StartPosition = FormStartPosition.CenterScreen;
-                                messagePrompt.ShowDialog();
-                            }));
-                        }
+                            // 确保窗体使用默认大小显示
+                            messagePrompt.StartPosition = FormStartPosition.CenterScreen;
+                            // 强制更新消息显示
+                            messagePrompt.UpdateMessageDisplay();
+                            messagePrompt.ShowDialog();
+                        }));
+                    }
                 }
                 else
                 {
@@ -451,6 +454,8 @@ namespace RUINORERP.UI.IM
                         {
                             // 确保窗体使用默认大小显示
                             prompt.StartPosition = FormStartPosition.CenterScreen;
+                            // 强制更新消息显示
+                            prompt.UpdateMessageDisplay();
                             prompt.ShowDialog();
                         }));
                     }
@@ -459,7 +464,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"使用MessagePrompt显示消息时发生错误: {ex.Message}");
-                MessageBox.Show($"显示消息详情时发生错误: {ex.Message}", "错误", 
+                MessageBox.Show($"显示消息详情时发生错误: {ex.Message}", "错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,7 +130,11 @@ namespace RUINORERP.UI.IM
         /// <param name="message">消息对象</param>
         public void AddMessage(MessageData message)
         {
-            message.BizData = null; // 清除BizData以节省存储空间
+            if (message.BizData is TodoUpdate todoUpdate)
+            {
+                // 清除单据数据以节省存储空间
+                todoUpdate.entity = null;
+            }
             // 添加消息到列表
             _messages.Add(message);
 

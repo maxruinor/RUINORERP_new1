@@ -3,6 +3,7 @@ using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.UserCenter;
@@ -430,7 +431,13 @@ namespace RUINORERP.UI.IM
                 {
                     // 设置MessageData属性以触发消息显示更新
                     messagePrompt.MessageData = message;
-                    //var EntityInfo = EntityMappingHelper.GetEntityInfo(message.BizType);
+                    if (message.BizData is TodoUpdate todoUpdate)
+                    {
+
+                        messagePrompt.Content = $"【{todoUpdate.BillNo}】-" + message.Content;
+                    }
+
+                    var EntityInfo = EntityMappingHelper.GetEntityInfo(message.BizType);
                     // 显示消息提示窗口
                     if (Application.OpenForms.Count > 0)
                     {

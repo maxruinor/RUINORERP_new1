@@ -119,8 +119,6 @@ namespace RUINORERP.UI.IM
                 
                 // 设置消息基础内容
                 Content = MessageData.Content ?? "";
-
-                string billNo=
                 Title = MessageData.Title ?? "智能提醒";
                 
                 // 设置窗体标题
@@ -141,7 +139,15 @@ namespace RUINORERP.UI.IM
                 // 设置消息内容
                 if (txtContent != null) 
                 {
-                    txtContent.Text = !string.IsNullOrEmpty(MessageData.Content) ? MessageData.Content : "无内容";
+                    string content = !string.IsNullOrEmpty(MessageData.Content) ? MessageData.Content : "无内容";
+                    
+                    //// 如果单据编号不为空，添加到消息内容中
+                    //if (!string.IsNullOrEmpty(MessageData.BillNo))
+                    //{
+                    //    content += $"\r\n\r\n单据编号: {MessageData.BillNo}";
+                    //}
+                    
+                    txtContent.Text = content;
                 }
                 
                 // 设置发送时间显示

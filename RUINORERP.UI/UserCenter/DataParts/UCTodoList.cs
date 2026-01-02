@@ -34,6 +34,7 @@ using RUINORERP.UI.BaseForm;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Forms;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {

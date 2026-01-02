@@ -3,6 +3,7 @@ using FastReport.Table;
 using Pipelines.Sockets.Unofficial.Arenas;
 using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global.EnumExt;

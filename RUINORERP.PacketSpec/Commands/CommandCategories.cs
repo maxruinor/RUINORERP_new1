@@ -295,6 +295,12 @@ namespace RUINORERP.PacketSpec.Commands
         /// 特殊功能命令
         /// </summary>
         [Description("特殊功能命令")]
-        Special = 0x90
+        Special = 0x90,
+
+        /// <summary>
+        /// 服务器管理命令 - 用于RUINORERP.ManagementServer与其他下级服务器之间的通信
+        /// </summary>
+        [Description("服务器管理命令")]
+        Management = 0x12
     }
 }

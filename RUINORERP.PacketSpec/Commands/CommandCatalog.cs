@@ -18,6 +18,10 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort System_Heartbeat = 0x0001;
 
+        /// <summary>
+        /// 服务器注册 - 下级服务器向顶级服务器注册
+        /// </summary>
+        public const ushort System_RegisterServer = 0x0002;
 
         /// <summary>
         /// 电脑状态查询
@@ -29,12 +33,60 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         public const ushort System_ExceptionReport = 0x0004;
 
- 
-
         /// <summary>
         /// 系统管理：服务器推送版本更新
         /// </summary>
         public const ushort System_SystemManagement = 0x0005;
+
+        /// <summary>
+        /// 状态上报 - 下级服务器向上级服务器上报状态
+        /// </summary>
+        public const ushort System_ReportStatus = 0x0006;
+
+        /// <summary>
+        /// 用户信息上报 - 下级服务器向上级服务器上报用户信息
+        /// </summary>
+        public const ushort System_ReportUsers = 0x0007;
+
+        /// <summary>
+        /// 配置上报 - 下级服务器向上级服务器上报配置信息
+        /// </summary>
+        public const ushort System_ReportConfiguration = 0x0008;
+
+        /// <summary>
+        /// 配置更新 - 上级服务器向下级服务器推送配置更新
+        /// </summary>
+        public const ushort System_UpdateConfiguration = 0x0009;
+
+        /// <summary>
+        /// 获取配置 - 下级服务器向上级服务器请求配置信息
+        /// </summary>
+        public const ushort System_GetConfiguration = 0x000A;
+
+        /// <summary>
+        /// 用户活动上报 - 下级服务器向上级服务器上报用户活动
+        /// </summary>
+        public const ushort System_ReportUserActivity = 0x000B;
+
+        /// <summary>
+        /// 服务器授权查询 - 查询服务器授权状态
+        /// </summary>
+        public const ushort System_QueryAuthorization = 0x000C;
+
+        /// <summary>
+        /// 服务器授权更新 - 更新服务器授权信息
+        /// </summary>
+        public const ushort System_UpdateAuthorization = 0x000D;
+
+        /// <summary>
+        /// 服务器状态广播 - 广播服务器集群状态
+        /// </summary>
+        public const ushort System_BroadcastServerStatus = 0x000E;
+
+        /// <summary>
+        /// 服务器集群配置同步 - 同步服务器集群配置
+        /// </summary>
+        public const ushort System_SyncClusterConfig = 0x000F;
         #endregion
 
         #region 认证命令 (0x01xx)
@@ -524,6 +576,88 @@ namespace RUINORERP.PacketSpec.Commands
         /// 调试信息 - 获取系统调试信息
         /// </summary>
         public const ushort Special_DebugInfo = 0x9002;
+        #endregion
+
+        #region 服务器管理命令 (0x12xx) - 用于RUINORERP.ManagementServer
+        /// <summary>
+        /// 服务器注册 - 下级服务器向顶级服务器注册
+        /// </summary>
+        public const ushort Management_RegisterServer = 0x1200;
+
+        /// <summary>
+        /// 心跳包 - 保持连接活跃
+        /// </summary>
+        public const ushort Management_Heartbeat = 0x1201;
+
+        /// <summary>
+        /// 状态上报 - 下级服务器向上级服务器上报状态
+        /// </summary>
+        public const ushort Management_ReportStatus = 0x1202;
+
+        /// <summary>
+        /// 用户信息上报 - 下级服务器向上级服务器上报用户信息
+        /// </summary>
+        public const ushort Management_ReportUsers = 0x1203;
+
+        /// <summary>
+        /// 配置上报 - 下级服务器向上级服务器上报配置信息
+        /// </summary>
+        public const ushort Management_ReportConfiguration = 0x1204;
+
+        /// <summary>
+        /// 配置更新 - 上级服务器向下级服务器推送配置更新
+        /// </summary>
+        public const ushort Management_UpdateConfiguration = 0x1205;
+
+        /// <summary>
+        /// 获取配置 - 下级服务器向上级服务器请求配置信息
+        /// </summary>
+        public const ushort Management_GetConfiguration = 0x1206;
+
+        /// <summary>
+        /// 用户活动上报 - 下级服务器向上级服务器上报用户活动
+        /// </summary>
+        public const ushort Management_ReportUserActivity = 0x1207;
+
+        /// <summary>
+        /// 服务器授权查询 - 查询服务器授权状态
+        /// </summary>
+        public const ushort Management_QueryAuthorization = 0x1208;
+
+        /// <summary>
+        /// 服务器授权更新 - 更新服务器授权信息
+        /// </summary>
+        public const ushort Management_UpdateAuthorization = 0x1209;
+
+        /// <summary>
+        /// 服务器状态广播 - 广播服务器集群状态
+        /// </summary>
+        public const ushort Management_BroadcastServerStatus = 0x120A;
+
+        /// <summary>
+        /// 服务器集群配置同步 - 同步服务器集群配置
+        /// </summary>
+        public const ushort Management_SyncClusterConfig = 0x120B;
+
+        /// <summary>
+        /// 服务器实例列表查询 - 查询所有注册的服务器实例
+        /// </summary>
+        public const ushort Management_QueryServerInstances = 0x120C;
+
+        /// <summary>
+        /// 服务器实例统计 - 获取服务器实例统计信息
+        /// </summary>
+        public const ushort Management_ServerStatistics = 0x120D;
+
+        /// <summary>
+        /// 服务器重启指令 - 指令下级服务器重启
+        /// </summary>
+        public const ushort Management_RestartServer = 0x120E;
+
+        /// <summary>
+        /// 服务器停止指令 - 指令下级服务器停止
+        /// </summary>
+        public const ushort Management_StopServer = 0x120F;
         #endregion
     }
 }

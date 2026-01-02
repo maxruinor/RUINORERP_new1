@@ -1,18 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.PacketSpec;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Core;
-using SuperSocket.Command;
-using SuperSocket.ProtoBase;
-using SuperSocket.Server;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using SuperSocket;
+using SuperSocket.Server.Host;
 
 namespace RUINORERP.ManagementServer.Network
 {
@@ -22,92 +19,93 @@ namespace RUINORERP.ManagementServer.Network
     /// </summary>
     public class NetworkServer
     {
-        private WebSocketServer<ServerSession> _server;
-        private int _port;
-        private string _ipAddress;
+        private readonly ILogger<NetworkServer> _logger;
+        private IHost _host;
 
         /// <summary>
-        /// 服务器状态变化事件
+        /// 服务器启动时间
         /// </summary>
-        public event EventHandler<ServerStatusChangedEventArgs> ServerStatusChanged;
-
-        /// <summary>
-        /// 客户端连接事件
-        /// </summary>
-        public event EventHandler<ClientConnectedEventArgs> ClientConnected;
-
-        /// <summary>
-        /// 客户端断开连接事件
-        /// </summary>
-        public event EventHandler<ClientDisconnectedEventArgs> ClientDisconnected;
-
-        /// <summary>
-        /// 收到消息事件
-        /// </summary>
-        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        public DateTime? StartTime { get; private set; }
 
         /// <summary>
         /// 服务器是否正在运行
         /// </summary>
-        public bool IsRunning => _server?.State == ServerState.Running;
+        public bool IsRunning => _host != null;
+
+        /// <summary>
+        /// 服务器端口
+        /// </summary>
+        public int ServerPort { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public NetworkServer()
+        public NetworkServer(ILogger<NetworkServer> logger = null)
         {
-            // 从配置文件读取默认端口和IP地址
-            _port = int.Parse(ConfigurationManager.AppSettings["ServerPort"] ?? "8080");
-            _ipAddress = ConfigurationManager.AppSettings["ServerIP"] ?? "0.0.0.0";
-        }
-
-        /// <summary>
-        /// 初始化服务器
-        /// </summary>
-        public void Initialize()
-        {
-            var hostBuilder = WebSocketHostBuilder.Create()
-                .UseWebSocketMessageHandler<ServerSession>((session, message) => HandleMessage(session, message))
-                .ConfigureSuperSocket(options =>
-                {
-                    options.Name = "RUINORERP.ManagementServer";
-                    options.Listeners = new List<ListenOptions>
-                    {
-                        new ListenOptions
-                        {
-                            Ip = _ipAddress,
-                            Port = _port
-                        }
-                    };
-                })
-                .ConfigureServices((hostCtx, services) =>
-                {
-                    // 注册命令处理程序
-                    services.AddCommandHandlers();
-                });
-
-            _server = hostBuilder.Build();
-
-            // 注册服务器事件
-            _server.Started += OnServerStarted;
-            _server.Stopped += OnServerStopped;
-            _server.NewSessionConnected += OnNewSessionConnected;
-            _server.SessionClosed += OnSessionClosed;
+            _logger = logger;
         }
 
         /// <summary>
         /// 启动服务器
         /// </summary>
-        public async Task StartAsync()
+        public async Task StartAsync(CancellationToken cancellationToken = default)
         {
-            if (_server == null)
+            try
             {
-                Initialize();
-            }
+                // 读取配置文件
+                var config = new ConfigurationBuilder()
+                    .SetBasePath(Directory.GetCurrentDirectory())
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                    .Build();
 
-            if (_server.State != ServerState.Running)
+                // 读取服务器配置
+                var serverOptions = new ServerOptions();
+                config.GetSection("serverOptions").Bind(serverOptions);
+                
+                if (serverOptions.Listeners.Count > 0)
+                {
+                    ServerPort = serverOptions.Listeners[0].Port;
+                }
+
+                // 构建服务器主机
+                _host = MultipleServerHostBuilder.Create()
+                    .ConfigureHostConfiguration(configBuilder =>
+                    {
+                        configBuilder.SetBasePath(Directory.GetCurrentDirectory());
+                        configBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                        configBuilder.AddEnvironmentVariables();
+                    })
+                    .ConfigureAppConfiguration((hostingContext, configBuilder) =>
+                    {
+                        configBuilder.SetBasePath(Directory.GetCurrentDirectory());
+                        configBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                        configBuilder.AddEnvironmentVariables();
+                    })
+                    .ConfigureLogging((hostCtx, loggingBuilder) =>
+                    {
+                        loggingBuilder.AddConsole();
+                    })
+                    .Build();
+
+                // 启动服务器
+                await _host.StartAsync(cancellationToken);
+
+                // 记录服务器启动时间
+                StartTime = DateTime.Now;
+
+                _logger?.LogInformation("网络服务器已启动，端口: {Port}", ServerPort);
+            }
+            catch (Exception ex)
             {
-                await _server.StartAsync();
+                // 确保在启动失败时清理资源
+                if (_host != null)
+                {
+                    _host.Dispose();
+                    _host = null;
+                }
+
+                _logger?.LogError(ex, "启动服务器失败");
+                throw;
             }
         }
 
@@ -116,325 +114,92 @@ namespace RUINORERP.ManagementServer.Network
         /// </summary>
         public async Task StopAsync()
         {
-            if (_server != null && _server.State == ServerState.Running)
-            {
-                await _server.StopAsync();
-            }
-        }
-
-        /// <summary>
-        /// 重启服务器
-        /// </summary>
-        public async Task RestartAsync()
-        {
-            await StopAsync();
-            await StartAsync();
-        }
-
-        /// <summary>
-        /// 处理收到的消息
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="message">收到的消息</param>
-        private async Task HandleMessage(ServerSession session, string message)
-        {
             try
             {
-                // 解析消息
-                var packet = JsonCompressionSerializationService.Deserialize<PacketModel>(message);
-                if (packet == null)
+                if (_host != null)
                 {
-                    return;
+                    await _host.StopAsync();
+                    _host.Dispose();
+                    _host = null;
+
+                    // 清除启动时间
+                    StartTime = null;
                 }
 
-                // 触发消息接收事件（由AppManager处理）
-                MessageReceived?.Invoke(this, new MessageReceivedEventArgs(session, packet));
-
-                // 发送响应（AppManager将处理具体的命令逻辑）
-                var response = ResponseFactory.CreateSuccessResponse(packet.ExecutionContext);
-                await SendResponse(session, response);
+                _logger?.LogInformation("网络服务器已停止");
             }
             catch (Exception ex)
             {
-                // 记录异常日志
-                Console.WriteLine($"处理消息时发生异常: {ex.Message}");
-                // 发送错误响应
-                var packet = JsonCompressionSerializationService.Deserialize<PacketModel>(message);
-                if (packet != null)
-                {
-                    var response = ResponseFactory.CreateErrorResponse(packet.ExecutionContext, ex.Message);
-                    await SendResponse(session, response);
-                }
+                _logger?.LogError(ex, "停止服务器时出错");
             }
         }
 
         /// <summary>
-        /// 发送响应
+        /// 获取服务器信息
         /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="response">响应数据</param>
-        private async Task SendResponse(ServerSession session, IResponse response)
+        public ServerInfo GetServerInfo()
         {
-            // 创建响应数据包
-            var responsePacket = new PacketModel
+            return new ServerInfo
             {
-                PacketId = IdGenerator.GenerateResponseId(Guid.NewGuid().ToString()),
-                Direction = PacketDirection.ServerResponse,
-                SessionId = session.SessionID,
-                Status = PacketStatus.Completed,
-                Response = response
+                Status = _host != null ? "运行中" : "已停止",
+                Ports = new List<int> { ServerPort },
+                ServerIps = new List<string> { "0.0.0.0" },
+                MaxConnections = 1000,
+                CurrentConnections = 0,
+                TotalConnections = 0,
+                PeakConnections = 0,
+                LastActivityTime = DateTime.Now,
+                StartTime = StartTime
             };
-
-            // 序列化响应数据包
-            var message = JsonCompressionSerializationService.Serialize(responsePacket);
-
-            // 发送响应
-            await session.SendAsync(message);
         }
 
         /// <summary>
-        /// 服务器启动事件处理
+        /// 服务器配置选项
         /// </summary>
-        private void OnServerStarted(object sender, EventArgs e)
+        public class ServerOptions
         {
-            // 触发服务器状态变化事件
-            ServerStatusChanged?.Invoke(this, new ServerStatusChangedEventArgs(ServerStatus.Running));
+            public List<ListenOptions> Listeners { get; set; } = new List<ListenOptions> { new ListenOptions { Ip = "0.0.0.0", Port = 8080 } };
+            public int MaxPackageLength { get; set; } = 1024 * 1024;
+            public int ReceiveBufferSize { get; set; } = 4096;
+            public int SendBufferSize { get; set; } = 4096;
+            public int ReceiveTimeout { get; set; } = 0;
+            public int SendTimeout { get; set; } = 0;
+            public int MaxConnectionCount { get; set; } = 1000;
         }
 
         /// <summary>
-        /// 服务器停止事件处理
+        /// 监听选项
         /// </summary>
-        private void OnServerStopped(object sender, EventArgs e)
+        public class ListenOptions
         {
-            // 触发服务器状态变化事件
-            ServerStatusChanged?.Invoke(this, new ServerStatusChangedEventArgs(ServerStatus.Stopped));
+            public string Ip { get; set; } = "0.0.0.0";
+            public int Port { get; set; } = 8080;
         }
 
         /// <summary>
-        /// 新会话连接事件处理
+        /// 服务器信息类
         /// </summary>
-        private void OnNewSessionConnected(object sender, SessionEventArgs<ServerSession> e)
+        public class ServerInfo
         {
-            // 触发客户端连接事件
-            ClientConnected?.Invoke(this, new ClientConnectedEventArgs(e.Session));
+            public string Status { get; set; } = "已停止";
+            public List<int> Ports { get; set; } = new List<int>();
+            public List<string> ServerIps { get; set; } = new List<string>();
+            public int MaxConnections { get; set; }
+            public int CurrentConnections { get; set; }
+            public int TotalConnections { get; set; }
+            public int PeakConnections { get; set; }
+            public DateTime LastActivityTime { get; set; }
+            public DateTime? StartTime { get; set; }
+
+            public int Port => Ports?.FirstOrDefault() ?? 0;
+            public string ServerIp => ServerIps?.FirstOrDefault() ?? "0.0.0.0";
+
+            public override string ToString()
+            {
+                var ports = string.Join(", ", Ports);
+                var ips = string.Join(", ", ServerIps);
+                return $"状态: {Status}, 端口: {ports}, IP: {ips}, 最大连接: {MaxConnections}, 当前连接: {CurrentConnections}";
+            }
         }
-
-        /// <summary>
-        /// 会话关闭事件处理
-        /// </summary>
-        private void OnSessionClosed(object sender, SessionEventArgs<ServerSession> e)
-        {
-            // 触发客户端断开连接事件
-            ClientDisconnected?.Invoke(this, new ClientDisconnectedEventArgs(e.Session));
-        }
-    }
-
-    /// <summary>
-    /// 服务器会话类
-    /// </summary>
-    public class ServerSession : WebSocketSession
-    {
-        /// <summary>
-        /// 最后活动时间
-        /// </summary>
-        public DateTime LastActivityTime { get; private set; }
-
-        /// <summary>
-        /// 服务器实例信息
-        /// </summary>
-        public ServerInstanceInfo ServerInstance { get; set; }
-
-        /// <summary>
-        /// 会话ID
-        /// </summary>
-        public new string SessionID => base.SessionID;
-
-        /// <summary>
-        /// 初始化会话
-        /// </summary>
-        protected override void OnSessionStarted()
-        {
-            base.OnSessionStarted();
-            LastActivityTime = DateTime.Now;
-        }
-
-        /// <summary>
-        /// 更新最后活动时间
-        /// </summary>
-        public void UpdateLastActivityTime()
-        {
-            LastActivityTime = DateTime.Now;
-        }
-    }
-
-    /// <summary>
-    /// 服务器状态枚举
-    /// </summary>
-    public enum ServerStatus
-    {
-        /// <summary>
-        /// 停止状态
-        /// </summary>
-        Stopped = 0,
-        /// <summary>
-        /// 运行状态
-        /// </summary>
-        Running = 1,
-        /// <summary>
-        /// 错误状态
-        /// </summary>
-        Error = 2
-    }
-
-    /// <summary>
-    /// 服务器状态变化事件参数
-    /// </summary>
-    public class ServerStatusChangedEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 新的服务器状态
-        /// </summary>
-        public ServerStatus NewStatus { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="newStatus">新的服务器状态</param>
-        public ServerStatusChangedEventArgs(ServerStatus newStatus)
-        {
-            NewStatus = newStatus;
-        }
-    }
-
-    /// <summary>
-    /// 客户端连接事件参数
-    /// </summary>
-    public class ClientConnectedEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 客户端会话
-        /// </summary>
-        public ServerSession Session { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        public ClientConnectedEventArgs(ServerSession session)
-        {
-            Session = session;
-        }
-    }
-
-    /// <summary>
-    /// 客户端断开连接事件参数
-    /// </summary>
-    public class ClientDisconnectedEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 客户端会话
-        /// </summary>
-        public ServerSession Session { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        public ClientDisconnectedEventArgs(ServerSession session)
-        {
-            Session = session;
-        }
-    }
-
-    /// <summary>
-    /// 消息接收事件参数
-    /// </summary>
-    public class MessageReceivedEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 客户端会话
-        /// </summary>
-        public ServerSession Session { get; }
-
-        /// <summary>
-        /// 收到的数据包
-        /// </summary>
-        public PacketModel Packet { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">收到的数据包</param>
-        public MessageReceivedEventArgs(ServerSession session, PacketModel packet)
-        {
-            Session = session;
-            Packet = packet;
-        }
-    }
-
-    /// <summary>
-    /// 服务器实例信息类
-    /// </summary>
-    public class ServerInstanceInfo
-    {
-        /// <summary>
-        /// 实例ID
-        /// </summary>
-        public Guid InstanceId { get; set; }
-
-        /// <summary>
-        /// 实例名称
-        /// </summary>
-        public string InstanceName { get; set; }
-
-        /// <summary>
-        /// IP地址
-        /// </summary>
-        public string IpAddress { get; set; }
-
-        /// <summary>
-        /// 端口号
-        /// </summary>
-        public int Port { get; set; }
-
-        /// <summary>
-        /// 版本号
-        /// </summary>
-        public string Version { get; set; }
-
-        /// <summary>
-        /// 注册时间
-        /// </summary>
-        public DateTime RegisterTime { get; set; }
-
-        /// <summary>
-        /// 最后心跳时间
-        /// </summary>
-        public DateTime LastHeartbeatTime { get; set; }
-
-        /// <summary>
-        /// 状态
-        /// </summary>
-        public ServerInstanceStatus Status { get; set; }
-    }
-
-    /// <summary>
-    /// 服务器实例状态枚举
-    /// </summary>
-    public enum ServerInstanceStatus
-    {
-        /// <summary>
-        /// 离线
-        /// </summary>
-        Offline = 0,
-        /// <summary>
-        /// 在线
-        /// </summary>
-        Online = 1,
-        /// <summary>
-        /// 异常
-        /// </summary>
-        Exception = 2
     }
 }

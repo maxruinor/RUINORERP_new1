@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using RUINORERP.ManagementServer.AuthorizationManagement;
 using RUINORERP.ManagementServer.ConfigurationManagement;
@@ -10,6 +7,7 @@ using RUINORERP.ManagementServer.ServerManagement;
 using RUINORERP.ManagementServer.UserStatusMonitoring;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
+using ManagementCommands = RUINORERP.PacketSpec.Commands.ManagementCommands;
 
 namespace RUINORERP.ManagementServer
 {
@@ -20,12 +18,17 @@ namespace RUINORERP.ManagementServer
     public class AppManager
     {
         private static AppManager _instance;
-        private static readonly object _lockObj = new object();
+        private static readonly object _lockObj = new();
         private NetworkServer _networkServer;
         private ServerManager _serverManager;
         private AuthorizationManager _authorizationManager;
         private UserManager _userManager;
         private ConfigurationManager _configurationManager;
+
+        /// <summary>
+        /// 全局服务提供者
+        /// </summary>
+        public static IServiceProvider? ServiceProvider { get; set; }
 
         /// <summary>
         /// 单例实例
@@ -38,10 +41,7 @@ namespace RUINORERP.ManagementServer
                 {
                     lock (_lockObj)
                     {
-                        if (_instance == null)
-                        {
-                            _instance = new AppManager();
-                        }
+                        _instance ??= new AppManager();
                     }
                 }
                 return _instance;
@@ -127,11 +127,6 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         private void RegisterModuleEvents()
         {
-            // 网络服务器事件
-            _networkServer.ClientConnected += OnClientConnected;
-            _networkServer.ClientDisconnected += OnClientDisconnected;
-            _networkServer.MessageReceived += OnMessageReceived;
-
             // 服务器管理器事件
             _serverManager.ServerInstanceRegistered += OnServerInstanceRegistered;
             _serverManager.ServerInstanceUnregistered += OnServerInstanceUnregistered;
@@ -155,7 +150,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnConfigurationUpdated(object sender, ConfigurationUpdatedEventArgs e)
+        private void OnConfigurationUpdated(object? sender, ConfigurationUpdatedEventArgs e)
         {
             // 配置更新时的处理逻辑
             Console.WriteLine($"配置更新: 名称={e.ConfigurationInfo.Name}, 新值={e.ConfigurationInfo.Value}");
@@ -168,7 +163,6 @@ namespace RUINORERP.ManagementServer
         {
             try
             {
-                _networkServer.Initialize();
                 _networkServer.StartAsync().Wait();
             }
             catch (Exception ex)
@@ -197,48 +191,11 @@ namespace RUINORERP.ManagementServer
         #region 事件处理方法
 
         /// <summary>
-        /// 客户端连接事件处理
-        /// </summary>
-        /// <param name="sender">发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnClientConnected(object sender, ClientConnectedEventArgs e)
-        {
-            // 客户端连接时的处理逻辑
-            Console.WriteLine($"客户端连接: {e.Session.SessionID}");
-        }
-
-        /// <summary>
-        /// 客户端断开连接事件处理
-        /// </summary>
-        /// <param name="sender">发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnClientDisconnected(object sender, ClientDisconnectedEventArgs e)
-        {
-            // 客户端断开连接时的处理逻辑
-            Console.WriteLine($"客户端断开连接: {e.Session.SessionID}");
-            // 从服务器管理器中注销服务器实例
-            _serverManager.UnregisterServerInstance(e.Session);
-        }
-
-        /// <summary>
-        /// 收到消息事件处理
-        /// </summary>
-        /// <param name="sender">发送者</param>
-        /// <param name="e">事件参数</param>
-        private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
-        {
-            // 收到消息时的处理逻辑
-            Console.WriteLine($"收到消息: SessionId={e.Session.SessionID}, CommandId={e.Packet.CommandId}");
-            // 根据消息类型进行处理
-            ProcessMessage(e.Session, e.Packet);
-        }
-
-        /// <summary>
         /// 服务器实例注册事件处理
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnServerInstanceRegistered(object sender, ServerInstanceRegisteredEventArgs e)
+        private void OnServerInstanceRegistered(object? sender, ServerInstanceRegisteredEventArgs e)
         {
             // 服务器实例注册时的处理逻辑
             Console.WriteLine($"服务器实例注册: {e.ServerInstance.InstanceName} ({e.ServerInstance.InstanceId})");
@@ -249,7 +206,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnServerInstanceUnregistered(object sender, ServerInstanceUnregisteredEventArgs e)
+        private void OnServerInstanceUnregistered(object? sender, ServerInstanceUnregisteredEventArgs e)
         {
             // 服务器实例注销时的处理逻辑
             Console.WriteLine($"服务器实例注销: {e.ServerInstance.InstanceName} ({e.ServerInstance.InstanceId})");
@@ -260,7 +217,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnServerInstanceStatusChanged(object sender, ServerInstanceStatusChangedEventArgs e)
+        private void OnServerInstanceStatusChanged(object? sender, ServerInstanceStatusChangedEventArgs e)
         {
             // 服务器实例状态变化时的处理逻辑
             Console.WriteLine($"服务器实例状态变化: {e.ServerInstance.InstanceName} ({e.ServerInstance.InstanceId}) 从 {e.OldStatus} 变为 {e.ServerInstance.Status}");
@@ -271,7 +228,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnAuthorizationStatusChanged(object sender, AuthorizationStatusChangedEventArgs e)
+        private void OnAuthorizationStatusChanged(object? sender, AuthorizationStatusChangedEventArgs e)
         {
             // 授权状态变化时的处理逻辑
             Console.WriteLine($"授权状态变化: 实例ID={e.AuthorizationInfo.InstanceId} 从 {e.OldStatus} 变为 {e.AuthorizationInfo.Status}");
@@ -282,7 +239,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnAuthorizationExpiryReminder(object sender, AuthorizationExpiryReminderEventArgs e)
+        private void OnAuthorizationExpiryReminder(object? sender, AuthorizationExpiryReminderEventArgs e)
         {
             // 授权到期提醒时的处理逻辑
             Console.WriteLine($"授权到期提醒: 实例ID={e.AuthorizationInfo.InstanceId} 距离到期还有 {e.DaysUntilExpiry} 天");
@@ -293,7 +250,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnUserLoggedIn(object sender, UserLoggedInEventArgs e)
+        private void OnUserLoggedIn(object? sender, UserLoggedInEventArgs e)
         {
             // 用户登录时的处理逻辑
             Console.WriteLine($"用户登录: 实例ID={e.InstanceId} 用户ID={e.UserInfo.UserId} 用户名={e.UserInfo.UserName}");
@@ -304,7 +261,7 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnUserLoggedOut(object sender, UserLoggedOutEventArgs e)
+        private void OnUserLoggedOut(object? sender, UserLoggedOutEventArgs e)
         {
             // 用户登出时的处理逻辑
             Console.WriteLine($"用户登出: 实例ID={e.InstanceId} 用户ID={e.UserInfo.UserId} 用户名={e.UserInfo.UserName}");
@@ -315,361 +272,279 @@ namespace RUINORERP.ManagementServer
         /// </summary>
         /// <param name="sender">发送者</param>
         /// <param name="e">事件参数</param>
-        private void OnUserActivity(object sender, UserActivityEventArgs e)
+        private void OnUserActivity(object? sender, UserActivityEventArgs e)
         {
             // 用户活动时的处理逻辑
             Console.WriteLine($"用户活动: 实例ID={e.InstanceId} 用户ID={e.ActivityInfo.UserId} 活动类型={e.ActivityInfo.ActivityType} 描述={e.ActivityInfo.Description}");
         }
 
         #endregion
-
-        #region 消息处理方法
-
-        /// <summary>
-        /// 处理收到的消息
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void ProcessMessage(ServerSession session, PacketModel packet)
-        {
-            if (packet == null)
-            {
-                return;
-            }
-
-            // 根据命令ID处理不同的消息
-            switch (packet.CommandId)
-            {
-                case CommandId.RegisterServer:
-                    HandleRegisterServer(session, packet);
-                    break;
-                case CommandId.Heartbeat:
-                    HandleHeartbeat(session, packet);
-                    break;
-                case CommandId.ReportStatus:
-                    HandleReportStatus(session, packet);
-                    break;
-                case CommandId.ReportUsers:
-                    HandleReportUsers(session, packet);
-                    break;
-                case CommandId.ReportConfiguration:
-                    HandleReportConfiguration(session, packet);
-                    break;
-                case CommandId.UpdateConfiguration:
-                    HandleUpdateConfiguration(session, packet);
-                    break;
-                case CommandId.GetConfiguration:
-                    HandleGetConfiguration(session, packet);
-                    break;
-                case CommandId.ReportUserActivity:
-                    HandleReportUserActivity(session, packet);
-                    break;
-                default:
-                    HandleUnknownCommand(session, packet);
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// 处理服务器注册命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleRegisterServer(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析服务器注册信息
-                var serverInfo = packet.Request as ServerInstanceInfo;
-                if (serverInfo != null)
-                {
-                    // 注册服务器实例
-                    _serverManager.RegisterServerInstance(session, serverInfo);
-                    
-                    // 创建默认授权信息
-                    var authInfo = new AuthorizationInfo
-                    {
-                        InstanceId = serverInfo.InstanceId,
-                        AuthorizationType = AuthorizationType.Trial,
-                        StartTime = DateTime.Now,
-                        ExpireTime = DateTime.Now.AddDays(30),
-                        MaxUsers = 50,
-                        MaxTransactions = 500000
-                    };
-                    _authorizationManager.SetAuthorizationInfo(serverInfo.InstanceId, authInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理服务器注册命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理心跳命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleHeartbeat(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 更新服务器实例心跳
-                _serverManager.UpdateHeartbeat(session);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理心跳命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理状态上报命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleReportStatus(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析状态信息
-                var statusInfo = packet.Request as ServerStatusInfo;
-                if (statusInfo != null && session.ServerInstance != null)
-                {
-                    // 更新服务器实例状态
-                    _serverManager.UpdateServerInstanceStatus(session.ServerInstance.InstanceId, statusInfo.Status);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理状态上报命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理用户信息上报命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleReportUsers(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析用户信息列表
-                var userInfos = packet.Request as List<UserInfo>;
-                if (userInfos != null && session.ServerInstance != null)
-                {
-                    foreach (var userInfo in userInfos)
-                    {
-                        // 添加或更新用户信息
-                        _userManager.AddOrUpdateUser(session.ServerInstance.InstanceId, userInfo);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理用户信息上报命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理用户活动上报命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleReportUserActivity(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析用户活动信息
-                var activityInfo = packet.Request as UserActivityInfo;
-                if (activityInfo != null && session.ServerInstance != null)
-                {
-                    // 更新用户活动
-                    _userManager.UpdateUserActivity(session.ServerInstance.InstanceId, activityInfo);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理用户活动上报命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理配置上报命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleReportConfiguration(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析配置信息
-                var configInfo = packet.Request as ServerConfigurationInfo;
-                if (configInfo != null && session.ServerInstance != null)
-                {
-                    // 保存服务器配置
-                    // 这里可以根据实际需求扩展，比如保存到数据库或缓存
-                    Console.WriteLine($"收到服务器配置: {session.ServerInstance.InstanceName} - {configInfo.ConfigurationName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理配置上报命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理配置更新命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleUpdateConfiguration(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析配置更新信息
-                var configUpdate = packet.Request as ConfigurationUpdateInfo;
-                if (configUpdate != null)
-                {
-                    // 这里可以根据实际需求扩展，比如广播配置更新到所有服务器实例
-                    Console.WriteLine($"更新配置: {configUpdate.ConfigurationName} - {configUpdate.ConfigurationValue}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理配置更新命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理获取配置命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleGetConfiguration(ServerSession session, PacketModel packet)
-        {
-            try
-            {
-                // 解析获取配置请求
-                var configRequest = packet.Request as ConfigurationRequestInfo;
-                if (configRequest != null)
-                {
-                    // 这里可以根据实际需求扩展，比如从数据库或缓存获取配置
-                    Console.WriteLine($"获取配置: {configRequest.ConfigurationName}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"处理获取配置命令时发生异常: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 处理未知命令
-        /// </summary>
-        /// <param name="session">客户端会话</param>
-        /// <param name="packet">数据包</param>
-        private void HandleUnknownCommand(ServerSession session, PacketModel packet)
-        {
-            // 记录未知命令
-            Console.WriteLine($"收到未知命令: {packet.CommandId}");
-        }
-
-        /// <summary>
-        /// 服务器配置信息类
-        /// </summary>
-        public class ServerConfigurationInfo
-        {
-            /// <summary>
-            /// 配置名称
-            /// </summary>
-            public string ConfigurationName { get; set; }
-            
-            /// <summary>
-            /// 配置值
-            /// </summary>
-            public string ConfigurationValue { get; set; }
-            
-            /// <summary>
-            /// 配置描述
-            /// </summary>
-            public string Description { get; set; }
-            
-            /// <summary>
-            /// 最后更新时间
-            /// </summary>
-            public DateTime LastUpdateTime { get; set; }
-        }
-        
-        /// <summary>
-        /// 配置更新信息类
-        /// </summary>
-        public class ConfigurationUpdateInfo
-        {
-            /// <summary>
-            /// 配置名称
-            /// </summary>
-            public string ConfigurationName { get; set; }
-            
-            /// <summary>
-            /// 配置值
-            /// </summary>
-            public string ConfigurationValue { get; set; }
-            
-            /// <summary>
-            /// 更新说明
-            /// </summary>
-            public string UpdateDescription { get; set; }
-        }
-        
-        /// <summary>
-        /// 配置请求信息类
-        /// </summary>
-        public class ConfigurationRequestInfo
-        {
-            /// <summary>
-            /// 配置名称
-            /// </summary>
-            public string ConfigurationName { get; set; }
-        }
-        
-        /// <summary>
-        /// 服务器状态信息类
-        /// </summary>
-        public class ServerStatusInfo
-        {
-            /// <summary>
-            /// 服务器状态
-            /// </summary>
-            public ServerInstanceStatus Status { get; set; }
-            
-            /// <summary>
-            /// CPU使用率
-            /// </summary>
-            public double CpuUsage { get; set; }
-            
-            /// <summary>
-            /// 内存使用率
-            /// </summary>
-            public double MemoryUsage { get; set; }
-            
-            /// <summary>
-            /// 磁盘使用率
-            /// </summary>
-            public double DiskUsage { get; set; }
-            
-            /// <summary>
-            /// 活动连接数
-            /// </summary>
-            public int ActiveConnections { get; set; }
-            
-            /// <summary>
-            /// 上报时间
-            /// </summary>
-            public DateTime ReportTime { get; set; }
-        }
-
-        #endregion
     }
+
+    #region 事件参数类
+
+    /// <summary>
+    /// 服务器实例注册事件参数
+    /// </summary>
+    public class ServerInstanceRegisteredEventArgs : EventArgs
+    {
+        public ServerInstanceInfo ServerInstance { get; }
+
+        public ServerInstanceRegisteredEventArgs(ServerInstanceInfo serverInstance)
+        {
+            ServerInstance = serverInstance;
+        }
+    }
+
+    /// <summary>
+    /// 服务器实例注销事件参数
+    /// </summary>
+    public class ServerInstanceUnregisteredEventArgs : EventArgs
+    {
+        public ServerInstanceInfo ServerInstance { get; }
+
+        public ServerInstanceUnregisteredEventArgs(ServerInstanceInfo serverInstance)
+        {
+            ServerInstance = serverInstance;
+        }
+    }
+
+    /// <summary>
+    /// 服务器实例状态变化事件参数
+    /// </summary>
+    public class ServerInstanceStatusChangedEventArgs : EventArgs
+    {
+        public ServerInstanceInfo ServerInstance { get; }
+        public ServerInstanceStatus OldStatus { get; }
+
+        public ServerInstanceStatusChangedEventArgs(ServerInstanceInfo serverInstance, ServerInstanceStatus oldStatus)
+        {
+            ServerInstance = serverInstance;
+            OldStatus = oldStatus;
+        }
+    }
+
+    /// <summary>
+    /// 授权状态变化事件参数
+    /// </summary>
+    public class AuthorizationStatusChangedEventArgs : EventArgs
+    {
+        public AuthorizationInfo AuthorizationInfo { get; }
+        public AuthorizationStatus OldStatus { get; }
+
+        public AuthorizationStatusChangedEventArgs(AuthorizationInfo authorizationInfo, AuthorizationStatus oldStatus)
+        {
+            AuthorizationInfo = authorizationInfo;
+            OldStatus = oldStatus;
+        }
+    }
+
+    /// <summary>
+    /// 授权到期提醒事件参数
+    /// </summary>
+    public class AuthorizationExpiryReminderEventArgs : EventArgs
+    {
+        public AuthorizationInfo AuthorizationInfo { get; }
+        public int DaysUntilExpiry { get; }
+
+        public AuthorizationExpiryReminderEventArgs(AuthorizationInfo authorizationInfo, int daysUntilExpiry)
+        {
+            AuthorizationInfo = authorizationInfo;
+            DaysUntilExpiry = daysUntilExpiry;
+        }
+    }
+
+    /// <summary>
+    /// 用户登录事件参数
+    /// </summary>
+    public class UserLoggedInEventArgs : EventArgs
+    {
+        public Guid InstanceId { get; }
+        public UserInfo UserInfo { get; }
+
+        public UserLoggedInEventArgs(Guid instanceId, UserInfo userInfo)
+        {
+            InstanceId = instanceId;
+            UserInfo = userInfo;
+        }
+    }
+
+    /// <summary>
+    /// 用户登出事件参数
+    /// </summary>
+    public class UserLoggedOutEventArgs : EventArgs
+    {
+        public Guid InstanceId { get; }
+        public UserInfo UserInfo { get; }
+
+        public UserLoggedOutEventArgs(Guid instanceId, UserInfo userInfo)
+        {
+            InstanceId = instanceId;
+            UserInfo = userInfo;
+        }
+    }
+
+    /// <summary>
+    /// 用户活动事件参数
+    /// </summary>
+    public class UserActivityEventArgs : EventArgs
+    {
+        public Guid InstanceId { get; }
+        public UserActivityInfo ActivityInfo { get; }
+
+        public UserActivityEventArgs(Guid instanceId, UserActivityInfo activityInfo)
+        {
+            InstanceId = instanceId;
+            ActivityInfo = activityInfo;
+        }
+    }
+
+    /// <summary>
+    /// 配置更新事件参数
+    /// </summary>
+    public class ConfigurationUpdatedEventArgs : EventArgs
+    {
+        public ConfigurationInfo ConfigurationInfo { get; }
+
+        public ConfigurationUpdatedEventArgs(ConfigurationInfo configurationInfo)
+        {
+            ConfigurationInfo = configurationInfo;
+        }
+    }
+
+    #endregion
+
+    #region 数据模型类
+
+    /// <summary>
+    /// 服务器实例信息类
+    /// </summary>
+    public class ServerInstanceInfo
+    {
+        /// <summary>
+        /// 实例ID
+        /// </summary>
+        public Guid InstanceId { get; set; }
+
+        /// <summary>
+        /// 实例名称
+        /// </summary>
+        public string InstanceName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// IP地址
+        /// </summary>
+        public string IpAddress { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 端口号
+        /// </summary>
+        public int Port { get; set; }
+
+        /// <summary>
+        /// 版本号
+        /// </summary>
+        public string Version { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 注册时间
+        /// </summary>
+        public DateTime RegisterTime { get; set; }
+
+        /// <summary>
+        /// 最后心跳时间
+        /// </summary>
+        public DateTime LastHeartbeatTime { get; set; }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public ServerInstanceStatus Status { get; set; }
+    }
+
+    /// <summary>
+    /// 服务器实例状态枚举
+    /// </summary>
+    public enum ServerInstanceStatus
+    {
+        /// <summary>
+        /// 离线
+        /// </summary>
+        Offline = 0,
+        /// <summary>
+        /// 在线
+        /// </summary>
+        Online = 1,
+        /// <summary>
+        /// 异常
+        /// </summary>
+        Exception = 2
+    }
+
+    /// <summary>
+    /// 授权信息类
+    /// </summary>
+    public class AuthorizationInfo
+    {
+        public Guid InstanceId { get; set; }
+        public AuthorizationType AuthorizationType { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime ExpireTime { get; set; }
+        public int MaxUsers { get; set; }
+        public int MaxTransactions { get; set; }
+        public AuthorizationStatus Status { get; set; }
+    }
+
+    /// <summary>
+    /// 授权类型枚举
+    /// </summary>
+    public enum AuthorizationType
+    {
+        Trial,
+        Standard,
+        Enterprise
+    }
+
+    /// <summary>
+    /// 授权状态枚举
+    /// </summary>
+    public enum AuthorizationStatus
+    {
+        Active,
+        Expired,
+        Suspended
+    }
+
+    /// <summary>
+    /// 用户信息类
+    /// </summary>
+    public class UserInfo
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public DateTime LastLoginTime { get; set; }
+    }
+
+    /// <summary>
+    /// 用户活动信息类
+    /// </summary>
+    public class UserActivityInfo
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string ActivityType { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime ActivityTime { get; set; }
+    }
+
+    /// <summary>
+    /// 配置信息类
+    /// </summary>
+    public class ConfigurationInfo
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public DateTime LastUpdateTime { get; set; }
+    }
+
+    #endregion
 }

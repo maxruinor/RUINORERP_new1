@@ -20,6 +20,7 @@ using System.Linq;
 using AutoMapper;
 using System.Numerics;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

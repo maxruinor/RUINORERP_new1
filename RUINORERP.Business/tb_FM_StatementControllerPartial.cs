@@ -29,6 +29,7 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.Business.BizMapperService;
 using System.Runtime.InteropServices.ComTypes;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

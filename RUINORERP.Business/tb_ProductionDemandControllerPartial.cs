@@ -29,6 +29,7 @@ using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
 using System.Threading;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

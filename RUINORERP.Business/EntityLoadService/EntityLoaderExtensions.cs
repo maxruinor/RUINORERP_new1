@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Business.BizMapperService
+namespace RUINORERP.Business.EntityLoadService
 {
     // File: EntityLoaderExtensions.cs
     public static class EntityLoaderExtensions

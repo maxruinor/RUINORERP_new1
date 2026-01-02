@@ -33,6 +33,7 @@ using static StackExchange.Redis.Role;
 using System.Text;
 using RUINORERP.Business.BizMapperService;
 using System.Threading;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

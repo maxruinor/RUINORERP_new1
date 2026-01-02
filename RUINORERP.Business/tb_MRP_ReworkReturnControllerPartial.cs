@@ -32,6 +32,7 @@ using RUINORERP.Model.CommonModel;
 using System.Windows.Forms;
 using SqlSugar;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {
@@ -188,7 +189,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rs.Succeeded = false;
                 rs.ErrorMsg = ex.Message;
                 return rs;

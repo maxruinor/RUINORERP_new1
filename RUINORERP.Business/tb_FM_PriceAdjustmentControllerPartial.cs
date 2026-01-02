@@ -34,6 +34,7 @@ using StackExchange.Redis;
 using System.Windows.Forms;
 using System.Text;
 using System.Threading;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {
@@ -115,7 +116,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
                 return rmrs;
             }
@@ -259,7 +260,7 @@ namespace RUINORERP.Business
             {
 
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 ApprovalResult.ErrorMsg += ex.Message;
                 return ApprovalResult;
             }

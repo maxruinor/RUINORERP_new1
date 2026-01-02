@@ -27,6 +27,7 @@ using RUINORERP.Global;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

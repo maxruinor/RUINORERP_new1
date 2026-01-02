@@ -30,6 +30,7 @@ using RUINORERP.Global;
 using System.Windows.Forms;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

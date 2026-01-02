@@ -34,6 +34,7 @@ using OfficeOpenXml.Export.ToDataTable;
 using RUINORERP.Business.CommService;
 using System.Windows.Forms;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

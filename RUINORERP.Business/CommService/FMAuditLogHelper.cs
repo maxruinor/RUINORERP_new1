@@ -16,6 +16,7 @@ using RUINORERP.Common.Helper;
 using System.Threading;
 using RUINORERP.Model.Context;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 
 namespace RUINORERP.Business.CommService

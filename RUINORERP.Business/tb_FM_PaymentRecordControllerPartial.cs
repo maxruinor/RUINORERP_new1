@@ -14,6 +14,7 @@ using RUINOR.Core;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Config;
+using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;

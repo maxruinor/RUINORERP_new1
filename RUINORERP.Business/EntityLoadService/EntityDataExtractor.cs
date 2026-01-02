@@ -10,7 +10,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Business.BizMapperService
+namespace RUINORERP.Business.EntityLoadService
 {
     /// <summary>
     /// 实体数据内容提取器

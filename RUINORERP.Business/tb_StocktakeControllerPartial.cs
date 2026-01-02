@@ -28,6 +28,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Hosting;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

@@ -29,6 +29,7 @@ using SqlSugar;
 using RUINORERP.Business.Security;
 using RUINORERP.Extensions;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

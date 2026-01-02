@@ -34,6 +34,7 @@ using IMapper = AutoMapper.IMapper;
 using System.Text;
 using System.Windows.Forms;
 using System.Runtime.ConstrainedExecution;
+using RUINORERP.Business.EntityLoadService;
 
 
 namespace RUINORERP.Business
@@ -251,7 +252,7 @@ namespace RUINORERP.Business
             catch (Exception ex)
             {
                 _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rmrs;
             }
 

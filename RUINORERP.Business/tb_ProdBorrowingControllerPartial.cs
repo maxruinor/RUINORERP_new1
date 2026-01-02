@@ -26,6 +26,7 @@ using System.Linq;
 using RUINORERP.Global;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.EntityLoadService;
 
 
 namespace RUINORERP.Business
@@ -143,7 +144,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.RollbackTran();
 
 
-                _logger.Error(ex, RUINORERP.Business.BizMapperService.EntityDataExtractor.ExtractDataContent(entity));
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rsms.ErrorMsg = "事务回滚=>" + ex.Message;
                 return rsms;
             }

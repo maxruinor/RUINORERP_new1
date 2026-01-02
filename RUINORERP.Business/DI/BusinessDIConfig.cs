@@ -21,6 +21,7 @@ using RUINORERP.Business.Cache;
 using RUINORERP.Business.Config;
 using RUINORERP.IServices;
 using RUINORERP.Model.Context;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business.DI
 {

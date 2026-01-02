@@ -34,6 +34,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.BizMapperService;
 using System.Data.OleDb;
 using System.Collections;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

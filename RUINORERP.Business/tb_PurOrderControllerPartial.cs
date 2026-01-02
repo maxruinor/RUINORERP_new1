@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.DB;
 using RUINORERP.Common.Extensions;

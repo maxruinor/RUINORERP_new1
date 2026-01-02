@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Extensions.ServiceExtensions;
 using RUINORERP.Global;
@@ -14,7 +15,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Business.BizMapperService
+namespace RUINORERP.Business.EntityLoadService
 {
     /// <summary>
     /// 统一实体加载服务
@@ -100,49 +101,7 @@ namespace RUINORERP.Business.BizMapperService
             var entityType = _mappingService.GetEntityType(bizType);
             return LoadEntityInternal(entityType, billNo) as T;
         }
-
-        ///// <summary>
-        ///// 内部加载方法（核心实现）
-        ///// </summary>
-        //private object LoadEntityInternal(Type entityType, object billNo)
-        //{
-        //    var config = _mappingService.GetFieldConfig(entityType);
-        //    if (config == null)
-        //    {
-        //        _logger.LogError($"找不到实体类型的字段配置: {entityType.Name}");
-        //        return null;
-        //    }
-
-        //    try
-        //    {
-        //        // 使用泛型方法创建查询
-        //        var method = typeof(EntityLoader).GetMethod("CreateQueryable",
-        //            BindingFlags.NonPublic | BindingFlags.Instance)
-        //            .MakeGenericMethod(entityType);
-
-        //        var queryable = method.Invoke(this, new object[] { config }) as ISugarQueryable<T>;
-
-        //        // 添加查询条件
-        //        if (billNo is long id)
-        //        {
-        //            queryable = queryable.Where($"{config.IdField} = @id", new { id });
-        //        }
-        //        else if (billNo is string no)
-        //        {
-        //            queryable = queryable.Where($"{config.NoField} = @no", new { no });
-        //        }
-
-        //        // 执行查询
-        //        var result = queryable.Single();
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, $"加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
-        //        return null;
-        //    }
-        //}
-
+ 
 
         public object LoadEntityInternal(Type entityType, object billNo)
         {
@@ -199,8 +158,18 @@ namespace RUINORERP.Business.BizMapperService
 
 
                 // 修改后的正确代码
-                // 动态调用 Where
-                queryable = whereMethod.Invoke(queryable, new object[] { $"{fieldName} = @{fieldName}", param });
+                // 动态调用 Where，使用正确的参数名
+                string sqlCondition;
+                if (billNo is long)
+                {
+                    sqlCondition = $"{fieldName} = @id";
+                }
+                else
+                {
+                    sqlCondition = $"{fieldName} = @no";
+                }
+                
+                queryable = whereMethod.Invoke(queryable, new object[] { sqlCondition, param });
 
         
 

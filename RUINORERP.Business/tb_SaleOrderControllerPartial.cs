@@ -27,6 +27,7 @@ using RUINORERP.Global.EnumExt;
 using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using System.Threading;
+using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {

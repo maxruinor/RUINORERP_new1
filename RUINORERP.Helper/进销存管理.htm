@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进销存管理模块 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .feature { background: #e8f4f8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .code { background: #f5f5f5; padding: 10px; border-left: 4px solid #3498db; font-family: Consolas, monospace; }
+        .warning { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; }
+        .tip { background: #d1ecf1; padding: 10px; border-left: 4px solid #17a2b8; margin: 10px 0; }
+        .business-flow { background: #f0f8ff; padding: 15px; border-left: 4px solid #5dade2; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>进销存管理模块</h1>
+
+<p>进销存管理模块是RUINOR ERP系统的核心业务模块，负责企业的采购、销售和库存管理全过程。</p>
+
+<div class="section">
+    <h2>模块概述</h2>
+    <p>进销存管理模块基于供应链管理理念，实现从供应商到客户的完整业务流程管理。</p>
+    
+    <div class="feature">
+        <h3>核心功能</h3>
+        <ul>
+            <li><strong>采购管理：</strong>供应商管理、采购计划、订单管理、到货验收</li>
+            <li><strong>销售管理：</strong>客户管理、销售报价、订单处理、发货管理</li>
+            <li><strong>库存管理：</strong>库存查询、盘点管理、调拨管理、安全库存</li>
+            <li><strong>出入库管理：</strong>采购入库、销售出库、生产领料、其他出入库</li>
+        </ul>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>采购需求 → 采购订单 → 到货验收 → 采购入库 → 库存管理 → 销售订单 → 销售出库 → 客户收货</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>技术架构</h2>
+    
+    <div class="feature">
+        <h3>核心数据模型</h3>
+        <table>
+            <tr>
+                <th>数据表</th>
+                <th>功能描述</th>
+                <th>关键字段</th>
+            </tr>
+            <tr>
+                <td>tb_PurOrder</td>
+                <td>采购订单主表</td>
+                <td>PurOrderID, SupplierID, OrderDate, TotalAmount, Status</td>
+            </tr>
+            <tr>
+                <td>tb_SaleOrder</td>
+                <td>销售订单主表</td>
+                <td>SaleOrderID, CustomerID, OrderDate, TotalAmount, Status</td>
+            </tr>
+            <tr>
+                <td>tb_Inventory</td>
+                <td>库存管理表</td>
+                <td>InventoryID, ProductID, WarehouseID, Quantity, LockQuantity</td>
+            </tr>
+            <tr>
+                <td>tb_StockIn</td>
+                <td>入库单主表</td>
+                <td>StockInID, SourceType, SourceID, InDate, Status</td>
+            </tr>
+            <tr>
+                <td>tb_StockOut</td>
+                <td>出库单主表</td>
+                <td>StockOutID, TargetType, TargetID, OutDate, Status</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>核心业务控制器</h3>
+        <ul>
+            <li><strong>PurOrderController：</strong>采购订单的业务逻辑处理</li>
+            <li><strong>SaleOrderController：</strong>销售订单的业务逻辑</li>
+            <li><strong>InventoryController：</strong>库存管理的业务逻辑</li>
+            <li><strong>StockInOutController：</strong>出入库业务逻辑</li>
+            <li><strong>SupplierController：</strong>供应商管理业务逻辑</li>
+            <li><strong>CustomerController：</strong>客户管理业务逻辑</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>采购管理</h2>
+    
+    <div class="feature">
+        <h3>采购业务流程</h3>
+        <p>采购管理涵盖从需求计划到供应商付款的完整流程。</p>
+        
+        <table>
+            <tr>
+                <th>流程阶段</th>
+                <th>主要活动</th>
+                <th>系统功能</th>
+            </tr>
+            <tr>
+                <td>需求计划</td>
+                <td>MRP计算、库存分析</td>
+                <td>采购需求生成</td>
+            </tr>
+            <tr>
+                <td>供应商选择</td>
+                <td>询价、比价、议价</td>
+                <td>供应商评估、价格管理</td>
+            </tr>
+            <tr>
+                <td>订单处理</td>
+                <td>订单创建、审批、下达</td>
+                <td>采购订单管理</td>
+            </tr>
+            <tr>
+                <td>到货验收</td>
+                <td>质量检验、数量核对</td>
+                <td>到货验收管理</td>
+            </tr>
+            <tr>
+                <td>入库处理</td>
+                <td>入库登记、库存更新</td>
+                <td>采购入库管理</td>
+            </tr>
+            <tr>
+                <td>发票处理</td>
+                <td>发票核对、付款申请</td>
+                <td>应付账款管理</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>采购订单状态管理</h3>
+        <p>系统支持完整的采购订单状态管理，确保采购过程的可控性。</p>
+        
+        <div class="code">
+// 采购订单状态枚举
+public enum PurchaseOrderStatus
+{
+    Draft = 0,      // 草稿
+    Submitted = 1,   // 已提交
+    Approved = 2,   // 已审批
+    Ordered = 3,    // 已下单
+    PartialReceived = 4, // 部分到货
+    Completed = 5,   // 已完成
+    Cancelled = 6    // 已取消
+}
+        </div>
+    </div>
+    
+    <div class="tip">
+        <strong>采购优化建议：</strong>建议建立供应商评估体系，定期评估供应商绩效，优化采购策略。
+    </div>
+</div>
+
+<div class="section">
+    <h2>销售管理</h2>
+    
+    <div class="feature">
+        <h3>销售业务流程</h3>
+        <p>销售管理涵盖从客户接触到售后服务的完整销售周期。</p>
+        
+        <table>
+            <tr>
+                <th>流程阶段</th>
+                <th>主要活动</th>
+                <th>系统功能</th>
+            </tr>
+            <tr>
+                <td>客户开发</td>
+                <td>潜在客户识别、客户跟进</td>
+                <td>客户关系管理</td>
+            </tr>
+            <tr>
+                <td>销售机会</td>
+                <td>需求分析、方案制定</td>
+                <td>销售机会管理</td>
+            </tr>
+            <tr>
+                <td>报价管理</td>
+                <td>价格制定、报价审批</td>
+                <td>销售报价管理</td>
+            </tr>
+            <tr>
+                <td>订单处理</td>
+                <td>订单创建、审批、确认</td>
+                <td>销售订单管理</td>
+            </tr>
+            <tr>
+                <td>发货管理</td>
+                <td>备货、发货、运输跟踪</td>
+                <td>销售出库管理</td>
+            </tr>
+            <tr>
+                <td>收款管理</td>
+                <td>发票开具、收款确认</td>
+                <td>应收账款管理</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>销售价格策略</h3>
+        <p>系统支持灵活的价格策略管理，满足不同客户和产品的定价需求。</p>
+        
+        <ul>
+            <li><strong>客户等级定价：</strong>基于客户等级设置不同价格</li>
+            <li><strong>数量折扣：</strong>基于采购数量设置阶梯价格</li>
+            <li><strong>促销定价：</strong>特定时期的促销价格</li>
+            <li><strong>组合定价：</strong>产品组合的优惠价格</li>
+        </ul>
+    </div>
+    
+    <div class="warning">
+        <strong>销售风险控制：</strong>建议建立客户信用评估体系，控制赊销风险，确保资金安全。
+    </div>
+</div>
+
+<div class="section">
+    <h2>库存管理</h2>
+    
+    <div class="feature">
+        <h3>库存管理策略</h3>
+        <p>系统支持多种库存管理策略，帮助企业优化库存水平。</p>
+        
+        <table>
+            <tr>
+                <th>库存策略</th>
+                <th>适用场景</th>
+                <th>特点</th>
+            </tr>
+            <tr>
+                <td>ABC分类法</td>
+                <td>物料重要性分类</td>
+                <td>重点管理高价值物料</td>
+            </tr>
+            <tr>
+                <td>安全库存</td>
+                <td>需求波动较大的物料</td>
+                <td>应对需求不确定性</td>
+            </tr>
+            <tr>
+                <td>经济订货量</td>
+                <td>采购成本较高的物料</td>
+                <td>平衡采购和库存成本</td>
+            </tr>
+            <tr>
+                <td>准时制库存</td>
+                <td>供应链协同良好的企业</td>
+                <td>最小化库存水平</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>库存预警机制</h3>
+        <p>系统提供完善的库存预警功能，帮助企业及时应对库存异常。</p>
+        
+        <div class="code">
+// 库存预警检查逻辑
+public class InventoryAlertService
+{
+    public List<AlertItem> CheckInventoryAlerts()
+    {
+        var alerts = new List<AlertItem>();
+        
+        // 检查库存不足预警
+        alerts.AddRange(CheckLowStockAlerts());
+        
+        // 检查库存积压预警
+        alerts.AddRange(CheckOverstockAlerts());
+        
+        // 检查呆滞物料预警
+        alerts.AddRange(CheckSlowMovingAlerts());
+        
+        return alerts;
+    }
+}
+        </div>
+    </div>
+    
+    <div class="tip">
+        <strong>库存优化建议：</strong>建议定期分析库存周转率，识别呆滞物料，优化库存结构。
+    </div>
+</div>
+
+<div class="section">
+    <h2>出入库管理</h2>
+    
+    <div class="feature">
+        <h3>入库管理</h3>
+        <p>系统支持多种来源的入库业务，确保入库数据的准确性。</p>
+        
+        <table>
+            <tr>
+                <th>入库类型</th>
+                <th>业务场景</th>
+                <th>处理流程</th>
+            </tr>
+            <tr>
+                <td>采购入库</td>
+                <td>采购到货验收</td>
+                <td>验收 → 入库 → 库存更新</td>
+            </tr>
+            <tr>
+                <td>生产入库</td>
+                <td>产品完工入库</td>
+                <td>检验 → 入库 → 库存更新</td>
+            </tr>
+            <tr>
+                <td>调拨入库</td>
+                <td>仓库间调拨</td>
+                <td>调拨出库 → 调拨入库</td>
+            </tr>
+            <tr>
+                <td>其他入库</td>
+                <td>盘盈、赠品等</td>
+                <td>审批 → 入库 → 库存更新</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>出库管理</h3>
+        <p>系统支持多种目标的出库业务，确保出库过程的规范性。</p>
+        
+        <table>
+            <tr>
+                <th>出库类型</th>
+                <th>业务场景</th>
+                <th>处理流程</th>
+            </tr>
+            <tr>
+                <td>销售出库</td>
+                <td>客户订单发货</td>
+                <td>订单确认 → 备货 → 出库</td>
+            </tr>
+            <tr>
+                <td>生产领料</td>
+                <td>生产物料领用</td>
+                <td>领料申请 → 审批 → 出库</td>
+            </tr>
+            <tr>
+                <td>调拨出库</td>
+                <td>仓库间调拨</td>
+                <td>调拨申请 → 出库 → 入库</td>
+            </tr>
+            <tr>
+                <td>其他出库</td>
+                <td>盘亏、报废等</td>
+                <td>审批 → 出库 → 库存更新</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="warning">
+        <strong>出入库控制：</strong>建议建立严格的出入库审批流程，确保库存数据的准确性。
+    </div>
+</div>
+
+<div class="section">
+    <h2>供应链协同</h2>
+    
+    <div class="feature">
+        <h3>供应商协同</h3>
+        <p>系统支持与供应商的协同作业，提高供应链效率。</p>
+        
+        <ul>
+            <li><strong>供应商门户：</strong>供应商自助查询订单状态</li>
+            <li><strong>电子数据交换：</strong>与供应商系统的数据对接</li>
+            <li><strong>供应商评估：</strong>基于绩效的供应商评估</li>
+            <li><strong>协同计划：</strong>与供应商的协同需求计划</li>
+        </ul>
+    </div>
+    
+    <div class="feature">
+        <h3>客户协同</h3>
+        <p>系统支持与客户的协同作业，提升客户服务水平。</p>
+        
+        <ul>
+            <li><strong>客户门户：</strong>客户自助查询订单状态</li>
+            <li><strong>在线下单：</strong>客户在线下单和跟踪</li>
+            <li><strong>客户服务：</strong>客户投诉和建议处理</li>
+            <li><strong>客户分析：</strong>客户行为和需求分析</li>
+        </ul>
+    </div>
+    
+    <div class="tip">
+        <strong>供应链优化：</strong>建议建立供应链协同平台，实现信息的实时共享和业务的协同处理。
+    </div>
+</div>
+
+<div class="section">
+    <h2>常见问题解答</h2>
+    
+    <div class="feature">
+        <h3>Q: 采购订单审批流程如何配置？</h3>
+        <p><strong>A:</strong> 系统支持灵活的审批流程配置，可以根据采购金额、物料类型等条件设置不同的审批路径。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 销售订单如何与库存关联？</h3>
+        <p><strong>A:</strong> 销售订单创建时会检查库存可用量，发货时会自动扣减库存数量，确保库存数据的实时性。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 库存盘点差异如何处理？</h3>
+        <p><strong>A:</strong> 系统支持盘点差异的审批和处理流程，差异确认后会生成相应的出入库单据调整库存。</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>相关模块链接</h2>
+    <ul>
+        <li><a href="采购管理.htm">采购管理</a></li>
+        <li><a href="销售管理.htm">销售管理</a></li>
+        <li><a href="库存管理.htm">库存管理</a></li>
+        <li><a href="借出归还.htm">借出归还管理</a></li>
+        <li><a href="盘点管理.htm">盘点管理</a></li>
+        <li><a href="调拨管理.htm">调拨管理</a></li>
+        <li><a href="产品分割与组合.htm">产品分割与组合</a></li>
+        <li><a href="其他出入库管理.htm">其他出入库管理</a></li>
+    </ul>
+</div>
+
+</body>
+</html>

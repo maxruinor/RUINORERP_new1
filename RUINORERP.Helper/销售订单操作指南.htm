@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>销售订单操作指南 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .step { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .button { background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; margin: 5px; }
+        .screenshot { border: 1px solid #ddd; padding: 10px; margin: 15px 0; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+
+<h1>销售订单操作指南</h1>
+
+<h2>1. 销售订单创建</h2>
+
+<h3>1.1 进入销售订单界面</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>登录系统后，点击顶部菜单：<strong>销售管理</strong></li>
+    <li>在左侧功能树中选择：<strong>销售订单</strong></li>
+    <li>点击<button class="button">新建订单</button>按钮</li>
+</ol>
+</div>
+
+<div class="screenshot">
+<strong>界面说明：</strong>
+<p>销售订单编辑界面包含以下主要区域：</p>
+<ul>
+    <li><strong>订单头信息</strong>：客户信息、订单日期、交货日期等</li>
+    <li><strong>商品明细</strong>：商品列表、数量、单价、金额</li>
+    <li><strong>订单金额</strong>：小计、折扣、税额、总额</li>
+    <li><strong>操作按钮</strong>：保存、审核、打印等</li>
+</ul>
+</div>
+
+<h3>1.2 填写订单基本信息</h3>
+<div class="step">
+<strong>必填字段说明：</strong>
+<ol>
+    <li><strong>客户名称</strong>：点击搜索按钮选择客户（带*号必填）</li>
+    <li><strong>订单日期</strong>：系统默认当前日期，可修改</li>
+    <li><strong>交货日期</strong>：预计交货时间（重要提醒字段）</li>
+    <li><strong>销售部门</strong>：自动带出当前用户所在部门</li>
+    <li><strong>业务员</strong>：自动带出当前登录用户</li>
+</ol>
+</div>
+
+<div class="tip">
+<strong>提示：</strong>如果客户不存在，需要先在"客户管理"中创建客户资料。
+</div>
+
+<h3>1.3 添加商品明细</h3>
+<div class="step">
+<strong>添加商品步骤：</strong>
+<ol>
+    <li>点击商品明细区域的<button class="button">添加商品</button>按钮</li>
+    <li>在弹出的商品选择窗口中搜索或选择商品</li>
+    <li>输入<strong>销售数量</strong>（必须大于0）</li>
+    <li>输入<strong>销售单价</strong>（系统会根据价格策略自动带出）</li>
+    <li>系统自动计算<strong>金额</strong> = 数量 × 单价</li>
+    <li>点击<strong>确定</strong>添加到订单明细</li>
+</ol>
+</div>
+
+<div class="warning">
+<strong>重要：</strong>商品单价会根据客户等级和价格策略自动计算，如需修改需要相应权限。
+</div>
+
+<h3>1.4 订单金额计算</h3>
+<div class="step">
+<strong>金额计算规则：</strong>
+<ol>
+    <li><strong>商品金额小计</strong>：所有商品金额总和</li>
+    <li><strong>折扣金额</strong>：如有折扣，输入折扣率或折扣金额</li>
+    <li><strong>税额</strong>：根据税率自动计算</li>
+    <li><strong>订单总额</strong>：小计 - 折扣 + 税额</li>
+</ol>
+</div>
+
+<h3>1.5 保存订单</h3>
+<div class="step">
+<strong>保存操作：</strong>
+<ol>
+    <li>确认所有信息填写正确后，点击<button class="button">保存</button>按钮</li>
+    <li>系统会验证必填字段和数据有效性</li>
+    <li>保存成功后，订单状态变为"已保存"</li>
+    <li>系统自动生成订单编号（如：SO202501030001）</li>
+</ol>
+</div>
+
+<h2>2. 订单审核流程</h2>
+
+<h3>2.1 提交审核</h3>
+<div class="step">
+<strong>审核提交：</strong>
+<ol>
+    <li>订单保存后，点击<button class="button">提交审核</button>按钮</li>
+    <li>系统根据订单金额判断审核流程：
+        <ul>
+            <li>金额 ≤ 500元：自动审核通过</li>
+            <li>金额 > 500元：需要指定人员审核</li>
+        </ul>
+    </li>
+    <li>提交后订单状态变为"待审核"</li>
+</ol>
+</div>
+
+<h3>2.2 审核人员操作</h3>
+<div class="step">
+<strong>审核操作路径：</strong>
+<ol>
+    <li>审核人员登录系统后，在工作台看到待审核订单提醒</li>
+    <li>点击提醒进入订单审核界面</li>
+    <li>查看订单详细信息</li>
+    <li>点击<button class="button">审核通过</button>或<button class="button">审核不通过</button></li>
+    <li>如不通过，需要填写不通过原因</li>
+</ol>
+</div>
+
+<h3>2.3 审核结果处理</h3>
+<div class="step">
+<strong>审核通过后：</strong>
+<ol>
+    <li>订单状态变为"已审核"</li>
+    <li>系统自动通知仓库人员准备出库</li>
+    <li>销售人员在订单查询界面可以看到审核状态</li>
+</ol>
+
+<strong>审核不通过：</strong>
+<ol>
+    <li>订单状态变为"审核不通过"</li>
+    <li>原销售人员收到通知，需要修改订单</li>
+    <li>修改后重新提交审核</li>
+</ol>
+</div>
+
+<h2>3. 订单修改和作废</h2>
+
+<h3>3.1 修改已保存订单</h3>
+<div class="step">
+<strong>修改步骤：</strong>
+<ol>
+    <li>在订单查询界面找到需要修改的订单</li>
+    <li>双击订单记录进入编辑界面</li>
+    <li>修改相关信息</li>
+    <li>点击<button class="button">保存</button>按钮</li>
+</ol>
+</div>
+
+<div class="warning">
+<strong>注意：</strong>已提交审核或已审核的订单不能直接修改，需要先反审核。
+</div>
+
+<h3>3.2 反审核操作</h3>
+<div class="step">
+<strong>反审核条件：</strong>
+<ol>
+    <li>订单未生成出库单</li>
+    <li>具有反审核权限的用户</li>
+    <li>点击<button class="button">反审核</button>按钮</li>
+    <li>填写反审核原因</li>
+    <li>反审核后订单状态回到"已保存"</li>
+</ol>
+</div>
+
+<h3>3.3 订单作废</h3>
+<div class="step">
+<strong>作废条件：</strong>
+<ol>
+    <li>订单未执行任何后续操作（出库、收款等）</li>
+    <li>具有订单作废权限</li>
+    <li>点击<button class="button">作废</button>按钮</li>
+    <li>填写作废原因</li>
+    <li>作废后订单不能再进行任何操作</li>
+</ol>
+</div>
+
+<h2>4. 订单查询和跟踪</h2>
+
+<h3>4.1 订单查询界面</h3>
+<div class="step">
+<strong>查询操作：</strong>
+<ol>
+    <li>进入：销售管理 → 销售订单查询</li>
+    <li>设置查询条件：日期范围、客户、状态等</li>
+    <li>点击<button class="button">查询</button>按钮</li>
+    <li>系统显示符合条件的订单列表</li>
+</ol>
+</div>
+
+<h3>4.2 订单状态说明</h3>
+<table border="1" style="width:100%; border-collapse: collapse;">
+    <tr><th>状态</th><th>说明</th><th>可执行操作</th></tr>
+    <tr><td>已保存</td><td>订单已创建但未提交审核</td><td>修改、提交审核、删除</td></tr>
+    <tr><td>待审核</td><td>已提交等待审核</td><td>查看（只能审核人员操作）</td></tr>
+    <tr><td>已审核</td><td>审核通过，等待出库</td><td>查看、反审核、生成出库单</td></tr>
+    <tr><td>部分出库</td><td>部分商品已出库</td><td>查看、继续出库</td></tr>
+    <tr><td>已完成</td><td>全部商品已出库</td><td>查看、生成应收款</td></tr>
+    <tr><td>已作废</td><td>订单已作废</td><td>查看</td></tr>
+</table>
+
+<h2>5. 常见问题解答</h2>
+
+<h3>Q: 如何快速复制已有的订单？</h3>
+<p>A: 在订单查询界面，选择要复制的订单，点击"复制订单"按钮，系统会创建相同客户和商品的新订单。</p>
+
+<h3>Q: 订单提交后发现有错误怎么办？</h3>
+<p>A: 如果订单还在"待审核"状态，可以联系审核人员退回修改。如果已审核，需要进行反审核操作。</p>
+
+<h3>Q: 如何查看订单的处理历史？</h3>
+<p>A: 在订单详情界面，点击"操作日志"标签可以查看订单的所有操作记录。</p>
+
+<h3>Q: 订单金额超过权限怎么办？</h3>
+<p>A: 系统会根据金额自动分配审核人员，如果超过个人权限，需要上级主管审核。</p>
+
+<h3>Q: 如何打印订单？</h3>
+<p>A: 在订单编辑或查询界面，点击"打印"按钮选择打印模板，可以打印订单确认书或送货单。</p>
+
+<h2>6. 操作注意事项</h2>
+
+<div class="tip">
+<strong>数据准确性：</strong>订单信息一旦提交将影响后续的出库和收款，请务必确保信息准确。
+</div>
+
+<div class="tip">
+<strong>权限控制：</strong>不同用户角色有不同的操作权限，如遇权限问题请联系管理员。
+</div>
+
+<div class="tip">
+<strong>时效性：</strong>订单处理要及时，避免影响客户交货和公司业务流程。
+</div>
+
+</body>
+</html>

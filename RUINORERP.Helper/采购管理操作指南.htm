@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>采购管理操作指南 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .step { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .button { background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>采购管理操作指南</h1>
+
+<h2>1. 采购业务流程概述</h2>
+
+<h3>1.1 完整采购流程</h3>
+<div class="step">
+<strong>标准采购流程：</strong>
+<ol>
+    <li>采购申请 → 部门审批</li>
+    <li>采购订单 → 供应商确认</li>
+    <li>货物入库 → 质量检验</li>
+    <li>发票核对 → 财务付款</li>
+</ol>
+</div>
+
+<h3>1.2 采购相关角色</h3>
+<table>
+    <tr><th>角色</th><th>职责</th><th>主要操作</th></tr>
+    <tr><td>申请人员</td><td>提出采购需求</td><td>创建采购申请</td></tr>
+    <tr><td>部门主管</td><td>审批采购申请</td><td>审核采购需求</td></tr>
+    <tr><td>采购人员</td><td>执行采购</td><td>创建采购订单</td></tr>
+    <tr><td>仓库人员</td><td>接收货物</td><td>入库验收</td></tr>
+    <tr><td>财务人员</td><td>付款处理</td><td>核对发票付款</td></tr>
+</table>
+
+<h2>2. 采购申请管理</h2>
+
+<h3>2.1 创建采购申请</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>点击菜单：<strong>采购管理</strong> → <strong>采购申请</strong></li>
+    <li>点击<button class="button">新建申请</button>按钮</li>
+    <li>填写申请基本信息：
+        <ul>
+            <li>申请部门（自动带出）</li>
+            <li>申请人（自动带出）</li>
+            <li>申请日期（系统默认）</li>
+            <li>需求日期（预计需要时间）</li>
+            <li>申请原因（必填）</li>
+        </ul>
+    </li>
+</ol>
+</div>
+
+<h3>2.2 添加申请明细</h3>
+<div class="step">
+<strong>明细添加：</strong>
+<ol>
+    <li>点击<button class="button">添加物料</button>按钮</li>
+    <li>选择需要的物料或商品</li>
+    <li>输入申请数量</li>
+    <li>填写用途说明</li>
+    <li>系统自动计算预估金额</li>
+</ol>
+</div>
+
+<h3>2.3 提交审批</h3>
+<div class="step">
+<strong>审批流程：</strong>
+<ol>
+    <li>填写完成后点击<button class="button">提交审批</button></li>
+    <li>系统根据金额自动分配审批人员</li>
+    <li>审批人员在工作台看到待审批申请</li>
+    <li>审批通过后，采购人员可以看到已批准的申请</li>
+</ol>
+</div>
+
+<h2>3. 采购订单管理</h2>
+
+<h3>3.1 生成采购订单</h3>
+<div class="step">
+<strong>从申请生成订单：</strong>
+<ol>
+    <li>采购人员进入：采购管理 → 待处理申请</li>
+    <li>选择已批准的采购申请</li>
+    <li>点击<button class="button">生成采购订单</button></li>
+    <li>系统自动创建采购订单，带出申请信息</li>
+</ol>
+</div>
+
+<h3>3.2 直接创建采购订单</h3>
+<div class="step">
+<strong>直接创建：</strong>
+<ol>
+    <li>点击菜单：采购管理 → 采购订单</li>
+    <li>点击<button class="button">新建订单</button></li>
+    <li>选择供应商（必填）</li>
+    <li>添加采购商品和数量</li>
+    <li>设置交货日期和价格条款</li>
+</ol>
+</div>
+
+<h3>3.3 采购订单审核</h3>
+<div class="step">
+<strong>审核流程：</strong>
+<ol>
+    <li>订单保存后点击<button class="button">提交审核</button></li>
+    <li>系统根据金额判断审核流程</li>
+    <li>审核通过后订单状态变为"已审核"</li>
+    <li>供应商可以查看已审核的订单</li>
+</ol>
+</div>
+
+<h2>4. 采购入库管理</h2>
+
+<h3>4.1 创建入库单</h3>
+<div class="step">
+<strong>入库操作：</strong>
+<ol>
+    <li>仓库人员进入：库存管理 → 采购入库</li>
+    <li>选择已审核的采购订单</li>
+    <li>点击<button class="button">生成入库单</button></li>
+    <li>系统自动创建入库单，带出订单信息</li>
+</ol>
+</div>
+
+<h3>4.2 入库验收</h3>
+<div class="step">
+<strong>验收流程：</strong>
+<ol>
+    <li>核对到货数量与订单数量</li>
+    <li>进行质量检验</li>
+    <li>填写实际入库数量</li>
+    <li>如有差异，填写差异原因</li>
+    <li>确认入库，更新库存</li>
+</ol>
+</div>
+
+<h3>4.3 入库状态管理</h3>
+<table>
+    <tr><th>状态</th><th>说明</th><th>后续操作</th></tr>
+    <tr><td>待入库</td><td>订单已审核，等待到货</td><td>生成入库单</td></tr>
+    <tr><td>部分入库</td><td>部分货物已入库</td><td>继续入库</td></tr>
+    <tr><td>已入库</td><td>全部货物入库完成</td><td>生成应付款</td></tr>
+    <tr><td>入库异常</td><td>到货数量或质量有问题</td><td>联系供应商处理</td></tr>
+</table>
+
+<h2>5. 采购退货管理</h2>
+
+<h3>5.1 创建退货单</h3>
+<div class="step">
+<strong>退货流程：</strong>
+<ol>
+    <li>点击菜单：采购管理 → 采购退货</li>
+    <li>选择需要退货的采购订单</li>
+    <li>点击<button class="button">新建退货</button></li>
+    <li>填写退货原因和退货数量</li>
+    <li>提交退货申请</li>
+</ol>
+</div>
+
+<h3>5.2 退货审批</h3>
+<div class="step">
+<strong>审批流程：</strong>
+<ol>
+    <li>采购部门审批退货申请</li>
+    <li>质量部门确认退货原因</li>
+    <li>供应商确认接收退货</li>
+    <li>仓库进行退货出库操作</li>
+</ol>
+</div>
+
+<h2>6. 供应商管理</h2>
+
+<h3>6.1 供应商信息维护</h3>
+<div class="step">
+<strong>供应商资料：</strong>
+<ol>
+    <li>点击菜单：基础资料 → 供应商管理</li>
+    <li>可以查看现有供应商列表</li>
+    <li>点击<button class="button">新增</button>添加新供应商</li>
+    <li>填写供应商基本信息：
+        <ul>
+            <li>供应商名称（必填）</li>
+            <li>联系人信息</li>
+            <li>银行账户</li>
+            <li>税务信息</li>
+            <li>合作状态</li>
+        </ul>
+    </li>
+</ol>
+</div>
+
+<h3>6.2 供应商评估</h3>
+<div class="step">
+<strong>评估指标：</strong>
+<ol>
+    <li>交货准时率</li>
+    <li>产品质量合格率</li>
+    <li>价格竞争力</li>
+    <li>售后服务响应</li>
+    <li>合作稳定性</li>
+</ol>
+</div>
+
+<h2>7. 采购报表查询</h2>
+
+<h3>7.1 采购统计报表</h3>
+<div class="step">
+<strong>报表路径：</strong>
+<ol>
+    <li>点击菜单：采购管理 → 报表查询</li>
+    <li>选择统计期间和统计维度</li>
+    <li>系统生成采购分析报表：
+        <ul>
+            <li>采购金额统计</li>
+            <li>供应商采购排行</li>
+            <li>物料采购分析</li>
+            <li>采购趋势分析</li>
+        </ul>
+    </li>
+</ol>
+</div>
+
+<h3>7.2 供应商对账</h3>
+<div class="step">
+<strong>对账操作：</strong>
+<ol>
+    <li>选择供应商和对账期间</li>
+    <li>系统显示该期间的所有交易记录</li>
+    <li>核对采购订单、入库单、发票信息</li>
+    <li>生成对账单，双方确认</li>
+</ol>
+</div>
+
+<h2>8. 常见问题解答</h2>
+
+<h3>Q: 采购申请和采购订单有什么区别？</h3>
+<p>A: 采购申请是内部需求申请，需要审批；采购订单是向供应商发出的正式订单。</p>
+
+<h3>Q: 如何快速复制已有的采购订单？</h3>
+<p>A: 在采购订单查询界面，选择要复制的订单，点击"复制订单"按钮。</p>
+
+<h3>Q: 到货数量与订单数量不一致怎么办？</h3>
+<p>A: 在入库时填写实际数量，系统会记录差异，需要联系供应商处理。</p>
+
+<h3>Q: 采购订单作废后会影响什么？</h3>
+<p>A: 作废订单会取消后续的入库和付款操作，需要重新创建订单。</p>
+
+<h3>Q: 如何查看采购订单的处理进度？</h3>
+<p>A: 在采购订单查询界面，可以通过状态筛选查看订单的当前处理进度。</p>
+
+<h2>9. 操作注意事项</h2>
+
+<div class="warning">
+<strong>供应商选择：</strong>选择合格的供应商，确保物料质量和交货准时。
+</div>
+
+<div class="tip">
+<strong>价格谈判：</strong>采购前进行充分的价格比较和谈判，控制采购成本。
+</div>
+
+<div class="tip">
+<strong>合同管理：</strong>重要采购应签订正式合同，明确双方权利义务。
+</div>
+
+<div class="tip">
+<strong>及时跟进：</strong>采购过程中要及时跟进订单状态，确保按时交货。
+</div>
+
+</body>
+</html>

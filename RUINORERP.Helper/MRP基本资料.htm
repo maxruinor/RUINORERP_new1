@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRP基本资料管理 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .feature { background: #e8f4f8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .code { background: #f5f5f5; padding: 10px; border-left: 4px solid #3498db; font-family: Consolas, monospace; }
+        .warning { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; }
+        .tip { background: #d1ecf1; padding: 10px; border-left: 4px solid #17a2b8; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>MRP基本资料管理</h1>
+
+<p>MRP（物料需求计划）基本资料是MRP计算的基础，包括物料主数据、BOM结构、工艺路线等基础信息的管理。</p>
+
+<div class="section">
+    <h2>功能概述</h2>
+    <p>MRP基本资料管理模块负责维护MRP计算所需的所有基础数据，确保MRP计算的准确性和可靠性。</p>
+    
+    <div class="feature">
+        <h3>主要功能</h3>
+        <ul>
+            <li><strong>物料主数据管理：</strong>物料编码、分类、属性等基础信息</li>
+            <li><strong>BOM结构管理：</strong>产品组成结构和用量关系</li>
+            <li><strong>工艺路线管理：</strong>产品制造过程和工序安排</li>
+            <li><strong>工作中心管理：</strong>生产设备和人员配置</li>
+            <li><strong>日历管理：</strong>工作日历和产能日历</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>物料主数据管理</h2>
+    
+    <div class="feature">
+        <h3>物料分类体系</h3>
+        <p>系统采用多级物料分类体系，便于物料的管理和查询。</p>
+        
+        <table>
+            <tr>
+                <th>分类级别</th>
+                <th>分类标准</th>
+                <th>示例</th>
+            </tr>
+            <tr>
+                <td>一级分类</td>
+                <td>物料大类</td>
+                <td>原材料、半成品、成品</td>
+            </tr>
+            <tr>
+                <td>二级分类</td>
+                <td>物料中类</td>
+                <td>金属材料、塑料材料、电子元件</td>
+            </tr>
+            <tr>
+                <td>三级分类</td>
+                <td>物料小类</td>
+                <td>钢板、铝材、ABS塑料</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>物料属性定义</h3>
+        <p>物料属性包括基本属性、采购属性、库存属性、计划属性等。</p>
+        
+        <table>
+            <tr>
+                <th>属性类别</th>
+                <th>关键属性</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>基本属性</td>
+                <td>物料编码、名称、规格</td>
+                <td>物料唯一标识和描述</td>
+            </tr>
+            <tr>
+                <td>采购属性</td>
+                <td>采购员、供应商、采购周期</td>
+                <td>采购相关参数</td>
+            </tr>
+            <tr>
+                <td>库存属性</td>
+                <td>安全库存、最大库存</td>
+                <td>库存管理参数</td>
+            </tr>
+            <tr>
+                <td>计划属性</td>
+                <td>提前期、批量规则</td>
+                <td>MRP计算参数</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="tip">
+        <strong>最佳实践：</strong>建议为每种物料建立完整的属性档案，确保MRP计算的准确性。
+    </div>
+</div>
+
+<div class="section">
+    <h2>BOM结构管理</h2>
+    
+    <div class="feature">
+        <h3>BOM类型</h3>
+        <p>系统支持多种BOM类型，满足不同业务场景的需求。</p>
+        
+        <table>
+            <tr>
+                <th>BOM类型</th>
+                <th>用途</th>
+                <th>特点</th>
+            </tr>
+            <tr>
+                <td>工程BOM</td>
+                <td>产品设计阶段</td>
+                <td>反映设计意图，可能包含可选件</td>
+            </tr>
+            <tr>
+                <td>制造BOM</td>
+                <td>生产制造阶段</td>
+                <td>反映实际制造过程，包含工艺信息</td>
+            </tr>
+            <tr>
+                <td>计划BOM</td>
+                <td>生产计划阶段</td>
+                <td>用于MRP计算，考虑批量规则</td>
+            </tr>
+            <tr>
+                <td>成本BOM</td>
+                <td>成本核算阶段</td>
+                <td>包含成本信息，用于成本计算</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>BOM结构要素</h3>
+        <p>BOM结构包含父项物料、子项物料、用量关系等关键要素。</p>
+        
+        <div class="code">
+// BOM结构数据模型示例
+public class BOMStructure
+{
+    public long ParentMaterialId { get; set; }  // 父项物料ID
+    public long ChildMaterialId { get; set; }   // 子项物料ID
+    public decimal Quantity { get; set; }        // 用量
+    public decimal LossRate { get; set; }       // 损耗率
+    public int Sequence { get; set; }           // 顺序号
+    public string Operation { get; set; }       // 工序
+}
+        </div>
+    </div>
+    
+    <div class="warning">
+        <strong>注意事项：</strong>BOM结构的准确性直接影响MRP计算结果，建议定期审核和更新BOM数据。
+    </div>
+</div>
+
+<div class="section">
+    <h2>工艺路线管理</h2>
+    
+    <div class="feature">
+        <h3>工艺路线组成</h3>
+        <p>工艺路线定义了产品的制造过程，包括工序序列、工作中心、工时定额等。</p>
+        
+        <table>
+            <tr>
+                <th>工艺要素</th>
+                <th>说明</th>
+                <th>数据来源</th>
+            </tr>
+            <tr>
+                <td>工序序列</td>
+                <td>制造过程的先后顺序</td>
+                <td>工艺设计</td>
+            </tr>
+            <tr>
+                <td>工作中心</td>
+                <td>执行工序的设备和人员</td>
+                <td>设备管理</td>
+            </tr>
+            <tr>
+                <td>工时定额</td>
+                <td>工序的标准工时</td>
+                <td>工时研究</td>
+            </tr>
+            <tr>
+                <td>准备时间</td>
+                <td>工序开始前的准备时间</td>
+                <td>工艺标准</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>工艺路线优化</h3>
+        <p>系统支持工艺路线的优化分析，帮助企业提高生产效率。</p>
+        
+        <ul>
+            <li><strong>瓶颈分析：</strong>识别工艺路线中的瓶颈工序</li>
+            <li><strong>工时分析：</strong>分析各工序的工时利用率</li>
+            <li><strong>负荷分析：</strong>分析工作中心的负荷情况</li>
+            <li><strong>优化建议：</strong>基于分析结果提出优化建议</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>工作中心管理</h2>
+    
+    <div class="feature">
+        <h3>工作中心属性</h3>
+        <p>工作中心是执行生产任务的基本单位，包含设备、人员和产能信息。</p>
+        
+        <table>
+            <tr>
+                <th>属性类别</th>
+                <th>关键属性</th>
+                <th>说明</th>
+            </tr>
+            <tr>
+                <td>基本属性</td>
+                <td>工作中心编码、名称、类型</td>
+                <td>工作中心标识</td>
+            </tr>
+            <tr>
+                <td>产能属性</td>
+                <td>标准产能、最大产能</td>
+                <td>生产能力参数</td>
+            </tr>
+            <tr>
+                <td>成本属性</td>
+                <td>人工费率、设备费率</td>
+                <td>成本计算参数</td>
+            </tr>
+            <tr>
+                <td>日历属性</td>
+                <td>工作日历、班次安排</td>
+                <td>工作时间安排</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>产能计算</h3>
+        <p>系统基于工作中心属性计算可用产能，支持产能规划和负荷分析。</p>
+        
+        <div class="code">
+// 产能计算逻辑示例
+public class CapacityCalculator
+{
+    public CapacityResult CalculateCapacity(WorkCenter wc, DateTime date)
+    {
+        // 获取工作日历
+        // 计算可用工时
+        // 考虑设备维护时间
+        // 返回产能结果
+    }
+}
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>日历管理</h2>
+    
+    <div class="feature">
+        <h3>工作日历</h3>
+        <p>工作日历定义了企业的正常工作日和休息日，是MRP计算的重要基础。</p>
+        
+        <table>
+            <tr>
+                <th>日历类型</th>
+                <th>适用场景</th>
+                <th>特点</th>
+            </tr>
+            <tr>
+                <td>公司日历</td>
+                <td>全公司通用</td>
+                <td>统一的节假日安排</td>
+            </tr>
+            <tr>
+                <td>部门日历</td>
+                <td>特定部门使用</td>
+                <td>考虑部门特殊安排</td>
+            </tr>
+            <tr>
+                <td>工作中心日历</td>
+                <td>特定工作中心</td>
+                <td>考虑设备维护计划</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>日历维护</h3>
+        <p>系统提供灵活的日历维护功能，支持批量设置和特殊日期处理。</p>
+        
+        <ul>
+            <li><strong>批量设置：</strong>支持按年、季度批量设置工作日</li>
+            <li><strong>特殊日期：</strong>支持特殊假期的单独设置</li>
+            <li><strong>日历复制：</strong>支持日历模板的复制和应用</li>
+            <li><strong>日历比较：</strong>支持不同日历的对比分析</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>数据维护最佳实践</h2>
+    
+    <div class="feature">
+        <h3>数据准确性保证</h3>
+        <p>确保MRP基本数据的准确性是MRP计算成功的关键。</p>
+        
+        <ol>
+            <li><strong>建立数据标准：</strong>制定统一的数据编码和命名规范</li>
+            <li><strong>数据审核机制：</strong>建立数据变更的审核流程</li>
+            <li><strong>定期盘点：</strong>定期盘点基础数据的准确性</li>
+            <li><strong>权限控制：</strong>严格控制数据修改权限</li>
+            <li><strong>版本管理：</strong>重要数据的版本管理</li>
+        </ol>
+    </div>
+    
+    <div class="tip">
+        <strong>数据维护建议：</strong>建议建立专门的数据维护团队，负责MRP基本数据的维护和管理。
+    </div>
+</div>
+
+<div class="section">
+    <h2>常见问题解答</h2>
+    
+    <div class="feature">
+        <h3>Q: 物料编码规则如何制定？</h3>
+        <p><strong>A:</strong> 物料编码规则应遵循唯一性、可扩展性、易识别等原则。建议采用分类码+流水码的组合方式。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: BOM变更后如何确保数据一致性？</h3>
+        <p><strong>A:</strong> 系统支持BOM版本管理，变更时创建新版本，确保历史数据的一致性。同时提供变更影响分析功能。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 如何保证工艺路线的准确性？</h3>
+        <p><strong>A:</strong> 建议通过工时测定、工艺验证等方式确保工艺路线的准确性。系统支持工艺路线的版本管理和审批流程。</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>相关模块链接</h2>
+    <ul>
+        <li><a href="生产管理.htm">生产管理模块</a></li>
+        <li><a href="制造规划.htm">制造规划管理</a></li>
+        <li><a href="制程生产.htm">制程生产管理</a></li>
+        <li><a href="基础资料管理.htm">基础资料管理</a></li>
+    </ul>
+</div>
+
+</body>
+</html>

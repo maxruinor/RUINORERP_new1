@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>系统设置操作指南 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .step { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .button { background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>系统设置操作指南</h1>
+
+<h2>1. 系统设置概述</h2>
+
+<h3>1.1 系统设置功能</h3>
+<p>系统设置模块用于配置RUINOR ERP系统的各项参数，确保系统正常运行并满足企业的个性化需求。只有具有系统管理员权限的用户才能进行系统设置操作。</p>
+
+<h3>1.2 设置分类</h3>
+<table>
+    <tr><th>设置类别</th><th>主要功能</th><th>操作权限</th></tr>
+    <tr><td>基础参数</td><td>公司信息、系统参数</td><td>系统管理员</td></tr>
+    <tr><td>用户权限</td><td>用户管理、角色权限</td><td>系统管理员</td></tr>
+    <tr><td>业务参数</td><td>业务流程、审批设置</td><td>相关部门主管</td></tr>
+    <tr><td>数据字典</td><td>基础数据、编码规则</td><td>数据管理员</td></tr>
+</table>
+
+<h2>2. 服务器配置</h2>
+
+<h3>2.1 首次服务器配置</h3>
+<div class="step">
+<strong>配置步骤：</strong>
+<ol>
+    <li>打开系统登录界面</li>
+    <li>点击右上角的<button class="button">服务器设置</button>按钮</li>
+    <li>输入服务器信息：
+        <ul>
+            <li><strong>服务器地址</strong>：ERP服务器IP地址</li>
+            <li><strong>端口号</strong>：默认8080（根据实际设置）</li>
+            <li><strong>数据库</strong>：选择连接的数据库</li>
+        </ul>
+    </li>
+    <li>点击<button class="button">测试连接</button>验证配置</li>
+    <li>保存配置并重新启动系统</li>
+</ol>
+</div>
+
+<div class="tip">
+<strong>提示：</strong>服务器配置信息由系统实施人员提供，如有疑问请联系技术支持。
+</div>
+
+<h3>2.2 多服务器配置</h3>
+<div class="step">
+<strong>配置说明：</strong>
+<ol>
+    <li>系统支持连接多个服务器实例</li>
+    <li>可以设置主服务器和备用服务器</li>
+    <li>主服务器故障时自动切换到备用服务器</li>
+    <li>确保业务连续性和数据安全</li>
+</ol>
+</div>
+
+<h2>3. 用户权限管理</h2>
+
+<h3>3.1 用户账号管理</h3>
+<div class="step">
+<strong>新建用户：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>用户管理</strong></li>
+    <li>点击<button class="button">新建用户</button>按钮</li>
+    <li>填写用户基本信息：
+        <ul>
+            <li><strong>用户名</strong>：登录用户名（英文或数字）</li>
+            <li><strong>真实姓名</strong>：用户中文姓名</li>
+            <li><strong>部门</strong>：选择所属部门</li>
+            <li><strong>职位</strong>：用户职位信息</li>
+            <li><strong>邮箱</strong>：用于接收系统通知</li>
+        </ul>
+    </li>
+    <li>设置初始密码</li>
+    <li>分配用户角色和权限</li>
+</ol>
+</div>
+
+<h3>3.2 角色权限设置</h3>
+<div class="step">
+<strong>权限配置：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>角色管理</strong></li>
+    <li>选择要配置的角色（如：销售员、采购员、财务等）</li>
+    <li>设置功能权限：勾选该角色可以访问的功能模块</li>
+    <li>设置数据权限：定义该角色可以查看和操作的数据范围</li>
+    <li>保存权限设置</li>
+</ol>
+</div>
+
+<h3>3.3 密码策略设置</h3>
+<div class="step">
+<strong>安全策略：</strong>
+<ol>
+    <li><strong>密码复杂度</strong>：设置密码最小长度和复杂度要求</li>
+    <li><strong>密码有效期</strong>：设置密码需要定期更换</li>
+    <li><strong>登录失败锁定</strong>：连续登录失败自动锁定账户</li>
+    <li><strong>会话超时</strong>：设置用户会话自动超时时间</li>
+</ol>
+</div>
+
+<h2>4. 基础数据设置</h2>
+
+<h3>4.1 公司信息设置</h3>
+<div class="step">
+<strong>公司资料：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>公司信息</strong></li>
+    <li>填写公司基本信息：
+        <ul>
+            <li>公司名称</li>
+            <li>公司地址</li>
+            <li>联系电话</li>
+            <li>税务登记号</li>
+            <li>银行账户信息</li>
+        </ul>
+    </li>
+    <li>上传公司Logo</li>
+    <li>保存设置</li>
+</ol>
+</div>
+
+<h3>4.2 数据字典管理</h3>
+<div class="step">
+<strong>字典维护：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>数据字典</strong></li>
+    <li>选择字典分类（如：性别、职务、产品类别等）</li>
+    <li>可以查看现有字典项列表</li>
+    <li>点击<button class="button">新增</button>添加新的字典项</li>
+    <li>设置字典项的编码、名称、排序等</li>
+</ol>
+</div>
+
+<h2>5. 业务流程设置</h2>
+
+<h3>5.1 审批流程设置</h3>
+<div class="step">
+<strong>流程配置：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>审批流程</strong></li>
+    <li>选择业务类型（如：销售订单、采购订单、费用报销等）</li>
+    <li>设置审批节点和审批人员</li>
+    <li>配置审批条件（如：金额阈值、部门等）</li>
+    <li>设置审批时限和提醒方式</li>
+</ol>
+</div>
+
+<h3>5.2 业务参数设置</h3>
+<div class="step">
+<strong>参数配置：</strong>
+<ol>
+    <li><strong>财务参数</strong>：默认币种、小数位数、税率等</li>
+    <li><strong>库存参数</strong>：安全库存天数、盘点周期等</li>
+    <li><strong>销售参数</strong>：默认价格策略、折扣规则等</li>
+    <li><strong>采购参数</strong>：供应商评估标准、采购周期等</li>
+</ol>
+</div>
+
+<h2>6. 系统维护</h2>
+
+<h3>6.1 数据备份</h3>
+<div class="step">
+<strong>备份操作：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>数据备份</strong></li>
+    <li>设置备份类型：完整备份、增量备份</li>
+    <li>选择备份路径</li>
+    <li>点击<button class="button">开始备份</button></li>
+    <li>系统显示备份进度和结果</li>
+</ol>
+</div>
+
+<h3>6.2 数据恢复</h3>
+<div class="step">
+<strong>恢复操作：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>数据恢复</strong></li>
+    <li>选择要恢复的备份文件</li>
+    <li>确认恢复操作（此操作会覆盖现有数据）</li>
+    <li>系统执行数据恢复</li>
+    <li>恢复完成后重新启动系统</li>
+</ol>
+</div>
+
+<div class="warning">
+<strong>重要：</strong>数据恢复操作会覆盖现有数据，请谨慎操作并确保有最新备份。
+</div>
+
+<h3>6.3 系统日志查看</h3>
+<div class="step">
+<strong>日志管理：</strong>
+<ol>
+    <li>点击菜单：<strong>系统设置</strong> → <strong>系统日志</strong></li>
+    <li>可以查看各种类型的日志：
+        <ul>
+            <li><strong>操作日志</strong>：用户操作记录</li>
+            <li><strong>安全日志</strong>：登录和权限变更记录</li>
+            <li><strong>系统日志</strong>：系统运行状态记录</li>
+            <li><strong>错误日志</strong>：系统错误和异常记录</li>
+        </ul>
+    </li>
+    <li>支持按时间、用户、模块等条件查询</li>
+    <li>可以导出日志文件进行分析</li>
+</ol>
+</div>
+
+<h2>7. 个性化设置</h2>
+
+<h3>7.1 界面个性化</h3>
+<div class="step">
+<strong>界面设置：</strong>
+<ol>
+    <li><strong>主题设置</strong>：选择界面颜色主题</li>
+    <li><strong>语言设置</strong>：选择系统显示语言</li>
+    <li><strong>布局设置</strong>：调整界面布局和字体大小</li>
+    <li><strong>快捷方式</strong>：设置常用功能的快捷方式</li>
+</ol>
+</div>
+
+<h3>7.2 个人设置</h3>
+<div class="step">
+<strong>个人偏好：</strong>
+<ol>
+    <li>点击右上角用户头像 → <strong>个人设置</strong></li>
+    <li><strong>修改密码</strong>：定期更改登录密码</li>
+    <li><strong>通知设置</strong>：设置接收哪些系统通知</li>
+    <li><strong>工作台设置</strong>：自定义工作台显示内容</li>
+</ol>
+</div>
+
+<h2>8. 常见问题解答</h2>
+
+<h3>Q: 如何重置用户密码？</h3>
+<p>A: 在用户管理界面选择要重置密码的用户，点击"重置密码"按钮，系统会生成临时密码发送到用户邮箱。</p>
+
+<h3>Q: 新增的功能模块如何分配权限？</h3>
+<p>A: 在角色管理界面，为新模块勾选相应的权限，然后分配给相应用户角色。</p>
+
+<h3>Q: 数据备份的频率应该是多少？</h3>
+<p>A: 建议每天进行增量备份，每周进行完整备份，重要数据变更后立即备份。</p>
+
+<h3>Q: 系统日志文件太大如何处理？</h3>
+<p>A: 可以设置日志自动清理策略，定期清理过期日志文件。</p>
+
+<h3>Q: 如何查看系统版本信息？</h3>
+<p>A: 在帮助菜单中点击"关于系统"可以查看版本信息和版权信息。</p>
+
+<h2>9. 操作注意事项</h2>
+
+<div class="warning">
+<strong>权限控制：</strong>系统设置涉及系统安全和稳定性，必须由授权人员操作。
+</div>
+
+<div class="tip">
+<strong>备份优先：</strong>在进行重要设置变更前，务必先进行数据备份。
+</div>
+
+<div class="tip">
+<strong>测试验证：</strong>重要设置变更后，需要在测试环境验证后再应用到生产环境。
+</div>
+
+<div class="tip">
+<strong>文档记录：</strong>重要的系统设置变更应该记录在变更日志中。
+</div>
+
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购管理 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .feature { background: #e8f4f8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .warning { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; }
+        .tip { background: #d1ecf1; padding: 10px; border-left: 4px solid #17a2b8; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>采购管理</h1>
+
+<p>采购管理模块负责企业采购业务的全面管理，包括供应商管理、采购计划、订单处理、到货验收等环节。</p>
+
+<div class="section">
+    <h2>技术实现</h2>
+    
+    <div class="feature">
+        <h3>核心数据模型</h3>
+        <table>
+            <tr>
+                <th>数据表</th>
+                <th>功能描述</th>
+                <th>关键字段</th>
+            </tr>
+            <tr>
+                <td>tb_PurOrder</td>
+                <td>采购订单主表</td>
+                <td>PurOrderID, SupplierID, OrderDate, TotalAmount, Status</td>
+            </tr>
+            <tr>
+                <td>tb_PurOrderDetail</td>
+                <td>采购订单明细表</td>
+                <td>DetailID, PurOrderID, MaterialID, Quantity, Price</td>
+            </tr>
+            <tr>
+                <td>tb_Supplier</td>
+                <td>供应商信息表</td>
+                <td>SupplierID, Name, Contact, Phone, Address</td>
+            </tr>
+            <tr>
+                <td>tb_GoodsReceipt</td>
+                <td>到货验收表</td>
+                <td>ReceiptID, PurOrderID, ReceiptDate, Inspector</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>核心业务逻辑</h3>
+        <ul>
+            <li><strong>采购需求生成：</strong>基于MRP计算结果生成采购需求</li>
+            <li><strong>供应商选择：</strong>基于价格、质量、交期等条件选择供应商</li>
+            <li><strong>订单审批：</strong>支持多级审批流程</li>
+            <li><strong>到货验收：</strong>支持质量检验和数量核对</li>
+            <li><strong>库存更新：</strong>验收合格后自动更新库存</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>采购业务流程</h2>
+    
+    <div class="feature">
+        <h3>标准采购流程</h3>
+        <ol>
+            <li><strong>需求识别：</strong>基于MRP计算或手工创建采购需求</li>
+            <li><strong>供应商选择：</strong>评估供应商并确定采购价格</li>
+            <li><strong>订单创建：</strong>创建采购订单并提交审批</li>
+            <li><strong>订单审批：</strong>按照审批流程进行订单审批</li>
+            <li><strong>订单下达：</strong>审批通过后下达给供应商</li>
+            <li><strong>到货验收：</strong>货物到达后进行验收</li>
+            <li><strong>入库处理：</strong>验收合格后办理入库</li>
+            <li><strong>付款处理：</strong>核对发票并办理付款</li>
+        </ol>
+    </div>
+    
+    <div class="tip">
+        <strong>流程优化建议：</strong>建议建立标准化的采购流程，减少不必要的审批环节，提高采购效率。
+    </div>
+</div>
+
+<div class="section">
+    <h2>供应商管理</h2>
+    
+    <div class="feature">
+        <h3>供应商评估体系</h3>
+        <p>系统支持基于多维度指标的供应商评估。</p>
+        
+        <table>
+            <tr>
+                <th>评估维度</th>
+                <th>评估指标</th>
+                <th>权重</th>
+            </tr>
+            <tr>
+                <td>价格</td>
+                <td>报价水平、价格稳定性</td>
+                <td>30%</td>
+            </tr>
+            <tr>
+                <td>质量</td>
+                <td>合格率、质量稳定性</td>
+                <td>25%</td>
+            </tr>
+            <tr>
+                <td>交期</td>
+                <td>准时率、交期稳定性</td>
+                <td>20%</td>
+            </tr>
+            <tr>
+                <td>服务</td>
+                <td>响应速度、配合度</td>
+                <td>15%</td>
+            </tr>
+            <tr>
+                <td>技术</td>
+                <td>技术能力、创新能力</td>
+                <td>10%</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>供应商分类管理</h3>
+        <p>系统支持基于ABC分类法的供应商管理策略。</p>
+        
+        <ul>
+            <li><strong>A类供应商：</strong>战略合作伙伴，建立长期合作关系</li>
+            <li><strong>B类供应商：</strong>重要供应商，保持良好合作关系</li>
+            <li><strong>C类供应商：</strong>一般供应商，维持基本合作关系</li>
+        </ul>
+    </div>
+    
+    <div class="warning">
+        <strong>供应商风险控制：</strong>建议建立供应商风险评估机制，定期评估供应商的经营状况和信用风险。
+    </div>
+</div>
+
+<div class="section">
+    <h2>采购价格管理</h2>
+    
+    <div class="feature">
+        <h3>价格策略</h3>
+        <p>系统支持多种采购价格策略，满足不同采购场景的需求。</p>
+        
+        <table>
+            <tr>
+                <th>价格策略</th>
+                <th>适用场景</th>
+                <th>特点</th>
+            </tr>
+            <tr>
+                <td>固定价格</td>
+                <td>标准物料采购</td>
+                <td>价格稳定，便于成本控制</td>
+            </tr>
+            <tr>
+                <td>浮动价格</td>
+                <td>原材料价格波动较大</td>
+                <td>随市场价格调整</td>
+            </tr>
+            <tr>
+                <td>阶梯价格</td>
+                <td>大批量采购</td>
+                <td>采购量越大，单价越低</td>
+            </tr>
+            <tr>
+                <td>招标价格</td>
+                <td>重大项目采购</td>
+                <td>通过招标确定价格</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>价格审批流程</h3>
+        <p>系统支持基于采购金额的价格审批流程。</p>
+        
+        <ul>
+            <li><strong>小额采购：</strong>采购员直接审批</li>
+            <li><strong>中等金额：</strong>部门经理审批</li>
+            <li><strong>大额采购：</strong>总经理审批</li>
+            <li><strong>重大采购：</strong>董事会审批</li>
+        </ul>
+    </div>
+    
+    <div class="tip">
+        <strong>成本控制建议：</strong>建议建立价格监控机制，定期分析采购价格趋势，优化采购策略。
+    </div>
+</div>
+
+<div class="section">
+    <h2>采购订单管理</h2>
+    
+    <div class="feature">
+        <h3>订单状态管理</h3>
+        <p>系统支持完整的采购订单状态管理，确保订单过程的可控性。</p>
+        
+        <table>
+            <tr>
+                <th>订单状态</th>
+                <th>说明</th>
+                <th>允许操作</th>
+            </tr>
+            <tr>
+                <td>草稿</td>
+                <td>订单已创建但未提交</td>
+                <td>修改、删除、提交</td>
+            </tr>
+            <tr>
+                <td>已提交</td>
+                <td>订单已提交等待审批</td>
+                <td>撤回、审批</td>
+            </tr>
+            <tr>
+                <td>已审批</td>
+                <td>订单审批通过</td>
+                <td>下达、取消</td>
+            </tr>
+            <tr>
+                <td>已下达</td>
+                <td>订单已下达给供应商</td>
+                <td>到货验收、取消</td>
+            </tr>
+            <tr>
+                <td>部分到货</td>
+                <td>部分货物已到货</td>
+                <td>继续验收、关闭</td>
+            </tr>
+            <tr>
+                <td>已完成</td>
+                <td>全部货物验收完成</td>
+                <td>关闭、归档</td>
+            </tr>
+            <tr>
+                <td>已取消</td>
+                <td>订单已取消</td>
+                <td>查看、归档</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>订单跟踪</h3>
+        <p>系统提供实时的订单跟踪功能，支持多维度订单监控。</p>
+        
+        <ul>
+            <li><strong>交期跟踪：</strong>监控订单的交货进度</li>
+            <li><strong>质量跟踪：</strong>跟踪到货质量情况</li>
+            <li><strong>付款跟踪：</strong>跟踪付款进度</li>
+            <li><strong>异常跟踪：</strong>监控订单异常情况</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>到货验收管理</h2>
+    
+    <div class="feature">
+        <h3>验收流程</h3>
+        <p>系统支持标准化的到货验收流程，确保验收质量。</p>
+        
+        <ol>
+            <li><strong>到货登记：</strong>登记到货信息</li>
+            <li><strong>数量核对：</strong>核对到货数量与订单数量</li>
+            <li><strong>质量检验：</strong>按照质量标准进行检验</li>
+            <li><strong>验收结果：</strong>记录验收结果</li>
+            <li><strong>异常处理：</strong>处理验收异常情况</li>
+            <li><strong>入库处理：</strong>验收合格后办理入库</li>
+        </ol>
+    </div>
+    
+    <div class="feature">
+        <h3>验收标准管理</h3>
+        <p>系统支持基于物料类型的验收标准管理。</p>
+        
+        <ul>
+            <li><strong>外观检验：</strong>检查产品外观质量</li>
+            <li><strong>尺寸检验：</strong>检查产品尺寸精度</li>
+            <li><strong>性能检验：</strong>检查产品性能指标</li>
+            <li><strong>包装检验：</strong>检查产品包装质量</li>
+        </ul>
+    </div>
+    
+    <div class="warning">
+        <strong>质量风险控制：</strong>建议建立严格的质量检验标准，对不合格品进行严格处理，防止质量风险。
+    </div>
+</div>
+
+<div class="section">
+    <h2>常见问题解答</h2>
+    
+    <div class="feature">
+        <h3>Q: 采购订单如何与库存管理关联？</h3>
+        <p><strong>A:</strong> 采购订单审批通过后，系统会自动生成采购在途量，到货验收合格后自动更新库存数量。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 如何处理供应商延迟交货？</h3>
+        <p><strong>A:</strong> 系统支持交期预警功能，可以提前预警延迟风险。对于延迟交货，可以记录延迟原因并影响供应商评估。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 如何控制采购成本？</h3>
+        <p><strong>A:</strong> 建议通过供应商评估、价格谈判、批量采购、替代物料等方式控制采购成本。</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>相关模块链接</h2>
+    <ul>
+        <li><a href="进销存管理.htm">进销存管理</a></li>
+        <li><a href="库存管理.htm">库存管理</a></li>
+        <li><a href="财务管理.htm">财务管理</a></li>
+        <li><a href="基础资料管理.htm">基础资料管理</a></li>
+    </ul>
+</div>
+
+</body>
+</html>

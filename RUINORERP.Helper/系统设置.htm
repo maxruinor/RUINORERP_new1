@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>系统设置管理 - RUINORERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .code { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 5px; font-family: Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .setting-group { background: #f9f9f9; border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<h1>系统设置管理系统</h1>
+
+<h2>1. 功能概述</h2>
+<p>系统设置管理模块提供全面的系统配置功能，包括基础参数设置、用户权限管理、数据字典配置、系统日志管理等。通过统一的配置界面，管理员可以灵活调整系统行为，满足企业的个性化需求。</p>
+
+<h2>2. 基础参数设置</h2>
+
+<h3>2.1 系统基本参数</h3>
+<div class="setting-group">
+<strong>公司信息配置</strong>
+<ul>
+    <li>公司名称、Logo设置</li>
+    <li>联系信息、地址配置</li>
+    <li>税务信息、银行账户</li>
+</ul>
+</div>
+
+<div class="setting-group">
+<strong>系统运行参数</strong>
+<ul>
+    <li>系统语言、时区设置</li>
+    <li>日期格式、数字格式</li>
+    <li>默认页面大小、超时时间</li>
+</ul>
+</div>
+
+<h3>2.2 业务参数配置</h3>
+<table>
+    <tr><th>参数类别</th><th>配置项</th><th>默认值</th><th>说明</th></tr>
+    <tr><td>财务参数</td><td>默认币种</td><td>CNY</td><td>系统默认货币</td></tr>
+    <tr><td>财务参数</td><td>小数位数</td><td>2</td><td>金额显示小数位数</td></tr>
+    <tr><td>库存参数</td><td>安全库存天数</td><td>7</td><td>安全库存计算基准</td></tr>
+    <tr><td>审批参数</td><td>审批超时时间</td><td>24</td><td>小时为单位</td></tr>
+    <tr><td>通知参数</td><td>消息保留天数</td><td>30</td><td>系统消息保留时间</td></tr>
+</table>
+
+<h2>3. 用户权限管理</h2>
+
+<h3>3.1 用户管理功能</h3>
+<div class="code">
+// 用户信息数据模型
+public class SystemUser
+{
+    public int Id { get; set; }
+    public string UserName { get; set; }             // 用户名
+    public string RealName { get; set; }             // 真实姓名
+    public string Email { get; set; }                // 邮箱
+    public string Phone { get; set; }                // 电话
+    public int DepartmentId { get; set; }            // 部门ID
+    public string Position { get; set; }             // 职位
+    public bool IsActive { get; set; }               // 是否激活
+    public DateTime CreateTime { get; set; }         // 创建时间
+    public DateTime? LastLoginTime { get; set; }     // 最后登录时间
+}
+
+// 用户权限服务
+public class UserService
+{
+    public UserResult CreateUser(UserCreateDto dto)
+    {
+        // 验证用户名唯一性
+        if (IsUserNameExists(dto.UserName))
+            return UserResult.Fail("用户名已存在");
+            
+        var user = new SystemUser
+        {
+            UserName = dto.UserName,
+            RealName = dto.RealName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            DepartmentId = dto.DepartmentId,
+            Position = dto.Position,
+            IsActive = true,
+            CreateTime = DateTime.Now
+        };
+        
+        _userRepo.Insert(user);
+        
+        // 设置默认密码
+        SetDefaultPassword(user.Id);
+        
+        return UserResult.Success("用户创建成功");
+    }
+}
+</div>
+
+<h3>3.2 角色权限配置</h3>
+<table>
+    <tr><th>角色名称</th><th>权限范围</th><th>功能权限</th><th>数据权限</th></tr>
+    <tr><td>系统管理员</td><td>全系统</td><td>所有功能</td><td>所有数据</td></tr>
+    <tr><td>部门经理</td><td>本部门</td><td>部门管理功能</td><td>本部门数据</td></tr>
+    <tr><td>普通员工</td><td>个人</td><td>业务操作功能</td><td>个人相关数据</td></tr>
+    <tr><td>财务人员</td><td>财务模块</td><td>财务相关功能</td><td>财务数据</td></tr>
+</table>
+
+<h2>4. 数据字典管理</h2>
+
+<h3>4.1 字典分类管理</h3>
+<div class="code">
+// 数据字典分类
+public class DictionaryCategory
+{
+    public int Id { get; set; }
+    public string CategoryCode { get; set; }         // 分类代码
+    public string CategoryName { get; set; }         // 分类名称
+    public string Description { get; set; }          // 描述
+    public bool IsSystem { get; set; }               // 是否系统字典
+    public int SortOrder { get; set; }               // 排序号
+}
+
+// 数据字典项
+public class DictionaryItem
+{
+    public int Id { get; set; }
+    public int CategoryId { get; set; }              // 分类ID
+    public string ItemCode { get; set; }             // 项代码
+    public string ItemName { get; set; }             // 项名称
+    public string ItemValue { get; set; }            // 项值
+    public int SortOrder { get; set; }               // 排序号
+    public bool IsActive { get; set; }               // 是否启用
+}
+</div>
+
+<h3>4.2 常用数据字典</h3>
+<table>
+    <tr><th>字典分类</th><th>用途</th><th>示例项</th></tr>
+    <tr><td>性别</td><td>人员性别</td><td>男、女</td></tr>
+    <tr><td>职务</td><td>员工职务</td><td>经理、主管、专员</td></tr>
+    <tr><td>产品类别</td><td>产品分类</td><td>原材料、半成品、成品</td></tr>
+    <tr><td>审批状态</td><td>审批流程状态</td><td>待审批、审批中、已批准</td></tr>
+    <tr><td>计量单位</td><td>物料计量</td><td>个、千克、米</td></tr>
+</table>
+
+<h2>5. 系统日志管理</h2>
+
+<h3>5.1 日志类型分类</h3>
+<div class="setting-group">
+<strong>操作日志</strong>
+<ul>
+    <li>用户登录/登出记录</li>
+    <li>业务数据增删改操作</li>
+    <li>系统配置变更记录</li>
+</ul>
+</div>
+
+<div class="setting-group">
+<strong>安全日志</strong>
+<ul>
+    <li>权限变更记录</li>
+    <li>异常登录尝试</li>
+    <li>敏感操作记录</li>
+</ul>
+</div>
+
+<div class="setting-group">
+<strong>系统日志</strong>
+<ul>
+    <li>系统启动/关闭记录</li>
+    <li>服务运行状态</li>
+    <li>错误异常记录</li>
+</ul>
+</div>
+
+<h3>5.2 日志数据模型</h3>
+<div class="code">
+// 系统日志表
+public class SystemLog
+{
+    public int Id { get; set; }
+    public string LogType { get; set; }              // 日志类型
+    public string Module { get; set; }               // 模块名称
+    public string Action { get; set; }               // 操作动作
+    public string Description { get; set; }          // 描述信息
+    public int? UserId { get; set; }                 // 用户ID
+    public string UserName { get; set; }             // 用户名
+    public string IpAddress { get; set; }            // IP地址
+    public DateTime LogTime { get; set; }            // 日志时间
+    public string Details { get; set; }              // 详细内容
+}
+
+// 日志服务
+public class LogService
+{
+    public void WriteLog(string logType, string module, string action, 
+                        string description, string details = null)
+    {
+        var log = new SystemLog
+        {
+            LogType = logType,
+            Module = module,
+            Action = action,
+            Description = description,
+            UserId = GetCurrentUserId(),
+            UserName = GetCurrentUserName(),
+            IpAddress = GetClientIp(),
+            LogTime = DateTime.Now,
+            Details = details
+        };
+        
+        _logRepo.Insert(log);
+    }
+}
+</div>
+
+<h2>6. 备份与恢复</h2>
+
+<h3>6.1 数据备份策略</h3>
+<table>
+    <tr><th>备份类型</th><th>备份频率</th><th>保留时间</th><th>备份内容</th></tr>
+    <tr><td>完整备份</td><td>每周一次</td><td>1个月</td><td>所有业务数据</td></tr>
+    <tr><td>增量备份</td><td>每日一次</td><td>7天</td><td>变更数据</td></tr>
+    <tr><td>事务日志备份</td><td>每小时一次</td><td>24小时</td><td>事务日志</td></tr>
+    <tr><td>配置备份</td><td>变更时备份</td><td>永久</td><td>系统配置</td></tr>
+</table>
+
+<h3>6.2 备份配置界面</h3>
+<div class="code">
+public class BackupService
+{
+    public BackupResult ExecuteBackup(BackupConfig config)
+    {
+        try
+        {
+            // 创建备份目录
+            var backupDir = CreateBackupDirectory(config);
+            
+            // 执行数据库备份
+            var dbBackupFile = BackupDatabase(backupDir, config);
+            
+            // 备份配置文件
+            var configBackupFile = BackupConfigFiles(backupDir);
+            
+            // 生成备份报告
+            var report = GenerateBackupReport(dbBackupFile, configBackupFile);
+            
+            // 清理过期备份
+            CleanExpiredBackups(config);
+            
+            return BackupResult.Success("备份执行成功", report);
+        }
+        catch (Exception ex)
+        {
+            return BackupResult.Fail($"备份失败: {ex.Message}");
+        }
+    }
+    
+    private string BackupDatabase(string backupDir, BackupConfig config)
+    {
+        var backupFile = Path.Combine(backupDir, $"db_backup_{DateTime.Now:yyyyMMdd_HHmmss}.bak");
+        
+        using (var connection = new SqlConnection(_connectionString))
+        {
+            var command = $"BACKUP DATABASE [{config.DatabaseName}] TO DISK = '{backupFile}'";
+            connection.Execute(command);
+        }
+        
+        return backupFile;
+    }
+}
+</div>
+
+<h2>7. 系统监控</h2>
+
+<h3>7.1 监控指标</h3>
+<ul>
+    <li><strong>系统性能</strong>：CPU使用率、内存占用、磁盘空间</li>
+    <li><strong>服务状态</strong>：数据库连接、网络服务、应用服务</li>
+    <li><strong>业务指标</strong>：用户活跃度、交易量、处理时效</li>
+    <li><strong>安全指标</strong>：登录失败次数、异常操作、权限变更</li>
+</ul>
+
+<h3>7.2 监控告警</h3>
+<div class="code">
+public class SystemMonitorService
+{
+    public void CheckSystemStatus()
+    {
+        // 检查数据库连接
+        if (!CheckDatabaseConnection())
+        {
+            SendAlert("数据库连接异常", AlertLevel.Critical);
+        }
+        
+        // 检查磁盘空间
+        var diskInfo = GetDiskSpaceInfo();
+        if (diskInfo.AvailableFreeSpace < diskInfo.TotalSize * 0.1) // 低于10%
+        {
+            SendAlert("磁盘空间不足", AlertLevel.Warning);
+        }
+        
+        // 检查服务状态
+        var serviceStatus = CheckServices();
+        foreach (var service in serviceStatus.Where(s => !s.IsRunning))
+        {
+            SendAlert($"服务{service.Name}异常", AlertLevel.Error);
+        }
+    }
+    
+    private void SendAlert(string message, AlertLevel level)
+    {
+        var alert = new SystemAlert
+        {
+            AlertLevel = level,
+            Message = message,
+            AlertTime = DateTime.Now,
+            IsAcknowledged = false
+        };
+        
+        _alertRepo.Insert(alert);
+        
+        // 发送通知
+        if (level >= AlertLevel.Warning)
+            SendNotification(alert);
+    }
+}
+</div>
+
+<h2>8. 接口配置</h2>
+
+<h3>8.1 外部接口配置</h3>
+<table>
+    <tr><th>接口类型</th><th>配置项</th><th>说明</th></tr>
+    <tr><td>Web服务接口</td><td>服务地址、认证方式</td><td>调用外部Web服务</td></tr>
+    <tr><td>数据库接口</td><td>连接字符串、查询语句</td><td>连接外部数据库</td></tr>
+    <tr><td>文件接口</td><td>文件路径、格式规范</td><td>文件导入导出</td></tr>
+    <tr><td>消息队列</td><td>队列地址、主题名称</td><td>异步消息处理</td></tr>
+</table>
+
+<h3>8.2 接口安全配置</h3>
+<div class="code">
+public class ApiSecurityConfig
+{
+    public string ApiKey { get; set; }               // API密钥
+    public string SecretKey { get; set; }            // 密钥
+    public string Token { get; set; }                // 访问令牌
+    public DateTime? TokenExpiry { get; set; }       // 令牌过期时间
+    public string EncryptionAlgorithm { get; set; }  // 加密算法
+    public bool EnableSSL { get; set; }              // 启用SSL
+}
+
+public class ExternalApiService
+{
+    public async Task<ApiResponse> CallExternalApi(string apiName, object data)
+    {
+        var config = GetApiConfig(apiName);
+        
+        using (var client = new HttpClient())
+        {
+            // 设置请求头
+            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {config.Token}");
+            client.DefaultRequestHeaders.Add("X-API-Key", config.ApiKey);
+            
+            // 序列化数据
+            var json = JsonConvert.SerializeObject(data);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            
+            // 发送请求
+            var response = await client.PostAsync(config.Endpoint, content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseJson = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<ApiResponse>(responseJson);
+            }
+            else
+            {
+                throw new ApiException($"API调用失败: {response.StatusCode}");
+            }
+        }
+    }
+}
+</div>
+
+<h2>9. 最佳实践</h2>
+
+<div class="tip">
+<strong>权限最小化原则</strong>：为用户分配权限时，应遵循最小权限原则，只授予完成工作所必需的最低权限。
+</div>
+
+<div class="tip">
+<strong>配置版本控制</strong>：重要的系统配置变更应记录版本信息，便于追溯和回滚。
+</div>
+
+<div class="tip">
+<strong>定期备份验证</strong>：不仅要定期备份数据，还要定期验证备份文件的完整性和可恢复性。
+</div>
+
+<h2>10. 常见问题</h2>
+
+<h3>Q: 如何重置用户密码？</h3>
+<p>A: 在用户管理界面选择要重置密码的用户，点击"重置密码"按钮，系统会生成临时密码发送到用户邮箱。</p>
+
+<h3>Q: 数据字典项如何批量导入？</h3>
+<p>A: 支持Excel格式的批量导入，下载模板文件填写后上传即可批量导入字典项。</p>
+
+<h3>Q: 系统监控告警如何配置接收人？</h3>
+<p>A: 在监控配置界面可以设置不同级别告警的接收人列表和通知方式。</p>
+
+</body>
+</html>

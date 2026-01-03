@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>工作流配置管理 - RUINORERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .code { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 5px; font-family: Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .config-item { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<h1>工作流配置管理系统</h1>
+
+<h2>1. 功能概述</h2>
+<p>工作流配置管理模块提供灵活的流程定义和配置功能，支持企业根据实际业务需求自定义审批流程。系统采用可视化配置界面，支持拖拽式流程设计，满足不同业务场景的审批需求。</p>
+
+<h2>2. 工作流配置要素</h2>
+
+<h3>2.1 基本配置参数</h3>
+<table>
+    <tr><th>配置项</th><th>说明</th><th>示例值</th></tr>
+    <tr><td>工作流名称</td><td>流程的标识名称</td><td>费用报销审批流程</td></tr>
+    <tr><td>业务类型</td><td>关联的业务模块</td><td>Finance.Expense</td></tr>
+    <tr><td>版本号</td><td>流程版本控制</td><td>v1.2.0</td></tr>
+    <tr><td>生效日期</td><td>流程开始生效时间</td><td>2025-01-01</td></tr>
+    <tr><td>状态</td><td>启用/禁用状态</td><td>启用</td></tr>
+</table>
+
+<h3>2.2 节点类型定义</h3>
+<table>
+    <tr><th>节点类型</th><th>功能描述</th><th>配置参数</th></tr>
+    <tr><td>开始节点</td><td>流程起点</td><td>无特殊配置</td></tr>
+    <tr><td>审批节点</td><td>人工审批环节</td><td>审批人、权限、时限</td></tr>
+    <tr><td>条件节点</td><td>流程分支判断</td><td>条件表达式、分支路径</td></tr>
+    <tr><td>自动节点</td><td>系统自动处理</td><td>处理逻辑、执行条件</td></tr>
+    <tr><td>结束节点</td><td>流程终点</td><td>结束动作、结果类型</td></tr>
+</table>
+
+<h2>3. 配置数据模型</h2>
+
+<h3>3.1 核心配置表结构</h3>
+<div class="code">
+// 工作流配置主表
+public class WorkflowConfig
+{
+    public int Id { get; set; }
+    public string ConfigName { get; set; }           // 配置名称
+    public string BusinessType { get; set; }         // 业务类型
+    public string Version { get; set; }              // 版本号
+    public DateTime EffectiveDate { get; set; }      // 生效日期
+    public bool IsActive { get; set; }               // 是否启用
+    public string ConfigJson { get; set; }           // 流程配置JSON
+    public string CreatedBy { get; set; }            // 创建人
+    public DateTime CreatedTime { get; set; }        // 创建时间
+}
+
+// 节点配置表
+public class NodeConfig
+{
+    public int Id { get; set; }
+    public int WorkflowConfigId { get; set; }        // 工作流配置ID
+    public string NodeId { get; set; }               // 节点ID
+    public string NodeType { get; set; }             // 节点类型
+    public string NodeName { get; set; }             // 节点名称
+    public int PositionX { get; set; }               // X坐标
+    public int PositionY { get; set; }               // Y坐标
+    public string Properties { get; set; }           // 节点属性JSON
+}
+
+// 连线配置表
+public class ConnectionConfig
+{
+    public int Id { get; set; }
+    public int WorkflowConfigId { get; set; }        // 工作流配置ID
+    public string SourceNodeId { get; set; }         // 源节点ID
+    public string TargetNodeId { get; set; }         // 目标节点ID
+    public string ConditionExpression { get; set; }  // 条件表达式
+}
+</div>
+
+<h2>4. 可视化配置界面</h2>
+
+<h3>4.1 配置界面功能</h3>
+<ul>
+    <li><strong>画布区域</strong>：拖拽式流程设计主区域</li>
+    <li><strong>组件面板</strong>：提供各种节点类型的组件</li>
+    <li><strong>属性面板</strong>：选中节点后的属性配置区域</li>
+    <li><strong>工具栏</strong>：保存、预览、验证等操作按钮</li>
+    <li><strong>状态栏</strong>：显示配置状态和验证信息</li>
+</ul>
+
+<h3>4.2 配置操作流程</h3>
+<ol>
+    <li><strong>创建新流程</strong>：选择业务类型，输入流程名称</li>
+    <li><strong>拖拽节点</strong>：从组件面板拖拽需要的节点到画布</li>
+    <li><strong>连接节点</td>：使用连线工具连接各个节点</li>
+    <li><strong>配置属性</strong>：选中节点配置具体的属性参数</li>
+    <li><strong>设置条件</strong>：为连线设置流转条件</li>
+    <li><strong>验证流程</strong>：检查流程的完整性和正确性</li>
+    <li><strong>保存发布</strong>：保存配置并发布生效</li>
+</ol>
+
+<h2>5. 条件表达式配置</h2>
+
+<h3>5.1 条件表达式语法</h3>
+<div class="code">
+// 金额条件示例
+amount > 5000 && amount <= 20000
+
+// 部门条件示例
+department == "销售部" || department == "市场部"
+
+// 复杂条件示例
+(amount > 10000 && projectType == "重点项目") || 
+(amount <= 5000 && urgency == "紧急")
+
+// 时间条件示例
+submitDate.DayOfWeek == DayOfWeek.Friday || 
+submitDate.Hour >= 17
+</div>
+
+<h3>5.2 条件变量说明</h3>
+<table>
+    <tr><th>变量名</th><th>数据类型</th><th>说明</th><th>示例</th></tr>
+    <tr><td>amount</td><td>decimal</td><td>业务金额</td><td>15000.50</td></tr>
+    <tr><td>department</td><td>string</td><td>申请部门</td><td>"技术部"</td></tr>
+    <tr><td>projectType</td><td>string</td><td>项目类型</td><td>"常规项目"</td></tr>
+    <tr><td>urgency</td><td>string</td><td>紧急程度</td><td>"紧急"</td></tr>
+    <tr><td>submitDate</td><td>DateTime</td><td>提交日期</td><td>DateTime.Now</td></tr>
+</table>
+
+<h2>6. 审批人配置策略</h2>
+
+<h3>6.1 审批人指定方式</h3>
+<div class="config-item">
+<strong>固定人员</strong>：直接指定具体的审批人员
+<code>approver: "张三"</code>
+</div>
+
+<div class="config-item">
+<strong>角色指定</strong>：指定角色，系统自动匹配具有该角色的用户
+<code>role: "部门经理"</code>
+</div>
+
+<div class="config-item">
+<strong>上级指定</strong>：自动指定申请人的直接上级
+<code>approverType: "直接上级"</code>
+</div>
+
+<div class="config-item">
+<strong>部门指定</strong>：指定部门负责人
+<code>approverType: "部门负责人"</code>
+</div>
+
+<h3>6.2 多人审批配置</h3>
+<div class="code">
+// 串行审批配置
+{
+    "approvalMode": "sequential",
+    "approvers": [
+        { "type": "role", "value": "部门经理" },
+        { "type": "role", "value": "财务专员" },
+        { "type": "role", "value": "财务经理" }
+    ]
+}
+
+// 并行审批配置
+{
+    "approvalMode": "parallel",
+    "approvers": [
+        { "type": "role", "value": "技术经理" },
+        { "type": "role", "value": "产品经理" }
+    ],
+    "completionRule": "all"  // 全部通过
+}
+
+// 或签审批配置
+{
+    "approvalMode": "anyone",
+    "approvers": [
+        { "type": "role", "value": "副总经理" },
+        { "type": "role", "value": "总经理" }
+    ],
+    "completionRule": "any"  // 任意一人通过
+}
+</div>
+
+<h2>7. 技术实现</h2>
+
+<h3>7.1 配置服务设计</h3>
+<div class="code">
+public class WorkflowConfigService
+{
+    private readonly IRepository<WorkflowConfig> _configRepo;
+    private readonly IRepository<NodeConfig> _nodeRepo;
+    private readonly IRepository<ConnectionConfig> _connectionRepo;
+    
+    // 保存工作流配置
+    public ConfigResult SaveWorkflowConfig(WorkflowConfigDto dto)
+    {
+        // 验证配置数据
+        var validationResult = ValidateConfig(dto);
+        if (!validationResult.IsValid)
+            return ConfigResult.Fail(validationResult.ErrorMessage);
+            
+        // 保存主配置
+        var config = new WorkflowConfig
+        {
+            ConfigName = dto.ConfigName,
+            BusinessType = dto.BusinessType,
+            Version = dto.Version,
+            EffectiveDate = dto.EffectiveDate,
+            ConfigJson = JsonConvert.SerializeObject(dto),
+            CreatedBy = GetCurrentUser(),
+            CreatedTime = DateTime.Now
+        };
+        
+        _configRepo.Insert(config);
+        
+        // 保存节点配置
+        SaveNodeConfigs(config.Id, dto.Nodes);
+        
+        // 保存连线配置
+        SaveConnectionConfigs(config.Id, dto.Connections);
+        
+        return ConfigResult.Success("配置保存成功");
+    }
+    
+    // 验证工作流配置
+    private ValidationResult ValidateConfig(WorkflowConfigDto dto)
+    {
+        // 检查必须的节点
+        if (!dto.Nodes.Any(n => n.NodeType == "start"))
+            return ValidationResult.Fail("必须包含开始节点");
+            
+        if (!dto.Nodes.Any(n => n.NodeType == "end"))
+            return ValidationResult.Fail("必须包含结束节点");
+            
+        // 检查节点连接性
+        if (!IsGraphConnected(dto.Nodes, dto.Connections))
+            return ValidationResult.Fail("流程图不连通，存在孤岛节点");
+            
+        return ValidationResult.Success();
+    }
+}
+</div>
+
+<h3>7.2 配置验证逻辑</h3>
+<div class="code">
+public class WorkflowValidator
+{
+    public ValidationResult Validate(WorkflowConfigDto config)
+    {
+        var errors = new List<string>();
+        
+        // 检查节点配置
+        foreach (var node in config.Nodes)
+        {
+            var nodeErrors = ValidateNode(node);
+            errors.AddRange(nodeErrors);
+        }
+        
+        // 检查连线配置
+        foreach (var connection in config.Connections)
+        {
+            var connectionErrors = ValidateConnection(connection, config.Nodes);
+            errors.AddRange(connectionErrors);
+        }
+        
+        // 检查流程完整性
+        var integrityErrors = CheckWorkflowIntegrity(config);
+        errors.AddRange(integrityErrors);
+        
+        return errors.Any() ? 
+            ValidationResult.Fail(string.Join("; ", errors)) : 
+            ValidationResult.Success();
+    }
+    
+    private List<string> ValidateNode(NodeDto node)
+    {
+        var errors = new List<string>();
+        
+        if (string.IsNullOrEmpty(node.NodeId))
+            errors.Add($"节点{node.NodeName}缺少节点ID");
+            
+        if (node.NodeType == "approval" && string.IsNullOrEmpty(node.Approver))
+            errors.Add($"审批节点{node.NodeName}未指定审批人");
+            
+        return errors;
+    }
+}
+</div>
+
+<h2>8. 版本管理</h2>
+
+<h3>8.1 版本控制策略</h3>
+<ul>
+    <li><strong>版本号格式</strong>：主版本.次版本.修订版本 (v1.2.3)</li>
+    <li><strong>版本发布</strong>：新版本生效后，旧版本自动归档</li>
+    <li><strong>版本回滚</strong>：支持回滚到历史版本</li>
+    <li><strong>版本比较</strong>：可视化比较不同版本的差异</li>
+</ul>
+
+<h3>8.2 版本迁移处理</h3>
+<div class="code">
+public class VersionMigrationService
+{
+    public MigrationResult MigrateWorkflowInstances(int oldConfigId, int newConfigId)
+    {
+        // 获取进行中的工作流实例
+        var runningInstances = GetRunningInstances(oldConfigId);
+        
+        foreach (var instance in runningInstances)
+        {
+            // 根据新旧配置的映射关系迁移实例
+            var migrated = MigrateInstance(instance, newConfigId);
+            if (!migrated)
+                return MigrationResult.Fail($"实例{instance.Id}迁移失败");
+        }
+        
+        return MigrationResult.Success($"成功迁移{runningInstances.Count}个实例");
+    }
+    
+    private bool MigrateInstance(WorkflowInstance instance, int newConfigId)
+    {
+        // 获取新旧节点的映射关系
+        var nodeMapping = GetNodeMapping(instance.WorkflowId, newConfigId);
+        
+        // 更新实例的配置ID
+        instance.WorkflowId = newConfigId;
+        
+        // 映射当前节点
+        if (nodeMapping.ContainsKey(instance.CurrentNode))
+        {
+            instance.CurrentNode = nodeMapping[instance.CurrentNode];
+        }
+        else
+        {
+            // 无法映射的节点，需要人工处理
+            instance.Status = "需要人工处理";
+        }
+        
+        return UpdateInstance(instance);
+    }
+}
+</div>
+
+<h2>9. 最佳实践</h2>
+
+<div class="tip">
+<strong>流程简化原则</strong>：在设计审批流程时，应尽量简化流程节点，避免不必要的审批环节。
+</div>
+
+<div class="tip">
+<strong>条件明确性</strong>：设置条件分支时，确保条件表达式明确无误，避免歧义。
+</div>
+
+<div class="tip">
+<strong>权限合理性</strong>：审批权限的设置应符合企业的组织架构和职责分工。
+</div>
+
+<h2>10. 常见问题</h2>
+
+<h3>Q: 如何复制现有的工作流配置？</h3>
+<p>A: 在配置列表中选择要复制的流程，点击"复制"按钮，系统会创建该流程的副本供修改。</p>
+
+<h3>Q: 配置保存时提示"流程不连通"怎么办？</h3>
+<p>A: 检查是否有孤立的节点未连接到主流程，确保所有节点都能从开始节点到达结束节点。</p>
+
+<h3>Q: 如何测试新配置的流程？</h3>
+<p>A: 使用流程测试功能，可以模拟提交业务单据来测试新流程的运行效果。</p>
+
+</body>
+</html>

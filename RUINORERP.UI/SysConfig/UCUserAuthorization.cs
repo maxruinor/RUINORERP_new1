@@ -1,28 +1,29 @@
-﻿using System;
+﻿using FastReport.DevComponents.DotNetBar.Controls;
+using Krypton.Navigator;
+using Krypton.Toolkit.Suite.Extended.TreeGridView;
+using Krypton.Workspace;
+using RUINORERP.Business;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Model;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using System.Linq.Expressions;
-using SqlSugar;
-using RUINORERP.Common.Helper;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.Common.Extensions;
-using System.Reflection;
-using RUINORERP.UI.Common;
-using System.Collections.Concurrent;
-using RUINORERP.Model.Dto;
-using Krypton.Workspace;
-using Krypton.Navigator;
-using Krypton.Toolkit.Suite.Extended.TreeGridView;
-using FastReport.DevComponents.DotNetBar.Controls;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -37,8 +38,12 @@ namespace RUINORERP.UI.SysConfig
         public UCUserAuthorization()
         {
             InitializeComponent();
+            if (!DesignMode)
+            {
+                DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_RoleInfo));
+            }
         }
-      
+        public GridViewDisplayTextResolver DisplayTextResolver;
         tb_RoleInfoController<tb_RoleInfo> ctrRole = Startup.GetFromFac<tb_RoleInfoController<tb_RoleInfo>>();
         private async Task LoadUser()
         {
@@ -116,7 +121,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void UCUserAuthorization_Load(object sender, EventArgs e)
         {
-            
+
             TreeView1.HideSelection = false;
             // FieldNameList = UIHelper.GetFieldNameColList(typeof(SelectDto), typeof(tb_RoleInfo));
             dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_User_Role));
@@ -145,7 +150,10 @@ namespace RUINORERP.UI.SysConfig
             catch (Exception)
             {
             }
-
+            if (!DesignMode)
+            {
+                DisplayTextResolver.Initialize(dataGridView1);
+            }
         }
 
         /// <summary>
@@ -164,7 +172,7 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
-            
+
 
             //TreeViewSingleSelectedAndChecked(TreeView1, e);
             tb_User_RoleController<tb_User_Role> ctr = Startup.GetFromFac<tb_User_RoleController<tb_User_Role>>();

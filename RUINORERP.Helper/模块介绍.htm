@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUINOR ERP模块介绍</title>
+    <style>
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .module { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .feature-list { margin: 10px 0; }
+        .feature-item { background: #e8f4f8; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .tech-info { background: #e8f4f8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .business-flow { background: #f0f8ff; padding: 15px; border-left: 4px solid #5dade2; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>RUINOR ERP 功能模块详细介绍</h1>
+
+<p>RUINOR ERP系统采用模块化设计，每个模块专注于特定的业务领域，通过模块间的协作实现企业资源的全面管理。</p>
+
+<div class="module">
+    <h2>1. 生产制造模块</h2>
+    
+    <div class="tech-info">
+        <h3>技术实现</h3>
+        <p><strong>核心控制器：</strong>BOMController, ManufacturingOrderController, ProductionPlanController</p>
+        <p><strong>数据模型：</strong>tb_BOM_S, tb_BOM_SDetail, tb_ManufacturingOrder, tb_ProductionPlan</p>
+    </div>
+    
+    <h3>主要功能</h3>
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4>配方管理 (BOM管理)</h4>
+            <ul>
+                <li>标准物料清单(BOM)的定义和维护</li>
+                <li>BOM版本控制和历史记录</li>
+                <li>物料替代关系的管理</li>
+                <li>BOM结构的多级展开和查询</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>生产计划管理</h4>
+            <ul>
+                <li>主生产计划(MPS)制定</li>
+                <li>物料需求计划(MRP)计算</li>
+                <li>产能计划和负荷分析</li>
+                <li>生产进度跟踪和调整</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>生产订单管理</h4>
+            <ul>
+                <li>生产订单的创建和下达</li>
+                <li>工单派工和进度跟踪</li>
+                <li>生产过程的实时监控</li>
+                <li>完工入库和质量检验</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>成本管理</h4>
+            <ul>
+                <li>材料成本核算</li>
+                <li>人工成本计算</li>
+                <li>制造费用分摊</li>
+                <li>成本差异分析</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>销售订单 → MRP计算 → 生产计划 → 生产订单 → 领料 → 生产 → 检验 → 入库</p>
+    </div>
+</div>
+
+<div class="module">
+    <h2>2. 供应链管理模块</h2>
+    
+    <div class="tech-info">
+        <h3>技术实现</h3>
+        <p><strong>核心控制器：</strong>PurOrderController, SaleOrderController, InventoryController, StockInOutController</p>
+        <p><strong>数据模型：</strong>tb_PurOrder, tb_SaleOrder, tb_Inventory, tb_StockIn, tb_StockOut</p>
+    </div>
+    
+    <h3>主要功能</h3>
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4>采购管理</h4>
+            <ul>
+                <li>供应商管理和评估</li>
+                <li>采购计划和预算控制</li>
+                <li>采购订单的创建和跟踪</li>
+                <li>到货验收和入库处理</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>销售管理</h4>
+            <ul>
+                <li>客户信息管理</li>
+                <li>销售报价和订单处理</li>
+                <li>销售合同的签订和执行</li>
+                <li>销售发货和发票管理</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>库存管理</h4>
+            <ul>
+                <li>库存实时查询和预警</li>
+                <li>安全库存设置和监控</li>
+                <li>库存盘点和差异处理</li>
+                <li>库存调拨和转移</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>出入库管理</h4>
+            <ul>
+                <li>采购入库管理</li>
+                <li>销售出库管理</li>
+                <li>生产领料和退料</li>
+                <li>其他出入库业务</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>采购需求 → 采购订单 → 到货验收 → 采购入库 → 库存管理 → 销售订单 → 销售出库</p>
+    </div>
+</div>
+
+<div class="module">
+    <h2>3. 售后服务模块</h2>
+    
+    <div class="tech-info">
+        <h3>技术实现</h3>
+        <p><strong>核心控制器：</strong>AfterSaleController, RepairOrderController, AssetDisposalController</p>
+        <p><strong>数据模型：</strong>tb_AS_AfterSaleApply, tb_AS_RepairOrder, tb_AS_RepairMaterialPickup</p>
+    </div>
+    
+    <h3>主要功能</h3>
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4>售后申请管理</h4>
+            <ul>
+                <li>售后申请的受理和登记</li>
+                <li>服务类型和优先级的设定</li>
+                <li>服务人员的指派和调度</li>
+                <li>服务进度的跟踪和反馈</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>维修订单管理</h4>
+            <ul>
+                <li>维修订单的创建和分配</li>
+                <li>维修过程和结果的记录</li>
+                <li>维修费用的核算和结算</li>
+                <li>维修质量的评估和改进</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>资产处置管理</h4>
+            <ul>
+                <li>固定资产的报废申请</li>
+                <li>资产处置流程的审批</li>
+                <li>处置结果的记录和归档</li>
+                <li>资产残值的核算</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>提前交付管理</h4>
+            <ul>
+                <li>提前交付申请的审批</li>
+                <li>交付计划的调整和优化</li>
+                <li>交付过程的监控和协调</li>
+                <li>交付结果的评估和反馈</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>售后申请 → 服务指派 → 维修处理 → 费用结算 → 客户反馈 → 服务改进</p>
+    </div>
+</div>
+
+<div class="module">
+    <h2>4. 审批工作流模块</h2>
+    
+    <div class="tech-info">
+        <h3>技术实现</h3>
+        <p><strong>核心控制器：</strong>ApprovalController, WorkflowController</p>
+        <p><strong>数据模型：</strong>tb_Approval, tb_WorkflowDefinition, tb_WorkflowInstance</p>
+        <p><strong>技术框架：</strong>WorkflowCore工作流引擎</p>
+    </div>
+    
+    <h3>主要功能</h3>
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4>工作流定义</h4>
+            <ul>
+                <li>业务流程的可视化设计</li>
+                <li>审批节点的配置和管理</li>
+                <li>条件分支和并行处理</li>
+                <li>超时处理和异常处理</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>多级审批</h4>
+            <ul>
+                <li>审批级别的灵活配置</li>
+                <li>审批人的动态指定</li>
+                <li>审批意见的记录和跟踪</li>
+                <li>审批流程的实时监控</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>条件审批</h4>
+            <ul>
+                <li>基于金额的审批条件</li>
+                <li>基于业务类型的审批规则</li>
+                <li>审批流程的动态调整</li>
+                <li>审批结果的自动处理</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>流程监控</h4>
+            <ul>
+                <li>流程进度的实时跟踪</li>
+                <li>审批时效的统计分析</li>
+                <li>流程异常的预警和处理</li>
+                <li>流程效率的优化建议</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>业务申请 → 工作流启动 → 审批节点 → 条件判断 → 审批处理 → 流程结束</p>
+    </div>
+</div>
+
+<div class="module">
+    <h2>5. 财务管理模块</h2>
+    
+    <div class="tech-info">
+        <h3>技术实现</h3>
+        <p><strong>核心控制器：</strong>FinancialController, ReceivableController, PayableController, ExpenseController</p>
+        <p><strong>数据模型：</strong>tb_Receivable, tb_Payable, tb_Expense, tb_FixedAssets</p>
+    </div>
+    
+    <h3>主要功能</h3>
+    <div class="feature-list">
+        <div class="feature-item">
+            <h4>应收应付管理</h4>
+            <ul>
+                <li>应收账款的管理和催收</li>
+                <li>应付账款的核对和支付</li>
+                <li>账龄分析和风险评估</li>
+                <li>坏账准备的计提和处理</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>费用管理</h4>
+            <ul>
+                <li>费用预算的制定和控制</li>
+                <li>费用报销的申请和审批</li>
+                <li>费用分摊和核算</li>
+                <li>费用分析和优化</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>固定资产管理</h4>
+            <ul>
+                <li>固定资产的登记和分类</li>
+                <li>折旧计算和计提</li>
+                <li>资产盘点和清查</li>
+                <li>资产处置和转移</li>
+            </ul>
+        </div>
+        
+        <div class="feature-item">
+            <h4>发票管理</h4>
+            <ul>
+                <li>发票的开具和登记</li>
+                <li>发票的认证和抵扣</li>
+                <li>发票的统计和分析</li>
+                <li>发票的归档和查询</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="business-flow">
+        <h3>业务流程</h3>
+        <p>业务发生 → 财务凭证 → 账务处理 → 财务报表 → 财务分析 → 决策支持</p>
+    </div>
+</div>
+
+<h2>模块间协作关系</h2>
+
+<table>
+    <tr>
+        <th>模块名称</th>
+        <th>主要协作模块</th>
+        <th>协作内容</th>
+    </tr>
+    <tr>
+        <td>生产制造模块</td>
+        <td>供应链管理、财务管理</td>
+        <td>物料需求传递、成本核算</td>
+    </tr>
+    <tr>
+        <td>供应链管理模块</td>
+        <td>生产制造、财务管理</td>
+        <td>采购计划、库存管理、应收应付</td>
+    </tr>
+    <tr>
+        <td>售后服务模块</td>
+        <td>供应链管理、审批工作流</td>
+        <td>维修领料、服务审批</td>
+    </tr>
+    <tr>
+        <td>审批工作流模块</td>
+        <td>所有业务模块</td>
+        <td>业务流程审批控制</td>
+    </tr>
+    <tr>
+        <td>财务管理模块</td>
+        <td>所有业务模块</td>
+        <td>财务核算和分析</td>
+    </tr>
+</table>
+
+<h2>模块扩展机制</h2>
+
+<div class="tech-info">
+    <h3>插件化架构</h3>
+    <p>RUINOR ERP采用插件化架构设计，支持以下扩展方式：</p>
+    
+    <ul>
+        <li><strong>功能模块扩展：</strong>通过标准化接口实现新功能模块的集成</li>
+        <li><strong>业务流程扩展：</strong>支持自定义业务流程的定义和执行</li>
+        <li><strong>报表扩展：</strong>提供报表模板和数据分析工具的扩展</li>
+        <li><strong>接口扩展：</strong>支持与第三方系统的接口集成</li>
+    </ul>
+</div>
+
+<div class="business-flow">
+    <h3>扩展开发指南</h3>
+    <p>系统提供完善的扩展开发文档和API接口，支持开发者进行二次开发和定制化改造。</p>
+</div>
+
+</body>
+</html>

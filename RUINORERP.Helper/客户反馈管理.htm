@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>客户反馈管理系统 - RUINORERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .code { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 5px; font-family: Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+<h1>客户反馈管理系统</h1>
+
+<h2>1. 功能概述</h2>
+<p>客户反馈管理模块负责收集、处理和分析客户对产品、服务的意见和建议，是持续改进产品质量和服务水平的重要工具。系统基于.NET Framework技术栈，提供全面的反馈管理功能。</p>
+
+<h2>2. 核心功能</h2>
+
+<h3>2.1 反馈收集渠道</h3>
+<table>
+    <tr><th>渠道类型</th><th>描述</th><th>处理方式</th></tr>
+    <tr><td>系统内反馈</td><td>客户通过系统界面直接提交反馈</td><td>自动录入系统</td></tr>
+    <tr><td>电话反馈</td><td>客户通过客服电话提供反馈</td><td>客服人员手工录入</td></tr>
+    <tr><td>邮件反馈</td><td>客户通过电子邮件发送反馈</td><td>邮件解析后导入系统</td></tr>
+    <tr><td>现场反馈</td><td>服务工程师收集的现场反馈</td><td>服务报告关联录入</td></tr>
+</table>
+
+<h3>2.2 反馈分类处理</h3>
+<table>
+    <tr><th>反馈类型</th><th>处理流程</th><th>责任部门</th></tr>
+    <tr><td>产品质量问题</td><td>技术部门分析→生产部门改进</td><td>质量部</td></tr>
+    <tr><td>服务不满意</td><td>服务部门分析→培训改进</td><td>客服部</td></tr>
+    <tr><td>功能建议</td><td>产品部门评估→版本规划</td><td>产品部</td></tr>
+    <tr><td>价格投诉</td><td>销售部门分析→价格策略调整</td><td>销售部</td></tr>
+</table>
+
+<h2>3. 数据模型设计</h2>
+
+<h3>3.1 核心数据表结构</h3>
+<div class="code">
+// 客户反馈表
+public class CustomerFeedback
+{
+    public int Id { get; set; }
+    public string FeedbackNumber { get; set; }       // 反馈编号
+    public int CustomerId { get; set; }              // 客户ID
+    public string FeedbackType { get; set; }         // 反馈类型
+    public string Content { get; set; }              // 反馈内容
+    public DateTime FeedbackDate { get; set; }       // 反馈日期
+    public string Priority { get; set; }             // 优先级
+    public string Status { get; set; }               // 处理状态
+    public int? HandlerId { get; set; }              // 处理人ID
+    public DateTime? HandleDate { get; set; }        // 处理日期
+    public string HandleResult { get; set; }         // 处理结果
+}
+
+// 反馈处理记录表
+public class FeedbackProcessRecord
+{
+    public int Id { get; set; }
+    public int FeedbackId { get; set; }              // 反馈ID
+    public int ProcessorId { get; set; }             // 处理人ID
+    public string ProcessContent { get; set; }       // 处理内容
+    public DateTime ProcessDate { get; set; }        // 处理日期
+    public string NextStep { get; set; }             // 下一步计划
+}
+</div>
+
+<h2>4. 业务流程</h2>
+
+<h3>4.1 反馈处理标准流程</h3>
+<ol>
+    <li><strong>反馈接收</strong>：系统接收来自各种渠道的客户反馈</li>
+    <li><strong>初步分类</strong>：根据反馈内容进行初步分类和优先级判定</li>
+    <li><strong>分配处理</strong>：将反馈分配给相应的责任部门</li>
+    <li><strong>调查分析</strong>：责任部门对反馈内容进行调查分析</li>
+    <li><strong>制定方案</strong>：制定改进措施和处理方案</li>
+    <li><strong>方案实施</strong>：执行改进措施，跟踪实施效果</li>
+    <li><strong>结果反馈</strong>：将处理结果反馈给客户</li>
+    <li><strong>归档总结</strong>：反馈处理完成，归档总结</li>
+</ol>
+
+<h3>4.2 紧急反馈处理流程</h3>
+<div class="warning">
+<strong>紧急反馈处理</strong>：对于优先级为"紧急"的反馈，系统会立即发送通知给相关责任人，要求在2小时内响应处理。
+</div>
+
+<h2>5. 技术实现</h2>
+
+<h3>5.1 反馈控制器设计</h3>
+<div class="code">
+public class CustomerFeedbackController : BaseController
+{
+    private readonly ICustomerFeedbackService _feedbackService;
+    
+    public CustomerFeedbackController(ICustomerFeedbackService feedbackService)
+    {
+        _feedbackService = feedbackService;
+    }
+    
+    // 提交客户反馈
+    [HttpPost]
+    public ActionResult SubmitFeedback(FeedbackDto dto)
+    {
+        var result = _feedbackService.SubmitFeedback(dto);
+        return Json(result);
+    }
+    
+    // 分配反馈给处理人
+    [HttpPost]
+    public ActionResult AssignFeedback(int feedbackId, int assigneeId)
+    {
+        var result = _feedbackService.AssignFeedback(feedbackId, assigneeId);
+        return Json(result);
+    }
+    
+    // 获取反馈统计
+    [HttpGet]
+    public ActionResult GetFeedbackStats(DateTime startDate, DateTime endDate)
+    {
+        var stats = _feedbackService.GetFeedbackStatistics(startDate, endDate);
+        return Json(stats);
+    }
+}
+</div>
+
+<h3>5.2 反馈服务实现</h3>
+<div class="code">
+public class CustomerFeedbackService : ICustomerFeedbackService
+{
+    private readonly IRepository<CustomerFeedback> _feedbackRepo;
+    private readonly IRepository<FeedbackProcessRecord> _processRepo;
+    
+    public ServiceResult SubmitFeedback(FeedbackDto dto)
+    {
+        // 数据验证
+        if (string.IsNullOrEmpty(dto.Content))
+            return ServiceResult.Fail("反馈内容不能为空");
+            
+        // 创建反馈记录
+        var feedback = new CustomerFeedback
+        {
+            FeedbackNumber = GenerateFeedbackNumber(),
+            CustomerId = dto.CustomerId,
+            FeedbackType = dto.FeedbackType,
+            Content = dto.Content,
+            FeedbackDate = DateTime.Now,
+            Priority = DeterminePriority(dto.FeedbackType, dto.Content),
+            Status = "待处理"
+        };
+        
+        _feedbackRepo.Insert(feedback);
+        
+        // 发送通知给相关人员
+        SendNotification(feedback);
+        
+        return ServiceResult.Success("反馈提交成功");
+    }
+    
+    private string DeterminePriority(string type, string content)
+    {
+        // 根据反馈类型和内容确定优先级
+        if (type == "紧急问题" || content.Contains("严重"))
+            return "紧急";
+        else if (type == "一般问题")
+            return "一般";
+        else
+            return "低";
+    }
+}
+</div>
+
+<h2>6. 统计分析功能</h2>
+
+<h3>6.1 反馈统计指标</h3>
+<ul>
+    <li><strong>反馈总量</strong>：统计指定时间段内的反馈数量</li>
+    <li><strong>反馈类型分布</strong>：分析各类反馈的占比情况</li>
+    <li><strong>处理时效</strong>：统计平均处理时间和超时情况</li>
+    <li><strong>满意度趋势</strong>：分析客户满意度的变化趋势</li>
+    <li><strong>问题热点</strong>：识别频繁出现的问题类型</li>
+</ul>
+
+<h3>6.2 统计报表生成</h3>
+<div class="code">
+public class FeedbackStatisticsService
+{
+    public FeedbackStatistics GetStatistics(DateTime startDate, DateTime endDate)
+    {
+        var feedbacks = _feedbackRepo.GetAll()
+            .Where(f => f.FeedbackDate >= startDate && f.FeedbackDate <= endDate)
+            .ToList();
+            
+        return new FeedbackStatistics
+        {
+            TotalCount = feedbacks.Count,
+            ByType = feedbacks.GroupBy(f => f.FeedbackType)
+                             .ToDictionary(g => g.Key, g => g.Count()),
+            AverageProcessTime = CalculateAverageProcessTime(feedbacks),
+            SatisfactionTrend = AnalyzeSatisfactionTrend(feedbacks)
+        };
+    }
+}
+</div>
+
+<h2>7. 最佳实践</h2>
+
+<div class="tip">
+<strong>快速响应机制</strong>：建议设置反馈响应时间目标，如紧急反馈2小时内响应，一般反馈24小时内响应。
+</div>
+
+<div class="tip">
+<strong>闭环管理</strong>：确保每个反馈都有明确的处理结果和客户回访，形成完整的闭环管理。
+</div>
+
+<div class="tip">
+<strong>持续改进</strong>：定期分析反馈数据，识别系统性问题，推动产品和服务的持续改进。
+</div>
+
+<h2>8. 常见问题</h2>
+
+<h3>Q: 如何设置反馈的自动分配规则？</h3>
+<p>A: 在系统设置中，可以配置反馈类型与处理部门的对应关系，系统会根据规则自动分配。</p>
+
+<h3>Q: 反馈处理超时如何提醒？</h3>
+<p>A: 系统会监控反馈处理时间，对于即将超时的反馈会自动发送提醒通知。</p>
+
+<h3>Q: 如何导出反馈统计报表？</h3>
+<p>A: 在反馈统计界面，可以选择时间范围后导出Excel格式的统计报表。</p>
+
+</body>
+</html>

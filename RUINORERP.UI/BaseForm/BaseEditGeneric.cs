@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -40,9 +40,26 @@ namespace RUINORERP.UI.BaseForm
 
         protected readonly IEntityCacheManager _cacheManager;
 
+        /// <summary>
+        /// 无参数构造函数，用于设计器环境
+        /// </summary>
+        public BaseEditGeneric()
+        {
+            InitializeComponent();
+            //this.KeyPreview = true;
+            //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
+        }
+
+        /// <summary>
+        /// 带参数构造函数，用于运行时环境
+        /// </summary>
+        /// <param name="cacheManager">实体缓存管理器</param>
         public BaseEditGeneric(IEntityCacheManager cacheManager = null)
         {
-            if (_cacheManager == null)
+            // 使用LicenseManager.UsageMode检测设计模式，在构造函数中更可靠
+            bool isDesignMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
+            
+            if (!isDesignMode)
             {
                 if (cacheManager == null)
                 {
@@ -50,6 +67,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 _cacheManager = cacheManager;
             }
+            
             InitializeComponent();
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);

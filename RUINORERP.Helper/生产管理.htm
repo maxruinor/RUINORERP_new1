@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生产管理模块 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #3498db; }
+        .feature { background: #e8f4f8; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .code { background: #f5f5f5; padding: 10px; border-left: 4px solid #3498db; font-family: Consolas, monospace; }
+        .warning { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 10px 0; }
+        .tip { background: #d1ecf1; padding: 10px; border-left: 4px solid #17a2b8; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<h1>生产管理模块</h1>
+
+<p>生产管理模块是RUINOR ERP系统的核心模块，专注于制造企业的生产计划、执行和控制全过程管理。</p>
+
+<div class="section">
+    <h2>模块概述</h2>
+    <p>生产管理模块基于实际的制造业务需求，提供完整的生产流程管理解决方案，包括：</p>
+    <ul>
+        <li><strong>配方管理：</strong>标准物料清单(BOM)的定义和维护</li>
+        <li><strong>生产计划：</strong>主生产计划和物料需求计划</li>
+        <li><strong>生产执行：</strong>生产订单管理和进度跟踪</li>
+        <li><strong>质量控制：</strong>生产过程的质量监控</li>
+        <li><strong>成本核算：</strong>生产成本的计算和分析</li>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>技术架构</h2>
+    
+    <div class="feature">
+        <h3>核心数据模型</h3>
+        <table>
+            <tr>
+                <th>数据表</th>
+                <th>功能描述</th>
+                <th>关键字段</th>
+            </tr>
+            <tr>
+                <td>tb_BOM_S</td>
+                <td>标准BOM主表</td>
+                <td>BOMID, ProductID, Version, Status, CreateDate</td>
+            </tr>
+            <tr>
+                <td>tb_BOM_SDetail</td>
+                <td>BOM明细表</td>
+                <td>DetailID, ParentID, MaterialID, Quantity, LossRate</td>
+            </tr>
+            <tr>
+                <td>tb_ManufacturingOrder</td>
+                <td>生产订单主表</td>
+                <td>OrderID, BOMID, PlanQuantity, ActualQuantity, Status</td>
+            </tr>
+            <tr>
+                <td>tb_ProductionPlan</td>
+                <td>生产计划表</td>
+                <td>PlanID, ProductID, PlanDate, PlanQuantity, Priority</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>核心业务控制器</h3>
+        <ul>
+            <li><strong>BOMController：</strong>BOM管理的业务逻辑处理</li>
+            <li><strong>ManufacturingOrderController：</strong>生产订单的业务逻辑</li>
+            <li><strong>ProductionPlanController：</strong>生产计划的业务逻辑</li>
+            <li><strong>QualityController：</strong>质量控制的业务逻辑</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>配方管理 (BOM管理)</h2>
+    
+    <div class="feature">
+        <h3>BOM结构定义</h3>
+        <p>BOM（Bill of Materials）是产品的物料清单，定义了产品的组成结构和用量关系。</p>
+        
+        <table>
+            <tr>
+                <th>BOM类型</th>
+                <th>适用场景</th>
+                <th>特点</th>
+            </tr>
+            <tr>
+                <td>标准BOM</td>
+                <td>常规产品生产</td>
+                <td>固定的物料组成和用量</td>
+            </tr>
+            <tr>
+                <td>工程BOM</td>
+                <td>研发阶段</td>
+                <td>设计阶段的物料清单</td>
+            </tr>
+            <tr>
+                <td>计划BOM</td>
+                <td>生产计划</td>
+                <td>用于MRP计算的BOM</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>BOM版本控制</h3>
+        <p>系统支持BOM的版本管理，确保生产过程中BOM变更的可追溯性。</p>
+        
+        <div class="code">
+// BOM版本控制逻辑示例
+public class BOMVersionManager
+{
+    public void CreateNewVersion(long bomId, string versionDesc)
+    {
+        // 复制当前版本BOM
+        // 创建新版本记录
+        // 更新版本状态
+    }
+    
+    public void ActivateVersion(long versionId)
+    {
+        // 激活指定版本
+        // 停用其他版本
+        // 更新相关生产计划
+    }
+}
+        </div>
+    </div>
+    
+    <div class="tip">
+        <strong>使用技巧：</strong>建议在BOM变更时创建新版本，而不是直接修改现有BOM，以确保生产历史数据的完整性。
+    </div>
+</div>
+
+<div class="section">
+    <h2>生产计划管理</h2>
+    
+    <div class="feature">
+        <h3>主生产计划 (MPS)</h3>
+        <p>主生产计划是基于销售预测和客户订单制定的产品级生产计划。</p>
+        
+        <table>
+            <tr>
+                <th>计划要素</th>
+                <th>说明</th>
+                <th>数据来源</th>
+            </tr>
+            <tr>
+                <td>产品需求</td>
+                <td>客户订单和销售预测</td>
+                <td>销售管理模块</td>
+            </tr>
+            <tr>
+                <td>产能约束</td>
+                <td>设备能力和人员配置</td>
+                <td>基础资料管理</td>
+            </tr>
+            <tr>
+                <td>物料供应</td>
+                <td>原材料库存和采购计划</td>
+                <td>库存管理模块</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>物料需求计划 (MRP)</h3>
+        <p>MRP是基于主生产计划计算物料需求的重要功能。</p>
+        
+        <div class="code">
+// MRP计算逻辑示例
+public class MRPCalculator
+{
+    public MRPResult CalculateMRP(List<ProductionPlan> plans)
+    {
+        // 展开BOM结构
+        // 计算净需求
+        // 考虑库存和在途量
+        // 生成采购建议
+        // 生成生产建议
+    }
+}
+        </div>
+        
+        <p><strong>MRP计算步骤：</strong></p>
+        <ol>
+            <li>获取主生产计划数据</li>
+            <li>展开BOM结构计算毛需求</li>
+            <li>考虑现有库存和已分配量</li>
+            <li>计算净需求和需求时间</li>
+            <li>生成采购订单和生产订单建议</li>
+        </ol>
+    </div>
+    
+    <div class="warning">
+        <strong>注意事项：</strong>MRP计算需要准确的BOM数据和库存数据，建议在计算前确保数据的准确性。
+    </div>
+</div>
+
+<div class="section">
+    <h2>生产订单管理</h2>
+    
+    <div class="feature">
+        <h3>生产订单状态</h3>
+        <table>
+            <tr>
+                <th>状态</th>
+                <th>说明</th>
+                <th>允许操作</th>
+            </tr>
+            <tr>
+                <td>新建</td>
+                <td>订单已创建但未下达</td>
+                <td>修改、删除、下达</td>
+            </tr>
+            <tr>
+                <td>已下达</td>
+                <td>订单已下达准备生产</td>
+                <td>领料、开始生产</td>
+            </tr>
+            <tr>
+                <td>生产中</td>
+                <td>订单正在生产过程中</td>
+                <td>进度汇报、暂停</td>
+            </tr>
+            <tr>
+                <td>已完成</td>
+                <td>订单生产完成</td>
+                <td>入库、质量检验</td>
+            </tr>
+            <tr>
+                <td>已关闭</td>
+                <td>订单已完成所有流程</td>
+                <td>查询、统计</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>生产进度跟踪</h3>
+        <p>系统提供实时的生产进度跟踪功能，支持多维度进度监控。</p>
+        
+        <ul>
+            <li><strong>订单级进度：</strong>单个生产订单的完成情况</li>
+            <li><strong>工序级进度：</strong>各工序的生产进度</li>
+            <li><strong>设备级进度：</strong>各设备的生产负荷</li>
+            <li><strong>人员级进度：</strong>操作人员的工作量</li>
+        </ul>
+    </div>
+    
+    <div class="tip">
+        <strong>最佳实践：</strong>建议定期更新生产进度数据，以便及时发现生产异常并采取纠正措施。
+    </div>
+</div>
+
+<div class="section">
+    <h2>质量控制</h2>
+    
+    <div class="feature">
+        <h3>质量检验流程</h3>
+        <p>系统支持完整的质量检验流程，包括来料检验、过程检验和成品检验。</p>
+        
+        <table>
+            <tr>
+                <th>检验类型</th>
+                <th>检验时机</th>
+                <th>检验标准</th>
+            </tr>
+            <tr>
+                <td>来料检验</td>
+                <td>原材料入库前</td>
+                <td>采购质量标准</td>
+            </tr>
+            <tr>
+                <td>过程检验</td>
+                <td>生产过程中</td>
+                <td>工序质量标准</td>
+            </tr>
+            <tr>
+                <td>成品检验</td>
+                <td>产品完工后</td>
+                <td>产品验收标准</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>质量统计分析</h3>
+        <p>系统提供丰富的质量统计分析功能，帮助企业持续改进质量水平。</p>
+        
+        <ul>
+            <li><strong>合格率分析：</strong>各产品、工序的合格率统计</li>
+            <li><strong>缺陷分析：</strong>缺陷类型和原因的统计分析</li>
+            <li><strong>趋势分析：</strong>质量指标的时间趋势分析</li>
+            <li><strong>对比分析：</strong>不同批次、班次的质量对比</li>
+        </ul>
+    </div>
+</div>
+
+<div class="section">
+    <h2>成本管理</h2>
+    
+    <div class="feature">
+        <h3>成本构成</h3>
+        <p>生产成本主要包括材料成本、人工成本和制造费用。</p>
+        
+        <table>
+            <tr>
+                <th>成本项目</th>
+                <th>计算方式</th>
+                <th>数据来源</th>
+            </tr>
+            <tr>
+                <td>材料成本</td>
+                <td>实际耗用量 × 材料单价</td>
+                <td>BOM用量、领料记录</td>
+            </tr>
+            <tr>
+                <td>人工成本</td>
+                <td>实际工时 × 人工费率</td>
+                <td>工时记录、工资标准</td>
+            </tr>
+            <tr>
+                <td>制造费用</td>
+                <td>按工时或产量分摊</td>
+                <td>费用记录、分摊标准</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="feature">
+        <h3>成本核算流程</h3>
+        <ol>
+            <li><strong>成本归集：</strong>收集生产过程中的各项成本数据</li>
+            <li><strong>成本分配：</strong>将间接成本分配到具体产品</li>
+            <li><strong>成本计算：</strong>计算各产品的单位成本和总成本</li>
+            <li><strong>成本分析：</strong>分析成本构成和成本差异</li>
+            <li><strong>成本改进：</strong>基于分析结果提出改进建议</li>
+        </ol>
+    </div>
+    
+    <div class="warning">
+        <strong>重要提示：</strong>成本核算的准确性依赖于基础数据的完整性，建议建立完善的数据采集和管理制度。
+    </div>
+</div>
+
+<div class="section">
+    <h2>常见问题解答</h2>
+    
+    <div class="feature">
+        <h3>Q: BOM变更后如何影响现有生产计划？</h3>
+        <p><strong>A:</strong> BOM变更会影响相关的生产计划，系统会自动检测变更影响并提示用户是否需要调整生产计划。建议在BOM变更后重新运行MRP计算。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: 生产订单状态异常如何处理？</h3>
+        <p><strong>A:</strong> 如果生产订单状态异常，首先检查订单相关的BOM、库存等基础数据是否正常。如果问题无法解决，请联系系统管理员。</p>
+    </div>
+    
+    <div class="feature">
+        <h3>Q: MRP计算结果显示物料短缺，如何解决？</h3>
+        <p><strong>A:</strong> 物料短缺通常有以下解决方案：调整生产计划、紧急采购、使用替代物料、调整库存策略等。</p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>相关模块链接</h2>
+    <ul>
+        <li><a href="MRP基本资料.htm">MRP基本资料管理</a></li>
+        <li><a href="制造规划.htm">制造规划管理</a></li>
+        <li><a href="制程生产.htm">制程生产管理</a></li>
+        <li><a href="生产品控.htm">生产质量控制</a></li>
+        <li><a href="BOM分析报表.htm">BOM分析报表</a></li>
+        <li><a href="成本管理.htm">成本管理</a></li>
+    </ul>
+</div>
+
+</body>
+</html>

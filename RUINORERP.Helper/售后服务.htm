@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>售后服务管理系统 - RUINORERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .code { background: #f8f9fa; border: 1px solid #e9ecef; padding: 15px; border-radius: 5px; font-family: Consolas, monospace; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+<h1>售后服务管理系统</h1>
+
+<h2>1. 系统概述</h2>
+<p>售后服务模块是RUINORERP系统的重要组成部分，负责管理客户服务请求、维修记录、质量反馈等售后相关业务。系统基于.NET Framework和Windows Forms技术栈构建，提供全面的售后服务管理功能。</p>
+
+<h2>2. 核心功能模块</h2>
+
+<h3>2.1 客户服务请求管理</h3>
+<table>
+    <tr><th>功能</th><th>描述</th><th>技术实现</th></tr>
+    <tr><td>服务请求登记</td><td>记录客户的服务需求、问题描述、紧急程度</td><td>ServiceRequestController</td></tr>
+    <tr><td>请求分配</td><td>根据服务类型、区域分配服务工程师</td><td>ServiceAssignmentService</td></tr>
+    <tr><td>进度跟踪</td><td>实时跟踪服务请求的处理状态</td><td>ServiceTrackingService</td></tr>
+    <tr><td>客户反馈</td><td>收集客户对服务质量的评价</td><td>CustomerFeedbackController</td></tr>
+</table>
+
+<h3>2.2 维修管理</h3>
+<table>
+    <tr><th>功能</th><th>描述</th><th>技术实现</th></tr>
+    <tr><td>维修单创建</td><td>生成维修工单，记录故障信息</td><td>RepairOrderController</td></tr>
+    <tr><td>维修过程记录</td><td>记录维修步骤、更换配件、工时</td><td>RepairProcessService</td></tr>
+    <tr><td>配件管理</td><td>维修配件的申领、使用、库存管理</td><td>SparePartsService</td></tr>
+    <tr><td>维修报告</td><td>生成维修完成报告和客户确认</td><td>RepairReportGenerator</td></tr>
+</table>
+
+<h3>2.3 质量反馈与改进</h3>
+<table>
+    <tr><th>功能</th><th>描述</th><th>技术实现</th></tr>
+    <tr><td>质量投诉处理</td><td>记录和处理产品质量投诉</td><td>QualityComplaintController</td></tr>
+    <tr><td>改进建议收集</td><td>收集客户对产品和服务的改进建议</td><td>SuggestionManagementService</td></tr>
+    <tr><td>质量统计分析</td><td>分析质量问题趋势和改进措施</td><td>QualityAnalysisService</td></tr>
+</table>
+
+<h2>3. 数据模型结构</h2>
+
+<h3>3.1 核心数据表</h3>
+<div class="code">
+// 服务请求表结构
+public class ServiceRequest
+{
+    public int Id { get; set; }
+    public string RequestNumber { get; set; }        // 服务单号
+    public int CustomerId { get; set; }              // 客户ID
+    public string ProblemDescription { get; set; }   // 问题描述
+    public DateTime RequestDate { get; set; }        // 请求日期
+    public string Priority { get; set; }             // 优先级
+    public string Status { get; set; }               // 状态
+}
+
+// 维修工单表结构
+public class RepairOrder
+{
+    public int Id { get; set; }
+    public int ServiceRequestId { get; set; }        // 关联服务请求
+    public string RepairNumber { get; set; }         // 维修单号
+    public DateTime StartDate { get; set; }          // 开始时间
+    public DateTime? EndDate { get; set; }           // 完成时间
+    public string RepairResult { get; set; }         // 维修结果
+}
+</div>
+
+<h2>4. 业务流程说明</h2>
+
+<h3>4.1 服务请求处理流程</h3>
+<ol>
+    <li><strong>接收请求</strong>：客户通过电话、邮件或系统提交服务请求</li>
+    <li><strong>信息登记</strong>：记录客户信息、问题描述、紧急程度</li>
+    <li><strong>请求分配</strong>：根据服务类型和区域分配服务工程师</li>
+    <li><strong>现场服务</strong>：工程师上门服务，记录服务过程</li>
+    <li><strong>完成确认</strong>：客户确认服务完成，满意度评价</li>
+    <li><strong>归档处理</strong>：服务记录归档，生成统计报告</li>
+</ol>
+
+<h3>4.2 维修管理流程</h3>
+<ol>
+    <li><strong>故障诊断</strong>：工程师进行故障分析和诊断</li>
+    <li><strong>维修方案</strong>：制定维修方案和配件需求</li>
+    <li><strong>配件申领</strong>：申领所需维修配件</li>
+    <li><strong>维修执行</strong>：执行维修操作，记录维修过程</li>
+    <li><strong>测试验证</strong>：维修后测试验证设备功能</li>
+    <li><strong>客户验收</strong>：客户验收维修结果，签字确认</li>
+</ol>
+
+<h2>5. 技术实现要点</h2>
+
+<h3>5.1 控制器设计</h3>
+<div class="code">
+public class ServiceRequestController : BaseController
+{
+    private readonly IServiceRequestService _service;
+    
+    public ServiceRequestController(IServiceRequestService service)
+    {
+        _service = service;
+    }
+    
+    // 创建服务请求
+    public ActionResult CreateServiceRequest(ServiceRequestDto request)
+    {
+        var result = _service.CreateRequest(request);
+        return Json(result);
+    }
+    
+    // 分配服务工程师
+    public ActionResult AssignEngineer(int requestId, int engineerId)
+    {
+        var result = _service.AssignEngineer(requestId, engineerId);
+        return Json(result);
+    }
+}
+</div>
+
+<h3>5.2 服务层实现</h3>
+<div class="code">
+public class ServiceRequestService : IServiceRequestService
+{
+    private readonly IRepository<ServiceRequest> _repository;
+    
+    public ServiceResult CreateRequest(ServiceRequestDto dto)
+    {
+        // 验证数据有效性
+        if (string.IsNullOrEmpty(dto.ProblemDescription))
+            return ServiceResult.Fail("问题描述不能为空");
+            
+        // 生成服务单号
+        var request = new ServiceRequest
+        {
+            RequestNumber = GenerateRequestNumber(),
+            CustomerId = dto.CustomerId,
+            ProblemDescription = dto.ProblemDescription,
+            RequestDate = DateTime.Now,
+            Status = "待分配"
+        };
+        
+        _repository.Insert(request);
+        return ServiceResult.Success("服务请求创建成功");
+    }
+}
+</div>
+
+<h2>6. 最佳实践建议</h2>
+
+<div class="tip">
+<strong>服务响应时间优化</strong>：建议设置服务响应时间目标，如紧急请求2小时内响应，普通请求24小时内响应。
+</div>
+
+<div class="tip">
+<strong>配件库存管理</strong>：建立常用配件的安全库存，确保维修服务的及时性。
+</div>
+
+<div class="tip">
+<strong>客户满意度跟踪</strong>：定期分析客户满意度数据，持续改进服务质量。
+</div>
+
+<h2>7. 常见问题解答</h2>
+
+<h3>Q: 如何快速创建服务请求？</h3>
+<p>A: 在服务请求界面，可以通过客户编号快速关联客户信息，系统会自动填充客户基本信息。</p>
+
+<h3>Q: 维修工单如何关联服务请求？</h3>
+<p>A: 在服务请求处理过程中，可以直接生成维修工单，系统会自动建立关联关系。</p>
+
+<h3>Q: 如何查看服务工程师的工作量？</h3>
+<p>A: 系统提供工程师工作量统计功能，可以查看每个工程师的待处理请求和已完成任务。</p>
+
+</body>
+</html>

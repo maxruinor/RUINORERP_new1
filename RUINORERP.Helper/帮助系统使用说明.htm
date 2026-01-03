@@ -1,235 +1,231 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <style>
-        /* 全局样式 */
-        body {
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-
-        /* 标题样式 */
-        h1 {
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-
-        h2 {
-            color: #34495e;
-            border-left: 4px solid #3498db;
-            padding-left: 15px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
-        h3 {
-            color: #555;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-
-        /* 段落样式 */
-        p {
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        /* 列表样式 */
-        ul, ol {
-            margin-bottom: 20px;
-            padding-left: 30px;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
-
-        /* 表格样式 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        th {
-            background-color: #3498db;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-        }
-
-        td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-        tr:hover {
-            background-color: #e3f2fd;
-        }
-
-        /* 强调文本 */
-        strong {
-            color: #2c3e50;
-        }
-
-        /* 链接样式 */
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-            color: #2980b9;
-        }
-
-        /* 提示框样式*/
-        .tip {
-            background-color: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .note {
-            background-color: #d1ecf1;
-            border-left: 4px solid #17a2b8;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-    </style>
-    
+    <meta charset="UTF-8">
     <title>RUINOR ERP 帮助系统使用说明</title>
-    <meta charset="utf-8">
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .step { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .button { background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; margin: 5px; }
+    </style>
 </head>
 <body>
-    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
-    <strong>导航链接：</strong>
-    <a href="生产管理.htm" style="margin-right: 15px;">生产管理</a>
-    <a href="进销存管理.htm" style="margin-right: 15px;">进销存管理</a>
-    <a href="售后管理.htm" style="margin-right: 15px;">售后管理</a>
-    <a href="客户关系管理.htm" style="margin-right: 15px;">客户关系</a>
-    <a href="财务管理.htm" style="margin-right: 15px;">财务管理</a>
-    <a href="行政管理.htm" style="margin-right: 15px;">行政管理</a>
-    <a href="报表管理.htm" style="margin-right: 15px;">报表管理</a>
-    <a href="电商运营.htm" style="margin-right: 15px;">电商运营</a>
-    <a href="基础资料管理.htm" style="margin-right: 15px;">基础资料</a>
-    <a href="系统设置.htm" style="margin-right: 15px;">系统设置</a>
-    <a href="通用功能.htm" style="margin-right: 15px;">通用功能</a>
-    <a href="审核反审核结案业务流程.htm" style="margin-right: 15px;">审核流程</a>
+
+<h1>RUINOR ERP 帮助系统使用说明</h1>
+
+<h2>1. 系统登录和基本操作</h2>
+
+<h3>1.1 首次登录配置</h3>
+<div class="step">
+<strong>步骤1：服务器配置</strong>
+<p>首次使用系统时，需要配置服务器连接：</p>
+<ol>
+    <li>打开系统登录界面</li>
+    <li>点击右上角的"服务器设置"按钮</li>
+    <li>输入服务器IP地址和端口号（默认端口：8080）</li>
+    <li>点击"测试连接"验证配置是否正确</li>
+    <li>保存配置并重新启动系统</li>
+</ol>
 </div>
-    <h1>RUINOR ERP 帮助系统使用说明</h1>
-    <p>本文档介绍如何使用RUINOR ERP系统的帮助系统。</p>
-    
-    <h2>帮助系统概述</h2>
-    <p>RUINOR ERP帮助系统是一个集成的帮助平台，提供全面的系统使用指导。帮助系统支持以下功能：</p>
-    <ul>
-        <li><strong>上下文相关帮助</strong>：按F1键显示当前界面或控件的相关帮助</li>
-        <li><strong>全局帮助搜索</strong>：按F2键打开帮助系统主界面，支持全文搜索</li>
-        <li><strong>结构化目录导航</strong>：通过目录结构快速定位帮助内容</li>
-        <li><strong>索引查找</strong>：通过关键字索引快速查找相关内容</li>
-    </ul>
-    
-    <h2>使用方法</h2>
-    <h3>1. 快捷键使用</h3>
-    <ul>
-        <li><strong>F1键</strong>：显示当前焦点控件或窗体的帮助信息</li>
-        <li><strong>F2键</strong>：打开帮助系统主界面，提供搜索和导航功能</li>
-    </ul>
-    
-    <h3>2. 帮助内容分类</h3>
-    <p>帮助内容按以下方式组织：</p>
-    <ul>
-        <li><strong>模块级帮助</strong>：介绍各业务模块的功能和使用方法</li>
-        <li><strong>窗体级帮助</strong>：介绍具体窗体的功能和操作方法</li>
-        <li><strong>控件级帮助</strong>：介绍界面控件的功能和使用方法</li>
-        <li><strong>流程级帮助</strong>：介绍业务流程和操作步骤</li>
-    </ul>
-    
-    <h3>3. 帮助导航</h3>
-    <p>用户可以通过以下方式浏览帮助内容：</p>
-    <ul>
-        <li><strong>目录导航</strong>：在帮助窗口左侧的目录树中浏览</li>
-        <li><strong>索引查找</strong>：通过关键字索引快速定位内容</li>
-        <li><strong>全文搜索</strong>：使用搜索功能查找相关内容</li>
-    </ul>
-    
-    <h2>帮助内容维护</h2>
-    <h3>1. 帮助文件结构</h3>
-    <p>帮助文件按以下结构组织：</p>
-    <ul>
-        <li><strong>模块帮助文件</strong>：每个业务模块对应一个帮助文件</li>
-        <li><strong>窗体帮助文件</strong>：每个窗体对应一个帮助文件，存放在forms目录</li>
-        <li><strong>控件帮助文件</strong>：每个控件对应一个帮助文件，存放在controls目录</li>
-    </ul>
-    
-    <h3>2. 帮助文件格式</h3>
-    <p>所有帮助文件采用HTML格式，包含以下标准元素：</p>
-    <ul>
-        <li><strong>标题</strong>：使用h1标签作为主标题</li>
-        <li><strong>功能概述</strong>：简要介绍功能用途</li>
-        <li><strong>操作流程</strong>：详细说明操作步骤</li>
-        <li><strong>字段说明</strong>：关键字段的详细说明</li>
-    </ul>
-    
-    <h3>3. 帮助系统编译</h3>
-    <p>更新帮助内容后，需要重新编译CHM文件：</p>
-    <ol>
-        <li>运行"编译帮助.bat"脚本</li>
-        <li>系统会自动调用HTML Help Workshop编译帮助文件</li>
-        <li>编译成功后生成新的help.chm文件</li>
-    </ol>
-    
-    <h2>常见问题</h2>
-    <h3>1. 帮助窗口无法显示</h3>
-    <p>可能原因及解决方法：</p>
-    <ul>
-        <li>未安装HTML Help Workshop - 请安装相应组件</li>
-        <li>help.chm文件损坏 - 重新编译帮助文件</li>
-        <li>权限不足 - 以管理员身份运行程序</li>
-    </ul>
-    
-    <h3>2. F1键无响应</h3>
-    <p>可能原因及解决方法：</p>
-    <ul>
-        <li>帮助系统未正确集成 - 检查HelpMapping特性设置</li>
-        <li>焦点控件无对应帮助 - 为控件设置帮助键</li>
-        <li>帮助文件缺失 - 检查对应帮助文件是否存在</li>
-    </ul>
-    
-    <h2>技术支持</h2>
-    <p>如有任何帮助系统使用问题，请联系技术支持：</p>
-    <ul>
-        <li>技术支持邮箱：support@ruinor.com</li>
-        <li>技术支持电话：400-123-4567</li>
-        <li>在线帮助文档：http://help.ruinor.com</li>
-    </ul>
+
+<div class="step">
+<strong>步骤2：用户登录</strong>
+<ol>
+    <li>输入用户名和密码</li>
+    <li>选择登录的账套（如果有多账套）</li>
+    <li>点击"登录"按钮进入系统</li>
+</ol>
+</div>
+
+<div class="tip">
+<strong>提示：</strong>如果忘记密码，请联系系统管理员重置密码。
+</div>
+
+<h3>1.2 主界面导航</h3>
+<p>登录成功后，系统显示主工作台界面，包含以下主要区域：</p>
+<ul>
+    <li><strong>顶部菜单栏</strong>：系统功能模块导航</li>
+    <li><strong>左侧功能树</strong>：具体功能菜单</li>
+    <li><strong>工作区</strong>：数据展示和操作区域</li>
+    <li><strong>状态栏</strong>：显示系统状态和用户信息</li>
+</ul>
+
+<h2>2. 核心业务流程操作指南</h2>
+
+<h3>2.1 销售订单处理流程</h3>
+<div class="step">
+<strong>创建销售订单</strong>
+<ol>
+    <li>点击菜单：销售管理 → 销售订单 → 新建订单</li>
+    <li>选择客户：点击客户字段旁的搜索按钮选择客户</li>
+    <li>添加商品：点击"添加商品"按钮，选择商品和数量</li>
+    <li>设置价格：输入单价，系统自动计算总金额</li>
+    <li>保存订单：点击<button class="button">保存</button>按钮</li>
+</ol>
+</div>
+
+<div class="step">
+<strong>订单审核流程</strong>
+<ol>
+    <li>订单保存后，点击<button class="button">提交审核</button>按钮</li>
+    <li>系统根据订单金额自动分配审核人员</li>
+    <li>审核人员在工作台看到待审核订单</li>
+    <li>审核通过后，订单状态变为"已审核"</li>
+    <li>仓库人员可以查看已审核订单准备出库</li>
+</ol>
+</div>
+
+<div class="tip">
+<strong>注意：</strong>金额超过500元的订单需要指定人员审核，500元以下订单自动审核通过。
+</div>
+
+<h3>2.2 采购订单处理流程</h3>
+<div class="step">
+<strong>创建采购申请</strong>
+<ol>
+    <li>点击菜单：采购管理 → 采购申请 → 新建申请</li>
+    <li>填写申请部门、申请原因、所需物料</li>
+    <li>提交申请给部门主管审批</li>
+</ol>
+</div>
+
+<div class="step">
+<strong>生成采购订单</strong>
+<ol>
+    <li>采购人员在"待处理申请"中查看已批准的申请</li>
+    <li>点击"生成采购订单"按钮</li>
+    <li>选择供应商、确定采购价格和交货日期</li>
+    <li>保存并提交采购订单</li>
+</ol>
+</div>
+
+<h3>2.3 财务收款流程</h3>
+
+<div class="warning">
+<strong>重要：</strong>财务收款分为预收款和应收款两种处理方式。
+</div>
+
+<div class="step">
+<strong>预收款处理（销售出库前）</strong>
+<ol>
+    <li>客户预付货款时，点击：财务管理 → 预收款 → 新建预收款</li>
+    <li>选择对应的销售订单</li>
+    <li>输入收款金额和收款方式</li>
+    <li>系统生成预收款凭证</li>
+</ol>
+</div>
+
+<div class="step">
+<strong>应收款处理（销售出库后）</strong>
+<ol>
+    <li>销售出库后，系统自动生成应收款</li>
+    <li>财务人员查看：财务管理 → 应收款管理</li>
+    <li>如果有预收款，系统自动核销</li>
+    <li>没有预收款时，手动创建收款单</li>
+</ol>
+</div>
+
+<div class="step">
+<strong>收款单处理方式</strong>
+<ol>
+    <li>方式一：在应收款界面点击"转收款单"</li>
+    <li>方式二：通过对账功能生成收款单</li>
+    <li>输入实际收款信息，完成收款确认</li>
+</ol>
+</div>
+
+<h2>3. 退货退款操作指南</h2>
+
+<h3>3.1 销售退货流程</h3>
+<div class="step">
+<strong>创建退货申请</strong>
+<ol>
+    <li>点击菜单：销售管理 → 销售退货 → 新建退货</li>
+    <li>选择原销售订单</li>
+    <li>填写退货原因和退货数量</li>
+    <li>提交退货申请</li>
+</ol>
+</div>
+
+<div class="step">
+<strong>退货审批和处理</strong>
+<ol>
+    <li>销售部门审批退货申请</li>
+    <li>质量部门确认退货原因</li>
+    <li>仓库接收退货商品</li>
+    <li>财务部门处理退款</li>
+</ol>
+</div>
+
+<h3>3.2 采购退货流程</h3>
+<div class="step">
+<strong>创建采购退货</strong>
+<ol>
+    <li>点击菜单：采购管理 → 采购退货 → 新建退货</li>
+    <li>选择原采购订单</li>
+    <li>填写退货原因和数量</li>
+    <li>提交给供应商确认</li>
+</ol>
+</div>
+
+<h2>4. 数据录入注意事项</h2>
+
+<h3>4.1 必填字段识别</h3>
+<p>在数据录入界面，带红色星号(*)的字段为必填项：</p>
+<ul>
+    <li>客户名称、商品名称、数量、单价等</li>
+    <li>日期字段通常有默认值，但需要确认</li>
+    <li>金额字段系统会自动计算，但需要核对</li>
+</ul>
+
+<h3>4.2 数据验证规则</h3>
+<ul>
+    <li><strong>数量</strong>：必须为大于0的数字</li>
+    <li><strong>单价</strong>：支持小数点后2位</li>
+    <li><strong>日期</strong>：不能早于系统启用日期</li>
+    <li><strong>客户/供应商</strong>：必须从列表中选择</li>
+</ul>
+
+<h3>4.3 快捷操作技巧</h3>
+<ul>
+    <li><strong>F1键</strong>：在任何界面按F1查看帮助</li>
+    <li><strong>Ctrl+S</strong>：快速保存当前数据</li>
+    <li><strong>Ctrl+F</strong>：在当前界面快速查找</li>
+    <li><strong>F5键</strong>：刷新数据列表</li>
+    <li><strong>Tab键</strong>：在字段间快速切换</li>
+</ul>
+
+<h2>5. 常见问题解答</h2>
+
+<h3>Q: 如何修改已提交的订单？</h3>
+<p>A: 已提交的订单需要先点击"反审核"按钮，修改后再重新提交审核。</p>
+
+<h3>Q: 订单审核需要多长时间？</h3>
+<p>A: 系统会根据订单金额自动分配审核人员，一般会在24小时内完成审核。</p>
+
+<h3>Q: 预收款和应收款有什么区别？</h3>
+<p>A: 预收款是销售出库前的收款，应收款是出库后生成的债权。系统会自动处理两者的核销关系。</p>
+
+<h3>Q: 如何查看订单的处理状态？</h3>
+<p>A: 在订单查询界面，可以通过状态筛选查看订单的当前处理进度。</p>
+
+<h3>Q: 忘记密码怎么办？</h3>
+<p>A: 请联系系统管理员重置密码，重置后首次登录需要修改密码。</p>
+
+<h2>6. 技术支持</h2>
+
+<p>如果在使用过程中遇到问题，可以通过以下方式获得帮助：</p>
+<ul>
+    <li>查看本帮助系统的相关章节</li>
+    <li>联系系统管理员</li>
+    <li>拨打技术支持热线：400-xxx-xxxx</li>
+    <li>发送邮件至：support@ruinor.com</li>
+</ul>
+
 </body>
 </html>

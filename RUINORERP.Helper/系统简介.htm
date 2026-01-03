@@ -1,171 +1,114 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUINOR ERP系统简介</title>
     <style>
-        /* 全局样式 */
-        body {
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f9fa;
-        }
-
-        /* 标题样式 */
-        h1 {
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-
-        h2 {
-            color: #34495e;
-            border-left: 4px solid #3498db;
-            padding-left: 15px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-        }
-
-        h3 {
-            color: #555;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 1.2em;
-        }
-
-        /* 段落样式 */
-        p {
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-
-        /* 列表样式 */
-        ul, ol {
-            margin-bottom: 20px;
-            padding-left: 30px;
-        }
-
-        li {
-            margin-bottom: 8px;
-        }
-
-        /* 表格样式 */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        th {
-            background-color: #3498db;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: bold;
-        }
-
-        td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #eee;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-        tr:hover {
-            background-color: #e3f2fd;
-        }
-
-        /* 强调文本 */
-        strong {
-            color: #2c3e50;
-        }
-
-        /* 链接样式 */
-        a {
-            color: #3498db;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-            color: #2980b9;
-        }
-
-        /* 提示框样式*/
-        .tip {
-            background-color: #d4edda;
-            border-left: 4px solid #28a745;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .warning {
-            background-color: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .note {
-            background-color: #d1ecf1;
-            border-left: 4px solid #17a2b8;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 4px 4px 0;
-        }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; }
+        h3 { color: #16a085; }
+        .feature { background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; margin: 10px 0; }
+        .highlight { background: #e8f4f8; padding: 10px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; }
     </style>
-    
-    <title>RUINOR ERP 系统简介</title>
-    <meta charset="utf-8">
 </head>
 <body>
-    <div style="background-color: #f0f0f0; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
-    <strong>导航链接：</strong>
-    <a href="生产管理.htm" style="margin-right: 15px;">生产管理</a>
-    <a href="进销存管理.htm" style="margin-right: 15px;">进销存管理</a>
-    <a href="售后管理.htm" style="margin-right: 15px;">售后管理</a>
-    <a href="客户关系管理.htm" style="margin-right: 15px;">客户关系</a>
-    <a href="财务管理.htm" style="margin-right: 15px;">财务管理</a>
-    <a href="行政管理.htm" style="margin-right: 15px;">行政管理</a>
-    <a href="报表管理.htm" style="margin-right: 15px;">报表管理</a>
-    <a href="电商运营.htm" style="margin-right: 15px;">电商运营</a>
-    <a href="基础资料管理.htm" style="margin-right: 15px;">基础资料</a>
-    <a href="系统设置.htm" style="margin-right: 15px;">系统设置</a>
-    <a href="通用功能.htm" style="margin-right: 15px;">通用功能</a>
-    <a href="审核反审核结案业务流程.htm" style="margin-right: 15px;">审核流程</a>
+
+<h1>RUINOR ERP 企业资源计划系统</h1>
+
+<div class="feature">
+    <h2>系统概述</h2>
+    <p>RUINOR ERP是一款面向制造业企业的综合性企业资源计划系统，采用先进的.NET技术架构，为企业提供全面的业务管理解决方案。</p>
 </div>
-    <h1>RUINOR ERP 系统简介</h1>
-    <p>RUINOR ERP 是一套集成的企业资源规划系统，旨在帮助企业实现业务流程的数字化管理，提高运营效率和决策质量。</p>
-    
-    <h2>系统特点</h2>
+
+<h2>系统定位</h2>
+<p>RUINOR ERP专注于制造业企业的数字化转型，通过整合企业内外部资源，实现业务流程的标准化、自动化和智能化管理。</p>
+
+<h2>技术架构</h2>
+<div class="highlight">
+    <h3>客户端/服务器架构</h3>
     <ul>
-        <li><strong>模块化设计</strong>：系统采用模块化架构，各功能模块既独立又相互关联，便于企业根据实际需求选择使用。</li>
-        <li><strong>业务全覆盖</strong>：涵盖生产、采购、销售、库存、财务、人力资源等企业核心业务流程。</li>
-        <li><strong>数据一致性</strong>：通过统一的数据管理平台，确保各业务模块间数据的一致性和准确性。</li>
-        <li><strong>灵活配置</strong>：支持业务流程自定义、报表自定义、界面自定义等个性化设置。</li>
-        <li><strong>实时监控</strong>：提供丰富的报表和仪表板，帮助企业实时掌握经营状况。</li>
+        <li><strong>客户端：</strong>基于Windows Forms的桌面应用程序</li>
+        <li><strong>服务器端：</strong>Windows服务形式运行，支持多实例部署</li>
+        <li><strong>通信协议：</strong>基于SuperSocket的实时通信框架</li>
     </ul>
+</div>
+
+<h2>核心功能模块</h2>
+<table>
+    <tr>
+        <th>模块名称</th>
+        <th>主要功能</th>
+        <th>核心组件</th>
+    </tr>
+    <tr>
+        <td>生产制造</td>
+        <td>BOM管理、生产计划、MRP计算、成本核算</td>
+        <td>tb_BOM_S, tb_ManufacturingOrder</td>
+    </tr>
+    <tr>
+        <td>供应链管理</td>
+        <td>采购管理、销售管理、库存管理、出入库管理</td>
+        <td>tb_PurOrder, tb_SaleOrder, tb_StockIn/Out</td>
+    </tr>
+    <tr>
+        <td>售后服务</td>
+        <td>售后申请、维修订单、资产处置</td>
+        <td>tb_AS_AfterSaleApply, tb_AS_RepairOrder</td>
+    </tr>
+    <tr>
+        <td>审批工作流</td>
+        <td>多级审批、条件审批、流程监控</td>
+        <td>tb_Approval, ApprovalWorkflow</td>
+    </tr>
+    <tr>
+        <td>财务管理</td>
+        <td>应收应付、费用报销、固定资产</td>
+        <td>tb_Receivable, tb_Payable, tb_FixedAssets</td>
+    </tr>
+</table>
+
+<h2>技术特色</h2>
+<div class="feature">
+    <h3>分布式架构</h3>
+    <p>支持多服务器实例部署，实现负载均衡和高可用性。</p>
     
-    <h2>核心价值</h2>
-    <ul>
-        <li><strong>提升效率</strong>：通过自动化流程减少人工操作，提高工作效率。</li>
-        <li><strong>降低成本</strong>：优化资源配置，减少库存积压，降低运营成本。</li>
-        <li><strong>增强管控</strong>：完善的权限管理和审批流程，加强企业内控。</li>
-        <li><strong>辅助决策</strong>：基于实时数据的分析报表，为管理决策提供有力支持。</li>
-    </ul>
+    <h3>插件化设计</h3>
+    <p>采用模块化架构，支持功能模块的动态加载和扩展。</p>
     
-    <h2>适用行业</h2>
-    <p>RUINOR ERP 系统适用于制造业、贸易流通业、服务业等多种行业，特别适合具有复杂业务流程和多组织架构的中大型企业。</p>
+    <h3>安全机制</h3>
+    <p>基于角色的访问控制(RBAC)，数据传输加密，完善的权限管理。</p>
+    
+    <h3>性能优化</h3>
+    <p>多级缓存策略，数据库连接池，异步任务处理。</p>
+</div>
+
+<h2>系统优势</h2>
+<ul>
+    <li><strong>高可用性：</strong>支持分布式部署，确保系统稳定运行</li>
+    <li><strong>易扩展性：</strong>插件化架构便于功能扩展和定制</li>
+    <li><strong>安全性强：</strong>多层次安全防护机制</li>
+    <li><strong>性能优越：</strong>优化的数据处理和缓存机制</li>
+    <li><strong>用户友好：</strong>直观的操作界面和丰富的帮助文档</li>
+</ul>
+
+<h2>适用场景</h2>
+<p>RUINOR ERP特别适用于以下类型的企业：</p>
+<ul>
+    <li>制造型企业（离散制造、流程制造）</li>
+    <li>需要进行物料需求计划(MRP)的企业</li>
+    <li>具有复杂供应链管理需求的企业</li>
+    <li>需要标准化业务流程的企业</li>
+    <li>追求数字化转型的传统制造企业</li>
+</ul>
+
+<div class="highlight">
+    <p><strong>注意：</strong>本系统需要专业的技术支持团队进行部署和维护，建议在实施前进行充分的需求分析和系统规划。</p>
+</div>
+
 </body>
 </html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>库存管理操作指南 - RUINOR ERP</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; }
+        h3 { color: #2c3e50; margin-top: 20px; }
+        .step { background: #f8f9fa; border-left: 4px solid #3498db; padding: 15px; margin: 15px 0; }
+        .tip { background: #e8f4fd; border-left: 4px solid #3498db; padding: 10px; margin: 15px 0; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 15px 0; }
+        .button { background: #007bff; color: white; padding: 8px 15px; border: none; border-radius: 4px; margin: 5px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<h1>库存管理操作指南</h1>
+
+<h2>1. 库存管理概述</h2>
+
+<h3>1.1 库存业务类型</h3>
+<table>
+    <tr><th>业务类型</th><th>说明</th><th>影响库存</th></tr>
+    <tr><td>采购入库</td><td>从供应商采购物料入库</td><td>库存增加</td></tr>
+    <tr><td>销售出库</td><td>向客户销售商品出库</td><td>库存减少</td></tr>
+    <tr><td>生产领料</td><td>生产部门领用原材料</td><td>库存减少</td></tr>
+    <tr><td>生产入库</td><td>生产完成品入库</td><td>库存增加</td></tr>
+    <tr><td>库存调拨</td><td>仓库间物料转移</td><td>库存总量不变</td></tr>
+    <tr><td>盘点调整</td><td>盘点差异调整</td><td>库存调整</td></tr>
+</table>
+
+<h3>1.2 库存管理角色</h3>
+<div class="step">
+<strong>相关人员职责：</strong>
+<ul>
+    <li><strong>仓库管理员</strong>：负责日常入库、出库操作</li>
+    <li><strong>库存主管</strong>：负责库存策略和盘点管理</li>
+    <li><strong>采购人员</strong>：根据库存情况提出采购需求</li>
+    <li><strong>生产人员</strong>：根据生产计划进行领料</li>
+</ul>
+</div>
+
+<h2>2. 入库管理</h2>
+
+<h3>2.1 采购入库操作</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>采购入库</strong></li>
+    <li>选择已审核的采购订单</li>
+    <li>点击<button class="button">生成入库单</button></li>
+    <li>系统自动创建入库单，带出订单信息</li>
+</ol>
+</div>
+
+<h3>2.2 入库验收流程</h3>
+<div class="step">
+<strong>验收步骤：</strong>
+<ol>
+    <li><strong>数量核对</strong>：清点到货数量，与订单对比</li>
+    <li><strong>质量检验</strong>：检查物料质量是否符合要求</li>
+    <li><strong>信息录入</strong>：填写实际入库数量和质量状况</li>
+    <li><strong>库位分配</strong>：指定物料存放的具体库位</li>
+    <li><strong>确认入库</strong>：点击<button class="button">确认入库</button>完成操作</li>
+</ol>
+</div>
+
+<h3>2.3 入库差异处理</h3>
+<div class="step">
+<strong>差异处理：</strong>
+<ol>
+    <li><strong>数量差异</strong>：实际数量与订单不一致时，填写差异原因</li>
+    <li><strong>质量差异</strong>：质量不合格时，选择退货或特采处理</li>
+    <li><strong>信息记录</strong>：系统自动记录差异信息，供后续查询</li>
+</ol>
+</div>
+
+<h2>3. 出库管理</h2>
+
+<h3>3.1 销售出库操作</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>销售出库</strong></li>
+    <li>选择已审核的销售订单</li>
+    <li>点击<button class="button">生成出库单</button></li>
+    <li>系统自动创建出库单，带出订单信息</li>
+</ol>
+</div>
+
+<h3>3.2 出库拣货流程</h3>
+<div class="step">
+<strong>拣货步骤：</strong>
+<ol>
+    <li><strong>订单确认</strong>：核对出库订单信息</li>
+    <li><strong>库存检查</strong>：确认所需物料库存是否充足</li>
+    <li><strong>拣货操作</strong>：根据订单明细进行拣货</li>
+    <li><strong>数量确认</strong>：清点实际出库数量</li>
+    <li><strong>确认出库</strong>：点击<button class="button">确认出库</button>完成操作</li>
+</ol>
+</div>
+
+<h3>3.3 出库异常处理</h3>
+<div class="step">
+<strong>异常情况：</strong>
+<ol>
+    <li><strong>库存不足</strong>：系统提示库存不足，需要调整出库数量或等待补货</li>
+    <li><strong>物料损坏</strong>：发现物料损坏时，选择其他批次或联系采购</li>
+    <li><strong>订单变更</strong>：销售订单变更时，需要相应调整出库单</li>
+</ol>
+</div>
+
+<h2>4. 库存调拨</h2>
+
+<h3>4.1 调拨单创建</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>库存调拨</strong></li>
+    <li>点击<button class="button">新建调拨单</button></li>
+    <li>选择调出仓库和调入仓库</li>
+    <li>添加需要调拨的物料和数量</li>
+    <li>填写调拨原因和预计调拨日期</li>
+</ol>
+</div>
+
+<h3>4.2 调拨执行</h3>
+<div class="step">
+<strong>执行流程：</strong>
+<ol>
+    <li><strong>调出确认</strong>：调出仓库确认调拨数量</li>
+    <li><strong>物流运输</strong>：安排物料运输</li>
+    <li><strong>调入确认</strong>：调入仓库确认接收数量</li>
+    <li><strong>库存更新</strong>：系统自动更新两个仓库的库存</li>
+</ol>
+</div>
+
+<h2>5. 库存盘点</h2>
+
+<h3>5.1 盘点计划创建</h3>
+<div class="step">
+<strong>操作路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>库存盘点</strong></li>
+    <li>点击<button class="button">新建盘点计划</button></li>
+    <li>选择盘点仓库和盘点范围</li>
+    <li>设置盘点开始时间和结束时间</li>
+    <li>分配盘点人员</li>
+</ol>
+</div>
+
+<h3>5.2 盘点执行</h3>
+<div class="step">
+<strong>盘点步骤：</strong>
+<ol>
+    <li><strong>冻结库存</strong>：盘点期间冻结相关库存操作</li>
+    <li><strong>实地盘点</strong>：盘点人员实地清点库存数量</li>
+    <li><strong>数据录入</strong>：将实际盘点数量录入系统</li>
+    <li><strong>差异分析</strong>：系统自动计算盘点差异</li>
+</ol>
+</div>
+
+<h3>5.3 盘点差异处理</h3>
+<div class="step">
+<strong>差异处理：</strong>
+<ol>
+    <li><strong>差异确认</strong>：确认盘点差异是否合理</li>
+    <li><strong>差异调整</strong>：根据差异原因进行库存调整</li>
+    <li><strong>调整审批</strong>：重大差异需要上级审批</li>
+    <li><strong>库存更新</strong>：确认后系统更新库存数量</li>
+</ol>
+</div>
+
+<h2>6. 库存查询</h2>
+
+<h3>6.1 实时库存查询</h3>
+<div class="step">
+<strong>查询路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>库存查询</strong></li>
+    <li>设置查询条件：仓库、物料、库存状态等</li>
+    <li>点击<button class="button">查询</button>按钮</li>
+    <li>系统显示符合条件的库存信息</li>
+</ol>
+</div>
+
+<h3>6.2 库存流水查询</h3>
+<div class="step">
+<strong>流水查询：</strong>
+<ol>
+    <li>查看指定物料的所有出入库记录</li>
+    <li>分析库存变动原因</li>
+    <li>跟踪库存异常变动</li>
+</ol>
+</div>
+
+<h2>7. 库存预警</h2>
+
+<h3>7.1 预警设置</h3>
+<div class="step">
+<strong>设置路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>库存预警</strong></li>
+    <li>设置物料的预警参数：
+        <ul>
+            <li><strong>最低库存</strong>：低于此数量触发缺货预警</li>
+            <li><strong>最高库存</strong>：高于此数量触发积压预警</li>
+            <li><strong>安全库存</strong>：保证正常生产的安全库存量</li>
+        </ul>
+    </li>
+</ol>
+</div>
+
+<h3>7.2 预警处理</h3>
+<div class="step">
+<strong>预警响应：</strong>
+<ol>
+    <li><strong>缺货预警</strong>：及时提出采购申请</li>
+    <li><strong>积压预警</strong>：分析积压原因，制定处理方案</li>
+    <li><strong>过期预警</strong>：处理即将过期的物料</li>
+</ol>
+</div>
+
+<h2>8. 库存报表</h2>
+
+<h3>8.1 库存统计报表</h3>
+<div class="step">
+<strong>报表路径：</strong>
+<ol>
+    <li>点击菜单：<strong>库存管理</strong> → <strong>报表查询</strong></li>
+    <li>选择统计期间和统计维度</li>
+    <li>系统生成库存分析报表：
+        <ul>
+            <li>库存金额统计</li>
+            <li>库存周转率分析</li>
+            <li>库龄分析报表</li>
+            <li>呆滞物料分析</li>
+        </ul>
+    </li>
+</ol>
+</div>
+
+<h2>9. 常见问题解答</h2>
+
+<h3>Q: 库存数量显示负数怎么办？</h3>
+<p>A: 库存负数是异常情况，需要检查是否有未及时录入的出库操作或盘点差异。</p>
+
+<h3>Q: 如何查看某个物料的历史库存变动？</h3>
+<p>A: 在库存流水查询界面，选择特定物料可以查看所有历史出入库记录。</p>
+
+<h3>Q: 盘点差异过大如何处理？</h3>
+<p>A: 需要分析差异原因，确认是否录入错误或存在管理问题，重大差异需要上报处理。</p>
+
+<h3>Q: 库存预警如何设置才合理？</h3>
+<p>A: 应根据物料的采购周期、使用频率和重要性来设置合理的预警参数。</p>
+
+<h3>Q: 如何快速查找某个物料的库存位置？</h3>
+<p>A: 在库存查询界面，输入物料编码可以快速定位到具体库位信息。</p>
+
+<h2>10. 操作注意事项</h2>
+
+<div class="warning">
+<strong>数据准确性：</strong>库存数据直接影响生产和销售，务必确保数据的准确性。
+</div>
+
+<div class="tip">
+<strong>及时性：</strong>出入库操作要及时录入系统，确保库存数据的实时性。
+</div>
+
+<div class="tip">
+<strong>规范性：</strong>严格按照操作规程执行，避免因操作不当导致库存混乱。
+</div>
+
+<div class="tip">
+<strong>安全性：</strong>注意仓库安全管理，防止物料丢失或损坏。
+</div>
+
+</body>
+</html>

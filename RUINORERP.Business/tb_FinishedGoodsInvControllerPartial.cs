@@ -686,10 +686,12 @@ namespace RUINORERP.Business
                                 }
                                 else
                                 {
-                                    Payable.ARAPStatus = (int)ARAPStatus.待审核;
-                                    Payable.Remark += $"引用的缴库单于{System.DateTime.Now.Date}被反审";
+                                    //Payable.ARAPStatus = (int)ARAPStatus.待审核;
+                                    //Payable.Remark += $"引用的缴库单于{System.DateTime.Now.Date}被反审";
+                                    //没有任何支付的，直接删除，因为审核时会重新生成。
+                                    await ctrpayable.BaseDeleteAsync(Payable);
                                 }
-                                ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
+                                //ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(Payable, false);
                             }
 
                             #endregion

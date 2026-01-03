@@ -388,6 +388,7 @@ namespace RUINORERP.UI.FM
             if (RelatedMenuInfo != null)
             {
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                paymentRecord.HasChanged = true;
             }
         }
 
@@ -491,6 +492,7 @@ namespace RUINORERP.UI.FM
             if (RelatedMenuInfo != null)
             {
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, paymentRecord);
+                paymentRecord.HasChanged = true;
             }
             return;
 

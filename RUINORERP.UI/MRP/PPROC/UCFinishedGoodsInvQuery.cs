@@ -129,6 +129,7 @@ namespace RUINORERP.UI.PSI.PUR
             if (RelatedMenuInfo != null)
             {
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                ReceivablePayable.HasChanged = true;
             }
 
         }
@@ -171,7 +172,7 @@ namespace RUINORERP.UI.PSI.PUR
             base.MasterSummaryCols.Add(c => c.TotalMaterialCost);
             base.MasterSummaryCols.Add(c => c.TotalManuFee);
             base.MasterSummaryCols.Add(c => c.TotalApportionedCost);
-  
+
             base.ChildSummaryCols.Add(c => c.Qty);
             base.ChildSummaryCols.Add(c => c.ApportionedCost);
             base.ChildSummaryCols.Add(c => c.MaterialCost);
@@ -179,7 +180,7 @@ namespace RUINORERP.UI.PSI.PUR
             base.ChildSummaryCols.Add(c => c.NetWorkingHours);
             base.ChildSummaryCols.Add(c => c.ProductionAllCost);
             base.ChildSummaryCols.Add(c => c.ManuFee);
-   
+
         }
 
 
@@ -242,7 +243,7 @@ namespace RUINORERP.UI.PSI.PUR
         private void UCFinishedGoodsInvQuery_Load(object sender, EventArgs e)
         {
             _UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FinishedGoodsInv, tb_ManufacturingOrder>(a => a.MONo, b => b.MONO);
- 
+
         }
     }
 

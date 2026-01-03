@@ -143,6 +143,7 @@ namespace RUINORERP.UI.PSI.SAL
                             if (RelatedMenuInfo != null)
                             {
                                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut.tb_SaleOutRes[0]);
+                                saleOut.tb_SaleOutRes[0].HasChanged = true;
                                 return;
                             }
                         }

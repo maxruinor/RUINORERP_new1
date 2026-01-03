@@ -603,7 +603,7 @@ namespace RUINORERP.UI.BaseForm
                 switch (updateType)
                 {
                     case TodoUpdateType.StatusChanged:
-                        update.OperationDescription =  $"【{billNo}】单据状态已变更";
+                        update.OperationDescription = $"【{billNo}】单据状态已变更";
                         break;
                     case TodoUpdateType.Deleted:
                         update.OperationDescription = $"【{billNo}】单据已删除";
@@ -763,6 +763,10 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         private void UnsubscribeFromLockStatusChanges()
         {
+            if (EditEntity == null)
+            {
+                return;
+            }
             try
             {
                 if (!string.IsNullOrEmpty(_lockSubscriptionId) && EditEntity.PrimaryKeyID > 0 && _lockStatusNotificationService != null)
@@ -2120,6 +2124,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.提交:
+
+                    if (EditEntity == null)
+                    {
+                        MainForm.Instance.ShowStatusText($"提交单据失败：单据保存成功后才能提交");
+                    }
 
                     if (!CanExecuteAction(menuItem, EditEntity))
                     {
@@ -4108,6 +4117,10 @@ namespace RUINORERP.UI.BaseForm
                         if (RelatedMenuInfo != null)
                         {
                             await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
+                            if(result.Data is BaseEntity baseEntity)
+                            {
+                                baseEntity.HasChanged = true;
+                            }
                         }
                     }
                     else if (result != null)

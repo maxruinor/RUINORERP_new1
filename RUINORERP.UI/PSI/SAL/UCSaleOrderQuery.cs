@@ -361,6 +361,7 @@ namespace RUINORERP.UI.PSI.SAL
                             if (RelatedMenuInfo != null)
                             {
                                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                rs.ReturnObject.HasChanged = true;
                             }
                             return;
                         }

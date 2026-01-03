@@ -242,7 +242,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 
                 if (bizTypeNode == null)
                 {
-                    _logger?.LogWarning($"未找到业务类型节点: {bizType}");
+                    //_logger?.LogWarning($"未找到业务类型节点: {bizType}"); 系统加载时按权限加载的节点中不存在要更新的类型则找不到。但不需要提示。权限设置问题
                     continue;
                 }
                 

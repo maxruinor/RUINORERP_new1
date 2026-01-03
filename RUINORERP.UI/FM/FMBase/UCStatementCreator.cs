@@ -85,6 +85,9 @@ namespace RUINORERP.UI.FM
 
         // 保存当前选择的对账类型
         private StatementType CurrentStatementType { get; set; }
+        
+        // 保存是否合并对账的选项
+        private bool IsMergeStatement { get; set; }
 
         /// <summary>
         /// 动态创建对账类型的下拉选项
@@ -131,6 +134,27 @@ namespace RUINORERP.UI.FM
                 cmbPaymentType.SelectedIndex = 0; // 默认选择余额对账
                 CurrentStatementType = StatementType.余额对账;
 
+                // 创建合并对账复选框
+                Krypton.Toolkit.KryptonCheckBox chkMergeStatement = new Krypton.Toolkit.KryptonCheckBox();
+                chkMergeStatement.Text = "合并多个单位对账";
+                chkMergeStatement.Location = new Point(260, 10);
+                chkMergeStatement.Size = new Size(150, 20);
+                chkMergeStatement.Name = "chkMergeStatement";
+                chkMergeStatement.Checked = false;
+                IsMergeStatement = false;
+
+                // 添加复选框变化事件
+                chkMergeStatement.CheckedChanged += (s, e) =>
+                {
+                    IsMergeStatement = chkMergeStatement.Checked;
+                    // 刷新查询条件和数据
+                    BuildLimitQueryConditions();
+                    QueryConditionBuilder();
+                    // 重新执行查询
+                    base.QueryDtoProxy = LoadQueryConditionToUI();
+                    base.Query(base.QueryDtoProxy);
+                };
+
                 // 添加选择变化事件
                 cmbPaymentType.SelectedIndexChanged += (s, e) =>
                 {
@@ -166,6 +190,7 @@ namespace RUINORERP.UI.FM
                 // 将控件添加到新面板
                 paymentTypePanel.Controls.Add(label);
                 paymentTypePanel.Controls.Add(cmbPaymentType);
+                paymentTypePanel.Controls.Add(chkMergeStatement);
 
                 // 调整查询面板的位置
                 queryPanel.Location = new Point(queryPanel.Location.X, queryPanel.Location.Y + paymentPanelHeight);
@@ -361,30 +386,42 @@ namespace RUINORERP.UI.FM
             }
 
 
-            //多选时。要相同客户才能合并到一个收款单
-            if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
+            //多选时检查是否允许合并多个单位对账
+            var distinctCustomerVendors = RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).ToList();
+            if (distinctCustomerVendors.Count > 1)
             {
-                msg.Append($"多选时，要相同客户才能合并到一个对账单");
-                #region 显示多个客户抬头
-
-                // 显示前10个单据编号，其余用省略号表示
-                string CustomerVendors = string.Join(", ",
-                    RealList.Select(item => item.tb_customervendor).Distinct().Select(c => c.CVName));
-                CustomerVendors = CustomerVendors.TrimEnd(',');
-                int Count = RealList.Select(item => item.tb_customervendor).Distinct().Count();
-                //if (RealList.Select(item => item.CustomerVendor_ID).Count() > 5)
-                //{
-                //    CustomerVendors += $" 等 {CustomerVendors.Count} 张单据\r\n";
-                //}
-
-                #endregion
-                if (MessageBox.Show(msg.ToString(), "系统提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                if (!IsMergeStatement)
                 {
-                    //您已选择 N 个客户，生成对账单时将合并这些客户的往来数据，是否继续？
-                    MessageBox.Show($"您已选择 {Count} 个客户:{CustomerVendors}，生成对账单时将合并这些客户的往来数据，请确认是否继续？", "系统提示", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
-                    return;
-                }
+                    msg.Append($"多选时，要相同客户才能合并到一个对账单");
+                    #region 显示多个客户抬头
 
+                    // 显示前10个单据编号，其余用省略号表示
+                    string CustomerVendors = string.Join(", ",
+                        RealList.Select(item => item.tb_customervendor).Distinct().Select(c => c.CVName));
+                    CustomerVendors = CustomerVendors.TrimEnd(',');
+                    int Count = distinctCustomerVendors.Count;
+
+                    #endregion
+                    
+                    // 提供用户选择是否合并对账
+                    var dialogResult = MessageBox.Show($"您已选择 {Count} 个客户：{CustomerVendors}\n\n是否要合并这些客户的往来数据进行对账？\n\n选择【是】将生成合并对账单，选择【否】将只对同一客户进行对账。", 
+                        "合并多个单位对账", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+                    
+                    if (dialogResult == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    else if (dialogResult == DialogResult.Yes)
+                    {
+                        IsMergeStatement = true;
+                    }
+                    else if (dialogResult == DialogResult.No)
+                    {
+                        msg.Append($"\n\n请选择同一个客户的往来数据进行对账。");
+                        MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
+                    }
+                }
             }
             if (msg.ToString().Length > 0)
             {
@@ -410,7 +447,7 @@ namespace RUINORERP.UI.FM
             List<tb_FM_ReceivablePayable> adjustedList = SetStatementItems(RealList, receivePaymentType, CurrentStatementType);
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_StatementController<tb_FM_Statement>>();
-            ReturnResults<tb_FM_Statement> rrs = await paymentController.BuildStatement(adjustedList, receivePaymentType, CurrentStatementType);
+            ReturnResults<tb_FM_Statement> rrs = await paymentController.BuildStatement(adjustedList, receivePaymentType, CurrentStatementType, IsMergeStatement);
             if (rrs.Succeeded)
             {
                 statement = rrs.ReturnObject;
@@ -426,6 +463,7 @@ namespace RUINORERP.UI.FM
                 if (RelatedMenuInfo != null)
                 {
                     await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, statement);
+                    statement.HasChanged = true;
                 }
             }
             else

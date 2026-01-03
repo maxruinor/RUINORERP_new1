@@ -282,6 +282,7 @@ namespace RUINORERP.UI.ASS
                     if (RelatedMenuInfo != null)
                     {
                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, RepairOrder);
+                        RepairOrder.HasChanged = true;
                     }
                     return;
                 }

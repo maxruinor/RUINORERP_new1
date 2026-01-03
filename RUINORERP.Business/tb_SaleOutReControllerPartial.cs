@@ -92,13 +92,17 @@ namespace RUINORERP.Business
                         return rrs;
                     }
 
-
-                    if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
+                    //如果状态包含已退款则不判断这个了。
+                    if (entity.RefundStatus == (int)RefundStatus.未退款等待退货)
                     {
-                        //特殊情况 要选择客户信息，还要进一步完善！TODO
-                        rrs.ErrorMsg = "退货金额不能大于出库金额。如果特殊情况，请单独使用【其他费用支出】完成退款。";
-                        rrs.Succeeded = false;
-                        return rrs;
+
+                        if (entity.tb_saleout.TotalAmount < entity.TotalAmount || entity.tb_saleout.ForeignTotalAmount < entity.ForeignTotalAmount)
+                        {
+                            //特殊情况 要选择客户信息，还要进一步完善！TODO
+                            rrs.ErrorMsg = "退货金额不能大于出库金额。如果特殊情况，请单独使用【其他费用支出】完成退款。";
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
                     }
                 }
                 //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
@@ -286,7 +290,7 @@ namespace RUINORERP.Business
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     // 创建库存流水记录列表
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                    
+
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
@@ -317,14 +321,14 @@ namespace RUINORERP.Business
                         inv.LatestStorageTime = System.DateTime.Now;
                         #endregion
                         invUpdateList.Add(inv);
-                        
+
                         // 实时获取当前库存成本
                         decimal realtimeCost = inv.Inv_Cost;
-                        
+
                         // 更新退货明细的成本为实时成本
                         child.Cost = realtimeCost;
                         child.SubtotalCostAmount = realtimeCost * child.Quantity;
-                        
+
                         // 创建库存流水记录
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                         transaction.ProdDetailID = inv.ProdDetailID;
@@ -347,7 +351,7 @@ namespace RUINORERP.Business
                     {
                         _logger.Debug($"{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
-                    
+
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                     await tranController.BatchRecordTransactions(transactionList);
@@ -572,7 +576,7 @@ namespace RUINORERP.Business
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     // 创建反向库存流水记录列表
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                    
+
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
@@ -597,10 +601,10 @@ namespace RUINORERP.Business
                         inv.LatestStorageTime = System.DateTime.Now;
                         #endregion
                         invUpdateList.Add(inv);
-                        
+
                         // 实时获取当前库存成本
                         decimal realtimeCost = inv.Inv_Cost;
-                        
+
                         // 创建反向库存流水记录
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                         transaction.ProdDetailID = inv.ProdDetailID;
@@ -616,14 +620,14 @@ namespace RUINORERP.Business
 
                         transactionList.Add(transaction);
                     }
-                    
+
                     DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                     var InvCounter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                     if (InvCounter == 0)
                     {
                         _logger.Debug($"销售退回单{entity.ReturnNo}审核时，更新库存结果为0行，请检查数据！");
                     }
-                    
+
                     invUpdateList.Clear();
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
                     {
@@ -637,10 +641,10 @@ namespace RUINORERP.Business
                                 //更新库存
                                 inv.Quantity = inv.Quantity + child.Quantity; //翻新用的耗材这里反审就是还回去。用加
                                 BusinessHelper.Instance.EditEntity(inv);
-                                
+
                                 // 实时获取当前库存成本
                                 decimal realtimeCost = inv.Inv_Cost;
-                                
+
                                 // 创建反向库存流水记录
                                 tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                                 transaction.ProdDetailID = inv.ProdDetailID;
@@ -669,7 +673,7 @@ namespace RUINORERP.Business
                             _logger.Debug($"销售退回单{entity.ReturnNo}审核时，更新物料库存结果为0行，请检查数据！");
                         }
                     }
-                    
+
                     // 记录反向库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                     await tranController.BatchRecordTransactions(transactionList);

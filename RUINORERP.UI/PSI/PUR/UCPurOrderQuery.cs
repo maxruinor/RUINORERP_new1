@@ -1,36 +1,37 @@
+using AutoMapper;
+using FastReport.Table;
+using RUINORERP.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.FM.FMBase;
+using RUINORERP.UI.UControls;
+using SqlSugar;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Global;
-using RUINORERP.Business;
-using RUINORERP.AutoMapper;
-using AutoMapper;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.Common.Extensions;
-using SqlSugar;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using System.Runtime.InteropServices;
-using System.Diagnostics;
-using System.Linq.Dynamic.Core;
-using RUINORERP.Common.Helper;
-using System.Linq.Expressions;
-using RUINORERP.Business.CommService;
-using FastReport.Table;
-using RUINORERP.UI.UControls;
-using StackExchange.Redis;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.UI.ATechnologyStack;
-using RUINORERP.UI.CommonUI;
 namespace RUINORERP.UI.PSI.PUR
 {
 
@@ -157,6 +158,7 @@ namespace RUINORERP.UI.PSI.PUR
                                 if (RelatedMenuInfo != null)
                                 {
                                     await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, rs.ReturnObject);
+                                    rs.ReturnObject.HasChanged = true;
                                 }
                                 return;
                             }
@@ -204,6 +206,7 @@ namespace RUINORERP.UI.PSI.PUR
                     if (RelatedMenuInfo != null)
                     {
                         await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, purEntry);
+                        purEntry.HasChanged = true;
                     }
                     return;
                 }

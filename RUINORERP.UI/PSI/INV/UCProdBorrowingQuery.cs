@@ -1,26 +1,27 @@
+using AutoMapper;
+using Org.BouncyCastle.Asn1.X509.Qualified;
+using RUINORERP.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.UControls;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Global;
-using RUINORERP.Business;
-using RUINORERP.AutoMapper;
-using AutoMapper;
-using RUINORERP.Common.CollectionExtension;
-using RUINORERP.Common.Extensions;
-using SqlSugar;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using RUINORERP.Model.Base;
-using RUINORERP.UI.UControls;
 
 
 namespace RUINORERP.UI.PSI.INV
@@ -95,6 +96,7 @@ namespace RUINORERP.UI.PSI.INV
                     if (RelatedMenuInfo != null)
                     {
                         await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ProdReturning);
+                        ProdReturning.HasChanged = true;
                     }
                     return;
                 }
@@ -122,6 +124,7 @@ namespace RUINORERP.UI.PSI.INV
                     if (RelatedMenuInfo != null)
                     {
                         await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, profitLoss);
+                        profitLoss.HasChanged = true;
                     }
                     return;
                 }

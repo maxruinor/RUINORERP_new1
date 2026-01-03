@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -342,39 +343,55 @@ namespace RUINORERP.Business
         /// <param name="entities">应收应付单列表</param>
         /// <param name="paymentType">付款类型（收款/付款）</param>
         /// <param name="statementType">对账模式（余额对账/收款对账/付款对账）</param>
+        /// <param name="isMergeStatement">是否合并多个单位对账</param>
         /// <returns>生成的对账单结果</returns>
-        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType receivePaymentType, StatementType statementType)
+        public async Task<ReturnResults<tb_FM_Statement>> BuildStatement(List<tb_FM_ReceivablePayable> entities, ReceivePaymentType receivePaymentType, StatementType statementType, bool isMergeStatement = false)
         {
             ReturnResults<tb_FM_Statement> rmrs = new ReturnResults<tb_FM_Statement>();
 
             try
             {
-                // 验证是否为同一客户/供应商
-                var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
-                if (customerVendorIds.Count > 1)
-                {
-                    rmrs.ErrorMsg = "对账单只能针对同一客户/供应商生成";
-                    rmrs.Succeeded = false;
-                    return rmrs;
-                }
+            // 验证是否为同一客户/供应商，如果是合并对账则不检查
+            var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
+            if (customerVendorIds.Count > 1 && !isMergeStatement)
+            {
+                rmrs.ErrorMsg = "对账单只能针对同一客户/供应商生成";
+                rmrs.Succeeded = false;
+                return rmrs;
+            }
 
-                long customerVendorId = customerVendorIds.First();
+            long customerVendorId = customerVendorIds.First();
 
-                // 创建对账单基本信息
-                tb_FM_Statement statement = new tb_FM_Statement();
-                statement.ApprovalResults = null;
-                statement.ApprovalStatus = (int)ApprovalStatus.未审核;
-                statement.Approver_at = null;
-                statement.Approver_by = null;
-                statement.PrintStatus = 0;
-                statement.ActionStatus = ActionStatus.新增;
-                statement.ApprovalOpinions = "";
-                statement.Modified_at = null;
-                statement.Modified_by = null;
-                statement.ReceivePaymentType = (int)receivePaymentType;
-                statement.StatementType = (int)statementType;
+            // 创建对账单基本信息
+            tb_FM_Statement statement = new tb_FM_Statement();
+            statement.ApprovalResults = null;
+            statement.ApprovalStatus = (int)ApprovalStatus.未审核;
+            statement.Approver_at = null;
+            statement.Approver_by = null;
+            statement.PrintStatus = 0;
+            statement.ActionStatus = ActionStatus.新增;
+            statement.ApprovalOpinions = "";
+            statement.Modified_at = null;
+            statement.Modified_by = null;
+            statement.ReceivePaymentType = (int)receivePaymentType;
+            statement.StatementType = (int)statementType;
+            
+            // 如果是合并对账，设置客户供应商为0（表示多个单位合并）
+            if (isMergeStatement && customerVendorIds.Count > 1)
+            {
+                statement.CustomerVendor_ID = 0; // 0表示合并对账单
+                statement.IsMergeStatement = true;
+                // 保存合并单位的ID列表（JSON格式）
+                statement.MergedCustomerVendorIDs = System.Text.Json.JsonSerializer.Serialize(customerVendorIds);
+            }
+            else
+            {
                 statement.CustomerVendor_ID = customerVendorId;
-                statement.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                statement.IsMergeStatement = false;
+                statement.MergedCustomerVendorIDs = null;
+            }
+            
+            statement.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 // 生成对账单明细，考虑已对账金额
                 List<tb_FM_StatementDetail> details = new List<tb_FM_StatementDetail>();
 
@@ -405,7 +422,16 @@ namespace RUINORERP.Business
 
                 // 获取期初余额（按客户供应商和日期范围）
                 DateTime startDate = entities.Min(c => c.BusinessDate).Value;
-                statement.OpeningBalanceLocalAmount = await GetOpeningBalance(customerVendorIds.ToArray(), startDate);
+                
+                // 如果是合并对账，计算多个客户供应商的期初余额总和
+                if (isMergeStatement && customerVendorIds.Count > 1)
+                {
+                    statement.OpeningBalanceLocalAmount = await GetOpeningBalance(customerVendorIds.ToArray(), startDate);
+                }
+                else
+                {
+                    statement.OpeningBalanceLocalAmount = await GetOpeningBalance(customerVendorIds.ToArray(), startDate);
+                }
                 statement.OpeningBalanceForeignAmount = 0; // 可根据需要扩展外币逻辑
                                                            // 期间收款总额：生成对账单时设置为零，后续通过收付款确认业务来更新
                 statement.TotalReceivedLocalAmount = 0;
@@ -424,6 +450,24 @@ namespace RUINORERP.Business
                 statement.StatementNo = await bizCodeService.GenerateBizBillNoAsync(BizType.对账单);
                 statement.StartDate = startDate;
                 statement.EndDate = entities.Max(c => c.BusinessDate).Value;
+
+                // 如果是合并对账单，在备注中添加合并单位信息
+                if (isMergeStatement && customerVendorIds.Count > 1)
+                {
+                    var customerVendorNames = entities.Select(e => e.tb_customervendor?.CVName).Distinct().Where(name => !string.IsNullOrEmpty(name)).ToList();
+                    if (customerVendorNames.Any())
+                    {
+                        var mergeInfo = $"合并对账单（包含单位：{string.Join(", ", customerVendorNames)}）";
+                        if (string.IsNullOrEmpty(statement.Summary))
+                        {
+                            statement.Summary = mergeInfo;
+                        }
+                        else
+                        {
+                            statement.Summary = $"{mergeInfo} - {statement.Summary}";
+                        }
+                    }
+                }
 
                 // 设置收款信息（如果有）
                 if (entities.Count > 0 && entities[0].PayeeInfoID.HasValue)

@@ -96,6 +96,7 @@ namespace RUINORERP.UI.PSI.SAL
                     if (RelatedMenuInfo != null)
                     {
                         await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOutre);
+                        saleOutre.HasChanged = true;
                     }
                     return;
                 }
@@ -171,6 +172,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (RelatedMenuInfo != null)
             {
                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                ReceivablePayable.HasChanged = true;
             }
 
         }
@@ -233,6 +235,7 @@ namespace RUINORERP.UI.PSI.SAL
             if (RelatedMenuInfo != null)
             {
                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, ReceivablePayable);
+                ReceivablePayable.HasChanged = true;
             }
 
         }

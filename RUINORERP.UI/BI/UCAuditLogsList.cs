@@ -1,33 +1,36 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.FM;
+using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.UControls;
+using SqlSugar;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.CollectionExtension;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-using RUINORERP.Business.Processor;
-using RUINORERP.Business.Security;
-using SqlSugar;
-using RUINORERP.Global;
-using RUINORERP.Common.Extensions;
-using System.Reflection;
-using RUINORERP.Global.EnumExt.CRM;
-using RUINORERP.UI.UControls;
-using Newtonsoft.Json;
-using RUINORERP.UI.Monitoring.Auditing;
-using RUINORERP.Business.CommService;
-using RUINORERP.UI.CommonUI;
-using RUINORERP.Global.Model;
 
 namespace RUINORERP.UI.BI
 {
@@ -155,7 +158,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private void NewSumDataGridView_恢复单据数据(object sender, EventArgs e)
+        private async void NewSumDataGridView_恢复单据数据(object sender, EventArgs e)
         {
             if (dataGridView1.CurrentRow != null && !dataGridView1.CurrentRow.IsNewRow)
             {
@@ -177,53 +180,43 @@ namespace RUINORERP.UI.BI
                             //  object PKValue = entity.GetPropertyValue(PKColName);
                             entity.SetPropertyValue(PKColName, 0);
 
+
                             MenuPowerHelper menuPowerHelper;
                             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                            tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == objType.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                            tb_MenuInfo RelatedMenuInfo = new tb_MenuInfo();
+                            //如果有收付款类型。还是在查找菜单时区别收付款类型
+
+                            if (entity.ContainsProperty("ReceivePaymentType"))
+                            {
+                                string Flag = ((SharedFlag)entity.GetPropertyValue("ReceivePaymentType").ToInt()).ToString();
+                                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                             && m.EntityName == objType.Name
+                             && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
+                                 .FirstOrDefault();
+                            }
+                            else
+                            {
+
+                                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == objType.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+                            }
+
                             if (RelatedMenuInfo != null)
                             {
-                                menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+
+                                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
+                                if (entity is BaseEntity baseEntity)
+                                {
+                                    baseEntity.HasChanged = true;
+                                }
+
                             }
                             return;
                         }
 
                     }
-
-
-                    /*
-                    //只有审核状态才可以转换为出库单
-                    if (item.ObjectType == (int)BizType.盘点单)
-                    {
-                        if (string.IsNullOrEmpty(item.DataContent))
-                        {
-                            //if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成过出库单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-                            //{
-
-                            //}
-                            //else
-                            //{
-                            //    continue;
-                            //}
-                        }
-
-                        tb_StocktakeController<tb_Stocktake> ctr = Startup.GetFromFac<tb_StocktakeController<tb_Stocktake>>();
-                        tb_Stocktake entity = null;
-                        //entity = EntityDataRestorer.DeserializeObject<tb_Stocktake>(item.DataContent, new JsonSerializerSettings() { DateFormatString = "yyyy-MM-dd HH:mm:ss" });
-                        // 恢复实体对象
-                        entity = EntityDataRestorer.RestoreEntity<tb_Stocktake>(item.DataContent);
-                        entity.MainID = 0;
-                        MenuPowerHelper menuPowerHelper;
-                        menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                        tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_Stocktake) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                        if (RelatedMenuInfo != null)
-                        {
-                            menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
-                        }
-                        return;
-                    }
-                    */
+ 
                     #endregion
-
                 }
             }
 
@@ -274,7 +267,7 @@ namespace RUINORERP.UI.BI
             GridRelated.ComplexType = true;
             //由这个列来决定单号显示哪个的业务窗体
             GridRelated.SetComplexTargetField<tb_AuditLogs>(c => c.ObjectType, c => c.ObjectNo);
-     
+
             //将枚举中的值循环
             foreach (var biztype in Enum.GetValues(typeof(BizType)))
             {

@@ -1087,14 +1087,12 @@ namespace RUINORERP.UI.IM
             
             // 根据当前选中的消息数量启用/禁用菜单项
             bool hasSelection = lstMessages.SelectedItems.Count > 0;
-            bool hasMultipleSelection = lstMessages.SelectedItems.Count > 1;
             
             // 刷新菜单项始终可用
             menuRefreshMessages.Enabled = true;
             
             // 删除菜单项根据选中情况启用/禁用
             menuDeleteSelected.Enabled = hasSelection;
-            menuDeleteMultiple.Enabled = hasMultipleSelection;
             
             // 清除消息的菜单项始终可用
             menuClear30Days.Enabled = true;
@@ -1115,14 +1113,6 @@ namespace RUINORERP.UI.IM
         /// 删除选中消息
         /// </summary>
         private void menuDeleteSelected_Click(object sender, EventArgs e)
-        {
-            DeleteSelectedMessages();
-        }
-
-        /// <summary>
-        /// 删除多条消息
-        /// </summary>
-        private void menuDeleteMultiple_Click(object sender, EventArgs e)
         {
             DeleteSelectedMessages();
         }

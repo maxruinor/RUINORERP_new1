@@ -41,6 +41,8 @@ namespace RUINORERP.UI.SysConfig
             if (!DesignMode)
             {
                 DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_RoleInfo));
+                DisplayTextResolver.Initialize(dataGridView1);
+                this.dataGridView1.CellFormatting -= new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
             }
         }
         public GridViewDisplayTextResolver DisplayTextResolver;
@@ -118,13 +120,14 @@ namespace RUINORERP.UI.SysConfig
 
         #endregion
 
-
+        public List<tb_RoleInfo> listRole { get; set; }
         private void UCUserAuthorization_Load(object sender, EventArgs e)
         {
-
+            listRole = ctrRole.Query();
             TreeView1.HideSelection = false;
             // FieldNameList = UIHelper.GetFieldNameColList(typeof(SelectDto), typeof(tb_RoleInfo));
             dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(tb_User_Role));
+
             dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             //属性–Columns–DefaultCellStyle–Alignment–MiddleRight
             //这里是不是与那个缓存 初始化时的那个字段重复？
@@ -133,6 +136,7 @@ namespace RUINORERP.UI.SysConfig
             //重构？
             dataGridView1.NeedSaveColumnsXml = true;
             dataGridView1.XmlFileName = "UCUserAuthorization";
+            dataGridView1.HideColumn<tb_User_Role>(s => s.User_ID);
             InitListData();
             /*
             combinedType = Common.EmitHelper.MergeTypesNew(typeof(SelectDto), typeof(tb_RoleInfo));
@@ -150,10 +154,7 @@ namespace RUINORERP.UI.SysConfig
             catch (Exception)
             {
             }
-            if (!DesignMode)
-            {
-                DisplayTextResolver.Initialize(dataGridView1);
-            }
+
         }
 
         /// <summary>
@@ -178,76 +179,35 @@ namespace RUINORERP.UI.SysConfig
             tb_User_RoleController<tb_User_Role> ctr = Startup.GetFromFac<tb_User_RoleController<tb_User_Role>>();
             e.Node.Checked = true;
             node_AfterCheck(sender, e);
-            List<tb_RoleInfo> listRole = await ctrRole.QueryByNavAsync();
-            List<tb_User_Role> listUR = await ctr.QueryByNavAsync();
-            tb_UserInfo user = TreeView1.SelectedNode.Tag as tb_UserInfo;
-            user.tb_User_Roles = new List<tb_User_Role>();
-            foreach (tb_RoleInfo item in listRole)
+
+
+            if (e.Node.Tag is tb_UserInfo userInfo)
             {
-                var urnew = listUR.FirstOrDefault(c => c.RoleID == item.RoleID && c.User_ID == user.User_ID);
-                if (urnew == null)
+                tb_UserInfo user = TreeView1.SelectedNode.Tag as tb_UserInfo;
+                List<tb_User_Role> listUR = await ctr.QueryByNavAsync(c => c.User_ID == user.User_ID);
+                user.tb_User_Roles = new List<tb_User_Role>();
+                foreach (tb_RoleInfo item in listRole)
                 {
-                    //没有添加到的显示一下，给保存修改准备数据
-                    urnew = new tb_User_Role();
-                    urnew.User_ID = user.User_ID;
-                    urnew.RoleID = item.RoleID;
-                    urnew.Authorized = false;
-                    urnew.DefaultRole = false;
-                    user.tb_User_Roles.Add(urnew);
-                }
-                else
-                {
-                    user.tb_User_Roles.Add(urnew);
-                }
-            }
-            bindingSourceList.DataSource = user.tb_User_Roles;
-            dataGridView1.DataSource = bindingSourceList;
-            dataGridView1.ReadOnly = false;
-            /*
-            //思路是合并两个实体
-            List<object> objlist = new List<object>();
-            List<tb_RoleInfo> list = await ctrRole.QueryByNavAsync();
-            tb_UserInfo user = TreeView1.SelectedNode.Tag as tb_UserInfo;
-            foreach (var item in list)
-            {
-                object InstObj = Activator.CreateInstance(combinedType);
-                foreach (var field in FieldNameList)
-                {
-                    if (field.Key == "UserSelect")
+                    var urnew = listUR.FirstOrDefault(c => c.RoleID == item.RoleID && c.User_ID == user.User_ID);
+                    if (urnew == null)
                     {
-                        //如果当前用户名下有这个角色就选中
-                        //bool userselect = item.tb_User_Roles != null && item.tb_User_Roles.Where(r => r.User_ID == user.User_ID).Any();
-                        bool userselect = false;
-                        if (item.tb_User_Roles == null)
-                        {
-                            item.tb_User_Roles = new List<tb_User_Role>();
-                        }
-                        var ur = item.tb_User_Roles.FirstOrDefault(c => c.User_ID == user.User_ID);
-                        if (ur != null)
-                        {
-                            userselect = ur.Authorized;
-                        }
-                        InstObj.SetPropertyValue(field.Key, userselect);
+                        //没有添加到的显示一下，给保存修改准备数据
+                        urnew = new tb_User_Role();
+                        urnew.User_ID = user.User_ID;
+                        urnew.RoleID = item.RoleID;
+                        urnew.Authorized = false;
+                        urnew.DefaultRole = false;
+                        user.tb_User_Roles.Add(urnew);
                     }
                     else
                     {
-                        var rowdata = item.GetPropertyValue(field.Key);
-                        InstObj.SetPropertyValue(field.Key, rowdata);
+                        user.tb_User_Roles.Add(urnew);
                     }
-                    objlist.Add(InstObj);
                 }
-                bindingSourceList.DataSource = objlist;
-                dataGridView1.DataSource = ListDataSoure;
-                dataGridView1.ColumnDisplayControl(FieldNameList);
-
-                if (this.TreeView1.SelectedNode != null)
-                {
-                    theLastNode = TreeView1.SelectedNode;
-                }
-
-
+                bindingSourceList.DataSource = user.tb_User_Roles;
+                dataGridView1.DataSource = bindingSourceList;
+                dataGridView1.ReadOnly = false;
             }
-            */
         }
 
 

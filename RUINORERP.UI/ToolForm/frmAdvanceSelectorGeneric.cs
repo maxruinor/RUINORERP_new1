@@ -95,7 +95,7 @@ namespace RUINORERP.UI.ToolForm
         /// <param name="title">窗体标题</param>
         public void InitializeSelector(List<T> dataSource, Dictionary<string, string> columnMappings, string title = "请选择")
         {
-            #region 初始化
+            #region 初始化 1
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(T));
             dgvItems.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
             dgvItems.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;

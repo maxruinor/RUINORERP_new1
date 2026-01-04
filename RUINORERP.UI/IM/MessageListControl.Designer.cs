@@ -37,15 +37,14 @@ namespace RUINORERP.UI.IM
             this.colStatus = new System.Windows.Forms.ColumnHeader();
             this.colType = new System.Windows.Forms.ColumnHeader();
             this.contextMenuStripMessages = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.menuRefreshMessages = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuDeleteSelected = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.menuClear30Days = new System.Windows.Forms.ToolStripMenuItem();
             this.menuClear60Days = new System.Windows.Forms.ToolStripMenuItem();
             this.menuClear180Days = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuClearAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
-            this.menuDeleteSelected = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuDeleteMultiple = new System.Windows.Forms.ToolStripMenuItem();
-            this.menuRefreshMessages = new System.Windows.Forms.ToolStripMenuItem();
             this.panelHeader = new System.Windows.Forms.Panel();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnMarkAllRead = new System.Windows.Forms.Button();
@@ -97,67 +96,61 @@ namespace RUINORERP.UI.IM
             this.colType.Width = 80;
             
             // contextMenuStripMessages
+            this.contextMenuStripMessages.AutoSize = true;
             this.contextMenuStripMessages.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuRefreshMessages,
             this.toolStripSeparator1,
             this.menuDeleteSelected,
-            this.menuDeleteMultiple,
             this.toolStripSeparator2,
             this.menuClear30Days,
             this.menuClear60Days,
             this.menuClear180Days,
             this.menuClearAll});
             this.contextMenuStripMessages.Name = "contextMenuStripMessages";
-            this.contextMenuStripMessages.Size = new System.Drawing.Size(150, 148);
+            this.contextMenuStripMessages.Size = new System.Drawing.Size(152, 148);
             this.contextMenuStripMessages.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripMessages_Opening);
             
             // menuRefreshMessages
             this.menuRefreshMessages.Name = "menuRefreshMessages";
-            this.menuRefreshMessages.Size = new System.Drawing.Size(149, 22);
+            this.menuRefreshMessages.Size = new System.Drawing.Size(150, 22);
             this.menuRefreshMessages.Text = "刷新消息";
             this.menuRefreshMessages.Click += new System.EventHandler(this.menuRefreshMessages_Click);
             
             // toolStripSeparator1
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(147, 6);
             
             // menuDeleteSelected
             this.menuDeleteSelected.Name = "menuDeleteSelected";
-            this.menuDeleteSelected.Size = new System.Drawing.Size(149, 22);
+            this.menuDeleteSelected.Size = new System.Drawing.Size(150, 22);
             this.menuDeleteSelected.Text = "删除选中消息";
             this.menuDeleteSelected.Click += new System.EventHandler(this.menuDeleteSelected_Click);
             
-            // menuDeleteMultiple
-            this.menuDeleteMultiple.Name = "menuDeleteMultiple";
-            this.menuDeleteMultiple.Size = new System.Drawing.Size(149, 22);
-            this.menuDeleteMultiple.Text = "删除多条消息";
-            this.menuDeleteMultiple.Click += new System.EventHandler(this.menuDeleteMultiple_Click);
-            
             // toolStripSeparator2
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(146, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(147, 6);
             
             // menuClear30Days
             this.menuClear30Days.Name = "menuClear30Days";
-            this.menuClear30Days.Size = new System.Drawing.Size(149, 22);
+            this.menuClear30Days.Size = new System.Drawing.Size(150, 22);
             this.menuClear30Days.Text = "清除30天前消息";
             this.menuClear30Days.Click += new System.EventHandler(this.menuClear30Days_Click);
             
             // menuClear60Days
             this.menuClear60Days.Name = "menuClear60Days";
-            this.menuClear60Days.Size = new System.Drawing.Size(149, 22);
+            this.menuClear60Days.Size = new System.Drawing.Size(150, 22);
             this.menuClear60Days.Text = "清除60天前消息";
             this.menuClear60Days.Click += new System.EventHandler(this.menuClear60Days_Click);
             
             // menuClear180Days
             this.menuClear180Days.Name = "menuClear180Days";
-            this.menuClear180Days.Size = new System.Drawing.Size(149, 22);
+            this.menuClear180Days.Size = new System.Drawing.Size(150, 22);
             this.menuClear180Days.Text = "清除180天前消息";
             this.menuClear180Days.Click += new System.EventHandler(this.menuClear180Days_Click);
             
             // menuClearAll
             this.menuClearAll.Name = "menuClearAll";
-            this.menuClearAll.Size = new System.Drawing.Size(149, 22);
+            this.menuClearAll.Size = new System.Drawing.Size(150, 22);
             this.menuClearAll.Text = "清除所有消息";
             this.menuClearAll.Click += new System.EventHandler(this.menuClearAll_Click);
             
@@ -204,6 +197,7 @@ namespace RUINORERP.UI.IM
             this.Controls.Add(this.panelHeader);
             this.Name = "MessageListControl";
             this.Size = new System.Drawing.Size(800, 450);
+            this.contextMenuStripMessages.ResumeLayout(false);
             this.panelHeader.ResumeLayout(false);
             this.panelHeader.PerformLayout();
             this.ResumeLayout(false);
@@ -219,18 +213,17 @@ namespace RUINORERP.UI.IM
         private System.Windows.Forms.ColumnHeader colStatus;
         private System.Windows.Forms.ColumnHeader colType;
         private System.Windows.Forms.ContextMenuStrip contextMenuStripMessages;
+        private System.Windows.Forms.ToolStripMenuItem menuRefreshMessages;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem menuDeleteSelected;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripMenuItem menuClear30Days;
         private System.Windows.Forms.ToolStripMenuItem menuClear60Days;
         private System.Windows.Forms.ToolStripMenuItem menuClear180Days;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem menuClearAll;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
-        private System.Windows.Forms.ToolStripMenuItem menuDeleteSelected;
-        private System.Windows.Forms.ToolStripMenuItem menuDeleteMultiple;
         private System.Windows.Forms.Panel panelHeader;
         private System.Windows.Forms.Label lblUnreadCount;
         private System.Windows.Forms.Button btnMarkAllRead;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.ToolStripMenuItem menuRefreshMessages;
     }
 }

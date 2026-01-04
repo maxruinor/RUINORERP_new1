@@ -692,8 +692,8 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 添加付款状态按钮规则
             AddStandardButtonRules(PaymentStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
-            AddStandardButtonRules(PaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            // 修改待审核状态的删除按钮权限，已审核的单据不允许直接删除
+            AddStandardButtonRules(PaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PaymentStatus.已支付, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 

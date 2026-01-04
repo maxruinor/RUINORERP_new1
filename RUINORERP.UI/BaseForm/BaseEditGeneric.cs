@@ -1,35 +1,36 @@
+using Autofac;
+using CacheManager.Core;
+using FastReport.Table;
+using FluentValidation;
+using FluentValidation.Results;
+using Krypton.Toolkit;
+using Netron.GraphLib;
+using Newtonsoft.Json.Linq;
+using RUINORERP.Business;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using Krypton.Toolkit;
-using FluentValidation.Results;
-using Autofac;
-using RUINORERP.Model;
-using System.IO;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
 using System.Reflection;
-using RUINORERP.UI.Properties;
-using FluentValidation;
-using RUINORERP.Business;
+using System.Text;
 using System.Text.RegularExpressions;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.UI.Common;
-using RUINORERP.Business.CommService;
-using RUINORERP.Common.Helper;
-using FastReport.Table;
-using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 using System.Web.UI;
+using System.Windows.Forms;
 using Control = System.Windows.Forms.Control;
-using Netron.GraphLib;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Global;
-using RUINORERP.Business.Cache;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -38,7 +39,7 @@ namespace RUINORERP.UI.BaseForm
     public partial class BaseEditGeneric<T> : KryptonForm where T : class
     {
 
-        protected readonly IEntityCacheManager _cacheManager;
+        protected  IEntityCacheManager _cacheManager;
 
         /// <summary>
         /// 无参数构造函数，用于设计器环境
@@ -46,8 +47,15 @@ namespace RUINORERP.UI.BaseForm
         public BaseEditGeneric()
         {
             InitializeComponent();
-            //this.KeyPreview = true;
-            //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
+            bool isDesignMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
+
+            if (!isDesignMode)
+            {
+                if (_cacheManager == null)
+                {
+                    _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                }
+            }
         }
 
         /// <summary>

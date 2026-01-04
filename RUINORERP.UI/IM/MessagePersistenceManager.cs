@@ -108,8 +108,12 @@ namespace RUINORERP.UI.IM
                     Messages = messages
                 };
 
-                // 序列化JSON数据
-                string jsonContent = JsonConvert.SerializeObject(messageData, Formatting.Indented);
+                // 序列化JSON数据，忽略null值属性以节省存储空间
+                var jsonSettings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                string jsonContent = JsonConvert.SerializeObject(messageData, Formatting.Indented, jsonSettings);
 
                 // 写入文件
                 File.WriteAllText(_dataPath, jsonContent);
@@ -226,7 +230,12 @@ namespace RUINORERP.UI.IM
                     Messages = new List<MessageData>()
                 };
                 
-                string jsonContent = JsonConvert.SerializeObject(persistenceData, Formatting.Indented);
+                // 序列化JSON数据，忽略null值属性以节省存储空间
+                var jsonSettings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                string jsonContent = JsonConvert.SerializeObject(persistenceData, Formatting.Indented, jsonSettings);
                 File.WriteAllText(_dataPath, jsonContent);
                 
                 Console.WriteLine("已成功清除所有消息");

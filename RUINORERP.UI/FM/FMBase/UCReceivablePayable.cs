@@ -1376,15 +1376,7 @@ namespace RUINORERP.UI.FM
                     if (rs)
                     {
                         MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_ReceivablePayable>("删除", EditEntity);
-                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        //{
-                        //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
-                        //}
-                        // bindingSourceSub.Clear();
-
-                        ////删除远程图片及本地图片
-                        ///暂时使用了逻辑删除所以不执行删除远程图片操作。
-                        //await DeleteRemoteImages();
+                        
 
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");

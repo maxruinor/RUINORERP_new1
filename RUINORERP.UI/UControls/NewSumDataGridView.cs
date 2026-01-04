@@ -3867,9 +3867,194 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 列的显示，unitName,<单位,true>
-        /// 列名，列中文，是否显示
+        /// 列名，列中文，是否显示1
         /// </summary>
         public ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList { get => _FieldNameList; set => _FieldNameList = value; }
+
+        #region 列隐藏显示控制方法
+
+        /// <summary>
+        /// 隐藏指定列（强类型方式）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="exp">列表达式</param>
+        /// <remarks>
+        /// 使用示例：
+        /// dataGridView1.HideColumn&lt;tb_Product&gt;(p => p.ProductName);
+        /// </remarks>
+        public void HideColumn<T>(System.Linq.Expressions.Expression<Func<T, object>> exp)
+        {
+            try
+            {
+                // 提取字段名
+                System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                
+                // 从FieldNameList中获取列的显示信息
+                KeyValuePair<string, bool> columnInfo;
+                if (FieldNameList.TryGetValue(columnName, out columnInfo))
+                {
+                    // 更新为隐藏状态
+                    KeyValuePair<string, bool> newColumnInfo = new KeyValuePair<string, bool>(columnInfo.Key, false);
+                    FieldNameList.AddOrUpdate(columnName, newColumnInfo, (key, oldValue) => newColumnInfo);
+                    
+                    // 如果列已经存在，直接隐藏
+                    if (this.Columns.Contains(columnName))
+                    {
+                        this.Columns[columnName].Visible = false;
+                    }
+                }
+                else
+                {
+                    // 如果列不存在于FieldNameList中，添加到隐藏列集合
+                    // 这里假设有一个隐藏列集合，如果没有，可以创建一个
+                    if (BizInvisibleCols == null)
+                    {
+                        BizInvisibleCols = new HashSet<string>();
+                    }
+                    BizInvisibleCols.Add(columnName);
+                    
+                    // 如果列已经存在，直接隐藏
+                    if (this.Columns.Contains(columnName))
+                    {
+                        this.Columns[columnName].Visible = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"隐藏列时发生错误: {ex.Message}");
+                throw new InvalidOperationException($"无法隐藏列: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 显示指定列（强类型方式）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="exp">列表达式</param>
+        /// <remarks>
+        /// 使用示例：
+        /// dataGridView1.ShowColumn&lt;tb_Product&gt;(p => p.ProductName);
+        /// </remarks>
+        public void ShowColumn<T>(System.Linq.Expressions.Expression<Func<T, object>> exp)
+        {
+            try
+            {
+                // 提取字段名
+                System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                
+                // 从FieldNameList中获取列的显示信息
+                KeyValuePair<string, bool> columnInfo;
+                if (FieldNameList.TryGetValue(columnName, out columnInfo))
+                {
+                    // 更新为显示状态
+                    KeyValuePair<string, bool> newColumnInfo = new KeyValuePair<string, bool>(columnInfo.Key, true);
+                    FieldNameList.AddOrUpdate(columnName, newColumnInfo, (key, oldValue) => newColumnInfo);
+                    
+                    // 如果列已经存在，直接显示
+                    if (this.Columns.Contains(columnName))
+                    {
+                        this.Columns[columnName].Visible = true;
+                    }
+                }
+                else
+                {
+                    // 如果列不存在于FieldNameList中，从隐藏列集合中移除
+                    if (BizInvisibleCols != null)
+                    {
+                        BizInvisibleCols.Remove(columnName);
+                    }
+                    
+                    // 如果列已经存在，直接显示
+                    if (this.Columns.Contains(columnName))
+                    {
+                        this.Columns[columnName].Visible = true;
+                    }
+                    else
+                    {
+                        // 如果列不存在，可以尝试重新创建列（可选功能）
+                        // 这里可以添加重新创建列的逻辑
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示列时发生错误: {ex.Message}");
+                throw new InvalidOperationException($"无法显示列: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 检查指定列是否可见（强类型方式）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="exp">列表达式</param>
+        /// <returns>如果列可见返回true，否则返回false</returns>
+        /// <remarks>
+        /// 使用示例：
+        /// bool isVisible = dataGridView1.IsColumnVisible&lt;tb_Product&gt;(p => p.ProductName);
+        /// </remarks>
+        public bool IsColumnVisible<T>(System.Linq.Expressions.Expression<Func<T, object>> exp)
+        {
+            try
+            {
+                // 提取字段名
+                System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                
+                // 检查列是否存在
+                if (!this.Columns.Contains(columnName))
+                {
+                    return false;
+                }
+                
+                // 检查列是否可见
+                return this.Columns[columnName].Visible;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"检查列可见性时发生错误: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 获取列的显示状态信息（强类型方式）
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="exp">列表达式</param>
+        /// <returns>列的显示状态信息</returns>
+        /// <remarks>
+        /// 使用示例：
+        /// var columnInfo = dataGridView1.GetColumnInfo&lt;tb_Product&gt;(p => p.ProductName);
+        /// </remarks>
+        public KeyValuePair<string, bool>? GetColumnInfo<T>(System.Linq.Expressions.Expression<Func<T, object>> exp)
+        {
+            try
+            {
+                // 提取字段名
+                System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                
+                // 从FieldNameList中获取列的显示信息
+                KeyValuePair<string, bool> columnInfo;
+                if (FieldNameList.TryGetValue(columnName, out columnInfo))
+                {
+                    return columnInfo;
+                }
+                
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取列信息时发生错误: {ex.Message}");
+                return null;
+            }
+        }
+
+        #endregion
 
 
 

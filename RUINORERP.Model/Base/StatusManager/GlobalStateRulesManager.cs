@@ -722,7 +722,7 @@ namespace RUINORERP.Model.Base.StatusManager
             // 添加应收应付状态按钮规则
             AddStandardButtonRules(ARAPStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true);
             // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
-            AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: false, submitEnabled: false, reviewEnabled: true);
+            AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true);
             // 待支付状态：允许查看和打印，不允许修改原始数据，但允许反审核操作
             AddStandardButtonRules(ARAPStatus.待支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             // 部分支付状态：允许查看和打印，不允许修改原始数据

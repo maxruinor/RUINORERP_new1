@@ -63,8 +63,7 @@ namespace RUINORERP.UI.IM
             _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
             _messageManager.UnreadMessageCountChanged += MessageManager_UnreadMessageCountChanged;
 
-            // 动态设置右键菜单，确保菜单已经完全初始化
-            lstMessages.ContextMenuStrip = contextMenuStripMessages;
+            // 右键菜单已在设计器中设置，无需重复设置
 
             // 加载现有消息
             LoadMessages();
@@ -1083,9 +1082,15 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private void contextMenuStripMessages_Opening(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            // 确保菜单显示
+            e.Cancel = false;
+            
             // 根据当前选中的消息数量启用/禁用菜单项
             bool hasSelection = lstMessages.SelectedItems.Count > 0;
             bool hasMultipleSelection = lstMessages.SelectedItems.Count > 1;
+            
+            // 刷新菜单项始终可用
+            menuRefreshMessages.Enabled = true;
             
             // 删除菜单项根据选中情况启用/禁用
             menuDeleteSelected.Enabled = hasSelection;

@@ -1003,7 +1003,7 @@ namespace RUINORERP.UI.IM
                     return;
                 }
 
-                // 清除指定天数前的消息
+                // 获取要删除的消息列表
                 var messagesToDelete = _messageManager.GetAllMessages()
                     .Where(m => m.SendTime < cutoffDate)
                     .ToList();
@@ -1014,11 +1014,9 @@ namespace RUINORERP.UI.IM
                     return;
                 }
 
-                // 执行清除操作
-                foreach (var message in messagesToDelete)
-                {
-                    _messageManager.DeleteMessage(message.MessageId);
-                }
+                // 执行清除操作 - 删除JSON文件中的消息
+                var messageIds = messagesToDelete.Select(m => m.MessageId).ToList();
+                _messageManager.DeleteMessages(messageIds);
 
                 // 重新加载消息列表
                 LoadMessages();
@@ -1057,7 +1055,7 @@ namespace RUINORERP.UI.IM
                     return;
                 }
 
-                // 执行清除所有消息操作
+                // 执行清除所有消息操作 - 从JSON文件和缓存中清除
                 _messageManager.ClearAllMessages();
 
                 // 重新加载消息列表
@@ -1158,7 +1156,7 @@ namespace RUINORERP.UI.IM
                     return;
                 }
 
-                // 执行删除操作
+                // 执行删除操作 - 从JSON文件和缓存中真正删除
                 if (messageIds.Count == 1)
                 {
                     _messageManager.DeleteMessage(messageIds[0]);
@@ -1168,7 +1166,7 @@ namespace RUINORERP.UI.IM
                     _messageManager.DeleteMessages(messageIds);
                 }
 
-                // 重新加载消息列表
+                // 重新加载消息列表以刷新UI
                 LoadMessages();
 
                 MessageBox.Show($"已成功删除{messageIds.Count}条消息。", "删除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);

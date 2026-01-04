@@ -107,12 +107,12 @@ namespace RUINORERP.UI.IM
             this.menuClear180Days,
             this.menuClearAll});
             this.contextMenuStripMessages.Name = "contextMenuStripMessages";
-            this.contextMenuStripMessages.Size = new System.Drawing.Size(152, 148);
+            this.contextMenuStripMessages.Size = new System.Drawing.Size(120, 148);
             this.contextMenuStripMessages.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripMessages_Opening);
             
             // menuRefreshMessages
             this.menuRefreshMessages.Name = "menuRefreshMessages";
-            this.menuRefreshMessages.Size = new System.Drawing.Size(150, 22);
+            this.menuRefreshMessages.Size = new System.Drawing.Size(115, 22);
             this.menuRefreshMessages.Text = "刷新消息";
             this.menuRefreshMessages.Click += new System.EventHandler(this.menuRefreshMessages_Click);
             
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.IM
             
             // menuDeleteSelected
             this.menuDeleteSelected.Name = "menuDeleteSelected";
-            this.menuDeleteSelected.Size = new System.Drawing.Size(150, 22);
+            this.menuDeleteSelected.Size = new System.Drawing.Size(115, 22);
             this.menuDeleteSelected.Text = "删除选中消息";
             this.menuDeleteSelected.Click += new System.EventHandler(this.menuDeleteSelected_Click);
             
@@ -132,25 +132,25 @@ namespace RUINORERP.UI.IM
             
             // menuClear30Days
             this.menuClear30Days.Name = "menuClear30Days";
-            this.menuClear30Days.Size = new System.Drawing.Size(150, 22);
+            this.menuClear30Days.Size = new System.Drawing.Size(115, 22);
             this.menuClear30Days.Text = "清除30天前消息";
             this.menuClear30Days.Click += new System.EventHandler(this.menuClear30Days_Click);
             
             // menuClear60Days
             this.menuClear60Days.Name = "menuClear60Days";
-            this.menuClear60Days.Size = new System.Drawing.Size(150, 22);
+            this.menuClear60Days.Size = new System.Drawing.Size(115, 22);
             this.menuClear60Days.Text = "清除60天前消息";
             this.menuClear60Days.Click += new System.EventHandler(this.menuClear60Days_Click);
             
             // menuClear180Days
             this.menuClear180Days.Name = "menuClear180Days";
-            this.menuClear180Days.Size = new System.Drawing.Size(150, 22);
+            this.menuClear180Days.Size = new System.Drawing.Size(115, 22);
             this.menuClear180Days.Text = "清除180天前消息";
             this.menuClear180Days.Click += new System.EventHandler(this.menuClear180Days_Click);
             
             // menuClearAll
             this.menuClearAll.Name = "menuClearAll";
-            this.menuClearAll.Size = new System.Drawing.Size(150, 22);
+            this.menuClearAll.Size = new System.Drawing.Size(115, 22);
             this.menuClearAll.Text = "清除所有消息";
             this.menuClearAll.Click += new System.EventHandler(this.menuClearAll_Click);
             

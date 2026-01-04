@@ -23,10 +23,10 @@ namespace RUINORERP.Business
 {
     public partial class tb_FM_PaymentRecordValidator : BaseValidatorGeneric<tb_FM_PaymentRecord>
     {
-       //public override void Initialize()
-        //{
-        //    RuleFor(x => x.PayReasonItems).MinimumLength(3).WithMessage("付款项目/原因:长度不能小于3。");
-        //}
+        public override void Initialize()
+        {
+            RuleFor(x => x.TotalLocalPayableAmount).NotEqual(0).WithMessage("应付金额本币:不能为零。");
+        }
     }
 
 }

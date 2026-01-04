@@ -132,42 +132,73 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                // 使用反射调用MessageService的内部保存方法
-                var saveMethod = _messageService.GetType().GetMethod("SaveMessageToLocalStorage",
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-
-                if (saveMethod != null)
+                // 直接调用MessageService的公共方法保存消息
+                // 首先检查消息是否已经存在于MessageService中
+                var existingMessage = _messageService.GetMessageById(message.MessageId);
+                if (existingMessage == null)
                 {
-                    saveMethod.Invoke(_messageService, new object[] { message });
-                    _logger.LogDebug($"消息已同步到MessageService本地存储 - ID: {message.MessageId}");
+                    // 使用反射调用MessageService的内部保存方法
+                    var saveMethod = _messageService.GetType().GetMethod("SaveMessageToLocalStorage",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                    if (saveMethod != null)
+                    {
+                        saveMethod.Invoke(_messageService, new object[] { message });
+                        _logger.LogDebug($"消息已同步到MessageService本地存储 - ID: {message.MessageId}");
+                    }
+                    else
+                    {
+                        // 如果反射失败，创建新的消息保存方法
+                        SaveMessageToMessageServiceDirectly(message);
+                    }
                 }
                 else
                 {
-                    // 如果反射失败，使用备用方案：直接调用MessageService的OnMessageReceived方法
-                    // 这会触发消息处理流程，但需要注意避免重复触发事件
-                    _logger.LogWarning("无法通过反射保存消息到MessageService，使用备用方案");
-
-                    // 根据消息类型调用相应的处理方法
-                    switch (message.MessageType)
-                    {
-                        case MessageType.Popup:
-                            _messageService.OnPopupMessageReceived(message);
-                            break;
-                        case MessageType.Business:
-                            _messageService.OnBusinessMessageReceived(message);
-                            break;
-                        case MessageType.System:
-                            _messageService.OnSystemNotificationReceived(message);
-                            break;
-                        default:
-                            _messageService.OnPopupMessageReceived(message);
-                            break;
-                    }
+                    _logger.LogDebug($"消息已存在于MessageService中，跳过保存 - ID: {message.MessageId}");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"保存消息到MessageService时发生异常 - ID: {message.MessageId}");
+                // 尝试使用备用方案
+                try
+                {
+                    SaveMessageToMessageServiceDirectly(message);
+                }
+                catch (Exception innerEx)
+                {
+                    _logger.LogError(innerEx, $"备用方案也失败 - ID: {message.MessageId}");
+                }
+            }
+        }
+
+        // 直接保存消息到MessageService的备用方案
+        private void SaveMessageToMessageServiceDirectly(MessageData message)
+        {
+            try
+            {
+                // 使用反射获取MessageService的_localMessages字段
+                var localMessagesField = _messageService.GetType().GetField("_localMessages",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+                if (localMessagesField != null)
+                {
+                    var localMessages = localMessagesField.GetValue(_messageService) as System.Collections.Concurrent.ConcurrentDictionary<long, MessageData>;
+                    if (localMessages != null)
+                    {
+                        // 直接保存到字典中
+                        localMessages[message.MessageId] = message;
+                        _logger.LogDebug($"消息已直接保存到MessageService本地存储 - ID: {message.MessageId}");
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("无法访问MessageService的本地存储字段");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"直接保存消息到MessageService时发生异常 - ID: {message.MessageId}");
             }
         }
 
@@ -275,11 +306,26 @@ namespace RUINORERP.UI.IM
             {
                 if (messageData != null)
                 {
+                    // 确保消息有有效的MessageId
+                    if (messageData.MessageId <= 0)
+                    {
+                        messageData.MessageId = DateTime.Now.Ticks;
+                    }
+
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
 
+                    // 同步到MessageService的内存存储
+                    SaveMessageToMessageServiceOnly(messageData);
+
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);
+
+                    // 触发未读消息计数变更事件
+                    UpdateUnreadMessageCount();
+
+                    // 触发消息状态变更事件，通知UI刷新
+                    OnMessageStatusChanged(messageData);
 
                     ShowDefaultMessagePrompt(messageData);
                 }
@@ -297,8 +343,17 @@ namespace RUINORERP.UI.IM
             {
                 if (messageData != null)
                 {
+                    // 确保消息有有效的MessageId
+                    if (messageData.MessageId <= 0)
+                    {
+                        messageData.MessageId = DateTime.Now.Ticks;
+                    }
+
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
+
+                    // 同步到MessageService的内存存储
+                    SaveMessageToMessageServiceOnly(messageData);
 
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);

@@ -226,7 +226,17 @@ namespace RUINORERP.UI.FM
                 bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
                 {
-                    RealList.Add(item);
+                    if (item.AllowAddToStatement)
+                    {
+                        RealList.Add(item);
+
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】,已经加入了对账单，不能重复支付， 无法生成{PaymentType.ToString()}单。").Append("\r\n");
+                        counter++;
+                    }
                 }
                 else
                 {
@@ -276,7 +286,7 @@ namespace RUINORERP.UI.FM
             }
 
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord PaymentRecord =await paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord PaymentRecord = await paymentController.BuildPaymentRecord(RealList);
 
             if (MessageBox.Show($"{PaymentType.ToString()}金额为:{PaymentRecord.TotalLocalAmount.ToString("#.0000")}元，确定吗？", "金额确认", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
             {
@@ -317,7 +327,19 @@ namespace RUINORERP.UI.FM
                 bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
                 if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
                 {
-                    RealList.Add(item);
+                    //允许对账的，能才直接付款。不允许可能是已经加入了对账
+                    if (item.AllowAddToStatement)
+                    {
+                        RealList.Add(item);
+
+                    }
+                    else
+                    {
+                        msg.Append(counter.ToString() + ") ");
+                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】,已经加入了对账单，不能重复支付， 无法生成{PaymentType.ToString()}单。").Append("\r\n");
+                        counter++;
+                    }
+
                 }
                 else
                 {
@@ -361,7 +383,7 @@ namespace RUINORERP.UI.FM
 
             }
             var paymentController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-            tb_FM_PaymentRecord ReturnObject =await paymentController.BuildPaymentRecord(RealList);
+            tb_FM_PaymentRecord ReturnObject = await paymentController.BuildPaymentRecord(RealList);
             tb_FM_PaymentRecord paymentRecord = ReturnObject;
             MenuPowerHelper menuPowerHelper;
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();

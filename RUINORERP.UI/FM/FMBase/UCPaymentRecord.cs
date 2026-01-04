@@ -885,7 +885,7 @@ namespace RUINORERP.UI.FM
             //  listCols.SetCol_Formula<tb_FM_PaymentRecordDetail>((a, b) => a.UnitPrice * b.Quantity, c => c.LocalPayableAmount);//-->成交价是结果列
             listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.ForeignAmount);
             listCols.SetCol_Summary<tb_FM_PaymentRecordDetail>(c => c.LocalAmount);
-
+            listCols.SetCol_ReadOnly<tb_FM_PaymentRecordDetail>(c => c.LocalPayableAmount);
 
             sgd.GridMasterData = EditEntity;
 

@@ -890,6 +890,73 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+        /// <summary>
+        /// 删除单个消息
+        /// </summary>
+        /// <param name="messageId">消息ID</param>
+        /// <returns>是否成功删除</returns>
+        public bool DeleteMessage(long messageId)
+        {
+            try
+            {
+                if (_localMessages.TryRemove(messageId, out _))
+                {
+                    _logger?.LogDebug("消息已从本地存储中删除 - ID: {MessageId}", messageId);
+                    return true;
+                }
+                _logger?.LogWarning("未找到要删除的消息 - ID: {MessageId}", messageId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "删除消息时发生异常 - ID: {MessageId}", messageId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 批量删除消息
+        /// </summary>
+        /// <param name="messageIds">消息ID列表</param>
+        /// <returns>成功删除的消息数量</returns>
+        public int DeleteMessages(IEnumerable<long> messageIds)
+        {
+            try
+            {
+                int deletedCount = 0;
+                foreach (var messageId in messageIds)
+                {
+                    if (_localMessages.TryRemove(messageId, out _))
+                    {
+                        deletedCount++;
+                    }
+                }
+                _logger?.LogDebug("已从本地存储中删除 {DeletedCount} 条消息", deletedCount);
+                return deletedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量删除消息时发生异常");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 清除所有消息
+        /// </summary>
+        public void ClearAllMessages()
+        {
+            try
+            {
+                _localMessages.Clear();
+                _logger?.LogDebug("已清除所有本地消息");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "清除所有消息时发生异常");
+            }
+        }
+
         #endregion
 
         /// <summary>

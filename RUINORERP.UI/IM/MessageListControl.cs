@@ -29,6 +29,7 @@ namespace RUINORERP.UI.IM
         private NotifyIcon _bubbleNotifyIcon;
         private Timer _bubbleTimer;
         private bool _isBubbleVisible = false;
+        private ToolStripMenuItem _menuPlayVoiceReminder;
 
         /// <summary>
         /// 当用户点击消息时触发的事件
@@ -63,7 +64,8 @@ namespace RUINORERP.UI.IM
             _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
             _messageManager.UnreadMessageCountChanged += MessageManager_UnreadMessageCountChanged;
 
-            // 右键菜单已在设计器中设置，无需重复设置
+            // 初始化右键菜单
+            InitializeContextMenu();
 
             // 加载现有消息
             LoadMessages();
@@ -377,6 +379,17 @@ namespace RUINORERP.UI.IM
             {
                 System.Diagnostics.Debug.WriteLine($"显示消息中心标签页时发生错误: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 初始化右键菜单
+        /// </summary>
+        private void InitializeContextMenu()
+        {
+            // 添加语音提醒菜单项
+            _menuPlayVoiceReminder = new ToolStripMenuItem("播放语音提醒");
+            _menuPlayVoiceReminder.Click += MenuPlayVoiceReminder_Click;
+            contextMenuStripMessages.Items.Add(_menuPlayVoiceReminder);
         }
 
         /// <summary>
@@ -1097,6 +1110,30 @@ namespace RUINORERP.UI.IM
             menuClear60Days.Enabled = true;
             menuClear180Days.Enabled = true;
             menuClearAll.Enabled = true;
+            
+            // 语音提醒菜单项根据选中情况启用/禁用
+            _menuPlayVoiceReminder.Enabled = hasSelection;
+        }
+
+        /// <summary>
+        /// 播放语音提醒菜单点击事件
+        /// </summary>
+        private void MenuPlayVoiceReminder_Click(object sender, EventArgs e)
+        {
+            if (lstMessages.SelectedItems.Count > 0)
+            {
+                var selectedItem = lstMessages.SelectedItems[0];
+                if (selectedItem.Tag is long messageId)
+                {
+                    var message = _messageManager.GetMessageById(messageId);
+                    if (message != null)
+                    {
+                        // 使用TaskVoiceReminder直接播放语音提醒
+                        var voiceReminder = new RUINORERP.UI.Common.TaskVoiceReminder();
+                        voiceReminder.AddRemindMessage(message);
+                    }
+                }
+            }
         }
 
         /// <summary>

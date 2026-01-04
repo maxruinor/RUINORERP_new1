@@ -899,6 +899,7 @@
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\ExpressionSafeHelper.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
+    <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
     <Compile Include="Forms\LockInfoDetailForm.cs">
       <SubType>Form</SubType>
@@ -2323,7 +2324,6 @@
     <Compile Include="Network\Services\LockRecoveryManager.cs" />
     <Compile Include="Network\Services\LockStatusNotificationService.cs" />
     <Compile Include="Network\Services\MessageService.cs" />
-    <Compile Include="Network\Services\SimplifiedMessageService.cs" />
     <Compile Include="Network\Services\SystemManagementService.cs" />
     <Compile Include="Network\Services\UserLoginService.cs" />
     <Compile Include="Network\SuperSocketClient.cs" />

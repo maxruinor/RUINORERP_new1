@@ -129,21 +129,30 @@ namespace RUINORERP.Server.Network.Core
 
                 // 在启动前检查所有配置的端口是否被占用
                 var configuredPorts = GetConfiguredPorts(config, serverOptions);
+                var occupiedPorts = new List<int>();
+                
+                // 检查所有端口占用情况
                 foreach (var port in configuredPorts)
                 {
                     if (await IsPortInUseAsync(port))
                     {
-                        // 端口被占用时创建详细错误信息并抛出异常
-                        var errorMessage = BuildPortOccupiedMessage(port);
-                        LogError(errorMessage);
-                        
-                        // 同时在控制台显示彩色错误信息
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        System.Diagnostics.Debug.WriteLine(errorMessage);
-                        Console.ResetColor();
-                        
-                        throw new InvalidOperationException(errorMessage);
+                        occupiedPorts.Add(port);
                     }
+                }
+                
+                // 如果发现被占用的端口，提供详细错误信息
+                if (occupiedPorts.Count > 0)
+                {
+                    // 只处理第一个被占用的端口（简化逻辑）
+                    var errorMessage = BuildPortOccupiedMessage(occupiedPorts[0]);
+                    LogError(errorMessage);
+                    
+                    // 同时在控制台显示彩色错误信息
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Diagnostics.Debug.WriteLine(errorMessage);
+                    Console.ResetColor();
+                    
+                    throw new InvalidOperationException(errorMessage);
                 }
 
                 // 扫描RUINORERP.PacketSpec程序集以及其他相关程序集
@@ -593,7 +602,7 @@ namespace RUINORERP.Server.Network.Core
                         {
                             // 忽略连接异常
                         }
-                        return true; // 端口已被占用
+                        return true; // 端口已被占用 
                     }
                 }
 
@@ -631,29 +640,80 @@ namespace RUINORERP.Server.Network.Core
         private string BuildPortOccupiedMessage(int port, string originalError = null)
         {
             var message = new System.Text.StringBuilder();
-            message.AppendLine("==========================================");
-            message.AppendLine("端口已被占用！\n");
-                    
-            if (!string.IsNullOrEmpty(originalError))
+            message.AppendLine("==================================================");
+            message.AppendLine("端口占用检测报告");
+            message.AppendLine("==================================================\n");
+            
+            message.AppendLine($"检测结果：端口 {port} 已被其他进程占用！\n");
+            
+            // 获取占用端口的进程信息
+            var processInfo = GetPortProcessInfo(port);
+            if (!string.IsNullOrEmpty(processInfo))
             {
-                message.AppendLine($"错误信息: {originalError}");
+                message.AppendLine($"占用进程信息：");
+                message.AppendLine($"{processInfo}\n");
             }
-                    
-            message.AppendLine($"当前尝试使用的端口: {port}\n");
-            message.AppendLine("解决方案:");
-            message.AppendLine("1. 检查端口占用情况:");
-            message.AppendLine($"   netstat -ano | findstr :{port}\n");
-            message.AppendLine("2. 查看占用端口的进程:");
-            message.AppendLine($"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{port}') do tasklist | findstr %a\n");
-            message.AppendLine("3. 终止占用端口的进程(可选):");
-            message.AppendLine("   taskkill /PID [进程ID] /F\n");
-            message.AppendLine("4. 或者修改配置文件中的端口设置:");
-            message.AppendLine("   配置文件路径: RUINORERP.Server/appsettings.json");
-            message.AppendLine($"   当前使用端口: {port}\n");
-            message.AppendLine("5. 重启应用程序");
-            message.Append("==========================================");
-                    
+            
+            message.AppendLine("解决方案：");
+            message.AppendLine($"1. 查看端口占用情况：");
+            message.AppendLine($"   netstat -ano | findstr :{port}");
+            message.AppendLine($"\n2. 查看占用进程详情：");
+            message.AppendLine($"   for /f \"tokens=5\" %a in ('netstat -ano ^| findstr :{port}') do tasklist | findstr %a");
+            message.AppendLine($"\n3. 终止占用进程（谨慎操作）：");
+            message.AppendLine($"   taskkill /PID [进程ID] /F");
+            message.AppendLine($"\n==================================================");
+            
             return message.ToString();
+        }
+
+        /// <summary>
+        /// 获取端口占用进程的详细信息
+        /// </summary>
+        /// <param name="port">端口号</param>
+        /// <returns>进程信息字符串</returns>
+        private string GetPortProcessInfo(int port)
+        {
+            try
+            {
+                var processInfo = new System.Text.StringBuilder();
+                
+                // 使用netstat命令获取端口占用信息
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = "netstat",
+                    Arguments = $"-ano | findstr :{port}",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                };
+                
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process != null)
+                    {
+                        var output = process.StandardOutput.ReadToEnd();
+                        process.WaitForExit();
+                        
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                            foreach (var line in lines)
+                            {
+                                if (line.Contains($":{port}"))
+                                {
+                                    processInfo.AppendLine($"   {line.Trim()}");
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return processInfo.Length > 0 ? processInfo.ToString() : "无法获取进程信息";
+            }
+            catch (Exception)
+            {
+                return "无法获取进程信息";
+            }
         }
         
         /// <summary>

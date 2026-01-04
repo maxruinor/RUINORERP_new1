@@ -43,6 +43,9 @@ namespace RUINORERP.UI.IM
         private MessagePersistenceManager _persistenceManager;
         private Timer _messageCheckTimer;
         private bool _disposed = false;
+        
+        // 语音提醒服务
+        private readonly TaskVoiceReminder _voiceReminder;
 
         /// <summary>
         /// 消息状态变更事件
@@ -61,12 +64,15 @@ namespace RUINORERP.UI.IM
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="messageService">消息服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService,  IEntityMappingService entityBizMappingService)
+        /// <param name="entityBizMappingService">实体映射服务</param>
+        /// <param name="voiceReminder">语音提醒服务</param>
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService,  IEntityMappingService entityBizMappingService, TaskVoiceReminder voiceReminder)
         {
             _logger = logger;
             _messageService = messageService;
-
             _entityBizMappingService = entityBizMappingService;
+            _voiceReminder = voiceReminder ?? throw new ArgumentNullException(nameof(voiceReminder));
+            
             // 初始化消息持久化管理器
             _persistenceManager = new MessagePersistenceManager();
 
@@ -145,14 +151,23 @@ namespace RUINORERP.UI.IM
                     switch (message.MessageType)
                     {
                         case MessageType.Prompt:
+                        case MessageType.Reminder:
+                        case MessageType.Task:
+                        case MessageType.Notice:
+                        case MessageType.Approve:
+                        case MessageType.UnLockRequest:
+                        case MessageType.ExceptionLog:
+                        case MessageType.Message:
+                        case MessageType.Event:
+                        case MessageType.Text:
+                        case MessageType.IM:
+                        case MessageType.BusinessData:
+                        case MessageType.UserMessage:
                             _messageService.OnPopupMessageReceived(message);
                             break;
                         case MessageType.Business:
                             _messageService.OnBusinessMessageReceived(message);
                             break;
-                        //case MessageType.:
-                        //    _messageService.OnDepartmentMessageReceived(message);
-                        //    break;
                         case MessageType.Broadcast:
                             _messageService.OnBroadcastMessageReceived(message);
                             break;
@@ -282,6 +297,9 @@ namespace RUINORERP.UI.IM
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
                     
+                    // 触发语音提醒
+                    _voiceReminder.AddRemindMessage(messageData);
+                    
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -300,6 +318,9 @@ namespace RUINORERP.UI.IM
                 {
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
+                    
+                    // 触发语音提醒
+                    _voiceReminder.AddRemindMessage(messageData);
                     
                     // 处理业务逻辑
                     ProcessBusinessMessage(messageData);
@@ -327,6 +348,9 @@ namespace RUINORERP.UI.IM
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
                     
+                    // 触发语音提醒
+                    _voiceReminder.AddRemindMessage(messageData);
+                    
                     // 部门消息由MessageService直接处理，我们不需要额外操作
                 }
             }
@@ -346,6 +370,9 @@ namespace RUINORERP.UI.IM
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
                     
+                    // 触发语音提醒
+                    _voiceReminder.AddRemindMessage(messageData);
+                    
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -364,6 +391,9 @@ namespace RUINORERP.UI.IM
                 {
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
+                    
+                    // 触发语音提醒
+                    _voiceReminder.AddRemindMessage(messageData);
                     
                     ShowDefaultMessagePrompt(messageData);
                 }
@@ -467,11 +497,23 @@ namespace RUINORERP.UI.IM
         // 删除消息
         public void DeleteMessage(long id)
         {
-            // 使用持久化管理器删除消息
-            _persistenceManager.DeleteMessage(id);
-            
-            // 触发消息状态变更事件
-            OnMessageStatusChanged(null);
+            try
+            {
+                // 从内存缓存中删除
+                _messageService.DeleteMessage(id);
+                
+                // 从持久化存储中删除
+                _persistenceManager.DeleteMessage(id);
+                
+                _logger?.LogDebug($"消息已删除 - ID: {id}");
+                
+                // 触发消息状态变更事件
+                OnMessageStatusChanged(null);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"删除消息时发生错误 - ID: {id}");
+            }
         }
         
         /// <summary>
@@ -480,11 +522,23 @@ namespace RUINORERP.UI.IM
         /// <param name="messageIds">消息ID列表</param>
         public void DeleteMessages(IEnumerable<long> messageIds)
         {
-            // 使用持久化管理器删除消息
-            _persistenceManager.DeleteMessages(messageIds);
-            
-            // 触发消息状态变更事件
-            OnMessageStatusChanged(null);
+            try
+            {
+                // 从内存缓存中删除
+                _messageService.DeleteMessages(messageIds);
+                
+                // 从持久化存储中删除
+                _persistenceManager.DeleteMessages(messageIds);
+                
+                _logger?.LogDebug($"已批量删除 {messageIds.Count()} 条消息");
+                
+                // 触发消息状态变更事件
+                OnMessageStatusChanged(null);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量删除消息时发生错误");
+            }
         }
 
         // 添加消息
@@ -495,6 +549,9 @@ namespace RUINORERP.UI.IM
 
             // 保存到持久化存储
             _persistenceManager.AddMessage(message);
+
+            // 触发语音提醒
+            _voiceReminder.AddRemindMessage(message);
 
             // 更新未读消息计数并触发事件
             UpdateUnreadMessageCount();
@@ -1137,11 +1194,17 @@ namespace RUINORERP.UI.IM
                     return;
                 }
 
-                // 使用持久化管理器清除所有消息
+                // 从内存缓存中清除所有消息
+                _messageService.ClearAllMessages();
+                
+                // 从持久化存储中清除所有消息
                 _persistenceManager.ClearAllMessages();
                 
                 // 触发未读消息计数变更事件
                 UnreadMessageCountChanged?.Invoke(this, 0);
+                
+                // 触发消息状态变更事件
+                OnMessageStatusChanged(null);
                 
                 _logger.LogInformation($"已成功清除所有{allMessages.Count}条消息");
             }
@@ -1169,6 +1232,18 @@ namespace RUINORERP.UI.IM
                     {
                         _messageCheckTimer.Stop();
                         _messageCheckTimer.Dispose();
+                    }
+
+                    if (_voiceReminder != null)
+                    {
+                        try
+                        {
+                            _voiceReminder.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "释放语音提醒服务资源时发生错误");
+                        }
                     }
 
                     if (_messageService != null)

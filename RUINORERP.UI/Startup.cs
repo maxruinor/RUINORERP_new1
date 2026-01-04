@@ -384,6 +384,9 @@ namespace RUINORERP.UI
                 var sqlSugarClient = provider.GetRequiredService<ISqlSugarClient>();
                 return sqlSugarClient.Ado.Connection;
             });
+            // 注册语音提醒服务
+            services.AddSingleton<TaskVoiceReminder>();
+            
             // 注册增强版消息管理器
             services.AddScoped<EnhancedMessageManager>();
 

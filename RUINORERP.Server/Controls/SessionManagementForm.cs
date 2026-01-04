@@ -422,12 +422,12 @@ namespace RUINORERP.Server.Controls
             {
                 var messageData = new MessageData
                 {
-                    MessageType = MessageType.Text,
+                    MessageType = MessageType.Business,
                     Content = txtMessage.Text,
                     SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.UserMessage, messageData);
+                var request = new MessageRequest(MessageType.Business, messageData);
                 bool success = await _sessionService.SendCommandAsync(
                     _session.SessionID,
                     MessageCommands.SendMessageToUser,
@@ -460,13 +460,13 @@ namespace RUINORERP.Server.Controls
             {
                 var messageData = new MessageData
                 {
-                    MessageType = MessageType.BusinessData,
+                    MessageType = MessageType.System,
                     Content = "FORCE_CACHE_SYNC",
                     SendTime = DateTime.Now
                 };
                 messageData.ExtendedData["Scope"] = "ALL";
 
-                var request = new MessageRequest(MessageType.BusinessData, messageData);
+                var request = new MessageRequest(MessageType.System, messageData);
                 bool success = await _sessionService.SendCommandAsync(
                     _session.SessionID,
                     MessageCommands.SendMessageToUser,
@@ -498,13 +498,13 @@ namespace RUINORERP.Server.Controls
             {
                 var messageData = new MessageData
                 {
-                    MessageType = MessageType.BusinessData,
+                    MessageType = MessageType.System,
                     Content = "CacheClear",
                     SendTime = DateTime.Now
                 };
                 messageData.ExtendedData["Scope"] = "All";
 
-                var request = new MessageRequest(MessageType.BusinessData, messageData);
+                var request = new MessageRequest(MessageType.System, messageData);
 
                 await _sessionService.SendCommandAsync(
                     _session.SessionID,

@@ -58,7 +58,7 @@ namespace RUINORERP.Server.Network.Services
                 var messageData = new MessageData
                 {
                     MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                    MessageType = MessageType.Prompt,
+                    MessageType = MessageType.Popup,
                     Title = title,
                     Content = message,
                     SenderName = "服务器消息",
@@ -66,7 +66,7 @@ namespace RUINORERP.Server.Network.Services
                     SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Prompt, messageData);
+                var request = new MessageRequest(MessageType.Popup, messageData);
 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserName);
@@ -84,16 +84,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
 
                         return responsePacket?.Response as MessageResponse ??
-                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+                               MessageResponse.Fail(MessageType.System, "未收到有效响应");
                     }
                 }
 
-                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                return MessageResponse.Fail(MessageType.System, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.System, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -109,7 +109,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<MessageResponse> SendMessageToUserAsync(
             string targetUserId,
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.System,
             int timeoutMs = 30000,
             CancellationToken ct = default)
         {
@@ -142,16 +142,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
 
                         return responsePacket?.Response as MessageResponse ??
-                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+                               MessageResponse.Fail(MessageType.System, "未收到有效响应");
                     }
                 }
 
-                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                return MessageResponse.Fail(MessageType.System, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送用户消息时发生异常");
-                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.System, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -168,7 +168,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<MessageResponse> SendMessageToUserAsync(
             SessionInfo session,
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.System,
             int timeoutMs = 30000,
             CancellationToken ct = default)
         {
@@ -176,7 +176,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 if (session == null)
                 {
-                    return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                    return MessageResponse.Fail(MessageType.System, "目标用户不在线");
                 }
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
@@ -198,137 +198,19 @@ namespace RUINORERP.Server.Network.Services
                     ct);
 
                 return responsePacket?.Response as MessageResponse ??
-                       MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+                       MessageResponse.Fail(MessageType.System, "未收到有效响应");
 
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送用户消息时发生异常");
-                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.System, $"发送消息失败: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// 发送消息给指定部门并等待响应
-        /// </summary>
-        /// <param name="departmentId">部门ID</param>
-        /// <param name="message">消息内容</param>
-        /// <param name="messageType">消息类型</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>消息响应</returns>
-        public async Task<MessageResponse> SendMessageToDepartmentAsync(
-            string departmentId,
-            string message,
-            string messageType = "Text",
-            int timeoutMs = 30000,
-            CancellationToken ct = default)
-        {
-            try
-            {
-                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
-                var messageData = new MessageData
-                {
-                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
-                    Content = message,
-                    SendTime = DateTime.Now
-                };
+ 
 
-                // 使用扩展数据存储部门ID
-                messageData.ExtendedData["DepartmentId"] = departmentId;
-
-                var request = new MessageRequest(messageData.MessageType, messageData);
-
-                // 获取目标部门用户的所有会话
-                // 这里简化处理，实际项目中需要根据部门ID获取部门下的所有用户
-                var sessions = _sessionService.GetAllUserSessions();
-
-                // 向所有会话发送消息并等待响应
-                int successCount = 0;
-                foreach (var session in sessions)
-                {
-                    if (session is SessionInfo sessionInfo)
-                    {
-                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID,
-                            MessageCommands.SendMessageToDepartment,
-                            request,
-                            timeoutMs,
-                            ct);
-
-                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
-                        {
-                            successCount++;
-                        }
-                    }
-                }
-
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "发送部门消息时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"发送消息失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 广播消息给所有用户并等待响应
-        /// </summary>
-        /// <param name="message">消息内容</param>
-        /// <param name="messageType">消息类型</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
-        /// <param name="ct">取消令牌</param>
-        /// <returns>消息响应</returns>
-        public async Task<MessageResponse> BroadcastMessageAsync(
-            string message,
-            string messageType = "Text",
-            int timeoutMs = 30000,
-            CancellationToken ct = default)
-        {
-            try
-            {
-                // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
-                var messageData = new MessageData
-                {
-                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
-                    Content = message,
-                    SendTime = DateTime.Now
-                };
-
-                var request = new MessageRequest(messageData.MessageType, messageData);
-
-                // 获取所有用户会话
-                var sessions = _sessionService.GetAllUserSessions();
-
-                // 向所有会话发送消息并等待响应
-                int successCount = 0;
-                foreach (var session in sessions)
-                {
-                    if (session is SessionInfo sessionInfo)
-                    {
-                        var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID,
-                            MessageCommands.BroadcastMessage,
-                            request,
-                            timeoutMs,
-                            ct);
-
-                        if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
-                        {
-                            successCount++;
-                        }
-                    }
-                }
-
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "广播消息时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"广播消息失败: {ex.Message}");
-            }
-        }
+      
 
         /// <summary>
         /// 发送系统通知并等待响应
@@ -349,7 +231,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    MessageType = MessageType.Notice,
+                    MessageType = MessageType.Popup,
                     Content = message,
                     SendTime = DateTime.Now
                 };
@@ -357,7 +239,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用扩展数据存储通知类型
                 messageData.ExtendedData["NotificationType"] = notificationType;
 
-                var request = new MessageRequest(MessageType.Notice, messageData);
+                var request = new MessageRequest(MessageType.Popup, messageData);
 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
@@ -382,12 +264,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.System, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送系统通知时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"发送通知失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.System, $"发送通知失败: {ex.Message}");
             }
         }
     }

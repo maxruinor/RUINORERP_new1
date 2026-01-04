@@ -133,9 +133,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success(MessageType.Prompt, responseMessage);
+                        var response = MessageResponse.Success(MessageType.Popup, responseMessage);
                         // 使用SessionService发送响应
-                        var messageRequest = new MessageRequest(MessageType.Prompt, responseMessage);
+                        var messageRequest = new MessageRequest(MessageType.Popup, responseMessage);
                         var success = await _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendPopupMessage,
@@ -208,9 +208,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 ForwardTime = DateTime.Now
                             };
 
-                            var response = MessageResponse.Success(MessageType.Prompt, forwardMessage);
+                            var response = MessageResponse.Success(MessageType.Popup, forwardMessage);
                             // 使用SessionService发送响应
-                            var messageRequest = new MessageRequest(MessageType.Prompt, forwardMessage);
+                            var messageRequest = new MessageRequest(MessageType.Popup, forwardMessage);
                             var success = await _sessionService.SendCommandAsync(
                                 session.SessionID,
                                 MessageCommands.ForwardPopupMessage,
@@ -316,9 +316,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success(MessageType.Message, userMessage);
+                        var response = MessageResponse.Success(MessageType.Popup, userMessage);
                         // 使用SessionService发送响应
-                        var messageRequest = new MessageRequest(MessageType.Message, userMessage);
+                        var messageRequest = new MessageRequest(MessageType.Popup, userMessage);
                         var success = await _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendMessageToUser,
@@ -387,9 +387,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success(MessageType.Message, broadcastMessage);
+                        var response = MessageResponse.Success(MessageType.Popup, broadcastMessage);
                         // 使用SessionService发送响应
-                        var messageRequest = new MessageRequest(MessageType.Message, broadcastMessage);
+                        var messageRequest = new MessageRequest(MessageType.Popup, broadcastMessage);
                         var success = await _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.BroadcastMessage,
@@ -454,9 +454,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             Timestamp = DateTime.Now
                         };
 
-                        var response = MessageResponse.Success(MessageType.Message, notificationMessage);
+                        var response = MessageResponse.Success(MessageType.System, notificationMessage);
                         // 使用SessionService发送响应
-                        var messageRequest = new MessageRequest(MessageType.Message, notificationMessage);
+                        var messageRequest = new MessageRequest(MessageType.System, notificationMessage);
                         var success = await _sessionService.SendCommandAsync(
                             session.SessionID,
                             MessageCommands.SendSystemNotification,

@@ -156,8 +156,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                // 触发MessageService中的事件
-                _messageService.OnDepartmentMessageReceived(messageData);
+                // 根据消息类型触发相应的事件
+                if (messageData.MessageType == MessageType.Popup)
+                {
+                    _messageService.OnPopupMessageReceived(messageData);
+                }
+                else if (messageData.MessageType == MessageType.System)
+                {
+                    _messageService.OnSystemNotificationReceived(messageData);
+                }
+                else
+                {
+                    _messageService.OnBusinessMessageReceived(messageData);
+                }
                 _logger.LogDebug("部门消息已处理");
             }
             catch (Exception ex)
@@ -173,8 +184,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         {
             try
             {
-                // 触发MessageService中的事件
-                _messageService.OnBroadcastMessageReceived(messageData);
+                // 根据消息类型触发相应的事件
+                if (messageData.MessageType == MessageType.Popup)
+                {
+                    _messageService.OnPopupMessageReceived(messageData);
+                }
+                else if (messageData.MessageType == MessageType.System)
+                {
+                    _messageService.OnSystemNotificationReceived(messageData);
+                }
+                else
+                {
+                    _messageService.OnBusinessMessageReceived(messageData);
+                }
                 _logger.LogDebug("广播消息已处理");
             }
             catch (Exception ex)
@@ -212,7 +234,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// <param name="packet">数据包</param>
         /// <returns>提取的消息数据对象</returns>
         private MessageData ExtractMessageData(PacketModel packet)
-        {            
+        {
             if (packet == null)
                 throw new ArgumentNullException(nameof(packet), "数据包不能为空");
 
@@ -221,82 +243,53 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
             // 尝试从Request中获取消息数据
             if (packet.Request != null && packet.Request is MessageRequest messageRequest)
-            {                
+            {
                 // 优先从Data中提取MessageType
                 if (messageRequest.Data != null)
                 {
                     // 如果Data是字典类型，尝试从中提取数据
                     if (messageRequest.Data is Dictionary<string, object> dataDict)
-                    {                    
+                    {
                         messageData = MessageData.FromDictionary(dataDict);
                     }
                     // 如果Data是MessageData类型，直接使用
                     else if (messageRequest.Data is MessageData data)
-                    {                    
+                    {
                         messageData = data;
                     }
                     // 处理其他类型的数据
                     else
-                    {                        
+                    {
                         // 尝试将Data转换为字典并提取
                         try
                         {
                             var dict = new Dictionary<string, object>();
                             // 添加默认的MessageType如果未指定
-                            dict["MessageType"] = MessageType.Text.ToString();
+                            dict["MessageType"] = MessageType.Business.ToString();
                             messageData = MessageData.FromDictionary(dict);
                         }
                         catch (Exception ex)
-                        {                             
+                        {
                             _logger.LogWarning(ex, "无法转换消息数据");
                         }
-                    }
-                }
-
-                // 如果消息类型仍未设置，尝试从CommandType映射
-                if (messageData.MessageType == MessageType.Unknown && messageRequest.CommandType != MessageType.Unknown)
-                {                    
-                    switch (messageRequest.CommandType)
-                    {                    
-                        case MessageType.Message:
-                            messageData.MessageType = MessageType.Text;
-                            break;
-                        case MessageType.Prompt:
-                            messageData.MessageType = MessageType.Prompt;
-                            break;
-                        case MessageType.Reminder:
-                            messageData.MessageType = MessageType.Reminder;
-                            break;
-                        case MessageType.System:
-                            messageData.MessageType = MessageType.System;
-                            break;
-                        default:
-                            messageData.MessageType = MessageType.Unknown;
-                            break;
                     }
                 }
             }
             // 尝试从Response中获取消息数据
             else if (packet.Response != null && packet.Response is Dictionary<string, object> responseDict)
-            {                
+            {
                 messageData = MessageData.FromDictionary(responseDict);
             }
             // 尝试从Extensions中提取消息数据
             else if (packet.Extensions != null)
-            {                
+            {
                 // 创建一个字典用于FromDictionary方法
                 var dict = new Dictionary<string, object>();
                 foreach (var kvp in packet.Extensions)
-                {                    
+                {
                     dict.Add(kvp.Key, kvp.Value);
                 }
                 messageData = MessageData.FromDictionary(dict);
-            }
-
-            // 如果消息类型仍未设置，使用默认值Text
-            if (messageData.MessageType == MessageType.Unknown)
-            {
-                messageData.MessageType = MessageType.Text;
             }
 
             return messageData;

@@ -100,7 +100,7 @@ namespace RUINORERP.Server.SmartReminder
                 // 使用消息系统发送给特定用户
                 var messageRequest = new MessageRequest
                 {
-                    CommandType =MessageType.Message ,
+                    CommandType = MessageType.Business,
                     Data = messageData
                 };
 
@@ -136,7 +136,7 @@ namespace RUINORERP.Server.SmartReminder
             {
                 var messageRequest = new MessageRequest
                 {
-                    CommandType = MessageType.Notice,
+                    CommandType = MessageType.System,
                     Data = messageData
                 };
 

@@ -44,16 +44,6 @@ namespace RUINORERP.UI.Network.Services
         public event Action<MessageData> BusinessMessageReceived;
 
         /// <summary>
-        /// 当接收到部门消息时触发的事件
-        /// </summary>
-        public event Action<MessageData> DepartmentMessageReceived;
-
-        /// <summary>
-        /// 当接收到广播消息时触发的事件
-        /// </summary>
-        public event Action<MessageData> BroadcastMessageReceived;
-
-        /// <summary>
         /// 当接收到系统通知时触发的事件
         /// </summary>
         public event Action<MessageData> SystemNotificationReceived;
@@ -261,88 +251,6 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 触发部门消息接收事件 (由MessageCommandHandler调用)
-        /// </summary>
-        /// <param name="messageData">消息数据</param>
-        public void OnDepartmentMessageReceived(MessageData messageData)
-        {
-            try
-            {
-                // 检查消息数据是否有效
-                if (messageData == null)
-                {
-                    _logger?.LogWarning("收到空的部门消息数据");
-                    return;
-                }
-                
-                // 消息去重处理
-                if (!IsMessageValid(messageData.MessageId))
-                {
-                    _logger?.LogDebug("跳过重复的部门消息 - ID: {MessageId}", messageData.MessageId);
-                    return;
-                }
-                
-                // 保存消息到本地存储
-                SaveMessageToLocalStorage(messageData);
-                
-                // 检查事件订阅者
-                if (DepartmentMessageReceived == null)
-                {
-                    _logger?.LogWarning("部门消息事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
-                }
-                
-                // 触发事件
-                DepartmentMessageReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发部门消息事件 - ID: {MessageId}", messageData.MessageId);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "触发部门消息事件时发生异常");
-            }
-        }
-
-        /// <summary>
-        /// 触发广播消息接收事件 (由MessageCommandHandler调用)
-        /// </summary>
-        /// <param name="messageData">消息数据</param>
-        public void OnBroadcastMessageReceived(MessageData messageData)
-        {
-            try
-            {
-                // 检查消息数据是否有效
-                if (messageData == null)
-                {
-                    _logger?.LogWarning("收到空的广播消息数据");
-                    return;
-                }
-                
-                // 消息去重处理
-                if (!IsMessageValid(messageData.MessageId))
-                {
-                    _logger?.LogDebug("跳过重复的广播消息 - ID: {MessageId}", messageData.MessageId);
-                    return;
-                }
-                
-                // 保存消息到本地存储
-                SaveMessageToLocalStorage(messageData);
-                
-                // 检查事件订阅者
-                if (BroadcastMessageReceived == null)
-                {
-                    _logger?.LogWarning("广播消息事件没有订阅者 - ID: {MessageId}", messageData.MessageId);
-                }
-                
-                // 触发事件
-                BroadcastMessageReceived?.Invoke(messageData);
-                _logger?.LogDebug("触发广播消息事件 - ID: {MessageId}", messageData.MessageId);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "触发广播消息事件时发生异常");
-            }
-        }
-
-        /// <summary>
         /// 触发系统通知接收事件 (由MessageCommandHandler调用)
         /// </summary>
         /// <param name="messageData">消息数据</param>
@@ -405,7 +313,7 @@ namespace RUINORERP.UI.Network.Services
                     TargetUserId = targetUserId,
                     Message = message,
                     Title = title,
-                    MessageType = MessageType.Prompt.ToString()
+                    MessageType = MessageType.Popup.ToString()
                 };
                 
                 var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
@@ -427,7 +335,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageType.Prompt,  $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Popup,  $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -453,7 +361,7 @@ namespace RUINORERP.UI.Network.Services
                     OriginalMessageId = originalMessageId,
                     TargetUserIds = targetUserIds,
                     AdditionalMessage = additionalMessage,
-                    MessageType = MessageType.Prompt.ToString()
+                    MessageType = MessageType.Popup.ToString()
                 };
                 var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.ForwardPopupMessage, request, cancellationToken);
@@ -474,7 +382,7 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "转发弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageType.Prompt,  $"转发消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Popup,  $"转发消息失败: {ex.Message}");
             }
         }
 
@@ -489,7 +397,7 @@ namespace RUINORERP.UI.Network.Services
         public async Task<MessageResponse> SendMessageToUserAsync(
             string targetUserId,
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.Popup,
             CancellationToken ct = default)
         {
             try
@@ -535,7 +443,7 @@ namespace RUINORERP.UI.Network.Services
         public async Task<MessageResponse> SendMessageToDepartmentAsync(
             string departmentId,
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.Popup,
             CancellationToken ct = default)
         {
             try
@@ -579,7 +487,7 @@ namespace RUINORERP.UI.Network.Services
         /// <returns>消息响应</returns>
         public async Task<MessageResponse> BroadcastMessageAsync(
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.Popup,
             CancellationToken ct = default)
         {
             try

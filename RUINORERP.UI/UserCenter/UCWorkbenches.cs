@@ -69,7 +69,9 @@ namespace RUINORERP.UI.UserCenter
 
             todoPage = UIForKryptonHelper.NewPage("待办事项", todoList);
             todoPage.AllowDrop = false;
-            todoPage.AutoHiddenSlideSize = new Size(215, 200); // 增加宽度15像素
+            todoPage.AutoHiddenSlideSize = new Size(245, 200); // 增加宽度30像素 1
+            todoPage.Width = 245; // 显式设置宽度以影响停靠状态的初始大小
+            todoPage.MinimumSize = new Size(245, 50); // 设置最小宽度，确保初始加载不被压缩
             ButtonSpecAny buttonSpecRefresh = new ButtonSpecAny();
             buttonSpecRefresh.Text = "刷新";
             buttonSpecRefresh.Click += ButtonSpecAny_Click;
@@ -104,6 +106,20 @@ namespace RUINORERP.UI.UserCenter
             cellSetting.BuilderCellListTreeView();
             // kryptonDockingManager1.ShowPageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowPageContextMenu);
             // kryptonDockingManager1.ShowWorkspacePageContextMenu += new System.EventHandler<Krypton.Docking.ContextPageEventArgs>(this.kryptonDockingManager_ShowWorkspacePageContextMenu);
+
+            // 强制设置左侧停靠栏的初始宽度（使用延迟调用确保在框架首轮布局完成后强制覆盖宽度）
+            this.BeginInvoke(new MethodInvoker(() =>
+            {
+                KryptonDockingControl dockingControl = kryptonDockingManager1.GetControl("Control");
+                if (dockingControl != null)
+                {
+                    KryptonDockspace leftSpace = dockingControl.FindDockspace(DockingEdge.Left);
+                    if (leftSpace != null)
+                    {
+                        leftSpace.Width = 245;
+                    }
+                }
+            }));
         }
 
         private void ButtonSpecAny_Click(object sender, EventArgs e)

@@ -410,7 +410,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 //发送提示强制下线
 
-                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.Notice, 1500);
+                await MessageService.SendMessageToUserAsync(targetSession, message: "您的账号在另一地点登录，您已被强制下线。如非本人操作，请及时修改密码。", MessageType.System, 1500);
 
                 //客户端通知强制下线 5 秒后断开连接
                 await managementService.ForceLogoutAsync(targetSession, 1000);

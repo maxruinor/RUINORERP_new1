@@ -124,23 +124,9 @@ namespace RUINORERP.UI.Common
             // 根据消息类型生成不同的语音提示文本
             string voiceText = messageData.MessageType switch
             {
-                MessageType.Unknown => $"您有一条新消息：{messageData.Title}",
-                MessageType.Message => $"新消息：{messageData.Title}",
-                MessageType.Reminder => $"智能提醒：{messageData.Title}",
-                MessageType.Event => $"事件通知：{messageData.Title}",
-                MessageType.Task => $"您有一条新任务：{messageData.Title}",
-                MessageType.Notice => $"系统通知：{messageData.Title}",
+                MessageType.Popup => $"弹出消息：{messageData.Title}",
                 MessageType.Business => $"业务消息：{messageData.Title}",
-                MessageType.Prompt => $"提醒消息：{messageData.Title}",
-                MessageType.UnLockRequest => $"解锁请求：{messageData.Title}",
-                MessageType.ExceptionLog => $"异常日志：{messageData.Title}",
-                MessageType.Broadcast => $"广播消息：{messageData.Title}",
-                MessageType.Approve => $"您有一条新的审批请求：{messageData.Title}",
                 MessageType.System => $"系统通知：{messageData.Title}",
-                MessageType.Text => $"文本消息：{messageData.Title}",
-                MessageType.IM => $"即时消息：{messageData.Title}",
-                MessageType.BusinessData => $"业务数据更新：{messageData.Title}",
-                MessageType.UserMessage => $"用户消息：{messageData.Title}",
                 _ => $"您有一条新消息：{messageData.Title}"
             };
 

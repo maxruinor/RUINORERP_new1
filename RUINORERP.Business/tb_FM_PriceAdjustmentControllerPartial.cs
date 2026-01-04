@@ -258,7 +258,6 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 ApprovalResult.ErrorMsg += ex.Message;

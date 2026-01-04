@@ -57,7 +57,7 @@ namespace RUINORERP.Server.Network.Services
                 var messageData = new MessageData
                 {
                     MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                    MessageType = MessageType.Prompt,
+                    MessageType = MessageType.Popup,
                     Title = title,
                     Content = message,
                     SenderName = "服务器消息",
@@ -65,7 +65,7 @@ namespace RUINORERP.Server.Network.Services
                     SendTime = DateTime.Now
                 };
 
-                var request = new MessageRequest(MessageType.Prompt, messageData);
+                var request = new MessageRequest(MessageType.Popup, messageData);
 
                 // 获取目标用户的所有会话
                 var sessions = _sessionService.GetUserSessions(targetUserName);
@@ -83,16 +83,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
 
                         return responsePacket?.Response as MessageResponse ??
-                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+                               MessageResponse.Fail(MessageType.Popup, "未收到有效响应");
                     }
                 }
 
-                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                return MessageResponse.Fail(MessageType.Popup, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送弹窗消息时发生异常");
-                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Popup, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -108,7 +108,7 @@ namespace RUINORERP.Server.Network.Services
         public async Task<MessageResponse> SendMessageToUserAsync(
             string targetUserId,
             string message,
-            MessageType messageType = MessageType.Text,
+            MessageType messageType = MessageType.Popup,
             int timeoutMs = 30000,
             CancellationToken ct = default)
         {
@@ -141,16 +141,16 @@ namespace RUINORERP.Server.Network.Services
                             ct);
 
                         return responsePacket?.Response as MessageResponse ??
-                               MessageResponse.Fail(MessageType.Unknown, "未收到有效响应");
+                               MessageResponse.Fail(messageType, "未收到有效响应");
                     }
                 }
 
-                return MessageResponse.Fail(MessageType.Unknown, "目标用户不在线");
+                return MessageResponse.Fail(messageType, "目标用户不在线");
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送用户消息时发生异常");
-                return MessageResponse.Fail(MessageType.Unknown, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(messageType, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -206,7 +206,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    MessageType = messageType == "Text" ? MessageType.Business : MessageType.Business,
                     Content = message,
                     SendTime = DateTime.Now
                 };
@@ -240,12 +240,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.Business, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送部门消息时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"发送消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Business, $"发送消息失败: {ex.Message}");
             }
         }
 
@@ -268,7 +268,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    MessageType = messageType == "Text" ? MessageType.Text : MessageType.Unknown,
+                    MessageType = messageType == "Text" ? MessageType.Business : MessageType.Business,
                     Content = message,
                     SendTime = DateTime.Now
                 };
@@ -298,12 +298,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.Business, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "广播消息时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"广播消息失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.Business, $"广播消息失败: {ex.Message}");
             }
         }
 
@@ -326,7 +326,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用MessageData类代替匿名对象，提高类型安全性和可维护性
                 var messageData = new MessageData
                 {
-                    MessageType = MessageType.Notice,
+                    MessageType = MessageType.System,
                     Content = message,
                     SendTime = DateTime.Now
                 };
@@ -334,7 +334,7 @@ namespace RUINORERP.Server.Network.Services
                 // 使用扩展数据存储通知类型
                 messageData.ExtendedData["NotificationType"] = notificationType;
 
-                var request = new MessageRequest(MessageType.Notice, messageData);
+                var request = new MessageRequest(MessageType.System, messageData);
 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
@@ -359,12 +359,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
-                return MessageResponse.Success(MessageType.Unknown, new { SendCount = successCount });
+                return MessageResponse.Success(MessageType.System, new { SendCount = successCount });
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "发送系统通知时发生异常");
-                return MessageResponse.Fail(MessageType.Message, $"发送通知失败: {ex.Message}");
+                return MessageResponse.Fail(MessageType.System, $"发送通知失败: {ex.Message}");
             }
         }
     }

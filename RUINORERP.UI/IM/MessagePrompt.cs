@@ -159,24 +159,38 @@ namespace RUINORERP.UI.IM
                 // 根据消息类型设置不同的显示样式和按钮状态
                 switch (MessageData.MessageType)
                 {
-                    case MessageType.Approve:
-                        // 审批消息：显示查看按钮
+                    case MessageType.Popup:
+                        // 弹出消息：显示查看详情按钮
                         if (btnOk != null)
                         {
-                            btnOk.Values.Text = "查看审批";
+                            btnOk.Values.Text = "查看详情";
                             btnOk.Visible = true;
                         }
                         break;
-                    case MessageType.Task:
-                        // 任务消息：显示查看按钮
+                    case MessageType.Business:
+                        // 业务消息：根据内容判断按钮文本
                         if (btnOk != null)
                         {
-                            btnOk.Values.Text = "查看任务";
+                            string contentLower = (MessageData.Content ?? "").ToLower();
+                            string titleLower = (MessageData.Title ?? "").ToLower();
+                            
+                            if (contentLower.Contains("审批") || titleLower.Contains("审批"))
+                            {
+                                btnOk.Values.Text = "查看审批";
+                            }
+                            else if (contentLower.Contains("任务") || titleLower.Contains("任务"))
+                            {
+                                btnOk.Values.Text = "查看任务";
+                            }
+                            else
+                            {
+                                btnOk.Values.Text = "查看详情";
+                            }
                             btnOk.Visible = true;
                         }
                         break;
-                    case MessageType.Notice:
-                        // 通知消息：显示查看按钮
+                    case MessageType.System:
+                        // 系统消息：显示查看详情按钮
                         if (btnOk != null)
                         {
                             btnOk.Values.Text = "查看详情";
@@ -533,7 +547,7 @@ namespace RUINORERP.UI.IM
                     { "RemindInterval", interval }
                 };
 
-                var messageRequest = new MessageRequest(MessageType.Message, requestData);
+                var messageRequest = new MessageRequest(MessageType.Business, requestData);
                 //TODO fix
                 //  MessageService.SendMessageToUserAsync(messageRequest).ConfigureAwait(false);
             }

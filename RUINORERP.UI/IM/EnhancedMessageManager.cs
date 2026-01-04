@@ -43,7 +43,7 @@ namespace RUINORERP.UI.IM
         private MessagePersistenceManager _persistenceManager;
         private Timer _messageCheckTimer;
         private bool _disposed = false;
-        
+
         // 语音提醒服务
         private readonly TaskVoiceReminder _voiceReminder;
 
@@ -66,13 +66,13 @@ namespace RUINORERP.UI.IM
         /// <param name="messageService">消息服务</param>
         /// <param name="entityBizMappingService">实体映射服务</param>
         /// <param name="voiceReminder">语音提醒服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService,  IEntityMappingService entityBizMappingService, TaskVoiceReminder voiceReminder)
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService, IEntityMappingService entityBizMappingService, TaskVoiceReminder voiceReminder)
         {
             _logger = logger;
             _messageService = messageService;
             _entityBizMappingService = entityBizMappingService;
             _voiceReminder = voiceReminder ?? throw new ArgumentNullException(nameof(voiceReminder));
-            
+
             // 初始化消息持久化管理器
             _persistenceManager = new MessagePersistenceManager();
 
@@ -100,7 +100,7 @@ namespace RUINORERP.UI.IM
                 if (persistedMessages.Count > 0)
                 {
                     _logger.LogDebug($"从持久化存储加载了{persistedMessages.Count}条消息");
-                    
+
                     // 将持久化的消息同步到消息服务（仅同步到MessageService，不重复保存到持久化）
                     foreach (var message in persistedMessages)
                     {
@@ -133,9 +133,9 @@ namespace RUINORERP.UI.IM
             try
             {
                 // 使用反射调用MessageService的内部保存方法
-                var saveMethod = _messageService.GetType().GetMethod("SaveMessageToLocalStorage", 
+                var saveMethod = _messageService.GetType().GetMethod("SaveMessageToLocalStorage",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (saveMethod != null)
                 {
                     saveMethod.Invoke(_messageService, new object[] { message });
@@ -146,30 +146,15 @@ namespace RUINORERP.UI.IM
                     // 如果反射失败，使用备用方案：直接调用MessageService的OnMessageReceived方法
                     // 这会触发消息处理流程，但需要注意避免重复触发事件
                     _logger.LogWarning("无法通过反射保存消息到MessageService，使用备用方案");
-                    
+
                     // 根据消息类型调用相应的处理方法
                     switch (message.MessageType)
                     {
-                        case MessageType.Prompt:
-                        case MessageType.Reminder:
-                        case MessageType.Task:
-                        case MessageType.Notice:
-                        case MessageType.Approve:
-                        case MessageType.UnLockRequest:
-                        case MessageType.ExceptionLog:
-                        case MessageType.Message:
-                        case MessageType.Event:
-                        case MessageType.Text:
-                        case MessageType.IM:
-                        case MessageType.BusinessData:
-                        case MessageType.UserMessage:
+                        case MessageType.Popup:
                             _messageService.OnPopupMessageReceived(message);
                             break;
                         case MessageType.Business:
                             _messageService.OnBusinessMessageReceived(message);
-                            break;
-                        case MessageType.Broadcast:
-                            _messageService.OnBroadcastMessageReceived(message);
                             break;
                         case MessageType.System:
                             _messageService.OnSystemNotificationReceived(message);
@@ -205,15 +190,11 @@ namespace RUINORERP.UI.IM
                 // 取消之前可能存在的订阅，避免重复订阅导致的多次执行
                 _messageService.PopupMessageReceived -= OnPopupMessageReceived;
                 _messageService.BusinessMessageReceived -= OnBusinessMessageReceived;
-                _messageService.DepartmentMessageReceived -= OnDepartmentMessageReceived;
-                _messageService.BroadcastMessageReceived -= OnBroadcastMessageReceived;
                 _messageService.SystemNotificationReceived -= OnSystemNotificationReceived;
 
                 // 重新订阅所有消息事件
                 _messageService.PopupMessageReceived += OnPopupMessageReceived;
                 _messageService.BusinessMessageReceived += OnBusinessMessageReceived;
-                _messageService.DepartmentMessageReceived += OnDepartmentMessageReceived;
-                _messageService.BroadcastMessageReceived += OnBroadcastMessageReceived;
                 _messageService.SystemNotificationReceived += OnSystemNotificationReceived;
 
                 _logger.LogDebug("已成功初始化消息服务并订阅所有消息事件");
@@ -296,10 +277,10 @@ namespace RUINORERP.UI.IM
                 {
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
-                    
+
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);
-                    
+
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -318,16 +299,16 @@ namespace RUINORERP.UI.IM
                 {
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
-                    
+
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);
-                    
+
                     // 处理业务逻辑
                     ProcessBusinessMessage(messageData);
-                    
+
                     // 触发未读消息计数变更事件，通知UI更新
                     UpdateUnreadMessageCount();
-                    
+
                     // 触发消息状态变更事件，通知消息列表刷新
                     OnMessageStatusChanged(messageData);
                 }
@@ -335,50 +316,6 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "处理业务消息时发生错误");
-            }
-        }
-
-        // 处理接收到的部门消息
-        private void OnDepartmentMessageReceived(MessageData messageData)
-        {
-            try
-            {
-                if (messageData != null)
-                {
-                    // 保存到持久化存储
-                    _persistenceManager.AddMessage(messageData);
-                    
-                    // 触发语音提醒
-                    _voiceReminder.AddRemindMessage(messageData);
-                    
-                    // 部门消息由MessageService直接处理，我们不需要额外操作
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理部门消息时发生错误");
-            }
-        }
-
-        // 处理接收到的广播消息
-        private void OnBroadcastMessageReceived(MessageData messageData)
-        {
-            try
-            {
-                if (messageData != null)
-                {
-                    // 保存到持久化存储
-                    _persistenceManager.AddMessage(messageData);
-                    
-                    // 触发语音提醒
-                    _voiceReminder.AddRemindMessage(messageData);
-                    
-                    ShowDefaultMessagePrompt(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理广播消息时发生错误");
             }
         }
 
@@ -391,10 +328,10 @@ namespace RUINORERP.UI.IM
                 {
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
-                    
+
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);
-                    
+
                     ShowDefaultMessagePrompt(messageData);
                 }
             }
@@ -421,16 +358,16 @@ namespace RUINORERP.UI.IM
             {
                 // 从消息服务获取实时消息
                 var serviceMessages = _messageService.GetMessages(1, int.MaxValue);
-                
+
                 // 从持久化存储获取历史消息
                 var persistedMessages = _persistenceManager.GetAllMessages();
-                
+
                 // 合并消息列表，优先使用实时消息
                 var allMessages = new List<MessageData>();
-                
+
                 // 先添加服务消息
                 allMessages.AddRange(serviceMessages);
-                
+
                 // 然后添加持久化消息，排除重复的消息
                 foreach (var persistedMessage in persistedMessages)
                 {
@@ -439,15 +376,15 @@ namespace RUINORERP.UI.IM
                         allMessages.Add(persistedMessage);
                     }
                 }
-                
+
                 _logger?.LogDebug($"获取到{allMessages.Count}条消息（服务:{serviceMessages.Count}, 持久化:{persistedMessages.Count}）");
-                
+
                 return allMessages;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "获取所有消息时发生错误");
-                
+
                 // 如果出错，尝试从服务获取消息
                 return _messageService.GetMessages(1, int.MaxValue);
             }
@@ -501,12 +438,12 @@ namespace RUINORERP.UI.IM
             {
                 // 从内存缓存中删除
                 _messageService.DeleteMessage(id);
-                
+
                 // 从持久化存储中删除
                 _persistenceManager.DeleteMessage(id);
-                
+
                 _logger?.LogDebug($"消息已删除 - ID: {id}");
-                
+
                 // 触发消息状态变更事件
                 OnMessageStatusChanged(null);
             }
@@ -515,7 +452,7 @@ namespace RUINORERP.UI.IM
                 _logger?.LogError(ex, $"删除消息时发生错误 - ID: {id}");
             }
         }
-        
+
         /// <summary>
         /// 批量删除消息
         /// </summary>
@@ -526,12 +463,12 @@ namespace RUINORERP.UI.IM
             {
                 // 从内存缓存中删除
                 _messageService.DeleteMessages(messageIds);
-                
+
                 // 从持久化存储中删除
                 _persistenceManager.DeleteMessages(messageIds);
-                
+
                 _logger?.LogDebug($"已批量删除 {messageIds.Count()} 条消息");
-                
+
                 // 触发消息状态变更事件
                 OnMessageStatusChanged(null);
             }
@@ -588,15 +525,14 @@ namespace RUINORERP.UI.IM
                 // 根据消息类型显示不同的提示框
                 switch (messageData.MessageType)
                 {
-                    case MessageType.UnLockRequest:
-                        ShowUnlockRequestPrompt(messageData);
-                        break;
-                    case MessageType.Notice:
-                    case MessageType.Prompt:
+                    case MessageType.Popup:
                         ShowNoticePrompt(messageData);
                         break;
                     case MessageType.Business:
                         //ShowBusinessMessagePrompt(messageData);
+                        break;
+                    case MessageType.System:
+                        // 系统消息处理
                         break;
                 }
             }
@@ -928,13 +864,13 @@ namespace RUINORERP.UI.IM
                         // 不同类型的消息显示不同颜色
                         switch (message.MessageType)
                         {
-                            case MessageType.UnLockRequest:
+                            case MessageType.Popup:
                                 row.DefaultCellStyle.BackColor = Color.LightYellow;
                                 break;
                             case MessageType.Business:
                                 row.DefaultCellStyle.BackColor = Color.LightBlue;
                                 break;
-                            case MessageType.Notice:
+                            case MessageType.System:
                                 row.DefaultCellStyle.BackColor = Color.LightGreen;
                                 break;
                             default:
@@ -1170,8 +1106,8 @@ namespace RUINORERP.UI.IM
                 "未读消息" => messagesCopy.Where(m => !m.IsRead).ToList(),
                 "已读消息" => messagesCopy.Where(m => m.IsRead).ToList(),
                 "业务消息" => messagesCopy.Where(m => m.MessageType == MessageType.Business).ToList(),
-                "系统通知" => messagesCopy.Where(m => m.MessageType == MessageType.Notice).ToList(),
-                "解锁请求" => messagesCopy.Where(m => m.MessageType == MessageType.UnLockRequest).ToList(),
+                "系统通知" => messagesCopy.Where(m => m.MessageType == MessageType.System).ToList(),
+                "温馨提示" => messagesCopy.Where(m => m.MessageType == MessageType.Popup).ToList(),
                 _ => messagesCopy
             };
 
@@ -1187,7 +1123,7 @@ namespace RUINORERP.UI.IM
             {
                 // 获取所有消息
                 var allMessages = GetAllMessages();
-                
+
                 if (allMessages.Count == 0)
                 {
                     _logger.LogDebug("没有消息需要清除");
@@ -1196,16 +1132,16 @@ namespace RUINORERP.UI.IM
 
                 // 从内存缓存中清除所有消息
                 _messageService.ClearAllMessages();
-                
+
                 // 从持久化存储中清除所有消息
                 _persistenceManager.ClearAllMessages();
-                
+
                 // 触发未读消息计数变更事件
                 UnreadMessageCountChanged?.Invoke(this, 0);
-                
+
                 // 触发消息状态变更事件
                 OnMessageStatusChanged(null);
-                
+
                 _logger.LogInformation($"已成功清除所有{allMessages.Count}条消息");
             }
             catch (Exception ex)
@@ -1252,8 +1188,6 @@ namespace RUINORERP.UI.IM
                         {
                             _messageService.PopupMessageReceived -= OnPopupMessageReceived;
                             _messageService.BusinessMessageReceived -= OnBusinessMessageReceived;
-                            _messageService.DepartmentMessageReceived -= OnDepartmentMessageReceived;
-                            _messageService.BroadcastMessageReceived -= OnBroadcastMessageReceived;
                             _messageService.SystemNotificationReceived -= OnSystemNotificationReceived;
                         }
                         catch (Exception ex)

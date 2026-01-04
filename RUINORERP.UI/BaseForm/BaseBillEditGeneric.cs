@@ -4117,7 +4117,7 @@ namespace RUINORERP.UI.BaseForm
                         if (RelatedMenuInfo != null)
                         {
                             await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);
-                            if(result.Data is BaseEntity baseEntity)
+                            if (result.Data is BaseEntity baseEntity)
                             {
                                 baseEntity.HasChanged = true;
                             }
@@ -6183,7 +6183,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 发送消息但不发送给当前用户
                     var response = await messageService.SendTodoNotificationAsync(messageData, false);
-                    if (!response.IsSuccess)
+                    if (response == null || !response.IsSuccess)
                     {
                         MainForm.Instance.logger?.LogWarning("发送任务状态通知失败：{ErrorMessage}", response.ErrorMessage);
                     }

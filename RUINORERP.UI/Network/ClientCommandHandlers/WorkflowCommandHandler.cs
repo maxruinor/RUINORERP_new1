@@ -216,7 +216,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 MessageId = DateTime.Now.Ticks, // 使用时间戳作为消息ID
                 Title = reminderData.RemindSubject ?? "工作流提醒",
                 Content = reminderData.ReminderContent ?? reminderData.RemindSubject ?? "您有新的工作流提醒",
-                MessageType = MessageType.Reminder,
+                MessageType = MessageType.Business,
                 SendTime = DateTime.Now,
                 IsRead = false,
                 BizId = reminderData.BizKeyID,

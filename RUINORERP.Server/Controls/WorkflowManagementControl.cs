@@ -388,7 +388,7 @@ namespace RUINORERP.Server.Controls
                         {
                             // 增加提醒次数
                             exData.RemindTimes++;
-                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Reminder, exData);
+                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Business, exData);
                             var success = await sessionService.SendCommandAsync(
                                 session.SessionID, 
                                 RUINORERP.PacketSpec.Commands.WorkflowCommands.WorkflowReminder, 

@@ -247,14 +247,20 @@ namespace RUINORERP.Model.TransModel
                 }
                 else
                 {
-                    // 尝试从数值转换
+                    // 尝试从数值转换并映射到新的消息类型
                     if (int.TryParse(typeStr, out int typeValue))
                     {
-                        messageData.MessageType = (MessageType)typeValue;
+                        // 根据旧的类型值映射到新的类型
+                        // 旧类型映射规则：
+                        // 1-5, 7-8, 10-11, 13-16 -> Popup
+                        // 6, 15 -> Business
+                        // 9, 12 -> System
+                        messageData.MessageType = MapOldMessageTypeToNew(typeValue);
                     }
                     else
                     {
-                        messageData.MessageType = MessageType.Unknown;
+                        // 默认使用Business类型
+                        messageData.MessageType = MessageType.Business;
                     }
                 }
             }
@@ -352,5 +358,46 @@ namespace RUINORERP.Model.TransModel
         /// </summary>
         [JsonIgnore]
         public DateTime? ReadTime { get; set; }
+
+        /// <summary>
+        /// 将旧的消息类型值映射到新的消息类型
+        /// 用于兼容旧系统发送的消息
+        /// </summary>
+        /// <param name="oldTypeValue">旧的消息类型数值</param>
+        /// <returns>新的消息类型</returns>
+        private static MessageType MapOldMessageTypeToNew(int oldTypeValue)
+        {
+            switch (oldTypeValue)
+            {
+                // 弹出式提醒：需要立即用户注意的消息
+                case 1: // Message
+                case 2: // Reminder
+                case 3: // Event
+                case 4: // Task
+                case 5: // Notice
+                case 7: // Prompt
+                case 8: // UnLockRequest
+                case 10: // Broadcast
+                case 11: // Approve
+                case 13: // Text
+                case 14: // IM
+                case 16: // UserMessage
+                    return MessageType.Popup;
+                
+                // 业务性提醒：业务流程相关的消息
+                case 6: // Business
+                case 15: // BusinessData
+                    return MessageType.Business;
+                
+                // 系统消息：系统级通知和日志
+                case 9: // ExceptionLog
+                case 12: // System
+                    return MessageType.System;
+                
+                // 默认值
+                default:
+                    return MessageType.Business;
+            }
+        }
     }
 }

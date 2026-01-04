@@ -561,25 +561,56 @@ namespace RUINORERP.UI.IM
             try
             {
                 // 根据消息类型和业务数据导航到相应的业务窗体
-                switch (message.MessageType)
+                // 检查消息内容和业务数据，而不仅仅依赖消息类型
+                if (message.BizData != null)
                 {
-                    case RUINORERP.Model.TransModel.MessageType.Approve:
-                        // 导航到审批窗体
+                    // 处理待办更新消息
+                    if (message.BizData is TodoUpdate todoUpdate)
+                    {
                         await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
-                        break;
-                    case RUINORERP.Model.TransModel.MessageType.Task:
-                        // 导航到任务窗体
-                        await NavigateToTaskForm(message.BizId.ToString());
-                        break;
-                    case RUINORERP.Model.TransModel.MessageType.Notice:
-                        // 显示通知详情
-                        ShowNoticeDetail(message);
-                        break;
-                    case RUINORERP.Model.TransModel.MessageType.Reminder:
-                        // 导航到工作流提醒相关的业务窗体
-                        await NavigateToWorkflowReminderForm(message);
-                        break;
-                        // 其他类型的导航...
+                        return;
+                    }
+                }
+
+                // 根据消息内容包含的关键词或业务类型进行导航
+                string contentLower = (message.Content ?? "").ToLower();
+                string titleLower = (message.Title ?? "").ToLower();
+                
+                // 检查审批相关消息
+                if (contentLower.Contains("审批") || titleLower.Contains("审批") || 
+                    contentLower.Contains("approve") || titleLower.Contains("approve"))
+                {
+                    await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
+                }
+                // 检查任务相关消息
+                else if (contentLower.Contains("任务") || titleLower.Contains("任务") ||
+                         contentLower.Contains("task") || titleLower.Contains("task"))
+                {
+                    await NavigateToTaskForm(message.BizId.ToString());
+                }
+                // 检查通知或提醒相关消息
+                else if (contentLower.Contains("通知") || titleLower.Contains("通知") ||
+                         contentLower.Contains("提醒") || titleLower.Contains("提醒") ||
+                         contentLower.Contains("notice") || titleLower.Contains("notice"))
+                {
+                    ShowNoticeDetail(message);
+                }
+                // 检查工作流相关消息
+                else if (contentLower.Contains("工作流") || titleLower.Contains("工作流") ||
+                         contentLower.Contains("workflow") || titleLower.Contains("workflow"))
+                {
+                    await NavigateToWorkflowReminderForm(message);
+                }
+                // 默认处理
+                else if (message.BizId > 0 && message.BizType != BizType.未知类型)
+                {
+                    // 如果有业务ID和类型，尝试导航到审批表单
+                    await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
+                }
+                else
+                {
+                    // 显示消息详情
+                    ShowNoticeDetail(message);
                 }
             }
             catch (Exception ex)

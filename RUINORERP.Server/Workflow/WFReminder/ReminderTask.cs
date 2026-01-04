@@ -114,7 +114,7 @@ namespace RUINORERP.Server.Workflow.WFReminder
                                 // 发送工作流提醒命令 - 使用正确的工作流命令
                    
 
-                                var request = new MessageRequest(MessageType.Reminder, exData);
+                                var request = new MessageRequest(MessageType.Business, exData);
                                 var success = _sessionService.SendCommandAsync(
                                     session.SessionID, 
                                     WorkflowCommands.WorkflowReminder, 

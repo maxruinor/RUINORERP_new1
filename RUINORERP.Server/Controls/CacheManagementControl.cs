@@ -607,78 +607,7 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private async void btnPushCacheData_Click(object sender, EventArgs e)
-        {
-            if (listBoxTableList.SelectedItem != null)
-            {
-                if (cmbUser.SelectedItem != null)
-                {
-                    SuperValue kv = listBoxTableList.SelectedItem as SuperValue;
-                    string tableName = kv.superDataTypeName;
-                    SuperValue skv = cmbUser.SelectedItem as SuperValue;
-                    var session = _sessionService.GetSession(skv.superDataTypeName);
-                    if (session != null)
-                    {
-                        // 发送推送缓存命令 - 使用新的发送方法
-                        var messageData = new
-                        {
-                            Command = "PUSH_CACHE_DATA",
-                            TableName = tableName
-                        };
-
-                        var request = new MessageRequest(MessageType.Unknown, messageData);
-                        var success = _sessionService.SendCommandAsync(
-                            session.SessionID,
-                            MessageCommands.SendMessageToUser,
-                            request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
-
-                        if (success)
-                        {
-                            frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 推送缓存数据: {tableName}");
-                        }
-                        else
-                        {
-                            frmMainNew.Instance.PrintErrorLog($"向用户 {session.UserName} 推送缓存数据失败: {tableName}");
-                        }
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("没有选择具体用户时，则向当前所有在线用户推送缓存数据。", "提示信息", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    if (listBoxTableList.SelectedItem is SuperValue kv)
-                    {
-                        string tableName = kv.superDataTypeName;
-                        var sessions = _sessionService.GetAllUserSessions();
-
-                        foreach (var session in sessions)
-                        {
-                            // 发送推送缓存命令 - 使用新的发送方法
-                            var messageData = new
-                            {
-                                Command = "PUSH_CACHE_DATA",
-                                TableName = tableName
-                            };
-
-                            var request = new MessageRequest(MessageType.Unknown, messageData);
-                            var success = _sessionService.SendCommandAsync(
-                                session.SessionID,
-                                MessageCommands.SendMessageToUser,
-                                request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
-
-                            if (success)
-                            {
-                                frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserName} 推送缓存数据: {tableName}");
-                            }
-                            else
-                            {
-                                frmMainNew.Instance.PrintErrorLog($"向用户 {session.UserName} 推送缓存数据失败: {tableName}");
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+  
         private async void 加载缓存数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try

@@ -24,7 +24,7 @@ namespace RUINORERP.Model.TransModel
         /// 单据主键 这种业务性keyid
         /// </summary>
         public long BizKeyID { get; set; }
-        public MessageType messageCmd { get; set; } = MessageType.Unknown;
+        public MessageType messageCmd { get; set; } = MessageType.Business;
         // 消息状态
         /// <summary>
         /// 消息是否已读

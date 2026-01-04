@@ -63,6 +63,9 @@ namespace RUINORERP.UI.IM
             _messageManager.MessageStatusChanged += MessageManager_MessageStatusChanged;
             _messageManager.UnreadMessageCountChanged += MessageManager_UnreadMessageCountChanged;
 
+            // 动态设置右键菜单，确保菜单已经完全初始化
+            lstMessages.ContextMenuStrip = contextMenuStripMessages;
+
             // 加载现有消息
             LoadMessages();
         }
@@ -447,6 +450,34 @@ namespace RUINORERP.UI.IM
                 }
             }
         }
+
+        /// <summary>
+        /// 消息列表项鼠标按下事件处理
+        /// </summary>
+        private void lstMessages_MouseDown(object sender, MouseEventArgs e)
+        {
+            // 右键点击时，确保选中当前项
+            if (e.Button == MouseButtons.Right)
+            {
+                var hitTest = lstMessages.HitTest(e.Location);
+                if (hitTest.Item != null)
+                {
+                    // 确保当前项被选中
+                    if (!hitTest.Item.Selected)
+                    {
+                        // 清除其他选中项，只选中右键点击的项
+                        lstMessages.SelectedItems.Clear();
+                        hitTest.Item.Selected = true;
+                    }
+                }
+                else
+                {
+                    // 点击空白处时，清除选中项
+                    lstMessages.SelectedItems.Clear();
+                }
+            }
+        }
+
 
         /// <summary>
         /// 使用MessagePrompt显示消息内容
@@ -1045,6 +1076,116 @@ namespace RUINORERP.UI.IM
 
         #endregion
 
+        #region 右键菜单功能
+
+        /// <summary>
+        /// 右键菜单打开事件处理
+        /// </summary>
+        private void contextMenuStripMessages_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // 根据当前选中的消息数量启用/禁用菜单项
+            bool hasSelection = lstMessages.SelectedItems.Count > 0;
+            bool hasMultipleSelection = lstMessages.SelectedItems.Count > 1;
+            
+            // 删除菜单项根据选中情况启用/禁用
+            menuDeleteSelected.Enabled = hasSelection;
+            menuDeleteMultiple.Enabled = hasMultipleSelection;
+            
+            // 清除消息的菜单项始终可用
+            menuClear30Days.Enabled = true;
+            menuClear60Days.Enabled = true;
+            menuClear180Days.Enabled = true;
+            menuClearAll.Enabled = true;
+        }
+
+        /// <summary>
+        /// 刷新消息列表
+        /// </summary>
+        private void menuRefreshMessages_Click(object sender, EventArgs e)
+        {
+            LoadMessages();
+        }
+
+        /// <summary>
+        /// 删除选中消息
+        /// </summary>
+        private void menuDeleteSelected_Click(object sender, EventArgs e)
+        {
+            DeleteSelectedMessages();
+        }
+
+        /// <summary>
+        /// 删除多条消息
+        /// </summary>
+        private void menuDeleteMultiple_Click(object sender, EventArgs e)
+        {
+            DeleteSelectedMessages();
+        }
+
+        /// <summary>
+        /// 删除选中的消息
+        /// </summary>
+        private void DeleteSelectedMessages()
+        {
+            try
+            {
+                if (lstMessages.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("请先选择要删除的消息", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认对话框
+                string message = lstMessages.SelectedItems.Count == 1 
+                    ? "确定要删除选中的这条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。" 
+                    : $"确定要删除选中的{lstMessages.SelectedItems.Count}条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。";
+                
+                var result = MessageBox.Show(message, "确认删除消息", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 获取要删除的消息ID列表
+                var messageIds = new List<long>();
+                foreach (ListViewItem item in lstMessages.SelectedItems)
+                {
+                    if (item.Tag is long messageId)
+                    {
+                        messageIds.Add(messageId);
+                    }
+                }
+
+                if (messageIds.Count == 0)
+                {
+                    MessageBox.Show("没有找到有效的消息ID，无法删除", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 执行删除操作
+                if (messageIds.Count == 1)
+                {
+                    _messageManager.DeleteMessage(messageIds[0]);
+                }
+                else
+                {
+                    _messageManager.DeleteMessages(messageIds);
+                }
+
+                // 重新加载消息列表
+                LoadMessages();
+
+                MessageBox.Show($"已成功删除{messageIds.Count}条消息。", "删除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除消息时发生错误: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"删除消息失败: {ex.ToString()}");
+            }
+        }
+
+        #endregion
 
     }
 

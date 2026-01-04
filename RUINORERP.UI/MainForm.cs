@@ -855,14 +855,13 @@ namespace RUINORERP.UI
             pageMessageCenter.TextDescription = "系统消息和通知";
             pageMessageCenter.UniqueName = "消息中心";
             pageMessageCenter.AllowDrop = false;
-            pageMessageCenter.ClearFlags(KryptonPageFlags.All);
+           // pageMessageCenter.ClearFlags(KryptonPageFlags.All);
+            pageMessageCenter.ClearFlags(KryptonPageFlags.DockingAllowClose);
+            pageMessageCenter.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
             #endregion
-            KryptonPage pageMsgList = NewPage("消息中心", 2, messageListControl);
-            //pageMsg.ClearFlags(KryptonPageFlags.All);
-            pageMsgList.ClearFlags(KryptonPageFlags.DockingAllowClose);
-            pageMsgList.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
-            pageMsgList.Height = 30;
-            return pageMsgList;
+            //KryptonPage pageMsgList = NewPage("消息中心", 2, messageListControl);
+            pageMessageCenter.Width = 50;
+            return pageMessageCenter;
         }
 
 
@@ -1641,9 +1640,9 @@ namespace RUINORERP.UI
 
                 KryptonPage IMPage = NewIMList();
                 IMPage.AllowDrop = false;
-                IMPage.SetFlags(KryptonPageFlags.All);
+                //IMPage.SetFlags(KryptonPageFlags.All);
                 kryptonDockingManager1.AddDockspace("Control", DockingEdge.Right, new KryptonPage[] { IMPage });
-                kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
+                //kryptonDockingManager1.MakeAutoHiddenRequest(IMPage.UniqueName);//默认加载时隐藏
 
                 InitCenterPages();
                 LoadDefaultSkinMenu();

@@ -17,10 +17,24 @@ namespace AutoUpdate
         /// </summary>
         public SkipVersionManager()
         {
-            // 使用应用程序数据文件夹存储跳过的版本信息，避免权限问题
-            string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "RUINORERP");
-            Directory.CreateDirectory(appDataPath);
-            skipVersionFilePath = Path.Combine(appDataPath, "SkippedVersions.xml");
+            try
+            {
+                // 使用程序当前目录存储跳过的版本信息，避免权限问题
+                string currentDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                // 如果获取当前目录失败，使用当前工作目录
+                if (string.IsNullOrEmpty(currentDir))
+                {
+                    currentDir = Environment.CurrentDirectory;
+                }
+                skipVersionFilePath = Path.Combine(currentDir, "SkippedVersions.xml");
+            }
+            catch (Exception ex)
+            {
+                // 记录异常但不抛出，确保功能不会中断
+                System.Diagnostics.Debug.WriteLine("初始化SkipVersionManager失败: " + ex.Message);
+                // 使用一个安全的默认值，确保程序能继续运行
+                skipVersionFilePath = "SkippedVersions.xml";
+            }
         }
 
         /// <summary>

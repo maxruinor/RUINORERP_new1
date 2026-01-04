@@ -42,6 +42,10 @@ namespace RUINORERP.UI.IM
             this.menuClear180Days = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.menuClearAll = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.menuDeleteSelected = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuDeleteMultiple = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuRefreshMessages = new System.Windows.Forms.ToolStripMenuItem();
             this.panelHeader = new System.Windows.Forms.Panel();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnMarkAllRead = new System.Windows.Forms.Button();
@@ -60,6 +64,8 @@ namespace RUINORERP.UI.IM
             this.lstMessages.ContextMenuStrip = this.contextMenuStripMessages;
             this.lstMessages.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstMessages.FullRowSelect = true;
+            this.lstMessages.HideSelection = false;
+            this.lstMessages.MultiSelect = true;
             this.lstMessages.Location = new System.Drawing.Point(0, 40);
             this.lstMessages.Name = "lstMessages";
             this.lstMessages.Size = new System.Drawing.Size(800, 410);
@@ -67,6 +73,7 @@ namespace RUINORERP.UI.IM
             this.lstMessages.UseCompatibleStateImageBehavior = false;
             this.lstMessages.View = System.Windows.Forms.View.Details;
             this.lstMessages.ItemActivate += new System.EventHandler(this.lstMessages_ItemClick);
+            this.lstMessages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDown);
             this.lstMessages.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDoubleClick);
             
             // colContent
@@ -91,13 +98,25 @@ namespace RUINORERP.UI.IM
             
             // contextMenuStripMessages
             this.contextMenuStripMessages.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.menuDeleteSelected,
+            this.menuDeleteMultiple,
+            this.toolStripSeparator2,
+            this.menuRefreshMessages,
+            this.toolStripSeparator1,
             this.menuClear30Days,
             this.menuClear60Days,
             this.menuClear180Days,
-            this.toolStripSeparator1,
+            this.toolStripSeparator2,
             this.menuClearAll});
             this.contextMenuStripMessages.Name = "contextMenuStripMessages";
-            this.contextMenuStripMessages.Size = new System.Drawing.Size(181, 98);
+            this.contextMenuStripMessages.Size = new System.Drawing.Size(181, 188);
+            this.contextMenuStripMessages.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripMessages_Opening);
+            
+            // menuRefreshMessages
+            this.menuRefreshMessages.Name = "menuRefreshMessages";
+            this.menuRefreshMessages.Size = new System.Drawing.Size(180, 22);
+            this.menuRefreshMessages.Text = "刷新消息";
+            this.menuRefreshMessages.Click += new System.EventHandler(this.menuRefreshMessages_Click);
             
             // menuClear30Days
             this.menuClear30Days.Name = "menuClear30Days";
@@ -126,6 +145,22 @@ namespace RUINORERP.UI.IM
             this.menuClearAll.Size = new System.Drawing.Size(180, 22);
             this.menuClearAll.Text = "清除所有消息";
             this.menuClearAll.Click += new System.EventHandler(this.menuClearAll_Click);
+            
+            // toolStripSeparator2
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(177, 6);
+            
+            // menuDeleteSelected
+            this.menuDeleteSelected.Name = "menuDeleteSelected";
+            this.menuDeleteSelected.Size = new System.Drawing.Size(180, 22);
+            this.menuDeleteSelected.Text = "删除选中消息";
+            this.menuDeleteSelected.Click += new System.EventHandler(this.menuDeleteSelected_Click);
+            
+            // menuDeleteMultiple
+            this.menuDeleteMultiple.Name = "menuDeleteMultiple";
+            this.menuDeleteMultiple.Size = new System.Drawing.Size(180, 22);
+            this.menuDeleteMultiple.Text = "删除多条消息";
+            this.menuDeleteMultiple.Click += new System.EventHandler(this.menuDeleteMultiple_Click);
             
             // panelHeader
             this.panelHeader.Controls.Add(this.btnRefresh);
@@ -190,9 +225,13 @@ namespace RUINORERP.UI.IM
         private System.Windows.Forms.ToolStripMenuItem menuClear180Days;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem menuClearAll;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem menuDeleteSelected;
+        private System.Windows.Forms.ToolStripMenuItem menuDeleteMultiple;
         private System.Windows.Forms.Panel panelHeader;
         private System.Windows.Forms.Label lblUnreadCount;
         private System.Windows.Forms.Button btnMarkAllRead;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.ToolStripMenuItem menuRefreshMessages;
     }
 }

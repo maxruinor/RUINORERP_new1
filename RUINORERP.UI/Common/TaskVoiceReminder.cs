@@ -11,7 +11,7 @@ namespace RUINORERP.UI.Common
     /// <summary>
     /// 服务器消息语音提醒工具（基于System.Speech）
     /// </summary>
-    public class TaskVoiceReminder : IVoiceReminder
+    public class SystemSpeechVoiceReminder : IVoiceReminder
     {
         // 1. 语音合成器实例（延长生命周期，避免异步播放时被释放）
         private readonly SpeechSynthesizer _synthesizer;
@@ -21,8 +21,11 @@ namespace RUINORERP.UI.Common
 
         // 3. 标记是否正在播放（控制队列消费，保证顺序播放）
         private bool _isPlaying = false;
+        
+        // 4. 标记语音合成器是否初始化成功
+        private bool _isSynthesizerInitialized = false;
 
-        // 4. 语音提醒配置
+        // 5. 语音提醒配置
         /// <summary>
         /// 是否启用语音提醒
         /// </summary>
@@ -43,33 +46,72 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public VoiceGender VoiceGender { get; set; } = VoiceGender.Female;
         
-        // 5. 消息去重机制
+        // 6. 消息去重机制
         private readonly ConcurrentDictionary<string, DateTime> _recentMessages;
         private readonly Timer _recentMessagesCleanupTimer;
+        
+        /// <summary>
+        /// 语音提醒类型名称
+        /// </summary>
+        public string ReminderTypeName => "System.Speech";
+        
+        /// <summary>
+        /// 检查系统是否支持System.Speech.Synthesis
+        /// </summary>
+        /// <returns>是否支持</returns>
+        public static bool IsSystemSpeechSupported()
+        {
+            try
+            {
+                using (var synthesizer = new SpeechSynthesizer())
+                {
+                    return synthesizer.GetInstalledVoices().Any();
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// 构造函数：初始化语音合成器和队列
         /// </summary>
-        public TaskVoiceReminder()
+        public SystemSpeechVoiceReminder()
         {
-            // 初始化语音合成器
-            _synthesizer = new SpeechSynthesizer();
-
-            // 配置语音参数
-            _synthesizer.Volume = Volume;
-            _synthesizer.Rate = Rate;
             try
             {
-                // 尝试选择女声，若系统无女声则使用默认语音（避免报错）
-                _synthesizer.SelectVoiceByHints(VoiceGender, VoiceAge.Adult);
-            }
-            catch
-            {
-                Console.WriteLine("未找到指定语音包，将使用系统默认语音");
-            }
+                // 初始化语音合成器
+                _synthesizer = new SpeechSynthesizer();
 
-            // 绑定异步播放完成事件（播放完成后消费下一条消息）
-            _synthesizer.SpeakCompleted += Synthesizer_SpeakCompleted;
+                // 配置语音参数
+                _synthesizer.Volume = Volume;
+                _synthesizer.Rate = Rate;
+                try
+                {
+                    // 尝试选择女声，若系统无女声则使用默认语音（避免报错）
+                    _synthesizer.SelectVoiceByHints(VoiceGender, VoiceAge.Adult);
+                }
+                catch
+                {
+                    Console.WriteLine("未找到指定语音包，将使用系统默认语音");
+                }
+
+                // 绑定异步播放完成事件（播放完成后消费下一条消息）
+                _synthesizer.SpeakCompleted += Synthesizer_SpeakCompleted;
+                
+                // 标记语音合成器初始化成功
+                _isSynthesizerInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"语音合成器初始化失败：{ex.Message}");
+                // 语音合成器初始化失败时，保持默认值false
+                _isSynthesizerInitialized = false;
+                
+                // 初始化一个空的语音合成器实例，避免后续调用时出现空引用异常
+                _synthesizer = null;
+            }
 
             // 初始化线程安全队列（支持多线程添加消息，如服务器异步接收消息后入队）
             _remindMessageQueue = new ConcurrentQueue<string>();
@@ -147,6 +189,13 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
+            
+            // 检查语音合成器是否初始化成功
+            if (!_isSynthesizerInitialized)
+            {
+                Console.WriteLine($"语音合成器未初始化，已跳过消息播放：{messageContent}");
+                return;
+            }
 
             // 检查是否为重复消息（10分钟内）
             if (_recentMessages.TryGetValue(messageContent, out DateTime lastPlayTime))
@@ -177,6 +226,15 @@ namespace RUINORERP.UI.Common
             // 双重判断：避免多线程同时触发播放
             if (_isPlaying || _remindMessageQueue.IsEmpty)
             {
+                return;
+            }
+            
+            // 检查语音合成器是否初始化成功
+            if (!_isSynthesizerInitialized || _synthesizer == null)
+            {
+                // 清空队列，避免消息堆积
+                while (_remindMessageQueue.TryDequeue(out _)) { }
+                Console.WriteLine("语音合成器未初始化，已清空消息队列");
                 return;
             }
 
@@ -269,10 +327,150 @@ namespace RUINORERP.UI.Common
                 _recentMessagesCleanupTimer.Dispose();
             }
             
-            _synthesizer.SpeakAsyncCancelAll(); // 取消所有未完成的异步播放
-            _synthesizer.SpeakCompleted -= Synthesizer_SpeakCompleted;
-            _synthesizer.Dispose();
+            // 安全释放语音合成器资源
+            if (_isSynthesizerInitialized && _synthesizer != null)
+            {
+                try
+                {
+                    _synthesizer.SpeakAsyncCancelAll(); // 取消所有未完成的异步播放
+                    _synthesizer.SpeakCompleted -= Synthesizer_SpeakCompleted;
+                    _synthesizer.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"释放语音合成器资源失败：{ex.Message}");
+                }
+            }
+            
             Console.WriteLine("语音提醒工具资源已释放");
+        }
+    }
+ 
+    /// <summary>
+    /// Windows内置TTS语音提醒实现（作为System.Speech的备选方案）
+    /// </summary>
+    public class WindowsTtsVoiceReminder : IVoiceReminder
+    {
+        // 语音提醒配置
+        /// <summary>
+        /// 是否启用语音提醒
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
+        
+        // 标记是否初始化成功
+        private bool _isInitialized = false;
+        
+        /// <summary>
+        /// 语音提醒类型名称
+        /// </summary>
+        public string ReminderTypeName => "Windows TTS";
+        
+        /// <summary>
+        /// 构造函数：初始化Windows TTS语音服务
+        /// </summary>
+        public WindowsTtsVoiceReminder()
+        {
+            try
+            {
+                // 检查Windows语音服务是否可用
+                _isInitialized = CheckWindowsTtsAvailability();
+                if (_isInitialized)
+                {
+                    Console.WriteLine("Windows TTS语音服务初始化成功");
+                }
+                else
+                {
+                    Console.WriteLine("Windows TTS语音服务不可用");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Windows TTS语音服务初始化失败：{ex.Message}");
+                _isInitialized = false;
+            }
+        }
+        
+        /// <summary>
+        /// 检查Windows TTS语音服务是否可用
+        /// </summary>
+        /// <returns>是否可用</returns>
+        private bool CheckWindowsTtsAvailability()
+        {
+            try
+            {
+                // 尝试创建SpeechSynthesizer实例来检测Windows TTS是否可用
+                using (var synthesizer = new SpeechSynthesizer())
+                {
+                    return synthesizer.GetInstalledVoices().Any();
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 添加提醒消息
+        /// </summary>
+        /// <param name="messageContent">消息内容</param>
+        public void AddRemindMessage(string messageContent)
+        {
+            if (!IsEnabled || !_isInitialized)
+            {
+                return;
+            }
+            
+            try
+            {
+                using (var synthesizer = new SpeechSynthesizer())
+                {
+                    synthesizer.SpeakAsync(messageContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Windows TTS语音播放失败：{ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// 添加提醒消息（基于MessageData对象）
+        /// </summary>
+        /// <param name="messageData">消息数据对象</param>
+        public void AddRemindMessage(MessageData messageData)
+        {
+            if (messageData == null)
+            {
+                return;
+            }
+            
+            string voiceText = messageData.MessageType switch
+            {
+                MessageType.Popup => $"弹出消息：{messageData.Title}",
+                MessageType.Business => $"业务消息：{messageData.Title}",
+                MessageType.System => $"系统通知：{messageData.Title}",
+                _ => $"您有一条新消息：{messageData.Title}"
+            };
+            
+            AddRemindMessage(voiceText);
+        }
+        
+        /// <summary>
+        /// 检查系统是否支持语音功能
+        /// </summary>
+        /// <returns>是否支持</returns>
+        public bool IsSupported()
+        {
+            return _isInitialized;
+        }
+        
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            // 无需释放资源
         }
     }
 }

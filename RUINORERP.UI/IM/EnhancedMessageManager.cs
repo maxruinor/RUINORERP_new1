@@ -45,7 +45,7 @@ namespace RUINORERP.UI.IM
         private bool _disposed = false;
 
         // 语音提醒服务
-        private readonly TaskVoiceReminder _voiceReminder;
+        private readonly SystemSpeechVoiceReminder _voiceReminder;
 
         /// <summary>
         /// 消息状态变更事件
@@ -66,7 +66,7 @@ namespace RUINORERP.UI.IM
         /// <param name="messageService">消息服务</param>
         /// <param name="entityBizMappingService">实体映射服务</param>
         /// <param name="voiceReminder">语音提醒服务</param>
-        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService, IEntityMappingService entityBizMappingService, TaskVoiceReminder voiceReminder)
+        public EnhancedMessageManager(ILogger<EnhancedMessageManager> logger, MessageService messageService, IEntityMappingService entityBizMappingService, SystemSpeechVoiceReminder voiceReminder)
         {
             _logger = logger;
             _messageService = messageService;

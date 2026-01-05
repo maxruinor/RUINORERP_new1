@@ -1159,7 +1159,7 @@ namespace RUINORERP.UI.IM
                     if (message != null)
                     {
                         // 使用TaskVoiceReminder直接播放语音提醒
-                        var voiceReminder = new RUINORERP.UI.Common.TaskVoiceReminder();
+                        var voiceReminder = new RUINORERP.UI.Common.SystemSpeechVoiceReminder();
                         voiceReminder.AddRemindMessage(message);
                     }
                 }

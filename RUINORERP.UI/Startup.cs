@@ -384,7 +384,7 @@ namespace RUINORERP.UI
                 var sqlSugarClient = provider.GetRequiredService<ISqlSugarClient>();
                 return sqlSugarClient.Ado.Connection;
             });
-            // 注册语音提醒服务 - 使用策略模式动态选择实现
+            // 注册语音提醒服务 - 简化版：只支持System.Speech或不支持语音
             services.AddSingleton<IVoiceReminder>(provider =>
             {
                 // 检测系统是否支持语音功能
@@ -393,7 +393,7 @@ namespace RUINORERP.UI
                 if (isSpeechSupported)
                 {
                     Console.WriteLine("系统支持语音合成，使用System.Speech实现");
-                    return new TaskVoiceReminder();
+                    return new SystemSpeechVoiceReminder();
                 }
                 else
                 {
@@ -403,7 +403,9 @@ namespace RUINORERP.UI
             });
             
             // 保持原有注册以兼容现有代码
-            services.AddSingleton<TaskVoiceReminder>();
+            services.AddSingleton<WindowsTtsVoiceReminder>();
+            // 注册SystemSpeechVoiceReminder，方便直接使用
+            services.AddSingleton<SystemSpeechVoiceReminder>();
             
             // 注册增强版消息管理器
             services.AddScoped<EnhancedMessageManager>();
@@ -1899,18 +1901,8 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
         /// <returns>是否支持语音合成</returns>
         private static bool IsSpeechSynthesisAvailable()
         {
-            try
-            {
-                using (var synthesizer = new System.Speech.Synthesis.SpeechSynthesizer())
-                {
-                    return synthesizer.GetInstalledVoices().Any();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"检测语音合成功能失败：{ex.Message}");
-                return false;
-            }
+            // 使用SystemSpeechVoiceReminder的静态方法检测系统支持
+            return Common.SystemSpeechVoiceReminder.IsSystemSpeechSupported();
         }
 
         /// <summary>

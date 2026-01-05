@@ -54,7 +54,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.Created_at, AdvQueryProcessType.datetimeRange, true);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.StartDate, AdvQueryProcessType.datetimeRange, false);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.EndDate, AdvQueryProcessType.datetimeRange, false);
-            queryFilter.SetQueryField<tb_FM_Statement>(c => c.StatementStatus, QueryFieldType.CmbEnum, typeof(ARAPStatus));
+            queryFilter.SetQueryField<tb_FM_Statement>(c => c.StatementStatus, QueryFieldType.CmbEnum, typeof(StatementStatus));
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.Summary);
 

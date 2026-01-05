@@ -921,27 +921,26 @@ namespace AULWriter
             var sourcePath = Path.Combine(parameters.SourceFolder, fileName);
             var targetPath = Path.Combine(parameters.TargetFolder, fileName);
 
-            AppendLog($"检查文件是否修改：{fileName}");
-            AppendLog($"源文件路径：{sourcePath}");
-            AppendLog($"目标文件路径：{targetPath}");
+            // 减少日志输出，只在必要时记录
+            // AppendLog($"检查文件是否修改：{fileName}");
 
             // 如果源文件不存在，认为文件未修改（返回false）
             if (!File.Exists(sourcePath))
             {
-                AppendLog($"源文件不存在，文件未修改：{fileName}");
+                // AppendLog($"源文件不存在，文件未修改：{fileName}");
                 return false;
             }
 
             // 如果目标文件不存在但源文件存在，认为文件已修改
             if (!File.Exists(targetPath))
             {
-                AppendLog($"目标文件不存在，文件已修改：{fileName}");
+                // AppendLog($"目标文件不存在，文件已修改：{fileName}");
                 return true;
             }
 
             // 两个文件都存在时，进行内容比较
             bool isModified = CompareFiles(sourcePath, targetPath);
-            AppendLog($"文件比较结果 - {fileName}：{(isModified ? "已修改" : "未修改")}");
+            // AppendLog($"文件比较结果 - {fileName}：{(isModified ? "已修改" : "未修改")}");
             return isModified;
         }
 
@@ -950,27 +949,45 @@ namespace AULWriter
             var sourceInfo = new FileInfo(sourcePath);
             var targetInfo = new FileInfo(targetPath);
 
-            AppendLog($"比较文件：{Path.GetFileName(sourcePath)}");
-            AppendLog($"源文件大小：{sourceInfo.Length}，修改时间：{sourceInfo.LastWriteTimeUtc}");
-            AppendLog($"目标文件大小：{targetInfo.Length}，修改时间：{targetInfo.LastWriteTimeUtc}");
+            // 减少详细的日志输出，提高性能
+            // AppendLog($"比较文件：{Path.GetFileName(sourcePath)}");
 
-            // 快速比较：文件大小和修改时间
+            // 快速比较：文件大小和修改时间（这是最快的检查）
             if (sourceInfo.Length != targetInfo.Length ||
                 sourceInfo.LastWriteTimeUtc != targetInfo.LastWriteTimeUtc)
             {
-                AppendLog("文件大小或修改时间不同，文件已修改");
+                // AppendLog("文件大小或修改时间不同，文件已修改");
                 return true;
             }
 
-            // 精确比较：哈希值校验
-            string sourceHash = CalculateFileHash(sourcePath);
-            string targetHash = CalculateFileHash(targetPath);
-            AppendLog($"源文件哈希：{sourceHash}");
-            AppendLog($"目标文件哈希：{targetHash}");
-            
-            bool isModified = sourceHash != targetHash;
-            AppendLog($"哈希比较结果：{(isModified ? "已修改" : "未修改")}");
-            return isModified;
+            // 对于小文件，使用更快的CRC32校验
+            // 对于大文件，使用优化的哈希计算
+            if (sourceInfo.Length < 1024 * 1024) // 小于1MB的文件
+            {
+                // 小文件使用CRC32计算，更快
+                uint sourceCrc = CalculateCrc32(sourcePath);
+                uint targetCrc = CalculateCrc32(targetPath);
+                
+                if (sourceCrc != targetCrc)
+                {
+                    // AppendLog("CRC32校验不同，文件已修改");
+                    return true;
+                }
+            }
+            else
+            {
+                // 大文件使用优化的哈希计算
+                string sourceHash = CalculateOptimizedHash(sourcePath);
+                string targetHash = CalculateOptimizedHash(targetPath);
+                
+                if (sourceHash != targetHash)
+                {
+                    // AppendLog("哈希值不同，文件已修改");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
 
@@ -1058,15 +1075,94 @@ namespace AULWriter
                     return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
             }
-
-            //using (var sha256 = SHA256.Create())
-            //using (var stream = File.OpenRead(filePath))
-            //{
-            //    return BitConverter.ToString(sha256.ComputeHash(stream))
-            //        .Replace("-", "").ToLowerInvariant();
-            //}
-
-
+        }
+        
+        /// <summary>
+        /// 计算CRC32校验值（适用于小文件，性能更好）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>CRC32校验值</returns>
+        private static uint CalculateCrc32(string filePath)
+        {
+            using (var stream = File.OpenRead(filePath))
+            {
+                byte[] buffer = new byte[4096];
+                uint crc = 0xFFFFFFFF;
+                int bytesRead;
+                
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    for (int i = 0; i < bytesRead; i++)
+                    {
+                        crc = (crc >> 8) ^ Crc32Table[(crc ^ buffer[i]) & 0xFF];
+                    }
+                }
+                
+                return crc ^ 0xFFFFFFFF;
+            }
+        }
+        
+        /// <summary>
+        /// 优化的哈希计算（适用于大文件，减少内存分配）
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>哈希值</returns>
+        private static string CalculateOptimizedHash(string filePath)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096))
+            {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                
+                // 使用TransformBlock进行流式处理，减少内存分配
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    sha256.TransformBlock(buffer, 0, bytesRead, null, 0);
+                }
+                
+                sha256.TransformFinalBlock(buffer, 0, 0);
+                byte[] hash = sha256.Hash;
+                
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
+        }
+        
+        /// <summary>
+        /// CRC32查找表
+        /// </summary>
+        private static readonly uint[] Crc32Table = new uint[256];
+        
+        /// <summary>
+        /// 静态构造函数，初始化CRC32表
+        /// </summary>
+        static frmAULWriter()
+        {
+            InitializeCrc32Table();
+        }
+        
+        /// <summary>
+        /// 初始化CRC32查找表
+        /// </summary>
+        private static void InitializeCrc32Table()
+        {
+            uint polynomial = 0xEDB88320;
+            for (uint i = 0; i < 256; i++)
+            {
+                uint crc = i;
+                for (int j = 0; j < 8; j++)
+                {
+                    if ((crc & 1) == 1)
+                    {
+                        crc = (crc >> 1) ^ polynomial;
+                    }
+                    else
+                    {
+                        crc >>= 1;
+                    }
+                }
+                Crc32Table[i] = crc;
+            }
         }
         /// <summary>
         /// 源文件夹是最新的。目标是要更新的。 

@@ -110,6 +110,7 @@ namespace RUINORERP.Business
                         {
                             result.ErrorMsg = $"未找到对账单ID: {sourceBillId}";
                             result.Succeeded = false;
+                            _logger?.LogWarning(result.ErrorMsg);
                             return result;
                         }
 
@@ -190,6 +191,8 @@ namespace RUINORERP.Business
         {
             try
             {
+                _logger?.LogInformation($"开始获取历史已付款金额，来源单据ID: {sourceBillId}, 业务类型: {(BizType)sourceBizType}");
+                
                 // 查询已审核的付款记录明细，计算历史已付款金额
                 // 注意：这里只查询已审核通过的记录，当前正在审核的记录不应计入历史
                 var paidAmount = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
@@ -200,6 +203,8 @@ namespace RUINORERP.Business
                         )
                     .SumAsync(prd => prd.LocalAmount);
 
+                _logger?.LogInformation($"获取历史已付款金额成功，来源单据ID: {sourceBillId}, 业务类型: {(BizType)sourceBizType}, 金额: {paidAmount}");
+                
                 return paidAmount;  // SumAsync返回decimal类型，不会是null
             }
             catch (Exception ex)
@@ -291,9 +296,10 @@ namespace RUINORERP.Business
                         .Where(c => c.PaymentId != entity.PaymentId)
                         .ToListAsync();
 
-                    // 将当前付款明细添加到待验证列表中，确保当前付款金额被纳入验证范围
-                    PendingApprovalDetails.Add(PaymentRecordDetail);
-                    bool isValid = await ValidatePaymentDetails(PendingApprovalDetails, entity, rmrs);
+                    // 调用验证方法，仅传递当前付款单的明细和来源单据信息
+                    // 注意：不需要添加历史记录，因为GetHistoricalPaidAmount方法会自动获取历史已付款金额
+                    var currentPaymentDetails = new List<tb_FM_PaymentRecordDetail> { PaymentRecordDetail };
+                    bool isValid = await ValidatePaymentDetails(currentPaymentDetails, entity, rmrs);
                     if (!isValid)
                     {
                         //rmrs.ErrorMsg = "相同业务类型下不能有相同的来源单号!审核失败。";
@@ -2114,6 +2120,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 验证付款明细。支持部分付款场景，确保累计付款金额不超过来源单据总金额
+        /// 1
         /// </summary>
         /// <param name="paymentDetails">付款明细列表</param>
         /// <param name="returnResults">返回结果</param>
@@ -2135,6 +2142,19 @@ namespace RUINORERP.Business
                 foreach (var billNoGroup in groupedByBillIDAndNo)
                 {
                     var items = billNoGroup.ToList();
+                    
+                    // 关键修复：只保留当前付款单的明细，过滤掉其他付款单的明细
+                    // currentSelfRecord.PaymentId 是当前正在审核的付款单ID
+                    var currentBillItems = items.Where(item => item.PaymentId == currentSelfRecord.PaymentId).ToList();
+                    
+                    // 如果过滤后没有明细，跳过
+                    if (currentBillItems.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    // 使用过滤后的当前付款单明细进行验证
+                    items = currentBillItems;
 
                     // 如果只有一条记录，检查历史累计付款金额
                     if (items.Count == 1)

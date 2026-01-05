@@ -384,7 +384,25 @@ namespace RUINORERP.UI
                 var sqlSugarClient = provider.GetRequiredService<ISqlSugarClient>();
                 return sqlSugarClient.Ado.Connection;
             });
-            // 注册语音提醒服务
+            // 注册语音提醒服务 - 使用策略模式动态选择实现
+            services.AddSingleton<IVoiceReminder>(provider =>
+            {
+                // 检测系统是否支持语音功能
+                bool isSpeechSupported = IsSpeechSynthesisAvailable();
+                
+                if (isSpeechSupported)
+                {
+                    Console.WriteLine("系统支持语音合成，使用System.Speech实现");
+                    return new TaskVoiceReminder();
+                }
+                else
+                {
+                    Console.WriteLine("系统不支持语音合成，使用空实现");
+                    return new NullVoiceReminder();
+                }
+            });
+            
+            // 保持原有注册以兼容现有代码
             services.AddSingleton<TaskVoiceReminder>();
             
             // 注册增强版消息管理器
@@ -1873,6 +1891,26 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             }
             #endregion
             return services;
+        }
+
+        /// <summary>
+        /// 检测系统是否支持语音合成功能
+        /// </summary>
+        /// <returns>是否支持语音合成</returns>
+        private static bool IsSpeechSynthesisAvailable()
+        {
+            try
+            {
+                using (var synthesizer = new System.Speech.Synthesis.SpeechSynthesizer())
+                {
+                    return synthesizer.GetInstalledVoices().Any();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"检测语音合成功能失败：{ex.Message}");
+                return false;
+            }
         }
 
         /// <summary>

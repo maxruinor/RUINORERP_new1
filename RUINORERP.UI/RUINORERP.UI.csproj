@@ -899,6 +899,8 @@
     <Compile Include="Common\ControlExtensions.cs" />
     <Compile Include="Common\ExpressionSafeHelper.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
+    <Compile Include="Common\IVoiceReminder.cs" />
+    <Compile Include="Common\NullVoiceReminder.cs" />
     <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
     <Compile Include="Forms\LockInfoDetailForm.cs">

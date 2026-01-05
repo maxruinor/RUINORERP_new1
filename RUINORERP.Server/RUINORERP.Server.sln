@@ -29,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Server", "RUINORE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RUINORERP.Plugin", "..\RUINORERP.Plugin\RUINORERP.Plugin.csproj", "{A753BE87-840E-4CA7-B42E-584542A6BE2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RUINORERP.ManagementServer", "..\RUINORERP.ManagementServer\RUINORERP.ManagementServer.csproj", "{F85F1DBB-A27A-065F-FAEB-66419CEC1325}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RUINORERP.TopServer", "..\RUINORERP.ManagementServer\RUINORERP.TopServer.csproj", "{F85F1DBB-A27A-065F-FAEB-66419CEC1325}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Speech.Synthesis;
 using System.Collections.Concurrent;
-using RUINORERP.Model.TransModel;
+using System.Linq;
+using System.Speech.Synthesis;
 using System.Timers;
+using RUINORERP.Model.TransModel;
 
 namespace RUINORERP.UI.Common
 {
@@ -14,7 +11,7 @@ namespace RUINORERP.UI.Common
     /// <summary>
     /// 服务器消息语音提醒工具（基于System.Speech）
     /// </summary>
-    public class TaskVoiceReminder
+    public class TaskVoiceReminder : IVoiceReminder
     {
         // 1. 语音合成器实例（延长生命周期，避免异步播放时被释放）
         private readonly SpeechSynthesizer _synthesizer;
@@ -134,22 +131,6 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 添加提醒消息（支持MessageData对象）
-        /// </summary>
-        /// <param name="messageData">消息数据对象</param>
-        public void AddRemindMessage(MessageData messageData)
-        {
-            if (messageData == null)
-            {
-                Console.WriteLine("提醒消息对象不能为空");
-                return;
-            }
-
-            string voiceText = GenerateVoiceText(messageData);
-            AddRemindMessage(voiceText);
-        }
-
-        /// <summary>
         /// 添加提醒消息（供服务器接收消息后调用，支持多线程调用）
         /// </summary>
         /// <param name="messageContent">服务器返回的提醒消息内容</param>
@@ -239,6 +220,41 @@ namespace RUINORERP.UI.Common
 
             // 自动消费队列中的下一条消息
             TryPlayNextMessage();
+        }
+
+        /// <summary>
+        /// 添加提醒消息（基于MessageData对象，接口实现）
+        /// </summary>
+        /// <param name="messageData">消息数据对象</param>
+        public void AddRemindMessage(MessageData messageData)
+        {
+            if (messageData == null)
+            {
+                Console.WriteLine("提醒消息对象不能为空");
+                return;
+            }
+
+            string voiceText = GenerateVoiceText(messageData);
+            AddRemindMessage(voiceText);
+        }
+
+        /// <summary>
+        /// 检查系统是否支持语音功能
+        /// </summary>
+        /// <returns>是否支持语音</returns>
+        public bool IsSupported()
+        {
+            try
+            {
+                using (var synthesizer = new System.Speech.Synthesis.SpeechSynthesizer())
+                {
+                    return synthesizer.GetInstalledVoices().Any();
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

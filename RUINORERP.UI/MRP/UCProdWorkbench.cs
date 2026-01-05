@@ -120,6 +120,7 @@ namespace RUINORERP.UI.MRP
             {
                 if (!this.DesignMode)
                 {
+                    frm = new frmFormProperty();
                     newContextMenuStrip = new();
                     tsmenuItemAddAnnotations = new ToolStripMenuItem("添加批注");
                     tsmenuItemAddAnnotations.Click += new System.EventHandler(this.tsmenuItemAddAnnotations_Click);
@@ -132,11 +133,11 @@ namespace RUINORERP.UI.MRP
                         {
                             ToolStripButton subItem = item as ToolStripButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton< ToolStripButton>(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, subItem);
                         }
                         if (item is ToolStripDropDownButton subItemDr)
                         {
-                            UIHelper.ControlButton< ToolStripDropDownButton>(CurMenuInfo, subItemDr);
+                            UIHelper.ControlButton<ToolStripDropDownButton>(CurMenuInfo, subItemDr);
                             subItemDr.Click += Item_Click;
                             //下一级
                             if (subItemDr.HasDropDownItems)
@@ -153,7 +154,7 @@ namespace RUINORERP.UI.MRP
                         {
                             ToolStripSplitButton subItem = item as ToolStripSplitButton;
                             subItem.Click += Item_Click;
-                            UIHelper.ControlButton< ToolStripSplitButton>(CurMenuInfo, subItem);
+                            UIHelper.ControlButton<ToolStripSplitButton>(CurMenuInfo, subItem);
                             //下一级
                             if (subItem.HasDropDownItems)
                             {
@@ -177,7 +178,7 @@ namespace RUINORERP.UI.MRP
             }
 
         }
-        
+
         private async void tsmenuItemAddAnnotations_Click(object sender, EventArgs e)
         {
             if (uCMRP.kryptonTreeGridView1.CurrentRow != null)
@@ -218,7 +219,7 @@ namespace RUINORERP.UI.MRP
                             {
 
                             }
-                            
+
                         }
                     }
                 }
@@ -229,7 +230,7 @@ namespace RUINORERP.UI.MRP
             MessageBox.Show("工作台是特殊的查询，暂时无法个性化设置条件。");
             //MenuPersonalizedSettings();
         }
-        protected  virtual void MenuPersonalizedSettings()
+        protected virtual void MenuPersonalizedSettings()
         {
             //bool rs = await UIBizSrvice.SetQueryConditionsAsync(CurMenuInfo, QueryConditionFilter, QueryDto as BaseEntity);
             //if (rs)
@@ -523,7 +524,7 @@ namespace RUINORERP.UI.MRP
 
                     break;
 
-              
+
                 case MenuItemEnums.打印:
 
                     break;
@@ -554,7 +555,7 @@ namespace RUINORERP.UI.MRP
 
 
 
-        protected frmFormProperty frm = new frmFormProperty();
+        protected frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

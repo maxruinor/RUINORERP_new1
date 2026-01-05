@@ -528,8 +528,8 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
-                    //更新一下标题
-                    existingConditions.FirstOrDefault(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID).Caption = condition.Caption.Trim();
+                    //更新一下标题，保持原描述不变
+                    existingConditions.FirstOrDefault(ec => ec.FieldName == condition.FieldName && ec.UIMenuPID == condition.UIMenuPID).Caption = condition.Caption;
                 }
 
             }

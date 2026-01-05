@@ -44,6 +44,7 @@ namespace RUINORERP.Business.Processor
             QueryFilter queryFilter = new QueryFilter();
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.StatementNo);
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.PayeeAccountNo);
+            queryFilter.SetQueryField<tb_FM_Statement>(c => c.ARAPNos);
             queryFilter.SetQueryField<tb_FM_Statement, tb_CustomerVendor>(c => c.CustomerVendor_ID);
             //可以根据关联外键自动加载条件，条件用公共虚方法
             queryFilter.SetQueryField<tb_FM_Statement>(c => c.PayeeInfoID);

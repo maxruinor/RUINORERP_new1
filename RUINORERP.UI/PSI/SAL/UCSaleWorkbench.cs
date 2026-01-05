@@ -114,6 +114,7 @@ namespace RUINORERP.UI.SAL
             {
                 if (!this.DesignMode)
                 {
+                    frm = new frmFormProperty();
                     foreach (var item in BaseToolStrip.Items)
                     {
                         if (item is ToolStripButton)
@@ -488,7 +489,7 @@ namespace RUINORERP.UI.SAL
 
 
 
-        protected frmFormProperty frm = new frmFormProperty();
+        protected frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)

@@ -1,6 +1,7 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.Common;
@@ -334,6 +335,97 @@ namespace RUINORERP.UI.UserPersonalized
 
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 初始化查询条件按钮点击事件
+        /// </summary>
+        /// <param name="sender">触发事件的控件</param>
+        /// <param name="e">事件参数</param>
+        private void btnInitialize_Click(object sender, EventArgs e)
+        {
+            // 添加确认提示，防止误操作
+            if (MessageBox.Show("确定要初始化所有查询条件吗？此操作将重置所有查询条件为默认状态。", "确认初始化", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                // 清空当前条件
+                Conditions.Clear();
+                listView1.Items.Clear();
+
+                // 重新生成默认查询条件
+                List<tb_UIQueryCondition> defaultConditions = new List<tb_UIQueryCondition>();
+                if (QueryFields != null)
+                {
+                    int sortIndex = 0;
+                    foreach (var item in QueryFields)
+                    {
+                        tb_UIQueryCondition condition = new tb_UIQueryCondition();
+                        condition.FieldName = item.FieldName;
+                        condition.Sort = item.DisplayIndex;
+                        // 时间区间排最后
+                        if (item.AdvQueryFieldType == AdvQueryProcessType.datetimeRange && condition.Sort == 0)
+                        {
+                            condition.Sort = 100;
+                        }
+                        condition.IsVisble = true; // 默认显示所有条件
+                        condition.Caption = item.Caption;
+                        if (item.ColDataType != null)
+                        {
+                            condition.ValueType = item.ColDataType.Name;
+                        }
+                        condition.UIMenuPID = Personalization.UIMenuPID;
+                        // 重置其他属性为默认值
+                        condition.Default1 = string.Empty;
+                        condition.Default2 = string.Empty;
+                        condition.EnableDefault1 = false;
+                        condition.EnableDefault2 = false;
+                        condition.Focused = false;
+                        condition.UseLike = true;
+                        condition.MultiChoice = false;
+                        condition.ControlWidth = 120; // 默认控件宽度
+                        condition.DiffDays1 = null;
+                        condition.DiffDays2 = null;
+
+                        defaultConditions.Add(condition);
+                        sortIndex++;
+                    }
+                }
+
+                // 对默认条件进行排序
+                var sortedDefaultConditions = defaultConditions.OrderBy(condition => condition.Sort).ToList();
+
+                // 更新条件集合
+                Conditions.AddRange(sortedDefaultConditions);
+
+                // 保存初始条件到oldConditions
+                oldConditions = new tb_UIQueryCondition[Conditions.Count];
+                Conditions.CopyTo(oldConditions);
+
+                // 更新ListView显示
+                foreach (tb_UIQueryCondition keyValue in Conditions)
+                {
+                    ListViewItem lvi = new ListViewItem();
+                    lvi.Checked = keyValue.IsVisble;
+                    lvi.Name = keyValue.FieldName;
+                    lvi.Tag = keyValue;
+                    lvi.Text = keyValue.Caption;
+                    lvi.ImageKey = keyValue.Sort.ToString();
+                    listView1.Items.Add(lvi);
+                }
+
+                // 清空编辑面板
+                panelConditionEdit.Controls.Clear();
+
+                MessageBox.Show("查询条件初始化完成。", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"初始化查询条件失败：{ex.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

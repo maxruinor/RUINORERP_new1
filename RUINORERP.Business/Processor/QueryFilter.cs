@@ -521,11 +521,23 @@ namespace RUINORERP.Business.Processor
             {
                 AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
             }
-            //上面没有调用其他方法来SET这里要添加
-            if (!QueryFields.Contains(queryField))
+            // 检查是否已存在相同字段（基于FieldName和QueryTargetType）
+            var existingField = QueryFields.FirstOrDefault(qf => 
+                qf.FieldName == queryField.FieldName && qf.QueryTargetType == queryField.QueryTargetType);
+            
+            if (existingField != null)
             {
-                QueryFields.Add(queryField);
+                // 记录重复添加尝试日志
+                // 可以在此处添加日志记录，例如：
+                // Logger.LogWarning($"尝试重复添加查询字段：{queryField.FieldName}，类型：{queryField.QueryTargetType.Name}，已被阻止");
+                
+                // 返回已存在的字段，而不是创建新字段
+                return existingField;
             }
+
+            // 添加新字段
+            QueryFields.Add(queryField);
+
             return queryField;
         }
 
@@ -585,11 +597,23 @@ namespace RUINORERP.Business.Processor
             {
                 AddSubFilterToQueryField(queryField, expSubFieldLimitCondition, typeof(R));
             }
-            //上面没有调用其他方法来SET这里要添加
-            if (!QueryFields.Contains(queryField))
+            // 检查是否已存在相同字段（基于FieldName和QueryTargetType）
+            var existingField = QueryFields.FirstOrDefault(qf => 
+                qf.FieldName == queryField.FieldName && qf.QueryTargetType == queryField.QueryTargetType);
+            
+            if (existingField != null)
             {
-                QueryFields.Add(queryField);
+                // 记录重复添加尝试日志
+                // 可以在此处添加日志记录，例如：
+                // Logger.LogWarning($"尝试重复添加查询字段：{queryField.FieldName}，类型：{queryField.QueryTargetType.Name}，已被阻止");
+                
+                // 返回已存在的字段，而不是创建新字段
+                return existingField;
             }
+
+            // 添加新字段
+            QueryFields.Add(queryField);
+
             return queryField;
         }
 
@@ -656,11 +680,22 @@ namespace RUINORERP.Business.Processor
                 AddSubFilterToQueryField(queryField, SubFieldLimitExp);
             }
 
-            //上面没有调用其他方法来SET这里要添加
-            if (!QueryFields.Contains(queryField))
+            // 检查是否已存在相同字段（基于FieldName和QueryTargetType）
+            var existingField = QueryFields.FirstOrDefault(qf => 
+                qf.FieldName == queryField.FieldName && qf.QueryTargetType == queryField.QueryTargetType);
+            
+            if (existingField != null)
             {
-                QueryFields.Add(queryField);
+                // 记录重复添加尝试日志
+                // 可以在此处添加日志记录，例如：
+                // Logger.LogWarning($"尝试重复添加查询字段：{queryField.FieldName}，类型：{queryField.QueryTargetType.Name}，已被阻止");
+                
+                // 返回已存在的字段，而不是创建新字段
+                return existingField;
             }
+
+            // 添加新字段
+            QueryFields.Add(queryField);
 
             return queryField;
         }

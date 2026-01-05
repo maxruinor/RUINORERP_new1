@@ -620,13 +620,13 @@ namespace RUINORERP.Business
                         var PrePayment = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entitys[m].SOrder_ID && p.SourceBizType == (int)BizType.销售订单);
                         if (PrePayment != null)
                         {
-                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || 
-                                PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 || 
+                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 ||
+                                PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 ||
                                 PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
                             {
                                 //没有付款记录的，直接删除关闭
                                 await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
-                                
+
                                 #region  检测对应的收款单记录，如果没有支付也可以直接删除
                                 var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
                                       .Includes(a => a.tb_FM_PaymentRecordDetails)
@@ -688,7 +688,7 @@ namespace RUINORERP.Business
                             {
                                 //订单结案后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
                                 //这里仅提醒，订金已支付
-                                if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销 
+                                if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
                                     || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                                 {
                                     _unitOfWorkManage.RollbackTran();
@@ -1091,7 +1091,14 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalResults = false;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                entity.ApprovalOpinions += "【被反审】";
+                if (_appContext != null && _appContext.CurUserInfo != null)
+                {
+                    entity.ApprovalOpinions += $"【被{_appContext.CurUserInfo.Name}反审】";
+                }
+                else
+                {
+                    entity.ApprovalOpinions += $"【被反审】";
+                }
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 //后面是不是要做一个审核历史记录表？

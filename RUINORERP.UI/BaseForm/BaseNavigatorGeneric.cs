@@ -212,14 +212,12 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
             InitializeComponent();
-            frm = new frmFormProperty();
+          
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
                 if (!this.DesignMode)
                 {
-
-
-
+                    frm = new frmFormProperty();
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
                     button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";

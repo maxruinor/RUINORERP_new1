@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.UserPersonalized
+namespace RUINORERP.UI.UserPersonalized
 {
     partial class frmQueryConditionSetting
     {
@@ -31,13 +31,14 @@
             this.QueryShowColQty = new Krypton.Toolkit.KryptonNumericUpDown();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
+            this.btnInitialize = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkEnableQuerySettings = new Krypton.Toolkit.KryptonCheckBox();
             this.panelConditionEdit = new System.Windows.Forms.Panel();
             this.chkReverseSelection = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAll = new Krypton.Toolkit.KryptonCheckBox();
             this.listView1 = new System.Windows.Forms.ListView();
-            this.chkEnableQuerySettings = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -82,18 +83,27 @@
             // btnCancel
             // 
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(379, 565);
+            this.btnCancel.Location = new System.Drawing.Point(528, 565);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 13;
             this.btnCancel.Values.Text = "取消(&C)";
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // btnInitialize
+            // 
+            this.btnInitialize.Location = new System.Drawing.Point(12, 565);
+            this.btnInitialize.Name = "btnInitialize";
+            this.btnInitialize.Size = new System.Drawing.Size(117, 25);
+            this.btnInitialize.TabIndex = 14;
+            this.btnInitialize.Values.Text = "初始化查询条件";
+            this.btnInitialize.Click += new System.EventHandler(this.btnInitialize_Click);
+            // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(212, 565);
+            this.btnOk.Location = new System.Drawing.Point(361, 565);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(90, 25);
+            this.btnOk.Size = new System.Drawing.Size(78, 25);
             this.btnOk.TabIndex = 12;
             this.btnOk.Values.Text = "确定(&O)";
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -107,6 +117,7 @@
             this.kryptonPanel1.Controls.Add(this.listView1);
             this.kryptonPanel1.Controls.Add(this.QueryShowColQty);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
+            this.kryptonPanel1.Controls.Add(this.btnInitialize);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -114,6 +125,14 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(729, 636);
             this.kryptonPanel1.TabIndex = 14;
+            // 
+            // chkEnableQuerySettings
+            // 
+            this.chkEnableQuerySettings.Location = new System.Drawing.Point(603, 16);
+            this.chkEnableQuerySettings.Name = "chkEnableQuerySettings";
+            this.chkEnableQuerySettings.Size = new System.Drawing.Size(114, 20);
+            this.chkEnableQuerySettings.TabIndex = 22;
+            this.chkEnableQuerySettings.Values.Text = "启用查询预设值";
             // 
             // panelConditionEdit
             // 
@@ -153,14 +172,6 @@
             this.listView1.View = System.Windows.Forms.View.Details;
             this.listView1.SelectedIndexChanged += new System.EventHandler(this.listView1_SelectedIndexChanged);
             // 
-            // chkEnableQuerySettings
-            // 
-            this.chkEnableQuerySettings.Location = new System.Drawing.Point(603, 16);
-            this.chkEnableQuerySettings.Name = "chkEnableQuerySettings";
-            this.chkEnableQuerySettings.Size = new System.Drawing.Size(114, 20);
-            this.chkEnableQuerySettings.TabIndex = 22;
-            this.chkEnableQuerySettings.Values.Text = "启用查询预设值";
-            // 
             // frmQueryConditionSetting
             // 
             this.AcceptButton = this.btnOk;
@@ -182,6 +193,7 @@
         #endregion
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonButton btnCancel;
+        private Krypton.Toolkit.KryptonButton btnInitialize;
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         public Krypton.Toolkit.KryptonNumericUpDown QueryShowColQty;

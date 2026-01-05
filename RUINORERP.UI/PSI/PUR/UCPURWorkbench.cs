@@ -487,7 +487,7 @@ namespace RUINORERP.UI.PUR
 
 
 
-        protected frmFormProperty frm = new frmFormProperty();
+        protected frmFormProperty frm = null;
         protected virtual void Property()
         {
             if (frm.ShowDialog() == DialogResult.OK)
@@ -591,6 +591,7 @@ namespace RUINORERP.UI.PUR
             }
             else
             {
+                frm = new frmFormProperty();
                 newContextMenuStrip = new();
                 tsmenuItemAddAnnotations = new ToolStripMenuItem("添加批注");
                 tsmenuItemAddAnnotations.Click += new System.EventHandler(this.tsmenuItemAddAnnotations_Click);

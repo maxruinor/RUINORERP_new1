@@ -206,6 +206,38 @@ namespace RUINORERP.Business.Processor
         public int? DiffDays2 { get; set; }
 
         #endregion
+
+        #region 相等性比较
+        /// <summary>
+        /// 比较两个查询字段是否相等
+        /// </summary>
+        /// <param name="obj">要比较的对象</param>
+        /// <returns>如果相等返回true，否则返回false</returns>
+        public override bool Equals(object obj)
+        {
+            if (obj is QueryField other)
+            {
+                // 基于字段名和查询目标类型判断相等性
+                return this.FieldName == other.FieldName && 
+                       this.QueryTargetType == other.QueryTargetType;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 获取查询字段的哈希码
+        /// </summary>
+        /// <returns>哈希码</returns>
+        public override int GetHashCode()
+        {
+            // 基于字段名和查询目标类型生成哈希码
+            // 使用兼容旧版本.NET Framework的哈希码生成方式
+            int hashCode = 17;
+            hashCode = hashCode * 23 + (FieldName?.GetHashCode() ?? 0);
+            hashCode = hashCode * 23 + (QueryTargetType?.GetHashCode() ?? 0);
+            return hashCode;
+        }
+        #endregion
     }
 
 

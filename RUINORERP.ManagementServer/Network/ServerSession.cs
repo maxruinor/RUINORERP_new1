@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using RUINORERP.PacketSpec.Models.Common;
 
-namespace RUINORERP.ManagementServer.Network
+namespace RUINORERP.TopServer.Network
 {
     /// <summary>
     /// 服务器会话信息 - 用于管理服务器与业务服务器之间的会话管理

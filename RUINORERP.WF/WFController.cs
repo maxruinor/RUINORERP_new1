@@ -61,36 +61,50 @@ namespace RUINORERP.WF
         }
 
 
-        public async void StartApproval(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
+        public async Task StartApprovalAsync(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
         {
-            tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
-            tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
-            var workflowId = host.StartWorkflow("盘点001", data).Result;
-            workflowlist.TryAdd(billid.ToString(), workflowId);
-            // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
-            // if (approval != null)
-            // {
-            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
-            //     host.SubmitActivitySuccess(approval.Token, "John Smith");
-            // }
-            //把ID加入到队列中？
-
+            try
+            {
+                tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
+                tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
+                var workflowId = host.StartWorkflow("盘点001", data).Result;
+                workflowlist.TryAdd(billid.ToString(), workflowId);
+                // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
+                // if (approval != null)
+                // {
+                //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
+                //     host.SubmitActivitySuccess(approval.Token, "John Smith");
+                // }
+                //把ID加入到队列中？
+            }
+            catch (Exception ex)
+            {
+                // 记录日志或处理异常
+                throw;
+            }
         }
 
-        public async void StartApprovalNew(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
+        public async Task StartApprovalNewAsync(IWorkflowHost host, long billid, ConcurrentDictionary<string, string> workflowlist)
         {
-            tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
-            tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
-            var workflowId = host.StartWorkflow("BillApprovalWorkflow", data).Result;
-            workflowlist.TryAdd(billid.ToString(), workflowId);
-            // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
-            // if (approval != null)
-            // {
-            //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
-            //     host.SubmitActivitySuccess(approval.Token, "John Smith");
-            // }
-            //把ID加入到队列中？
-
+            try
+            {
+                tb_StocktakeController<tb_Stocktake> ctr = appContext.GetRequiredService<tb_StocktakeController<tb_Stocktake>>();
+                tb_Stocktake data = await ctr.BaseQueryByIdAsync(billid);
+                var workflowId = host.StartWorkflow("BillApprovalWorkflow", data).Result;
+                workflowlist.TryAdd(billid.ToString(), workflowId);
+                // var approval = host.GetPendingActivity("get-approval", "worker1", TimeSpan.FromMinutes(1)).Result;
+                // if (approval != null)
+                // {
+                //     System.Diagnostics.Debug.WriteLine("Approval required for " + approval.Parameters);
+                //     host.SubmitActivitySuccess(approval.Token, "John Smith");
+                // }
+                //把ID加入到队列中？
+            }
+            catch (Exception ex)
+            {
+                // 记录日志或处理异常
+                throw;
+            }
         }
         public void PublishEvent(IWorkflowHost host, ApprovalWFData data, ConcurrentDictionary<string, string> workflowlist)
         {

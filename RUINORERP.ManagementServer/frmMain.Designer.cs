@@ -1,4 +1,4 @@
-namespace RUINORERP.ManagementServer
+namespace RUINORERP.TopServer
 {
     partial class frmMain
     {

@@ -6,13 +6,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.ManagementServer.ConfigurationManagement
+namespace RUINORERP.TopServer.ConfigurationManagement
 {
     /// <summary>
     /// 配置管理核心类
     /// 负责配置信息的存储、检索和更新
     /// </summary>
-    public class ConfigurationManager
+    public class TopServerConfigurationManager
     {
         // 配置信息字典，键为配置名称，值为配置值
         private ConcurrentDictionary<string, ConfigurationInfo> _configurations;
@@ -25,7 +25,7 @@ namespace RUINORERP.ManagementServer.ConfigurationManagement
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ConfigurationManager()
+        public TopServerConfigurationManager()
         {
             _configurations = new ConcurrentDictionary<string, ConfigurationInfo>();
             

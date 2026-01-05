@@ -37,34 +37,41 @@ namespace RUINORERP.Server.BizService
 
         }
 
-        public async void LoadCRMFollowUpPlansData(ConcurrentDictionary<long, ReminderData> dictionary)
+        public async Task LoadCRMFollowUpPlansData(ConcurrentDictionary<long, ReminderData> dictionary)
         {
-            //只要是未开始 并且结束时间还没有到。就要加载
-            var Plans = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()
-                .Where(c => c.PlanStatus == (int)FollowUpPlanStatus.未开始)
-                .Where(c => c.PlanEndDate >= System.DateTime.Now)
-                .OrderBy(c => c.PlanStartDate)
-                .ToListAsync();
-
-            foreach (var item in Plans)
+            try
             {
-                ReminderData reminderBizData = new ReminderData();
-                reminderBizData.BizPrimaryKey = item.PlanID;
-                reminderBizData.BizType = Global.BizType.CRM跟进计划;
-                List<long> receiverIDs = new List<long>();
-                receiverIDs.Add(item.Employee_ID);
-                reminderBizData.ReceiverUserIDs = receiverIDs;
-                //reminderBizData.SenderName = item.;
-                reminderBizData.RemindSubject = item.PlanSubject;
-                reminderBizData.ReminderContent = item.PlanContent;
-                reminderBizData.StartTime = item.PlanStartDate;
-                reminderBizData.EndTime = item.PlanEndDate;
+                //只要是未开始 并且结束时间还没有到。就要加载
+                var Plans = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()
+                    .Where(c => c.PlanStatus == (int)FollowUpPlanStatus.未开始)
+                    .Where(c => c.PlanEndDate >= System.DateTime.Now)
+                    .OrderBy(c => c.PlanStartDate)
+                    .ToListAsync();
 
-                //只要是不有结束，未开始的都要加入到等待列表中。每一分种 检测 开始时间前一天开始提醒
-                dictionary.AddOrUpdate(reminderBizData.BizPrimaryKey, reminderBizData, (key, value) => value);
+                foreach (var item in Plans)
+                {
+                    ReminderData reminderBizData = new ReminderData();
+                    reminderBizData.BizPrimaryKey = item.PlanID;
+                    reminderBizData.BizType = Global.BizType.CRM跟进计划;
+                    List<long> receiverIDs = new List<long>();
+                    receiverIDs.Add(item.Employee_ID);
+                    reminderBizData.ReceiverUserIDs = receiverIDs;
+                    //reminderBizData.SenderName = item.;
+                    reminderBizData.RemindSubject = item.PlanSubject;
+                    reminderBizData.ReminderContent = item.PlanContent;
+                    reminderBizData.StartTime = item.PlanStartDate;
+                    reminderBizData.EndTime = item.PlanEndDate;
 
+                    //只要是不有结束，未开始的都要加入到等待列表中。每一分种 检测 开始时间前一天开始提醒
+                    dictionary.AddOrUpdate(reminderBizData.BizPrimaryKey, reminderBizData, (key, value) => value);
+
+                }
             }
-
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载CRM跟进计划数据时发生错误");
+                throw;
+            }
         }
 
 
@@ -75,28 +82,36 @@ namespace RUINORERP.Server.BizService
         /// </summary>
         /// <param name="reminderData">提醒数据</param>
         /// <param name="isRead">消息是否已读</param>
-        public async void ProcessCRMFollowUpPlansData(ReminderData reminderData, bool isRead)
+        public async Task ProcessCRMFollowUpPlansData(ReminderData reminderData, bool isRead)
         {
-            reminderData.IsRead = isRead;
-            if (reminderData.BizType == Global.BizType.CRM跟进计划)
+            try
             {
-                var plan = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()
-                    .Includes(c => c.tb_CRM_FollowUpRecordses)
-                    .Where(c => c.PlanID == reminderData.BizPrimaryKey).SingleAsync();
-                //如果不是手动取消的，则系统会自动根据是不是有记录来判断最终计划的不个完成情况
-                if (plan.PlanStatus != (int)FollowUpPlanStatus.已取消)
+                reminderData.IsRead = isRead;
+                if (reminderData.BizType == Global.BizType.CRM跟进计划)
                 {
-                    if (plan.tb_CRM_FollowUpRecordses.Count > 0)
+                    var plan = await _appContext.Db.Queryable<tb_CRM_FollowUpPlans>()
+                        .Includes(c => c.tb_CRM_FollowUpRecordses)
+                        .Where(c => c.PlanID == reminderData.BizPrimaryKey).SingleAsync();
+                    //如果不是手动取消的，则系统会自动根据是不是有记录来判断最终计划的不个完成情况
+                    if (plan.PlanStatus != (int)FollowUpPlanStatus.已取消)
                     {
-                        plan.PlanStatus = (int)FollowUpPlanStatus.已完成;
-                    }
-                    else
-                    {
-                        plan.PlanStatus = (int)FollowUpPlanStatus.未执行;
-                    }
+                        if (plan.tb_CRM_FollowUpRecordses.Count > 0)
+                        {
+                            plan.PlanStatus = (int)FollowUpPlanStatus.已完成;
+                        }
+                        else
+                        {
+                            plan.PlanStatus = (int)FollowUpPlanStatus.未执行;
+                        }
 
-                    var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_CRM_FollowUpPlans>(plan).UpdateColumns(it => new { it.PlanStatus }).ExecuteCommandAsync();
+                        var result = await _unitOfWorkManage.GetDbClient().Updateable<tb_CRM_FollowUpPlans>(plan).UpdateColumns(it => new { it.PlanStatus }).ExecuteCommandAsync();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理CRM跟进计划数据时发生错误");
+                throw;
             }
         }
 

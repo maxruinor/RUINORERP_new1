@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using SuperSocket;
 using SuperSocket.Server.Host;
 
-namespace RUINORERP.ManagementServer.Network
+namespace RUINORERP.TopServer.Network
 {
     /// <summary>
     /// 网络服务器核心类

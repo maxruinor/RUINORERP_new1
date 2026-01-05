@@ -388,40 +388,46 @@ namespace RUINORERP.UI.UserCenter.DataParts
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private async void kryptonTreeGridView1_CellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == -1 || e.RowIndex == -1)
+            try
             {
+                if (e.ColumnIndex == -1 || e.RowIndex == -1)
+                {
+                    return;
+                }
+                if (kryptonTreeGridView1.CurrentRow != null && kryptonTreeGridView1.CurrentCell != null)
+                {
+                    if (kryptonTreeGridView1.CurrentRow.Tag is BaseEntity entity)
+                    {
+                        if (kryptonTreeGridView1.CurrentCell.Tag != null)
+                        {
+                            //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
+                            GridRelated.GuideToForm(kryptonTreeGridView1.CurrentCell.Tag.ToString(), entity);
+                        }
+                    }
+                }
                 return;
-            }
-            if (kryptonTreeGridView1.CurrentRow != null && kryptonTreeGridView1.CurrentCell != null)
-            {
-                if (kryptonTreeGridView1.CurrentRow.Tag is BaseEntity entity)
+                //导航到指向的单据界面
+                //找到要打开的菜单  查询下级数据
+                if (kryptonTreeGridView1.CurrentCell != null)
                 {
-                    if (kryptonTreeGridView1.CurrentCell.Tag != null)
+                    if (kryptonTreeGridView1.CurrentCell.OwningRow.Tag is long pid)
                     {
-                        //特殊情况处理 当前行的业务类型：销售出库  库存盘点 对应一个集合，再用原来的方法来处理
-                        GridRelated.GuideToForm(kryptonTreeGridView1.CurrentCell.Tag.ToString(), entity);
+                        var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ProductionPlan).Name && m.ClassPath == ("RUINORERP.UI.PSI.PUR.UCMRPData")).FirstOrDefault();
+                        if (RelatedBillMenuInfo != null)
+                        {
+                            tb_ProductionPlanController<tb_ProductionPlan> controller = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
+                            tb_ProductionPlan MRPData = await controller.BaseQueryByIdNavAsync(pid);
+                            //要把单据信息传过去
+                            menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, MRPData);
+                        }
                     }
                 }
             }
-            return;
-            //导航到指向的单据界面
-            //找到要打开的菜单  查询下级数据
-            if (kryptonTreeGridView1.CurrentCell != null)
+            catch (Exception ex)
             {
-                if (kryptonTreeGridView1.CurrentCell.OwningRow.Tag is long pid)
-                {
-                    var RelatedBillMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == typeof(tb_ProductionPlan).Name && m.ClassPath == ("RUINORERP.UI.PSI.PUR.UCMRPData")).FirstOrDefault();
-                    if (RelatedBillMenuInfo != null)
-                    {
-                        tb_ProductionPlanController<tb_ProductionPlan> controller = Startup.GetFromFac<tb_ProductionPlanController<tb_ProductionPlan>>();
-                        tb_ProductionPlan MRPData = await controller.BaseQueryByIdNavAsync(pid);
-                        //要把单据信息传过去
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, MRPData);
-                    }
-                }
+                // 记录错误日志或显示错误信息
+                MessageBox.Show("操作失败：" + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-
         }
 
         private void treeGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)

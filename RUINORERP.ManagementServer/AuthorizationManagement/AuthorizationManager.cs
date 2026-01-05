@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.ManagementServer.ServerManagement;
+using RUINORERP.TopServer.ServerManagement;
 
-namespace RUINORERP.ManagementServer.AuthorizationManagement
+namespace RUINORERP.TopServer.AuthorizationManagement
 {
     /// <summary>
     /// 授权管理核心类

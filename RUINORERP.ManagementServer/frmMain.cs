@@ -7,13 +7,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.ManagementServer.AuthorizationManagement;
-using RUINORERP.ManagementServer.ConfigurationManagement;
-using RUINORERP.ManagementServer.Network;
-using RUINORERP.ManagementServer.ServerManagement;
-using RUINORERP.ManagementServer.UserStatusMonitoring;
+using RUINORERP.TopServer.AuthorizationManagement;
+using RUINORERP.TopServer.ConfigurationManagement;
+using RUINORERP.TopServer.Network;
+using RUINORERP.TopServer.ServerManagement;
+using RUINORERP.TopServer.UserStatusMonitoring;
 
-namespace RUINORERP.ManagementServer
+namespace RUINORERP.TopServer
 {
     /// <summary>
     /// 管理服务器主窗体

@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.ManagementServer.Network;
+using RUINORERP.TopServer.Network;
 
-namespace RUINORERP.ManagementServer.ServerManagement
+namespace RUINORERP.TopServer.ServerManagement
 {
     /// <summary>
     /// 服务器管理核心类

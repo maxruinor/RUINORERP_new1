@@ -154,7 +154,7 @@ namespace RUINORERP.Server.Workflow
                 _logger.LogDebug("开始刷新CRM跟进计划数据");
                 
                 // 重新加载数据
-                _dataService.LoadCRMFollowUpPlansData(reminderDataList);
+                await _dataService.LoadCRMFollowUpPlansData(reminderDataList);
                 
                 // 清理已过期或已完成的提醒数据
                 var expiredKeys = reminderDataList.Where(kv => 

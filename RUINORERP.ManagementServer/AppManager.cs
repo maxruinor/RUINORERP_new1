@@ -1,15 +1,15 @@
 using System;
 using System.Threading.Tasks;
-using RUINORERP.ManagementServer.AuthorizationManagement;
-using RUINORERP.ManagementServer.ConfigurationManagement;
-using RUINORERP.ManagementServer.Network;
-using RUINORERP.ManagementServer.ServerManagement;
-using RUINORERP.ManagementServer.UserStatusMonitoring;
+using RUINORERP.TopServer.AuthorizationManagement;
+using RUINORERP.TopServer.ConfigurationManagement;
+using RUINORERP.TopServer.Network;
+using RUINORERP.TopServer.ServerManagement;
+using RUINORERP.TopServer.UserStatusMonitoring;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Common;
 using ManagementCommands = RUINORERP.PacketSpec.Commands.ManagementCommands;
 
-namespace RUINORERP.ManagementServer
+namespace RUINORERP.TopServer
 {
     /// <summary>
     /// 应用管理核心类
@@ -23,7 +23,7 @@ namespace RUINORERP.ManagementServer
         private ServerManager _serverManager;
         private AuthorizationManager _authorizationManager;
         private UserManager _userManager;
-        private ConfigurationManager _configurationManager;
+        private TopServerConfigurationManager _configurationManager;
 
         /// <summary>
         /// 全局服务提供者
@@ -71,7 +71,7 @@ namespace RUINORERP.ManagementServer
         /// <summary>
         /// 配置管理器
         /// </summary>
-        public ConfigurationManager ConfigurationManager => _configurationManager;
+        public TopServerConfigurationManager ConfigurationManager => _configurationManager;
 
         /// <summary>
         /// 应用程序是否已初始化
@@ -119,7 +119,7 @@ namespace RUINORERP.ManagementServer
             // 初始化用户管理器
             _userManager = new UserManager();
             // 初始化配置管理器
-            _configurationManager = new ConfigurationManager();
+            _configurationManager = new TopServerConfigurationManager();
         }
 
         /// <summary>

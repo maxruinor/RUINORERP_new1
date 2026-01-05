@@ -1065,8 +1065,8 @@ namespace RUINORERP.UI.IM
                 // 重新加载消息列表
                 LoadMessages();
 
-                MessageBox.Show($"已成功清除{cutoffDate:yyyy-MM-dd}之前的{messagesToDelete.Count}条消息。",
-                    "清除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+              MainForm.Instance.ShowStatusText($"已成功清除{cutoffDate:yyyy-MM-dd}之前的{messagesToDelete.Count}条消息。"
+                   );
             }
             catch (Exception ex)
             {
@@ -1105,8 +1105,7 @@ namespace RUINORERP.UI.IM
                 // 重新加载消息列表
                 LoadMessages();
 
-                MessageBox.Show($"已成功清除所有{allMessages.Count}条消息。",
-                    "清除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MainForm.Instance.ShowStatusText($"已成功清除所有{allMessages.Count}条消息。");
             }
             catch (Exception ex)
             {
@@ -1237,7 +1236,7 @@ namespace RUINORERP.UI.IM
                 // 重新加载消息列表以刷新UI
                 LoadMessages();
 
-                MessageBox.Show($"已成功删除{messageIds.Count}条消息。", "删除完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MainForm.Instance.ShowStatusText($"已成功删除{messageIds.Count}条消息。");
             }
             catch (Exception ex)
             {

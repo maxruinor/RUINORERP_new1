@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.ManagementServer.ServerManagement;
+using RUINORERP.TopServer.ServerManagement;
 
-namespace RUINORERP.ManagementServer.UserStatusMonitoring
+namespace RUINORERP.TopServer.UserStatusMonitoring
 {
     /// <summary>
     /// 用户管理核心类

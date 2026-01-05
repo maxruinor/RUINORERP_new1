@@ -517,7 +517,6 @@ namespace AULWriter
                 if (urlElement != null)
                 {
                     urlElement.Value = parameters.UpdateUrl;
-                    AppendLog($"更新URL地址为: {parameters.UpdateUrl}");
                 }
                 
                 UpdateVersionInformation(doc, parameters);
@@ -527,7 +526,7 @@ namespace AULWriter
                 DirectoryDiffResult diffResult = CompareDirectories(parameters.SourceFolder, parameters.TargetFolder, doc, parameters.ExcludeUnnecessaryFiles);
                 
                 // 记录对比结果
-                AppendLog($"目录对比完成：新增 {diffResult.NewFiles.Count} 个文件，修改 {diffResult.ModifiedFiles.Count} 个文件，删除 {diffResult.DeletedFiles.Count} 个文件");
+                AppendLog($"目录对比完成：新增 {diffResult.NewFiles.Count} 个，修改 {diffResult.ModifiedFiles.Count} 个，删除 {diffResult.DeletedFiles.Count} 个");
                 
                 // 处理修改的文件
                 var fileElements = doc.Descendants("File").ToList();
@@ -535,7 +534,6 @@ namespace AULWriter
                 
                 if (diffResult.ModifiedFiles.Count > 0)
                 {
-                    AppendLog($"开始处理 {diffResult.ModifiedFiles.Count} 个修改文件...");
                     ProcessFiles(worker, parameters, fileElements, diffList, diffResult.ModifiedFiles);
                 }
                 
@@ -547,14 +545,12 @@ namespace AULWriter
                 
                 if (allNewFiles.Count > 0)
                 {
-                    AppendLog($"开始处理 {allNewFiles.Count} 个新增文件...");
                     ProcessNewFiles(doc, allNewFiles, diffList, parameters);
                 }
                 
                 // 处理删除的文件（从配置文件中移除）
                 if (diffResult.DeletedFiles.Count > 0)
                 {
-                    AppendLog($"开始处理 {diffResult.DeletedFiles.Count} 个删除文件...");
                     ProcessDeletedFiles(doc, diffResult.DeletedFiles, diffList);
                 }
                 
@@ -577,10 +573,8 @@ namespace AULWriter
             // 计算没有变化的文件数量
             int totalFiles = diffResult.ModifiedFiles.Count + diffResult.NewFiles.Count + diffResult.DeletedFiles.Count + diffResult.UnchangedFiles.Count;
             
-            AppendLog($"差异文件统计：共 {diffList.Count} 个差异文件（已过滤排除规则）");
-            AppendLog($"原始差异统计：修改 {diffResult.ModifiedFiles.Count} 个，新增 {diffResult.NewFiles.Count} 个，删除 {diffResult.DeletedFiles.Count} 个，无变化 {diffResult.UnchangedFiles.Count} 个");
-            AppendLog($"过滤后差异统计：修改 {filteredModifiedFiles.Count} 个，新增 {filteredNewFiles.Count} 个，删除 {filteredDeletedFiles.Count} 个");
-            AppendLog($"总文件数：{totalFiles} 个");
+            // 合并统计信息为一条日志
+            AppendLog($"差异统计：{diffList.Count}个差异文件（过滤后：修改{filteredModifiedFiles.Count}个，新增{filteredNewFiles.Count}个，删除{filteredDeletedFiles.Count}个），总文件{totalFiles}个");
 
             AppendLog("更新配置文件生成完成");
             e.Result = new UpdateXmlResult { Document = doc, DiffList = diffList };
@@ -708,13 +702,10 @@ namespace AULWriter
             {
                 if (Directory.Exists(sourceDir))
                 {
-                    AppendLog($"开始扫描目录: {sourceDir}");
-                    
                     // 递归扫描目录中的所有文件
                     // 使用*.*可能会排除某些没有扩展名的文件，改为使用*来包含所有文件
                     string[] allFiles = Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories);
                     totalFiles = allFiles.Length;
-                    AppendLog($"共扫描到 {totalFiles} 个文件");
                     
                     foreach (string filePath in allFiles)
                     {
@@ -732,7 +723,6 @@ namespace AULWriter
                         if (excludePredicate(relativePath))
                         {
                             excludedFiles++;
-                            AppendLog($"文件 {relativePath} 被排除：符合排除条件");
                             continue;
                         }
                         
@@ -740,7 +730,6 @@ namespace AULWriter
                         if (IsInHiddenDirectory(sourceDir, relativePath))
                         {
                             excludedFiles++;
-                            AppendLog($"文件 {relativePath} 被排除：位于隐藏目录中");
                             continue;
                         }
                         
@@ -748,7 +737,6 @@ namespace AULWriter
                         if (IsOverSizeLimit(sourceDir, relativePath, 100))
                         {
                             excludedFiles++;
-                            AppendLog($"文件 {relativePath} 被排除：超过100MB大小限制");
                             continue;
                         }
                         

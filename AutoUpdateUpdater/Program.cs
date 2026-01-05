@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -23,7 +24,6 @@ namespace AutoUpdateUpdater
             
             // 记录启动日志
             WriteLog("AutoUpdateUpdaterLog.txt", $"AutoUpdateUpdater启动，参数数量: {args.Length}");
-            WriteLog("AutoUpdateUpdaterLog.txt", $"所有参数: {string.Join(" | ", args.Select((arg, index) => $"[{index}]={arg}"))}");
             
             try
             {
@@ -44,11 +44,10 @@ namespace AutoUpdateUpdater
                     if (config.IsValid())
                     {
                         config.SaveToFile(configFilePath);
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"命令行参数有效，已保存到配置文件: {configFilePath}");
                     }
                 }
                 
-                WriteLog("AutoUpdateUpdaterLog.txt", $"最终配置: {config}");
+
                 
                 // 参数验证
                 if (!config.IsValid())
@@ -278,12 +277,8 @@ namespace AutoUpdateUpdater
             
             try
             {
-                WriteLog("AutoUpdateUpdaterLog.txt", "开始解析命令行参数...");
-                
                 for (int i = 0; i < args.Length; i++)
                 {
-                    WriteLog("AutoUpdateUpdaterLog.txt", $"解析参数[{i}]: {args[i]}");
-                    
                     string currentArg = args[i].Trim('"');
                     
                     // 处理格式1: --source-dir "path"
@@ -291,13 +286,11 @@ namespace AutoUpdateUpdater
                     {
                         config.SourceDir = args[i + 1].Trim('"');
                         i++;
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"解析到源目录(格式1): {config.SourceDir}");
                     }
                     // 处理格式2: --source-dir=path
                     else if (currentArg.StartsWith("--source-dir="))
                     {
                         config.SourceDir = currentArg.Substring("--source-dir=".Length).Trim('"');
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"解析到源目录(格式2): {config.SourceDir}");
                     }
                     // 处理格式1: --target-dir "path"
                     else if (currentArg == "--target-dir" && i + 1 < args.Length)

@@ -252,7 +252,7 @@ namespace RUINORERP.Business
                                         _unitOfWorkManage.RollbackTran();
                                         rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                         FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                      await  fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
+                                        await fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
                                         if (_appContext.SysConfig.ShowDebugInfo)
                                         {
                                             _logger.Debug(rmrs.ErrorMsg);
@@ -261,7 +261,7 @@ namespace RUINORERP.Business
                                     else
                                     {
                                         FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                     fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
                                     }
                                     #endregion
                                 }
@@ -542,6 +542,7 @@ namespace RUINORERP.Business
         /// 如果还没有出库。但是结案的订单时。修正拟出库数量,将数量减掉。不需再出货了。
         /// 目前暂时是这个逻辑。后面再处理凭证财务相关的
         /// 目前认为结案 是仓库和业务确定这个订单不再执行的一个确认过程。
+        /// 审核状态时取消订单式结案 有预收付款则同时要退款
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -549,7 +550,6 @@ namespace RUINORERP.Business
         {
             List<tb_SaleOrder> entitys = new List<tb_SaleOrder>();
             entitys = NeedCloseCaseList as List<tb_SaleOrder>;
-
 
             ReturnResults<bool> rs = new ReturnResults<bool>();
             try
@@ -611,6 +611,118 @@ namespace RUINORERP.Business
                     entitys[m].DataStatus = (int)DataStatus.完结;
                     BusinessHelper.Instance.EditEntity(entitys[m]);
                     //后面是不是要做一个审核历史记录表？
+
+                    #region  预收款单处理（结案时检查）
+                    AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                    if (authorizeController.EnableFinancialModule())
+                    {
+                        var ctrpay = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                        var PrePayment = await ctrpay.IsExistEntityAsync(p => p.SourceBillId == entitys[m].SOrder_ID && p.SourceBizType == (int)BizType.销售订单);
+                        if (PrePayment != null)
+                        {
+                            if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.草稿 || 
+                                PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待审核 || 
+                                PrePayment.PrePaymentStatus == (int)PrePaymentStatus.已生效)
+                            {
+                                //没有付款记录的，直接删除关闭
+                                await _unitOfWorkManage.GetDbClient().Deleteable(PrePayment).ExecuteCommandAsync();
+                                
+                                #region  检测对应的收款单记录，如果没有支付也可以直接删除
+                                var PaymentList = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                                      .Includes(a => a.tb_FM_PaymentRecordDetails)
+                                     .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == PrePayment.PreRPID)).ToListAsync();
+                                if (PaymentList != null && PaymentList.Count > 0)
+                                {
+                                    if (PaymentList.Count > 1 && PaymentList.Sum(c => c.TotalLocalAmount) == 0 && PaymentList.Any(c => c.IsReversed))
+                                    {
+                                        if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entitys[m].IsFromPlatform)
+                                        {
+                                            //自动退款处理
+                                        }
+                                        else
+                                        {
+                                            _unitOfWorkManage.RollbackTran();
+                                            rs.ErrorMsg = $"销售订单{PrePayment.SourceBillNo}的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，不能结案，只能【预收款退款】作废。";
+                                            rs.Succeeded = false;
+                                            return rs;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        tb_FM_PaymentRecord Payment = PaymentList[0];
+                                        if (Payment.PaymentStatus == (int)PaymentStatus.草稿 || Payment.PaymentStatus == (int)PaymentStatus.待审核)
+                                        {
+                                            await _unitOfWorkManage.GetDbClient().DeleteNav(Payment)
+                                                .Include(c => c.tb_FM_PaymentRecordDetails)
+                                                .ExecuteCommandAsync();
+                                        }
+                                        else
+                                        {
+                                            if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entitys[m].IsFromPlatform)
+                                            {
+                                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                bool isRefund = true;
+                                                tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                                paymentRecord.Remark += "（结案）";
+                                                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                                if (rrs.Succeeded)
+                                                {
+                                                    await paymentController.ApprovalAsync(paymentRecord, true);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                _unitOfWorkManage.RollbackTran();
+                                                rs.ErrorMsg = $"对应的预收款单{PrePayment.PreRPNO}状态为【{(PrePaymentStatus)PrePayment.PrePaymentStatus}】，结案失败\r\n" +
+                                                    $"需将预收款单【退款】，对收款单{Payment.PaymentNo}进行冲销处理\r\n" +
+                                                    $"当前订单【结案】后，重新录入正确的销售订单。";
+                                                rs.Succeeded = false;
+                                                return rs;
+                                            }
+                                        }
+                                    }
+                                }
+                                #endregion
+                            }
+                            else
+                            {
+                                //订单结案后，预收款，可以退款可以下一个订单，应收来处理。由财务决定。
+                                //这里仅提醒，订金已支付
+                                if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销 
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                                {
+                                    _unitOfWorkManage.RollbackTran();
+                                    rs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接结案,请撤销核销，再退款处理,或部分退款";
+                                    rs.Succeeded = false;
+                                    return rs;
+                                }
+
+                                if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.待核销)
+                                {
+                                    if (_appContext.FMConfig.EnableAutoRefundOnOrderCancel && entitys[m].IsFromPlatform)
+                                    {
+                                        var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                        bool isRefund = true;
+                                        tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { PrePayment }, isRefund);
+                                        paymentRecord.Remark += "（结案）";
+                                        var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                        if (rrs.Succeeded)
+                                        {
+                                            await paymentController.ApprovalAsync(paymentRecord, true);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _unitOfWorkManage.RollbackTran();
+                                        rs.ErrorMsg = $"存在预收款单，且状态为{(PrePaymentStatus)PrePayment.PrePaymentStatus},不能直接结案,请进行【退款】处理。";
+                                        rs.Succeeded = false;
+                                        return rs;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #endregion
 
                     //只更新指定列
                     var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_SaleOrder>(entitys[m]).UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions, it.Modified_by, it.Modified_at, it.Notes }).ExecuteCommandAsync();

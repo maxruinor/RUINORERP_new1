@@ -43,9 +43,9 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<View_Inventory>(c => c.BOM_ID);
             queryFilter.SetQueryField<View_Inventory>(c => c.Unit_ID);
             queryFilter.SetQueryField<View_Inventory>(c => c.SourceType, QueryFieldType.CmbEnum, typeof(GoodsSource));
-            //queryFilter.SetQueryField<View_Inventory>(c => c.LastInventoryDate);
-            //queryFilter.SetQueryField<View_Inventory>(c => c.LatestStorageTime);
-            //queryFilter.SetQueryField<View_Inventory>(c => c.LatestOutboundTime);
+            queryFilter.SetQueryField<View_Inventory>(c => c.LastInventoryDate, AdvQueryProcessType.datetimeRange, false);
+            queryFilter.SetQueryField<View_Inventory>(c => c.LatestStorageTime, AdvQueryProcessType.datetimeRange, false);
+            queryFilter.SetQueryField<View_Inventory>(c => c.LatestOutboundTime, AdvQueryProcessType.datetimeRange, false);
             return queryFilter;
         }
     }

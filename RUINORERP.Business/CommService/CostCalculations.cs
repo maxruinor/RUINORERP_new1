@@ -28,6 +28,7 @@ namespace RUINORERP.Business.CommService
 
         /// <summary>
         /// 移动加权平均成本计算，要以未税成本为基准
+        /// 当前方法中不能对tb_Inventory inv的数量进行操作，因为这里只是价格计算，数量的变动要在调用方处理
         /// </summary>
         /// <param name="_appContext"></param>
         /// <param name="inv"></param>
@@ -125,8 +126,8 @@ namespace RUINORERP.Business.CommService
                 throw new InvalidOperationException($"计算得到负库存成本（成本值：{inv.Inv_Cost}）");
             }
 
-            // 更新库存数量（注意：这里只更新内存中的数量，实际数据库更新由调用方处理）
-            inv.Quantity = newQty;
+            // 注意：这里不更新库存数量，数量的变动要在调用方处理
+            // inv.Quantity = newQty; // 已移除，避免重复计算数量
         }
 
 
@@ -262,8 +263,8 @@ namespace RUINORERP.Business.CommService
                 throw new InvalidOperationException($"反审核计算得到负库存成本（成本值：{inv.Inv_Cost}），请检查操作数量或原成本价是否合理");
             }
 
-            // 更新库存数量（注意：这里只更新内存中的数量，实际数据库更新由调用方处理）
-            inv.Quantity = newQty;
+            // 注意：这里不更新库存数量，数量的变动要在调用方处理
+            // inv.Quantity = newQty; // 已移除，避免重复计算数量
         }
 
 

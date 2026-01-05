@@ -39,7 +39,7 @@ namespace RUINORERP.Business
     {
 
         /// <summary>
-        /// 返回批量审核的结果
+        /// 返回批量审核的结果1
         /// </summary>
         /// <param name="entitys"></param>
         /// <returns></returns>
@@ -51,6 +51,25 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
+                // 首先检查单据是否已经被审核，防止重复审核
+                var existingEntity = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
+                    .Where(c => c.PurEntryID == entity.PurEntryID)
+                    .Select(c => new { c.DataStatus, c.ApprovalStatus, c.ApprovalResults })
+                    .FirstAsync();
+                
+                if (existingEntity != null)
+                {
+                    // 检查是否已经审核通过
+                    if (existingEntity.DataStatus == (int)DataStatus.确认 || 
+                        existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 ||
+                        (existingEntity.ApprovalResults.HasValue && existingEntity.ApprovalResults.Value))
+                    {
+                        rs.ErrorMsg = "采购入库单已经审核通过，不能重复审核！";
+                        rs.Succeeded = false;
+                        return rs;
+                    }
+                }
+
                 if (entity.tb_PurEntryDetails == null)
                 {
                     //处理采购订单

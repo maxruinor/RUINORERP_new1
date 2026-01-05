@@ -541,6 +541,8 @@ namespace RUINORERP.UI.BaseForm
             //添加默认全局的
             // base.QueryConditions.Add(c => c.Created_by);
             // List<string> slist = ExpressionHelper.ExpressionListToStringList(MasterSummaryCols);
+            BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(M).Name + "Processor");
+            QueryFilter = baseProcessor.GetQueryFilter();
         }
 
         /// <summary>

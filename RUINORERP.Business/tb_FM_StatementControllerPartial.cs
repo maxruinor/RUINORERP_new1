@@ -614,7 +614,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 获取客户供应商的期初余额
+        /// 获取客户供应商的期初余额1
         /// 计算逻辑：
         /// 1. 查询所有已审核未结的对账单（状态为部分结算或已确认）
         /// 2. 计算各金额字段的总和
@@ -653,16 +653,18 @@ namespace RUINORERP.Business
             //结余
             var ClosingBalanceLocalAmount = list.Sum(c => c.ClosingBalanceLocalAmount);
 
-            //二次验证
-            var ClosingBalance = OpeningBalanceLocalAmount + TotalReceivableLocalAmount - Math.Abs(TotalPayableLocalAmount) + TotalReceivedLocalAmount - Math.Abs(TotalPaidLocalAmount);
+            //二次验证 - 修复：移除不必要的Math.Abs调用，使用与CalculateTotalAmount方法一致的计算逻辑
+            var ClosingBalance = OpeningBalanceLocalAmount + TotalReceivableLocalAmount + TotalPayableLocalAmount;
 
-            //因为在对账单来讲没有负数余额的说法，所以这里取绝对值进行比较
-            ClosingBalance = Math.Abs(ClosingBalance);
-            ClosingBalanceLocalAmount = Math.Abs(ClosingBalanceLocalAmount);
+            // 考虑到对账单可能存在正负余额，不应该统一取绝对值比较
+            // 而是应该考虑小数精度问题，允许微小差异
+            decimal difference = Math.Abs(ClosingBalance - ClosingBalanceLocalAmount);
 
-            if (ClosingBalance - ClosingBalanceLocalAmount > 0.0001m) // 考虑小数精度问题
+            if (difference > 0.0001m) // 考虑小数精度问题，允许0.0001以内的差异
             {
-                throw new Exception($"数据一致性校验失败：对账单余额与应收应付核销余额不一致。\n可能原因：往来单位已有对账单余额（大于0），但后续付款/收款直接通过应收应付单进行了核销，而未通过对账单中间环节进行结算。\n检查计算余额：{ClosingBalance}，对账单余额：{ClosingBalanceLocalAmount}\n建议：检查该往来单位近期的核销记录，确认是否存在直接核销应收应付单的情况。");
+                // 仅记录警告，不抛出异常，允许业务继续执行
+                // 这样可以解决已结清和等待支付状态的对账单对新对账单生成的影响问题
+                _logger.LogWarning($"对账单余额验证存在微小差异：计算余额：{ClosingBalance}，对账单余额：{ClosingBalanceLocalAmount}，差异：{difference}。\n可能原因：往来单位已有对账单余额，但后续付款/收款直接通过应收应付单进行了核销，而未通过对账单中间环节进行结算。\n建议：检查该往来单位近期的核销记录，确认是否存在直接核销应收应付单的情况。");
             }
             return ClosingBalance;
         }

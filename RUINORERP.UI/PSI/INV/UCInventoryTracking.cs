@@ -80,6 +80,7 @@ namespace RUINORERP.UI.PSI.INV
             // .ToExpression();//注意 这一句 不能少
             ////如果有限制则设置一下 但是注意 不应该在这设置，灵活的应该是在调用层设置
             //Filter.SetFieldLimitCondition(lambdaOrder);
+            base.BuildQueryCondition();
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.SKU);
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.CNName);
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.ProductNo);
@@ -92,6 +93,10 @@ namespace RUINORERP.UI.PSI.INV
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.Rack_ID);
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.BOM_ID);
             base.QueryFilter.SetQueryField<View_Inventory>(c => c.Unit_ID);
+            base.QueryFilter.SetQueryField<View_Inventory>(c => c.LastInventoryDate, AdvQueryProcessType.datetimeRange, false);
+            base.QueryFilter.SetQueryField<View_Inventory>(c => c.LatestStorageTime, AdvQueryProcessType.datetimeRange, false);
+            base.QueryFilter.SetQueryField<View_Inventory>(c => c.LatestOutboundTime, AdvQueryProcessType.datetimeRange, false);
+
         }
 
 
@@ -143,8 +148,9 @@ namespace RUINORERP.UI.PSI.INV
             { "转换单加", "tb_ProdConversion" },
             { "返工退库", "tb_MRP_ReworkReturn" },
             { "返工入库", "tb_MRP_ReworkEntry" },
+            //{ "返工入库", "tb_MRP_ReworkEntry" },
             { "缴库", "tb_FinishedGoodsInv" }
-        };//还要添加调拨单 转换单，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
+        };//还要添加调拨单 转换单，售后维修，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
             foreach (KeyValuePair<string, string> item in mappings)
             {
                 //取编号为条件，目标表为在kv

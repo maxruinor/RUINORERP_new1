@@ -436,7 +436,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 设置查询条件的个性化参数
+        /// 设置查询条件的个性化参数1
         /// </summary>
         /// <param name="CurMenuInfo"></param>
         /// <param name="QueryConditionFilter"></param>

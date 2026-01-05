@@ -309,6 +309,25 @@ namespace RUINORERP.Business
             tb_SaleOut entity = ObjectEntity as tb_SaleOut;
             try
             {
+                // 首先检查单据是否已经被审核，防止重复审核
+                var existingEntity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                    .Where(c => c.SaleOut_MainID == entity.SaleOut_MainID)
+                    .Select(c => new { c.DataStatus, c.ApprovalStatus, c.ApprovalResults })
+                    .FirstAsync();
+                
+                if (existingEntity != null)
+                {
+                    // 检查是否已经审核通过
+                    if (existingEntity.DataStatus == (int)DataStatus.确认 || 
+                        existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 ||
+                        (existingEntity.ApprovalResults.HasValue && existingEntity.ApprovalResults.Value))
+                    {
+                        rrs.ErrorMsg = "销售出库单已经审核通过，不能重复审核！";
+                        rrs.Succeeded = false;
+                        return rrs;
+                    }
+                }
+
                 if (entity == null)
                 {
                     return rrs;

@@ -2124,9 +2124,10 @@ namespace RUINORERP.Business
                                        .ToListAsync();
                         if (prePayment.Count > 0)
                         {
-
-                            if (receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalPrepaidAmount &&
-                                                       receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalBalanceAmount)
+                            // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
+                            // 并且预付款单余额应该大于0，才能进行抵扣
+                            if (prePayment[0].LocalBalanceAmount > 0 && 
+                                receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
                             {
                                 keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
                             }
@@ -2156,9 +2157,10 @@ namespace RUINORERP.Business
                                        .ToListAsync();
                         if (prePayment.Count > 0)
                         {
-
-                            if (receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalPrepaidAmount &&
-                                                       receivablePayable.TotalLocalPayableAmount == prePayment[0].LocalBalanceAmount)
+                            // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
+                            // 并且预付款单余额应该大于0，才能进行抵扣
+                            if (prePayment[0].LocalBalanceAmount > 0 && 
+                                receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
                             {
                                 keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
                             }

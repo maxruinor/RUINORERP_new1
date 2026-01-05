@@ -2043,7 +2043,6 @@ namespace RUINORERP.UI
         /// </summary>
         public void LogLock()
         {
-
             // 检查是否已经在注销过程中，防止重复执行
             if (IsLoggingOut || CurrentLoginStatus == LoginStatus.LoggingOut || CurrentLoginStatus == LoginStatus.LoggingIn)
             {
@@ -2056,7 +2055,8 @@ namespace RUINORERP.UI
             CurrentLoginStatus = LoginStatus.Locked;
             IsLocked = true; // 设置锁定状态标志
 
-            MainForm.Instance.Invoke(new Action(async () =>
+            // 使用异步方式处理登录，避免在UI线程中阻塞
+            MainForm.Instance.BeginInvoke(new Action(() =>
             {
                 try
                 {
@@ -2073,28 +2073,81 @@ namespace RUINORERP.UI
 
                     System.GC.Collect();
 
-                    // 尝试重新登录
-                    bool islogin = await Login();
-                    if (!islogin)
+                    // 使用Task.Run来启动异步登录操作，避免阻塞UI线程
+                    _ = Task.Run(async () =>
                     {
-                        // 登录失败时重置状态
-                        IsLoggingOut = false;
-                        CurrentLoginStatus = LoginStatus.None;
-                        return;
-                    }
+                        try
+                        {
+                            bool islogin = await Login();
+                            if (!islogin)
+                            {
+                                // 登录失败时重置状态
+                                if (this.InvokeRequired)
+                                {
+                                    this.Invoke(new Action(() =>
+                                    {
+                                        IsLoggingOut = false;
+                                        CurrentLoginStatus = LoginStatus.None;
+                                    }));
+                                }
+                                else
+                                {
+                                    IsLoggingOut = false;
+                                    CurrentLoginStatus = LoginStatus.None;
+                                }
+                                return;
+                            }
 
-                    // 登录成功后加载界面
-                    LoadUIMenus();
-                    LoadUIForIM_LogPages();
+                            // 登录成功后加载界面
+                            if (this.InvokeRequired)
+                            {
+                                this.Invoke(new Action(() =>
+                                {
+                                    LoadUIMenus();
+                                    LoadUIForIM_LogPages();
 
-                    // 登录成功后重置状态
-                    IsLoggingOut = false;
-                    CurrentLoginStatus = LoginStatus.LoggedIn;
-                    IsLocked = false; // 重置锁定状态
-                    // 更新锁定状态为正常
-                    UpdateLockStatus(false);
-                    // 重新启用UI组件
-                    ReenableUIComponents();
+                                    // 登录成功后重置状态
+                                    IsLoggingOut = false;
+                                    CurrentLoginStatus = LoginStatus.LoggedIn;
+                                    IsLocked = false; // 重置锁定状态
+                                    // 更新锁定状态为正常
+                                    UpdateLockStatus(false);
+                                    // 重新启用UI组件
+                                    ReenableUIComponents();
+                                }));
+                            }
+                            else
+                            {
+                                LoadUIMenus();
+                                LoadUIForIM_LogPages();
+
+                                // 登录成功后重置状态
+                                IsLoggingOut = false;
+                                CurrentLoginStatus = LoginStatus.LoggedIn;
+                                IsLocked = false; // 重置锁定状态
+                                // 更新锁定状态为正常
+                                UpdateLockStatus(false);
+                                // 重新启用UI组件
+                                ReenableUIComponents();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "注销过程中发生异常");
+                            // 异常情况下重置注销状态
+                            if (this.InvokeRequired)
+                            {
+                                this.Invoke(new Action(() =>
+                                {
+                                    IsLoggingOut = false;
+                                }));
+                            }
+                            else
+                            {
+                                IsLoggingOut = false;
+                            }
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {

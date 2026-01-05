@@ -400,7 +400,7 @@ namespace AutoUpdateUpdater
         }
 
         /// <summary>
-        /// 查找源文件（支持版本子目录）
+        /// 查找源文件（支持版本子目录，优先按创建时间选择最新的文件）
         /// </summary>
         /// <param name="sourceDir">源目录</param>
         /// <param name="exeName">可执行文件名</param>
@@ -420,14 +420,50 @@ namespace AutoUpdateUpdater
                 // 查找子目录中的文件（处理版本目录）
                 string[] subDirectories = Directory.GetDirectories(sourceDir);
                 
+                // 收集所有找到的版本文件路径及其信息
+                List<FileInfoWithTime> foundFiles = new List<FileInfoWithTime>();
+                
                 foreach (string subDir in subDirectories)
                 {
                     string versionPath = Path.Combine(subDir, exeName);
                     if (File.Exists(versionPath))
                     {
+                        var fileInfo = new FileInfo(versionPath);
+                        foundFiles.Add(new FileInfoWithTime
+                        {
+                            FilePath = versionPath,
+                            CreationTime = fileInfo.CreationTime,
+                            LastWriteTime = fileInfo.LastWriteTime,
+                            Version = ExtractVersionFromPath(versionPath)
+                        });
                         WriteLog("AutoUpdateUpdaterLog.txt", $"找到源文件（版本目录）: {versionPath}");
-                        return versionPath;
                     }
+                }
+                
+                // 如果找到多个版本文件，选择最新的
+                if (foundFiles.Count > 1)
+                {
+                    // 优先按最后修改时间排序，其次按创建时间，最后按版本号
+                    var sortedFiles = foundFiles
+                        .OrderByDescending(f => f.LastWriteTime)
+                        .ThenByDescending(f => f.CreationTime)
+                        .ThenByDescending(f => f.Version)
+                        .ToList();
+                    
+                    string latestPath = sortedFiles.First().FilePath;
+                    var latestFile = sortedFiles.First();
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"找到 {foundFiles.Count} 个版本文件，选择最新的: {latestPath}");
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"最新文件信息 - 最后修改时间: {latestFile.LastWriteTime}, 创建时间: {latestFile.CreationTime}, 版本号: {latestFile.Version}");
+                    
+                    return latestPath;
+                }
+                else if (foundFiles.Count == 1)
+                {
+                    // 只有一个版本文件，直接返回
+                    var fileInfo = foundFiles.First();
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"找到唯一版本文件: {fileInfo.FilePath}");
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"文件信息 - 最后修改时间: {fileInfo.LastWriteTime}, 创建时间: {fileInfo.CreationTime}, 版本号: {fileInfo.Version}");
+                    return fileInfo.FilePath;
                 }
                 
                 // 如果都找不到，返回原始路径
@@ -438,6 +474,93 @@ namespace AutoUpdateUpdater
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", $"查找源文件失败: {ex.Message}");
                 return Path.Combine(sourceDir, exeName);
+            }
+        }
+        
+        /// <summary>
+        /// 文件信息类，包含路径和时间信息
+        /// </summary>
+        private class FileInfoWithTime
+        {
+            public string FilePath { get; set; }
+            public DateTime CreationTime { get; set; }
+            public DateTime LastWriteTime { get; set; }
+            public string Version { get; set; }
+        }
+        
+        /// <summary>
+        /// 从路径中提取版本号
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>版本号字符串</returns>
+        private static string ExtractVersionFromPath(string filePath)
+        {
+            try
+            {
+                // 获取文件所在目录的名称，通常版本号在目录名中
+                string directoryName = Path.GetFileName(Path.GetDirectoryName(filePath));
+                
+                if (string.IsNullOrEmpty(directoryName))
+                {
+                    return "0";
+                }
+                
+                // 尝试从目录名中提取版本号
+                // 版本号格式通常为：1.0.0.0 或 1.0.0.0_20240101
+                string versionPattern = @"\d+(\.\d+)*";
+                var match = System.Text.RegularExpressions.Regex.Match(directoryName, versionPattern);
+                
+                if (match.Success)
+                {
+                    return match.Value;
+                }
+                
+                // 如果没有匹配到标准版本号格式，返回目录名本身
+                return directoryName;
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"提取版本号失败: {ex.Message}");
+                return "0";
+            }
+        }
+        
+        /// <summary>
+        /// 比较两个版本号的大小
+        /// </summary>
+        /// <param name="version1">版本号1</param>
+        /// <param name="version2">版本号2</param>
+        /// <returns>比较结果（-1：version1 < version2，0：相等，1：version1 > version2）</returns>
+        private static int CompareVersions(string version1, string version2)
+        {
+            try
+            {
+                // 将版本号拆分为数字数组
+                var v1Parts = version1.Split('.').Select(p => int.Parse(p)).ToArray();
+                var v2Parts = version2.Split('.').Select(p => int.Parse(p)).ToArray();
+                
+                // 比较每个部分
+                int maxLength = Math.Max(v1Parts.Length, v2Parts.Length);
+                
+                for (int i = 0; i < maxLength; i++)
+                {
+                    int v1Part = i < v1Parts.Length ? v1Parts[i] : 0;
+                    int v2Part = i < v2Parts.Length ? v2Parts[i] : 0;
+                    
+                    if (v1Part != v2Part)
+                    {
+                        return v1Part.CompareTo(v2Part);
+                    }
+                }
+                
+                return 0; // 版本号相等
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"比较版本号失败: {ex.Message}");
+                
+                // 如果无法解析版本号，使用字符串比较
+                return string.Compare(version1, version2, StringComparison.Ordinal);
             }
         }
 

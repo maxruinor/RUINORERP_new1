@@ -769,7 +769,7 @@ namespace RUINORERP.UI.FM
                 }
                 var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                // 2. 查找可抵扣的预收付款单
+                // 2. 查找可抵扣的预收付款单1
                 var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList);
                 if (availableAdvances.Any())
                 {

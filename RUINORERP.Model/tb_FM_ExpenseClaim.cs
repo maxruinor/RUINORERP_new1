@@ -110,14 +110,14 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _ProjectGroup_ID;
+        private long _ProjectGroup_ID;
         /// <summary>
         /// 项目组
         /// </summary>
         [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = false, ColumnDescription = "项目组")]
         [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
-        public long? ProjectGroup_ID
+        public long ProjectGroup_ID
         {
             get { return _ProjectGroup_ID; }
             set

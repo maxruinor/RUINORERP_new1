@@ -2415,9 +2415,7 @@ namespace RUINORERP.Business
                 if (entity.tb_FM_ExpenseClaimDetails == null || !entity.tb_FM_ExpenseClaimDetails.Any())
                     throw new ArgumentException("报销单明细不能为空", nameof(entity));
 
-                if (!entity.ProjectGroup_ID.HasValue)
-                    throw new ArgumentException("报销单必须关联项目组", nameof(entity));
-
+            
                 // 验证项目组有效性
                 if (entity.tb_projectgroup == null)
                 {
@@ -2438,8 +2436,8 @@ namespace RUINORERP.Business
 
                 // 按部门ID分组，过滤掉没有部门ID的明细
                 var departmentGroups = entity.tb_FM_ExpenseClaimDetails
-                    .Where(detail => detail.DepartmentID.HasValue)
-                    .GroupBy(detail => detail.DepartmentID.Value);
+                    .Where(detail => detail.DepartmentID>0)
+                    .GroupBy(detail => detail.DepartmentID);
 
                 if (!departmentGroups.Any())
                     throw new ArgumentException("报销单明细中必须包含有效的部门信息", nameof(entity));

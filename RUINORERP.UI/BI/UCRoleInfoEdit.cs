@@ -1,25 +1,26 @@
-﻿using System;
+﻿using Krypton.Toolkit;
+using Netron.GraphLib;
+using RUINORERP.Business;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Common;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.UCToolBar;
+using RUINORERP.UI.UserCenter.DataParts;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.UCToolBar;
-using RUINORERP.Model;
-using Krypton.Toolkit;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Business;
-using RUINORERP.UI.Common;
-using RUINORERP.UI.UserCenter.DataParts;
-using RUINORERP.Common.Extensions;
-using System.Collections;
+using Winista.Text.HtmlParser.Lex;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using Netron.GraphLib;
 
 namespace RUINORERP.UI.BI
 {
@@ -50,6 +51,15 @@ namespace RUINORERP.UI.BI
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_RoleInfoValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+            //为了性能通用查询中没有添加自动导航了
+            if (roleinfo.tb_rolepropertyconfig == null && roleinfo.RolePropertyID.HasValue)
+            {
+                var tb_rolepropertyconfig = MainForm.Instance.AppContext.Db.Queryable<tb_RolePropertyConfig>().Where(c => c.RolePropertyID == roleinfo.RolePropertyID.Value)
+            .Single();
+                roleinfo.tb_rolepropertyconfig = tb_rolepropertyconfig;
+            }
+
+
             //处理角色属性
             if (roleinfo.tb_rolepropertyconfig != null)
             {
@@ -170,7 +180,10 @@ namespace RUINORERP.UI.BI
 
         }
 
-
+        private void btnDeleteRolePropertyConfig_Click(object sender, EventArgs e)
+        {
+            
+        }
     }
 }
 

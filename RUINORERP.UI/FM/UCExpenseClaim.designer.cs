@@ -64,6 +64,8 @@
             this.lblstatus = new Krypton.Toolkit.KryptonLabel();
             this.txtUntaxedAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedAmount = new Krypton.Toolkit.KryptonLabel();
+            this.lblStore_ID = new Krypton.Toolkit.KryptonLabel();
+            this.cmbProjectGroup = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -84,6 +86,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).BeginInit();
             this.kryptonSplitContainer2.Panel2.SuspendLayout();
             this.kryptonSplitContainer2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonSplitContainer1
@@ -107,6 +110,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblStore_ID);
+            this.kryptonPanel1.Controls.Add(this.cmbProjectGroup);
             this.kryptonPanel1.Controls.Add(this.lblPrintStatus);
             this.kryptonPanel1.Controls.Add(this.lbl盘点单);
             this.kryptonPanel1.Controls.Add(this.btnInfo);
@@ -259,10 +264,13 @@
             // 
             this.magicPictureBox1.AllowDrop = true;
             this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.magicPictureBox1.ImagePaths = "";
+            this.magicPictureBox1.InfoPanelDisplayTime = 3000;
             this.magicPictureBox1.Location = new System.Drawing.Point(927, 145);
-            this.magicPictureBox1.MultiImageSupport = true; // 启用多图片支持
+            this.magicPictureBox1.MultiImageSupport = true;
             this.magicPictureBox1.Name = "magicPictureBox1";
             this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
+            this.magicPictureBox1.ShowImageInfo = true;
             this.magicPictureBox1.Size = new System.Drawing.Size(178, 95);
             this.magicPictureBox1.TabIndex = 162;
             this.magicPictureBox1.TabStop = false;
@@ -276,7 +284,7 @@
             // 
             // lblApprovalResults
             // 
-            this.lblApprovalResults.Location = new System.Drawing.Point(592, 62);
+            this.lblApprovalResults.Location = new System.Drawing.Point(542, 62);
             this.lblApprovalResults.Name = "lblApprovalResults";
             this.lblApprovalResults.Size = new System.Drawing.Size(62, 20);
             this.lblApprovalResults.TabIndex = 159;
@@ -292,7 +300,7 @@
             // 
             // chkApprovalResults
             // 
-            this.chkApprovalResults.Location = new System.Drawing.Point(660, 62);
+            this.chkApprovalResults.Location = new System.Drawing.Point(610, 62);
             this.chkApprovalResults.Name = "chkApprovalResults";
             this.chkApprovalResults.Size = new System.Drawing.Size(19, 13);
             this.chkApprovalResults.TabIndex = 160;
@@ -432,6 +440,23 @@
             this.lblUntaxedAmount.TabIndex = 153;
             this.lblUntaxedAmount.Values.Text = "未税本位币";
             // 
+            // lblStore_ID
+            // 
+            this.lblStore_ID.Location = new System.Drawing.Point(542, 88);
+            this.lblStore_ID.Name = "lblStore_ID";
+            this.lblStore_ID.Size = new System.Drawing.Size(62, 20);
+            this.lblStore_ID.TabIndex = 170;
+            this.lblStore_ID.Values.Text = "项目小组";
+            // 
+            // cmbProjectGroup
+            // 
+            this.cmbProjectGroup.DropDownWidth = 100;
+            this.cmbProjectGroup.IntegralHeight = false;
+            this.cmbProjectGroup.Location = new System.Drawing.Point(608, 88);
+            this.cmbProjectGroup.Name = "cmbProjectGroup";
+            this.cmbProjectGroup.Size = new System.Drawing.Size(186, 21);
+            this.cmbProjectGroup.TabIndex = 169;
+            // 
             // UCExpenseClaim
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -463,6 +488,7 @@
             this.kryptonSplitContainer2.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).EndInit();
             this.kryptonSplitContainer2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.cmbProjectGroup)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -504,5 +530,7 @@
         private Krypton.Toolkit.KryptonComboBox cmbPayeeInfoID;
         private Krypton.Toolkit.KryptonButton btnInfo;
         internal Krypton.Toolkit.KryptonPanel kryptonPanel1;
+        private Krypton.Toolkit.KryptonLabel lblStore_ID;
+        private Krypton.Toolkit.KryptonComboBox cmbProjectGroup;
     }
 }

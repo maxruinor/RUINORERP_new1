@@ -1044,6 +1044,19 @@ namespace RUINORERP.UI.SysConfig
             //循环去钩选
             UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
 
+            // 默认展开两级节点（根节点和第一级模块节点）
+            if (TreeView1.Nodes.Count > 0)
+            {
+                // 展开根节点
+                TreeView1.Nodes[0].Expand();
+                
+                // 展开所有第一级模块节点
+                foreach (TreeNode moduleNode in TreeView1.Nodes[0].Nodes)
+                {
+                    moduleNode.Expand();
+                }
+            }
+
 
 
         }

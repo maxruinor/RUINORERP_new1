@@ -4063,7 +4063,7 @@ namespace RUINORERP.UI.BaseForm
                 var options = new RUINORERP.Business.Document.ActionOptions
                 {
                     UseTransaction = true,
-                    SaveTarget = true
+                    SaveTarget = false
                 };
 
                 // 执行联动操作

@@ -16,6 +16,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Krypton.Toolkit;
 
 namespace RUINORERP.UI.IM
 {
@@ -51,9 +52,12 @@ namespace RUINORERP.UI.IM
 
         private void InitializeControl()
         {
-            // 设置控件样式
+            // 设置控件样式 - 企业级现代化设计
             this.BackColor = Color.White;
             this.Dock = DockStyle.Fill;
+            
+            // 设置Krypton控件样式
+            SetKryptonStyles();
 
             // 初始化通知定时器
             _notificationTimer = new Timer { Interval = 3000 }; // 3秒
@@ -103,27 +107,75 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 添加消息到列表
+        /// 添加消息到列表 - 企业级现代化显示
         /// </summary>
         /// <param name="message">消息对象</param>
         private void AddMessageToList(MessageData message)
         {
-            var item = new ListViewItem(message.Content);
+            var item = new ListViewItem(message.Content)
+            {
+                UseItemStyleForSubItems = false
+            };
+            
+            // 设置主要列
             item.SubItems.Add(message.Title ?? "无标题");
-            // 使用SendTime作为消息时间
-            item.SubItems.Add(message.SendTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            
+            // 格式化时间显示
+            var sendTime = message.SendTime;
+            string timeText;
+            if (sendTime.Date == DateTime.Today)
+                timeText = sendTime.ToString("HH:mm:ss");
+            else if (sendTime.Date == DateTime.Today.AddDays(-1))
+                timeText = "昨天 " + sendTime.ToString("HH:mm");
+            else
+                timeText = sendTime.ToString("MM-dd HH:mm");
+                
+            item.SubItems.Add(timeText);
             item.SubItems.Add(message.IsRead ? "已读" : "未读");
-            item.SubItems.Add(message.MessageType.ToString());
+            item.SubItems.Add(GetMessageTypeDisplayName(message.MessageType));
 
-            // 设置未读消息的样式
+            // 设置企业级现代化样式
             if (!message.IsRead)
             {
-                item.ForeColor = Color.Red;
-                item.Font = new Font(item.Font, FontStyle.Bold);
+                // 未读消息 - 蓝色强调
+                item.ForeColor = Color.FromArgb(0, 120, 215);
+                item.Font = new Font("微软雅黑", 9, FontStyle.Bold);
+                
+                // 设置背景色
+                item.BackColor = Color.FromArgb(240, 248, 255);
+            }
+            else
+            {
+                // 已读消息 - 灰色
+                item.ForeColor = Color.FromArgb(64, 64, 64);
+                item.Font = new Font("微软雅黑", 9);
+                item.BackColor = Color.White;
+            }
+
+            // 设置子项样式
+            for (int i = 1; i < item.SubItems.Count; i++)
+            {
+                item.SubItems[i].ForeColor = item.ForeColor;
+                item.SubItems[i].Font = item.Font;
+                item.SubItems[i].BackColor = item.BackColor;
             }
 
             item.Tag = message.MessageId; // 存储消息ID
             lstMessages.Items.Add(item);
+        }
+
+        /// <summary>
+        /// 获取消息类型的显示名称
+        /// </summary>
+        private string GetMessageTypeDisplayName(MessageType messageType)
+        {
+            return messageType switch
+            {
+                MessageType.System => "系统通知",
+                MessageType.Business => "业务提醒",
+                MessageType.Popup => "信息提示",
+                _ => messageType.ToString()
+            };
         }
 
         /// <summary>
@@ -996,6 +1048,43 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
+        /// 设置Krypton控件样式 - 企业级现代化设计
+        /// </summary>
+        private void SetKryptonStyles()
+        {
+            try
+            {
+                // 设置头部面板样式 - 使用更简单的属性设置方式
+                panelHeader.BackColor = Color.FromArgb(240, 240, 240);
+                
+                // 设置标签样式 - 使用更小的字体避免重叠
+                lblUnreadCount.ForeColor = Color.FromArgb(64, 64, 64);
+                lblUnreadCount.Font = new Font("微软雅黑", 9, FontStyle.Regular);
+                
+                // 设置按钮样式
+                var buttons = new[] { btnMarkAllRead, btnRefresh, btnSettings };
+                foreach (var button in buttons)
+                {
+                    button.BackColor = Color.FromArgb(64, 158, 255);
+                    button.ForeColor = Color.White;
+                    button.Font = new Font("微软雅黑", 9, FontStyle.Bold);
+                }
+                
+                // 设置消息列表样式
+                lstMessages.BackColor = Color.White;
+                lstMessages.View = View.Details; // 确保使用详细信息视图
+                lstMessages.FullRowSelect = true; // 启用整行选择
+                
+                // 设置上下文菜单样式 - 确保右键菜单正常工作
+                contextMenuStripMessages.BackColor = Color.White;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"设置Krypton样式失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 设置按钮点击事件 - 打开消息提醒设置窗体
         /// </summary>
         private void btnSettings_Click(object sender, EventArgs e)
@@ -1004,18 +1093,22 @@ namespace RUINORERP.UI.IM
             {
                 // 创建并显示消息提醒设置窗体
                 var settingsForm = new frmIMSetting();
-                var result = settingsForm.ShowDialog();
+                settingsForm.StartPosition = FormStartPosition.CenterParent;
+                var result = settingsForm.ShowDialog(this);
                 
                 if (result == DialogResult.OK)
                 {
-                    // 设置保存成功，可以在这里添加一些更新逻辑
-                    // 例如：重新加载配置、刷新消息显示等
-                    System.Diagnostics.Debug.WriteLine("消息提醒设置已更新");
+                    // 设置保存成功，显示提示信息
+                    MainForm.Instance.ShowStatusText("消息提醒设置已更新");
+                    
+                    // 重新加载配置以应用新设置
+                    LoadMessages();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"打开设置窗体失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"打开设置窗体失败: {ex.Message}", "错误", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
                 System.Diagnostics.Debug.WriteLine($"打开设置窗体失败: {ex.ToString()}");
             }
         }

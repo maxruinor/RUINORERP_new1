@@ -1,4 +1,6 @@
+using Krypton.Toolkit;
 using System;
+using System.Windows.Forms;
 
 namespace RUINORERP.UI.IM
 {
@@ -30,12 +32,12 @@ namespace RUINORERP.UI.IM
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.lstMessages = new System.Windows.Forms.ListView();
-            this.colContent = new System.Windows.Forms.ColumnHeader();
-            this.colTitle = new System.Windows.Forms.ColumnHeader();
-            this.colTime = new System.Windows.Forms.ColumnHeader();
-            this.colStatus = new System.Windows.Forms.ColumnHeader();
-            this.colType = new System.Windows.Forms.ColumnHeader();
+            this.lstMessages = new Krypton.Toolkit.KryptonListView();
+            this.colContent = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStripMessages = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuRefreshMessages = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -45,16 +47,18 @@ namespace RUINORERP.UI.IM
             this.menuClear60Days = new System.Windows.Forms.ToolStripMenuItem();
             this.menuClear180Days = new System.Windows.Forms.ToolStripMenuItem();
             this.menuClearAll = new System.Windows.Forms.ToolStripMenuItem();
-            this.panelHeader = new System.Windows.Forms.Panel();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.btnMarkAllRead = new System.Windows.Forms.Button();
-            this.btnSettings = new System.Windows.Forms.Button();
-            this.lblUnreadCount = new System.Windows.Forms.Label();
+            this.panelHeader = new Krypton.Toolkit.KryptonPanel();
+            this.btnSettings = new Krypton.Toolkit.KryptonButton();
+            this.btnRefresh = new Krypton.Toolkit.KryptonButton();
+            this.btnMarkAllRead = new Krypton.Toolkit.KryptonButton();
+            this.lblUnreadCount = new Krypton.Toolkit.KryptonLabel();
             this.contextMenuStripMessages.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.panelHeader)).BeginInit();
             this.panelHeader.SuspendLayout();
             this.SuspendLayout();
-            
+            // 
             // lstMessages
+            // 
             this.lstMessages.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colContent,
             this.colTitle,
@@ -64,40 +68,51 @@ namespace RUINORERP.UI.IM
             this.lstMessages.ContextMenuStrip = this.contextMenuStripMessages;
             this.lstMessages.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lstMessages.FullRowSelect = true;
+            this.lstMessages.GridLines = true;
+            this.lstMessages.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.lstMessages.HideSelection = false;
-            this.lstMessages.MultiSelect = true;
-            this.lstMessages.Location = new System.Drawing.Point(0, 40);
+            this.lstMessages.ItemStyle = Krypton.Toolkit.ButtonStyle.ListItem;
+            this.lstMessages.Location = new System.Drawing.Point(0, 60);
             this.lstMessages.Name = "lstMessages";
-            this.lstMessages.Size = new System.Drawing.Size(800, 410);
+            this.lstMessages.OwnerDraw = true;
+            this.lstMessages.Size = new System.Drawing.Size(800, 390);
+            this.lstMessages.StateCommon.Border.Draw = Krypton.Toolkit.InheritBool.False;
+            this.lstMessages.StateCommon.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
+            | Krypton.Toolkit.PaletteDrawBorders.Left) 
+            | Krypton.Toolkit.PaletteDrawBorders.Right)));
             this.lstMessages.TabIndex = 0;
             this.lstMessages.UseCompatibleStateImageBehavior = false;
-            this.lstMessages.View = System.Windows.Forms.View.Details;
             this.lstMessages.ItemActivate += new System.EventHandler(this.lstMessages_ItemClick);
-            this.lstMessages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDown);
             this.lstMessages.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDoubleClick);
-            
+            this.lstMessages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDown);
+            // 
             // colContent
-            this.colContent.Text = "内容";
-            this.colContent.Width = 300;
-            
+            // 
+            this.colContent.Text = "消息内容";
+            this.colContent.Width = 350;
+            // 
             // colTitle
+            // 
             this.colTitle.Text = "标题";
             this.colTitle.Width = 150;
-            
+            // 
             // colTime
-            this.colTime.Text = "时间";
-            this.colTime.Width = 120;
-            
+            // 
+            this.colTime.Text = "发送时间";
+            this.colTime.Width = 150;
+            // 
             // colStatus
+            // 
             this.colStatus.Text = "状态";
-            this.colStatus.Width = 60;
-            
+            this.colStatus.Width = 80;
+            // 
             // colType
-            this.colType.Text = "类型";
-            this.colType.Width = 80;
-            
+            // 
+            this.colType.Text = "消息类型";
+            this.colType.Width = 100;
+            // 
             // contextMenuStripMessages
-            this.contextMenuStripMessages.AutoSize = true;
+            // 
             this.contextMenuStripMessages.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.menuRefreshMessages,
             this.toolStripSeparator1,
@@ -108,54 +123,63 @@ namespace RUINORERP.UI.IM
             this.menuClear180Days,
             this.menuClearAll});
             this.contextMenuStripMessages.Name = "contextMenuStripMessages";
-            this.contextMenuStripMessages.Size = new System.Drawing.Size(120, 148);
+            this.contextMenuStripMessages.Size = new System.Drawing.Size(170, 148);
             this.contextMenuStripMessages.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStripMessages_Opening);
-            
+            // 
             // menuRefreshMessages
+            // 
             this.menuRefreshMessages.Name = "menuRefreshMessages";
-            this.menuRefreshMessages.Size = new System.Drawing.Size(115, 22);
+            this.menuRefreshMessages.Size = new System.Drawing.Size(169, 22);
             this.menuRefreshMessages.Text = "刷新消息";
             this.menuRefreshMessages.Click += new System.EventHandler(this.menuRefreshMessages_Click);
-            
+            // 
             // toolStripSeparator1
+            // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(147, 6);
-            
+            this.toolStripSeparator1.Size = new System.Drawing.Size(166, 6);
+            // 
             // menuDeleteSelected
+            // 
             this.menuDeleteSelected.Name = "menuDeleteSelected";
-            this.menuDeleteSelected.Size = new System.Drawing.Size(115, 22);
+            this.menuDeleteSelected.Size = new System.Drawing.Size(169, 22);
             this.menuDeleteSelected.Text = "删除选中消息";
             this.menuDeleteSelected.Click += new System.EventHandler(this.menuDeleteSelected_Click);
-            
+            // 
             // toolStripSeparator2
+            // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(147, 6);
-            
+            this.toolStripSeparator2.Size = new System.Drawing.Size(166, 6);
+            // 
             // menuClear30Days
+            // 
             this.menuClear30Days.Name = "menuClear30Days";
-            this.menuClear30Days.Size = new System.Drawing.Size(115, 22);
+            this.menuClear30Days.Size = new System.Drawing.Size(169, 22);
             this.menuClear30Days.Text = "清除30天前消息";
             this.menuClear30Days.Click += new System.EventHandler(this.menuClear30Days_Click);
-            
+            // 
             // menuClear60Days
+            // 
             this.menuClear60Days.Name = "menuClear60Days";
-            this.menuClear60Days.Size = new System.Drawing.Size(115, 22);
+            this.menuClear60Days.Size = new System.Drawing.Size(169, 22);
             this.menuClear60Days.Text = "清除60天前消息";
             this.menuClear60Days.Click += new System.EventHandler(this.menuClear60Days_Click);
-            
+            // 
             // menuClear180Days
+            // 
             this.menuClear180Days.Name = "menuClear180Days";
-            this.menuClear180Days.Size = new System.Drawing.Size(115, 22);
+            this.menuClear180Days.Size = new System.Drawing.Size(169, 22);
             this.menuClear180Days.Text = "清除180天前消息";
             this.menuClear180Days.Click += new System.EventHandler(this.menuClear180Days_Click);
-            
+            // 
             // menuClearAll
+            // 
             this.menuClearAll.Name = "menuClearAll";
-            this.menuClearAll.Size = new System.Drawing.Size(115, 22);
+            this.menuClearAll.Size = new System.Drawing.Size(169, 22);
             this.menuClearAll.Text = "清除所有消息";
             this.menuClearAll.Click += new System.EventHandler(this.menuClearAll_Click);
-            
+            // 
             // panelHeader
+            // 
             this.panelHeader.Controls.Add(this.btnSettings);
             this.panelHeader.Controls.Add(this.btnRefresh);
             this.panelHeader.Controls.Add(this.btnMarkAllRead);
@@ -163,45 +187,58 @@ namespace RUINORERP.UI.IM
             this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
             this.panelHeader.Name = "panelHeader";
-            this.panelHeader.Size = new System.Drawing.Size(800, 40);
+            this.panelHeader.PanelBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelAlternate;
+            this.panelHeader.Size = new System.Drawing.Size(800, 60);
             this.panelHeader.TabIndex = 1;
-            
-            // btnRefresh
-            this.btnRefresh.Location = new System.Drawing.Point(220, 10);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(75, 23);
-            this.btnRefresh.TabIndex = 2;
-            this.btnRefresh.Text = "刷新";
-            this.btnRefresh.UseVisualStyleBackColor = true;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            
+            // 
             // btnSettings
-            this.btnSettings.Location = new System.Drawing.Point(310, 10);
+            // 
+            this.btnSettings.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
+            this.btnSettings.Location = new System.Drawing.Point(340, 20);
             this.btnSettings.Name = "btnSettings";
-            this.btnSettings.Size = new System.Drawing.Size(75, 23);
+            this.btnSettings.Size = new System.Drawing.Size(90, 30);
             this.btnSettings.TabIndex = 3;
-            this.btnSettings.Text = "设置";
-            this.btnSettings.UseVisualStyleBackColor = true;
+            this.btnSettings.Values.ExtraText = "消息提醒设置";
+            this.btnSettings.Values.Text = "设置";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
-            
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
+            this.btnRefresh.Location = new System.Drawing.Point(240, 20);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(90, 30);
+            this.btnRefresh.TabIndex = 2;
+            this.btnRefresh.Values.ExtraText = "刷新消息列表";
+            this.btnRefresh.Values.Text = "刷新";
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
             // btnMarkAllRead
-            this.btnMarkAllRead.Location = new System.Drawing.Point(120, 10);
+            // 
+            this.btnMarkAllRead.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
+            this.btnMarkAllRead.Location = new System.Drawing.Point(140, 20);
             this.btnMarkAllRead.Name = "btnMarkAllRead";
-            this.btnMarkAllRead.Size = new System.Drawing.Size(90, 23);
+            this.btnMarkAllRead.Size = new System.Drawing.Size(90, 30);
             this.btnMarkAllRead.TabIndex = 1;
-            this.btnMarkAllRead.Text = "全部标记已读";
-            this.btnMarkAllRead.UseVisualStyleBackColor = true;
+            this.btnMarkAllRead.Values.ExtraText = "标记所有消息为已读";
+            this.btnMarkAllRead.Values.Text = "标记已读";
             this.btnMarkAllRead.Click += new System.EventHandler(this.btnbtnMarkAllRead_Click);
-            
+            // 
             // lblUnreadCount
-            this.lblUnreadCount.AutoSize = true;
-            this.lblUnreadCount.Location = new System.Drawing.Point(10, 15);
+            // 
+            this.lblUnreadCount.AutoSize = false;
+            this.lblUnreadCount.LabelStyle = Krypton.Toolkit.LabelStyle.NormalControl;
+            this.lblUnreadCount.Location = new System.Drawing.Point(15, 20);
             this.lblUnreadCount.Name = "lblUnreadCount";
-            this.lblUnreadCount.Size = new System.Drawing.Size(65, 12);
+            this.lblUnreadCount.Size = new System.Drawing.Size(120, 25);
+            this.lblUnreadCount.StateCommon.ShortText.TextH = Krypton.Toolkit.PaletteRelativeAlign.Near;
+            this.lblUnreadCount.StateCommon.ShortText.TextV = Krypton.Toolkit.PaletteRelativeAlign.Center;
+            this.lblUnreadCount.StateCommon.ShortText.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular);
             this.lblUnreadCount.TabIndex = 0;
-            this.lblUnreadCount.Text = "未读消息: 0";
-            
+            this.lblUnreadCount.Values.Text = "未读消息: 0";
+            // 
             // MessageListControl
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.lstMessages);
@@ -209,21 +246,22 @@ namespace RUINORERP.UI.IM
             this.Name = "MessageListControl";
             this.Size = new System.Drawing.Size(800, 450);
             this.contextMenuStripMessages.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.panelHeader)).EndInit();
             this.panelHeader.ResumeLayout(false);
-            this.panelHeader.PerformLayout();
             this.ResumeLayout(false);
+
         }
 
 
         #endregion
 
-        private System.Windows.Forms.ListView lstMessages;
+        private Krypton.Toolkit.KryptonListView lstMessages;
         private System.Windows.Forms.ColumnHeader colContent;
         private System.Windows.Forms.ColumnHeader colTitle;
         private System.Windows.Forms.ColumnHeader colTime;
         private System.Windows.Forms.ColumnHeader colStatus;
         private System.Windows.Forms.ColumnHeader colType;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStripMessages;
+        private ContextMenuStrip contextMenuStripMessages;
         private System.Windows.Forms.ToolStripMenuItem menuRefreshMessages;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem menuDeleteSelected;
@@ -232,10 +270,10 @@ namespace RUINORERP.UI.IM
         private System.Windows.Forms.ToolStripMenuItem menuClear60Days;
         private System.Windows.Forms.ToolStripMenuItem menuClear180Days;
         private System.Windows.Forms.ToolStripMenuItem menuClearAll;
-        private System.Windows.Forms.Panel panelHeader;
-        private System.Windows.Forms.Label lblUnreadCount;
-        private System.Windows.Forms.Button btnMarkAllRead;
-        private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.Button btnSettings;
+        private Krypton.Toolkit.KryptonPanel panelHeader;
+        private Krypton.Toolkit.KryptonLabel lblUnreadCount;
+        private Krypton.Toolkit.KryptonButton btnMarkAllRead;
+        private Krypton.Toolkit.KryptonButton btnRefresh;
+        private Krypton.Toolkit.KryptonButton btnSettings;
     }
 }

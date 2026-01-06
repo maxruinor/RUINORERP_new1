@@ -4269,6 +4269,9 @@
     <EmbeddedResource Include="IM\InstructionsPrompt.resx">
       <DependentUpon>InstructionsPrompt.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="IM\MessageListControl.resx">
+      <DependentUpon>MessageListControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="IM\MessagePrompt.resx">
       <DependentUpon>MessagePrompt.cs</DependentUpon>
     </EmbeddedResource>

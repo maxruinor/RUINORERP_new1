@@ -138,12 +138,13 @@ namespace RUINORERP.Business
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
+                    //我们在财务模块做一个配置，是否需要生成付款单，还是报销单审核后直接将款项支付出去，财务会手工统计费用报销付款金额作为企业的支出。
                     //简化流程，不算债权关系，
                     //更新财务模块 
                     var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                     tb_FM_PaymentRecord paymentRecord =await paymentController.BuildPaymentRecord(entity);
                     await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                    //等待审核
+                    //等待财务审核
                 }
 
                 _unitOfWorkManage.CommitTran();

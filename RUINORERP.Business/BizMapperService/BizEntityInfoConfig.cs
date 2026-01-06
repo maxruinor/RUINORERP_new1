@@ -124,8 +124,8 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 费用
                 SafeRegister<tb_FM_ExpenseClaim>(BizType.费用报销单, e => e.ClaimMainID, e => e.ClaimNo, e => e.tb_FM_ExpenseClaimDetails);
-              
-               
+
+
                 // 请购
                 SafeRegister<tb_BuyingRequisition>(BizType.请购单, e => e.PuRequisition_ID, e => e.PuRequisitionNo, e => e.tb_BuyingRequisitionDetails);
 
@@ -144,8 +144,8 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_MRP_ReworkEntry>(BizType.返工入库单, e => e.ReworkEntryID, e => e.ReworkEntryNo, e => e.tb_MRP_ReworkEntryDetails);
 
                 // 付款申请（无明细）
-                SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo);
-                SafeRegister<tb_FM_Statement>(BizType.对账单, e => e.StatementId, e => e.StatementNo);
+                SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo,e=>e.tb_fm_payeeinfo );
+                SafeRegister<tb_FM_Statement>(BizType.对账单, e => e.StatementId, e => e.StatementNo, e => e.tb_FM_StatementDetails);
 
                 // 售后
                 SafeRegister<tb_AS_AfterSaleApply>(BizType.售后申请单, e => e.ASApplyID, e => e.ASApplyNo, e => e.tb_AS_AfterSaleApplyDetails);
@@ -153,11 +153,11 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_AS_RepairOrder>(BizType.维修工单, e => e.RepairOrderID, e => e.RepairOrderNo, e => e.tb_AS_RepairOrderDetails);
                 SafeRegister<tb_AS_RepairMaterialPickup>(BizType.维修领料单, e => e.RMRID, e => e.MaterialPickupNO, e => e.tb_AS_RepairMaterialPickupDetails);
                 SafeRegister<tb_AS_RepairInStock>(BizType.维修入库单, e => e.RepairInStockID, e => e.RepairInStockNo, e => e.tb_AS_RepairInStockDetails);
-                
+
                 // CRM相关
                 SafeRegister<tb_CRM_FollowUpPlans>(BizType.CRM跟进计划, e => e.PlanID, e => e.PlanSubject);
                 SafeRegister<tb_CRM_FollowUpRecords>(BizType.CRM跟进记录, e => e.RecordID, e => e.FollowUpSubject);
-                
+
                 // 包装信息
                 SafeRegister<tb_Packing>(BizType.包装信息, e => e.Pack_ID, e => e.PackagingName);
 

@@ -214,7 +214,7 @@ namespace RUINORERP.UI.FM
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
             string Flag = string.Empty;
-            //对账单的
+            //对账单的1
             if (ReturnObject.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
                 Flag = typeof(RUINORERP.UI.FM.UCFMReceivedRecord).FullName;

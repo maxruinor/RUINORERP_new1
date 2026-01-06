@@ -43,10 +43,11 @@ namespace RUINORERP.Business.Document
 
         /// <summary>
         /// 执行单据转换
+        /// 虚方法，允许子类重写以实现自定义转换逻辑
         /// </summary>
         /// <param name="source">源单据对象</param>
         /// <returns>转换后的目标单据对象</returns>
-        public async Task<TTarget> ConvertAsync(TSource source)
+        public virtual async Task<TTarget> ConvertAsync(TSource source)
         {
             // 验证转换条件
             var validationResult = await ValidateConversionAsync(source);

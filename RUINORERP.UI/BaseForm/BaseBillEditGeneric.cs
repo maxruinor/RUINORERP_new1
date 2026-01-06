@@ -4103,7 +4103,7 @@ namespace RUINORERP.UI.BaseForm
                             MainForm.Instance.uclog.AddLog($"单据转换完成：{sourceDisplayName} -> {targetDisplayName}，提示：{message}", Global.UILogType.普通消息);
 
                             // 显示提示信息对话框
-                            MessageBox.Show(message, "转换提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MainForm.Instance.ShowStatusText(message);
                         }
                         else
                         {
@@ -6173,7 +6173,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
         #endregion
     }
 

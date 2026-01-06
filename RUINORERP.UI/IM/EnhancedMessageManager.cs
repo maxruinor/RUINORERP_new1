@@ -25,9 +25,10 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.Business.BizMapperService;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Message;
 // 移除Microsoft.Extensions.Logging引用，使用应用程序中定义的ILogger
 
 namespace RUINORERP.UI.IM

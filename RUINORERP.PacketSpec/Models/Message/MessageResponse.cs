@@ -1,12 +1,12 @@
 ﻿using Newtonsoft.Json;
-using RUINORERP.Model.TransModel;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
 using System.Data;
 
-namespace RUINORERP.PacketSpec.Models.Messaging
+namespace RUINORERP.PacketSpec.Models.Message
 {
     /// <summary>
     /// 消息响应

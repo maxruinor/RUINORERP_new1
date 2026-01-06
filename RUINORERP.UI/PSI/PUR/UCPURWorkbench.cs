@@ -124,6 +124,9 @@ namespace RUINORERP.UI.PUR
             {
                 if (!this.DesignMode)
                 {
+                             // 初始化frm变量以避免空引用异常
+                    frm = new frmFormProperty();
+
                     foreach (var item in BaseToolStrip.Items)
                     {
                         if (item is ToolStripButton)
@@ -164,6 +167,8 @@ namespace RUINORERP.UI.PUR
                         }
                     }
 
+           
+                    
                     Krypton.Toolkit.KryptonButton button设置查询条件 = new Krypton.Toolkit.KryptonButton();
                     button设置查询条件.Text = "设置查询条件";
                     button设置查询条件.ToolTipValues.Description = "对查询条件进行个性化设置。";
@@ -591,7 +596,7 @@ namespace RUINORERP.UI.PUR
             }
             else
             {
-                frm = new frmFormProperty();
+               
                 newContextMenuStrip = new();
                 tsmenuItemAddAnnotations = new ToolStripMenuItem("添加批注");
                 tsmenuItemAddAnnotations.Click += new System.EventHandler(this.tsmenuItemAddAnnotations_Click);

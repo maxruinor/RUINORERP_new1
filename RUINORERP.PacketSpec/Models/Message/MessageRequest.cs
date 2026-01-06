@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
-using RUINORERP.Model.TransModel;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Requests;
 using System;
 
-namespace RUINORERP.PacketSpec.Models.Messaging
+namespace RUINORERP.PacketSpec.Models.Message
 {
     /// <summary>
     /// 消息请求 - 用于传递通用消息命令

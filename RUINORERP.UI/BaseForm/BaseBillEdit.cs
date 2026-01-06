@@ -30,7 +30,6 @@ using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Caching.Memory;
-using RUINORERP.Model.TransModel;
 using System.Threading;
 using System.Linq.Expressions;
 using System.Web.UI;

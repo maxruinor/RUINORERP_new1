@@ -28,13 +28,14 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.SysConfig;
 
 using AutoUpdateTools;
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.Business.CommService;
 using FastReport.DevComponents.DotNetBar;
 
 
 using System.Threading;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Message;
 
 
 

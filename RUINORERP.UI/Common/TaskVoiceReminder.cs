@@ -1,9 +1,11 @@
-﻿using System;
+﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.PacketSpec.Models.Message;
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Speech.Synthesis;
 using System.Timers;
-using RUINORERP.Model.TransModel;
+
 
 namespace RUINORERP.UI.Common
 {
@@ -447,8 +449,8 @@ namespace RUINORERP.UI.Common
             
             string voiceText = messageData.MessageType switch
             {
-                MessageType.Popup => $"弹出消息：{messageData.Title}",
-                MessageType.Business => $"业务消息：{messageData.Title}",
+                MessageType.Popup => $"新提示消息：{messageData.Title}",
+                MessageType.Business => $"新单据消息：{messageData.Title}",
                 MessageType.System => $"系统通知：{messageData.Title}",
                 _ => $"您有一条新消息：{messageData.Title}"
             };

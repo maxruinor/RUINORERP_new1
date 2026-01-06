@@ -1,6 +1,7 @@
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;

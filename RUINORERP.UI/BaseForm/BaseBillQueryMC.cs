@@ -16,20 +16,20 @@ using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.HelpSystem;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Report;
-using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserCenter;
 using RUINORERP.UI.UserCenter.DataParts;
 using SqlSugar;
@@ -778,18 +778,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     foreach (var update in updates)
                     {
-                        // 构造消息请求
-                        var messageRequest = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(
+                        // 构造消息请求 - 使用统一的方法
+                        var messageData = MessageData.CreateTodoUpdateMessage(update);
+                        var messageRequest = new MessageRequest(
                             MessageType.Business,
-                            new RUINORERP.Model.TransModel.MessageData
-                            {
-                                MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                                MessageType = MessageType.Business,
-                                Title = "任务状态变更",
-                                Content = update.OperationDescription,
-                                BizData = update,
-                                SendTime = DateTime.Now
-                            }
+                            messageData
                         );
 
                         // 发送消息到服务器

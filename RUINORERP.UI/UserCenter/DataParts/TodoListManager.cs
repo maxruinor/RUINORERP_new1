@@ -2,6 +2,7 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
 using SqlSugar;
 using System;
 using System.Collections.Generic;

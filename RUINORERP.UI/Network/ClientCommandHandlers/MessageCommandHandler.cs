@@ -1,4 +1,4 @@
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.UI.Network.Services;
 using System.Collections.Generic;
@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -27,12 +28,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// </summary>
         /// <param name="messageService">消息服务</param>
         /// <param name="logger">日志记录器</param>
-        public MessageCommandHandler(MessageService messageService, ILogger<MessageCommandHandler> logger = null) : 
+        public MessageCommandHandler(MessageService messageService, ILogger<MessageCommandHandler> logger = null) :
             base(logger ?? Startup.GetFromFac<ILogger<BaseClientCommandHandler>>())
         {
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _logger = logger ?? Startup.GetFromFac<ILogger<MessageCommandHandler>>();
-            
+
             // 保留通过SetSupportedCommands方法设置命令的方式，使用枚举值而非硬编码字符串
             SetSupportedCommands(
                 MessageCommands.SendPopupMessage,
@@ -211,15 +212,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         private async Task HandleSystemNotificationAsync(MessageData messageData)
         {
             try
-            {                
+            {
                 // 确保系统通知使用正确的消息类型
                 messageData.MessageType = MessageType.System;
                 // 触发系统通知事件
                 _messageService.OnSystemNotificationReceived(messageData);
                 _logger.LogDebug("系统通知已处理");
-            }            
-            catch (Exception ex)            
-            {                
+            }
+            catch (Exception ex)
+            {
                 _logger.LogError(ex, "处理系统通知命令时发生异常");
             }
         }
@@ -247,49 +248,16 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 // 优先从Data中提取MessageType
                 if (messageRequest.Data != null)
                 {
-                    // 如果Data是字典类型，尝试从中提取数据
-                    if (messageRequest.Data is Dictionary<string, object> dataDict)
-                    {
-                        messageData = MessageData.FromDictionary(dataDict);
-                    }
-                    // 如果Data是MessageData类型，直接使用
-                    else if (messageRequest.Data is MessageData data)
+                    if (messageRequest.Data is MessageData data)
                     {
                         messageData = data;
                     }
                     // 处理其他类型的数据
                     else
                     {
-                        // 尝试将Data转换为字典并提取
-                        try
-                        {
-                            var dict = new Dictionary<string, object>();
-                            // 添加默认的MessageType如果未指定
-                            dict["MessageType"] = MessageType.Business.ToString();
-                            messageData = MessageData.FromDictionary(dict);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "无法转换消息数据");
-                        }
+                        _logger.LogWarning("请完成：尝试提取消息数据 没有完成");
                     }
                 }
-            }
-            // 尝试从Response中获取消息数据
-            else if (packet.Response != null && packet.Response is Dictionary<string, object> responseDict)
-            {
-                messageData = MessageData.FromDictionary(responseDict);
-            }
-            // 尝试从Extensions中提取消息数据
-            else if (packet.Extensions != null)
-            {
-                // 创建一个字典用于FromDictionary方法
-                var dict = new Dictionary<string, object>();
-                foreach (var kvp in packet.Extensions)
-                {
-                    dict.Add(kvp.Key, kvp.Value);
-                }
-                messageData = MessageData.FromDictionary(dict);
             }
 
             return messageData;

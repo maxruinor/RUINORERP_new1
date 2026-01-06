@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
-using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
 using System;

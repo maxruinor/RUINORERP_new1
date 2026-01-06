@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.UI.Network;
 using System;
@@ -7,8 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 using System.Linq;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.Network.Services
 {

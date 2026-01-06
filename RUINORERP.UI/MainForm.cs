@@ -69,7 +69,7 @@ using Mysqlx.Prepare;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
 using System.Xml;
-using RUINORERP.Model.TransModel;
+
 using Microsoft.Extensions.Options;
 using RUINORERP.Model.ConfigModel;
 
@@ -104,6 +104,7 @@ using RUINORERP.UI.Network.Services;
 using System.ComponentModel;
 using Padding = System.Windows.Forms.Padding;
 using System.Windows.Forms;
+using RUINORERP.PacketSpec.Models.Message;
 
 
 namespace RUINORERP.UI
@@ -303,7 +304,7 @@ namespace RUINORERP.UI
         public List<View_ProdDetail> View_ProdDetailList = new List<View_ProdDetail>();
 
         // 消息相关的集合和锁已移至MessageManager类中管理
-        // 移除了内部ReminderData类，使用RUINORERP.Model.TransModel.ReminderData
+        // 移除了内部ReminderData类，使用RUINORERP.PacketSpec.Models.Message.ReminderData
 
         ///// <summary>
         ///// 用于连接上服务器后。保存与服务器连接的id

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Global.EnumExt
 {
-
     public enum RuleEngineType
     {
         //RulesEngine/Roslyn

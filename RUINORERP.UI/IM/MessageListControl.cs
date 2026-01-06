@@ -2,8 +2,10 @@
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
-using RUINORERP.Model.TransModel;
+using RUINORERP.Global.EnumExt;
+
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.IM;
 using RUINORERP.UI.UserCenter;
@@ -104,7 +106,7 @@ namespace RUINORERP.UI.IM
         /// 添加消息到列表
         /// </summary>
         /// <param name="message">消息对象</param>
-        private void AddMessageToList(RUINORERP.Model.TransModel.MessageData message)
+        private void AddMessageToList(MessageData message)
         {
             var item = new ListViewItem(message.Content);
             item.SubItems.Add(message.Title ?? "无标题");
@@ -137,7 +139,7 @@ namespace RUINORERP.UI.IM
         /// 显示消息通知
         /// </summary>
         /// <param name="message">消息对象</param>
-        private void ShowNotification(RUINORERP.Model.TransModel.MessageData message)
+        private void ShowNotification(RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             // TODO: 实现更复杂的通知逻辑
             // 这里仅作为示例
@@ -220,11 +222,11 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 消息管理器 - 消息状态变更事件处理
         /// </summary>
-        private void MessageManager_MessageStatusChanged(object sender, RUINORERP.Model.TransModel.MessageData message)
+        private void MessageManager_MessageStatusChanged(object sender, RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             if (this.InvokeRequired)
             {
-                this.Invoke(new Action<object, RUINORERP.Model.TransModel.MessageData>(MessageManager_MessageStatusChanged), sender, message);
+                this.Invoke(new Action<object, RUINORERP.PacketSpec.Models.Message.MessageData>(MessageManager_MessageStatusChanged), sender, message);
                 return;
             }
 
@@ -556,7 +558,7 @@ namespace RUINORERP.UI.IM
         /// 根据消息导航到业务窗体
         /// </summary>
         /// <param name="message">消息对象</param>
-        private async Task NavigateToBusiness(RUINORERP.Model.TransModel.MessageData message)
+        private async Task NavigateToBusiness(RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             try
             {
@@ -800,7 +802,7 @@ namespace RUINORERP.UI.IM
         /// 导航到工作流提醒相关的业务窗体
         /// </summary>
         /// <param name="message">工作流提醒消息</param>
-        private async Task NavigateToWorkflowReminderForm(RUINORERP.Model.TransModel.MessageData message)
+        private async Task NavigateToWorkflowReminderForm(RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             try
             {
@@ -832,7 +834,7 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 显示通知详情
         /// </summary>
-        private void ShowNoticeDetail(RUINORERP.Model.TransModel.MessageData message)
+        private void ShowNoticeDetail(RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             try
             {
@@ -1257,13 +1259,13 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 被点击的消息对象
         /// </summary>
-        public RUINORERP.Model.TransModel.MessageData Message { get; }
+        public RUINORERP.PacketSpec.Models.Message.MessageData Message { get; }
 
         /// <summary>
         /// 初始化消息点击事件参数
         /// </summary>
         /// <param name="message">消息对象</param>
-        public MessageClickedEventArgs(RUINORERP.Model.TransModel.MessageData message)
+        public MessageClickedEventArgs(RUINORERP.PacketSpec.Models.Message.MessageData message)
         {
             Message = message;
         }

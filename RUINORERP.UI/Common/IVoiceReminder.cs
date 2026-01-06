@@ -1,5 +1,6 @@
+using RUINORERP.PacketSpec.Models.Message;
 using System;
-using RUINORERP.Model.TransModel;
+
 
 namespace RUINORERP.UI.Common
 {

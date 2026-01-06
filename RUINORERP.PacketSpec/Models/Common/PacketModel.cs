@@ -10,7 +10,6 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using System.Net.Sockets;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Models.Core;
 
 namespace RUINORERP.PacketSpec.Models.Common

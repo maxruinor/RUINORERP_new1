@@ -8,7 +8,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.UI.BaseForm;
 
 using RUINORERP.UI.Common;
@@ -34,6 +34,7 @@ using Timer = System.Windows.Forms.Timer;
 using Microsoft.Extensions.Logging;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.IM
 {

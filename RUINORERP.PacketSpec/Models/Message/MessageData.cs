@@ -1,0 +1,250 @@
+﻿using Newtonsoft.Json;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace RUINORERP.PacketSpec.Models.Message
+{
+    /// <summary>
+    /// 消息确认状态枚举
+    /// 表示消息的确认处理状态
+    /// </summary>
+    public enum ConfirmStatus
+    {
+        /// <summary>
+        /// 未确认
+        /// 默认状态，消息尚未被确认
+        /// </summary>
+        Unconfirmed = 0,
+
+        /// <summary>
+        /// 已确认
+        /// 消息已被接收方确认
+        /// </summary>
+        Confirmed = 1,
+
+        /// <summary>
+        /// 已拒绝
+        /// 消息被接收方拒绝
+        /// </summary>
+        Rejected = 2,
+
+        /// <summary>
+        /// 处理中
+        /// 消息正在处理中
+        /// </summary>
+        Processing = 3,
+
+        /// <summary>
+        /// 已完成
+        /// 消息相关的任务已完成
+        /// </summary>
+        Completed = 4
+    }
+
+    /// <summary>
+    /// 消息数据模型
+    /// 替代旧的ReminderData类型，用于客户端与服务器之间的消息传递
+    /// </summary>
+    public class MessageData
+    {
+        /// <summary>
+        /// 消息ID
+        /// </summary>
+        public long MessageId { get; set; }
+
+        /// <summary>
+        /// 消息类型 - 使用统一的MessageType枚举
+        /// </summary>
+        public MessageType MessageType { get; set; }
+
+        /// <summary>
+        /// 发送者ID
+        /// </summary>
+        public long SenderId { get; set; }
+
+        /// <summary>
+        /// 发送者名称
+        /// </summary>
+        public string SenderName { get; set; }
+
+        /// <summary>
+        /// 是否发送给自己
+        /// 提醒类的可以发送给自己
+        /// </summary>
+        public bool SendToSelf { get; set; } = false;
+
+
+        /// <summary>
+        /// 接收者ID列表
+        /// </summary>
+        public List<long> ReceiverIds { get; set; } = new List<long>();
+
+        /// <summary>
+        /// 消息标题
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// 消息内容
+        /// </summary>
+        public string Content { get; set; }
+
+        /// <summary>
+        /// 业务类型
+        /// </summary>
+        public BizType BizType { get; set; }
+
+        /// <summary>
+        /// 业务ID
+        /// </summary>
+        public long BizId { get; set; }
+
+        /// <summary>
+        /// 业务数据
+        /// </summary>
+        public object BizData { get; set; }
+
+        /// <summary>
+        /// 发送时间
+        /// </summary>
+        public DateTime SendTime { get; set; }
+
+        /// <summary>
+        /// 消息创建时间
+        /// 与SendTime保持同步
+        /// </summary>
+        [JsonIgnore]
+        public DateTime CreateTime
+        {
+            get => SendTime;
+            set => SendTime = value;
+        }
+
+        /// <summary>
+        /// 接收者ID的别名
+        /// 为保持API兼容性保留
+        /// </summary>
+        [JsonIgnore]
+        public List<long> RecipientIds
+        {
+            get => ReceiverIds;
+            set => ReceiverIds = value;
+        }
+
+        /// <summary>
+        /// 是否已读
+        /// </summary>
+        public bool IsRead { get; set; }
+
+        /// <summary>
+        /// 是否需要确认
+        /// </summary>
+        public bool NeedConfirmation { get; set; }
+
+        /// <summary>
+        /// 确认状态
+        /// </summary>
+        public ConfirmStatus ConfirmStatus { get; set; }
+
+        /// <summary>
+        /// 确认时间
+        /// </summary>
+        public DateTime? ConfirmTime { get; set; }
+
+        /// <summary>
+        /// 扩展数据字典
+        /// </summary>
+        public Dictionary<string, object> ExtendedData { get; set; } = new Dictionary<string, object>();
+
+        /// <summary>
+        /// 是否为弹窗消息（默认false，所有消息直接加载到消息中心）
+        /// </summary>
+        public bool IsPopupMessage { get; set; } = false;
+
+        /// <summary>
+        /// 消息优先级（用于消息中心排序）
+        /// </summary>
+        public int Priority { get; set; } = 0;
+
+        /// <summary>
+        /// 是否自动添加到消息中心（默认true）
+        /// </summary>
+        public bool AutoAddToMessageCenter { get; set; } = true;
+
+        /// <summary>
+        /// 消息类别（用于消息中心分类）
+        /// </summary>
+        public string Category { get; set; } = "业务通知";
+
+           
+        /// <summary>
+        /// 标记消息为已读
+        /// 更新已读状态并设置阅读时间
+        /// </summary>
+        public void MarkAsRead()
+        {
+            IsRead = true;
+            ReadTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 标记消息为已处理
+        /// 更新确认状态为已完成并设置确认时间
+        /// </summary>
+        public void MarkAsProcessed()
+        {
+            ConfirmStatus = ConfirmStatus.Completed;
+            ConfirmTime = DateTime.Now;
+        }
+
+
+        /// <summary>
+        /// 阅读时间
+        /// 兼容UI层使用的属性
+        /// </summary>
+        [JsonIgnore]
+        public DateTime? ReadTime { get; set; }
+
+ 
+        /// <summary>
+        /// 创建任务状态变更消息数据的统一方法
+        /// 用于替换重复的构造代码
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <param name="senderId">发送者ID</param>
+        /// <param name="senderName">发送者名称</param>
+        /// <param name="isPopupMessage">是否为弹窗消息（默认false）</param>
+        /// <param name="receiverIds">接收者ID列表（可选）</param>
+        /// <returns>创建的消息数据对象</returns>
+        public static MessageData CreateTodoUpdateMessage(
+            TodoUpdate update,
+            long senderId = 0,
+            string senderName = null,
+            bool isPopupMessage = false,
+            List<long> receiverIds = null)
+        {
+            if (update == null)
+                throw new ArgumentNullException(nameof(update), "任务更新数据不能为空");
+
+            return new MessageData
+            {
+                MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                MessageType = MessageType.Business,
+                Title = "任务状态变更",
+                Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
+                BizData = update,
+                SenderId = senderId,
+                SenderName = senderName,
+                SendTime = DateTime.Now,
+                IsPopupMessage = isPopupMessage,
+                ReceiverIds = receiverIds ?? new List<long>(),
+                // 设置消息为业务消息类型，直接加载到消息中心
+                AutoAddToMessageCenter = true,
+                Category = "业务通知"
+            };
+        }
+    }
+}

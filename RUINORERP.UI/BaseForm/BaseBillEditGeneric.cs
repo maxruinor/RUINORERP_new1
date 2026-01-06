@@ -51,7 +51,7 @@ using ImageHelper = RUINORERP.UI.Common.ImageHelper;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.UI.Network.Services;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.Model.Base.StatusManager;
 using Netron.GraphLib;
@@ -68,9 +68,6 @@ using Newtonsoft.Json.Linq;
 using System.Web.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using RUINORERP.UI.PSI.SAL;
-
-
-using RUINORERP.Model.TransModel;
 using System.Threading;
 using System.Management.Instrumentation;
 using FastReport.DevComponents.DotNetBar;
@@ -99,6 +96,7 @@ using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.PacketSpec.Models.Lock;
 using System.Windows.Markup.Localizer;
 using RUINORERP.SecurityTool;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -6162,20 +6160,13 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 构造消息数据 - 优化为使用消息中心而非弹窗
-                var messageData = new MessageData
-                {
-                    MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                    MessageType = MessageType.Business,
-                    Title = "任务状态变更",
-                    Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
-                    BizData = update,
-                    SenderId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
-                    SenderName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
-                    SendTime = DateTime.Now,
-                    // 设置消息为业务消息类型，直接加载到消息中心
-                    IsPopupMessage = false // 禁止使用弹窗形式的消息提示
-                };
+                // 构造消息数据 - 使用统一的方法
+                var messageData = MessageData.CreateTodoUpdateMessage(
+                    update,
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name,
+                    false // 禁止使用弹窗形式的消息提示
+                );
 
                 // 获取消息服务并发送
                 var messageService = Startup.GetFromFac<MessageService>();

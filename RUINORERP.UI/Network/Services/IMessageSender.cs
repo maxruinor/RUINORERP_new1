@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
 using System.Threading;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.Network.Services
 {

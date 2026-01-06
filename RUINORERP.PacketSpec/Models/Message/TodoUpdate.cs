@@ -4,7 +4,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Collections.Generic;
 
-namespace RUINORERP.PacketSpec.Models.Common
+namespace RUINORERP.PacketSpec.Models.Message
 {
     /// <summary>
     /// 任务状态更新信息

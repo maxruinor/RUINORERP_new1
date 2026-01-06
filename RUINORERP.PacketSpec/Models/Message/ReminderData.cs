@@ -1,4 +1,5 @@
-using RUINORERP.Global.EnumExt;
+﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Linq.Dynamic.Core.CustomTypeProviders;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Model.TransModel
+namespace RUINORERP.PacketSpec.Models.Message
 {
  
 
@@ -121,4 +122,3 @@ namespace RUINORERP.Model.TransModel
         }
     }
 }
-       

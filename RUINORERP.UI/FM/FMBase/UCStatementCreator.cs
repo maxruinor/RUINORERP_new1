@@ -26,7 +26,7 @@ using RUINORERP.Business.Processor;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Global;
-using RUINORERP.Model.TransModel;
+
 
 using AutoUpdateTools;
 using RUINORERP.UI.BaseForm;

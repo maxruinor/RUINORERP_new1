@@ -10,10 +10,11 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;

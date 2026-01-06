@@ -48,7 +48,7 @@ using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.Context;
-using RUINORERP.Model.TransModel;
+
 using RUINORERP.PacketSpec.DI;
 using RUINORERP.Repository.Base;
 using RUINORERP.Repository.DI;
@@ -85,6 +85,7 @@ using WorkflowCore.Services;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using RUINORERP.Business.EntityLoadService;
+using RUINORERP.PacketSpec.Models.Message;
 namespace RUINORERP.UI
 {
     public class Startup

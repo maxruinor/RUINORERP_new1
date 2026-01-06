@@ -35,6 +35,7 @@ using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Forms;
 using RUINORERP.Business.EntityLoadService;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {

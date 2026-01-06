@@ -32,7 +32,7 @@ using RUINORERP.UI.CommonUI;
 using RUINORERP.Business.CommService;
 
 using RUINORERP.Global;
-using RUINORERP.Model.TransModel;
+
 
 using FastReport.DevComponents.DotNetBar;
 

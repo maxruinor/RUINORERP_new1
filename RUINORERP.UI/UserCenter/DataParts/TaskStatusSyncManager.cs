@@ -8,6 +8,7 @@ using System.Threading;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {

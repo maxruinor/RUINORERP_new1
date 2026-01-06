@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RUINORERP.Model.TransModel
+namespace RUINORERP.PacketSpec.Models.Message
 {
     internal interface IReminderData
     {

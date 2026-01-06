@@ -12,6 +12,7 @@ using RUINORERP.Server.Network.CommandHandlers;
 using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.Server.SmartReminder
 {

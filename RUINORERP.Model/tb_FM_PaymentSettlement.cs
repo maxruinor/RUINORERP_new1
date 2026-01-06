@@ -107,6 +107,7 @@ namespace RUINORERP.Model
                         }
         }
 
+
         private decimal? _ExchangeRate;
         /// <summary>
         /// 汇率
@@ -176,6 +177,52 @@ namespace RUINORERP.Model
             SetProperty(ref _ReceivePaymentType, value);
                         }
         }
+
+        private int? _RelatedBizType;
+        /// <summary>
+        /// 相关单据类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedBizType", ColDesc = "相关单据类型")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "RelatedBizType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "相关单据类型")]
+        public int? RelatedBizType
+        {
+            get { return _RelatedBizType; }
+            set
+            {
+                SetProperty(ref _RelatedBizType, value);
+            }
+        }
+
+        private long? _RelatedBillId;
+        /// <summary>
+        /// 相关单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedBillId", ColDesc = "相关单据")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "RelatedBillId", DecimalDigits = 0, IsNullable = true, ColumnDescription = "相关单据")]
+        public long? RelatedBillId
+        {
+            get { return _RelatedBillId; }
+            set
+            {
+                SetProperty(ref _RelatedBillId, value);
+            }
+        }
+
+        private string _RelatedBillNo;
+        /// <summary>
+        /// 相关单据编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedBillNo", ColDesc = "相关单据编号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "RelatedBillNo", Length = 30, IsNullable = true, ColumnDescription = "相关单据编号")]
+        public string RelatedBillNo
+        {
+            get { return _RelatedBillNo; }
+            set
+            {
+                SetProperty(ref _RelatedBillNo, value);
+            }
+        }
+
 
         private long? _Account_id;
         /// <summary>

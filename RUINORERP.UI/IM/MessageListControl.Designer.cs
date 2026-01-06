@@ -32,12 +32,13 @@ namespace RUINORERP.UI.IM
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.lstMessages = new Krypton.Toolkit.KryptonListView();
-            this.colContent = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.colTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.colTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.colStatus = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.colType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.dgvMessages = new Krypton.Toolkit.KryptonDataGridView();
+            this.colContent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTitle = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMessageId = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStripMessages = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.menuRefreshMessages = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
@@ -52,64 +53,85 @@ namespace RUINORERP.UI.IM
             this.btnRefresh = new Krypton.Toolkit.KryptonButton();
             this.btnMarkAllRead = new Krypton.Toolkit.KryptonButton();
             this.lblUnreadCount = new Krypton.Toolkit.KryptonLabel();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvMessages)).BeginInit();
             this.contextMenuStripMessages.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelHeader)).BeginInit();
             this.panelHeader.SuspendLayout();
             this.SuspendLayout();
             // 
-            // lstMessages
+            // dgvMessages
             // 
-            this.lstMessages.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.dgvMessages.AllowUserToAddRows = false;
+            this.dgvMessages.AllowUserToDeleteRows = false;
+            this.dgvMessages.AllowUserToResizeRows = false;
+            this.dgvMessages.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgvMessages.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvMessages.ColumnHeadersHeight = 30;
+            this.dgvMessages.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dgvMessages.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colContent,
             this.colTitle,
             this.colTime,
             this.colStatus,
-            this.colType});
-            this.lstMessages.ContextMenuStrip = this.contextMenuStripMessages;
-            this.lstMessages.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstMessages.FullRowSelect = true;
-            this.lstMessages.GridLines = true;
-            this.lstMessages.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.lstMessages.HideSelection = false;
-            this.lstMessages.ItemStyle = Krypton.Toolkit.ButtonStyle.ListItem;
-            this.lstMessages.Location = new System.Drawing.Point(0, 60);
-            this.lstMessages.Name = "lstMessages";
-            this.lstMessages.OwnerDraw = true;
-            this.lstMessages.Size = new System.Drawing.Size(800, 390);
-            this.lstMessages.StateCommon.Border.Draw = Krypton.Toolkit.InheritBool.False;
-            this.lstMessages.StateCommon.Border.DrawBorders = ((Krypton.Toolkit.PaletteDrawBorders)((((Krypton.Toolkit.PaletteDrawBorders.Top | Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.lstMessages.TabIndex = 0;
-            this.lstMessages.UseCompatibleStateImageBehavior = false;
-            this.lstMessages.ItemActivate += new System.EventHandler(this.lstMessages_ItemClick);
-            this.lstMessages.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDoubleClick);
-            this.lstMessages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lstMessages_MouseDown);
+            this.colType,
+            this.colMessageId});
+            this.dgvMessages.ContextMenuStrip = this.contextMenuStripMessages;
+            this.dgvMessages.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgvMessages.Location = new System.Drawing.Point(0, 40);
+            this.dgvMessages.MultiSelect = false;
+            this.dgvMessages.Name = "dgvMessages";
+            this.dgvMessages.ReadOnly = true;
+            this.dgvMessages.RowHeadersVisible = false;
+            this.dgvMessages.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvMessages.Size = new System.Drawing.Size(800, 410);
+            this.dgvMessages.TabIndex = 0;
+            this.dgvMessages.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvMessages_CellDoubleClick);
+            this.dgvMessages.MouseDown += new System.Windows.Forms.MouseEventHandler(this.dgvMessages_MouseDown);
             // 
             // colContent
             // 
-            this.colContent.Text = "消息内容";
-            this.colContent.Width = 350;
+            this.colContent.DataPropertyName = "Content";
+            this.colContent.HeaderText = "消息内容";
+            this.colContent.Name = "colContent";
+            this.colContent.ReadOnly = true;
+            this.colContent.Width = 145;
+            this.colContent.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             // 
             // colTitle
             // 
-            this.colTitle.Text = "标题";
-            this.colTitle.Width = 150;
+            this.colTitle.DataPropertyName = "Title";
+            this.colTitle.HeaderText = "标题";
+            this.colTitle.Name = "colTitle";
+            this.colTitle.ReadOnly = true;
             // 
             // colTime
             // 
-            this.colTime.Text = "发送时间";
-            this.colTime.Width = 150;
+            this.colTime.DataPropertyName = "SendTime";
+            this.colTime.HeaderText = "发送时间";
+            this.colTime.Name = "colTime";
+            this.colTime.ReadOnly = true;
             // 
             // colStatus
             // 
-            this.colStatus.Text = "状态";
-            this.colStatus.Width = 80;
+            this.colStatus.DataPropertyName = "IsRead";
+            this.colStatus.HeaderText = "状态";
+            this.colStatus.Name = "colStatus";
+            this.colStatus.ReadOnly = true;
             // 
             // colType
             // 
-            this.colType.Text = "消息类型";
-            this.colType.Width = 100;
+            this.colType.DataPropertyName = "MessageType";
+            this.colType.HeaderText = "消息类型";
+            this.colType.Name = "colType";
+            this.colType.ReadOnly = true;
+            // 
+            // colMessageId
+            // 
+            this.colMessageId.DataPropertyName = "MessageId";
+            this.colMessageId.HeaderText = "MessageId";
+            this.colMessageId.Name = "colMessageId";
+            this.colMessageId.ReadOnly = true;
+            this.colMessageId.Visible = false;
             // 
             // contextMenuStripMessages
             // 
@@ -188,39 +210,45 @@ namespace RUINORERP.UI.IM
             this.panelHeader.Location = new System.Drawing.Point(0, 0);
             this.panelHeader.Name = "panelHeader";
             this.panelHeader.PanelBackStyle = Krypton.Toolkit.PaletteBackStyle.PanelAlternate;
-            this.panelHeader.Size = new System.Drawing.Size(800, 60);
+            this.panelHeader.Size = new System.Drawing.Size(800, 40);
             this.panelHeader.TabIndex = 1;
             // 
             // btnSettings
             // 
             this.btnSettings.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
-            this.btnSettings.Location = new System.Drawing.Point(340, 20);
+            this.btnSettings.Location = new System.Drawing.Point(210, 5);
             this.btnSettings.Name = "btnSettings";
-            this.btnSettings.Size = new System.Drawing.Size(90, 30);
+            this.btnSettings.Size = new System.Drawing.Size(42, 30);
             this.btnSettings.TabIndex = 3;
-            this.btnSettings.Values.ExtraText = "消息提醒设置";
+            this.btnSettings.ToolTipValues.Description = "消息提醒设置";
+            this.btnSettings.ToolTipValues.EnableToolTips = true;
+            this.btnSettings.ToolTipValues.Heading = "";
             this.btnSettings.Values.Text = "设置";
             this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             // 
             // btnRefresh
             // 
             this.btnRefresh.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
-            this.btnRefresh.Location = new System.Drawing.Point(240, 20);
+            this.btnRefresh.Location = new System.Drawing.Point(152, 5);
             this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(90, 30);
+            this.btnRefresh.Size = new System.Drawing.Size(42, 30);
             this.btnRefresh.TabIndex = 2;
-            this.btnRefresh.Values.ExtraText = "刷新消息列表";
+            this.btnRefresh.ToolTipValues.Description = "刷新消息列表";
+            this.btnRefresh.ToolTipValues.EnableToolTips = true;
+            this.btnRefresh.ToolTipValues.Heading = "";
             this.btnRefresh.Values.Text = "刷新";
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // btnMarkAllRead
             // 
             this.btnMarkAllRead.ButtonStyle = Krypton.Toolkit.ButtonStyle.Alternate;
-            this.btnMarkAllRead.Location = new System.Drawing.Point(140, 20);
+            this.btnMarkAllRead.Location = new System.Drawing.Point(80, 5);
             this.btnMarkAllRead.Name = "btnMarkAllRead";
-            this.btnMarkAllRead.Size = new System.Drawing.Size(90, 30);
+            this.btnMarkAllRead.Size = new System.Drawing.Size(66, 30);
             this.btnMarkAllRead.TabIndex = 1;
-            this.btnMarkAllRead.Values.ExtraText = "标记所有消息为已读";
+            this.btnMarkAllRead.ToolTipValues.Description = "标记所有消息为已读";
+            this.btnMarkAllRead.ToolTipValues.EnableToolTips = true;
+            this.btnMarkAllRead.ToolTipValues.Heading = "";
             this.btnMarkAllRead.Values.Text = "标记已读";
             this.btnMarkAllRead.Click += new System.EventHandler(this.btnbtnMarkAllRead_Click);
             // 
@@ -228,23 +256,24 @@ namespace RUINORERP.UI.IM
             // 
             this.lblUnreadCount.AutoSize = false;
             this.lblUnreadCount.LabelStyle = Krypton.Toolkit.LabelStyle.NormalControl;
-            this.lblUnreadCount.Location = new System.Drawing.Point(15, 20);
+            this.lblUnreadCount.Location = new System.Drawing.Point(2, 5);
             this.lblUnreadCount.Name = "lblUnreadCount";
-            this.lblUnreadCount.Size = new System.Drawing.Size(120, 25);
+            this.lblUnreadCount.Size = new System.Drawing.Size(71, 30);
+            this.lblUnreadCount.StateCommon.ShortText.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.lblUnreadCount.StateCommon.ShortText.TextH = Krypton.Toolkit.PaletteRelativeAlign.Near;
             this.lblUnreadCount.StateCommon.ShortText.TextV = Krypton.Toolkit.PaletteRelativeAlign.Center;
-            this.lblUnreadCount.StateCommon.ShortText.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular);
             this.lblUnreadCount.TabIndex = 0;
-            this.lblUnreadCount.Values.Text = "未读消息: 0";
+            this.lblUnreadCount.Values.Text = "未读: 0";
             // 
             // MessageListControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.lstMessages);
+            this.Controls.Add(this.dgvMessages);
             this.Controls.Add(this.panelHeader);
             this.Name = "MessageListControl";
             this.Size = new System.Drawing.Size(800, 450);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvMessages)).EndInit();
             this.contextMenuStripMessages.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.panelHeader)).EndInit();
             this.panelHeader.ResumeLayout(false);
@@ -255,12 +284,13 @@ namespace RUINORERP.UI.IM
 
         #endregion
 
-        private Krypton.Toolkit.KryptonListView lstMessages;
-        private System.Windows.Forms.ColumnHeader colContent;
-        private System.Windows.Forms.ColumnHeader colTitle;
-        private System.Windows.Forms.ColumnHeader colTime;
-        private System.Windows.Forms.ColumnHeader colStatus;
-        private System.Windows.Forms.ColumnHeader colType;
+        private Krypton.Toolkit.KryptonDataGridView dgvMessages;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colContent;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTitle;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatus;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMessageId;
         private ContextMenuStrip contextMenuStripMessages;
         private System.Windows.Forms.ToolStripMenuItem menuRefreshMessages;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;

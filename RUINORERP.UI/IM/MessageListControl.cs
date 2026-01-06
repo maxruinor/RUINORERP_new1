@@ -84,7 +84,7 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                lstMessages.Items.Clear();
+                dgvMessages.Rows.Clear();
                 _unreadCount = 0;
 
                 // 从消息管理器获取所有消息
@@ -93,7 +93,7 @@ namespace RUINORERP.UI.IM
                 // 添加消息到列表
                 foreach (var message in messages)
                 {
-                    AddMessageToList(message);
+                    AddMessageToGrid(message);
                 }
 
                 UpdateUnreadCount();
@@ -107,19 +107,11 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 添加消息到列表 - 企业级现代化显示
+        /// 添加消息到DataGridView - 企业级现代化显示
         /// </summary>
         /// <param name="message">消息对象</param>
-        private void AddMessageToList(MessageData message)
+        private void AddMessageToGrid(MessageData message)
         {
-            var item = new ListViewItem(message.Content)
-            {
-                UseItemStyleForSubItems = false
-            };
-            
-            // 设置主要列
-            item.SubItems.Add(message.Title ?? "无标题");
-            
             // 格式化时间显示
             var sendTime = message.SendTime;
             string timeText;
@@ -129,39 +121,33 @@ namespace RUINORERP.UI.IM
                 timeText = "昨天 " + sendTime.ToString("HH:mm");
             else
                 timeText = sendTime.ToString("MM-dd HH:mm");
-                
-            item.SubItems.Add(timeText);
-            item.SubItems.Add(message.IsRead ? "已读" : "未读");
-            item.SubItems.Add(GetMessageTypeDisplayName(message.MessageType));
+
+            // 添加行到DataGridView
+            int rowIndex = dgvMessages.Rows.Add(
+                message.Content,
+                message.Title ?? "无标题",
+                timeText,
+                message.IsRead ? "已读" : "未读",
+                GetMessageTypeDisplayName(message.MessageType),
+                message.MessageId
+            );
 
             // 设置企业级现代化样式
+            var row = dgvMessages.Rows[rowIndex];
             if (!message.IsRead)
             {
                 // 未读消息 - 蓝色强调
-                item.ForeColor = Color.FromArgb(0, 120, 215);
-                item.Font = new Font("微软雅黑", 9, FontStyle.Bold);
-                
-                // 设置背景色
-                item.BackColor = Color.FromArgb(240, 248, 255);
+                row.DefaultCellStyle.ForeColor = Color.FromArgb(0, 120, 215);
+                row.DefaultCellStyle.Font = new Font("微软雅黑", 9, FontStyle.Bold);
+                row.DefaultCellStyle.BackColor = Color.FromArgb(240, 248, 255);
             }
             else
             {
                 // 已读消息 - 灰色
-                item.ForeColor = Color.FromArgb(64, 64, 64);
-                item.Font = new Font("微软雅黑", 9);
-                item.BackColor = Color.White;
+                row.DefaultCellStyle.ForeColor = Color.FromArgb(64, 64, 64);
+                row.DefaultCellStyle.Font = new Font("微软雅黑", 9);
+                row.DefaultCellStyle.BackColor = Color.White;
             }
-
-            // 设置子项样式
-            for (int i = 1; i < item.SubItems.Count; i++)
-            {
-                item.SubItems[i].ForeColor = item.ForeColor;
-                item.SubItems[i].Font = item.Font;
-                item.SubItems[i].BackColor = item.BackColor;
-            }
-
-            item.Tag = message.MessageId; // 存储消息ID
-            lstMessages.Items.Add(item);
         }
 
         /// <summary>
@@ -291,23 +277,26 @@ namespace RUINORERP.UI.IM
             {
                 // 检查是否为新增消息（消息ID不在当前列表中）
                 bool isNewMessage = true;
-                foreach (ListViewItem item in lstMessages.Items)
+                foreach (DataGridViewRow row in dgvMessages.Rows)
                 {
-                    if (item.Tag != null && item.Tag.ToString() == message.MessageId.ToString())
+                    if (row.Cells["colMessageId"].Value != null && 
+                        row.Cells["colMessageId"].Value.ToString() == message.MessageId.ToString())
                     {
                         isNewMessage = false;
                         // 更新现有消息项
-                        item.SubItems[3].Text = message.IsRead ? "已读" : "未读";
+                        row.Cells["colStatus"].Value = message.IsRead ? "已读" : "未读";
 
                         if (message.IsRead)
                         {
-                            item.ForeColor = Color.Black;
-                            item.Font = new Font(item.Font, FontStyle.Regular);
+                            row.DefaultCellStyle.ForeColor = Color.Black;
+                            row.DefaultCellStyle.Font = new Font("微软雅黑", 9, FontStyle.Regular);
+                            row.DefaultCellStyle.BackColor = Color.White;
                         }
                         else
                         {
-                            item.ForeColor = Color.Red;
-                            item.Font = new Font(item.Font, FontStyle.Bold);
+                            row.DefaultCellStyle.ForeColor = Color.Red;
+                            row.DefaultCellStyle.Font = new Font("微软雅黑", 9, FontStyle.Bold);
+                            row.DefaultCellStyle.BackColor = Color.FromArgb(240, 248, 255);
                         }
                         break;
                     }
@@ -456,14 +445,14 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 消息列表项点击事件处理
+        /// DataGridView单元格双击事件处理
         /// </summary>
-        private void lstMessages_ItemClick(object sender, EventArgs e)
+        private void dgvMessages_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (lstMessages.SelectedItems.Count > 0)
+            if (e.RowIndex >= 0)
             {
-                var selectedItem = lstMessages.SelectedItems[0];
-                if (selectedItem.Tag is long messageId)
+                var selectedRow = dgvMessages.Rows[e.RowIndex];
+                if (selectedRow.Cells["colMessageId"].Value is long messageId)
                 {
                     // 获取消息对象
                     var message = _messageManager.GetMessageById(messageId);
@@ -485,61 +474,31 @@ namespace RUINORERP.UI.IM
             }
         }
 
-        /// <summary>
-        /// 消息列表项双击事件处理
-        /// </summary>
-        private void lstMessages_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            // 获取点击的项
-            var hitTestInfo = lstMessages.HitTest(e.Location);
-            if (hitTestInfo.Item != null)
-            {
-                var selectedItem = hitTestInfo.Item;
-                if (selectedItem.Tag is long messageId)
-                {
-                    // 获取消息对象
-                    var message = _messageManager.GetMessageById(messageId);
-                    if (message != null)
-                    {
-                        // 标记为已读
-                        _messageManager.MarkAsRead(messageId);
 
-                        // 触发消息点击事件
-                        MessageClicked?.Invoke(this, new MessageClickedEventArgs(message));
-
-                        // 使用MessagePrompt显示消息内容
-                        ShowMessageWithPrompt(message);
-
-                        // 处理业务导航
-                        NavigateToBusiness(message);
-                    }
-                }
-            }
-        }
 
         /// <summary>
-        /// 消息列表项鼠标按下事件处理
+        /// DataGridView鼠标按下事件处理
         /// </summary>
-        private void lstMessages_MouseDown(object sender, MouseEventArgs e)
+        private void dgvMessages_MouseDown(object sender, MouseEventArgs e)
         {
             // 右键点击时，确保选中当前项
             if (e.Button == MouseButtons.Right)
             {
-                var hitTest = lstMessages.HitTest(e.Location);
-                if (hitTest.Item != null)
+                var hitTest = dgvMessages.HitTest(e.X, e.Y);
+                if (hitTest.RowIndex >= 0)
                 {
-                    // 确保当前项被选中
-                    if (!hitTest.Item.Selected)
+                    // 确保当前行被选中
+                    if (!dgvMessages.Rows[hitTest.RowIndex].Selected)
                     {
-                        // 清除其他选中项，只选中右键点击的项
-                        lstMessages.SelectedItems.Clear();
-                        hitTest.Item.Selected = true;
+                        // 清除其他选中项，只选中右键点击的行
+                        dgvMessages.ClearSelection();
+                        dgvMessages.Rows[hitTest.RowIndex].Selected = true;
                     }
                 }
                 else
                 {
                     // 点击空白处时，清除选中项
-                    lstMessages.SelectedItems.Clear();
+                    dgvMessages.ClearSelection();
                 }
             }
         }
@@ -1070,10 +1029,21 @@ namespace RUINORERP.UI.IM
                     button.Font = new Font("微软雅黑", 9, FontStyle.Bold);
                 }
                 
-                // 设置消息列表样式
-                lstMessages.BackColor = Color.White;
-                lstMessages.View = View.Details; // 确保使用详细信息视图
-                lstMessages.FullRowSelect = true; // 启用整行选择
+                // 设置DataGridView样式 - 确保表格模式正确显示
+                dgvMessages.BackgroundColor = Color.White;
+                dgvMessages.GridColor = Color.FromArgb(240, 240, 240);
+                dgvMessages.DefaultCellStyle.BackColor = Color.White;
+                dgvMessages.DefaultCellStyle.ForeColor = Color.FromArgb(64, 64, 64);
+                dgvMessages.DefaultCellStyle.Font = new Font("微软雅黑", 9);
+                
+                // 设置列头样式
+                dgvMessages.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(240, 240, 240);
+                dgvMessages.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(64, 64, 64);
+                dgvMessages.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9, FontStyle.Bold);
+                
+                // 设置选中行样式
+                dgvMessages.DefaultCellStyle.SelectionBackColor = Color.FromArgb(64, 158, 255);
+                dgvMessages.DefaultCellStyle.SelectionForeColor = Color.White;
                 
                 // 设置上下文菜单样式 - 确保右键菜单正常工作
                 contextMenuStripMessages.BackColor = Color.White;
@@ -1247,7 +1217,7 @@ namespace RUINORERP.UI.IM
             e.Cancel = false;
             
             // 根据当前选中的消息数量启用/禁用菜单项
-            bool hasSelection = lstMessages.SelectedItems.Count > 0;
+            bool hasSelection = dgvMessages.SelectedRows.Count > 0;
             
             // 刷新菜单项始终可用
             menuRefreshMessages.Enabled = true;
@@ -1270,10 +1240,10 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private void MenuPlayVoiceReminder_Click(object sender, EventArgs e)
         {
-            if (lstMessages.SelectedItems.Count > 0)
+            if (dgvMessages.SelectedRows.Count > 0)
             {
-                var selectedItem = lstMessages.SelectedItems[0];
-                if (selectedItem.Tag is long messageId)
+                var selectedRow = dgvMessages.SelectedRows[0];
+                if (selectedRow.Cells["colMessageId"].Value is long messageId)
                 {
                     var message = _messageManager.GetMessageById(messageId);
                     if (message != null)
@@ -1309,16 +1279,16 @@ namespace RUINORERP.UI.IM
         {
             try
             {
-                if (lstMessages.SelectedItems.Count == 0)
+                if (dgvMessages.SelectedRows.Count == 0)
                 {
                     MessageBox.Show("请先选择要删除的消息", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
                 // 确认对话框
-                string message = lstMessages.SelectedItems.Count == 1 
+                string message = dgvMessages.SelectedRows.Count == 1 
                     ? "确定要删除选中的这条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。" 
-                    : $"确定要删除选中的{lstMessages.SelectedItems.Count}条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。";
+                    : $"确定要删除选中的{dgvMessages.SelectedRows.Count}条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。";
                 
                 var result = MessageBox.Show(message, "确认删除消息", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
@@ -1329,9 +1299,9 @@ namespace RUINORERP.UI.IM
 
                 // 获取要删除的消息ID列表
                 var messageIds = new List<long>();
-                foreach (ListViewItem item in lstMessages.SelectedItems)
+                foreach (DataGridViewRow row in dgvMessages.SelectedRows)
                 {
-                    if (item.Tag is long messageId)
+                    if (row.Cells["colMessageId"].Value is long messageId)
                     {
                         messageIds.Add(messageId);
                     }

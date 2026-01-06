@@ -259,7 +259,7 @@ namespace RUINORERP.UI.Common
                     //这里是显示明细
                     //要把单据信息传过去
 
-                     RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
 
 
                     if (RelatedMenuInfo == null)
@@ -283,7 +283,7 @@ namespace RUINORERP.UI.Common
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
                         if (billno != null)
                         {
-                         
+
                             //有时 有收付款类型的情况。要通过实体中具体的数据来定菜单。则在查出实体后来更新菜单信息
                             OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                         }
@@ -450,6 +450,15 @@ namespace RUINORERP.UI.Common
                  && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
                      .FirstOrDefault();
                 }
+                if (RelatedMenuInfo == null)
+                {
+                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                 && m.EntityName == tableName
+                 && m.BIBaseForm == "BaseBillEditGeneric`2")
+                     .FirstOrDefault();
+                }
+                //对账单虽然有区分收付款类型。但只有一种情况。所以这里还有加一个判断
+
                 #endregion
 
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);

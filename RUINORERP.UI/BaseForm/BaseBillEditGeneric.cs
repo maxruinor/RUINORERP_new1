@@ -4112,15 +4112,25 @@ namespace RUINORERP.UI.BaseForm
 
                         MenuPowerHelper menuPowerHelper;
                         menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                        string Flag = string.Empty;
-                        //付款
-                        //  Flag = typeof(RUINORERP.UI.FM.UCPayable).FullName;
 
                         tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                                     && m.EntityName == targetType.Name
                                     && m.BIBaseForm == "BaseBillEditGeneric`2")
-                        //&& m.BIBaseForm == "BaseBillEditGeneric`2" && m.ClassPath == Flag)
                         .FirstOrDefault();
+
+                        #region 特殊情况处理
+                        //如果有收付款类型。还是在查找菜单时区别收付款类型
+                        //BizEntityInfo entityInfo = EntityMappingHelper.GetEntityInfoByTableName(tableName);
+                        if (result.Data.ContainsProperty(nameof(ReceivePaymentType)))
+                        {
+                            string Flag = ((SharedFlag)result.Data.GetPropertyValue(nameof(ReceivePaymentType))).ToString();
+                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == targetType.Name
+                            && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
+                             .FirstOrDefault();
+                        }
+                        #endregion
+
+
                         if (RelatedMenuInfo != null)
                         {
                             await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, result.Data);

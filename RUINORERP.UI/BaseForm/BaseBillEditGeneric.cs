@@ -1,102 +1,101 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
-using static RUINORERP.UI.Common.DataBindingHelper;
-using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
 using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.AdvancedUIModule;
-using Krypton.Navigator;
-using System.Linq.Expressions;
-using RUINORERP.Common.Extensions;
-using System.Collections;
-using Microsoft.Extensions.DependencyInjection;
-
-using Microsoft.Extensions.Logging;
-using RUINOR.Core;
-using RUINORERP.Model.CommonModel;
+using ExCSS;
+using FastReport.DevComponents.AdvTree;
+using FastReport.DevComponents.DotNetBar;
+using FastReport.Table;
 using FluentValidation;
 using FluentValidation.Results;
+using Krypton.Navigator;
 using Krypton.Toolkit;
-using System.IO;
-using System.Diagnostics;
-using SqlSugar;
-using RUINORERP.Business.Processor;
-using ExCSS;
-
-using OfficeOpenXml.FormulaParsing.Excel.Functions;
+using LiveChartsCore.Geo;
+using MathNet.Numerics.LinearAlgebra.Factorization;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MySqlX.XDevAPI.Common;
-using RUINORERP.Business.Security;
-using RUINORERP.UI.CommonUI;
-using ImageHelper = RUINORERP.UI.Common.ImageHelper;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.UI.UserCenter.DataParts;
-using RUINORERP.UI.Network.Services;
-using RUINORERP.PacketSpec.Models.Message;
-using RUINORERP.Common.SnowflakeIdHelper;
-using RUINORERP.Model.Base.StatusManager;
 using Netron.GraphLib;
 using Newtonsoft.Json;
-using RUINORERP.UI.SS;
-using MathNet.Numerics.LinearAlgebra.Factorization;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using SourceGrid;
-using RUINORERP.UI.FormProperty;
-using SourceGrid.Cells.Models;
-using FastReport.Table;
-using FastReport.DevComponents.AdvTree;
 using Newtonsoft.Json.Linq;
-using System.Web.Caching;
-using Microsoft.Extensions.Caching.Memory;
-using RUINORERP.UI.PSI.SAL;
-using System.Threading;
-using System.Management.Instrumentation;
-using FastReport.DevComponents.DotNetBar;
-using RUINORERP.UI.WorkFlowDesigner.Entities;
-using System.Windows.Controls.Primitives;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.Common.LogHelper;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Model.Base;
-using System.Windows.Documents;
-using RUINORERP.UI.Monitoring.Auditing;
-using RUINORERP.UI.FM;
-using RUINORERP.UI.FM.FMBase;
-using LiveChartsCore.Geo;
-using RUINORERP.UI.MRP.MP;
-using Winista.Text.HtmlParser.Lex;
+using OfficeOpenXml.FormulaParsing.Excel.Functions;
 using Org.BouncyCastle.Asn1.X509.Qualified;
-using System.Management;
+using RUINOR.Core;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
-using RUINORERP.UI.Network;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
-using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Common.LogHelper;
+using RUINORERP.Common.SnowflakeIdHelper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.Dto;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Lock;
-using System.Windows.Markup.Localizer;
-using RUINORERP.SecurityTool;
 using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.SecurityTool;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.FM;
+using RUINORERP.UI.FM.FMBase;
+using RUINORERP.UI.FormProperty;
+using RUINORERP.UI.Monitoring.Auditing;
+using RUINORERP.UI.MRP.MP;
+using RUINORERP.UI.Network;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.PSI.SAL;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.UI.UserCenter.DataParts;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using SourceGrid;
+using SourceGrid.Cells.Models;
+using SqlSugar;
+using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Management;
+using System.Management.Instrumentation;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.Caching;
+using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
+using System.Windows.Forms;
+using System.Windows.Markup.Localizer;
+using Winista.Text.HtmlParser.Lex;
+using static RUINORERP.UI.Common.DataBindingHelper;
+using static RUINORERP.UI.Common.GUIUtils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using static WorkflowCore.Models.ActivityResult;
+using ImageHelper = RUINORERP.UI.Common.ImageHelper;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -570,6 +569,27 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>TodoUpdate对象</returns>
         protected TodoUpdate ConvertToTodoUpdate(T entity, TodoUpdateType updateType)
         {
+            // 发送任务状态更新通知 - 使用扩展的TodoUpdate
+            //var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
+            //// 使用StateManager获取状态类型和状态值
+            //var statusType = StateManager.GetStatusType(entity);
+            //var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
+
+            //var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+            //string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
+
+
+            //// 创建更新数据，传入正确的状态类型和值
+            //var updateData = TodoUpdate.Create(
+            //    originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
+            //    bizType,
+            //    pkid,
+            //     billNo,
+            //  EditEntity, statusType, currentStatus
+            //);
+
+
             try
             {
                 if (entity == null)
@@ -584,8 +604,8 @@ namespace RUINORERP.UI.BaseForm
                 string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                 // 获取业务类型
-                var bizType = RUINORERP.Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
-
+                var bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+                var bizStatusType = StateManager.GetStatusType(entity);
                 // 创建TodoUpdate对象
                 TodoUpdate update = TodoUpdate.Create(
                     updateType,
@@ -593,23 +613,11 @@ namespace RUINORERP.UI.BaseForm
                     billId,
                     billNo,
                     entity,
-                    nameof(DataStatus),
-                    entity.GetPropertyValue(nameof(DataStatus))
+                    entity.StateManager.GetStatusType(entity),
+                    StateManager.GetBusinessStatus(entity, bizStatusType)
                 );
 
-                // 添加操作描述
-                switch (updateType)
-                {
-                    case TodoUpdateType.StatusChanged:
-                        update.OperationDescription = $"【{billNo}】单据状态已变更";
-                        break;
-                    case TodoUpdateType.Deleted:
-                        update.OperationDescription = $"【{billNo}】单据已删除";
-                        break;
-                    case TodoUpdateType.Created:
-                        update.OperationDescription = $"【{billNo}】单据已创建";
-                        break;
-                }
+                // 操作描述不再在这里设置，由MessageData.CreateTodoUpdateMessage方法智能生成
 
                 // 添加当前用户ID
                 update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
@@ -622,6 +630,7 @@ namespace RUINORERP.UI.BaseForm
                 return null;
             }
         }
+
 
 
         public BaseBillEditGeneric()
@@ -2962,7 +2971,7 @@ namespace RUINORERP.UI.BaseForm
                     string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                     // 统一状态同步 - 结案操作
-                    var updateData = CreateTodoUpdate("结案", "单据已结案", pkid, billNo);
+                    var updateData = ConvertToTodoUpdate(rs.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "结案");
@@ -3180,7 +3189,7 @@ namespace RUINORERP.UI.BaseForm
                     string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                     // 统一状态同步 - 审核操作
-                    var updateData = CreateTodoUpdate("审核", "单据已审核通过", pkid, billNo);
+                    var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "审核");
@@ -3531,7 +3540,7 @@ namespace RUINORERP.UI.BaseForm
                     string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                     // 统一状态同步 - 反审操作
-                    var updateData = CreateTodoUpdate("反审", "单据已反审", pkid, billNo);
+                    var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
                     if (updateData != null)
                     {
                         await SyncTodoStatusAsync(updateData, "反审");
@@ -4742,31 +4751,13 @@ namespace RUINORERP.UI.BaseForm
                 // 保存成功后的锁定状态管理
                 await PostSaveLockManagement(entity, pkid);
                 MainForm.Instance.uclog.AddLog("保存成功");
+                //保存是否需要提醒？状态？
+                if (pkid > 0)
+                {
+                    //var updateData = ConvertToTodoUpdate(entity);
+                    //TodoSyncManager.Instance.PublishUpdate(updateData);
+                }
 
-
-                // 发送任务状态更新通知 - 使用扩展的TodoUpdate
-                var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                // 使用StateManager获取状态类型和状态值
-                var statusType = StateManager.GetStatusType(entity);
-                var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
-
-                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
-
-                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-
-
-                // 创建更新数据，传入正确的状态类型和值
-                var updateData = TodoUpdate.Create(
-                    originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                    bizType,
-                    pkid,
-                     billNo,
-                  EditEntity
-                );
-
-
-
-                TodoSyncManager.Instance.PublishUpdate(updateData);
             }
             else
             {
@@ -5060,21 +5051,7 @@ namespace RUINORERP.UI.BaseForm
                         await DeleteRemoteImages();
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
-
-                        var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
-
-                        string billNo = editEntity.GetPropertyValue(EntityInfo.NoField).ToString();
-
-                        // 发送任务状态删除通知 - 使用扩展的TodoUpdate
-                        var bizType = EntityMappingHelper.GetBillData<T>(editEntity as T).BizType;
-                        var updateData = TodoUpdate.Create(
-                            PacketSpec.Enums.Core.TodoUpdateType.Deleted,
-                            bizType,
-                            PKValue.ToLong(),
-                            billNo,
-                            EditEntity
-                        );
-
+                        var updateData = ConvertToTodoUpdate(editEntity, TodoUpdateType.Deleted);
                         TodoSyncManager.Instance.PublishUpdate(updateData);
 
                         //加载一个空的显示的UI
@@ -5275,7 +5252,7 @@ namespace RUINORERP.UI.BaseForm
                         string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
 
                         // 统一状态同步 - 提交操作
-                        var updateData = CreateTodoUpdate("提交", "单据已提交", pkid, billNo);
+                        var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
                         if (updateData != null)
                         {
                             await SyncTodoStatusAsync(updateData, "提交");
@@ -6196,37 +6173,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 创建统一的任务状态更新数据
-        /// </summary>
-        /// <param name="operationType">操作类型</param>
-        /// <param name="operationDescription">操作描述</param>
-        /// <returns>任务状态更新数据</returns>
-        private TodoUpdate CreateTodoUpdate(string operationType, string operationDescription, long pkid, string billno)
-        {
-            try
-            {
-                var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-                var updateData = TodoUpdate.Create(
-                    PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-                    bizType,
-                    pkid,
-                    billno,
-                    EditEntity
-                );
-
-                // 设置操作描述
-                updateData.OperationDescription = operationDescription ?? $"单据{operationType}";
-
-                return updateData;
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger?.LogError(ex, "创建任务状态更新数据时发生异常");
-                return null;
-            }
-        }
-
+ 
         #endregion
     }
 

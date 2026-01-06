@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定
     /// </summary>
     [Serializable()]
-    [Description("标准物料表BOM明细的替代材料表-使用优化级按库存量-成本-保质时间在配置来确定")]
+    [Description("标准物料表BOM明细的替代材料表")]
     [SugarTable("tb_BOM_SDetailSubstituteMaterial")]
     public partial class tb_BOM_SDetailSubstituteMaterial: BaseEntity, ICloneable
     {

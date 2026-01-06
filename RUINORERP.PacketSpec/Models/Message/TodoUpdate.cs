@@ -42,14 +42,14 @@ namespace RUINORERP.PacketSpec.Models.Message
         public Dictionary<string, object> ConditionValues { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
-        /// 状态类型
+        /// 业务状态类型
         /// </summary>
-        public string StatusType { get; set; }
+        public Type BizStatusType { get; set; }
 
         /// <summary>
         /// 业务状态值
         /// <summary>
-        public object BusinessStatusValue { get; set; }
+        public object BizStatusValue { get; set; }
 
         /// <summary>
         /// 创建BillStatusUpdateData实例的工厂方法
@@ -67,8 +67,8 @@ namespace RUINORERP.PacketSpec.Models.Message
             long billId,
             string bilno,
             object entity,
-            string statusType = null,
-            object businessStatusValue = null
+            Type statusType,
+            object businessStatusValue
         )
         {
             return new TodoUpdate
@@ -78,8 +78,8 @@ namespace RUINORERP.PacketSpec.Models.Message
                 BillId = billId,
                 BillNo= bilno,
                 entity = entity,
-                StatusType = statusType,
-                BusinessStatusValue = businessStatusValue,
+                BizStatusType = statusType,
+                BizStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(),
                 ConditionValues = new Dictionary<string, object>()
             };
@@ -95,9 +95,9 @@ namespace RUINORERP.PacketSpec.Models.Message
         /// <returns>创建的BillStatusUpdateData实例</returns>
         public static TodoUpdate CreateFromUpdate(
             TodoUpdate update,
-            object entity = null,
-            string statusType = null,
-            object businessStatusValue = null
+            object entity ,
+            Type statusType,
+            object businessStatusValue
         )
         {
             return new TodoUpdate
@@ -107,8 +107,8 @@ namespace RUINORERP.PacketSpec.Models.Message
                 BillId = update.BillId,
                 BillNo=update.BillNo,
                 entity = entity ?? new BaseEntity(),
-                StatusType = statusType,
-                BusinessStatusValue = businessStatusValue,
+                BizStatusType = statusType,
+                BizStatusValue = businessStatusValue,
                 AdditionalData = new Dictionary<string, object>(update.AdditionalData),
                 ConditionValues = new Dictionary<string, object>()
             };

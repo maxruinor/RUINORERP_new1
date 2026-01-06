@@ -494,30 +494,24 @@ namespace RUINORERP.UI.BaseForm
                     long billId = Convert.ToInt64(pkValue);
                     if (billId > 0)
                     {  // 发送任务状态更新通知 - 使用扩展的TodoUpdate
-                        var bizType = EntityMappingHelper.GetBillData<M>(entity).BizType;
-                        // 创建TodoUpdate对象
-                        TodoUpdate update = new TodoUpdate
-                        {
-                            UpdateType = updateType,
-                            BusinessType = bizType,
-                            BillId = billId,
-                           // entity = entity, // 添加实体对象引用
-                            StatusType = nameof(DataStatus),
-                            BusinessStatusValue = entity.GetPropertyValue(nameof(DataStatus))
-                        };
-                        // 添加操作描述
-                        switch (updateType)
-                        {
-                            case TodoUpdateType.StatusChanged:
-                                update.OperationDescription = "单据状态已变更";
-                                break;
-                            case TodoUpdateType.Deleted:
-                                update.OperationDescription = "单据已删除";
-                                break;
-                            case TodoUpdateType.Created:
-                                update.OperationDescription = "单据已创建";
-                                break;
-                        }
+                        var billData = EntityMappingHelper.GetBillData<M>(entity);
+                        var bizType = billData.BizType;
+                        string billNo = billData.BillNo;
+                        var baseEntity = entity as BaseEntity;
+                        var bizStatusType = StateManager.GetStatusType(baseEntity);
+                        // 创建TodoUpdate对象 - 使用统一的工厂方法
+                        TodoUpdate update = TodoUpdate.Create(
+                            updateType,
+                            bizType,
+                            billId,
+                            billNo,
+                            entity,
+                            StateManager.GetStatusType(baseEntity),
+                            StateManager.GetBusinessStatus(baseEntity, bizStatusType)
+                        );
+
+                        // 操作描述不再在这里设置，由MessageData.CreateTodoUpdateMessage方法智能生成
+
                         // 添加当前用户ID
                         update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
                         updates.Add(update);

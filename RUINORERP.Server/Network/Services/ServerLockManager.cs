@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Lock;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;

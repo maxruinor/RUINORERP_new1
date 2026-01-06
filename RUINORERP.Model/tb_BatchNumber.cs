@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 批次表 在采购入库时和出库时保存批次ID
     /// </summary>
     [Serializable()]
-    [Description("批次表 在采购入库时和出库时保存批次ID")]
+    [Description("批次表")]
     [SugarTable("tb_BatchNumber")]
     public partial class tb_BatchNumber: BaseEntity, ICloneable
     {

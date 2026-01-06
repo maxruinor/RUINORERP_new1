@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识
     /// </summary>
     [Serializable()]
-    [Description("BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识")]
+    [Description("BOM配置历史")]
     [SugarTable("tb_BOMConfigHistory")]
     public partial class tb_BOMConfigHistory: BaseEntity, ICloneable
     {

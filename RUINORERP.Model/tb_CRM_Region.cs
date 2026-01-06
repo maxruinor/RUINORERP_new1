@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 销售分区表-大中华区
     /// </summary>
     [Serializable()]
-    [Description("销售分区表-大中华区")]
+    [Description("销售分区表")]
     [SugarTable("tb_CRM_Region")]
     public partial class tb_CRM_Region: BaseEntity, ICloneable
     {

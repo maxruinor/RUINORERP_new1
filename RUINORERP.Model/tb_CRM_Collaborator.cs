@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 协作人记录表-记录内部人员介绍客户的情况
     /// </summary>
     [Serializable()]
-    [Description("协作人记录表-记录内部人员介绍客户的情况")]
+    [Description("协作人记录表")]
     [SugarTable("tb_CRM_Collaborator")]
     public partial class tb_CRM_Collaborator: BaseEntity, ICloneable
     {

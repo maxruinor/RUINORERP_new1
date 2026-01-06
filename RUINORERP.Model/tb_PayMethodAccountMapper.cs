@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 收付款方式与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面
     /// </summary>
     [Serializable()]
-    [Description("收付款方式与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面")]
+    [Description("收付款方式与账号映射配置表")]
     [SugarTable("tb_PayMethodAccountMapper")]
     public partial class tb_PayMethodAccountMapper: BaseEntity, ICloneable
     {

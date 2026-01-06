@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用
     /// </summary>
     [Serializable()]
-    [Description("目标客户-公海客户CRM系统中使用，给成交客户作外键引用")]
+    [Description("目标客户")]
     [SugarTable("tb_CRM_Customer")]
     public partial class tb_CRM_Customer: BaseEntity, ICloneable
     {

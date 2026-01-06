@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。
     /// </summary>
     [Serializable()]
-    [Description("产品转换单 A变成B出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。")]
+    [Description("产品转换单")]
     [SugarTable("tb_ProdConversion")]
     public partial class tb_ProdConversion: BaseEntity, ICloneable
     {

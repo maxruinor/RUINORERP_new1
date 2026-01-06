@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html 
     /// </summary>
     [Serializable()]
-    [Description("审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html ")]
+    [Description("审核配置表")]
     [SugarTable("tb_Approval")]
     public partial class tb_Approval: BaseEntity, ICloneable
     {

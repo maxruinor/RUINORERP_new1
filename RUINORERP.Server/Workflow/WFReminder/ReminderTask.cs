@@ -10,7 +10,6 @@ using System.Numerics;
 using RUINORERP.Server.Network.Interfaces.Services;
 using Newtonsoft.Json;
 using Azure.Core;
-using RUINORERP.Model.TransModel;
 using RUINORERP.Model;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.BizService;
@@ -18,7 +17,8 @@ using RUINORERP.PacketSpec.Enums;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Messaging;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {
@@ -89,10 +89,10 @@ namespace RUINORERP.Server.Workflow.WFReminder
                 //提醒到期了 - 将MessageStatus转换为bool类型（true表示已处理）
                 serviceChannel.ProcessCRMFollowUpPlansData(exData, true);
             }
-            if (exData.Status != Model.MessageStatus.Cancel)
+            if (exData.Status != MessageStatus.Cancel)
             {
                 //将客户端要求的间隔时间传到步骤的参数，再传到工作流中
-                if (exData.Status == Model.MessageStatus.WaitRminder)
+                if (exData.Status == MessageStatus.WaitRminder)
                 {
                     //将回应的参数传给步骤再传到工作流中
                     RemindTime = System.DateTime.Now.AddSeconds(exData.RemindInterval);

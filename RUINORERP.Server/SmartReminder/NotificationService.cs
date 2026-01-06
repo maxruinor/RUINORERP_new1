@@ -9,10 +9,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.Server.Network.CommandHandlers;
-using RUINORERP.Model.TransModel;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.SmartReminder
 {

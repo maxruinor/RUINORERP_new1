@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 流程定义 http://www.phpheidong.com/blog/article/68471/a3129f742e5e396e3d1e/
     /// </summary>
     [Serializable()]
-    [Description("流程定义 http://www.phpheidong.com/blog/article/68471/a3129f742e5e396e3d1e/")]
+    [Description("流程定义")]
     [SugarTable("tb_ProcessDefinition")]
     public partial class tb_ProcessDefinition: BaseEntity, ICloneable
     {

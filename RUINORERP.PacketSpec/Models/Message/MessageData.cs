@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Model.Base.StatusManager;
+using RUINORERP.PacketSpec.Enums.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static WorkflowCore.Models.ActivityResult;
 
 namespace RUINORERP.PacketSpec.Models.Message
 {
@@ -179,7 +182,7 @@ namespace RUINORERP.PacketSpec.Models.Message
         /// </summary>
         public string Category { get; set; } = "业务通知";
 
-           
+
         /// <summary>
         /// 标记消息为已读
         /// 更新已读状态并设置阅读时间
@@ -208,10 +211,10 @@ namespace RUINORERP.PacketSpec.Models.Message
         [JsonIgnore]
         public DateTime? ReadTime { get; set; }
 
- 
+
         /// <summary>
         /// 创建任务状态变更消息数据的统一方法
-        /// 用于替换重复的构造代码
+        /// 用于替换重复的构造代码，并智能生成详细的消息内容
         /// </summary>
         /// <param name="update">任务更新数据</param>
         /// <param name="senderId">发送者ID</param>
@@ -229,12 +232,18 @@ namespace RUINORERP.PacketSpec.Models.Message
             if (update == null)
                 throw new ArgumentNullException(nameof(update), "任务更新数据不能为空");
 
+            // 生成详细的消息标题和内容
+            string title = GenerateDetailedTitle(update);
+            string content = GenerateDetailedContent(update, senderName);
+
             return new MessageData
             {
                 MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                 MessageType = MessageType.Business,
-                Title = "任务状态变更",
-                Content = update.OperationDescription ?? $"[{update.BusinessType}]状态已变更",
+                Title = title,
+                Content = content,
+                BizType = update.BusinessType,
+                BizId = update.BillId,
                 BizData = update,
                 SenderId = senderId,
                 SenderName = senderName,
@@ -245,6 +254,113 @@ namespace RUINORERP.PacketSpec.Models.Message
                 AutoAddToMessageCenter = true,
                 Category = "业务通知"
             };
+        }
+
+        /// <summary>
+        /// 根据任务更新数据生成详细的消息标题
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <returns>生成的详细标题</returns>
+        private static string GenerateDetailedTitle(TodoUpdate update)
+        {
+            string billInfo = !string.IsNullOrEmpty(update.BillNo)
+                ? $"【{update.BillNo}】"
+                : $"【{update.BusinessType} #{update.BillId}】";
+
+            switch (update.UpdateType)
+            {
+                case TodoUpdateType.StatusChanged:
+                    return $"{billInfo}{GetStatusChangeAction(update)}";
+                case TodoUpdateType.Deleted:
+                    return $"{billInfo}单据已删除";
+                case TodoUpdateType.Created:
+                    return $"{billInfo}单据已创建";
+                default:
+                    return $"{billInfo}任务状态变更";
+            }
+        }
+
+        /// <summary>
+        /// 根据任务更新数据生成详细的消息内容
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <param name="senderName">发送者名称</param>
+        /// <returns>生成的详细内容</returns>
+        private static string GenerateDetailedContent(TodoUpdate update, string senderName)
+        {
+            string billInfo = !string.IsNullOrEmpty(update.BillNo)
+                ? $"单据编号：{update.BillNo}\n"
+                : $"单据ID：{update.BillId}\n";
+
+            string businessTypeInfo = $"业务类型：{update.BusinessType}\n";
+            string statusInfo = GetStatusInfo(update);
+            string operationInfo = !string.IsNullOrEmpty(update.OperationDescription)
+                ? $"操作描述：{update.OperationDescription}\n"
+                : string.Empty;
+            string operatorInfo = !string.IsNullOrEmpty(senderName)
+                ? $"操作人：{senderName}\n"
+                : string.Empty;
+            string timeInfo = $"操作时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+
+            return $"{billInfo}{businessTypeInfo}{statusInfo}{operationInfo}{operatorInfo}{timeInfo}";
+        }
+
+        /// <summary>
+        /// 根据任务更新数据获取状态变更动作描述
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <returns>状态变更动作描述</returns>
+        private static string GetStatusChangeAction(TodoUpdate update)
+        {
+            // 根据BusinessStatusValue获取状态描述
+            if (update.BizStatusValue != null)
+            {
+                if (update.BizStatusValue is DataStatus dataStatus)
+                {
+                    return dataStatus switch
+                    {
+                        DataStatus.草稿 => "单据已保存为草稿",
+                        DataStatus.新建 => "单据已提交",
+                        DataStatus.确认 => "单据已审核",
+                        DataStatus.完结 => "单据已结案",
+                        DataStatus.作废 => "单据已取消",
+                        _ => $"状态已变更为{dataStatus}"
+                    };
+                }
+                else if (update.BizStatusValue is ApprovalStatus approvalStatus)
+                {
+                    return approvalStatus switch
+                    {
+                        ApprovalStatus.未审核 => "审批状态已重置为未审核",
+                        //ApprovalStatus.审核中 => "审批中",
+                        ApprovalStatus.审核通过 => "审批已通过",
+                        ApprovalStatus.审核驳回 => "审批已驳回",
+                        _ => $"审批状态已变更为{approvalStatus}"
+                    };
+                }
+                else if (update.BizStatusValue is string statusStr)
+                {
+                    return $"状态已变更为{statusStr}";
+                }
+            }
+
+            return "状态已变更";
+        }
+
+        /// <summary>
+        /// 根据任务更新数据获取状态信息
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <returns>状态信息</returns>
+        private static string GetStatusInfo(TodoUpdate update)
+        {
+
+            string statusValue = update.BizStatusValue?.ToString() ?? "未知";
+
+
+            string statusDescription = GlobalStateRulesManager.Instance.GetStatusTypeDescription(update.BizStatusType);//GetStatusDescription(update.BusinessStatusValue);
+
+            return $"状态类型：{update.BizStatusType}\n当前状态：{statusValue}{(!string.IsNullOrEmpty(statusDescription) ? $"（{statusDescription}）" : string.Empty)}\n";
         }
     }
 }

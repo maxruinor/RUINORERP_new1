@@ -10,10 +10,10 @@ using RUINORERP.Server.Network.Services;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.Model.TransModel;
 using System.Windows.Forms;
-using RUINORERP.PacketSpec.Models.Messaging;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {

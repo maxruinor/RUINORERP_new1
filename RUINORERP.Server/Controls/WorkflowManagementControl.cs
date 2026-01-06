@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Model.TransModel;
+ 
 using RUINORERP.Server.Workflow;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;
@@ -23,6 +23,8 @@ using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using RUINORERP.Business.Cache;
 using RUINORERP.Server.BizService;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.Controls
 {
@@ -364,7 +366,7 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 检查提醒是否已取消或到期
-                if (exData.Status == Model.MessageStatus.Cancel)
+                if (exData.Status == MessageStatus.Cancel)
                 {
                     throw new Exception("该提醒已被取消");
                 }
@@ -388,7 +390,7 @@ namespace RUINORERP.Server.Controls
                         {
                             // 增加提醒次数
                             exData.RemindTimes++;
-                            var request = new RUINORERP.PacketSpec.Models.Messaging.MessageRequest(MessageType.Business, exData);
+                            var request = new MessageRequest(MessageType.Business, exData);
                             var success = await sessionService.SendCommandAsync(
                                 session.SessionID, 
                                 RUINORERP.PacketSpec.Commands.WorkflowCommands.WorkflowReminder, 

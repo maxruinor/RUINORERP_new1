@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞
     /// </summary>
     [Serializable()]
-    [Description("订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞")]
+    [Description("订单装箱单")]
     [SugarTable("tb_OrderPacking")]
     public partial class tb_OrderPacking: BaseEntity, ICloneable
     {

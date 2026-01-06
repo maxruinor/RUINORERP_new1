@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 总账表来源于凭证分类汇总是财务报表的基础数据
     /// </summary>
     [Serializable()]
-    [Description("总账表来源于凭证分类汇总是财务报表的基础数据")]
+    [Description("总账表")]
     [SugarTable("tb_FM_GeneralLedger")]
     public partial class tb_FM_GeneralLedger: BaseEntity, ICloneable
     {

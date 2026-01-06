@@ -7,8 +7,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualBasic.ApplicationServices;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
-using RUINORERP.Model.TransModel;
+ 
 using RUINORERP.PacketSpec;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Authentication;

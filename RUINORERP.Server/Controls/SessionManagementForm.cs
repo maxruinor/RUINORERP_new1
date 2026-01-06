@@ -9,8 +9,7 @@
 using RUINORERP.Server.Network.Models;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Messaging;
-using RUINORERP.Model.TransModel;
+ 
 using RUINORERP.Server.Network.Services;
 using System;
 using System.Collections.Generic;
@@ -19,10 +18,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Management;
-using MessageRequest = RUINORERP.PacketSpec.Models.Messaging.MessageRequest;
 using System.Diagnostics;
 using RUINORERP.Server.Network.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.Server.Controls
 {

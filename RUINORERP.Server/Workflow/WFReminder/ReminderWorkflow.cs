@@ -12,7 +12,8 @@ using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFApproval.Steps;
 using RUINORERP.Global;
 using System.Windows.Forms;
-using RUINORERP.Model.TransModel;
+ 
+using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.Server.Workflow.WFReminder
 {

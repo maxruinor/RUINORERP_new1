@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
-using RUINORERP.Model.TransModel;
+ 
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Server.BizService;
 using System;
 using System.Collections.Concurrent;

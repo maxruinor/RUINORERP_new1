@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 先采购合同再订单,条款内容后面补充 注意一个合同可以多个发票一个发票也可以多个合同
     /// </summary>
     [Serializable()]
-    [Description("先采购合同再订单,条款内容后面补充 注意一个合同可以多个发票一个发票也可以多个合同")]
+    [Description("合同单")]
     [SugarTable("tb_PO_Contract")]
     public partial class tb_PO_Contract: BaseEntity, ICloneable
     {

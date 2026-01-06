@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 流程步骤 为转移条件集合，Field为条件左参数，Operator为操作操作符如果值类型为String则表达式只能为==或者!=，Value为表达式值
     /// </summary>
     [Serializable()]
-    [Description("流程步骤 为转移条件集合，Field为条件左参数，Operator为操作操作符如果值类型为String则表达式只能为==或者!=，Value为表达式值")]
+    [Description("流程步骤")]
     [SugarTable("tb_ConNodeConditions")]
     public partial class tb_ConNodeConditions: BaseEntity, ICloneable
     {

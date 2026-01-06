@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息，提高沟通效率和透明度
     /// </summary>
     [Serializable()]
-    [Description("全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息，提高沟通效率和透明度")]
+    [Description("全局级批注表")]
     [SugarTable("tb_gl_Comment")]
     public partial class tb_gl_Comment: BaseEntity, ICloneable
     {

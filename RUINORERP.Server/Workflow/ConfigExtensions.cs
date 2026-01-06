@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
 using RUINORERP.Model;
-using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Server.Workflow.Steps;
 using RUINORERP.Server.Workflow.WFApproval;
 using RUINORERP.Server.Workflow.WFPush;

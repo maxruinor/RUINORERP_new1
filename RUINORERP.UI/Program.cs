@@ -532,9 +532,6 @@ namespace RUINORERP.UI
                     EntityMappingHelper.Initialize();
 
 
-
-
-
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
                     Application.Run(form1);
 

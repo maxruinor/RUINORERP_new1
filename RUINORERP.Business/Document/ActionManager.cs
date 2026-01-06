@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.CommService;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Common.LogHelper;
 using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
@@ -155,7 +157,7 @@ namespace RUINORERP.Business.Document
         /// <returns>可用操作列表</returns>
         public List<ActionOption> GetAvailableActions<TSource>(TSource source = null) where TSource : BaseEntity
         {
-            var conversions = _converterFactory.GetAvailableConversions<TSource>();
+            var conversions = _converterFactory.GetAvailableConversions<TSource>(source);
             var result = conversions.ConvertAll(c => new ActionOption
             {
                 DisplayName = c.DisplayName,
@@ -180,18 +182,36 @@ namespace RUINORERP.Business.Document
                 // 只有已审核的单据才能进行转换操作
                 if (source is BaseEntity)
                 {
+                    string Flag = string.Empty;
+                    #region 特殊情况处理
+                    //如果有收付款类型。还是在查找菜单时区别收付款类型
+                    if (source.ContainsProperty(nameof(ReceivePaymentType)))
+                    {
+                        Flag = ((SharedFlag)source.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
+                    }
+                    #endregion
+
                     //当一个用户有这个目标单据窗体及新建的权限才显示这个目标单据的联动菜单
                     // 根据权限设置操作的可见性和可用性
                     foreach (var action in result)
                     {
-                        var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.TargetType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric")).FirstOrDefault();
+                        var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
+                            .WhereIF(!string.IsNullOrEmpty(Flag), c => c.tb_menuinfo.UIPropertyIdentifier == Flag)
+                            .FirstOrDefault();
+
+                        //对账单这种，就是有收付类型。但只有一种情况
+                        if (MenuInfo == null && !string.IsNullOrEmpty(Flag))
+                        {
+                            MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
+                            .FirstOrDefault();
+                        }
+
                         if (MenuInfo != null)
                         {
                             var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.联动.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
                             if (btnInfo != null)
                             {
                                 action.IsVisible = btnInfo.IsVisble;
-                                action.IsEnabled = btnInfo.IsEnabled;
                             }
                             else
                             {
@@ -202,6 +222,10 @@ namespace RUINORERP.Business.Document
                         {
                             action.IsVisible = false;
                         }
+
+                        //控制是否可用,暂时默认可以用，是否能保存。看目标窗体中的权限控制
+                        action.IsEnabled = true;
+
                     }
 
                     // 假设Status属性表示单据状态，1表示已审核

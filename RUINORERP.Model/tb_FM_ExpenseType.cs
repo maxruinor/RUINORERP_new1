@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 业务类型 报销，员工借支还款，运费
     /// </summary>
     [Serializable()]
-    [Description("业务类型 报销，员工借支还款，运费")]
+    [Description("业务类型")]
     [SugarTable("tb_FM_ExpenseType")]
     public partial class tb_FM_ExpenseType: BaseEntity, ICloneable
     {

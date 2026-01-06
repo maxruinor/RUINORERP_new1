@@ -7,6 +7,7 @@ using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Global.Model;
 using RUINORERP.Model;

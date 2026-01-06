@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 功能模块定义（仅限部分已经硬码并体现于菜单表中）
     /// </summary>
     [Serializable()]
-    [Description("功能模块定义（仅限部分已经硬码并体现于菜单表中）")]
+    [Description("功能模块定义")]
     [SugarTable("tb_ModuleDefinition")]
     public partial class tb_ModuleDefinition: BaseEntity, ICloneable
     {

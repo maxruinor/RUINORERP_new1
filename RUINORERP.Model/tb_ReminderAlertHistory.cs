@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 提醒信息是通过什么规则通知了什么内容给谁在什么时间。通知记录  暂时不处理
     /// </summary>
     [Serializable()]
-    [Description("提醒信息是通过什么规则通知了什么内容给谁在什么时间。通知记录  暂时不处理")]
+    [Description("提醒信息")]
     [SugarTable("tb_ReminderAlertHistory")]
     public partial class tb_ReminderAlertHistory: BaseEntity, ICloneable
     {

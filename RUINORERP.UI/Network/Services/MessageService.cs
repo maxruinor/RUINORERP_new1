@@ -890,23 +890,22 @@ namespace RUINORERP.UI.Network.Services
                 // 设置发送者信息（用于服务器端过滤）
                 var request = new MessageRequest(MessageType.Business, messageData);
             
-
+                // 发送消息到服务器
                 var response = await _messageSender.Value.SendCommandWithResponseAsync<MessageResponse>(
                     MessageCommands.SendTodoNotification, request, ct);
 
-                // 只记录关键信息和错误
-                if (response != null && response.IsSuccess)
+                // 只记录关键错误信息
+                if (response != null && !response.IsSuccess)
                 {
-                    _logger?.LogDebug("任务状态通知发送成功 - 业务类型: {BusinessType}", 
-                        messageData.BizData?.GetType()?.Name ?? "未知");
-                }
-                else
-                {
-                    _logger?.LogWarning("任务状态通知发送失败 - 业务类型: {BusinessType}, 错误: {ErrorMessage}",
-                        messageData.BizData?.GetType()?.Name ?? "未知", response?.ErrorMessage ?? "未知错误");
+                    _logger?.LogWarning("任务状态通知发送失败 - 错误信息: {ErrorMessage}", response.ErrorMessage ?? "未知错误");
                 }
 
                 return response;
+            }
+            catch (OperationCanceledException)
+            {
+                // 取消操作不需要记录日志
+                return MessageResponse.Fail(MessageType.Business, "发送任务状态通知被取消");
             }
             catch (Exception ex)
             {

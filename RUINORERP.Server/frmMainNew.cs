@@ -29,9 +29,10 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.ConfigModel;
-using RUINORERP.Model.TransModel;
+ 
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server.BizService;
 using RUINORERP.Server.Comm;

@@ -5,7 +5,7 @@ using RUINORERP.Business;
 using RUINORERP.Global.EnumExt.CRM;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
-using RUINORERP.Model.TransModel;
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Server.Workflow.WFReminder;
 using System;

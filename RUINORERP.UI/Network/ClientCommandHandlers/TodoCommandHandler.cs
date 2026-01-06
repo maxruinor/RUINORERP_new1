@@ -154,31 +154,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 if (messageService != null)
                 {
                     // 创建消息数据
-                    var message = originalMessageData != null ?
-                        new MessageData
-                        {
-                            MessageId = originalMessageData.MessageId,
-                            MessageType = MessageType.Business,
-                            Title = originalMessageData.Title,
-                            Content = originalMessageData.Content,
-                            BizType = update.BusinessType,
-                            BizId = update.BillId,
-                            BizData = update,
-                            SendTime = originalMessageData.SendTime,
-                            IsRead = false
-                        } :
-                        new MessageData
-                        {
-                            MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
-                            MessageType = MessageType.Business,
-                            Title = "任务状态变更",
-                            Content = $"[{update.BusinessType}]{update.OperationDescription}",
-                            BizType = update.BusinessType,
-                            BizId = update.BillId,
-                            BizData = update,
-                            SendTime = DateTime.Now,
-                            IsRead = false
-                        };
+                    MessageData message;
+                    if (originalMessageData != null)
+                    {
+                        // 如果有原始消息数据，直接使用它
+                        message = originalMessageData;
+                        // 更新消息的业务数据
+                        message.BizData = update;
+                    }
+                    else
+                    {
+                        // 使用统一的工厂方法创建消息数据，智能生成详细的标题和内容
+                        message = MessageData.CreateTodoUpdateMessage(update);
+                    }
 
                     // 添加到消息管理器
                     messageService.OnBusinessMessageReceived(message);

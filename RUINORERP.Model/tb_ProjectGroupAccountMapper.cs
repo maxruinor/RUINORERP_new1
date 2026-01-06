@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 项目组与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面
     /// </summary>
     [Serializable()]
-    [Description("项目组与账号映射配置表-销售订单收款时付款方式即可指定到收到哪个账号下面")]
+    [Description("项目组与账号映射配置表")]
     [SugarTable("tb_ProjectGroupAccountMapper")]
     public partial class tb_ProjectGroupAccountMapper: BaseEntity, ICloneable
     {

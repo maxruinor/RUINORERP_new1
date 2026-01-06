@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？
     /// </summary>
     [Serializable()]
-    [Description("单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？")]
+    [Description("单据标识")]
     [SugarTable("tb_BillMarking")]
     public partial class tb_BillMarking: BaseEntity, ICloneable
     {

@@ -478,7 +478,7 @@ namespace RUINORERP.Business
         /// 转换为销售退库单
         /// </summary>
         /// <param name="prodBorrowing"></param>
-        public  async Task<tb_ProdReturning> BorrowToProdReturning(tb_ProdBorrowing prodBorrowing)
+        public  async Task<tb_ProdReturning> BuildProdReturningFromBorrow(tb_ProdBorrowing prodBorrowing)
         {
             tb_ProdReturning entity = new tb_ProdReturning();
             //转单

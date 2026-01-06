@@ -48,6 +48,7 @@ namespace RUINORERP.UI.IM
             this.panelHeader = new System.Windows.Forms.Panel();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.btnMarkAllRead = new System.Windows.Forms.Button();
+            this.btnSettings = new System.Windows.Forms.Button();
             this.lblUnreadCount = new System.Windows.Forms.Label();
             this.contextMenuStripMessages.SuspendLayout();
             this.panelHeader.SuspendLayout();
@@ -155,6 +156,7 @@ namespace RUINORERP.UI.IM
             this.menuClearAll.Click += new System.EventHandler(this.menuClearAll_Click);
             
             // panelHeader
+            this.panelHeader.Controls.Add(this.btnSettings);
             this.panelHeader.Controls.Add(this.btnRefresh);
             this.panelHeader.Controls.Add(this.btnMarkAllRead);
             this.panelHeader.Controls.Add(this.lblUnreadCount);
@@ -172,6 +174,15 @@ namespace RUINORERP.UI.IM
             this.btnRefresh.Text = "刷新";
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            
+            // btnSettings
+            this.btnSettings.Location = new System.Drawing.Point(310, 10);
+            this.btnSettings.Name = "btnSettings";
+            this.btnSettings.Size = new System.Drawing.Size(75, 23);
+            this.btnSettings.TabIndex = 3;
+            this.btnSettings.Text = "设置";
+            this.btnSettings.UseVisualStyleBackColor = true;
+            this.btnSettings.Click += new System.EventHandler(this.btnSettings_Click);
             
             // btnMarkAllRead
             this.btnMarkAllRead.Location = new System.Drawing.Point(120, 10);
@@ -225,5 +236,6 @@ namespace RUINORERP.UI.IM
         private System.Windows.Forms.Label lblUnreadCount;
         private System.Windows.Forms.Button btnMarkAllRead;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnSettings;
     }
 }

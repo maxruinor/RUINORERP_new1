@@ -401,6 +401,22 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private string _IMConfig;
+        /// <summary>
+        /// 消息模块配置
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IMConfig", ColDesc = "消息模块配置")]
+        [SugarColumn(ColumnDataType = "text", SqlParameterDbType = "String", ColumnName = "IMConfig", Length = 2147483647, IsNullable = false, ColumnDescription = "消息模块配置")]
+        public string IMConfig
+        {
+            get { return _IMConfig; }
+            set
+            {
+                SetProperty(ref _IMConfig, value);
+            }
+        }
+
         private string _FunctionConfiguration;
         /// <summary>
         /// 功能配置

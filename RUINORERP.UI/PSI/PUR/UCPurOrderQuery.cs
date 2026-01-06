@@ -198,7 +198,7 @@ namespace RUINORERP.UI.PSI.PUR
                     }
 
                     tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry = await ctr.PurOrderTotb_PurEntry(item);
+                    tb_PurEntry purEntry = await ctr.BuildPurEntryFromPurOrder(item);
 
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
@@ -289,7 +289,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
                     tb_PurOrderController<tb_PurOrder> ctrPurOrder = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                    tb_PurEntry purEntry = await ctrPurOrder.PurOrderTotb_PurEntry(item);
+                    tb_PurEntry purEntry = await ctrPurOrder.BuildPurEntryFromPurOrder(item);
                     if (purEntry.tb_PurEntryDetails.Count > 0)
                     {
                         ReturnMainSubResults<tb_PurEntry> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_PurEntry>(purEntry);

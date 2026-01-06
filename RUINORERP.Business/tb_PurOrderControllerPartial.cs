@@ -897,7 +897,7 @@ namespace RUINORERP.Business
         /// 转换为采购入库单,注意一个订单可以多次转成入库单。
         /// </summary>
         /// <param name="order"></param>
-        public async Task<tb_PurEntry> PurOrderTotb_PurEntry(tb_PurOrder order)
+        public async Task<tb_PurEntry> BuildPurEntryFromPurOrder(tb_PurOrder order)
         {
             AuthorizeController authorizeController = null;
             tb_PurEntry entity = new tb_PurEntry();

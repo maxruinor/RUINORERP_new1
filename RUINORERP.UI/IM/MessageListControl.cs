@@ -995,6 +995,31 @@ namespace RUINORERP.UI.IM
             LoadMessages(); // 重新加载以更新UI
         }
 
+        /// <summary>
+        /// 设置按钮点击事件 - 打开消息提醒设置窗体
+        /// </summary>
+        private void btnSettings_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 创建并显示消息提醒设置窗体
+                var settingsForm = new frmIMSetting();
+                var result = settingsForm.ShowDialog();
+                
+                if (result == DialogResult.OK)
+                {
+                    // 设置保存成功，可以在这里添加一些更新逻辑
+                    // 例如：重新加载配置、刷新消息显示等
+                    System.Diagnostics.Debug.WriteLine("消息提醒设置已更新");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开设置窗体失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"打开设置窗体失败: {ex.ToString()}");
+            }
+        }
+
 
         #region 清空消息功能
 

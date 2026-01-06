@@ -2118,7 +2118,14 @@
     <Compile Include="IM\BaseMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="IM\ConfigurationService.cs" />
     <Compile Include="IM\EnhancedMessageManager.cs" />
+    <Compile Include="IM\frmIMSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IM\frmIMSetting.Designer.cs">
+      <DependentUpon>frmIMSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="IM\MainFormMessageExtensions.cs" />
     <Compile Include="IM\MessageListControl.cs">
       <SubType>UserControl</SubType>
@@ -2252,6 +2259,7 @@
     <Compile Include="IM\MessagePrompt.Designer.cs">
       <DependentUpon>MessagePrompt.cs</DependentUpon>
     </Compile>
+    <Compile Include="IM\MessageReminderConfig.cs" />
     <Compile Include="LoginResult.cs" />
     <Compile Include="LogInterceptor.cs" />
     <Compile Include="Log\UClog.cs">
@@ -4254,6 +4262,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="HelpSystem\HelpSystemForm.resx">
       <DependentUpon>HelpSystemForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IM\frmIMSetting.resx">
+      <DependentUpon>frmIMSetting.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="IM\InstructionsPrompt.resx">
       <DependentUpon>InstructionsPrompt.cs</DependentUpon>

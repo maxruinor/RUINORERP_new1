@@ -262,6 +262,10 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_MRP_ReworkReturn, tb_MRP_ReworkEntry>();
             CreateMap<tb_MRP_ReworkReturnDetail, tb_MRP_ReworkEntryDetail>();
 
+            //费用报销单引用到应收付单中
+            CreateMap<tb_FM_ExpenseClaim, tb_FM_ReceivablePayable>();
+            CreateMap<tb_FM_ExpenseClaimDetail, tb_FM_ReceivablePayableDetail>()
+            .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.ClaimSubID));
 
             //缴库单引用到返工退库主单和明细中
             CreateMap<tb_FinishedGoodsInv, tb_MRP_ReworkReturn>();

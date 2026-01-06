@@ -153,7 +153,21 @@ namespace RUINORERP.Business
                         // 预收付款单的总金额（本币）
                         totalAmount = preReceivedPayment.LocalPrepaidAmount;
                         break;
+                    case BizType.费用报销单:
+                        var ExpenseClaimPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>()
+                       .Where(prp => prp.Employee_ID == sourceBillId)
+                       .FirstAsync();
 
+                        if (ExpenseClaimPayment == null)
+                        {
+                            result.ErrorMsg = $"未找到费用报销单ID: {sourceBillId}";
+                            result.Succeeded = false;
+                            return result;
+                        }
+
+                        // 费用报销单的总金额（本币）
+                        totalAmount = ExpenseClaimPayment.ClaimAmount;
+                        break;
                     default:
                         // 对于其他业务类型，暂时无法获取总金额，返回错误
                         result.ErrorMsg = $"不支持的来源业务类型: {(BizType)sourceBizType}";
@@ -1473,6 +1487,9 @@ namespace RUINORERP.Business
                     }
 
 
+                    #region 费用报销单回写状态
+
+                    #endregion
                 }
 
                 #region 更新数据库
@@ -1840,29 +1857,43 @@ namespace RUINORERP.Business
         {
             if (receivablePayable.SourceBizType == (int)BizType.费用报销单)
             {
-                if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
-                {
-                    #region 更新对应业务的单据状态和付款情况
+                #region 更新对应业务的单据状态和付款情况
 
-                    tb_FM_ExpenseClaim ExpenseClaim = await _appContext.Db.Queryable<tb_FM_ExpenseClaim>()
-                        .Includes(c => c.tb_FM_ExpenseClaimDetails)
-                      .Where(c => c.DataStatus >= (int)DataStatus.确认
-                     && c.ClaimMainID == receivablePayable.SourceBillId).SingleAsync();
-                    if (ExpenseClaim != null)
+                tb_FM_ExpenseClaim ExpenseClaim = await _appContext.Db.Queryable<tb_FM_ExpenseClaim>()
+                    .Includes(c => c.tb_FM_ExpenseClaimDetails)
+                  .Where(c => c.DataStatus >= (int)DataStatus.确认
+                 && c.ClaimMainID == receivablePayable.SourceBillId).SingleAsync();
+                if (ExpenseClaim != null)
+                {
+                    //根据支付状态更新费用报销单的付款状态
+                    if (receivablePayable.ARAPStatus == (int)ARAPStatus.全部支付)
                     {
-                        //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
+                        //应收结清，并且结清的金额等于费用报销金额，则修改费用报销单的状态
                         if (receivablePayable.LocalBalanceAmount == 0 && receivablePayable.LocalPaidAmount == ExpenseClaim.ClaimAmount)
                         {
                             ExpenseClaim.DataStatus = (int)DataStatus.完结;
                             ExpenseClaim.CloseCaseOpinions = "全部付款";
-                            //ExpenseClaim.PayStatus = (int)PayStatus.全部付款;
-                            //ExpenseClaim.Paytype_ID = entity.Paytype_ID;
-                            expenseClaimUpdateList.Add(ExpenseClaim);
+                            ExpenseClaim.PayStatus = (int)PayStatus.全部付款;
+                            ExpenseClaim.Paytype_ID = entity.Paytype_ID;
                         }
                     }
-
-                    #endregion
+                    else if (receivablePayable.ARAPStatus == (int)ARAPStatus.部分支付)
+                    {
+                        //部分支付时更新付款状态
+                        ExpenseClaim.PayStatus = (int)PayStatus.部分付款;
+                        ExpenseClaim.Paytype_ID = entity.Paytype_ID;
+                    }
+                    else if (receivablePayable.ARAPStatus == (int)ARAPStatus.待支付)
+                    {
+                        //未支付时重置付款状态
+                        ExpenseClaim.PayStatus = (int)PayStatus.未付款;
+                        ExpenseClaim.Paytype_ID = null;
+                    }
+                    
+                    expenseClaimUpdateList.Add(ExpenseClaim);
                 }
+
+                #endregion
             }
         }
 

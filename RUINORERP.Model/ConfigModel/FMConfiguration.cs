@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.ConfigModel
 {
+
+    /// <summary>
+    /// 财务模块配置
+    /// </summary>
     public class FMConfiguration
     {
         /// <summary>
@@ -71,6 +75,11 @@ namespace RUINORERP.Model.ConfigModel
         /// 平台订单取消作废时启用财务数据自动退款功能
         /// </summary>
        public bool EnableAutoRefundOnOrderCancel { get; set; } = false;
+
+        /// <summary>
+        /// 报销流程自动化模式
+        /// </summary>
+        public bool ExpenseFinancialProcessAutoMode { get; set; } = false;
 
     }
 }

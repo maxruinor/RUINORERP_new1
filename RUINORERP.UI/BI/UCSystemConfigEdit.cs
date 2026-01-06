@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Data;
 using System.Linq;
@@ -102,6 +102,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditReceiveable, chkAutoAuditReceiveable, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditPaymentable, chkAutoAuditPaymentable, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoRefundOnOrderCancel, chkEnableAutoRefundOnOrderCancel, false);
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.ExpenseFinancialProcessAutoMode, chkExpenseFinancialProcessAutoMode, false);
             #endregion
 
             #region 系统功能配置

@@ -77,7 +77,7 @@ namespace RUINORERP.Business
                     typeof(ARAPStatus),
                     entity.GetPropertyValue(statusProperty)
                 );
- 
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -2126,7 +2126,7 @@ namespace RUINORERP.Business
                         {
                             // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
                             // 并且预付款单余额应该大于0，才能进行抵扣
-                            if (prePayment[0].LocalBalanceAmount > 0 && 
+                            if (prePayment[0].LocalBalanceAmount > 0 &&
                                 receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
                             {
                                 keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
@@ -2159,7 +2159,7 @@ namespace RUINORERP.Business
                         {
                             // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
                             // 并且预付款单余额应该大于0，才能进行抵扣
-                            if (prePayment[0].LocalBalanceAmount > 0 && 
+                            if (prePayment[0].LocalBalanceAmount > 0 &&
                                 receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
                             {
                                 keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
@@ -2395,6 +2395,171 @@ namespace RUINORERP.Business
             return payable;
         }
 
+        /// <summary>
+        /// 创建应付款单
+        /// 报销单中的项目是限制级的主维度
+        /// 报销单明细中的部门是辅助维度，按部门生成多个应付款单
+        /// 后面会到付款单中再归集处理。
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="isRefund">true为红字冲销</param>
+        /// <returns></returns>
+        public async Task<List<tb_FM_ReceivablePayable>> BuildReceivablePayable(tb_FM_ExpenseClaim entity)
+        {
+            try
+            {
+                // 参数验证
+                if (entity == null)
+                    throw new ArgumentNullException(nameof(entity), "报销单实体不能为空");
+
+                if (entity.tb_FM_ExpenseClaimDetails == null || !entity.tb_FM_ExpenseClaimDetails.Any())
+                    throw new ArgumentException("报销单明细不能为空", nameof(entity));
+
+                if (!entity.ProjectGroup_ID.HasValue)
+                    throw new ArgumentException("报销单必须关联项目组", nameof(entity));
+
+                // 验证项目组有效性
+                if (entity.tb_projectgroup == null)
+                {
+                    // 从缓存或数据库加载项目组
+                    var projectgroup = _cacheManager.GetEntity<tb_ProjectGroup>(entity.ProjectGroup_ID);
+                    if (projectgroup == null)
+                    {
+                        // 从数据库查询
+                        entity.tb_projectgroup = await _appContext.GetRequiredService<tb_ProjectGroupController<tb_ProjectGroup>>().BaseQueryByIdAsync(entity.ProjectGroup_ID);
+                        if (entity.tb_projectgroup == null)
+                            throw new ArgumentException($"无效的项目组ID：{entity.ProjectGroup_ID}", nameof(entity));
+                    }
+                    else
+                    {
+                        entity.tb_projectgroup = projectgroup as tb_ProjectGroup;
+                    }
+                }
+
+                // 按部门ID分组，过滤掉没有部门ID的明细
+                var departmentGroups = entity.tb_FM_ExpenseClaimDetails
+                    .Where(detail => detail.DepartmentID.HasValue)
+                    .GroupBy(detail => detail.DepartmentID.Value);
+
+                if (!departmentGroups.Any())
+                    throw new ArgumentException("报销单明细中必须包含有效的部门信息", nameof(entity));
+
+                List<tb_FM_ReceivablePayable> payableList = new List<tb_FM_ReceivablePayable>();
+                IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
+
+                // 为每个部门生成应付款单
+                foreach (var group in departmentGroups)
+                {
+                    // 创建应付款单基础信息
+                    tb_FM_ReceivablePayable payable = new tb_FM_ReceivablePayable();
+                    mapper.Map(entity, payable);
+
+                    // 重置单据特定字段
+                    payable.ApprovalResults = null;
+                    payable.ApprovalStatus = (int)ApprovalStatus.未审核;
+                    payable.Approver_at = null;
+                    payable.Approver_by = null;
+                    payable.PrintStatus = 0;
+                    payable.ActionStatus = ActionStatus.新增;
+                    payable.ApprovalOpinions = "";
+                    payable.Modified_at = null;
+                    payable.Modified_by = null;
+                    payable.SourceBillNo = entity.ClaimNo;
+                    payable.SourceBillId = entity.ClaimMainID;
+                    payable.Currency_ID = entity.Currency_ID;
+                    payable.SourceBizType = (int)BizType.费用报销单;
+                    //员工创建时就会生成一个一对一的往来单位的员工信息，离职只是逻辑删除，类型为内部员工-类似信保客户
+                    //payable.CustomerVendor_ID
+                    // 设置部门和项目组信息
+                    payable.DepartmentID = group.Key;
+                    payable.ProjectGroup_ID = entity.ProjectGroup_ID;
+
+                    // 生成唯一单据编号
+                    payable.ARAPNo = await bizCodeService.GenerateBizBillNoAsync(BizType.应付款单, CancellationToken.None);
+
+                    // 设置日期信息
+                    payable.BusinessDate = entity.DocumentDate;
+                    payable.DocumentDate = entity.Created_at.Value;
+                    payable.DueDate = DateTime.Now.AddDays(30); // 默认30天付款期限
+
+                    // 汇率设置（本币）
+                    payable.ExchangeRate = 1;
+
+                    // 过滤当前部门的明细
+                    var departmentDetails = entity.tb_FM_ExpenseClaimDetails
+                        .Where(detail => detail.DepartmentID == group.Key)
+                        .ToList();
+
+                    // 转换并处理部门明细
+                    List<tb_FM_ReceivablePayableDetail> payableDetails = new List<tb_FM_ReceivablePayableDetail>();
+                    decimal departmentTotalAmount = 0;
+                    decimal departmentTotalTax = 0;
+
+                    foreach (var expenseDetail in departmentDetails)
+                    {
+                        tb_FM_ReceivablePayableDetail payableDetail = mapper.Map<tb_FM_ReceivablePayableDetail>(expenseDetail);
+
+                        // 设置明细特定字段
+                        payableDetail.ActionStatus = ActionStatus.新增;
+                        payableDetail.ExchangeRate = 1;
+                        payableDetail.TaxRate = expenseDetail.TaxRate ?? 0;
+                        payableDetail.ExpenseType_id = expenseDetail.ExpenseType_id;
+                        payableDetail.TaxLocalAmount = expenseDetail.TaxAmount ?? 0;
+                        payableDetail.Quantity = 1;
+                        payableDetail.UnitPrice = expenseDetail.SingleAmount;
+                        payableDetail.LocalPayableAmount = expenseDetail.SingleAmount;
+
+                        // 累加部门金额
+                        departmentTotalAmount += expenseDetail.SingleAmount;
+                        departmentTotalTax += expenseDetail.TaxAmount ?? 0;
+
+                        payableDetails.Add(payableDetail);
+                    }
+
+                    // 设置应付款单明细和金额
+                    payable.tb_FM_ReceivablePayableDetails = payableDetails;
+
+                    // 设置金额信息（本币）
+                    payable.ForeignBalanceAmount = 0;
+                    payable.ForeignPaidAmount = 0;
+                    payable.TotalForeignPayableAmount = 0;
+
+                    payable.LocalBalanceAmount = departmentTotalAmount;
+                    payable.LocalPaidAmount = 0;
+                    payable.TotalLocalPayableAmount = departmentTotalAmount;
+
+                    // 设置其他业务信息
+                    payable.PayeeInfoID = entity.PayeeInfoID;
+                    payable.Employee_ID = entity.Employee_ID;
+                    payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
+
+                    // 确保账户ID有效性
+                    if (payable.Account_id <= 0)
+                    {
+                        payable.Account_id = null;
+                    }
+
+                    payable.Remark = $"费用报销单：{entity.ClaimNo} - 部门：{group.Key}产生的应付款";
+
+                    // 初始化实体
+                    Business.BusinessHelper.Instance.InitEntity(payable);
+                    payable.ARAPStatus = (int)ARAPStatus.待审核;
+
+                    // 添加到结果列表
+                    payableList.Add(payable);
+                }
+
+                if (!payableList.Any())
+                    throw new Exception("未能生成有效的应付款单");
+
+                return payableList;
+            }
+            catch (Exception ex)
+            {
+                _logger?.Error(ex, $"生成报销单应付款单失败：{EntityDataExtractor.ExtractDataContent(entity)}");
+                throw;
+            }
+        }
 
         /// <summary>
         /// 创建应付款单，审核时如果有预付，会先核销

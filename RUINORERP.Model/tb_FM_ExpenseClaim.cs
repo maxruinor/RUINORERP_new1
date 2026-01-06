@@ -7,7 +7,7 @@
 // 时间：11/06/2025 20:41:48
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -110,6 +110,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _ProjectGroup_ID;
+        /// <summary>
+        /// 项目组
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ProjectGroup_ID", ColDesc = "项目组")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "ProjectGroup_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "项目组")]
+        [FKRelationAttribute("tb_ProjectGroup", "ProjectGroup_ID")]
+        public long? ProjectGroup_ID
+        {
+            get { return _ProjectGroup_ID; }
+            set
+            {
+                SetProperty(ref _ProjectGroup_ID, value);
+            }
+        }
         private DateTime? _DocumentDate;
         /// <summary>
         /// 报销日期
@@ -391,6 +406,37 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int? _PayStatus;
+        /// <summary>
+        /// 付款状态
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PayStatus", ColDesc = "付款状态")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "PayStatus", DecimalDigits = 0, IsNullable = true, ColumnDescription = "付款状态")]
+        public int? PayStatus
+        {
+            get { return _PayStatus; }
+            set
+            {
+                SetProperty(ref _PayStatus, value);
+            }
+        }
+
+        private long? _Paytype_ID;
+        /// <summary>
+        /// 付款类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "Paytype_ID", ColDesc = "付款类型")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "Paytype_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "付款类型")]
+        [FKRelationAttribute("tb_PaymentMethod", "Paytype_ID")]
+        public long? Paytype_ID
+        {
+            get { return _Paytype_ID; }
+            set
+            {
+                SetProperty(ref _Paytype_ID, value);
+            }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -409,6 +455,9 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(PayeeInfoID))]
         public virtual tb_FM_PayeeInfo tb_fm_payeeinfo { get; set; }
 
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToOne, nameof(ProjectGroup_ID))]
+        public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

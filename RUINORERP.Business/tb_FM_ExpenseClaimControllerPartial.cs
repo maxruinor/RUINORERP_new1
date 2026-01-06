@@ -6,30 +6,31 @@
 // 作者：Watson
 // 时间：01/11/2024 00:33:16
 // **************************************
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
+using RUINOR.Core;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.EntityLoadService;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.IServices;
+using RUINORERP.IServices.BASE;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.ConfigModel;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
-using FluentValidation.Results;
-using RUINORERP.Services;
-
-using RUINORERP.Model.Base;
-using RUINORERP.Common.Extensions;
-using RUINORERP.IServices.BASE;
-using RUINORERP.Model.Context;
-using System.Linq;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global;
-using RUINORERP.Business.Security;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.BizMapperService;
-using RUINORERP.Business.EntityLoadService;
 
 namespace RUINORERP.Business
 {
@@ -54,9 +55,9 @@ namespace RUINORERP.Business
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 BusinessHelper.Instance.ApproverEntity(entity);
- 
 
- 
+
+
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                     .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
@@ -118,7 +119,7 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_FM_ExpenseClaim entity = ObjectEntity as tb_FM_ExpenseClaim;
-
+            FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
 
             try
             {
@@ -131,20 +132,65 @@ namespace RUINORERP.Business
                 //只更新指定列
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                    .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, 
-                                        it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                    .UpdateColumns(it => new
+                                    {
+                                        it.DataStatus,
+                                        it.ApprovalOpinions,
+                                        it.ApprovalResults,
+                                        it.ApprovalStatus,
+                                        it.Approver_at,
+                                        it.Approver_by
+                                    })
                                     .ExecuteCommandHasChangeAsync();
 
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
-                    //我们在财务模块做一个配置，是否需要生成付款单，还是报销单审核后直接将款项支付出去，财务会手工统计费用报销付款金额作为企业的支出。
-                    //简化流程，不算债权关系，
-                    //更新财务模块 
-                    var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                    tb_FM_PaymentRecord paymentRecord =await paymentController.BuildPaymentRecord(entity);
-                    await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                    //等待财务审核
+                    // 获取系统配置
+                    var systemConfigService = _appContext.GetRequiredService<Itb_SystemConfigServices>();
+
+                    FMConfiguration fmConfig = _appContext.FMConfig;
+
+                    // 1. 生成应付款单
+                    var payableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+
+                    var payableList = await payableController.BuildReceivablePayable(entity);
+
+                    for (int i = 0; i < payableList.Count; i++)
+                    {
+                        // 保存应付款单
+                        ReturnMainSubResults<tb_FM_ReceivablePayable> returnMain = await payableController.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payableList[i], false);
+                        if (fmConfig.ExpenseFinancialProcessAutoMode)
+                        {
+                            returnMain.ReturnObject.ApprovalOpinions = $"报销流程自动化模式开启时，自动审核通过";
+                            //自动审核应付款单
+                            await payableController.ApprovalAsync(returnMain.ReturnObject, true);
+
+                            // 2. 生成付款单
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(entity);
+
+                            // 3. 自动化模式处理
+
+                            // 自动审核付款单
+                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                            BusinessHelper.Instance.ApproverEntity(paymentRecord);
+                            //自动审核收款单
+                            paymentRecord.ApprovalOpinions = "报销流程自动化模式开启时，系统自动审核";
+                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                            paymentRecord.ApprovalResults = true;
+                            ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(paymentRecord);
+                            if (!rrRecord.Succeeded)
+                            {
+                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                            }
+                            else
+                            {
+                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                            }
+
+                        }
+                    }
                 }
 
                 _unitOfWorkManage.CommitTran();
@@ -165,7 +211,7 @@ namespace RUINORERP.Business
 
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_ExpenseClaim ObjectEntity)
         {
-          //  ReturnResults<tb_FM_ExpenseClaim> rrs = new Business.ReturnResults<tb_FM_ExpenseClaim>();
+            //  ReturnResults<tb_FM_ExpenseClaim> rrs = new Business.ReturnResults<tb_FM_ExpenseClaim>();
             int count = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_ExpenseClaim>(ObjectEntity).IsLogic().ExecuteCommandAsync();
             if (count > 0)
             {
@@ -208,8 +254,15 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.ApproverEntity(entity);
                         //只更新指定列
                         var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                            .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, 
-                                                it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                            .UpdateColumns(it => new
+                                            {
+                                                it.DataStatus,
+                                                it.ApprovalOpinions,
+                                                it.ApprovalResults,
+                                                it.ApprovalStatus,
+                                                it.Approver_at,
+                                                it.Approver_by
+                                            })
                                             .ExecuteCommandHasChangeAsync();
                     }
                 }

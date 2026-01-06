@@ -3050,7 +3050,9 @@ namespace RUINORERP.UI.BaseForm
                 nameof(ApprovalStatus),
                 nameof(DataStatus),
                 "ApprovalOpinions",
-                "ApprovalResults"
+                "ApprovalResults",
+                "Approver_by",
+                "Approver_at"
             };
 
 

@@ -59,9 +59,10 @@ namespace RUINORERP.Business.Document.Converters
         /// 使用基类实现，从Description特性获取
         /// </summary>
         public override string DisplayName => base.DisplayName;
-        
+
         /// <summary>
         /// 执行具体的转换逻辑 - 复用业务层核心逻辑
+        /// 需要添加一个限制条件，如果应收应付款存在于对账单中。则不能跳过对账来直接付款。
         /// </summary>
         /// <param name="source">源单据：应收应付款单</param>
         /// <param name="target">目标单据：收付款单</param>
@@ -70,9 +71,15 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                if (source == null )
+
+                if (source == null)
                 {
                     throw new ArgumentException("应收应付款单不能为空");
+                }
+                ReceivePaymentType PaymentType = (ReceivePaymentType)source.ReceivePaymentType;
+                if (source.AllowAddToStatement == false)
+                {
+                    throw new ArgumentException($"当前应{PaymentType}单：{source.ARAPNo} 存在于对账单中，请使用对账单支付。");
                 }
 
                 // 使用AutoMapper进行基础映射
@@ -149,7 +156,7 @@ namespace RUINORERP.Business.Document.Converters
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "应收应付款单到收付款单转换失败，应收应付款单号：{ARAPNo}", 
+                _logger.LogError(ex, "应收应付款单到收付款单转换失败，应收应付款单号：{ARAPNo}",
                     source?.ARAPNo ?? "未知");
                 throw;
             }
@@ -165,7 +172,7 @@ namespace RUINORERP.Business.Document.Converters
 
             #region 明细转换
             tb_FM_PaymentRecordDetail paymentRecordDetail = details;
-            
+
             // 设置来源业务类型
             if (target.ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
@@ -175,10 +182,10 @@ namespace RUINORERP.Business.Document.Converters
             {
                 paymentRecordDetail.SourceBizType = (int)BizType.应付款单;
             }
-            
+
             // 设置摘要
             paymentRecordDetail.Summary = $"由应{((ReceivePaymentType)target.ReceivePaymentType).ToString()}转换自动生成。";
-            
+
             // 添加源单据的备注信息
             if (!string.IsNullOrEmpty(source.Remark))
             {
@@ -187,10 +194,10 @@ namespace RUINORERP.Business.Document.Converters
 
             // 设置应付金额
             paymentRecordDetail.LocalPayableAmount = details.LocalAmount;
-            
+
             // 关联到收付款单
             paymentRecordDetail.PaymentId = target.PaymentId;
-            
+
             #endregion
             newDetails.Add(paymentRecordDetail);
 
@@ -215,10 +222,10 @@ namespace RUINORERP.Business.Document.Converters
 
             // 计算外币总金额
             target.TotalForeignAmount = target.tb_FM_PaymentRecordDetails.Sum(c => c.ForeignAmount);
-            
+
             // 计算本币总金额
             target.TotalLocalAmount = target.tb_FM_PaymentRecordDetails.Sum(c => c.LocalAmount);
-            
+
             // 计算应付总金额
             target.TotalLocalPayableAmount = target.tb_FM_PaymentRecordDetails.Sum(c => c.LocalPayableAmount);
         }
@@ -275,10 +282,10 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查应收应付款单状态
-                if (source.ARAPStatus != (int)ARAPStatus.待支付 && 
+                if (source.ARAPStatus != (int)ARAPStatus.待支付 &&
                     source.ARAPStatus != (int)ARAPStatus.部分支付 ||
                     source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue || 
+                    !source.ApprovalResults.HasValue ||
                     !source.ApprovalResults.Value)
                 {
                     result.CanConvert = false;
@@ -288,7 +295,7 @@ namespace RUINORERP.Business.Document.Converters
 
                 // 检查是否有可抵扣的预收付款单
                 await ValidateAvailableAdvancesAsync(source, result);
-                
+
                 await Task.CompletedTask; // 满足异步方法签名要求
             }
             catch (Exception ex)
@@ -300,7 +307,7 @@ namespace RUINORERP.Business.Document.Converters
 
             return result;
         }
-        
+
         /// <summary>
         /// 验证是否有可抵扣的预收付款单
         /// </summary>
@@ -312,17 +319,17 @@ namespace RUINORERP.Business.Document.Converters
             {
                 // 创建应收应付款单控制器
                 var receivablePayableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                
+
                 // 查找可抵扣的预收付款单
                 var sourceList = new List<tb_FM_ReceivablePayable> { source };
                 var availableAdvances = await receivablePayableController.FindAvailableAdvances(sourceList);
-                
+
                 if (availableAdvances.Any())
                 {
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                     result.AddWarning($"有可抵扣的预{paymentType}单，请先进行抵扣操作！");
                 }
-                
+
                 await Task.CompletedTask; // 满足异步方法签名要求
             }
             catch (Exception ex)

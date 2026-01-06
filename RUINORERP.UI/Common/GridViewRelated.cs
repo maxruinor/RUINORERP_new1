@@ -1,5 +1,6 @@
 ﻿using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
+using Netron.GraphLib;
 using Pipelines.Sockets.Unofficial.Arenas;
 using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
@@ -256,8 +257,10 @@ namespace RUINORERP.UI.Common
                     string tableName = relatedRelationship.TargetTableName.Name;
                     //这里是显示明细
                     //要把单据信息传过去
-                    //                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains(tableName.Replace("tb_", "UC").ToString().Replace("Query", ""))).FirstOrDefault();
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+                     RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
+
+
                     if (RelatedMenuInfo == null)
                     {
                         //特殊情况：没有关联的单据 uc控件窗体名称和实体名称不一致时
@@ -279,6 +282,8 @@ namespace RUINORERP.UI.Common
                         var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
                         if (billno != null)
                         {
+                         
+                            //有时 有收付款类型的情况。要通过实体中具体的数据来定菜单。则在查出实体后来更新菜单信息
                             OpenTargetEntity(RelatedMenuInfo, tableName, billno);
                         }
 
@@ -433,6 +438,19 @@ namespace RUINORERP.UI.Common
             var entity = _loader.LoadEntityInternal(entityType, billno);
             if (entity != null)
             {
+                #region 特殊情况处理
+                //如果有收付款类型。还是在查找菜单时区别收付款类型
+                //BizEntityInfo entityInfo = EntityMappingHelper.GetEntityInfoByTableName(tableName);
+                if (entity.ContainsProperty(nameof(ReceivePaymentType)))
+                {
+                    string Flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
+                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                 && m.EntityName == tableName
+                 && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
+                     .FirstOrDefault();
+                }
+                #endregion
+
                 await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
                 return;
             }

@@ -186,9 +186,9 @@ namespace RUINORERP.UI.BI
                             tb_MenuInfo RelatedMenuInfo = new tb_MenuInfo();
                             //如果有收付款类型。还是在查找菜单时区别收付款类型
 
-                            if (entity.ContainsProperty("ReceivePaymentType"))
+                            if (entity.ContainsProperty(nameof(ReceivePaymentType)))
                             {
-                                string Flag = ((SharedFlag)entity.GetPropertyValue("ReceivePaymentType").ToInt()).ToString();
+                                string Flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
                                 RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
                              && m.EntityName == objType.Name
                              && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)

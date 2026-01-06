@@ -246,7 +246,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnConvertDocuments.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripbtnConvertDocuments.Name = "toolStripbtnConvertDocuments";
             this.toolStripbtnConvertDocuments.Size = new System.Drawing.Size(62, 22);
-            this.toolStripbtnConvertDocuments.Text = "转单";
+            this.toolStripbtnConvertDocuments.Text = "联动";
             // 
             // toolStripbtnProperty
             // 

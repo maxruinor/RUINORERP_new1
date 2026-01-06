@@ -187,7 +187,7 @@ namespace RUINORERP.Business.Document
                         var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.TargetType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric")).FirstOrDefault();
                         if (MenuInfo != null)
                         {
-                            var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.新增.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
+                            var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.联动.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
                             if (btnInfo != null)
                             {
                                 action.IsVisible = btnInfo.IsVisble;

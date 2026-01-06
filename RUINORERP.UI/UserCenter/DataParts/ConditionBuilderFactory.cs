@@ -223,7 +223,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     {
                         new ConditionalModel
                         {
-                            FieldName = "ReceivePaymentType",
+                            FieldName = nameof(ReceivePaymentType),
                             ConditionalType = ConditionalType.Equal,
                             FieldValue = ((int)paymentType).ToString(),
                             CSharpTypeName = "int"
@@ -254,7 +254,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -285,7 +285,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -316,7 +316,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -381,7 +381,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -410,7 +410,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -446,7 +446,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     },
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -477,7 +477,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     },
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -536,7 +536,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -566,7 +566,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -595,7 +595,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -660,7 +660,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"
@@ -691,7 +691,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     new ConditionalModel
                     {
-                        FieldName = "ReceivePaymentType",
+                        FieldName = nameof(ReceivePaymentType),
                         ConditionalType = ConditionalType.Equal,
                         FieldValue = ((int)paymentType).ToString(),
                         CSharpTypeName = "int"

@@ -651,7 +651,7 @@ namespace RUINORERP.UI.FM
         /// 注意：此方法创建数据副本而不是直接修改原始数据，以避免用户重新对账时出现错误
         /// </summary>
         /// <param name="RealList">原始应收付款单列表</param>
-        /// <param name="receivePaymentType">对账单类型</param>
+        /// <param name=nameof(ReceivePaymentType)>对账单类型</param>
         /// <param name="CurrentStatementType">当前对账模式</param>
         /// <returns>调整后的应收付款单副本列表</returns>
         private List<tb_FM_ReceivablePayable> SetStatementItems(List<tb_FM_ReceivablePayable> RealList, ReceivePaymentType receivePaymentType, StatementType CurrentStatementType)

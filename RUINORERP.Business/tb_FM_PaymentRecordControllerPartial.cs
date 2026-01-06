@@ -191,8 +191,6 @@ namespace RUINORERP.Business
         {
             try
             {
-                _logger?.LogInformation($"开始获取历史已付款金额，来源单据ID: {sourceBillId}, 业务类型: {(BizType)sourceBizType}");
-                
                 // 查询已审核的付款记录明细，计算历史已付款金额
                 // 注意：这里只查询已审核通过的记录，当前正在审核的记录不应计入历史
                 var paidAmount = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
@@ -202,8 +200,7 @@ namespace RUINORERP.Business
                         && prd.tb_fm_paymentrecord.PaymentStatus == (int)PaymentStatus.已支付
                         )
                     .SumAsync(prd => prd.LocalAmount);
-
-                _logger?.LogInformation($"获取历史已付款金额成功，来源单据ID: {sourceBillId}, 业务类型: {(BizType)sourceBizType}, 金额: {paidAmount}");
+ 
                 
                 return paidAmount;  // SumAsync返回decimal类型，不会是null
             }

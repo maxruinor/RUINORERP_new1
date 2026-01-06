@@ -99,8 +99,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 收付类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "ReceivePaymentType",ColDesc = "收付类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "ReceivePaymentType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
+        [AdvQueryAttribute(ColName = nameof(ReceivePaymentType),ColDesc = "收付类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = nameof(ReceivePaymentType) , DecimalDigits = 0,IsNullable = false,ColumnDescription = "收付类型" )]
         public int ReceivePaymentType
         { 
             get{return _ReceivePaymentType;}

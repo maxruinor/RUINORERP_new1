@@ -515,7 +515,7 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="statement"></param>
         /// <param name="details"></param>
-        /// <param name="receivePaymentType"></param>
+        /// <param name=nameof(ReceivePaymentType)></param>
         /// <param name="statementType"></param>
         /// <exception cref="Exception"></exception>
         public void CalculateTotalAmount(tb_FM_Statement statement, List<tb_FM_StatementDetail> details, ReceivePaymentType receivePaymentType, StatementType statementType)

@@ -176,8 +176,23 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4DataTime<tb_ManufacturingOrder>(entity, t => t.PreEndDate, dtpPreEndDate, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.BOM_No, txtBOM_No, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.Notes, txtNotes, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtRefBillNO, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ManufacturingOrder>(entity, v => v.PDID, txtRefBillNO, true);
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
+            DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.PDNO, txtRefBillNO, BindDataType4TextBox.Text, true);
+
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaPD = Expressionable.Create<tb_ProductionDemand>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                             .And(t => t.isdeleted == false)
+                            .ToExpression();
+
+            BaseProcessor baseProPD = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProductionDemand).Name + "Processor");
+            QueryFilter queryFilterPD = baseProPD.GetQueryFilter();
+
+            queryFilterPD.FilterLimitExpressions.Add(lambdaPD);
+
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_ManufacturingOrder, tb_ProductionDemand>(entity, txtRefBillNO, t => t.PDNO,
+                f => f.PDNo, queryFilterPD, a => a.PDID, b => b.PDID, null, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.WorkingHour.ToString(), txtWorkingHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.MachineHour.ToString(), txtMachineHour, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, t => t.ApportionedCost.ToString(), txtApportionedCost, BindDataType4TextBox.Money, false);
@@ -194,9 +209,22 @@ namespace RUINORERP.UI.MRP.MP
             txtQuantityDelivered.ReadOnly = true;
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, cmbLocation_ID);
 
-            //先绑定这个。InitFilterForControl 这个才生效
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ManufacturingOrder>(entity, v => v.CNName, txtProdDetail, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ManufacturingOrder>(entity, v => v.ProdDetailID, txtProdDetail, true);
+
+            //创建表达式  只显示可用的产品详情
+            var lambdaProdDetail = Expressionable.Create<tb_ProdDetail>()
+                            .And(t => t.isdeleted == false)
+                            .ToExpression();
+
+            BaseProcessor baseProProdDetail = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdDetail).Name + "Processor");
+            QueryFilter queryFilterProdDetail = baseProProdDetail.GetQueryFilter();
+
+            queryFilterProdDetail.FilterLimitExpressions.Add(lambdaProdDetail);
+
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_ManufacturingOrder, tb_ProdDetail>(entity, txtProdDetail, t => t.CNName,
+                f => f.DisplayText, queryFilterProdDetail, a => a.ProdDetailID, b => b.ProdDetailID, null, false);
 
             DataBindingHelper.BindData4CheckBox<tb_ManufacturingOrder>(entity, t => t.IsOutSourced, chkIsOutSourced, false);
             DataBindingHelper.BindData4Cmb<tb_Unit>(entity, k => k.Unit_ID, v => v.UnitName, cmbUnit);
@@ -594,7 +622,7 @@ namespace RUINORERP.UI.MRP.MP
                 var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
                 if (NeedValidated && aa.Count > 0)
                 {
-                    var detail =_cacheManager.GetEntity<View_ProdDetail>(aa[0].ToLong());
+                    var detail = _cacheManager.GetEntity<View_ProdDetail>(aa[0].ToLong());
                     if (detail != null)
                     {
                         System.Windows.Forms.MessageBox.Show($"明细中，相同的产品{detail.SKU}不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);

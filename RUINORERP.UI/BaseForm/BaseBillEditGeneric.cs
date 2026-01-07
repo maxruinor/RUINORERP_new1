@@ -46,7 +46,6 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Message;
-using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.SecurityTool;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
@@ -2141,6 +2140,14 @@ namespace RUINORERP.UI.BaseForm
                     });
                     break;
                 case MenuItemEnums.保存:
+                    // 防止重复点击：立即禁用保存按钮
+                    var saveButton = FindToolStripButtonByName("toolStripButtonSave");
+                    bool wasEnabled = saveButton?.Enabled ?? true;
+                    if (saveButton != null)
+                    {
+                        saveButton.Enabled = false;
+                    }
+                    
                     try
                     {
                         var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
@@ -2206,6 +2213,14 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"保存单据失败：{ex.Message}");
+                    }
+                    finally
+                    {
+                        // 确保按钮恢复可用状态
+                        if (saveButton != null)
+                        {
+                            saveButton.Enabled = wasEnabled;
+                        }
                     }
                     break;
                 case MenuItemEnums.提交:

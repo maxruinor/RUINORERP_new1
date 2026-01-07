@@ -123,17 +123,17 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 配置控件的高级过滤查询功能，支持自定义字段映射
         /// </summary>
-        public static void ConfigureControlFilter<TEntity, TSource>(
-            TEntity entity,
+        public static void ConfigureControlFilter<TTarget, TSource>(
+            TTarget entity,
             Control control,
-            Expression<Func<TEntity, object>> targetDisplayField,
+            Expression<Func<TTarget, object>> targetDisplayField,
             Expression<Func<TSource, object>> sourceDisplayField,
             QueryFilter queryFilter,
-            Expression<Func<TEntity, object>> targetValueField = null,
+            Expression<Func<TTarget, object>> targetValueField = null,
             Expression<Func<TSource, object>> sourceValueField = null,
             Type keyValueTypeForDgv = null,
             bool isEditable = false)
-            where TEntity : BaseEntity
+            where TTarget : BaseEntity
             where TSource : class
         {
             // 解析表达式树获取字段名称

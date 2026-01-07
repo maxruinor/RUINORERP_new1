@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -225,9 +225,25 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-            //先绑定这个。InitFilterForControl 这个才生效
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ProductionPlan>(entity, v => v.SaleOrderNo, txtSaleOrder, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProductionPlan>(entity, v => v.SOrder_ID, txtSaleOrder, true);
+            
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaSaleOrder = Expressionable.Create<tb_SaleOrder>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                            .And(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
+                            .And(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true)
+                            .And(t => t.isdeleted == false)
+                            .ToExpression();
+            
+            BaseProcessor baseProSaleOrder = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
+            QueryFilter queryFilterSaleOrder = baseProSaleOrder.GetQueryFilter();
+            
+            queryFilterSaleOrder.FilterLimitExpressions.Add(lambdaSaleOrder);
+            
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_ProductionPlan, tb_SaleOrder>(entity, txtSaleOrder, t => t.SaleOrderNo,
+                f => f.SOrderNo, queryFilterSaleOrder, a => a.SOrder_ID, b => b.SOrder_ID, null, false);
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_SaleOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
@@ -960,6 +976,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
                 BindData(entity);
+                entity.HasChanged = true;
             }
         }
 

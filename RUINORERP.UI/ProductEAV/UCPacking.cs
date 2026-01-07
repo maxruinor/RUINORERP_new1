@@ -808,6 +808,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
+                entity.HasChanged = true;
             }
         }
 

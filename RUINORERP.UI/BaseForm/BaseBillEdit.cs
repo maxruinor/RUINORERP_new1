@@ -453,8 +453,27 @@ namespace RUINORERP.UI.BaseForm
                     // 删除操作需要特殊处理
                     break;
                 case MenuItemEnums.保存:
-                    // 保存操作是异步的
-                    _ = Save(true);
+                    // 防止重复点击：立即禁用保存按钮
+                    var saveButton = toolStripButtonSave;
+                    bool wasEnabled = saveButton?.Enabled ?? true;
+                    if (saveButton != null)
+                    {
+                        saveButton.Enabled = false;
+                    }
+                    
+                    try
+                    {
+                        // 保存操作是异步的
+                        _ = Save(true);
+                    }
+                    finally
+                    {
+                        // 确保按钮恢复可用状态
+                        if (saveButton != null)
+                        {
+                            saveButton.Enabled = wasEnabled;
+                        }
+                    }
                     break;
                 case MenuItemEnums.提交:
                     // 提交操作是异步的

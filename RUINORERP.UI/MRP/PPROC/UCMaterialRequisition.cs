@@ -305,9 +305,23 @@ namespace RUINORERP.UI.MRP.MP
 
 
 
-            //先绑定这个。InitFilterForControl 这个才生效
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
             DataBindingHelper.BindData4TextBox<tb_MaterialRequisition>(entity, v => v.MONO, txtManufacturingOrder, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_MaterialRequisition>(entity, v => v.MOID, txtManufacturingOrder, true);
+            
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaMO = Expressionable.Create<tb_ManufacturingOrder>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                            .And(t => t.isdeleted == false)
+                            .ToExpression();
+            
+            BaseProcessor baseProMO = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
+            QueryFilter queryFilterMO = baseProMO.GetQueryFilter();
+            
+            queryFilterMO.FilterLimitExpressions.Add(lambdaMO);
+            
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_MaterialRequisition, tb_ManufacturingOrder>(entity, txtManufacturingOrder, t => t.MONO,
+                f => f.MONO, queryFilterMO, a => a.MOID, b => b.MOID, null, false);
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ManufacturingOrder).Name + "Processor");
             QueryFilter queryFilter = basePro.GetQueryFilter();
@@ -802,6 +816,7 @@ namespace RUINORERP.UI.MRP.MP
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
+                entity.HasChanged = true;
             }
         }
 

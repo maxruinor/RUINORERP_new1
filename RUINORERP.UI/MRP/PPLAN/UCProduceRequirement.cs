@@ -297,9 +297,23 @@ namespace RUINORERP.UI.MRP.MP
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_ProductionDemand>(entity, t => t.SuggestBasedOn, rdbis_available净需求, rdbis_available毛需求);
 
             //先绑定这个。InitFilterForControl 这个才生效
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ProductionDemand>(entity, v => v.PPNo, txtRefBillNO, BindDataType4TextBox.Text, true);
-
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProductionDemand>(entity, v => v.PPID, txtRefBillNO, true);
+            
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaPP = Expressionable.Create<tb_ProductionPlan>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                            .And(t => t.isdeleted == false)
+                            .ToExpression();
+            
+            BaseProcessor baseProPP = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProductionPlan).Name + "Processor");
+            QueryFilter queryFilterPP = baseProPP.GetQueryFilter();
+            
+            queryFilterPP.FilterLimitExpressions.Add(lambdaPP);
+            
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_ProductionDemand, tb_ProductionPlan>(entity, txtRefBillNO, t => t.PPNo,
+                f => f.PPNo, queryFilterPP, a => a.PPID, b => b.PPID, null, false);
 
 
             BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProductionPlan).Name + "Processor");

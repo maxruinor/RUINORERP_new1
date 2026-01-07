@@ -181,39 +181,25 @@ namespace RUINORERP.UI.PSI.PUR
 
             }
 
-            if (entity.RefBizType.HasValue)
-            {
-                #region 引用到了不同的单据，需要特殊处理
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
+            DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, v => v.RefBillNO, txtRefBillID, BindDataType4TextBox.Text, true);
 
-                if (entity.RefBizType == (int)BizType.需求分析)
-                {
-                    /* ----------这个引用到了 不同的单据：需求分析。手动。销售订单。其他？。需要特殊处理 ----------- */
-
-                    //先绑定这个。InitFilterForControl 这个才生效
-                    DataBindingHelper.BindData4TextBox<tb_BuyingRequisition>(entity, v => v.RefBillNO, txtRefBillID, BindDataType4TextBox.Text, true);
-                    DataBindingHelper.BindData4TextBoxWithTagQuery<tb_BuyingRequisition>(entity, v => v.RefBillID, txtRefBillID, true);
-
-                    //创建表达式  草稿 结案 和没有提交的都不显示
-                    var lambdaOrder = Expressionable.Create<tb_PurOrder>()
-                                    .And(t => t.DataStatus == (int)DataStatus.确认)
-                                     .And(t => t.isdeleted == false)
-                                     .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
-                                    .ToExpression();//注意 这一句 不能少
-                   
-
-                    BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_BuyingRequisition).Name + "Processor");
-                    QueryFilter queryFilter = basePro.GetQueryFilter();
-
-                    queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
-
-                    DataBindingHelper.InitFilterForControlByExp<tb_BuyingRequisition>(entity, txtRefBillID, c => c.RefBillNO, queryFilter);
-
-                }
+            //创建表达式  草稿 结案 和没有提交的都不显示
+            var lambdaOrder = Expressionable.Create<tb_PurOrder>()
+                            .And(t => t.DataStatus == (int)DataStatus.确认)
+                             .And(t => t.isdeleted == false)
+                             .AndIF(AuthorizeController.GetPurBizLimitedAuth(MainForm.Instance.AppContext) && !MainForm.Instance.AppContext.IsSuperUser, t => t.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID)//限制了销售只看到自己的客户,采购不限制
+                            .ToExpression();//注意 这一句 不能少
 
 
+            BaseProcessor basePro = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_BuyingRequisition).Name + "Processor");
+            QueryFilter queryFilter = basePro.GetQueryFilter();
 
-                #endregion
-            }
+            queryFilter.FilterLimitExpressions.Add(lambdaOrder);//意思是只有审核确认的。没有结案的。才能查询出来。
+
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_BuyingRequisition, tb_PurOrder>(entity, txtRefBillID, t => t.RefBillNO,
+                f => f.PurOrderNo, queryFilter, a => a.RefBillID, b => b.PurOrder_ID, null, false);
 
             base.BindData(entity);
         }

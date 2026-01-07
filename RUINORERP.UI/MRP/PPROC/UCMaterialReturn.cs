@@ -650,6 +650,7 @@ namespace RUINORERP.UI.MRP.MP
 
                 ActionStatus actionStatus = ActionStatus.无操作;
                 BindData(entity, actionStatus);
+                entity.HasChanged = true;
             }
         }
        

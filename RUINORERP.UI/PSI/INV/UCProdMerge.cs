@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -178,9 +178,22 @@ namespace RUINORERP.UI.PSI.INV
                 sgh.LoadItemDataToGrid<tb_ProdMergeDetail>(grid1, sgd, new List<tb_ProdMergeDetail>(), c => c.ProdDetailID);
             }
 
-            //先绑定这个。InitFilterForControl 这个才生效
+            //先绑定这个。ControlBindingHelper.ConfigureControlFilter 这个才生效
             DataBindingHelper.BindData4TextBox<tb_ProdMerge>(entity, k => k.SKU, txtProdDetailID, BindDataType4TextBox.Text, true);
-            DataBindingHelper.BindData4TextBoxWithTagQuery<tb_ProdMerge>(entity, v => v.ProdDetailID, txtProdDetailID, true);
+            
+            //创建表达式  只显示可用的产品详情
+            var lambdaProdDetail = Expressionable.Create<tb_ProdDetail>()
+                            .And(t => t.isdeleted == false)
+                            .ToExpression();
+            
+            BaseProcessor baseProProdDetail = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_ProdDetail).Name + "Processor");
+            QueryFilter queryFilterProdDetail = baseProProdDetail.GetQueryFilter();
+            
+            queryFilterProdDetail.FilterLimitExpressions.Add(lambdaProdDetail);
+            
+            // 使用ControlBindingHelper.ConfigureControlFilter配置控件过滤，避免光标锁定问题
+            ControlBindingHelper.ConfigureControlFilter<tb_ProdMerge, tb_ProdDetail>(entity, txtProdDetailID, t => t.SKU,
+                f => f.SKU, queryFilterProdDetail, a => a.ProdDetailID, b => b.ProdDetailID, null, false);
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdMergeValidator>(), kryptonSplitContainer1.Panel1.Controls);

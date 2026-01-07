@@ -146,6 +146,7 @@ namespace RUINORERP.UI.MRP.MP
                     entity.Priority = (int)Priority.正常;
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
+
                     if (entity.MONO.IsNullOrEmpty())
                     {
                         entity.MONO = ClientBizCodeService.GetBizBillNo(BizType.制令单);

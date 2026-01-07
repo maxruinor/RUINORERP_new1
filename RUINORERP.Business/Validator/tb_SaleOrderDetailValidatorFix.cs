@@ -28,13 +28,14 @@ namespace RUINORERP.Business
             // 这里添加额外的初始化代码
 
             RuleFor(x => x.Quantity).GreaterThan(0).WithMessage("明细中，数量：要大于零。");
-            RuleFor(x => x.Discount).GreaterThan(0).WithMessage("明细中，折扣：要大于零。");
+            RuleFor(x => x.Discount).GreaterThan(0).When(x => x.UnitPrice > 0 || x.TransactionPrice > 0).WithMessage("明细中，价格大于零时，折扣：要大于零。");
+
             RuleFor(x => x.UnitCommissionAmount).GreaterThanOrEqualTo(0).WithMessage("明细中，单品佣金：要大于零。");
             RuleFor(x => x.CommissionAmount).GreaterThanOrEqualTo(0).WithMessage("明细中，佣金小计：要大于零。");
             RuleFor(x => x.TaxRate).NotEqual(0).When(c => c.SubtotalTaxAmount != 0).WithMessage("明细中，税率：税额非零时不能为零。");
             RuleFor(x => x.SubtotalTaxAmount).NotEqual(0).When(c => c.TaxRate != 0).WithMessage("明细中，税额：税率非零时不能为零。");
             RuleFor(x => x.CommissionAmount).NotEqual(0).When(c => c.UnitCommissionAmount != 0).WithMessage("明细中，佣金小计：单品佣金非零时不能为零。");
-            RuleFor(x => x.UnitCommissionAmount).NotEqual(0).When(c => c.CommissionAmount != 0).WithMessage("明细中，佣金小计：单品佣金非零时不能为零。");
+            RuleFor(x => x.UnitCommissionAmount).NotEqual(0).When(c => c.CommissionAmount != 0).WithMessage("明细中，单品佣金：佣金小计非零时不能为零。");
             RuleFor(x => x.UnitPrice).GreaterThan(0).When(c => c.Gift == false).WithMessage("明细中，单价：非赠品时要大于零。");
             RuleFor(x => x.TransactionPrice).GreaterThan(0).When(c => c.Gift == false).WithMessage("明细中，成交价：非赠品时要大于零。");
             //RuleFor(x => x.Cost).GreaterThan(0).WithMessage("明细中，成本价：要大于零,请联系管理员。");

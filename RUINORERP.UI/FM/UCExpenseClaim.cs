@@ -1,65 +1,70 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
-using static RUINORERP.UI.Common.DataBindingHelper;
-using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
+﻿using AutoMapper;
 using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
-using Microsoft.Extensions.Logging;
-using SqlSugar;
-using SourceGrid;
-using System.Linq.Expressions;
-using RUINORERP.Common.Extensions;
-using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
-using RUINOR.Core;
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
 using Krypton.Toolkit;
+using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
-using RUINORERP.UI.SysConfig;
-using SourceGrid.Cells.Editors;
-using RUINORERP.UI.MRP.MP;
-using SourceGrid.Cells.Models;
-using RUINORERP.UI.BI;
-using RUINORERP.Global.EnumExt;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
-using System.Configuration;
-
-
-using Image = System.Drawing.Image;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.Dto;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BI;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.MRP.MP;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.SysConfig;
+using RUINORERP.UI.UCSourceGrid;
+using SourceGrid;
+using SourceGrid.Cells.Editors;
+using SourceGrid.Cells.Models;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using static RUINORERP.UI.Common.DataBindingHelper;
+using static RUINORERP.UI.Common.GUIUtils;
+using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
+using Image = System.Drawing.Image;
 
 namespace RUINORERP.UI.FM
 {
     [MenuAttrAssemblyInfo("费用报销单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用报销, BizType.费用报销单)]
-    public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>
+    public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>, IToolStripMenuInfoAuth
     {
         public UCExpenseClaim()
         {
             InitializeComponent();
         }
-
+        public override void AddExcludeMenuList()
+        {
+            //通过付款单来联动结案
+            base.AddExcludeMenuList(MenuItemEnums.结案);
+            base.AddExcludeMenuList(MenuItemEnums.反结案);
+            base.AddExcludeMenuList(MenuItemEnums.作废);
+        }
 
         /// <summary>
         /// 加载下拉值
@@ -136,11 +141,29 @@ namespace RUINORERP.UI.FM
                 entity.ActionStatus = ActionStatus.加载;
 
                 //如果审核了，审核要灰色
+                if (entity.DataStatus == (int)DataStatus.完结)
+                {
+                    cmbPayStatus.Visible = true;
+                    lblPayStatus.Visible = true;
+                    lblPaytype_ID.Visible = true;
+                    cmbPaytype_ID.Visible = true;
+                }
+                else
+                {
+                    cmbPayStatus.Visible = false;
+                    lblPayStatus.Visible = false;
+                    lblPaytype_ID.Visible = false;
+                    cmbPaytype_ID.Visible = false;
+                }
             }
             else
             {
                 entity.ActionStatus = ActionStatus.新增;
                 entity.DataStatus = (int)DataStatus.草稿;
+                cmbPayStatus.Visible = false;
+                lblPayStatus.Visible = false;
+                lblPaytype_ID.Visible = false;
+                cmbPaytype_ID.Visible = false;
 
                 //默认优化报销自己
                 if (MainForm.Instance.AppContext.CurUserInfo.UserInfo.tb_employee != null)
@@ -162,6 +185,9 @@ namespace RUINORERP.UI.FM
                 }
                 entity.Currency_ID = MainForm.Instance.AppContext.BaseCurrency.Currency_ID;
             }
+
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+            DataBindingHelper.BindData4CmbByEnum<tb_FM_ExpenseClaim, PayStatus>(entity, k => k.PayStatus, cmbPayStatus, false, PayStatus.全额预付, PayStatus.部分预付);
 
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
             DataBindingHelper.BindData4TextBox<tb_FM_ExpenseClaim>(entity, t => t.ClaimNo, txtClaimNo, BindDataType4TextBox.Text, false);
@@ -286,7 +312,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-             
+
 
             };
 
@@ -413,7 +439,7 @@ namespace RUINORERP.UI.FM
                 lbl盘点单.Text = CurMenuInfo.CaptionCN;
             }
             InitDataTocmbbox();
-            
+
 
             // 为结案凭证图片控件添加双击事件，支持上传图片
             magicPictureBox1.DoubleClick += MagicPictureBox1_DoubleClick;

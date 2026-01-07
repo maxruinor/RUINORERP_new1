@@ -71,7 +71,11 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-            AddPublicEntityObject(typeof(ProductSharePart));
+            if (!this.DesignMode)
+            {
+                AddPublicEntityObject(typeof(ProductSharePart));
+            }
+            
         }
 
 

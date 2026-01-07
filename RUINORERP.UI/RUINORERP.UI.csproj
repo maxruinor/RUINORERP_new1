@@ -2357,6 +2357,18 @@
       <DependentUpon>UCProductAttrRelationEdit.cs</DependentUpon>
     </Compile>
     <Compile Include="ProductEAV\Utils\PropertyCombinationHelper.cs" />
+    <Compile Include="PSI\INV\UCInventorySnapshotQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCInventorySnapshotQuery.Designer.cs">
+      <DependentUpon>UCInventorySnapshotQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PSI\INV\UCInventoryTransactionQuery.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PSI\INV\UCInventoryTransactionQuery.Designer.cs">
+      <DependentUpon>UCInventoryTransactionQuery.cs</DependentUpon>
+    </Compile>
     <Compile Include="Services\ClientSystemInfoService.cs" />
     <Compile Include="SmartReminderClient\DetailForm.cs">
       <SubType>Form</SubType>
@@ -4407,8 +4419,14 @@
     <EmbeddedResource Include="PSI\INV\UCInventoryQuery.resx">
       <DependentUpon>UCInventoryQuery.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCInventorySnapshotQuery.resx">
+      <DependentUpon>UCInventorySnapshotQuery.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCInventoryTracking.resx">
       <DependentUpon>UCInventoryTracking.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PSI\INV\UCInventoryTransactionQuery.resx">
+      <DependentUpon>UCInventoryTransactionQuery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PSI\INV\UCProdConversionStatistics.resx">
       <DependentUpon>UCProdConversionStatistics.cs</DependentUpon>

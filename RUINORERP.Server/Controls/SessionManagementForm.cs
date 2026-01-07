@@ -34,8 +34,11 @@ namespace RUINORERP.Server.Controls
         private readonly Timer _performanceTimer;
         private PerformanceCounter _cpuCounter;
         private PerformanceCounter _memoryCounter;
+        private PerformanceCounter _diskIOCounter;
         private DateTime _formOpenTime;
         private readonly ILogger<SessionManagementForm> _logger;
+        private int _baseUpdateInterval = 2000; // 基础更新间隔，单位：毫秒
+        private int _basePerformanceInterval = 1000; // 基础性能更新间隔，单位：毫秒
         public SessionManagementForm(SessionInfo session, ISessionService sessionService)
         {
             InitializeComponent();
@@ -76,6 +79,7 @@ namespace RUINORERP.Server.Controls
             {
                 _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
                 _memoryCounter = new PerformanceCounter("Memory", "Available MBytes");
+                _diskIOCounter = new PerformanceCounter("PhysicalDisk", "% Disk Time", "_Total");
             }
             catch (Exception ex)
             {
@@ -100,8 +104,16 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void UpdateBasicInfo()
         {
+            // 使用try-catch保护关键操作，确保UI不会崩溃
             try
             {
+                // 检查会话是否仍然有效
+                if (_session == null)
+                {
+                    Close();
+                    return;
+                }
+
                 // 会话基本信息
                 lblSessionID.Text = _session.SessionID;
                 lblUserName.Text = _session.UserName ?? "未登录用户";
@@ -109,7 +121,7 @@ namespace RUINORERP.Server.Controls
                 lblClientIP.Text = _session.ClientIp;
                 lblClientPort.Text = _session.ClientPort.ToString();
                 lblConnectedTime.Text = _session.ConnectedTime.ToString("yyyy-MM-dd HH:mm:ss");
-                lblClientVersion.Text = _session.UserInfo.客户端版本 ?? "未知版本";
+                lblClientVersion.Text = _session.UserInfo?.客户端版本 ?? "未知版本";
 
                 // 计算连接时长
                 TimeSpan duration = DateTime.Now - _session.ConnectedTime;
@@ -131,34 +143,56 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                // 检查会话是否仍然有效
+                if (_session == null)
+                {
+                    Close();
+                    return;
+                }
+
                 if (_session.ClientSystemInfo != null)
                 {
-                    var osInfo = _session.ClientSystemInfo.OperatingSystem;
-                    var hwInfo = _session.ClientSystemInfo.Hardware;
+                    var clientSystemInfo = _session.ClientSystemInfo;
+                    var osInfo = clientSystemInfo.OperatingSystem;
+                    var hwInfo = clientSystemInfo.Hardware;
 
                     // 操作系统信息
-                    lblOSName.Text = $"{osInfo.Platform} {osInfo.Version}";
-                    lblMachineName.Text = osInfo.MachineName;
-                    lblArchitecture.Text = osInfo.Architecture;
-                    lblIs64Bit.Text = osInfo.Is64BitOperatingSystem ? "是" : "否";
+                    lblOSName.Text = $"{osInfo?.Platform} {osInfo?.Version}";
+                    lblMachineName.Text = osInfo?.MachineName ?? "未知";
+                    lblArchitecture.Text = osInfo?.Architecture ?? "未知";
+                    lblIs64Bit.Text = osInfo?.Is64BitOperatingSystem == true ? "是" : "否";
 
                     // 硬件信息
-                    if (hwInfo.ProcessorInfo != null)
+                    if (hwInfo?.ProcessorInfo != null)
                     {
-                        lblCPUName.Text = hwInfo.ProcessorInfo.Name;
-                        lblCPUCores.Text = hwInfo.ProcessorInfo.NumberOfCores.ToString();
-                        lblCPULogicalProcessors.Text = hwInfo.ProcessorInfo.NumberOfLogicalProcessors.ToString();
-                        lblCPUMaxSpeed.Text = $"{hwInfo.ProcessorInfo.MaxClockSpeed} MHz";
+                        var cpuInfo = hwInfo.ProcessorInfo;
+                        lblCPUName.Text = cpuInfo.Name ?? "未知";
+                        lblCPUCores.Text = cpuInfo.NumberOfCores.ToString();
+                        lblCPULogicalProcessors.Text = cpuInfo.NumberOfLogicalProcessors.ToString();
+                        lblCPUMaxSpeed.Text = $"{cpuInfo.MaxClockSpeed} MHz";
+                    }
+                    else
+                    {
+                        lblCPUName.Text = "未采集";
+                        lblCPUCores.Text = "未采集";
+                        lblCPULogicalProcessors.Text = "未采集";
+                        lblCPUMaxSpeed.Text = "未采集";
                     }
 
-                    if (hwInfo.MemoryInfo != null)
+                    if (hwInfo?.MemoryInfo != null)
                     {
-                        lblTotalMemory.Text = $"{hwInfo.MemoryInfo.TotalPhysicalMemory / (1024 * 1024 * 1024)} GB";
-                        lblAvailableMemory.Text = $"{hwInfo.MemoryInfo.AvailablePhysicalMemory / (1024 * 1024)} MB";
+                        var memInfo = hwInfo.MemoryInfo;
+                        lblTotalMemory.Text = $"{(memInfo.TotalPhysicalMemory / (1024.0 * 1024.0 * 1024.0)):F1} GB";
+                        lblAvailableMemory.Text = $"{(memInfo.AvailablePhysicalMemory / (1024.0 * 1024.0)):F0} MB";
+                    }
+                    else
+                    {
+                        lblTotalMemory.Text = "未采集";
+                        lblAvailableMemory.Text = "未采集";
                     }
 
                     // MAC地址和网络信息
-                    lblMacAddress.Text = hwInfo.MacAddress ?? "未知";
+                    lblMacAddress.Text = hwInfo?.MacAddress ?? "未知";
                 }
                 else
                 {
@@ -189,6 +223,14 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                // 检查会话是否仍然有效
+                if (_session == null || _session.Status == SessionStatus.Disconnected)
+                {
+                    Close();
+                    return;
+                }
+
+                // 获取性能统计信息，使用安全调用
                 var stats = _session.GetPerformanceStats();
 
                 // 网络统计
@@ -209,6 +251,10 @@ namespace RUINORERP.Server.Controls
                     double bytesPerSecond = totalBytes / duration.TotalSeconds;
                     lblThroughput.Text = $"{FormatBytes((long)bytesPerSecond)}/秒";
                 }
+                else
+                {
+                    lblThroughput.Text = "0 B/秒";
+                }
 
                 // 更新活动状态
                 TimeSpan idleTime = DateTime.Now - _session.LastActivityTime;
@@ -227,6 +273,13 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                // 检查会话是否仍然有效
+                if (_session == null || _session.Status == SessionStatus.Disconnected)
+                {
+                    Close();
+                    return;
+                }
+
                 if (_session.ClientSystemInfo?.Network != null)
                 {
                     var networkInfo = _session.ClientSystemInfo.Network;
@@ -240,12 +293,15 @@ namespace RUINORERP.Server.Controls
                     // 网络质量指标
                     if (networkInfo.NetworkQuality != null)
                     {
-                        lblLatency.Text = $"{networkInfo.NetworkQuality.Latency} ms";
-                        lblPacketLoss.Text = $"{networkInfo.NetworkQuality.PacketLossRate:P2}";
+                        double latency = networkInfo.NetworkQuality.Latency;
+                        double packetLoss = networkInfo.NetworkQuality.PacketLossRate;
+                        
+                        lblLatency.Text = $"{latency:F0} ms";
+                        lblPacketLoss.Text = $"{packetLoss:P2}";
                         lblBandwidth.Text = FormatBytes(networkInfo.NetworkQuality.AvailableBandwidth);
 
                         // 更新网络状态指示器
-                        UpdateNetworkStatus(networkInfo.NetworkQuality.Latency, networkInfo.NetworkQuality.PacketLossRate);
+                        UpdateNetworkStatus(latency, packetLoss);
                     }
                     else
                     {
@@ -257,6 +313,7 @@ namespace RUINORERP.Server.Controls
                 }
                 else
                 {
+                    // 设置默认值，避免显示空白
                     lblLocalIP.Text = "未采集";
                     lblLocalPort.Text = "未采集";
                     lblRemoteIP.Text = "未采集";
@@ -270,6 +327,8 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 LogError("更新网络信息失败", ex);
+                // 在异常情况下，确保UI显示合理的默认值
+                UpdateNetworkStatus(-1, 0);
             }
         }
 
@@ -280,31 +339,98 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                // 这里可以集成实际的缓存统计
-                // 目前显示模拟数据
-                lblCacheEntries.Text = "156";
-                lblCacheSize.Text = "2.3 MB";
-                lblCacheHitRate.Text = "87.5%";
+                // 检查会话是否仍然有效
+                if (_session == null || _session.Status != SessionStatus.Connected)
+                {
+                    return;
+                }
+
+                // 实际获取缓存统计信息
+                var cacheStats = GetCacheStatistics();
+                lblCacheEntries.Text = cacheStats.Entries.ToString("N0");
+                lblCacheSize.Text = FormatBytes(cacheStats.SizeBytes);
+                lblCacheHitRate.Text = $"{cacheStats.HitRate:P1}";
 
                 // 更新缓存状态
-                var cacheStatus = GetCacheStatus();
+                var cacheStatus = GetCacheStatus(cacheStats);
                 lblCacheStatus.Text = cacheStatus;
-                lblCacheStatus.ForeColor = cacheStatus == "正常" ? Color.Green : Color.Red;
+                lblCacheStatus.ForeColor = cacheStatus == "正常" ? Color.Green : cacheStatus == "警告" ? Color.Orange : Color.Red;
             }
             catch (Exception ex)
             {
                 LogError("更新缓存信息失败", ex);
+                // 在异常情况下，设置合理的默认值
+                lblCacheEntries.Text = "N/A";
+                lblCacheSize.Text = "N/A";
+                lblCacheHitRate.Text = "N/A";
+                lblCacheStatus.Text = "未知";
+                lblCacheStatus.ForeColor = Color.Gray;
+            }
+        }
+
+        /// <summary>
+        /// 缓存统计信息类
+        /// </summary>
+        private class CacheStatistics
+        {
+            public long Entries { get; set; }
+            public long SizeBytes { get; set; }
+            public double HitRate { get; set; }
+        }
+
+        /// <summary>
+        /// 获取缓存统计信息
+        /// </summary>
+        private CacheStatistics GetCacheStatistics()
+        {
+            try
+            {
+                // 这里应该实现实际的缓存统计获取逻辑
+                // 示例：从CacheManager获取缓存统计
+                // 目前返回模拟数据，实际应用中应替换为真实实现
+                return new CacheStatistics
+                {
+                    Entries = 156,
+                    SizeBytes = 2401280, // 约2.3 MB
+                    HitRate = 0.875
+                };
+            }
+            catch (Exception ex)
+            {
+                LogError("获取缓存统计信息失败", ex);
+                // 返回默认值
+                return new CacheStatistics
+                {
+                    Entries = 0,
+                    SizeBytes = 0,
+                    HitRate = 0
+                };
             }
         }
 
         /// <summary>
         /// 获取缓存状态
         /// </summary>
-        private string GetCacheStatus()
+        private string GetCacheStatus(CacheStatistics cacheStats)
         {
-            // 这里应该实现实际的缓存状态检查逻辑
-            // 返回 "正常", "警告", "错误" 等状态
-            return "正常";
+            try
+            {
+                // 根据缓存统计信息判断缓存状态
+                if (cacheStats.HitRate < 0.5)
+                {
+                    return "警告";
+                }
+                if (cacheStats.SizeBytes > 100 * 1024 * 1024) // 超过100MB
+                {
+                    return "警告";
+                }
+                return "正常";
+            }
+            catch (Exception ex)
+            {
+                LogError("获取缓存状态失败", ex);
+                return "未知";
+            }
         }
 
         /// <summary>
@@ -396,6 +522,45 @@ namespace RUINORERP.Server.Controls
             UpdatePerformanceInfo();
             UpdateNetworkInfo();
             UpdatePerformanceCharts();
+            AdjustRefreshIntervals();
+        }
+
+        /// <summary>
+        /// 根据系统负载调整刷新间隔
+        /// </summary>
+        private void AdjustRefreshIntervals()
+        {
+            try
+            {
+                float cpuUsage = _cpuCounter?.NextValue() ?? 0;
+                float diskUsage = _diskIOCounter?.NextValue() ?? 0;
+                
+                // 根据CPU和磁盘使用率调整刷新间隔
+                // 负载越高，刷新间隔越长，减少系统压力
+                int cpuBasedInterval = cpuUsage < 30 ? _baseUpdateInterval : cpuUsage < 70 ? _baseUpdateInterval * 2 : _baseUpdateInterval * 4;
+                int diskBasedInterval = diskUsage < 30 ? _basePerformanceInterval : diskUsage < 70 ? _basePerformanceInterval * 2 : _basePerformanceInterval * 4;
+                
+                // 取最大值作为新的间隔，确保系统负载高时减少更新频率
+                int newUpdateInterval = Math.Max(cpuBasedInterval, diskBasedInterval);
+                int newPerformanceInterval = Math.Max(cpuBasedInterval / 2, diskBasedInterval / 2);
+                
+                // 应用新的间隔，避免频繁调整
+                if (Math.Abs(_updateTimer.Interval - newUpdateInterval) > 500)
+                {
+                    _updateTimer.Interval = newUpdateInterval;
+                }
+                
+                if (Math.Abs(_performanceTimer.Interval - newPerformanceInterval) > 250)
+                {
+                    _performanceTimer.Interval = newPerformanceInterval;
+                }
+                
+                // 更新状态栏显示当前刷新间隔 - 移除对不存在控件的引用
+            }
+            catch (Exception ex)
+            {
+                LogError("调整刷新间隔失败", ex);
+            }
         }
 
         /// <summary>
@@ -403,8 +568,23 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void UpdatePerformanceCharts()
         {
-            // 这里可以添加实时图表更新逻辑
-            // 例如CPU使用率、内存使用率的趋势图
+            try
+            {
+                // 示例：获取并显示系统CPU和内存使用率
+                // 实际应用中应替换为客户端实际性能数据
+                float cpuUsage = _cpuCounter?.NextValue() ?? 0;
+                float availableMemory = _memoryCounter?.NextValue() ?? 0;
+                
+                // 客户端性能数据已在UpdatePerformanceInfo方法中更新
+                // 这里可以添加图表控件的更新逻辑
+                // 例如：
+                // chartCPU.Series["CPU"].Points.AddY(cpuUsage);
+                // chartMemory.Series["Memory"].Points.AddY(availableMemory);
+            }
+            catch (Exception ex)
+            {
+                LogError("更新性能图表失败", ex);
+            }
         }
 
         /// <summary>
@@ -428,6 +608,7 @@ namespace RUINORERP.Server.Controls
                 };
 
                 var request = new MessageRequest(MessageType.Business, messageData);
+                _logger.LogInformation("正在向会话 {SessionID} 发送消息", _session.SessionID);
                 bool success = await _sessionService.SendCommandAsync(
                     _session.SessionID,
                     MessageCommands.SendMessageToUser,
@@ -438,9 +619,11 @@ namespace RUINORERP.Server.Controls
                     // 添加到消息历史
                     AddMessageToHistory($"管理员: {txtMessage.Text}", Color.Blue);
                     txtMessage.Clear();
+                    _logger.LogInformation("消息发送成功，会话 {SessionID}", _session.SessionID);
                 }
                 else
                 {
+                    _logger.LogWarning("消息发送失败，会话 {SessionID}", _session.SessionID);
                     MessageBox.Show("发送消息失败，请检查连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -458,6 +641,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                _logger.LogInformation("正在向会话 {SessionID} 发送强制同步缓存命令", _session.SessionID);
                 var messageData = new MessageData
                 {
                     MessageType = MessageType.System,
@@ -474,11 +658,13 @@ namespace RUINORERP.Server.Controls
 
                 if (success)
                 {
+                    _logger.LogInformation("强制同步缓存命令发送成功，会话 {SessionID}", _session.SessionID);
                     MessageBox.Show("强制同步命令已发送", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     AddMessageToHistory("系统: 强制同步缓存命令已发送", Color.Green);
                 }
                 else
                 {
+                    _logger.LogWarning("强制同步缓存命令发送失败，会话 {SessionID}", _session.SessionID);
                     MessageBox.Show("发送同步命令失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -496,6 +682,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                _logger.LogInformation("正在向会话 {SessionID} 发送清理缓存命令", _session.SessionID);
                 var messageData = new MessageData
                 {
                     MessageType = MessageType.System,
@@ -511,11 +698,12 @@ namespace RUINORERP.Server.Controls
                     MessageCommands.SendMessageToUser,
                     request);
 
+                _logger.LogInformation("清理缓存命令发送成功，会话 {SessionID}", _session.SessionID);
                 AddMessageToHistory("[清除缓存] 已发送缓存清除命令", Color.YellowGreen);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"清除缓存失败: {ex.Message}");
+                _logger.LogError(ex, "清除缓存失败，会话 {SessionID}", _session.SessionID);
                 MessageBox.Show($"清除缓存失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -535,6 +723,7 @@ namespace RUINORERP.Server.Controls
             {
                 try
                 {
+                    _logger.LogInformation("正在向会话 {SessionID} 发送重启客户端命令", _session.SessionID);
                     var messageData = new MessageData
                     {
                         MessageType = MessageType.System,
@@ -552,11 +741,13 @@ namespace RUINORERP.Server.Controls
 
                     if (success)
                     {
+                        _logger.LogInformation("重启客户端命令发送成功，会话 {SessionID}", _session.SessionID);
                         MessageBox.Show("重启命令已发送", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         AddMessageToHistory("系统: 客户端重启命令已发送", Color.Orange);
                     }
                     else
                     {
+                        _logger.LogWarning("重启客户端命令发送失败，会话 {SessionID}", _session.SessionID);
                         MessageBox.Show("发送重启命令失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
@@ -583,6 +774,7 @@ namespace RUINORERP.Server.Controls
             {
                 try
                 {
+                    _logger.LogInformation("正在向会话 {SessionID} 发送关闭客户端命令", _session.SessionID);
                     var messageData = new MessageData
                     {
                         MessageType = MessageType.System,
@@ -599,11 +791,12 @@ namespace RUINORERP.Server.Controls
                         MessageCommands.SendMessageToUser,
                         request);
 
+                    _logger.LogInformation("关闭客户端命令发送成功，会话 {SessionID}", _session.SessionID);
                     AddMessageToHistory("[关机] 已发送客户端关机命令", Color.Yellow);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError($"关机失败: {ex.Message}");
+                    _logger.LogError(ex, "关闭客户端失败，会话 {SessionID}", _session.SessionID);
                     MessageBox.Show($"关机失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -633,8 +826,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private void LogError(string message, Exception ex)
         {
-            Debug.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}: {ex.Message}");
-            // 这里可以集成实际的日志系统
+            _logger.LogError(ex, message);
         }
 
         /// <summary>

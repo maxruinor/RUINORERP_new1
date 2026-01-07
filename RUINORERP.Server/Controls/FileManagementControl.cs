@@ -114,12 +114,12 @@ namespace RUINORERP.Server.Controls
             listView1.Columns.Add("状态", 80);
         }
 
-        private void UpdateTimer_Tick(object sender, EventArgs e)
+        private async void UpdateTimer_Tick(object sender, EventArgs e)
         {
-            LoadStorageInfo();
+           await LoadStorageInfo();
         }
 
-        public async void LoadStorageInfo()
+        public async Task LoadStorageInfo()
         {   
             try
             {   

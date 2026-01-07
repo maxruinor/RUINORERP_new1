@@ -155,7 +155,7 @@ namespace RUINORERP.Business
                         break;
                     case BizType.费用报销单:
                         var ExpenseClaimPayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>()
-                       .Where(prp => prp.Employee_ID == sourceBillId)
+                       .Where(prp => prp.ClaimMainID == sourceBillId)
                        .FirstAsync();
 
                         if (ExpenseClaimPayment == null)
@@ -361,6 +361,10 @@ namespace RUINORERP.Business
                 List<tb_FM_Statement> StatementUpdateList = new List<tb_FM_Statement>();
                 List<tb_FM_StatementDetail> StatementDetailUpdateList = new List<tb_FM_StatementDetail>();
                 List<tb_FinishedGoodsInv> FinishedGoodsInvUpdateList = new List<tb_FinishedGoodsInv>();
+
+
+                List<tb_FM_ExpenseClaim> ExpenseClaimUpdateList = new List<tb_FM_ExpenseClaim>();
+
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。
                 // 开启事务，保证数据一致性
@@ -1488,7 +1492,33 @@ namespace RUINORERP.Business
 
 
                     #region 费用报销单回写状态
-
+                    //要把费用报销单的状态更新了，
+                    List<tb_FM_ExpenseClaim> ExpenseClaimList = await _appContext.Db.Queryable<tb_FM_ExpenseClaim>()
+                        .Includes(c => c.tb_FM_ExpenseClaimDetails)
+                       .Where(c => sourcebillids.Contains(c.ClaimMainID))
+                       .ToListAsync();
+                    foreach (var ExpenseClaim in ExpenseClaimList)
+                    {
+                        //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
+                        tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == ExpenseClaim.ClaimMainID);
+                        if (ExpenseClaim != null)
+                        {
+                            if (RecordDetail.LocalAmount == ExpenseClaim.ClaimAmount)
+                            {
+                                ExpenseClaim.PayStatus = (int)PayStatus.全部付款;
+                                ExpenseClaim.Paytype_ID = entity.Paytype_ID;
+                                ExpenseClaim.DataStatus = (int)DataStatus.完结;
+                            }
+                            else
+                            {
+                                rmrs.ErrorMsg = "付款金额与报销金额不一致，审核失败";
+                                rmrs.Succeeded = false;
+                                rmrs.ReturnObject = entity as T;
+                                return rmrs;
+                            }
+                            ExpenseClaimUpdateList.Add(ExpenseClaim);
+                        }
+                    }
                     #endregion
                 }
 
@@ -1889,7 +1919,7 @@ namespace RUINORERP.Business
                         ExpenseClaim.PayStatus = (int)PayStatus.未付款;
                         ExpenseClaim.Paytype_ID = null;
                     }
-                    
+
                     expenseClaimUpdateList.Add(ExpenseClaim);
                 }
 

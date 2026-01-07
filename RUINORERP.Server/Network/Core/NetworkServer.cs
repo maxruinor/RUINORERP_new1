@@ -452,6 +452,19 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
+                // 增强参数检查
+                if (globalProvider == null)
+                {
+                    _logger.LogWarning("全局服务提供者为空，无法复制服务");
+                    return;
+                }
+
+                if (services == null)
+                {
+                    _logger.LogError("服务集合为空，无法复制服务");
+                    return;
+                }
+
                 // 注册核心服务为单例，确保使用与全局相同的实例
                 services.AddSingleton<ISessionService>(_sessionManager);
                 services.AddSingleton(_commandDispatcher);
@@ -459,17 +472,35 @@ namespace RUINORERP.Server.Network.Core
                 // 注册全局服务提供者本身，以便在需要时可以访问所有全局服务
                 services.AddSingleton(globalProvider);
 
-                // 这里可以根据需要显式注册其他必要的服务
-                // 例如：
-                // services.AddSingleton(globalProvider.GetService<ILoggerFactory>());
-                // services.AddSingleton(globalProvider.GetService<ISqlSugarClient>());
-                // services.AddSingleton(globalProvider.GetService<IConfiguration>());
+                // 显式注册一些核心服务，提高可靠性
+                try
+                {
+                    // 注册日志工厂
+                    var loggerFactory = globalProvider.GetService<ILoggerFactory>();
+                    if (loggerFactory != null)
+                    {
+                        services.AddSingleton(loggerFactory);
+                    }
 
-                _logger.LogInformation("已将全局服务提供者集成到SuperSocket服务器");
+                    // 注册配置对象
+                    var configuration = globalProvider.GetService<IConfiguration>();
+                    if (configuration != null)
+                    {
+                        services.AddSingleton(configuration);
+                    }
+
+                    _logger.LogInformation("已将全局服务提供者集成到SuperSocket服务器");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "注册额外服务时出错，但不影响核心功能");
+                    // 继续执行，不中断服务启动
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "从全局服务提供者复制服务时出错");
+                _logger.LogError(ex, "从全局服务提供者复制服务时出错，但不影响服务器启动");
+                // 继续执行，确保服务器能够启动
             }
         }
 
@@ -500,38 +531,74 @@ namespace RUINORERP.Server.Network.Core
                 // 如果没有传入配置对象，则创建一个
                 if (config == null)
                 {
-                    config = new ConfigurationBuilder()
-                        .SetBasePath(Directory.GetCurrentDirectory())
-                        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                        .Build();
+                    try
+                    {
+                        config = new ConfigurationBuilder()
+                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true) // 改为可选，避免配置文件不存在导致崩溃
+                            .Build();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "创建配置对象时发生异常，将使用默认配置");
+                        // 继续执行，使用默认配置
+                    }
                 }
 
                 // 如果没有传入服务器配置对象，则尝试从配置文件中读取
                 if (serverOptions == null)
                 {
-                    var serverOptionsSection = config.GetSection("serverOptions");
-                    if (serverOptionsSection != null && serverOptionsSection.GetChildren().Any())
+                    if (config != null)
                     {
-                        serverOptions = serverOptionsSection.Get<ERPServerOptions>();
+                        try
+                        {
+                            var serverOptionsSection = config.GetSection("serverOptions");
+                            if (serverOptionsSection != null && serverOptionsSection.Exists() && serverOptionsSection.GetChildren().Any())
+                            {
+                                serverOptions = serverOptionsSection.Get<ERPServerOptions>();
+                                // 验证配置是否有效
+                                if (serverOptions != null)
+                                {
+                                    serverOptions.Validate();
+                                }
+                            }
+                            else
+                            {
+                                _logger?.LogInformation("未找到有效的服务器配置，将使用默认配置");
+                                serverOptions = new ERPServerOptions();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, "从配置文件读取服务器配置时发生异常，将使用默认配置");
+                            serverOptions = new ERPServerOptions();
+                        }
                     }
                     else
                     {
+                        _logger?.LogInformation("配置对象为空，将使用默认配置");
                         serverOptions = new ERPServerOptions();
                     }
                 }
 
                 // 首先添加serverOptions.listeners中的所有端口和IP
-                if (serverOptions != null && serverOptions.Listeners != null)
+                if (serverOptions != null && serverOptions.Listeners != null && serverOptions.Listeners.Count > 0)
                 {
                     foreach (var listener in serverOptions.Listeners)
                     {
+                        if (listener == null)
+                        {
+                            _logger?.LogWarning("监听器配置为空，跳过");
+                            continue;
+                        }
+
                         if (listener.Port > 0 && !ports.Contains(listener.Port))
                         {
                             ports.Add(listener.Port);
                         }
 
                         // 记录IP地址
-                        var ip = listener.Ip ?? "0.0.0.0";
+                        var ip = listener.Ip ?? "Any";
                         if (ip.Equals("Any", StringComparison.OrdinalIgnoreCase))
                         {
                             ip = "0.0.0.0";
@@ -542,6 +609,10 @@ namespace RUINORERP.Server.Network.Core
                         }
                     }
                 }
+                else
+                {
+                    _logger?.LogInformation("未配置监听器，将使用默认配置");
+                }
 
                 // 如果没有配置任何端口，则添加默认端口
                 if (ports.Count == 0)
@@ -550,22 +621,39 @@ namespace RUINORERP.Server.Network.Core
                     ports.Add(defaultPort);
                     Serverport = defaultPort; // 更新Serverport
                     _configuredIps.Add("0.0.0.0"); // 默认监听所有IP
+                    _logger?.LogInformation($"使用默认端口配置: {defaultPort}");
                 }
                 else
                 {
                     // 更新Serverport为第一个配置的端口
                     Serverport = ports[0];
+                    _logger?.LogInformation($"使用配置的端口: {string.Join(", ", ports)}");
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "读取配置文件中的端口信息时发生异常");
+                _logger?.LogWarning(ex, "读取配置文件中的端口信息时发生异常，将使用默认配置");
 
-                // 发生异常时，使用默认端口和IP
+                // 发生异常时，确保清空之前可能的部分数据，使用完全的默认配置
+                ports.Clear();
+                _configuredIps.Clear();
+                
                 var defaultPort = new ListenOptions().Port;
                 ports.Add(defaultPort);
                 Serverport = defaultPort;
+                _configuredIps.Add("0.0.0.0");
+                
+                _logger?.LogInformation($"发生异常后使用默认端口: {defaultPort}");
+            }
+
+            // 确保返回的端口列表不为空，且至少包含一个有效端口
+            if (ports == null || ports.Count == 0)
+            {
+                var defaultPort = new ListenOptions().Port;
+                ports = new List<int> { defaultPort };
                 _configuredIps = new List<string> { "0.0.0.0" };
+                Serverport = defaultPort;
+                _logger?.LogError("端口列表为空，强制使用默认端口");
             }
 
             // 保存配置的端口，用于服务器信息展示

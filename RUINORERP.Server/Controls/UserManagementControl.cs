@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using RUINORERP.Model.CommonModel;
- 
+
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
@@ -52,6 +52,16 @@ namespace RUINORERP.Server.Controls
         /// 上次立即刷新时间，用于避免过于频繁的刷新
         /// </summary>
         private DateTime _lastImmediateRefresh = DateTime.MinValue;
+
+        /// <summary>
+        /// 上次统计信息更新时间
+        /// </summary>
+        private DateTime _lastStatisticsUpdate = DateTime.MinValue;
+
+        /// <summary>
+        /// 上次心跳和空闲时间更新时间
+        /// </summary>
+        private DateTime _lastHeartbeatUpdate = DateTime.MinValue;
 
         [DllImport("user32.dll")]
         private static extern int GetScrollPos(IntPtr hWnd, int nBar);
@@ -211,27 +221,35 @@ namespace RUINORERP.Server.Controls
 
                 foreach (var session in sessions)
                 {
-                    // 检查会话是否已授权，未授权的会话不添加到表格中
-                    var userInfo = session.UserInfo ?? new UserInfo();
-                    if (!userInfo.授权状态)
+                    try
                     {
-                        skippedCount++;
-                        continue;
-                    }
+                        // 检查会话是否已授权，未授权的会话不添加到表格中
+                        var userInfo = session.UserInfo ?? new UserInfo();
+                        if (!userInfo.授权状态)
+                        {
+                            skippedCount++;
+                            continue;
+                        }
 
-                    AddOrUpdateSessionItem(session);
-                    loadedCount++;
+                        AddOrUpdateSessionItem(session);
+                        loadedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError($"处理会话 {session?.SessionID} 时出错", ex, session);
+                        skippedCount++;
+                    }
                 }
 
                 // 记录加载结果
-                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个未授权会话");
+                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个会话");
 
                 // 初始化统计信息
                 UpdateStatistics();
             }
             catch (Exception ex)
             {
-                LogError($"加载现有会话时出错: {ex.Message}", ex);
+                LogError("加载现有会话时出错", ex);
             }
         }
 
@@ -353,31 +371,57 @@ namespace RUINORERP.Server.Controls
         /// <param name="sessionInfo">会话信息</param>
         private void AddOrUpdateSessionItem(SessionInfo sessionInfo)
         {
-            if (this.InvokeRequired)
+            try
             {
-                this.Invoke(new Action(() => AddOrUpdateSessionItem(sessionInfo)));
-                return;
-            }
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => AddOrUpdateSessionItem(sessionInfo)));
+                    return;
+                }
 
-            // 以SessionID为唯一标识
-            if (string.IsNullOrEmpty(sessionInfo.SessionID))
-            {
-                LogError("会话信息SessionID为空，跳过添加或更新");
-                return;
-            }
+                // 检查控件是否已释放
+                if (listView1.IsDisposed)
+                {
+                    return;
+                }
 
-            if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
-            {
-                // 会话已存在，更新现有项
-                UpdateSessionItem(existingItem, sessionInfo);
+                // 以SessionID为唯一标识
+                if (!IsSessionValid(sessionInfo))
+                {
+                    LogError("无效的会话信息，跳过添加或更新", null, sessionInfo);
+                    return;
+                }
+
+                // 使用BeginUpdate/EndUpdate减少UI闪烁
+                listView1.BeginUpdate();
+
+                if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
+                {
+                    // 会话已存在，更新现有项
+                    UpdateSessionItem(existingItem, sessionInfo);
+                }
+                else
+                {
+                    // 新会话，创建新项
+                    var newItem = CreateSessionItem(sessionInfo);
+                    newItem.ToolTipText = sessionInfo.SessionID;
+                    listView1.Items.Add(newItem);
+                    _sessionItemMap[sessionInfo.SessionID] = newItem;
+                }
+
+                listView1.EndUpdate();
             }
-            else
+            catch (Exception ex)
             {
-                // 新会话，创建新项
-                var newItem = CreateSessionItem(sessionInfo);
-                newItem.ToolTipText = sessionInfo.SessionID;
-                listView1.Items.Add(newItem);
-                _sessionItemMap[sessionInfo.SessionID] = newItem;
+                LogError("添加或更新会话项时出错", ex, sessionInfo);
+                try
+                {
+                    if (!listView1.IsDisposed)
+                    {
+                        listView1.EndUpdate();
+                    }
+                }
+                catch { }
             }
         }
 
@@ -387,17 +431,23 @@ namespace RUINORERP.Server.Controls
         /// <param name="sessionId">会话ID</param>
         private void RemoveSessionItem(string sessionId)
         {
-            if (this.InvokeRequired)
-            {
-                this.Invoke(new Action(() => RemoveSessionItem(sessionId)));
-                return;
-            }
-
             try
             {
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => RemoveSessionItem(sessionId)));
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(sessionId))
                 {
                     LogError("尝试移除会话ID为空的会话项");
+                    return;
+                }
+
+                // 检查控件是否已释放
+                if (listView1.IsDisposed)
+                {
                     return;
                 }
 
@@ -405,10 +455,12 @@ namespace RUINORERP.Server.Controls
                 {
                     // 记录将要移除的会话信息
                     string sessionInfo = "未知会话";
-                    if (item.Tag is SessionInfo sessionData)
+                    SessionInfo sessionData = null;
+                    if (item.Tag is SessionInfo data)
                     {
-                        var userInfo = sessionData.UserInfo ?? new UserInfo();
-                        sessionInfo = $"用户: {GetDisplayUserName(userInfo)}, IP: {sessionData.ClientIp}";
+                        sessionData = data;
+                        var userInfo = data.UserInfo ?? new UserInfo();
+                        sessionInfo = $"用户: {GetDisplayUserName(userInfo)}, IP: {data.ClientIp}";
                     }
 
                     // 移除会话项
@@ -417,7 +469,7 @@ namespace RUINORERP.Server.Controls
                     _sessionItemMap.Remove(sessionId);
                     listView1.EndUpdate();
 
-                    LogStatusChange(null, $"会话项已移除: {sessionInfo} (SessionID: {sessionId})");
+                    LogStatusChange(sessionData, $"会话项已移除: {sessionInfo} (SessionID: {sessionId})");
                 }
                 else
                 {
@@ -427,6 +479,14 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 LogError($"移除会话项时出错: {sessionId}", ex);
+                try
+                {
+                    if (!listView1.IsDisposed)
+                    {
+                        listView1.EndUpdate();
+                    }
+                }
+                catch { }
             }
         }
 
@@ -584,6 +644,42 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
+        /// 检查会话是否有效
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>如果会话有效则返回true，否则返回false</returns>
+        private bool IsSessionValid(SessionInfo sessionInfo)
+        {
+            return sessionInfo != null && !string.IsNullOrEmpty(sessionInfo.SessionID);
+        }
+
+        /// <summary>
+        /// 检查会话是否已授权
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>如果会话已授权则返回true，否则返回false</returns>
+        private bool IsSessionAuthorized(SessionInfo sessionInfo)
+        {
+            if (!IsSessionValid(sessionInfo))
+            {
+                return false;
+            }
+
+            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+            return userInfo.授权状态;
+        }
+
+        /// <summary>
+        /// 检查会话是否已连接
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>如果会话已连接则返回true，否则返回false</returns>
+        private bool IsSessionConnected(SessionInfo sessionInfo)
+        {
+            return IsSessionValid(sessionInfo) && sessionInfo.IsConnected;
+        }
+
+        /// <summary>
         /// 获取显示用户名 - 优先使用UserInfo中的用户名
         /// </summary>
         /// <param name="userInfo">用户信息</param>
@@ -630,31 +726,35 @@ namespace RUINORERP.Server.Controls
         #region 定时器和刷新逻辑
 
         /// <summary>
-        /// 定时器刷新 - 简化版：基于事件驱动和必要轮询
+        /// 定时器刷新 - 优化版：使用时间间隔跟踪减少不必要的计算和UI更新
         /// </summary>
         private void UpdateTimer_Tick(object sender, EventArgs e)
         {
             try
             {
-                if (listView1.IsDisposed) return;
+                if (listView1.IsDisposed || !IsHandleCreated)
+                    return;
 
                 var now = DateTime.Now;
-                
+
                 // 1. 统计信息：每2秒更新一次
-                if (now.Second % 2 == 0)
+                if (now - _lastStatisticsUpdate > TimeSpan.FromSeconds(2))
                 {
+                    _lastStatisticsUpdate = now;
                     UpdateStatistics();
                 }
 
-                // 2. 心跳和空闲时间更新：每秒更新可见项（更频繁的UI更新）
-                if (now.Millisecond % 1000 < 100) // 每秒执行一次
+                // 2. 心跳和空闲时间更新：每1秒更新一次
+                if (now - _lastHeartbeatUpdate > TimeSpan.FromSeconds(1))
                 {
+                    _lastHeartbeatUpdate = now;
                     UpdateVisibleSessionsHeartbeatAndIdleTime();
                 }
 
                 // 3. 完整刷新：每45秒或按需执行
-                if (now.Second % 45 == 0 || _needsFullRefresh)
+                if (now - _lastFullUpdate > TimeSpan.FromSeconds(45) || _needsFullRefresh)
                 {
+                    _lastFullUpdate = now;
                     _needsFullRefresh = false;
                     FullRefreshFromSessions();
                 }
@@ -705,34 +805,72 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                if (listView1.Items.Count == 0) return;
+                if (listView1.Items.Count == 0 || listView1.IsDisposed)
+                    return;
 
+                // 使用BeginUpdate/EndUpdate减少UI闪烁
+                listView1.BeginUpdate();
+
+                // 只更新变化的会话项
                 foreach (ListViewItem item in listView1.Items)
                 {
                     if (item.Tag is SessionInfo sessionInfo)
                     {
-                        // 更新空闲时间显示
-                        if (item.SubItems.Count > 10)
+                        // 计算当前空闲时间
+                        var currentIdleTime = DateTime.Now - sessionInfo.LastHeartbeat;
+                        string formattedIdleTime = FormatIdleTime(currentIdleTime);
+
+                        // 更新空闲时间显示（只有当值变化时才更新）
+                        if (item.SubItems.Count > 10 && item.SubItems[10].Text != formattedIdleTime)
                         {
-                            var idleTime = DateTime.Now - sessionInfo.LastHeartbeat;
-                            item.SubItems[10].Text = FormatIdleTime(idleTime);
+                            item.SubItems[10].Text = formattedIdleTime;
                         }
-                        // 更新心跳数
-                        if (item.SubItems.Count > 6)
+
+                        // 更新心跳数（只有当值变化时才更新）
+                        string heartbeatCount = sessionInfo.HeartbeatCount.ToString();
+                        if (item.SubItems.Count > 6 && item.SubItems[6].Text != heartbeatCount)
                         {
-                            item.SubItems[6].Text = sessionInfo.HeartbeatCount.ToString();
+                            item.SubItems[6].Text = heartbeatCount;
                         }
-                        // 更新最后心跳时间
-                        if (item.SubItems.Count > 7)
+
+                        // 更新最后心跳时间（只有当值变化时才更新）
+                        string lastHeartbeat = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
+                        if (item.SubItems.Count > 7 && item.SubItems[7].Text != lastHeartbeat)
                         {
-                            item.SubItems[7].Text = sessionInfo.LastHeartbeat.ToString("yy-MM-dd HH:mm:ss");
+                            item.SubItems[7].Text = lastHeartbeat;
+                        }
+
+                        // 检查心跳异常并更新样式（只有当状态变化时才更新）
+                        if (currentIdleTime.TotalMinutes > 5 && sessionInfo.IsConnected)
+                        {
+                            if (item.ForeColor != Color.Red)
+                            {
+                                item.ForeColor = Color.Red;
+                                item.BackColor = Color.MistyRose;
+                                item.ToolTipText = $"心跳异常 - 超过{currentIdleTime.TotalMinutes:F0}分钟无响应\n{item.ToolTipText}";
+                            }
+                        }
+                        else if (item.ForeColor == Color.Red)
+                        {
+                            // 恢复正常样式
+                            SetSessionItemStyle(item, sessionInfo, sessionInfo.UserInfo ?? new UserInfo());
                         }
                     }
                 }
+
+                listView1.EndUpdate();
             }
             catch (Exception ex)
             {
                 LogError("更新可见会话心跳时间显示时出错", ex);
+                try
+                {
+                    if (!listView1.IsDisposed)
+                    {
+                        listView1.EndUpdate();
+                    }
+                }
+                catch { }
             }
         }
 
@@ -1113,39 +1251,100 @@ namespace RUINORERP.Server.Controls
         #region 工具方法
 
         /// <summary>
+        /// 日志级别枚举
+        /// </summary>
+        private enum LogLevel
+        {
+            Info,
+            Warning,
+            Error,
+            Debug
+        }
+
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <param name="level">日志级别</param>
+        /// <param name="message">日志消息</param>
+        /// <param name="sessionInfo">关联的会话信息</param>
+        /// <param name="exception">异常对象</param>
+        private void Log(LogLevel level, string message, SessionInfo sessionInfo = null, Exception exception = null)
+        {
+            try
+            {
+                string sessionDetails = "";
+
+                // 如果提供了会话信息，添加会话详情
+                if (sessionInfo != null)
+                {
+                    var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                    string userDisplayName = GetDisplayUserName(userInfo);
+                    string userRealName = GetDisplayName(userInfo?.姓名) ?? "未知姓名";
+                    sessionDetails = $"用户: {userDisplayName} ({userRealName}) - {sessionInfo.ClientIp ?? "未知IP"}";
+                }
+
+                // 构建完整日志消息
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string logLevel = level.ToString().ToUpper();
+                string fullMessage = sessionDetails != ""
+                    ? $"[{logLevel}] [{timestamp}] {sessionDetails} - {message}"
+                    : $"[{logLevel}] [{timestamp}] {message}";
+
+                // 添加异常信息（如果有）
+                if (exception != null)
+                {
+                    fullMessage += $"\n异常详情: {exception}";
+                }
+
+                // 根据日志级别记录
+                switch (level)
+                {
+                    case LogLevel.Info:
+                        if (frmMainNew.Instance.IsDebug)
+                        {
+                            frmMainNew.Instance.PrintInfoLog(fullMessage);
+                        }
+                        break;
+                    case LogLevel.Warning:
+                        frmMainNew.Instance.PrintInfoLog(fullMessage);
+                        break;
+                    case LogLevel.Error:
+                        frmMainNew.Instance.PrintErrorLog(fullMessage);
+                        break;
+                    case LogLevel.Debug:
+                        if (frmMainNew.Instance.IsDebug)
+                        {
+                            frmMainNew.Instance.PrintInfoLog(fullMessage);
+                        }
+                        break;
+                }
+            }
+            catch
+            {
+                // 避免日志记录本身出错导致无限递归
+                System.Diagnostics.Debug.WriteLine($"[UserManagementControl] 日志记录失败: {message}");
+            }
+        }
+
+        /// <summary>
         /// 记录状态变化日志
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <param name="changeDescription">变化描述</param>
         private void LogStatusChange(SessionInfo sessionInfo, string changeDescription)
         {
-            try
-            {
-                // 添加空值检查，防止sessionInfo为null导致错误
-                if (sessionInfo == null)
-                {
-                    string logMessagenull = $"[会话状态变化] 会话信息为空, {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                    if (frmMainNew.Instance.IsDebug)
-                    {
-                        frmMainNew.Instance.PrintInfoLog(logMessagenull);
-                    }
+            Log(LogLevel.Info, changeDescription, sessionInfo);
+        }
 
-                    return;
-                }
-
-                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
-                string userDisplayName = GetDisplayUserName(userInfo);
-                string userRealName = GetDisplayName(userInfo?.姓名) ?? "未知姓名";
-                string logMessage = $"[会话状态变化] 用户: {userDisplayName} ({userRealName}), {changeDescription}, 时间: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
-                if (frmMainNew.Instance.IsDebug)
-                {
-                    frmMainNew.Instance.PrintInfoLog(logMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                LogError($"记录状态变化日志时出错: {ex.Message}", ex);
-            }
+        /// <summary>
+        /// 记录错误日志
+        /// </summary>
+        /// <param name="message">错误信息</param>
+        /// <param name="exception">异常对象</param>
+        /// <param name="sessionInfo">关联的会话信息</param>
+        private void LogError(string message, Exception exception = null, SessionInfo sessionInfo = null)
+        {
+            Log(LogLevel.Error, message, sessionInfo, exception);
         }
 
         /// <summary>
@@ -1162,28 +1361,6 @@ namespace RUINORERP.Server.Controls
                 return "已连接且已授权";
             else
                 return "已连接但未授权";
-        }
-
-        /// <summary>
-        /// 记录错误日志
-        /// </summary>
-        /// <param name="message">错误信息</param>
-        /// <param name="exception">异常对象</param>
-        private void LogError(string message, Exception exception = null)
-        {
-            try
-            {
-                string fullMessage = exception != null
-                    ? $"{message}\n异常详情: {exception}"
-                    : message;
-
-                frmMainNew.Instance.PrintErrorLog($"[UserManagementControl] {fullMessage}");
-            }
-            catch
-            {
-                // 避免日志记录本身出错导致无限递归
-                System.Diagnostics.Debug.WriteLine($"[UserManagementControl] {message}");
-            }
         }
 
         /// <summary>
@@ -1287,19 +1464,25 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要发送消息的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            foreach (var session in selectedSessions)
+
+            var validSessions = selectedSessions.Where(IsSessionValid).ToList();
+            if (validSessions.Count == 0)
             {
-                if (session == null)
-                {
-                    MessageBox.Show($"用户 {session.UserInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                var userList = new List<UserInfo>();
-                userList.Add(session.UserInfo);
-                HandleSendMessage(userList);
+                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            // Todo: 实现发送消息功能
-            MessageBox.Show($"选择了 {selectedSessions.Count} 个会话发送消息", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            var userList = validSessions.Select(s => s.UserInfo).Where(u => u != null).ToList();
+            if (userList.Count == 0)
+            {
+                MessageBox.Show("所选会话中没有有效的用户信息", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            HandleSendMessage(userList);
+
+            // 显示操作结果
+            MessageBox.Show($"已向 {userList.Count} 个用户发送消息", "操作完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
 
@@ -1312,31 +1495,52 @@ namespace RUINORERP.Server.Controls
                 return;
             }
             string message = frmMessager.Message;
+
+            int successCount = 0;
+            int failedCount = 0;
+
             foreach (var user in users)
             {
+                if (user == null || string.IsNullOrEmpty(user.用户名))
+                {
+                    failedCount++;
+                    continue;
+                }
+
                 try
                 {
-                    // 使用新的SessionService获取会话信息
-
-                    #region
                     var response = await _serverMessageService.SendPopupMessageAsync(
                         user.用户名,
                         message,
                         "系统通知",
                         30000, // 30秒超时
                         CancellationToken.None);
-                    #endregion
 
+                    if (response != null && response.IsSuccess)
+                    {
+                        successCount++;
+                        Log(LogLevel.Info, $"成功向用户 {user.用户名} 发送消息");
+                    }
+                    else
+                    {
+                        failedCount++;
+                        Log(LogLevel.Warning, $"向用户 {user.用户名} 发送消息失败");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    frmMainNew.Instance.PrintErrorLog($"向用户 {user.用户名} 发送消息失败: {ex.Message}");
+                    failedCount++;
+                    LogError($"向用户 {user.用户名} 发送消息失败", ex);
                 }
             }
+
+            // 显示发送结果
+            string resultMessage = $"消息发送完成: 成功 {successCount} 个, 失败 {failedCount} 个";
+            MessageBox.Show(resultMessage, "发送结果", MessageBoxButtons.OK, successCount == users.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
 
-       
- 
+
+
         private void tsbtn推送更新_Click(object sender, EventArgs e)
         {
             PushVersionUpdate();
@@ -1390,44 +1594,70 @@ namespace RUINORERP.Server.Controls
                 MessageBox.Show("请先选择要推送系统配置的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            foreach (var session in selectedSessions)
+
+            // 过滤有效会话
+            var validSessions = selectedSessions.Where(IsSessionValid).ToList();
+            if (validSessions.Count == 0)
             {
-                if (session == null)
-                {
-                    MessageBox.Show($"用户 {session.UserInfo.用户名} 的会话不存在或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // 确认推送系统配置
-                var result = MessageBox.Show($"确定要向用户 {session.UserInfo.用户名} 推送系统配置吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                if (result == DialogResult.Yes)
-                {
-                    //// 发送推送系统配置命令 - 使用新的发送方法
-                    //var messageData = new
-                    //{
-                    //    Command = "PUSH_SYS_CONFIG"
-                    //};
-
-                    //var request = new MessageRequest(MessageType.Unknown, messageData);
-                    //var success = _sessionService.SendCommandAsync(
-                    //    session.SessionID,
-                    //    MessageCommands.SendMessageToUser,
-                    //    request).Result; // 注意：这里使用.Result是为了保持原有的同步行为
-
-                    //if (success)
-                    //{
-                    //    frmMainNew.Instance.PrintInfoLog($"已向用户 {session.UserInfo.用户名} 推送系统配置");
-                    //    MessageBox.Show("系统配置推送成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //}
-                    //else
-                    //{
-                    //    MessageBox.Show("系统配置推送失败，请检查用户连接状态", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    //}
-                }
-
+                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
-            // Todo: 实现推送系统配置功能
-            MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送系统配置", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            // 统一确认推送操作
+            var confirmResult = MessageBox.Show(
+                $"确定要向选中的 {validSessions.Count} 个会话推送系统配置吗？",
+                "确认推送系统配置",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult != DialogResult.Yes)
+            {
+                return;
+            }
+
+            int successCount = 0;
+            int failedCount = 0;
+
+            foreach (var session in validSessions)
+            {
+                try
+                {
+                    // 构造系统配置推送命令
+                    SystemCommandRequest systemCommandRequest = new SystemCommandRequest();
+                    systemCommandRequest.CommandType = SystemManagementType.PushVersionUpdate; // 使用现有枚举值
+                    systemCommandRequest.Parameters = new Dictionary<string, object> { { "ConfigType", "SystemConfig" } };
+
+                    // 发送命令到客户端
+                    bool success = _sessionService.SendCommandAsync(
+                        session.SessionID,
+                        SystemCommands.SystemManagement,
+                        systemCommandRequest).Result; // 保持原有的同步行为
+
+                    if (success)
+                    {
+                        successCount++;
+                        LogStatusChange(session, "已推送系统配置");
+                    }
+                    else
+                    {
+                        failedCount++;
+                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置失败", null, session);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failedCount++;
+                    LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置时出错", ex, session);
+                }
+            }
+
+            // 显示操作结果
+            string resultMessage = $"系统配置推送完成: 成功 {successCount} 个, 失败 {failedCount} 个";
+            MessageBox.Show(
+                resultMessage,
+                "推送结果",
+                MessageBoxButtons.OK,
+                successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
 
         private void tsbtn推送缓存_Click(object sender, EventArgs e)
@@ -1439,13 +1669,70 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            // Todo: 实现推送缓存功能
-            MessageBox.Show($"选择了 {selectedSessions.Count} 个会话推送缓存", "功能待实现", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            // 过滤有效会话
+            var validSessions = selectedSessions.Where(IsSessionValid).ToList();
+            if (validSessions.Count == 0)
+            {
+                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 统一确认推送操作
+            var confirmResult = MessageBox.Show(
+                $"确定要向选中的 {validSessions.Count} 个会话推送缓存吗？",
+                "确认推送缓存",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult != DialogResult.Yes)
+            {
+                return;
+            }
+
+            int successCount = 0;
+            int failedCount = 0;
+
+            foreach (var session in validSessions)
+            {
+                try
+                {
+                    // 构造缓存推送命令
+                    SystemCommandRequest systemCommandRequest = new SystemCommandRequest();
+                    systemCommandRequest.CommandType = SystemManagementType.PushVersionUpdate; // 使用现有枚举值
+                    systemCommandRequest.Parameters = new Dictionary<string, object> { { "ConfigType", "Cache" } };
+
+                    // 发送命令到客户端
+                    bool success = _sessionService.SendCommandAsync(
+                        session.SessionID,
+                        SystemCommands.SystemManagement,
+                        systemCommandRequest).Result; // 保持原有的同步行为
+
+                    if (success)
+                    {
+                        successCount++;
+                        LogStatusChange(session, "已推送缓存");
+                    }
+                    else
+                    {
+                        failedCount++;
+                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送缓存失败", null, session);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failedCount++;
+                    LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送缓存时出错", ex, session);
+                }
+            }
+
+            // 显示操作结果
+            string resultMessage = $"缓存推送完成: 成功 {successCount} 个, 失败 {failedCount} 个";
+            MessageBox.Show(
+                resultMessage,
+                "推送结果",
+                MessageBoxButtons.OK,
+                successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
-
-
-
-        // FullRefreshFromSessions方法已在文件上方定义，此处移除重复实现
 
         private void contextMenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {

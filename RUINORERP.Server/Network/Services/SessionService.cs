@@ -311,22 +311,30 @@ namespace RUINORERP.Server.Network.Services
             try
             {
                 if (sessionInfo == null || string.IsNullOrEmpty(sessionInfo.SessionID))
+                {
+                    _logger.LogWarning("更新会话失败：会话信息或会话ID为空");
                     return false;
+                }
 
                 if (_sessions.TryGetValue(sessionInfo.SessionID, out var existingSession))
                 {
-                    // 更新会话信息
-                    existingSession.UserId = sessionInfo.UserId;
-                    existingSession.UserName = sessionInfo.UserName;
-                    existingSession.IsAuthenticated = sessionInfo.IsAuthenticated;
-                    //existingSession.IsAdmin = sessionInfo.IsAdmin;
-                    existingSession.UpdateActivity();
-                    existingSession.DataContext = sessionInfo.DataContext;
+                    // 增强线程安全性：使用锁保护会话更新操作
+                    // 确保会话信息的多个字段更新是原子的，避免竞态条件
+                    lock (existingSession)
+                    {
+                        // 更新会话信息
+                        existingSession.UserId = sessionInfo.UserId;
+                        existingSession.UserName = sessionInfo.UserName;
+                        existingSession.IsAuthenticated = sessionInfo.IsAuthenticated;
+                        //existingSession.IsAdmin = sessionInfo.IsAdmin;
+                        existingSession.UpdateActivity();
+                        existingSession.DataContext = sessionInfo.DataContext;
+                    }
 
                     // 触发会话更新事件
                     SessionUpdated?.Invoke(existingSession);
 
-                    //_logger.LogDebug($"更新会话信息: {sessionInfo.SessionID}");
+                    _logger.LogDebug($"更新会话信息: {sessionInfo.SessionID}");
                     return true;
                 }
 
@@ -436,6 +444,14 @@ namespace RUINORERP.Server.Network.Services
                 // SessionInfo继承自AppSession，可以直接转换
                 SessionInfo sessionInfo = session as SessionInfo;
 
+                // 增强对会话转换异常的处理
+                if (sessionInfo == null)
+                {
+                    _logger.LogError($"会话转换失败，SessionID: {session.SessionID}");
+                    await session.CloseAsync(CloseReason.ServerShutdown);
+                    return;
+                }
+
                 // 创建会话信息
                 sessionInfo.ConnectedTime = DateTime.Now;
                 sessionInfo.UpdateActivity();
@@ -463,11 +479,25 @@ namespace RUINORERP.Server.Network.Services
                 else
                 {
                     _logger.LogWarning($"SuperSocket会话连接失败，SessionID已存在: {session.SessionID}");
+                    await session.CloseAsync(CloseReason.ServerShutdown);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理会话连接事件时出错: SessionID={session?.SessionID}");
+                try
+                {
+                    // 修复编译错误：ValueTask? 没有 GetAwaiter 方法
+                    // 先检查 session 是否为 null，再调用 CloseAsync 方法
+                    if (session != null)
+                    {
+                        await session.CloseAsync(CloseReason.ServerShutdown);
+                    }
+                }
+                catch (Exception closeEx)
+                {
+                    _logger.LogWarning(closeEx, $"关闭异常会话时出错: SessionID={session?.SessionID}");
+                }
             }
         }
 
@@ -731,6 +761,10 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>断开是否成功</returns>
         public async Task<bool> DisconnectSessionAsync(string sessionId, string reason = "服务器强制断开")
         {
+            bool success = false;
+            SessionInfo sessionInfo = null;
+            string username = "未知";
+
             try
             {
                 if (string.IsNullOrEmpty(sessionId))
@@ -740,11 +774,13 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 获取会话信息
-                if (!_sessions.TryGetValue(sessionId, out var sessionInfo))
+                if (!_sessions.TryGetValue(sessionId, out sessionInfo))
                 {
                     _logger.LogWarning($"断开会话失败：会话不存在，SessionID={sessionId}");
                     return false;
                 }
+
+                username = sessionInfo.UserName ?? "未知";
 
                 try
                 {
@@ -753,28 +789,44 @@ namespace RUINORERP.Server.Network.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"关闭SuperSocket会话连接失败: SessionID={sessionId}");
+                    _logger.LogError(ex, $"关闭SuperSocket会话连接失败: SessionID={sessionId}, UserName={username}");
+                    // 关闭失败不影响后续清理
                 }
 
-                // 移除会话记录
-                var removeResult = RemoveSession(sessionId);
+                // 移除会话记录，确保资源释放
+                success = RemoveSession(sessionId);
 
-                if (removeResult)
+                if (success)
                 {
-                    _logger.LogInformation($"会话已成功断开并移除: SessionID={sessionId}, 用户={sessionInfo.UserName}, 原因={reason}");
-                    return true;
+                    _logger.LogInformation($"会话已成功断开并移除: SessionID={sessionId}, 用户={username}, 原因={reason}");
                 }
                 else
                 {
-                    _logger.LogWarning($"会话断开但移除记录失败: SessionID={sessionId}");
-                    return false;
+                    _logger.LogWarning($"会话断开但移除记录失败: SessionID={sessionId}, 用户={username}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"断开会话时发生异常: SessionID={sessionId}");
-                return false;
+                _logger.LogError(ex, $"断开会话时发生异常: SessionID={sessionId}, UserName={username}");
+                try
+                {
+                    // 无论如何都尝试移除会话记录，确保资源释放
+                    if (sessionInfo != null)
+                    {
+                        success = RemoveSession(sessionId);
+                        if (success)
+                        {
+                            _logger.LogInformation($"异常情况下会话记录已成功移除: SessionID={sessionId}, UserName={username}");
+                        }
+                    }
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logger.LogError(cleanupEx, $"异常情况下移除会话记录失败: SessionID={sessionId}, UserName={username}");
+                }
             }
+
+            return success;
         }
 
         /// <summary>
@@ -863,6 +915,25 @@ namespace RUINORERP.Server.Network.Services
 
             try
             {
+                // 增强参数检查
+                if (sessionInfo == null)
+                {
+                    _logger.LogError("发送数据包失败: 会话信息为空");
+                    throw new ArgumentNullException(nameof(sessionInfo));
+                }
+
+                if (request == null)
+                {
+                    _logger.LogError($"发送数据包失败: 请求数据为空, SessionID={sessionInfo.SessionID}");
+                    throw new ArgumentNullException(nameof(request));
+                }
+
+                if (string.IsNullOrEmpty(request.RequestId))
+                {
+                    _logger.LogError($"发送数据包失败: 请求ID为空, SessionID={sessionInfo.SessionID}");
+                    throw new ArgumentException("请求ID不能为空", nameof(request.RequestId));
+                }
+
                 // 构建数据包
                 var packet = PacketBuilder.Create()
                     .WithDirection(packetDirection)
@@ -893,23 +964,20 @@ namespace RUINORERP.Server.Network.Services
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, serializedData);
                 var encrypted = UnifiedEncryptionProtocol.EncryptServerDataToClient(original);
 
-
-                //// 网络监控：发送响应
-                //if (IsNetworkMonitorEnabled)
-                //{
-                //    _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                //        package.SessionId, package.CommandId.ToString(), package.PacketId);
-                //}
-
                 // 发送数据
                 await sessionInfo.SendAsync(encrypted.ToArray(), ct);
 
                 _logger?.LogDebug("数据包发送成功: SessionID={SessionID}, CommandId={CommandId}, RequestId={RequestId}",
                     sessionInfo.SessionID, commandId, request.RequestId);
             }
+            catch (OperationCanceledException)
+            {
+                // 取消操作不需要记录错误日志
+                throw;
+            }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"发送数据包时发生错误: SessionID={sessionInfo?.SessionID}, CommandId={commandId}");
+                _logger?.LogError(ex, $"发送数据包时发生错误: SessionID={sessionInfo?.SessionID}, CommandId={commandId}, RequestId={request?.RequestId}");
                 throw;
             }
         }
@@ -1209,30 +1277,79 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                var timeoutSessions = _sessions.Values
-                    .Where(s => s.LastActivityTime.AddMinutes(30) < DateTime.Now)
-                    .ToList();
+                // 1. 首先获取所有会话ID，避免在遍历过程中修改集合导致异常
+                var allSessionIds = _sessions.Keys.ToList();
+                var timeoutSessions = new List<SessionInfo>();
+
+                // 2. 筛选超时会话，使用线程安全的方式访问会话信息
+                foreach (var sessionId in allSessionIds)
+                {
+                    if (_sessions.TryGetValue(sessionId, out var session))
+                    {
+                        // 增强线程安全性：使用锁保护会话访问
+                        lock (session)
+                        {
+                            if (session.LastActivityTime.AddMinutes(30) < DateTime.Now)
+                            {
+                                timeoutSessions.Add(session);
+                            }
+                        }
+                    }
+                }
+
+                int totalTimeoutSessions = timeoutSessions.Count;
+                if (totalTimeoutSessions == 0)
+                {
+                    // 没有超时会话，直接返回
+                    _logger.LogDebug("未发现超时会话，无需清理");
+                    return 0;
+                }
 
                 var removedCount = 0;
 
-                // 限制并行度，防止过度占用系统资源
-                // 根据历史经验，应控制并行度避免影响服务器稳定性
+                // 3. 优化并行处理逻辑
+                // 根据超时会话数量动态调整并行度，避免过度占用系统资源
                 var parallelOptions = new ParallelOptions
                 {
-                    MaxDegreeOfParallelism = Environment.ProcessorCount // 限制并行度为CPU核心数
+                    // 会话数量较少时，使用顺序处理更高效
+                    // 会话数量较多时，限制并行度为CPU核心数的一半，避免影响服务器其他功能
+                    MaxDegreeOfParallelism = totalTimeoutSessions <= 10 ? 1 : Math.Max(1, Environment.ProcessorCount / 2)
                 };
 
-                Parallel.ForEach(timeoutSessions, parallelOptions, session =>
+                try
                 {
-                    if (RemoveSession(session.SessionID))
+                    Parallel.ForEach(timeoutSessions, parallelOptions, session =>
                     {
-                        Interlocked.Increment(ref removedCount);
+                        try
+                        {
+                            if (RemoveSession(session.SessionID))
+                            {
+                                Interlocked.Increment(ref removedCount);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // 捕获单个会话清理异常，避免影响其他会话清理
+                            _logger.LogWarning(ex, $"清理单个超时会话失败: {session.SessionID}");
+                        }
+                    });
+                }
+                catch (AggregateException ex)
+                {
+                    // 处理并行处理中的聚合异常
+                    foreach (var innerEx in ex.InnerExceptions)
+                    {
+                        _logger.LogWarning(innerEx, "并行清理超时会话时发生异常");
                     }
-                });
+                }
 
                 if (removedCount > 0)
                 {
-                    _logger.LogInformation($"清理超时会话完成，共清理 {removedCount} 个会话");
+                    _logger.LogInformation($"清理超时会话完成，共清理 {removedCount} 个会话，总超时会话数: {totalTimeoutSessions}");
+                }
+                else if (totalTimeoutSessions > 0)
+                {
+                    _logger.LogWarning($"清理超时会话完成，但没有成功清理任何会话，总超时会话数: {totalTimeoutSessions}");
                 }
 
                 return removedCount;
@@ -1315,10 +1432,16 @@ namespace RUINORERP.Server.Network.Services
         {
             if (!_disposed)
             {
+                // 1. 首先释放定时器资源
                 _cleanupTimer?.Dispose();
 
-                // 关闭并清理所有活动会话
-                foreach (var sessionId in _sessions.Keys.ToList())
+                // 2. 关闭并清理所有活动会话
+                var sessionIds = _sessions.Keys.ToList();
+                int totalSessions = sessionIds.Count;
+                int closedSessions = 0;
+
+                // 使用并行方式处理会话关闭，提高释放效率
+                Parallel.ForEach(sessionIds, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, sessionId =>
                 {
                     if (_sessions.TryGetValue(sessionId, out var session))
                     {
@@ -1327,18 +1450,24 @@ namespace RUINORERP.Server.Network.Services
                             // 使用异步方式关闭会话，避免阻塞
                             var closeTask = session.CloseAsync(CloseReason.ServerShutdown);
                             // 等待最多100毫秒，防止长时间阻塞
-                            closeTask.AsTask().Wait(100);
+                            if (closeTask.AsTask().Wait(100))
+                            {
+                                Interlocked.Increment(ref closedSessions);
+                            }
                         }
                         catch (Exception ex)
                         {
                             _logger.LogWarning(ex, $"关闭会话时出错: {sessionId}");
                         }
                     }
-                }
+                });
 
+                // 3. 清理会话字典
                 _sessions?.Clear();
+
+                // 4. 标记为已释放
                 _disposed = true;
-                _logger.LogDebug("统一会话管理器资源已释放");
+                _logger.LogInformation($"统一会话管理器资源已释放，共处理{totalSessions}个会话，成功关闭{closedSessions}个");
             }
 
             GC.SuppressFinalize(this);

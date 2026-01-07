@@ -29,6 +29,7 @@ namespace RUINORERP.Server.Controls
         private readonly DiagnosticsService _diagnosticsService;
         private readonly PerformanceMonitoringService _performanceMonitoringService;
         private readonly ErrorAnalysisService _errorAnalysisService;
+        private readonly ILogger<ServerMonitorControl> _logger;
         // 不再使用独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
         private readonly System.Windows.Forms.Timer _refreshTimer;
 
@@ -52,6 +53,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -83,6 +85,7 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
             // 初始化定时器
@@ -118,6 +121,39 @@ namespace RUINORERP.Server.Controls
             if (_refreshCount >= FAST_REFRESH_COUNT && _refreshTimer.Interval == FAST_REFRESH_INTERVAL)
             {
                 _refreshTimer.Interval = SLOW_REFRESH_INTERVAL;
+            }
+
+            // 实现动态刷新频率：根据系统负载调整刷新间隔
+            // 获取系统CPU使用率，如果使用率超过70%，降低刷新频率
+            try
+            {
+                // 使用PerformanceCounter获取CPU使用率
+                using (var cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total"))
+                {
+                    // 首次采样返回0，需要再次采样
+                    cpuCounter.NextValue();
+                    System.Threading.Thread.Sleep(100);
+                    float cpuUsage = cpuCounter.NextValue();
+
+                    // 根据CPU使用率动态调整刷新频率
+                    if (cpuUsage > 70 && _refreshTimer.Interval < SLOW_REFRESH_INTERVAL * 2)
+                    {
+                        // 高负载时，降低刷新频率到10秒
+                        _refreshTimer.Interval = SLOW_REFRESH_INTERVAL * 2;
+                        _logger.LogDebug($"系统负载较高 (CPU: {cpuUsage:F2}%)，降低刷新频率到 {_refreshTimer.Interval}ms");
+                    }
+                    else if (cpuUsage < 30 && _refreshCount >= FAST_REFRESH_COUNT && _refreshTimer.Interval > SLOW_REFRESH_INTERVAL)
+                    {
+                        // 低负载时，恢复正常刷新频率
+                        _refreshTimer.Interval = SLOW_REFRESH_INTERVAL;
+                        _logger.LogDebug($"系统负载较低 (CPU: {cpuUsage:F2}%)，恢复正常刷新频率 {_refreshTimer.Interval}ms");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 如果PerformanceCounter获取失败，忽略异常，使用默认刷新频率
+                _logger.LogDebug($"获取CPU使用率失败，使用默认刷新频率: {ex.Message}");
             }
         }
 
@@ -365,7 +401,7 @@ namespace RUINORERP.Server.Controls
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"从SessionService获取统计信息时出错: {ex.Message}");
+                        _logger.LogDebug($"从SessionService获取统计信息时出错: {ex.Message}");
                     }
                 }
 
@@ -399,7 +435,7 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 // 显示错误信息但保持UI功能
-                System.Diagnostics.Debug.WriteLine($"更新服务器状态时出错: {ex.Message}");
+                _logger.LogError(ex, "更新服务器状态时出错");
                 lblStatusValue.Text = "数据更新错误";
                 lblStatusValue.ForeColor = Color.Red;
             }
@@ -457,7 +493,7 @@ namespace RUINORERP.Server.Controls
             if (_networkServer != null && _networkServer.StartTime.HasValue)
             {
                 var uptime = DateTime.Now - _networkServer.StartTime.Value;
-                lblUptimeValue.Text = $"{uptime.Days}天 {uptime.Hours}小时 {uptime.Minutes}分钟";
+                lblUptimeValue.Text = $"{uptime.Days}天 {uptime.Hours}小时 {uptime.Minutes}分钟 {uptime.Seconds}秒";
             }
             else
             {
@@ -483,6 +519,79 @@ namespace RUINORERP.Server.Controls
             else
             {
                 lblMemoryUsageValue.ForeColor = Color.Green;
+            }
+
+            // 添加CPU使用率监控
+            try
+            {
+                // 使用PerformanceCounter获取CPU使用率
+                using (var cpuCounter = new System.Diagnostics.PerformanceCounter("Processor", "% Processor Time", "_Total"))
+                {
+                    // 首次采样返回0，需要再次采样
+                    cpuCounter.NextValue();
+                    System.Threading.Thread.Sleep(50);
+                    float cpuUsage = cpuCounter.NextValue();
+
+                    // 动态添加CPU使用率标签（如果不存在）
+                    Label lblCpuUsage = Controls.Find("lblCpuUsage", true).FirstOrDefault() as Label;
+                    Label lblCpuUsageValue = Controls.Find("lblCpuUsageValue", true).FirstOrDefault() as Label;
+
+                    if (lblCpuUsage != null && lblCpuUsageValue != null)
+                    {
+                        lblCpuUsageValue.Text = $"{cpuUsage:F2}%";
+                        
+                        // 根据CPU使用率设置颜色
+                        if (cpuUsage > 80)
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Red;
+                        }
+                        else if (cpuUsage > 50)
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Orange;
+                        }
+                        else
+                        {
+                            lblCpuUsageValue.ForeColor = Color.Green;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"获取CPU使用率失败: {ex.Message}");
+            }
+
+            // 添加磁盘I/O监控
+            try
+            {
+                // 使用PerformanceCounter获取磁盘读写速度
+                using (var diskReadCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Read Bytes/sec", "_Total"))
+                using (var diskWriteCounter = new System.Diagnostics.PerformanceCounter("PhysicalDisk", "Disk Write Bytes/sec", "_Total"))
+                {
+                    diskReadCounter.NextValue();
+                    diskWriteCounter.NextValue();
+                    System.Threading.Thread.Sleep(50);
+                    float diskRead = diskReadCounter.NextValue();
+                    float diskWrite = diskWriteCounter.NextValue();
+
+                    // 动态添加磁盘I/O标签（如果不存在）
+                    Label lblDiskReadValue = Controls.Find("lblDiskReadValue", true).FirstOrDefault() as Label;
+                    Label lblDiskWriteValue = Controls.Find("lblDiskWriteValue", true).FirstOrDefault() as Label;
+
+                    if (lblDiskReadValue != null)
+                    {
+                        lblDiskReadValue.Text = $"{FormatBytes((long)diskRead)}/秒";
+                    }
+
+                    if (lblDiskWriteValue != null)
+                    {
+                        lblDiskWriteValue.Text = $"{FormatBytes((long)diskWrite)}/秒";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"获取磁盘I/O信息失败: {ex.Message}");
             }
         }
 

@@ -1878,24 +1878,6 @@ namespace RUINORERP.UI.BaseForm
         protected async override void DoButtonClick(MenuItemEnums menuItem)
         {
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
-            if (!MainForm.Instance.AppContext.IsSuperUser)
-            {
-                /*
-                tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.Where(c => c.MenuType == "行为菜单").Where(c => c.FormName == this.Name).FirstOrDefault();
-                if (menuInfo == null)
-                {
-                    MessageBox.Show($"没有使用【{menuInfo.MenuName}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                List<tb_ButtonInfo> btnList = MainForm.Instance.AppContext.CurUserInfo.UserButtonList.Where(c => c.MenuID == menuInfo.MenuID).ToList();
-                if (!btnList.Where(b => b.BtnText == menuItem.ToString()).Any())
-                {
-                    MessageBox.Show($"没有使用【{menuItem.ToString()}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }*/
-            }
-
-
             //操作前是不是锁定。自己排除
             long pkid = 0;
             //操作前将数据收集

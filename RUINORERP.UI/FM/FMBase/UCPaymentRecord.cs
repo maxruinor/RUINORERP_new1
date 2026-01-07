@@ -543,6 +543,12 @@ namespace RUINORERP.UI.FM
             if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
             {
 
+                // 提前验证：如果付款单是对报销单进行付款，则验证付款金额与报销金额必须一致
+                if (NeedValidated && !await ValidateExpenseClaimPaymentAsync(detailentity))
+                {
+                    return false;
+                }
+
                 // 先进行自动分配（如果需要）
                 if (NeedValidated && EditEntity.TotalLocalAmount > 0 && detailentity.Sum(d => d.LocalAmount) != EditEntity.TotalLocalAmount)
                 {
@@ -1017,5 +1023,103 @@ namespace RUINORERP.UI.FM
                 }
             }
         }
+        /// <summary>
+        /// 提前验证：如果付款单是对报销单进行付款，则验证付款金额与报销金额必须一致
+        /// 此方法在事务开启前执行，用于提前发现问题
+        /// </summary>
+        /// <param name="details">付款明细列表</param>
+        /// <returns>验证通过返回true，否则返回false</returns>
+        private async Task<bool> ValidateExpenseClaimPaymentAsync(List<tb_FM_PaymentRecordDetail> details)
+        {
+            // 如果没有明细数据，跳过验证
+            if (details == null || !details.Any())
+            {
+                return true;
+            }
+
+            // 检查是否有关联报销单的明细
+            var expenseClaimDetails = details
+                .Where(d => d.SourceBizType == (int)BizType.费用报销单)
+                .ToList();
+
+            // 如果没有关联报销单的明细，跳过验证
+            if (!expenseClaimDetails.Any())
+            {
+                return true;
+            }
+
+            try
+            {
+                // 获取数据库上下文
+                var db = MainForm.Instance.AppContext.Db;
+
+                // 对每张报销单进行验证
+                foreach (var detailGroup in expenseClaimDetails.GroupBy(d => d.SourceBilllId))
+                {
+                    long claimId = detailGroup.Key;
+                    decimal totalPaymentAmount = detailGroup.Sum(d => d.LocalAmount);
+
+                    // 查询报销单信息
+                    var expenseClaim = await db.Queryable<tb_FM_ExpenseClaim>()
+                        .Where(c => c.ClaimMainID == claimId)
+                        .FirstAsync();
+
+                    if (expenseClaim == null)
+                    {
+                        continue; // 报销单不存在，跳过
+                    }
+
+                    // 比较付款金额与报销金额
+                    if (totalPaymentAmount != expenseClaim.ClaimAmount)
+                    {
+                        decimal difference = totalPaymentAmount - expenseClaim.ClaimAmount;
+                        string message;
+                        if (difference > 0)
+                        {
+                            message = string.Format(
+                                "付款单对报销单【{0}】付款时，\n付款金额({1})大于报销金额({2})，\n差额为{3}。\n\n要求：付款金额必须与报销金额一致！\n请调整付款金额后再保存。",
+                                expenseClaim.ClaimNo,
+                                totalPaymentAmount.ToString("F2"),
+                                expenseClaim.ClaimAmount.ToString("F2"),
+                                difference.ToString("F2")
+                            );
+                        }
+                        else
+                        {
+                            message = string.Format(
+                                "付款单对报销单【{0}】付款时，\n付款金额({1})小于报销金额({2})，\n差额为{3}。\n\n要求：付款金额必须与报销金额一致！\n请调整付款金额后再保存。",
+                                expenseClaim.ClaimNo,
+                                totalPaymentAmount.ToString("F2"),
+                                expenseClaim.ClaimAmount.ToString("F2"),
+                                Math.Abs(difference).ToString("F2")
+                            );
+                        }
+
+                        MessageBox.Show(
+                            message,
+                            "付款金额验证",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning
+                        );
+
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("验证报销单付款金额时出错", ex);
+                MessageBox.Show(
+                    $"验证报销单付款金额时出错：{ex.Message}\n请联系系统管理员。",
+                    "验证错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return false;
+            }
+        }
     }
 }
+

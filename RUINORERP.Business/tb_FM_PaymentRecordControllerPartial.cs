@@ -233,6 +233,7 @@ namespace RUINORERP.Business
         /// 3. 对账单来源的收付款单采用FIFO（先进先出）方式核销
         /// 4. 更新相关单据状态并生成核销记录
         /// 5. 处理关联业务单据的收款状态更新
+        /// 6. 如果付款单是对报销单进行付款，则更新报销单的付款状态。并且要求付款金额与报销金额要一致
         /// </summary>
         /// <param name="ObjectEntity"></param>
         /// <returns></returns>
@@ -1523,6 +1524,15 @@ namespace RUINORERP.Business
                 }
 
                 #region 更新数据库
+                if (ExpenseClaimUpdateList.Any())
+                {
+                    var r = await _unitOfWorkManage.GetDbClient().Updateable(ExpenseClaimUpdateList).UpdateColumns(t => new
+                    {
+                        t.PayStatus,
+                        t.Paytype_ID,
+                        t.DataStatus,
+                    }).ExecuteCommandAsync();
+                }
 
                 if (FinishedGoodsInvUpdateList.Any())
                 {
@@ -2572,7 +2582,7 @@ namespace RUINORERP.Business
 
         public async Task<tb_FM_PaymentRecord> BuildPaymentRecord(tb_FM_ExpenseClaim entity)
         {
-            //预收付款单 审核时 自动生成 收付款记录
+            //报销单审核时 自动生成 收付款记录，同时注意报销金额要与付款金额一致
 
             tb_FM_PaymentRecord paymentRecord = new tb_FM_PaymentRecord();
             paymentRecord = mapper.Map<tb_FM_PaymentRecord>(entity);

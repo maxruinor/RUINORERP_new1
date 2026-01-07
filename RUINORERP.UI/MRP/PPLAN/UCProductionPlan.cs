@@ -93,7 +93,7 @@ namespace RUINORERP.UI.MRP.MP
                 }
 
             }
-         await   base.LoadRelatedDataToDropDownItemsAsync();
+            await base.LoadRelatedDataToDropDownItemsAsync();
         }
 
         internal override void LoadDataToUI(object Entity)
@@ -136,6 +136,7 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
+                    entity.Priority = (int)Priority.正常;
                     if (entity.PPNo.IsNullOrEmpty())
                     {
                         entity.PPNo = ClientBizCodeService.GetBizBillNo(BizType.生产计划单);
@@ -217,9 +218,9 @@ namespace RUINORERP.UI.MRP.MP
                     }
                 }
 
- 
+
                 //如果客户有变化，带出对应有业务员
- 
+
             };
 
 
@@ -259,7 +260,7 @@ namespace RUINORERP.UI.MRP.MP
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
             //InitDataTocmbbox();
-            
+
 
             ///显示列表对应的中文
             //base.FieldNameList = UIHelper.GetFieldNameList<tb_ProductionPlanDetail>();
@@ -796,7 +797,7 @@ namespace RUINORERP.UI.MRP.MP
             {
                 return false;
             }
-           
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_ProductionPlan>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);

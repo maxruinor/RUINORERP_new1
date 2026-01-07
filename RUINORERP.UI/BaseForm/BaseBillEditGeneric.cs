@@ -847,27 +847,54 @@ namespace RUINORERP.UI.BaseForm
                 // 更新锁状态UI
                 UpdateLockUI(args.LockInfo);
 
-                // 根据锁状态变化类型，执行相应的操作
+                // 显示状态栏提示
+                string billNo = args.LockInfo.BillNo;
+                if (string.IsNullOrEmpty(billNo))
+                {
+                    billNo = args.LockInfo?.BillNo ?? args.BillId.ToString();
+                }
+
+                // 根据锁状态变化类型，执行相应的操作和提示
                 switch (args.ChangeType)
                 {
                     case LockStatusChangeType.Locked:
                         // 单据被锁定，禁用编辑控件
                         logger?.LogDebug("单据 {BillId} 被锁定，禁用编辑控件", args.BillId);
+                        if (args.LockInfo != null)
+                        {
+                            MainForm.Instance.ShowStatusText($"单据{billNo}已被{args.LockInfo.LockedUserName}锁定");
+                        }
                         break;
 
                     case LockStatusChangeType.Unlocked:
                         // 单据被解锁，启用编辑控件
                         logger?.LogDebug("单据 {BillId} 被解锁，启用编辑控件", args.BillId);
+                        MainForm.Instance.ShowStatusText($"单据{billNo}已解锁");
                         break;
 
                     case LockStatusChangeType.OwnerChanged:
                         // 锁持有者变更，更新UI提示
                         logger?.LogDebug("单据 {BillId} 锁持有者变更", args.BillId);
+                        if (args.LockInfo != null)
+                        {
+                            MainForm.Instance.ShowStatusText($"单据{billNo}的锁持有者已变更为{args.LockInfo.LockedUserName}");
+                        }
                         break;
 
                     case LockStatusChangeType.StatusUpdated:
                         // 锁状态更新，刷新UI显示
                         logger?.LogDebug("单据 {BillId} 锁状态已更新", args.BillId);
+                        if (args.LockInfo != null)
+                        {
+                            if (args.LockInfo.IsLocked)
+                            {
+                                MainForm.Instance.ShowStatusText($"单据{billNo}已被{args.LockInfo.LockedUserName}锁定");
+                            }
+                            else
+                            {
+                                MainForm.Instance.ShowStatusText($"单据{billNo}已解锁");
+                            }
+                        }
                         break;
 
                     default:
@@ -2916,16 +2943,50 @@ namespace RUINORERP.UI.BaseForm
                 var result = await _integratedLockService.LockBillAsync(finalBillId, finalBillNo, EntityMappingHelper.GetEntityInfo<T>().BizType, CurMenuInfo.MenuID);
                 bool lockSuccess = result != null && result.IsSuccess;
 
-                // 核心步骤3: 更新UI状态（确保在UI线程）
-                if (tsBtnLocked != null && !IsDisposed)
+                // 核心步骤3: 更新UI状态和显示状态栏提示（确保在UI线程）
+                if (InvokeRequired)
                 {
-                    if (InvokeRequired)
+                    Invoke((MethodInvoker)(() =>
                     {
-                        Invoke((MethodInvoker)(() => UpdateLockUI(lockSuccess, result?.LockInfo)));
-                    }
-                    else
+                        if (!IsDisposed)
+                        {
+                            if (tsBtnLocked != null)
+                            {
+                                UpdateLockUI(lockSuccess, result?.LockInfo);
+                            }
+
+                            // 显示状态栏提示
+                            if (lockSuccess)
+                            {
+                                MainForm.Instance.ShowStatusText($"成功锁定单据{finalBillNo}");
+                            }
+                            else
+                            {
+                                string errorMsg = result?.Message ?? "锁定失败";
+                                MainForm.Instance.ShowStatusText($"锁定单据{finalBillNo}失败：{errorMsg}");
+                            }
+                        }
+                    }));
+                }
+                else
+                {
+                    if (!IsDisposed)
                     {
-                        UpdateLockUI(lockSuccess, result?.LockInfo);
+                        if (tsBtnLocked != null)
+                        {
+                            UpdateLockUI(lockSuccess, result?.LockInfo);
+                        }
+
+                        // 显示状态栏提示
+                        if (lockSuccess)
+                        {
+                            MainForm.Instance.ShowStatusText($"成功锁定单据{finalBillNo}");
+                        }
+                        else
+                        {
+                            string errorMsg = result?.Message ?? "锁定失败";
+                            MainForm.Instance.ShowStatusText($"锁定单据{finalBillNo}失败：{errorMsg}");
+                        }
                     }
                 }
 
@@ -3607,7 +3668,7 @@ namespace RUINORERP.UI.BaseForm
                         {
                             if (saleOut.tb_saleorder != null)
                             {
-                                UNLock(saleOut.tb_saleorder.SOrder_ID);
+                                UNLock(saleOut.tb_saleorder.SOrder_ID, saleOut.tb_saleorder.SOrderNo);
                             }
                         }
                     }
@@ -4912,6 +4973,23 @@ namespace RUINORERP.UI.BaseForm
                 // 核心步骤3: 更新UI状态
                 UpdateLockUI(isLocked, lockInfo);
 
+                // 核心步骤4: 显示状态栏提示
+                if (isLocked && lockInfo != null && !isSelfLock)
+                {
+                    // 获取单据编号
+                    string billNo = BillNo;
+                    if (string.IsNullOrEmpty(billNo))
+                    {
+                        billNo = lockInfo.BillNo;
+                    }
+                    if (string.IsNullOrEmpty(billNo))
+                    {
+                        billNo = billId.ToString();
+                    }
+                    // 显示状态栏提示
+                    MainForm.Instance.ShowStatusText($"单据{billNo}已被{lockInfo.LockedUserName}锁定");
+                }
+
                 // 记录刷新日志（如果需要）
                 if (logRefresh && isLocked && lockInfo != null)
                 {
@@ -5924,7 +6002,7 @@ namespace RUINORERP.UI.BaseForm
         /// 当前单据解锁相关的单据
         /// </summary>
         /// <param name="billId">单据ID</param>
-        public void UNLock(long billId, bool NeedUpdateUI = false)
+        public void UNLock(long billId, string BillNo, bool NeedUpdateUI = false)
         {
             if (_integratedLockService == null || billId <= 0)
                 return;
@@ -5936,14 +6014,68 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 执行解锁操作
                     var lockResponse = await _integratedLockService.UnlockBillAsync(billId);
+                    bool isSuccess = lockResponse != null && lockResponse.IsSuccess;
 
-                    if (NeedUpdateUI)
+                    // 更新UI状态和显示状态栏提示
+                    if (NeedUpdateUI || isSuccess)
                     {
-                        UpdateLockUI(false);
+                        // 获取单据编号
+                        string billNo = BillNo;
+                        if (string.IsNullOrEmpty(billNo))
+                        {
+                            billNo = billId.ToString();
+                        }
+
+                        // 在UI线程执行
+                        if (InvokeRequired)
+                        {
+                            Invoke((MethodInvoker)(() =>
+                            {
+                                if (!IsDisposed)
+                                {
+                                    if (NeedUpdateUI)
+                                    {
+                                        UpdateLockUI(false);
+                                    }
+
+                                    // 显示状态栏提示
+                                    if (isSuccess)
+                                    {
+                                        MainForm.Instance.ShowStatusText($"✅ 成功解锁单据{billNo}");
+                                    }
+                                    else
+                                    {
+                                        string errorMsg = lockResponse?.Message ?? "解锁失败";
+                                        MainForm.Instance.ShowStatusText($"❌ 解锁单据{billNo}失败：{errorMsg}");
+                                    }
+                                }
+                            }));
+                        }
+                        else
+                        {
+                            if (!IsDisposed)
+                            {
+                                if (NeedUpdateUI)
+                                {
+                                    UpdateLockUI(false);
+                                }
+
+                                // 显示状态栏提示
+                                if (isSuccess)
+                                {
+                                    MainForm.Instance.ShowStatusText($"✅ 成功解锁单据{billNo}");
+                                }
+                                else
+                                {
+                                    string errorMsg = lockResponse?.Message ?? "解锁失败";
+                                    MainForm.Instance.ShowStatusText($"❌ 解锁单据{billNo}失败：{errorMsg}");
+                                }
+                            }
+                        }
                     }
 
                     // 简化的错误记录
-                    if (lockResponse == null || !lockResponse.IsSuccess)
+                    if (!isSuccess)
                     {
                         MainForm.Instance.logger.LogError($"单据【{billId}】解锁失败");
                     }
@@ -6008,7 +6140,13 @@ namespace RUINORERP.UI.BaseForm
             long billId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (billId <= 0)
                 return;
-            UNLock(billId, NeedUpdateUI);
+
+            BizEntityInfo entityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+            string BillNo = ReflectionHelper.GetPropertyValue(EditEntity, entityInfo.NoField).ToString();
+
+
+            UNLock(billId, BillNo, NeedUpdateUI);
         }
 
 
@@ -6350,7 +6488,6 @@ namespace RUINORERP.UI.BaseForm
                     if (_lockRefreshTask != null && !_lockRefreshTask.IsCompleted)
                     {
                         await Task.WhenAny(_lockRefreshTask, Task.Delay(500));// 等待任务完成，最多等待1秒
-
                     }
                 }
                 catch (Exception ex)

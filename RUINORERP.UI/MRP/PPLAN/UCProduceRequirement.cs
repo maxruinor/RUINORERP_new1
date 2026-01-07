@@ -184,6 +184,7 @@ namespace RUINORERP.UI.MRP.MP
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
+                    
                     if (entity.PDNo.IsNullOrEmpty())
                     {
                         entity.PDNo = ClientBizCodeService.GetBizBillNo(BizType.需求分析);

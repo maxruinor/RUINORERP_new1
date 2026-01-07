@@ -257,6 +257,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     entity.ActionStatus = ActionStatus.新增;
                     entity.DataStatus = (int)DataStatus.草稿;
+
                     if (string.IsNullOrEmpty(entity.SOrderNo))
                     {
                         entity.SOrderNo = ClientBizCodeService.GetBizBillNo(BizType.销售订单);

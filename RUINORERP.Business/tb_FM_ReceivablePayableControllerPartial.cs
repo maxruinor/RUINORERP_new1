@@ -2394,7 +2394,7 @@ namespace RUINORERP.Business
             #endregion
             return payable;
         }
-
+        /*
         /// <summary>
         /// 创建应付款单
         /// 报销单中的项目是限制级的主维度
@@ -2558,6 +2558,8 @@ namespace RUINORERP.Business
                 throw;
             }
         }
+        */
+
 
         /// <summary>
         /// 创建应付款单，审核时如果有预付，会先核销

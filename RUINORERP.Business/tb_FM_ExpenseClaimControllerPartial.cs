@@ -148,48 +148,30 @@ namespace RUINORERP.Business
                 {
                     // 获取系统配置
                     var systemConfigService = _appContext.GetRequiredService<Itb_SystemConfigServices>();
-
                     FMConfiguration fmConfig = _appContext.FMConfig;
+                    // 生成付款单
+                    var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(entity);
 
-                    // 1. 生成应付款单
-                    var payableController = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-
-                    var payableList = await payableController.BuildReceivablePayable(entity);
-
-                    for (int i = 0; i < payableList.Count; i++)
+                    if (fmConfig.AutoAuditExpensePaymentRecord)
                     {
-                        // 保存应付款单
-                        ReturnMainSubResults<tb_FM_ReceivablePayable> returnMain = await payableController.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payableList[i], false);
-                        if (fmConfig.ExpenseFinancialProcessAutoMode)
+                        // 自动审核付款单
+                        paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                        BusinessHelper.Instance.ApproverEntity(paymentRecord);
+                        //自动审核收款单
+                        paymentRecord.ApprovalOpinions = "报销流程自动化模式开启时，系统自动审核";
+                        paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                        paymentRecord.ApprovalResults = true;
+                        ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(paymentRecord);
+                        if (!rrRecord.Succeeded)
                         {
-                            returnMain.ReturnObject.ApprovalOpinions = $"报销流程自动化模式开启时，自动审核通过";
-                            //自动审核应付款单
-                            await payableController.ApprovalAsync(returnMain.ReturnObject, true);
-
-                            // 2. 生成付款单
-                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                            tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(entity);
-
-                            // 3. 自动化模式处理
-
-                            // 自动审核付款单
-                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                            BusinessHelper.Instance.ApproverEntity(paymentRecord);
-                            //自动审核收款单
-                            paymentRecord.ApprovalOpinions = "报销流程自动化模式开启时，系统自动审核";
-                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                            paymentRecord.ApprovalResults = true;
-                            ReturnResults<tb_FM_PaymentRecord> rrRecord = await paymentController.ApprovalAsync(paymentRecord);
-                            if (!rrRecord.Succeeded)
-                            {
-                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
-                            }
-                            else
-                            {
-                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
-                            }
-
+                            fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核失败：" + rrRecord.ErrorMsg, rrRecord.ReturnObject as tb_FM_PaymentRecord);
                         }
+                        else
+                        {
+                            fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("报销流程自动化模式开启时，系统自动审核成功", rrRecord.ReturnObject as tb_FM_PaymentRecord);
+                        }
+
                     }
                 }
 

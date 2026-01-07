@@ -180,10 +180,7 @@ namespace RUINORERP.UI.BI
 
         }
 
-        private void btnDeleteRolePropertyConfig_Click(object sender, EventArgs e)
-        {
-            
-        }
+    
     }
 }
 

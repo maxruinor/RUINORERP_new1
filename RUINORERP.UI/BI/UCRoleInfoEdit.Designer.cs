@@ -69,7 +69,6 @@
             this.txtRoleName = new Krypton.Toolkit.KryptonTextBox();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtDesc = new Krypton.Toolkit.KryptonTextBox();
-            this.btnDeleteRolePropertyConfig = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -129,7 +128,6 @@
             // 
             // kryptonGroupBox角色属性.Panel
             // 
-            this.kryptonGroupBox角色属性.Panel.Controls.Add(this.btnDeleteRolePropertyConfig);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.kryptonLabel9);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.chkOwnershipControl);
             this.kryptonGroupBox角色属性.Panel.Controls.Add(this.chkDataBoardUnits);
@@ -442,15 +440,6 @@
             this.txtDesc.Size = new System.Drawing.Size(494, 53);
             this.txtDesc.TabIndex = 6;
             // 
-            // btnDeleteRolePropertyConfig
-            // 
-            this.btnDeleteRolePropertyConfig.Location = new System.Drawing.Point(561, 313);
-            this.btnDeleteRolePropertyConfig.Name = "btnDeleteRolePropertyConfig";
-            this.btnDeleteRolePropertyConfig.Size = new System.Drawing.Size(90, 25);
-            this.btnDeleteRolePropertyConfig.TabIndex = 191;
-            this.btnDeleteRolePropertyConfig.Values.Text = "删除角色属性";
-            this.btnDeleteRolePropertyConfig.Click += new System.EventHandler(this.btnDeleteRolePropertyConfig_Click);
-            // 
             // UCRoleInfoEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -512,6 +501,5 @@
         private RUINOR.WinFormsUI.ChkComboBox.CheckBoxComboBox chkDataBoardUnits;
         private Krypton.Toolkit.KryptonLabel kryptonLabel9;
         private Krypton.Toolkit.KryptonCheckBox chkOwnershipControl;
-        private Krypton.Toolkit.KryptonButton btnDeleteRolePropertyConfig;
     }
 }

@@ -77,9 +77,9 @@ namespace RUINORERP.Model.ConfigModel
        public bool EnableAutoRefundOnOrderCancel { get; set; } = false;
 
         /// <summary>
-        /// 报销流程自动化模式
+        /// 费用报销的付款单自动审核
         /// </summary>
-        public bool ExpenseFinancialProcessAutoMode { get; set; } = false;
+        public bool AutoAuditExpensePaymentRecord { get; set; } = false;
 
     }
 }

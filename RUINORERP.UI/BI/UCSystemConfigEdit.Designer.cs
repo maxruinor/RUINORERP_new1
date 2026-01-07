@@ -32,7 +32,7 @@ namespace RUINORERP.UI.BI
             this.chkEnableRowLevelAuth = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
             this.chkEnableAutoRefundOnOrderCancel = new Krypton.Toolkit.KryptonCheckBox();
-            this.chkExpenseFinancialProcessAutoMode = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkAutoAuditExpensePaymentRecord = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPaymentable = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPrePayment = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnablePaymentAutoOffsetAP = new Krypton.Toolkit.KryptonCheckBox();
@@ -172,7 +172,7 @@ namespace RUINORERP.UI.BI
             // kryptonGroupBox1.Panel
             // 
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAutoRefundOnOrderCancel);
-            this.kryptonGroupBox1.Panel.Controls.Add(this.chkExpenseFinancialProcessAutoMode);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditExpensePaymentRecord);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPaymentable);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPrePayment);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnablePaymentAutoOffsetAP);
@@ -195,25 +195,25 @@ namespace RUINORERP.UI.BI
             // 
             this.chkEnableAutoRefundOnOrderCancel.Checked = true;
             this.chkEnableAutoRefundOnOrderCancel.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableAutoRefundOnOrderCancel.Location = new System.Drawing.Point(22, 319);
+            this.chkEnableAutoRefundOnOrderCancel.Location = new System.Drawing.Point(16, 288);
             this.chkEnableAutoRefundOnOrderCancel.Name = "chkEnableAutoRefundOnOrderCancel";
             this.chkEnableAutoRefundOnOrderCancel.Size = new System.Drawing.Size(218, 20);
             this.chkEnableAutoRefundOnOrderCancel.TabIndex = 208;
             this.chkEnableAutoRefundOnOrderCancel.Values.Text = "平台订单时，取消作废会自动退款";
             // 
-            // chkExpenseFinancialProcessAutoMode
+            // chkAutoAuditExpensePaymentRecord
             // 
-            this.chkExpenseFinancialProcessAutoMode.Location = new System.Drawing.Point(329, 13);
-            this.chkExpenseFinancialProcessAutoMode.Name = "chkExpenseFinancialProcessAutoMode";
-            this.chkExpenseFinancialProcessAutoMode.Size = new System.Drawing.Size(140, 20);
-            this.chkExpenseFinancialProcessAutoMode.TabIndex = 209;
-            this.chkExpenseFinancialProcessAutoMode.Values.Text = "报销流程自动化模式";
+            this.chkAutoAuditExpensePaymentRecord.Location = new System.Drawing.Point(262, 16);
+            this.chkAutoAuditExpensePaymentRecord.Name = "chkAutoAuditExpensePaymentRecord";
+            this.chkAutoAuditExpensePaymentRecord.Size = new System.Drawing.Size(205, 20);
+            this.chkAutoAuditExpensePaymentRecord.TabIndex = 209;
+            this.chkAutoAuditExpensePaymentRecord.Values.Text = "费用报销的付款单自动审核";
             // 
             // chkAutoAuditPaymentable
             // 
             this.chkAutoAuditPaymentable.Checked = true;
             this.chkAutoAuditPaymentable.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditPaymentable.Location = new System.Drawing.Point(198, 365);
+            this.chkAutoAuditPaymentable.Location = new System.Drawing.Point(262, 205);
             this.chkAutoAuditPaymentable.Name = "chkAutoAuditPaymentable";
             this.chkAutoAuditPaymentable.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditPaymentable.TabIndex = 207;
@@ -223,7 +223,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkAutoAuditPrePayment.Checked = true;
             this.chkAutoAuditPrePayment.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditPrePayment.Location = new System.Drawing.Point(187, 100);
+            this.chkAutoAuditPrePayment.Location = new System.Drawing.Point(262, 122);
             this.chkAutoAuditPrePayment.Name = "chkAutoAuditPrePayment";
             this.chkAutoAuditPrePayment.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditPrePayment.TabIndex = 206;
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnablePaymentAutoOffsetAP
             // 
-            this.chkEnablePaymentAutoOffsetAP.Location = new System.Drawing.Point(22, 242);
+            this.chkEnablePaymentAutoOffsetAP.Location = new System.Drawing.Point(16, 220);
             this.chkEnablePaymentAutoOffsetAP.Name = "chkEnablePaymentAutoOffsetAP";
             this.chkEnablePaymentAutoOffsetAP.Size = new System.Drawing.Size(153, 20);
             this.chkEnablePaymentAutoOffsetAP.TabIndex = 205;
@@ -241,7 +241,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkAutoAuditReceiveable.Checked = true;
             this.chkAutoAuditReceiveable.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditReceiveable.Location = new System.Drawing.Point(24, 365);
+            this.chkAutoAuditReceiveable.Location = new System.Drawing.Point(262, 176);
             this.chkAutoAuditReceiveable.Name = "chkAutoAuditReceiveable";
             this.chkAutoAuditReceiveable.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditReceiveable.TabIndex = 204;
@@ -249,7 +249,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnablePaymentAutoOffsetAR
             // 
-            this.chkEnablePaymentAutoOffsetAR.Location = new System.Drawing.Point(22, 216);
+            this.chkEnablePaymentAutoOffsetAR.Location = new System.Drawing.Point(16, 186);
             this.chkEnablePaymentAutoOffsetAR.Name = "chkEnablePaymentAutoOffsetAR";
             this.chkEnablePaymentAutoOffsetAR.Size = new System.Drawing.Size(153, 20);
             this.chkEnablePaymentAutoOffsetAR.TabIndex = 204;
@@ -259,7 +259,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkAutoAuditReceivePaymentRecordByPlatform.Checked = true;
             this.chkAutoAuditReceivePaymentRecordByPlatform.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditReceivePaymentRecordByPlatform.Location = new System.Drawing.Point(22, 283);
+            this.chkAutoAuditReceivePaymentRecordByPlatform.Location = new System.Drawing.Point(16, 254);
             this.chkAutoAuditReceivePaymentRecordByPlatform.Name = "chkAutoAuditReceivePaymentRecordByPlatform";
             this.chkAutoAuditReceivePaymentRecordByPlatform.Size = new System.Drawing.Size(192, 20);
             this.chkAutoAuditReceivePaymentRecordByPlatform.TabIndex = 202;
@@ -267,7 +267,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableAPAutoOffsetPrepay
             // 
-            this.chkEnableAPAutoOffsetPrepay.Location = new System.Drawing.Point(22, 165);
+            this.chkEnableAPAutoOffsetPrepay.Location = new System.Drawing.Point(16, 152);
             this.chkEnableAPAutoOffsetPrepay.Name = "chkEnableAPAutoOffsetPrepay";
             this.chkEnableAPAutoOffsetPrepay.Size = new System.Drawing.Size(153, 20);
             this.chkEnableAPAutoOffsetPrepay.TabIndex = 203;
@@ -277,7 +277,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkAutoAuditPreReceive.Checked = true;
             this.chkAutoAuditPreReceive.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkAutoAuditPreReceive.Location = new System.Drawing.Point(22, 100);
+            this.chkAutoAuditPreReceive.Location = new System.Drawing.Point(262, 147);
             this.chkAutoAuditPreReceive.Name = "chkAutoAuditPreReceive";
             this.chkAutoAuditPreReceive.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditPreReceive.TabIndex = 200;
@@ -285,7 +285,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableARAutoOffsetPreReceive
             // 
-            this.chkEnableARAutoOffsetPreReceive.Location = new System.Drawing.Point(22, 139);
+            this.chkEnableARAutoOffsetPreReceive.Location = new System.Drawing.Point(16, 118);
             this.chkEnableARAutoOffsetPreReceive.Name = "chkEnableARAutoOffsetPreReceive";
             this.chkEnableARAutoOffsetPreReceive.Size = new System.Drawing.Size(153, 20);
             this.chkEnableARAutoOffsetPreReceive.TabIndex = 202;
@@ -295,7 +295,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkEnableFinancialModule.Checked = true;
             this.chkEnableFinancialModule.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkEnableFinancialModule.Location = new System.Drawing.Point(187, 64);
+            this.chkEnableFinancialModule.Location = new System.Drawing.Point(16, 16);
             this.chkEnableFinancialModule.Name = "chkEnableFinancialModule";
             this.chkEnableFinancialModule.Size = new System.Drawing.Size(101, 20);
             this.chkEnableFinancialModule.TabIndex = 198;
@@ -303,7 +303,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableMultiCurrency
             // 
-            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(187, 38);
+            this.chkEnableMultiCurrency.Location = new System.Drawing.Point(262, 84);
             this.chkEnableMultiCurrency.Name = "chkEnableMultiCurrency";
             this.chkEnableMultiCurrency.Size = new System.Drawing.Size(88, 20);
             this.chkEnableMultiCurrency.TabIndex = 196;
@@ -311,7 +311,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableVoucherModule
             // 
-            this.chkEnableVoucherModule.Location = new System.Drawing.Point(21, 13);
+            this.chkEnableVoucherModule.Location = new System.Drawing.Point(16, 50);
             this.chkEnableVoucherModule.Name = "chkEnableVoucherModule";
             this.chkEnableVoucherModule.Size = new System.Drawing.Size(101, 20);
             this.chkEnableVoucherModule.TabIndex = 190;
@@ -319,7 +319,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableInvoiceModule
             // 
-            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(187, 12);
+            this.chkEnableInvoiceModule.Location = new System.Drawing.Point(262, 49);
             this.chkEnableInvoiceModule.Name = "chkEnableInvoiceModule";
             this.chkEnableInvoiceModule.Size = new System.Drawing.Size(101, 20);
             this.chkEnableInvoiceModule.TabIndex = 194;
@@ -327,7 +327,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkEnableContractModule
             // 
-            this.chkEnableContractModule.Location = new System.Drawing.Point(21, 38);
+            this.chkEnableContractModule.Location = new System.Drawing.Point(16, 84);
             this.chkEnableContractModule.Name = "chkEnableContractModule";
             this.chkEnableContractModule.Size = new System.Drawing.Size(101, 20);
             this.chkEnableContractModule.TabIndex = 192;
@@ -796,7 +796,7 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPrePayment;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPaymentable;
         private Krypton.Toolkit.KryptonCheckBox chkEnableAutoRefundOnOrderCancel;
-        private Krypton.Toolkit.KryptonCheckBox chkExpenseFinancialProcessAutoMode;
+        private Krypton.Toolkit.KryptonCheckBox chkAutoAuditExpensePaymentRecord;
         private Krypton.Toolkit.KryptonCheckBox chkEnableRowLevelAuth;
     }
 }

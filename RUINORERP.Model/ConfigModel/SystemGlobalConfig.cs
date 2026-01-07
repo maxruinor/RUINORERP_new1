@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using RUINORERP.Global;
 using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,7 +27,8 @@ namespace RUINORERP.Model.ConfigModel
 
         [JsonProperty("客户端自动更新")]
         [Category("系统设置")]
-        [Description("客户端自动更新")]
+        //[Description("客户端自动更新")]
+        [Display(Name = "客户端自动更新", Description = "消息提醒的时间间隔")]
         public bool 客户端自动更新 { get; set; } = true;
 
 
@@ -80,6 +82,7 @@ namespace RUINORERP.Model.ConfigModel
         [JsonProperty("HeartbeatInterval")]
         [Category("服务器配置")]
         [Description("心跳间隔(毫秒)")]
+        [Range(1, 60, ErrorMessage = "心跳间隔必须在1000-60000毫秒之间")]
         public int HeartbeatInterval { get; set; }
 
         [JsonProperty("DbConnectionString")]

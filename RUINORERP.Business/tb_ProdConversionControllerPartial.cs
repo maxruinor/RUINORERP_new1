@@ -1,27 +1,26 @@
-﻿using System;
+﻿using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
+using RUINOR.Core;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.EntityLoadService;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.IServices;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using SqlSugar;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
-using FluentValidation.Results;
-using RUINORERP.Services;
-
-
-using RUINORERP.Global;
-using RUINORERP.Model.Base;
-using SqlSugar;
-using RUINORERP.Business.Security;
-using RUINORERP.Common.Extensions;
-using System.Linq;
-using RUINORERP.Business.CommService;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using System.Collections;
-using RUINORERP.Business.EntityLoadService;
+using System.Transactions;
 
 namespace RUINORERP.Business
 {
@@ -148,6 +147,7 @@ namespace RUINORERP.Business
                     transactionFrom.Location_ID = invForm.Location_ID;
                     transactionFrom.BizType = (int)BizType.产品转换单;
                     transactionFrom.ReferenceId = entity.ConversionID;
+                    transactionFrom.ReferenceNo = entity.ConversionNo;
                     transactionFrom.QuantityChange = -TransferQty; // 源产品减少库存
                     transactionFrom.AfterQuantity = invForm.Quantity;
                     transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
@@ -162,6 +162,7 @@ namespace RUINORERP.Business
                     transactionTo.Location_ID = invTo.Location_ID;
                     transactionTo.BizType = (int)BizType.产品转换单;
                     transactionTo.ReferenceId = entity.ConversionID;
+                    transactionTo.ReferenceNo = entity.ConversionNo;
                     transactionTo.QuantityChange = TransferQty; // 目标产品增加库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
@@ -373,6 +374,7 @@ namespace RUINORERP.Business
                     transactionFrom.Location_ID = invForm.Location_ID;
                     transactionFrom.BizType = (int)BizType.产品转换单;
                     transactionFrom.ReferenceId = entity.ConversionID;
+                    transactionFrom.ReferenceNo = entity.ConversionNo;
                     transactionFrom.QuantityChange = TransferQty; // 反审核时源产品增加库存
                     transactionFrom.AfterQuantity = invForm.Quantity;
                     transactionFrom.UnitCost = realtimeCostFrom; // 使用实时成本
@@ -387,6 +389,7 @@ namespace RUINORERP.Business
                     transactionTo.Location_ID = invTo.Location_ID;
                     transactionTo.BizType = (int)BizType.产品转换单;
                     transactionTo.ReferenceId = entity.ConversionID;
+                    transactionTo.ReferenceNo = entity.ConversionNo;
                     transactionTo.QuantityChange = -TransferQty; // 反审核时目标产品减少库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCostTo; // 使用实时成本

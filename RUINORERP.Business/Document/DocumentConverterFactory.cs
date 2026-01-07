@@ -200,7 +200,11 @@ namespace RUINORERP.Business.Document
                                 return enumEntityInfo.ToString();
                             }
                         }
-                        return entityInfo?.BizType.ToString();
+
+                        if (entityInfo.BizType != BizType.无对应数据)
+                        {
+                            return entityInfo?.BizType.ToString();
+                        }
                     }
                 }
 

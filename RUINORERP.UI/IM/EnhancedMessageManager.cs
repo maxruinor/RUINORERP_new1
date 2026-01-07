@@ -300,8 +300,12 @@ namespace RUINORERP.UI.IM
             UnreadMessageCountChanged?.Invoke(this, unreadCount);
         }
 
-        // 处理接收到的弹窗消息
-        private void OnPopupMessageReceived(MessageData messageData)
+        /// <summary>
+        /// 通用消息处理方法
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        /// <param name="messageType">消息类型</param>
+        private void HandleMessageReceived(MessageData messageData, MessageType messageType)
         {
             try
             {
@@ -313,6 +317,9 @@ namespace RUINORERP.UI.IM
                         messageData.MessageId = DateTime.Now.Ticks;
                     }
 
+                    // 设置消息类型
+                    messageData.MessageType = messageType;
+
                     // 保存到持久化存储
                     _persistenceManager.AddMessage(messageData);
 
@@ -321,80 +328,50 @@ namespace RUINORERP.UI.IM
 
                     // 触发语音提醒
                     _voiceReminder.AddRemindMessage(messageData);
+
+                    // 根据消息类型执行特定处理
+                    switch (messageType)
+                    {
+                        case MessageType.Popup:
+                            ShowDefaultMessagePrompt(messageData);
+                            break;
+                        case MessageType.Business:
+                            ProcessBusinessMessage(messageData);
+                            break;
+                        case MessageType.System:
+                            ShowDefaultMessagePrompt(messageData);
+                            break;
+                    }
 
                     // 触发未读消息计数变更事件
                     UpdateUnreadMessageCount();
 
                     // 触发消息状态变更事件，通知UI刷新
                     OnMessageStatusChanged(messageData);
-
-                    ShowDefaultMessagePrompt(messageData);
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理弹窗消息时发生错误");
+                _logger?.LogError(ex, $"处理{messageType}消息时发生错误");
             }
+        }
+
+        // 处理接收到的弹窗消息
+        private void OnPopupMessageReceived(MessageData messageData)
+        {
+            HandleMessageReceived(messageData, MessageType.Popup);
         }
 
         // 处理接收到的业务消息
         private void OnBusinessMessageReceived(MessageData messageData)
         {
-            try
-            {
-                if (messageData != null)
-                {
-                    // 确保消息有有效的MessageId
-                    if (messageData.MessageId <= 0)
-                    {
-                        messageData.MessageId = DateTime.Now.Ticks;
-                    }
-
-                    // 保存到持久化存储
-                    _persistenceManager.AddMessage(messageData);
-
-                    // 同步到MessageService的内存存储
-                    SaveMessageToMessageServiceOnly(messageData);
-
-                    // 触发语音提醒
-                    _voiceReminder.AddRemindMessage(messageData);
-
-                    // 处理业务逻辑
-                    ProcessBusinessMessage(messageData);
-
-                    // 触发未读消息计数变更事件，通知UI更新
-                    UpdateUnreadMessageCount();
-
-                    // 触发消息状态变更事件，通知消息列表刷新
-                    OnMessageStatusChanged(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理业务消息时发生错误");
-            }
+            HandleMessageReceived(messageData, MessageType.Business);
         }
 
         // 处理接收到的系统通知
         private void OnSystemNotificationReceived(MessageData messageData)
         {
-            try
-            {
-                if (messageData != null)
-                {
-                    // 保存到持久化存储
-                    _persistenceManager.AddMessage(messageData);
-
-                    // 触发语音提醒
-                    _voiceReminder.AddRemindMessage(messageData);
-
-                    ShowDefaultMessagePrompt(messageData);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理系统通知时发生错误");
-            }
+            HandleMessageReceived(messageData, MessageType.System);
         }
 
 

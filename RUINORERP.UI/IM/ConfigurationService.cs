@@ -2,11 +2,13 @@ using Newtonsoft.Json;
 using RUINORERP.Business;
 using RUINORERP.Model;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace RUINORERP.UI.IM
 {
+    // MessageReminderConfig 类已移至单独的 MessageReminderConfig.cs 文件中
+
     /// <summary>
     /// 通用配置服务 - 提供统一的配置管理功能
     /// </summary>
@@ -85,22 +87,21 @@ namespace RUINORERP.UI.IM
         /// <summary>
         /// 验证配置对象
         /// </summary>
-        public static bool ValidateConfig<T>(T config, System.Collections.Generic.List<System.ComponentModel.DataAnnotations.ValidationResult> validationResults = null)
+        public static bool ValidateConfig<T>(T config, System.Collections.Generic.List<ValidationResult> validationResults = null)
         {
             if (config == null)
                 return false;
 
-            var context = new System.ComponentModel.DataAnnotations.ValidationContext(config, null, null);
-            var results = new System.Collections.Generic.List<System.ComponentModel.DataAnnotations.ValidationResult>();
+            var context = new ValidationContext(config, null, null);
+            var results = new System.Collections.Generic.List<ValidationResult>();
 
-            bool isValid = System.ComponentModel.DataAnnotations.Validator.TryValidateObject(config, context, results, true);
+            bool isValid = Validator.TryValidateObject(config, context, results, true);
 
             validationResults?.AddRange(results);
 
             return isValid;
         }
 
-   
         /// <summary>
         /// 从用户个性化配置对象中获取配置JSON
         /// </summary>

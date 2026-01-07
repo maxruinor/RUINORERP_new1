@@ -50,6 +50,72 @@ namespace RUINORERP.UI.IM
         {
             // 默认实现为空，子类可以根据需要重写
         }
+        
+        /// <summary>
+        /// 初始化消息流布局面板和计时器
+        /// </summary>
+        /// <param name="flowLayoutPanel">流布局面板引用</param>
+        /// <param name="timer">计时器引用</param>
+        protected virtual void InitializeMessageComponents(ref FlowLayoutPanel flowLayoutPanel, ref Timer timer)
+        {
+            // 初始化消息流布局面板
+            flowLayoutPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                FlowDirection = FlowDirection.RightToLeft,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+            this.Controls.Add(flowLayoutPanel);
+
+            // 初始化消息计时器
+            timer = new Timer
+            {
+                Interval = 5000 // 消息显示的时间间隔，单位毫秒
+            };
+            
+            // 使用局部变量避免引用问题
+            var localFlowLayoutPanel = flowLayoutPanel;
+            timer.Tick += (sender, e) => MessageTimer_Tick(sender, e, localFlowLayoutPanel);
+        }
+        
+        /// <summary>
+        /// 消息计时器事件处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        /// <param name="flowLayoutPanel">流布局面板</param>
+        protected virtual void MessageTimer_Tick(object sender, EventArgs e, FlowLayoutPanel flowLayoutPanel)
+        {
+            // 模拟消息到达，显示新消息
+            ShowMessage(Content, flowLayoutPanel);
+        }
+        
+        /// <summary>
+        /// 显示消息
+        /// </summary>
+        /// <param name="message">消息内容</param>
+        /// <param name="flowLayoutPanel">流布局面板</param>
+        protected virtual void ShowMessage(string message, FlowLayoutPanel flowLayoutPanel)
+        {
+            // 创建一个新的消息标签
+            Label messageLabel = new Label
+            {
+                Text = message,
+                AutoSize = true,
+                ForeColor = SystemColors.ControlText,
+                BackColor = SystemColors.Control,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            // 将消息标签添加到流布局面板
+            flowLayoutPanel.Controls.Add(messageLabel);
+        }
+        
+        /// <summary>
+        /// 消息内容属性
+        /// </summary>
+        public string Content { get; set; } = string.Empty;
 
         /// <summary>
         /// 更新消息显示
@@ -301,6 +367,19 @@ namespace RUINORERP.UI.IM
         /// <param name="sender">发送者</param>
         protected virtual void WaitReminder(object sender)
         {
+            int interval = GetWaitInterval(sender);
+            
+            this.DialogResult = DialogResult.OK;
+            this.Close();
+        }
+        
+        /// <summary>
+        /// 获取等待间隔时间（秒）
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <returns>等待间隔（秒）</returns>
+        protected virtual int GetWaitInterval(object sender)
+        {
             int interval = 60;
             if (sender is KryptonDropButton dropButton)
             {
@@ -327,9 +406,7 @@ namespace RUINORERP.UI.IM
                         break;
                 }
             }
-            
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            return interval;
         }
     }
 }

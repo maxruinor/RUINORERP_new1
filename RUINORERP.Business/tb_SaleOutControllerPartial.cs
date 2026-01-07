@@ -563,6 +563,7 @@ namespace RUINORERP.Business
                         transaction.Location_ID = inv.Location_ID;
                         transaction.BizType = (int)BizType.销售出库单;
                         transaction.ReferenceId = entity.SaleOut_MainID;
+                        transaction.ReferenceNo = entity.SaleOutNo;
                         transaction.QuantityChange = -group.Value.OutQtySum.ToInt(); // 销售出库减少库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = inv.Inv_Cost;
@@ -1051,6 +1052,7 @@ namespace RUINORERP.Business
                     transaction.Location_ID = inv.Location_ID;
                     transaction.BizType = (int)BizType.销售出库单;
                     transaction.ReferenceId = entity.SaleOut_MainID;
+                    transaction.ReferenceNo = entity.SaleOutNo;
                     transaction.QuantityChange = group.Value.OutQtySum.ToInt(); // 反审核增加库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = inv.Inv_Cost;

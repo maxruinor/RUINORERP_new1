@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -40,23 +40,23 @@ namespace RUINORERP.Business
         /// <summary>
         /// 费用报销反审
         /// </summary>
-        /// <param name="ObjectEntity"></param>
-        /// <returns></returns>
+        /// <param name="ObjectEntity">报销单实体</param>
+        /// <returns>反审核结果</returns>
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_FM_ExpenseClaim entity = ObjectEntity as tb_FM_ExpenseClaim;
 
-
             try
             {
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
+                
+                // 设置报销单状态为新建和未审核
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                entity.ApprovalResults = false;
                 BusinessHelper.Instance.ApproverEntity(entity);
-
-
 
                 //只更新指定列
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
@@ -66,38 +66,38 @@ namespace RUINORERP.Business
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
-                    //注意，反审 将对应的预付生成的收款单，只有收款单没有审核前，可以删除
-                    //不能直接删除上级。要让对应的人员自己删除。不然不清楚。逻辑也不对。只能通过判断
-                    var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                    // 查询关联的付款单
+                    var paymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
                             .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == entity.ClaimMainID))
                               .ToListAsync();
-                    if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
+                    
+                    if (paymentRecordlist != null && paymentRecordlist.Count > 0)
                     {
-                        //判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
-                        if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
-                            && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
+                        // 检查付款单状态，只要有已支付或已审核的付款单，就不允许反审核
+                        var invalidPaymentRecords = paymentRecordlist.Where(c => 
+                            c.PaymentStatus == (int)PaymentStatus.已支付 || 
+                            c.ApprovalStatus == (int)ApprovalStatus.审核通过).ToList();
+                        
+                        if (invalidPaymentRecords.Any())
                         {
                             _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = "存在【已支付】的付款单，不能反审,请联系上级财务，或作退回处理。";
+                            var invalidBillNos = string.Join(", ", invalidPaymentRecords.Select(c => c.PaymentNo));
+                            rmrs.ErrorMsg = $"存在【已支付】或【已审核】的付款单（{invalidBillNos}），不能反审，请联系上级财务，或作退回处理。";
                             rmrs.Succeeded = false;
                             return rmrs;
                         }
                         else
                         {
-                            foreach (var item in PaymentRecordlist)
+                            // 删除关联的付款单及其明细
+                            foreach (var item in paymentRecordlist)
                             {
-                                //删除对应生成的收款单
                                 await _appContext.Db.DeleteNav<tb_FM_PaymentRecord>(item)
                                     .Include(c => c.tb_FM_PaymentRecordDetails)
                                     .ExecuteCommandAsync();
                             }
-
                         }
-
                     }
                 }
-
-
 
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
@@ -109,10 +109,9 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-                rmrs.ErrorMsg = ex.Message;
+                rmrs.ErrorMsg = $"反审核失败：{ex.Message}";
                 return rmrs;
             }
-
         }
 
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)

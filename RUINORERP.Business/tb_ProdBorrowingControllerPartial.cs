@@ -105,6 +105,7 @@ namespace RUINORERP.Business
                         transaction.Location_ID = inv.Location_ID;
                         transaction.BizType = (int)BizType.借出单;
                         transaction.ReferenceId = entity.BorrowID;
+                        transaction.ReferenceNo = entity.BorrowNo;
                         transaction.QuantityChange = -child.Qty; // 借出减少库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = realtimeCost; // 使用实时成本
@@ -212,6 +213,7 @@ namespace RUINORERP.Business
                     transaction.Location_ID = inv.Location_ID;
                     transaction.BizType = (int)BizType.借出单;
                     transaction.ReferenceId = entity.BorrowID;
+                    transaction.ReferenceNo = entity.BorrowNo;
                     transaction.QuantityChange = child.Qty; // 反审核增加库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = realtimeCost; // 使用实时成本

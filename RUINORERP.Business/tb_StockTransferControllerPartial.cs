@@ -6,26 +6,26 @@
 // 作者：Watson
 // 时间：10/12/2023 14:45:18
 // **************************************
+using FluentValidation.Results;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
+using RUINORERP.IServices;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.Services;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.IServices;
-using RUINORERP.Repository.UnitOfWorks;
-using RUINORERP.Model;
-using FluentValidation.Results;
-using RUINORERP.Services;
-
-using RUINORERP.Model.Base;
-using RUINORERP.Common.Extensions;
-using System.Linq;
-using SqlSugar;
-using RUINORERP.Global;
-using RUINORERP.Model.CommonModel;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.CommService;
+using System.Transactions;
 
 namespace RUINORERP.Business
 {
@@ -100,6 +100,7 @@ namespace RUINORERP.Business
                     transactionFrom.Location_ID = invFrom.Location_ID;
                     transactionFrom.BizType = (int)BizType.调拨单;
                     transactionFrom.ReferenceId = entity.StockTransferID;
+                    transactionFrom.ReferenceNo = entity.StockTransferNo;
                     transactionFrom.QuantityChange = -child.Qty; // 调出减少库存
                     transactionFrom.AfterQuantity = invFrom.Quantity;
                     transactionFrom.UnitCost = realtimeCost; // 使用实时成本
@@ -148,6 +149,7 @@ namespace RUINORERP.Business
                     transactionTo.Location_ID = invTo.Location_ID;
                     transactionTo.BizType = (int)BizType.调拨单;
                     transactionTo.ReferenceId = entity.StockTransferID;
+                    transactionFrom.ReferenceNo = entity.StockTransferNo;
                     transactionTo.QuantityChange = child.Qty; // 调入增加库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCost; // 使用调出仓库的实时成本
@@ -273,6 +275,7 @@ namespace RUINORERP.Business
                         transactionFrom.Location_ID = invFrom.Location_ID;
                         transactionFrom.BizType = (int)BizType.调拨单;
                         transactionFrom.ReferenceId = entity.StockTransferID;
+                        transactionFrom.ReferenceNo = entity.StockTransferNo;
                         transactionFrom.QuantityChange = child.Qty; // 反审核时调出仓库增加库存
                         transactionFrom.AfterQuantity = invFrom.Quantity;
                         transactionFrom.UnitCost = realtimeCost; // 使用实时成本
@@ -325,6 +328,7 @@ namespace RUINORERP.Business
                         transactionTo.Location_ID = invTo.Location_ID;
                         transactionTo.BizType = (int)BizType.调拨单;
                         transactionTo.ReferenceId = entity.StockTransferID;
+                        transactionTo.ReferenceNo = entity.StockTransferNo;
                         transactionTo.QuantityChange = -child.Qty; // 反审核时调入仓库减少库存
                         transactionTo.AfterQuantity = invTo.Quantity;
                         transactionTo.UnitCost = realtimeCost; // 使用实时成本

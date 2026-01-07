@@ -107,6 +107,21 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _ReferenceNo;
+        /// <summary>
+        /// 业务单据编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ReferenceNo", ColDesc = "业务单据编号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "ReferenceNo", Length = 250, IsNullable = true, ColumnDescription = "业务单据编号")]
+        public string ReferenceNo
+        {
+            get { return _ReferenceNo; }
+            set
+            {
+                SetProperty(ref _ReferenceNo, value);
+            }
+        }
+
         private int _QuantityChange= ((0));
         /// <summary>
         /// 变动数量

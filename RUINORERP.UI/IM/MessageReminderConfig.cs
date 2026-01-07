@@ -45,52 +45,7 @@ namespace RUINORERP.UI.IM
         public bool QuietTimeEnabled { get; set; } = false;
     }
 
-    /// <summary>
-    /// 通用配置管理框架
-    /// </summary>
-    public static class ConfigurationManager
-    {
-        /// <summary>
-        /// 获取消息提醒配置
-        /// </summary>
-        public static MessageReminderConfig GetMessageReminderConfig(string configJson)
-        {
-            if (string.IsNullOrEmpty(configJson))
-            {
-                return new MessageReminderConfig();
-            }
-
-            try
-            {
-                return JsonConvert.DeserializeObject<MessageReminderConfig>(configJson) ?? new MessageReminderConfig();
-            }
-            catch
-            {
-                return new MessageReminderConfig();
-            }
-        }
-
-        /// <summary>
-        /// 序列化配置为JSON
-        /// </summary>
-        public static string SerializeConfig(MessageReminderConfig config)
-        {
-            return JsonConvert.SerializeObject(config, Formatting.Indented);
-        }
-
-        /// <summary>
-        /// 验证配置项是否有效
-        /// </summary>
-        public static bool ValidateConfig(MessageReminderConfig config)
-        {
-            if (config == null) return false;
-            if (config.Volume < 0 || config.Volume > 100) return false;
-            if (config.ReminderFrequency <= 0) return false;
-            if (config.QuietStartTime >= config.QuietEndTime) return false;
-
-            return true;
-        }
-    }
+    // 通用配置管理框架已移至 ConfigurationService.cs 中，使用统一的配置服务
 
     /// <summary>
     /// 配置项属性特性，用于UI绑定和验证

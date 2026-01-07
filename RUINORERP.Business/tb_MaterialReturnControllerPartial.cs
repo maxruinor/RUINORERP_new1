@@ -75,7 +75,7 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(entity);
                         //只更新指定列
                         var affectedRows = await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialReturn>(entity).UpdateColumns(it => new { it.DataStatus, it.Modified_by, it.Modified_at }).ExecuteCommandAsync();
-                       
+
                     }
                 }
 
@@ -170,7 +170,7 @@ namespace RUINORERP.Business
                 {
                     // 创建库存流水记录列表
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                    
+
                     //因为要计算未发数量，所以要更新库存要在最后一步
                     foreach (var child in entity.tb_MaterialReturnDetails)
                     {
@@ -217,20 +217,21 @@ namespace RUINORERP.Business
 
                             // tb_MaterialRequisitionDetail.ActualSentQty -= child.Quantity; 实发不变。应该是变到 制令单的实发，因为还可能要退了再补进去。做领料单时引用制令单的数量
                         }
-                        
+
                         // 实时获取当前库存成本
                         decimal realtimeCost = inv.Inv_Cost;
-                        
+
                         // 更新退料明细的成本为实时成本
                         child.Cost = realtimeCost;
                         //child.Summary = realtimeCost * child.Quantity;
-                        
+
                         // 创建库存流水记录
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                         transaction.ProdDetailID = inv.ProdDetailID;
                         transaction.Location_ID = inv.Location_ID;
                         transaction.BizType = (int)BizType.生产退料单;
                         transaction.ReferenceId = entity.MRE_ID;
+                        transaction.ReferenceNo = entity.BillNo;
                         transaction.QuantityChange = child.Quantity; // 生产退料增加库存
                         transaction.AfterQuantity = inv.Quantity;
                         transaction.UnitCost = realtimeCost; // 使用实时成本
@@ -240,7 +241,7 @@ namespace RUINORERP.Business
 
                         transactionList.Add(transaction);
                     }
-                    
+
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                     await tranController.BatchRecordTransactions(transactionList);
@@ -351,7 +352,7 @@ namespace RUINORERP.Business
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建反向库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                
+
                 foreach (var child in entity.tb_MaterialReturnDetails)
                 {
 
@@ -385,22 +386,23 @@ namespace RUINORERP.Business
                     tb_MaterialRequisitionDetail.ReturnQty -= child.Quantity;
                     tb_ManufacturingOrderDetail manufacturingOrderDetail = entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails.FirstOrDefault(c => c.ProdDetailID == child.ProdDetailID && child.Location_ID == child.Location_ID);
                     manufacturingOrderDetail.ActualSentQty += child.Quantity;
-                    
+
                     // 实时获取当前库存成本
                     decimal realtimeCost = inv.Inv_Cost;
-                    
+
                     // 创建反向库存流水记录
-                        tb_InventoryTransaction transaction = new tb_InventoryTransaction();
-                        transaction.ProdDetailID = inv.ProdDetailID;
-                        transaction.Location_ID = inv.Location_ID;
-                        transaction.BizType = (int)BizType.生产退料单;
-                        transaction.ReferenceId = entity.MRE_ID;
-                        transaction.QuantityChange = -child.Quantity; // 反审核减少库存
-                        transaction.AfterQuantity = inv.Quantity;
-                        transaction.UnitCost = realtimeCost; // 使用实时成本
-                        transaction.TransactionTime = DateTime.Now;
-                        transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"生产退料单反审核：{entity.BillNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+                    tb_InventoryTransaction transaction = new tb_InventoryTransaction();
+                    transaction.ProdDetailID = inv.ProdDetailID;
+                    transaction.Location_ID = inv.Location_ID;
+                    transaction.BizType = (int)BizType.生产退料单;
+                    transaction.ReferenceId = entity.MRE_ID;
+                    transaction.ReferenceNo = entity.BillNo;
+                    transaction.QuantityChange = -child.Quantity; // 反审核减少库存
+                    transaction.AfterQuantity = inv.Quantity;
+                    transaction.UnitCost = realtimeCost; // 使用实时成本
+                    transaction.TransactionTime = DateTime.Now;
+                    transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transaction.Notes = $"生产退料单反审核：{entity.BillNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
                     transactionList.Add(transaction);
                 }
@@ -411,12 +413,12 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
-                
+
                 // 记录反向库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                 await tranController.BatchRecordTransactions(transactionList);
 
-                
+
 
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_ManufacturingOrderDetail>(entity.tb_materialrequisition.tb_manufacturingorder.tb_ManufacturingOrderDetails).ExecuteCommandAsync();
                 await _unitOfWorkManage.GetDbClient().Updateable<tb_MaterialRequisitionDetail>(entity.tb_materialrequisition.tb_MaterialRequisitionDetails).ExecuteCommandAsync();

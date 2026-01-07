@@ -55,6 +55,7 @@ namespace RUINORERP.UI.IM
         {
             InitializeComponent();
             InitializeForm();
+            InitializeMessageComponents(ref messageFlowLayoutPanel, ref messageTimer);
         }
 
         /// <summary>
@@ -131,53 +132,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private void InitializeForm()
         {
-            // 初始化消息流布局面板
-            messageFlowLayoutPanel = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Bottom,
-                FlowDirection = FlowDirection.RightToLeft,
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
-            };
-            this.Controls.Add(messageFlowLayoutPanel);
-
-            // 初始化消息计时器
-            messageTimer = new Timer
-            {
-                Interval = 5000 // 消息显示的时间间隔，单位毫秒
-            };
-            messageTimer.Tick += MessageTimer_Tick;
-        }
-
-        public string Content { get; set; } = string.Empty;
-
-        private void MessageTimer_Tick(object sender, EventArgs e)
-        {
-            // 模拟消息到达，显示新消息
-            ShowMessage(Content);
-        }
-
-        private void ShowMessage(string message)
-        {
-            // 创建一个新的消息标签
-            Label messageLabel = new Label
-            {
-                Text = message,
-                AutoSize = true,
-                ForeColor = SystemColors.ControlText,
-                BackColor = SystemColors.Control,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            // 将消息标签添加到流布局面板
-            messageFlowLayoutPanel.Controls.Add(messageLabel);
-
-            // 调整窗体大小以适应消息
-            this.Width = messageFlowLayoutPanel.Width + messageFlowLayoutPanel.Padding.Horizontal;
-            this.Height = messageFlowLayoutPanel.Height + messageFlowLayoutPanel.Padding.Vertical;
-
-            // 计时器启动，用于在一定时间后隐藏消息
-            messageTimer.Start();
+            // 可以在这里添加额外的初始化代码
         }
 
         QueryParameter parameter { get; set; }
@@ -357,32 +312,7 @@ namespace RUINORERP.UI.IM
 
         private void WaitReminder(object sender)
         {
-            int interval = 60;
-            if (sender is KryptonDropButton dropButton)
-            {
-                //默认5分钟
-                interval = 60 * 5;
-            }
-            else if (sender is KryptonCommand command)
-            {
-                switch (command.Text)
-                {
-                    case "五分钟后":
-                        interval = 300;
-                        break;
-                    case "十分钟后":
-                        interval = 600;
-                        break;
-                    case "一小时后":
-                        interval = 3600;
-                        break;
-                    case "一天后":
-                        interval = 3600 * 24;
-                        break;
-                    default:
-                        break;
-                }
-            }
+            int interval = GetWaitInterval(sender);
 
             this.DialogResult = DialogResult.OK;
             this.Close();

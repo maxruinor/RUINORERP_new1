@@ -569,27 +569,6 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>TodoUpdate对象</returns>
         protected TodoUpdate ConvertToTodoUpdate(T entity, TodoUpdateType updateType)
         {
-            // 发送任务状态更新通知 - 使用扩展的TodoUpdate
-            //var bizType = EntityMappingHelper.GetBillData<T>(EditEntity).BizType;
-            //// 使用StateManager获取状态类型和状态值
-            //var statusType = StateManager.GetStatusType(entity);
-            //var currentStatus = StateManager.GetBusinessStatus(entity, statusType);
-
-            //var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
-
-            //string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-
-
-            //// 创建更新数据，传入正确的状态类型和值
-            //var updateData = TodoUpdate.Create(
-            //    originalPkid == 0 ? PacketSpec.Enums.Core.TodoUpdateType.Created : PacketSpec.Enums.Core.TodoUpdateType.StatusChanged,
-            //    bizType,
-            //    pkid,
-            //     billNo,
-            //  EditEntity, statusType, currentStatus
-            //);
-
-
             try
             {
                 if (entity == null)
@@ -598,27 +577,23 @@ namespace RUINORERP.UI.BaseForm
                 long billId = entity.PrimaryKeyID;
                 if (billId <= 0)
                     return null;
-
+                // 获取业务类型
                 var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                 string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-
-                // 获取业务类型
-                var bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+              
                 var bizStatusType = StateManager.GetStatusType(entity);
                 // 创建TodoUpdate对象
                 TodoUpdate update = TodoUpdate.Create(
                     updateType,
-                    bizType,
+                    EntityInfo.BizType,
                     billId,
                     billNo,
                     entity,
                     entity.StateManager.GetStatusType(entity),
                     StateManager.GetBusinessStatus(entity, bizStatusType)
                 );
-
-                // 操作描述不再在这里设置，由MessageData.CreateTodoUpdateMessage方法智能生成
-
+                         
                 // 添加当前用户ID
                 update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
 
@@ -700,6 +675,8 @@ namespace RUINORERP.UI.BaseForm
                     CurrentBizType = EntityMappingHelper.GetBizType(typeof(T).Name);
                     CurrentBizTypeName = CurrentBizType.ToString();
                 }
+
+
                 menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
 
@@ -6163,16 +6140,24 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 发送消息但不发送给当前用户
                     var response = await messageService.SendTodoNotificationAsync(messageData, false);
-                    if (response == null || !response.IsSuccess)
+                    if (response == null)
                     {
-                        MainForm.Instance.logger?.LogWarning("发送任务状态通知失败：{ErrorMessage}", response.ErrorMessage);
+                        MainForm.Instance.logger?.LogWarning($"发送任务状态通知失败,响应为空{messageData.ToString()}");
                     }
                     else
                     {
-                        // 记录消息已发送到消息中心
-                        MainForm.Instance.logger?.LogDebug("任务状态通知已发送到消息中心 - 业务类型: {BusinessType}",
-                            update.BusinessType);
+                        if (!response.IsSuccess)
+                        {
+                            MainForm.Instance.logger?.LogWarning("发送任务状态通知失败：{ErrorMessage}", response.ErrorMessage);
+                        }
+                        else
+                        {
+                            // 记录消息已发送到消息中心
+                            MainForm.Instance.logger?.LogDebug("任务状态通知已发送到消息中心 - 业务类型: {BusinessType}",
+                                update.BusinessType);
+                        }
                     }
+
                 }
                 else
                 {

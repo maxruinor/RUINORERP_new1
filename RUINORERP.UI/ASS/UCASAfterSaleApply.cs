@@ -64,15 +64,15 @@ namespace RUINORERP.UI.ASS
     [MenuAttrAssemblyInfo("售后申请单", ModuleMenuDefine.模块定义.售后管理, ModuleMenuDefine.售后管理.售后流程, BizType.售后申请单)]
     public partial class UCASAfterSaleApply : BaseBillEditGeneric<tb_AS_AfterSaleApply, tb_AS_AfterSaleApplyDetail>, IPublicEntityObject
     {
-        private readonly IEntityCacheManager _cacheManager;
-        private readonly ITableSchemaManager _tableSchemaManager;
-        
-        public UCASAfterSaleApply(IEntityCacheManager cacheManager, ITableSchemaManager tableSchemaManager)
+        //private  IEntityCacheManager _cacheManager;
+        //private  ITableSchemaManager _tableSchemaManager;
+
+        public UCASAfterSaleApply()
         {
-            _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
-            _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             InitializeComponent();
-            //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_AS_AfterSaleApply>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
+            //_cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+            //_tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
@@ -200,7 +200,7 @@ namespace RUINORERP.UI.ASS
                     }
 
                     var ctr = Startup.GetFromFac<tb_AS_AfterSaleApplyController<tb_AS_AfterSaleApply>>();
-                    tb_AS_RepairOrder RepairOrder =await ctr.ToRepairOrder(EditEntity);
+                    tb_AS_RepairOrder RepairOrder = await ctr.ToRepairOrder(EditEntity);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_AS_RepairOrder) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
@@ -404,7 +404,7 @@ namespace RUINORERP.UI.ASS
                     }
                 }
 
-       
+
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_AS_AfterSaleApply>(c => c.CustomerVendor_ID))
@@ -841,7 +841,7 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-           
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
@@ -899,7 +899,7 @@ namespace RUINORERP.UI.ASS
             {
                 return false;
             }
-      
+
             CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<tb_AS_AfterSaleApply>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);

@@ -265,124 +265,56 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 重连循环
+        /// 重连循环（优化版）
+        /// 避免资源竞争和重复重连，提高稳定性
         /// </summary>
         private async Task ReconnectLoopAsync()
         {
-            _logger?.LogDebug("进入重连循环");
+            _logger?.LogDebug("进入重连循环（优化版）");
             int reconnectAttempts = 0;
             int currentBackoffInterval = _config.ReconnectInterval;
 
-            while (!_disposed && !_reconnectStopped && _isReconnecting && !_cancellationTokenSource.Token.IsCancellationRequested)
+            while (ShouldContinueReconnecting())
             {
-                // 如果已经连接，重置重连计数并等待一段时间再检查
+                // 使用ConfigureAwait(false)避免UI线程阻塞
+                await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
+
+                // 快速检查连接状态，避免不必要的重连尝试
                 if (IsConnected)
                 {
-                    if (reconnectAttempts > 0)
-                    {
-                        _logger?.LogDebug("重连成功，重置重连计数器");
-                        OnReconnectSucceeded();
-                    }
-                    reconnectAttempts = 0;
-                    currentBackoffInterval = _config.ReconnectInterval; // 重置退避间隔
-                    await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
+                    HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
                     continue;
                 }
 
-                // 如果没有服务器信息，等待重连
-                if (string.IsNullOrEmpty(_serverAddress) || _serverPort == 0)
+                // 检查服务器信息完整性
+                if (!HasValidServerInfo())
                 {
-                    _logger?.LogDebug("服务器信息不完整，等待重连检查间隔");
-                    await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
+                    _logger?.LogDebug("服务器信息不完整，跳过重连尝试");
                     continue;
                 }
 
                 // 检查是否达到最大重连次数
-                if (_config.MaxReconnectAttempts > 0 && reconnectAttempts >= _config.MaxReconnectAttempts)
+                if (ShouldStopReconnecting(reconnectAttempts))
                 {
-                    _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
-                    lock (_reconnectStateLock)
-                    {
-                        _isReconnecting = false;
-                        _reconnectStopped = true;
-                    }
-                    // 触发重连失败事件
-                    OnReconnectFailed();
+                    StopReconnecting();
                     break;
                 }
 
-                reconnectAttempts++;
-                _lastReconnectAttempt = DateTime.Now;
+                // 执行重连尝试
+                bool reconnectResult = await AttemptReconnectAsync(reconnectAttempts);
                 
-                // 触发重连尝试事件
-                OnReconnectAttempt(reconnectAttempts, _config.MaxReconnectAttempts);
-                
-                _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
-
-                try
+                if (reconnectResult)
                 {
-                    // 检查网络状态（简单检测）
-                    if (!await CheckNetworkAvailabilityAsync())
-                    {
-                        _logger?.LogWarning("网络不可用，跳过此次重连尝试");
-                        await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token);
-                        continue;
-                    }
-
-                    bool connected = await _socketClient.ConnectAsync(_serverAddress, _serverPort, _cancellationTokenSource.Token);
-
-                    if (connected)
-                    {
-                        _isConnected = true;
-                        OnConnectionStateChanged(true);
-                        _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}，共尝试 {Attempt} 次", _serverAddress, _serverPort, reconnectAttempts);
-                        OnReconnectSucceeded();
-
-                        // 重连成功后重置计数器
-                        reconnectAttempts = 0;
-                        currentBackoffInterval = _config.ReconnectInterval;
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
-                    }
+                    HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
                 }
-                catch (OperationCanceledException)
+                else
                 {
-                    _logger?.LogDebug("重连操作被取消");
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, reconnectAttempts);
-                }
-
-                // 等待重连间隔，应用指数退避算法
-                if (!IsConnected && !_reconnectStopped)
-                {
-                    if (_config.EnableExponentialBackoff && reconnectAttempts > 0)
-                    {
-                        // 计算指数退避时间，添加随机抖动避免雷群效应
-                        var baseInterval = (int)Math.Min(
-                            currentBackoffInterval * _config.BackoffMultiplier,
-                            _config.MaxBackoffInterval);
-                        
-                        // 添加±20%的随机抖动
-                        var randomJitter = new Random().Next(-baseInterval / 5, baseInterval / 5);
-                        currentBackoffInterval = Math.Max(_config.ReconnectInterval, baseInterval + randomJitter);
-                        
-                        _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒（含抖动）", currentBackoffInterval);
-                    }
-
-                    try
-                    {
-                        await Task.Delay(currentBackoffInterval, _cancellationTokenSource.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger?.LogDebug("重连等待被取消");
-                        break;
-                    }
+                    // 更新重连尝试计数
+                    reconnectAttempts++;
+                    _lastReconnectAttempt = DateTime.Now;
+                    
+                    // 应用指数退避算法
+                    currentBackoffInterval = CalculateNextBackoffInterval(reconnectAttempts, currentBackoffInterval);
                 }
             }
 
@@ -390,29 +322,194 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// Socket连接关闭事件处理
+        /// 检查是否应该继续重连
         /// </summary>
-        private void OnSocketClosed(EventArgs e)
+        /// <returns>是否继续重连</returns>
+        private bool ShouldContinueReconnecting()
+        {
+            return !_disposed && !_reconnectStopped && _isReconnecting && !_cancellationTokenSource.Token.IsCancellationRequested;
+        }
+
+        /// <summary>
+        /// 检查服务器信息是否有效
+        /// </summary>
+        /// <returns>服务器信息是否有效</returns>
+        private bool HasValidServerInfo()
+        {
+            return !string.IsNullOrEmpty(_serverAddress) && _serverPort > 0;
+        }
+
+        /// <summary>
+        /// 检查是否应该停止重连
+        /// </summary>
+        /// <param name="attempts">当前尝试次数</param>
+        /// <returns>是否应该停止</returns>
+        private bool ShouldStopReconnecting(int attempts)
+        {
+            return _config.MaxReconnectAttempts > 0 && attempts >= _config.MaxReconnectAttempts;
+        }
+
+        /// <summary>
+        /// 停止重连操作
+        /// </summary>
+        private void StopReconnecting()
         {
             lock (_reconnectStateLock)
             {
-                if (_isConnected)
+                _isReconnecting = false;
+                _reconnectStopped = true;
+            }
+            
+            _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
+            OnReconnectFailed();
+        }
+
+        /// <summary>
+        /// 执行重连尝试
+        /// </summary>
+        /// <param name="attempt">当前尝试次数</param>
+        /// <returns>重连是否成功</returns>
+        private async Task<bool> AttemptReconnectAsync(int attempt)
+        {
+            _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+            OnReconnectAttempt(attempt, _config.MaxReconnectAttempts);
+
+            try
+            {
+                // 检查网络可用性
+                if (!await CheckNetworkAvailabilityAsync())
+                {
+                    _logger?.LogWarning("网络不可用，跳过此次重连尝试");
+                    return false;
+                }
+
+                // 执行重连
+                bool connected = await _socketClient.ConnectAsync(_serverAddress, _serverPort, _cancellationTokenSource.Token);
+
+                if (connected)
+                {
+                    _isConnected = true;
+                    OnConnectionStateChanged(true);
+                    _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}，共尝试 {Attempt} 次", _serverAddress, _serverPort, attempt);
+                    OnReconnectSucceeded();
+                    return true;
+                }
+                else
+                {
+                    _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+                    return false;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _logger?.LogDebug("重连操作被取消");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "重连过程中发生异常 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 处理重连成功
+        /// </summary>
+        /// <param name="attempts">当前尝试次数</param>
+        /// <param name="backoffInterval">当前退避间隔</param>
+        private void HandleReconnectSuccess(ref int attempts, ref int backoffInterval)
+        {
+            if (attempts > 0)
+            {
+                _logger?.LogDebug("重连成功，重置重连计数器");
+                OnReconnectSucceeded();
+            }
+            
+            attempts = 0;
+            backoffInterval = _config.ReconnectInterval; // 重置退避间隔
+        }
+
+        /// <summary>
+        /// 计算下一个退避间隔
+        /// </summary>
+        /// <param name="attempts">当前尝试次数</param>
+        /// <param name="currentInterval">当前间隔</param>
+        /// <returns>下一个退避间隔</returns>
+        private int CalculateNextBackoffInterval(int attempts, int currentInterval)
+        {
+            if (!_config.EnableExponentialBackoff || attempts <= 0)
+            {
+                return _config.ReconnectInterval;
+            }
+
+            // 计算指数退避时间
+            var baseInterval = (int)Math.Min(
+                currentInterval * _config.BackoffMultiplier,
+                _config.MaxBackoffInterval);
+            
+            // 添加随机抖动避免雷群效应
+            if (_config.EnableRandomJitter)
+            {
+                var randomJitter = new Random().Next(-baseInterval / 5, baseInterval / 5);
+                baseInterval = Math.Max(_config.ReconnectInterval, baseInterval + randomJitter);
+            }
+            
+            _logger?.LogDebug("应用指数退避，下次重连间隔 {Interval} 毫秒", baseInterval);
+            return baseInterval;
+        }
+
+        /// <summary>
+        /// Socket连接关闭事件处理（优化版）
+        /// 避免重复触发重连，提高稳定性
+        /// </summary>
+        private void OnSocketClosed(EventArgs e)
+        {
+            // 快速检查，避免不必要的锁操作
+            if (!_isConnected || _disposed)
+                return;
+
+            bool shouldStartReconnect = false;
+            
+            lock (_reconnectStateLock)
+            {
+                // 双重检查，确保线程安全
+                if (_isConnected && !_disposed)
                 {
                     _isConnected = false;
                     OnConnectionStateChanged(false);
                     _logger?.LogDebug("检测到连接已断开");
 
-                    // 如果启用了自动重连且重连未在进行中，启动重连任务
-                    if (_config.AutoReconnect && !_isReconnecting && !_disposed)
+                    // 检查是否应该启动重连
+                    shouldStartReconnect = _config.AutoReconnect && !_isReconnecting && !_disposed;
+                    
+                    if (shouldStartReconnect)
                     {
                         _logger?.LogDebug("启动自动重连机制");
-                        StartAutoReconnect();
                     }
                     else if (_isReconnecting)
                     {
                         _logger?.LogDebug("重连已在进行中，不重复启动");
                     }
                 }
+            }
+
+            // 在锁外启动重连，避免可能的死锁
+            if (shouldStartReconnect)
+            {
+                // 使用延迟启动，避免频繁重连
+                Task.Run(async () =>
+                {
+                    await Task.Delay(_config.ReconnectDelayMs).ConfigureAwait(false);
+                    
+                    // 再次检查连接状态，避免重复启动
+                    lock (_reconnectStateLock)
+                    {
+                        if (!_isConnected && !_isReconnecting && !_disposed)
+                        {
+                            StartAutoReconnect();
+                        }
+                    }
+                }).ConfigureAwait(false);
             }
         }
 

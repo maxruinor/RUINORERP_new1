@@ -270,13 +270,13 @@ namespace RUINORERP.PacketSpec.Models.Message
             switch (update.UpdateType)
             {
                 case TodoUpdateType.StatusChanged:
-                    return $"{billInfo}{GetStatusChangeAction(update)}";
+                    return $"{update.BusinessType}{billInfo}{GetStatusChangeAction(update)}";
                 case TodoUpdateType.Deleted:
-                    return $"{billInfo}单据已删除";
+                    return $"{update.BusinessType}{billInfo}已删除";
                 case TodoUpdateType.Created:
-                    return $"{billInfo}单据已创建";
+                    return $"{update.BusinessType}{billInfo}已创建";
                 default:
-                    return $"{billInfo}任务状态变更";
+                    return $"{update.BusinessType}{billInfo}任务状态变更";
             }
         }
 
@@ -289,20 +289,20 @@ namespace RUINORERP.PacketSpec.Models.Message
         private static string GenerateDetailedContent(TodoUpdate update, string senderName)
         {
             string billInfo = !string.IsNullOrEmpty(update.BillNo)
-                ? $"单据编号：{update.BillNo}\n"
+                ? $"{update.BillNo}\n"
                 : $"单据ID：{update.BillId}\n";
 
-            string businessTypeInfo = $"业务类型：{update.BusinessType}\n";
+         
             string statusInfo = GetStatusInfo(update);
             string operationInfo = !string.IsNullOrEmpty(update.OperationDescription)
-                ? $"操作描述：{update.OperationDescription}\n"
+                ? $" 操作描述:{update.OperationDescription}\n"
                 : string.Empty;
             string operatorInfo = !string.IsNullOrEmpty(senderName)
-                ? $"操作人：{senderName}\n"
+                ? $" 操作人:{senderName}\n"
                 : string.Empty;
-            string timeInfo = $"操作时间：{DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+            string timeInfo = $" 操作时间:{DateTime.Now:yyyy-MM-dd HH:mm:ss}";
 
-            return $"{billInfo}{businessTypeInfo}{statusInfo}{operationInfo}{operatorInfo}{timeInfo}";
+            return $"{update.BusinessType}{billInfo},{operationInfo},{statusInfo},{operatorInfo},{timeInfo}";
         }
 
         /// <summary>
@@ -319,11 +319,11 @@ namespace RUINORERP.PacketSpec.Models.Message
                 {
                     return dataStatus switch
                     {
-                        DataStatus.草稿 => "单据已保存为草稿",
-                        DataStatus.新建 => "单据已提交",
-                        DataStatus.确认 => "单据已审核",
-                        DataStatus.完结 => "单据已结案",
-                        DataStatus.作废 => "单据已取消",
+                        DataStatus.草稿 => "已保存为草稿",
+                        DataStatus.新建 => "已提交",
+                        DataStatus.确认 => "已审核",
+                        DataStatus.完结 => "已结案",
+                        DataStatus.作废 => "已取消",
                         _ => $"状态已变更为{dataStatus}"
                     };
                 }
@@ -333,8 +333,8 @@ namespace RUINORERP.PacketSpec.Models.Message
                     {
                         ApprovalStatus.未审核 => "审批状态已重置为未审核",
                         //ApprovalStatus.审核中 => "审批中",
-                        ApprovalStatus.审核通过 => "审批已通过",
-                        ApprovalStatus.审核驳回 => "审批已驳回",
+                        ApprovalStatus.审核通过 => "审批通过",
+                        ApprovalStatus.审核驳回 => "审批驳回",
                         _ => $"审批状态已变更为{approvalStatus}"
                     };
                 }
@@ -360,7 +360,7 @@ namespace RUINORERP.PacketSpec.Models.Message
 
             string statusDescription = GlobalStateRulesManager.Instance.GetStatusTypeDescription(update.BizStatusType);//GetStatusDescription(update.BusinessStatusValue);
 
-            return $"状态类型：{update.BizStatusType}\n当前状态：{statusValue}{(!string.IsNullOrEmpty(statusDescription) ? $"（{statusDescription}）" : string.Empty)}\n";
+            return $"当前状态:{statusValue}{(!string.IsNullOrEmpty(statusDescription) ? $"（{statusDescription}）" : string.Empty)}\n";
         }
     }
 }

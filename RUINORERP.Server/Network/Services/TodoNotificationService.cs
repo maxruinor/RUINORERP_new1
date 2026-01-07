@@ -44,7 +44,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 构造推送消息
-                messageData.SendTime = System.DateTime.UtcNow;
+                messageData.SendTime = System.DateTime.Now;
 
                 var request = new MessageRequest(MessageType.Business, messageData);
 

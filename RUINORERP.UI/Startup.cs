@@ -940,7 +940,6 @@ namespace RUINORERP.UI
 
                     if (type.BaseType.IsGenericType)
                     {
-
                         if (type.BaseType.Name.Contains("BaseBillEditGeneric"))
                         {
                             _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseBillEdit>(type.Name)

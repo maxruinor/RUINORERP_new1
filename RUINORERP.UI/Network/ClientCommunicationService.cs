@@ -495,111 +495,153 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 启动心跳检测
+        /// 启动心跳检测（优化版）
+        /// 使用更安全的启动机制，避免重复启动
         /// </summary>
         private void StartHeartbeat()
         {
+            // 使用轻量级检查，避免不必要的锁操作
+            if (Volatile.Read(ref _isHeartbeatRunning))
+                return;
+
             lock (_heartbeatLock)
             {
+                // 双重检查，确保线程安全
                 if (_isHeartbeatRunning || (_heartbeatTask != null && !_heartbeatTask.IsCompleted))
                     return;
 
                 _isHeartbeatRunning = true;
-                _heartbeatFailedAttempts = 0;
+                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
                 _heartbeatCancellationTokenSource = new CancellationTokenSource();
 
-                _heartbeatTask = Task.Run(async () => await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token));
+                // 使用ConfigureAwait(false)避免UI线程上下文捕获
+                _heartbeatTask = Task.Run(async () => 
+                    await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token).ConfigureAwait(false));
+                
                 _logger?.LogDebug("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
             }
         }
 
         /// <summary>
-        /// 停止心跳检测
+        /// 停止心跳检测（优化版）
+        /// 使用更安全的停止机制，确保资源正确释放
         /// </summary>
         private void StopHeartbeat()
         {
+            // 快速检查，避免不必要的锁操作
+            if (!Volatile.Read(ref _isHeartbeatRunning))
+                return;
+
             lock (_heartbeatLock)
             {
+                // 双重检查，确保线程安全
                 if (!_isHeartbeatRunning)
                     return;
 
                 _isHeartbeatRunning = false;
+                
+                // 取消心跳任务
                 _heartbeatCancellationTokenSource?.Cancel();
 
-                try
-                {
-                    if (_heartbeatTask != null && !_heartbeatTask.IsCompleted)
-                    {
-                        _heartbeatTask.Wait(TimeSpan.FromSeconds(3));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "停止心跳任务时发生异常");
-                }
-                finally
-                {
-                    _heartbeatTask = null;
-                    _heartbeatCancellationTokenSource?.Dispose();
-                    _heartbeatCancellationTokenSource = null;
-                }
+                // 安全地等待任务完成，避免阻塞
+                SafeWaitForHeartbeatTaskCompletion();
 
                 _logger?.LogDebug("心跳检测已停止");
             }
         }
 
         /// <summary>
-        /// 心跳检测循环
-        /// 定期执行心跳检测
+        /// 安全地等待心跳任务完成
+        /// 避免长时间阻塞，确保资源正确释放
+        /// </summary>
+        private void SafeWaitForHeartbeatTaskCompletion()
+        {
+            if (_heartbeatTask == null)
+                return;
+
+            try
+            {
+                // 使用异步方式等待，避免阻塞UI线程
+                if (!_heartbeatTask.IsCompleted)
+                {
+                    // 使用短时间等待，避免长时间阻塞
+                    bool completed = _heartbeatTask.Wait(TimeSpan.FromSeconds(2));
+                    
+                    if (!completed)
+                    {
+                        _logger?.LogWarning("心跳任务未在指定时间内完成，强制清理资源");
+                    }
+                }
+            }
+            catch (AggregateException ae)
+            {
+                // 处理可能的异常
+                foreach (var ex in ae.InnerExceptions)
+                {
+                    if (ex is not OperationCanceledException)
+                    {
+                        _logger?.LogWarning(ex, "等待心跳任务完成时发生异常");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "等待心跳任务完成时发生异常");
+            }
+            finally
+            {
+                // 确保资源正确释放
+                SafeDisposeHeartbeatResources();
+            }
+        }
+
+        /// <summary>
+        /// 安全释放心跳资源
+        /// </summary>
+        private void SafeDisposeHeartbeatResources()
+        {
+            try
+            {
+                _heartbeatTask = null;
+                
+                if (_heartbeatCancellationTokenSource != null)
+                {
+                    _heartbeatCancellationTokenSource.Dispose();
+                    _heartbeatCancellationTokenSource = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "释放心跳资源时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 心跳检测循环（优化版）
+        /// 定期执行心跳检测，避免UI阻塞和资源竞争
         /// </summary>
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
-            _logger?.LogDebug("进入心跳循环");
+            _logger?.LogDebug("进入心跳循环（优化版）");
 
             while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
             {
                 try
                 {
+                    // 使用ConfigureAwait(false)避免UI线程阻塞
+                    await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
+
                     // 检查连接状态
                     if (!_socketClient.IsConnected)
                     {
-                        await Task.Delay(_heartbeatIntervalMs, cancellationToken);
                         continue;
                     }
 
-                    // 发送心跳
-                    bool success = await SendHeartbeatAsync(cancellationToken);
+                    // 发送心跳（异步执行，避免阻塞）
+                    bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
 
-                    lock (_heartbeatLock)
-                    {
-                        _lastHeartbeatTime = DateTime.Now;
-
-                        if (success)
-                        {
-                            // 如果之前有失败，触发恢复事件
-                            if (_heartbeatFailedAttempts > 0)
-                            {
-                                _heartbeatFailedAttempts = 0;
-                                HeartbeatRecovered?.Invoke();
-                                _logger?.LogDebug("心跳恢复");
-                            }
-                        }
-                        else
-                        {
-                            _heartbeatFailedAttempts++;
-
-                            // 触发失败事件
-                            HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
-                            _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", _heartbeatFailedAttempts);
-
-                            // 检查是否达到心跳失败阈值
-                            if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
-                            {
-                                _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
-                                HeartbeatFailureThresholdReached?.Invoke();
-                            }
-                        }
-                    }
+                    // 使用轻量级同步机制处理状态更新
+                    UpdateHeartbeatState(success);
                 }
                 catch (OperationCanceledException)
                 {
@@ -608,26 +650,53 @@ namespace RUINORERP.UI.Network
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "心跳循环中发生异常");
-                    lock (_heartbeatLock)
-                    {
-                        _heartbeatFailedAttempts++;
-                        
-                        // 触发失败事件
-                        HeartbeatFailed?.Invoke(_heartbeatFailedAttempts);
-                        
-                        // 检查是否达到心跳失败阈值
-                        if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
-                        {
-                            _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
-                            HeartbeatFailureThresholdReached?.Invoke();
-                        }
-                    }
+                    // 异常情况下也更新状态
+                    UpdateHeartbeatState(false);
                 }
-
-                await Task.Delay(_heartbeatIntervalMs, cancellationToken);
             }
 
             _logger?.LogDebug("退出心跳循环");
+        }
+
+        /// <summary>
+        /// 更新心跳状态（优化版）
+        /// 避免频繁的锁操作，减少资源竞争
+        /// </summary>
+        /// <param name="success">心跳是否成功</param>
+        private void UpdateHeartbeatState(bool success)
+        {
+            // 使用轻量级的状态管理，避免频繁锁操作
+            if (success)
+            {
+                // 使用Interlocked操作确保原子性
+                int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                _lastHeartbeatTime = DateTime.Now;
+
+                // 如果之前有失败，触发恢复事件
+                if (previousFailures > 0)
+                {
+                    // 使用Task.Run避免UI线程阻塞
+                    Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
+                    _logger?.LogDebug("心跳恢复");
+                }
+            }
+            else
+            {
+                // 原子增加失败计数
+                int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+
+                // 触发失败事件（异步执行）
+                Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
+                _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
+
+                // 检查是否达到心跳失败阈值
+                if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
+                {
+                    _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
+                    // 异步触发阈值事件
+                    Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                }
+            }
         }
 
         /// <summary>
@@ -1786,7 +1855,8 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 释放资源
+        /// 释放资源（优化版）
+        /// 确保所有资源正确释放，避免资源泄漏和死锁
         /// </summary>
         /// <param name="disposing">是否手动调用</param>
         protected virtual void Dispose(bool disposing)
@@ -1796,66 +1866,193 @@ namespace RUINORERP.UI.Network
             {
                 // 立即设置disposed标志，防止新任务启动
                 _disposed = true;
-                // 设置其他状态标志为false，停止相关操作
                 _isProcessingQueue = false;
                 _isReconnecting = false;
 
-
                 if (disposing)
                 {
-                    // 取消所有事件订阅，防止内存泄漏
+                    // 安全释放所有托管资源
+                    SafeDisposeManagedResources();
+                }
+
+                _logger?.Debug("ClientCommunicationService资源释放完成");
+            }
+        }
+
+        /// <summary>
+        /// 安全释放托管资源
+        /// 按顺序释放，避免资源泄漏和死锁
+        /// </summary>
+        private void SafeDisposeManagedResources()
+        {
+            try
+            {
+                // 第一步：取消事件订阅（防止事件继续触发）
+                SafeUnsubscribeEvents();
+
+                // 第二步：停止心跳检测（避免后台任务继续运行）
+                SafeStopHeartbeat();
+
+                // 第三步：释放计时器（避免定时任务继续运行）
+                SafeDisposeTimers();
+
+                // 第四步：断开Socket连接（释放网络资源）
+                SafeDisconnectSocket();
+
+                // 第五步：清理队列和取消待处理任务（避免任务无限等待）
+                SafeClearQueuesAndCancelTasks();
+
+                // 第六步：释放资源锁（释放同步原语）
+                SafeDisposeLocks();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "释放托管资源时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全取消事件订阅
+        /// </summary>
+        private void SafeUnsubscribeEvents()
+        {
+            try
+            {
+                if (_connectionManager != null)
+                {
                     _connectionManager.ReconnectFailed -= OnReconnectFailed;
                     _connectionManager.ReconnectAttempt -= OnReconnectAttempt;
                     _connectionManager.ReconnectSucceeded -= OnReconnectSucceeded;
                     _connectionManager.ConnectionStateChanged -= OnConnectionStateChanged;
                     _connectionManager.ConnectionStateChanged -= OnConnectionStateChangedForHeartbeat;
-                    _socketClient.Received -= OnReceived;
-                    // 停止心跳
-                    try
-                    {
-                        // 使用内部实现的StopHeartbeat方法
-                        StopHeartbeat();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "停止心跳时发生异常");
-                    }
-
-                    // 释放清理定时器
-                    _cleanupTimer?.Dispose();
-                    _cleanupTimer = null;
-
-                    // 断开Socket连接
-                    try
-                    {
-                        _socketClient?.Disconnect();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "断开Socket连接时发生异常");
-                    }
-
-                    // 清理待发送队列并取消所有待处理命令
-                    _logger?.Debug($"清理命令队列，当前队列大小: {_queuedCommands.Count}");
-                    while (_queuedCommands.TryDequeue(out var queuedCommand))
-                    {
-                        // 取消所有待处理命令，避免任务无限等待
-                        queuedCommand.CompletionSource?.TrySetCanceled();
-                        queuedCommand.ResponseCompletionSource?.TrySetCanceled();
-                    }
-
-                    // 清理待处理请求
-                    foreach (var pendingRequest in _pendingRequests.Values)
-                    {
-                        pendingRequest.Tcs?.TrySetCanceled();
-                    }
-                    _pendingRequests.Clear();
-
-                    // 释放队列锁
-                    _queueLock?.Dispose();
                 }
 
-                _logger?.Debug("ClientCommunicationService资源释放完成");
+                if (_socketClient != null)
+                {
+                    _socketClient.Received -= OnReceived;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "取消事件订阅时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全停止心跳检测
+        /// </summary>
+        private void SafeStopHeartbeat()
+        {
+            try
+            {
+                StopHeartbeat();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "停止心跳时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全释放计时器
+        /// </summary>
+        private void SafeDisposeTimers()
+        {
+            try
+            {
+                _cleanupTimer?.Dispose();
+                _cleanupTimer = null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "释放清理定时器时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全断开Socket连接
+        /// </summary>
+        private void SafeDisconnectSocket()
+        {
+            try
+            {
+                if (_socketClient != null)
+                {
+                    // 异步断开连接，避免阻塞
+                    var disconnectTask = Task.Run(async () => await _socketClient.Disconnect());
+                    
+                    // 等待最多3秒
+                    if (!disconnectTask.Wait(TimeSpan.FromSeconds(3)))
+                    {
+                        _logger?.LogWarning("断开Socket连接超时");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "断开Socket连接时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全清理队列和取消任务
+        /// </summary>
+        private void SafeClearQueuesAndCancelTasks()
+        {
+            try
+            {
+                // 清理命令队列
+                _logger?.Debug($"清理命令队列，当前队列大小: {_queuedCommands.Count}");
+                while (_queuedCommands.TryDequeue(out var queuedCommand))
+                {
+                    SafeCancelTaskCompletionSource(queuedCommand.CompletionSource, "命令队列");
+                    SafeCancelTaskCompletionSource(queuedCommand.ResponseCompletionSource, "响应队列");
+                }
+
+                // 清理待处理请求
+                _logger?.Debug($"清理待处理请求，数量: {_pendingRequests.Count}");
+                foreach (var pendingRequest in _pendingRequests.Values)
+                {
+                    SafeCancelTaskCompletionSource(pendingRequest.Tcs, "待处理请求");
+                }
+                _pendingRequests.Clear();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "清理队列和取消任务时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 安全取消TaskCompletionSource（泛型版本）
+        /// </summary>
+        /// <typeparam name="T">TaskCompletionSource的类型参数</typeparam>
+        /// <param name="tcs">TaskCompletionSource对象</param>
+        /// <param name="sourceName">源名称（用于日志）</param>
+        private void SafeCancelTaskCompletionSource<T>(TaskCompletionSource<T> tcs, string sourceName)
+        {
+            try
+            {
+                tcs?.TrySetCanceled();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "取消{SourceName}的TaskCompletionSource时发生异常", sourceName);
+            }
+        }
+
+        /// <summary>
+        /// 安全释放资源锁
+        /// </summary>
+        private void SafeDisposeLocks()
+        {
+            try
+            {
+                _queueLock?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "释放队列锁时发生异常");
             }
         }
 

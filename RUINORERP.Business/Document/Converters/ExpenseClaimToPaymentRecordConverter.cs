@@ -4,8 +4,10 @@ using RUINORERP.Business.Document;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
+using RUINORERP.Model.Context;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Document.Converters
@@ -19,7 +21,7 @@ namespace RUINORERP.Business.Document.Converters
     {
         private readonly ILogger<ExpenseClaimToPaymentRecordConverter> _logger;
         private readonly tb_FM_PaymentRecordController<tb_FM_PaymentRecord> _paymentController;
-        
+        private readonly ApplicationContext _context;
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
@@ -27,11 +29,14 @@ namespace RUINORERP.Business.Document.Converters
         /// <param name="paymentController">付款单控制器（用于调用核心转换逻辑）</param>
         public ExpenseClaimToPaymentRecordConverter(
             ILogger<ExpenseClaimToPaymentRecordConverter> logger,
-            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController)
+            tb_FM_PaymentRecordController<tb_FM_PaymentRecord> paymentController,
+            ApplicationContext context
+            )
             : base(logger)
         {
             _paymentController = paymentController ?? throw new ArgumentNullException(nameof(paymentController));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context;
         }
 
         /// <summary>
@@ -58,7 +63,7 @@ namespace RUINORERP.Business.Document.Converters
             // 直接调用经过长期验证的 BuildPaymentRecord 方法
             return await _paymentController.BuildPaymentRecord(source);
         }
-        
+
         /// <summary>
         /// 执行具体的转换逻辑 - 重写后不再使用基类的 target 参数模式
         /// </summary>
@@ -91,13 +96,22 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 // 检查报销单状态
-                if (source.DataStatus != (int)DataStatus.确认 || 
+                if (source.DataStatus != (int)DataStatus.确认 ||
                     source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
-                    !source.ApprovalResults.HasValue || 
+                    !source.ApprovalResults.HasValue ||
                     !source.ApprovalResults.Value)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = $"报销单{source.ClaimNo}状态不符合转换条件，只能转换已审核且状态为[已确认]的报销单";
+                    return result;
+                }
+
+                // 检查是否已经生成过付款单
+                var hasExistingPayment = await CheckExistingPaymentRecordAsync(source.ClaimMainID, source.ClaimNo);
+                if (hasExistingPayment)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"报销单{source.ClaimNo}已经生成过付款单，不能重复生成";
                     return result;
                 }
 
@@ -111,7 +125,7 @@ namespace RUINORERP.Business.Document.Converters
                 {
                     result.AddInfo($"转换金额为0，仍将生成付款单");
                 }
-                
+
                 await Task.CompletedTask; // 满足异步方法签名要求
             }
             catch (Exception ex)
@@ -122,6 +136,34 @@ namespace RUINORERP.Business.Document.Converters
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 检查报销单是否已经生成了付款单
+        /// </summary>
+        /// <param name="claimId">报销单ID</param>
+        /// <param name="claimNo">报销单号</param>
+        /// <returns>如果已存在则返回true，否则返回false</returns>
+        private async Task<bool> CheckExistingPaymentRecordAsync(long claimId, string claimNo)
+        {
+            try
+            {
+                // 查询付款单明细中是否存在该报销单号的记录
+                var existingRecords = await _context.Db.Queryable<tb_FM_PaymentRecord>()
+                    .Where(p => p.tb_FM_PaymentRecordDetails.Any(
+                        d => d.SourceBilllId == claimId &&
+                             d.SourceBillNo == claimNo &&
+                             d.SourceBizType == (int)BizType.费用报销单))
+                    .ToListAsync();
+
+                return existingRecords != null && existingRecords.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查报销单是否已生成付款单时发生错误，报销单号：{ClaimNo}", claimNo);
+                // 发生异常时，为了安全起见，返回true，阻止继续生成
+                return true;
+            }
         }
     }
 }

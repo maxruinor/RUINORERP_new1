@@ -243,15 +243,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        //public ReferenceKeyMapping(string tableName, string keyFieldName, string valueFieldName = null, bool isSpecialField = false, string specialFieldName = null, bool isSelfReferencing = false)
-        //{
-        //    ReferenceTableName = tableName;
-        //    KeyFieldName = keyFieldName;
-        //    DisplayFieldName = valueFieldName;
-        //    IsSpecialField = isSpecialField;
-        //    SpecialFieldName = specialFieldName;
-        //    IsSelfReferencing = isSelfReferencing;
-        //}
+
 
     }
 

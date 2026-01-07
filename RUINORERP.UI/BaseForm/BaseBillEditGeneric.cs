@@ -143,6 +143,17 @@ namespace RUINORERP.UI.BaseForm
         private LockStatusNotificationService _lockStatusNotificationService;
         private string _lockSubscriptionId; // 当前窗体的锁状态订阅ID
 
+        /// <summary>
+        /// 当前窗体的锁信息缓存
+        /// 用于定时刷新锁定时长显示
+        /// </summary>
+        private LockInfo _currentLockInfo;
+
+        /// <summary>
+        /// 锁状态定时刷新标志，指示是否启用定时刷新
+        /// </summary>
+        private bool _lockRefreshEnabled = false;
+
         // 注：UI更新控制标志已移至BaseBillEdit基类统一管理
 
         // 状态管理相关字段
@@ -581,7 +592,7 @@ namespace RUINORERP.UI.BaseForm
                 var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                 string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-              
+
                 var bizStatusType = StateManager.GetStatusType(entity);
                 // 创建TodoUpdate对象
                 TodoUpdate update = TodoUpdate.Create(
@@ -593,7 +604,7 @@ namespace RUINORERP.UI.BaseForm
                     entity.StateManager.GetStatusType(entity),
                     StateManager.GetBusinessStatus(entity, bizStatusType)
                 );
-                         
+
                 // 添加当前用户ID
                 update.InitiatorUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID.ToString();
 
@@ -769,7 +780,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 锁状态变化事件处理程序
+        /// 锁状态变化事件处理程序（优化版）
+        /// v2.1.0优化：增加状态一致性检查、网络延迟容错、边界条件处理
         /// </summary>
         /// <param name="args">锁状态变化事件参数</param>
         private void OnLockStatusChanged(LockStatusChangeEventArgs args)
@@ -783,20 +795,90 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
+                // 边界条件检查：验证参数
+                if (args == null)
+                {
+                    logger?.LogWarning("收到空的锁状态变化事件参数");
+                    return;
+                }
+
                 // 检查是否是当前窗体编辑的单据
                 if (EditEntity == null || EditEntity.PrimaryKeyID != args.BillId)
+                {
+                    logger?.LogDebug("跳过非当前单据的锁状态通知: 单据ID={BillId}", args.BillId);
                     return;
+                }
 
                 // 记录日志
-                logger?.LogDebug("收到单据 {BillId} 的锁状态变化通知: {ChangeType}, 锁定状态: {IsLocked}, 锁定用户: {LockedUser}",
-                    args.BillId, args.ChangeType, args.LockInfo?.IsLocked ?? false, args.LockInfo?.LockedUserName);
+                logger?.LogDebug("收到单据 {BillId} 的锁状态变化通知: {ChangeType}, 锁定状态: {IsLocked}, 锁定用户: {LockedUser}, 时间戳: {Timestamp}",
+                    args.BillId, args.ChangeType, args.LockInfo?.IsLocked ?? false,
+                    args.LockInfo?.LockedUserName, args.Timestamp);
 
-                // 更新锁状态
+                // 边界条件检查：验证锁信息
+                if (args.LockInfo != null)
+                {
+                    // 检查锁信息是否过期
+                    if (args.LockInfo.IsExpired)
+                    {
+                        logger?.LogWarning("收到过期的锁信息: 单据ID={BillId}, 过期时间={ExpireTime}",
+                            args.BillId, args.LockInfo.ExpireTime);
+                        // 将过期锁视为未锁定状态
+                        args.LockInfo.IsLocked = false;
+                    }
+
+                    // 检查关键属性是否有效
+                    if (args.LockInfo.BillID != args.BillId)
+                    {
+                        logger?.LogWarning("锁信息BillID不匹配: 事件BillId={EventBillId}, 锁信息BillId={LockInfoBillId}",
+                            args.BillId, args.LockInfo.BillID);
+                        // 修正BillID
+                        args.LockInfo.BillID = args.BillId;
+                    }
+
+                    // 检查网络延迟情况：时间戳过旧
+                    if (args.Timestamp < DateTime.Now.AddMinutes(-5))
+                    {
+                        logger?.LogWarning("收到过时的锁状态通知: 单据ID={BillId}, 通知时间={Timestamp}, 当前时间={Now}",
+                            args.BillId, args.Timestamp, DateTime.Now);
+                        // 考虑到可能存在网络延迟，仍然处理此通知，但记录警告
+                    }
+                }
+
+                // 更新锁状态UI
                 UpdateLockUI(args.LockInfo);
+
+                // 根据锁状态变化类型，执行相应的操作
+                switch (args.ChangeType)
+                {
+                    case LockStatusChangeType.Locked:
+                        // 单据被锁定，禁用编辑控件
+                        logger?.LogDebug("单据 {BillId} 被锁定，禁用编辑控件", args.BillId);
+                        break;
+
+                    case LockStatusChangeType.Unlocked:
+                        // 单据被解锁，启用编辑控件
+                        logger?.LogDebug("单据 {BillId} 被解锁，启用编辑控件", args.BillId);
+                        break;
+
+                    case LockStatusChangeType.OwnerChanged:
+                        // 锁持有者变更，更新UI提示
+                        logger?.LogDebug("单据 {BillId} 锁持有者变更", args.BillId);
+                        break;
+
+                    case LockStatusChangeType.StatusUpdated:
+                        // 锁状态更新，刷新UI显示
+                        logger?.LogDebug("单据 {BillId} 锁状态已更新", args.BillId);
+                        break;
+
+                    default:
+                        logger?.LogDebug("单据 {BillId} 未知的锁状态变化类型: {ChangeType}",
+                            args.BillId, args.ChangeType);
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "处理锁状态变化事件失败: 单据ID={BillId}", args.BillId);
+                logger?.LogError(ex, "处理锁状态变化事件失败: 单据ID={BillId}", args?.BillId ?? 0);
             }
         }
 
@@ -1889,7 +1971,10 @@ namespace RUINORERP.UI.BaseForm
                     break;
                 case MenuItemEnums.已锁定:
 
-                    #region 
+                    #region
+
+                    // 显示状态栏提示
+                    MainForm.Instance.ShowStatusText("正在检查锁定状态...");
 
                     var lockResult = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                     if (lockResult.IsLocked)
@@ -1898,13 +1983,20 @@ namespace RUINORERP.UI.BaseForm
                         if (lockResult.LockInfo.LockedUserId == currentUserId)
                         {
                             // 当前用户锁定，直接解锁
+                            MainForm.Instance.ShowStatusText("正在解锁当前单据...");
                             UNLock();
                         }
                         else
                         {
                             // 其他用户锁定，请求解锁
+                            MainForm.Instance.ShowStatusText($"单据已被 {lockResult.LockInfo.LockedUserName} 锁定，正在发送解锁请求...");
                             RequestUnLock();
                         }
+                    }
+                    else
+                    {
+                        // 单据未被锁定
+                        MainForm.Instance.ShowStatusText("单据未被锁定");
                     }
                     break;
 
@@ -1918,9 +2010,9 @@ namespace RUINORERP.UI.BaseForm
                         // 检查主实体是否有更改
                         if (EditEntity != null)
                         {
-                            pkid = GetPrimaryKeyValue(EditEntity);
-                            // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
-                            hasUnsavedChanges = pkid > 0 || Edited;
+                            // 使用BaseEntity内置的HasChanged属性和GetEffectiveChanges()方法结合判断是否有实际变化
+                            // GetEffectiveChanges()会返回实际发生变化的属性集合，过滤掉值未实际变化的属性
+                            hasUnsavedChanges = EditEntity.HasChanged && EditEntity.GetEffectiveChanges().Count > 0;
                         }
 
                         // 如果有未保存的更改，显示确认提示
@@ -4846,7 +4938,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 更新锁定UI显示
+        /// 更新锁定UI显示（优化版）
+        /// v2.1.0优化：增加网络延迟容错、状态清晰度提升、边界条件处理
         /// 统一管理锁定按钮的显示状态和提示信息，使用统一的锁状态图片标识
         /// </summary>
         /// <param name="isLocked">是否被锁定</param>
@@ -4869,7 +4962,28 @@ namespace RUINORERP.UI.BaseForm
 
                 if (isLocked && lockInfo != null)
                 {
-                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+                    // 保存锁信息到缓存，用于定时刷新锁定时长
+                    _currentLockInfo = lockInfo;
+
+                    // 启动锁状态定时刷新
+                    StartLockStatusRefresh();
+
+                    // 边界条件检查：验证用户信息
+                    var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                    if (currentUserId == 0)
+                    {
+                        // 用户未登录，显示特殊状态
+                        tsBtnLocked.Image = Properties.Resources.Lockbill;
+                        tsBtnLocked.ToolTipText = "⚠️ 锁定状态：用户未登录\n💡 请重新登录后查看状态";
+                        tsBtnLocked.Text = "状态未知";
+                        tsBtnLocked.BackColor = System.Drawing.Color.LightGray;
+                        tsBtnLocked.ForeColor = System.Drawing.Color.Black;
+                        tsBtnLocked.Enabled = false;
+                        UpdateStatusBarLockInfo("⚠️ 用户未登录，无法获取锁定状态");
+                        StopLockStatusRefresh();
+                        return;
+                    }
+
                     bool isSelfLock = lockInfo.LockedUserId == currentUserId;
 
                     // 统一使用锁状态图片标识锁定状态，根据锁定者身份使用不同图片
@@ -4879,33 +4993,48 @@ namespace RUINORERP.UI.BaseForm
 
                     // 优化提示信息，确保包含完整的锁定详情
                     string lockTimeStr = lockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
+                    string lockDuration = CalculateLockDuration(lockInfo.LockTime);
+                    string expireTimeStr = lockInfo.ExpireTime.HasValue ?
+                        $"⏰ 过期时间：{lockInfo.ExpireTime.Value:yyyy-MM-dd HH:mm:ss}" :
+                        "⏰ 过期时间：未知";
+
                     if (isSelfLock)
                     {
                         tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
                                                 $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
                                                 $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                                $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                                $"{expireTimeStr}\n" +
                                                 $"💡 提示：关闭单据自动解锁";
                         // 设置绿色背景表示自己锁定，提供直观视觉反馈
                         tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
                         tsBtnLocked.ForeColor = System.Drawing.Color.Black;
                         tsBtnLocked.Text = "已锁定(自己)";
+                        UpdateStatusBarLockInfo($"✅ 已锁定(自己) - {lockInfo.LockedUserName} - {lockDuration}");
                     }
                     else
                     {
                         tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
                                                 $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
                                                 $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                                $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                                $"{expireTimeStr}\n" +
                                                 $"💡 提示：点击可请求解锁";
                         // 设置红色背景表示他人锁定，提供直观视觉反馈
                         tsBtnLocked.BackColor = System.Drawing.Color.LightCoral;
                         tsBtnLocked.ForeColor = System.Drawing.Color.White;
                         tsBtnLocked.Text = $"已锁定({lockInfo.LockedUserName})";
+                        UpdateStatusBarLockInfo($"🔒 已锁定({lockInfo.LockedUserName}) - {lockDuration}");
                     }
                     // 启用按钮，允许点击操作
                     tsBtnLocked.Enabled = true;
                 }
                 else
                 {
+                    // 未锁定状态，停止定时刷新
+                    _currentLockInfo = null;
+                    StopLockStatusRefresh();
+
                     // 未锁定状态：显示未锁定图标和状态
                     tsBtnLocked.Image = Properties.Resources.unlockbill;  // 使用解锁图标表示未锁定
                     tsBtnLocked.ToolTipText = "🔓 锁定状态：单据未被锁定\n💡 提示：您可以编辑此单据";
@@ -4913,6 +5042,7 @@ namespace RUINORERP.UI.BaseForm
                     tsBtnLocked.BackColor = System.Drawing.Color.LightBlue;
                     tsBtnLocked.ForeColor = System.Drawing.Color.Black;
                     tsBtnLocked.Enabled = false;  // 未锁定时禁用按钮，避免误操作
+                    UpdateStatusBarLockInfo("🔓 单据未被锁定，可以编辑");
                 }
 
                 // 确保按钮在工具栏中正确显示
@@ -4922,7 +5052,189 @@ namespace RUINORERP.UI.BaseForm
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "更新锁定UI显示失败");
+                logger?.LogError(ex, "更新锁定UI显示失败");
+                // 发生异常时，显示状态未知
+                UpdateStatusBarLockInfo("⚠️ 锁定状态获取失败");
+            }
+        }
+
+        /// <summary>
+        /// 计算锁定时长
+        /// </summary>
+        /// <param name="lockTime">锁定时间</param>
+        /// <returns>格式化的锁定时长字符串</returns>
+        private string CalculateLockDuration(DateTime lockTime)
+        {
+            try
+            {
+                var duration = DateTime.Now - lockTime;
+                if (duration.TotalHours >= 1)
+                {
+                    return $"{(int)duration.TotalHours}小时{duration.Minutes}分钟";
+                }
+                else if (duration.TotalMinutes >= 1)
+                {
+                    return $"{duration.Minutes}分钟";
+                }
+                else
+                {
+                    return $"{duration.Seconds}秒";
+                }
+            }
+            catch
+            {
+                return "未知";
+            }
+        }
+
+        /// <summary>
+        /// 更新状态栏锁定信息（优化版）
+        /// </summary>
+        /// <param name="statusText">状态文本</param>
+        private void UpdateStatusBarLockInfo(string statusText)
+        {
+            try
+            {
+                // 在状态栏显示锁定信息（如果有）
+                var statusLabel = this.Controls.Find("lblLockStatus", true).FirstOrDefault() as KryptonLabel;
+                if (statusLabel != null)
+                {
+                    statusLabel.Text = $"🔐 {statusText}";
+                    statusLabel.ForeColor = statusText.Contains("已锁定(自己)") ?
+                        System.Drawing.Color.Green :
+                        statusText.Contains("已锁定") ?
+                        System.Drawing.Color.Red :
+                        System.Drawing.Color.Blue;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新状态栏锁定信息失败");
+            }
+        }
+
+        /// <summary>
+        /// 启动锁状态定时刷新
+        /// 每10秒刷新一次锁定时长的显示
+        /// </summary>
+        private void StartLockStatusRefresh()
+        {
+            try
+            {
+                if (timerLockStatusRefresh != null && !timerLockStatusRefresh.Enabled)
+                {
+                    timerLockStatusRefresh.Start();
+                    _lockRefreshEnabled = true;
+                    logger?.LogDebug("锁状态定时刷新已启动: 单据ID={BillId}", EditEntity?.PrimaryKeyID);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "启动锁状态定时刷新失败");
+            }
+        }
+
+        /// <summary>
+        /// 停止锁状态定时刷新
+        /// </summary>
+        private void StopLockStatusRefresh()
+        {
+            try
+            {
+                if (timerLockStatusRefresh != null && timerLockStatusRefresh.Enabled)
+                {
+                    timerLockStatusRefresh.Stop();
+                    _lockRefreshEnabled = false;
+                    logger?.LogDebug("锁状态定时刷新已停止: 单据ID={BillId}", EditEntity?.PrimaryKeyID);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "停止锁状态定时刷新失败");
+            }
+        }
+
+        /// <summary>
+        /// 锁状态定时刷新事件处理
+        /// 每10秒刷新一次锁定时长和提示信息
+        /// </summary>
+        private void timerLockStatusRefresh_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                // 检查窗体是否已关闭或锁信息是否为空
+                if (IsDisposed || _currentLockInfo == null || tsBtnLocked == null)
+                {
+                    StopLockStatusRefresh();
+                    return;
+                }
+
+                // 刷新锁定时长显示
+                RefreshLockDurationDisplay();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "锁状态定时刷新时发生错误");
+                StopLockStatusRefresh();
+            }
+        }
+
+        /// <summary>
+        /// 刷新锁定时长显示
+        /// 更新按钮提示文本和状态栏中的锁定时长信息
+        /// </summary>
+        private void RefreshLockDurationDisplay()
+        {
+            try
+            {
+                if (_currentLockInfo == null || tsBtnLocked == null)
+                {
+                    return;
+                }
+
+                // 重新计算锁定时长
+                string lockDuration = CalculateLockDuration(_currentLockInfo.LockTime);
+                string lockTimeStr = _currentLockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
+                string expireTimeStr = _currentLockInfo.ExpireTime.HasValue ?
+                    $"⏰ 过期时间：{_currentLockInfo.ExpireTime.Value:yyyy-MM-dd HH:mm:ss}" :
+                    "⏰ 过期时间：未知";
+
+                // 获取当前用户ID
+                var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                bool isSelfLock = _currentLockInfo.LockedUserId == currentUserId;
+
+                // 更新工具提示
+                if (isSelfLock)
+                {
+                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
+                                            $"👤 锁定用户：{_currentLockInfo.LockedUserName}\n" +
+                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                            $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                            $"{expireTimeStr}\n" +
+                                            $"💡 提示：关闭单据自动解锁";
+
+                    // 更新状态栏
+                    UpdateStatusBarLockInfo($"✅ 已锁定(自己) - {_currentLockInfo.LockedUserName} - {lockDuration}");
+                }
+                else
+                {
+                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
+                                            $"👤 锁定用户：{_currentLockInfo.LockedUserName}\n" +
+                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                            $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                            $"{expireTimeStr}\n" +
+                                            $"💡 提示：点击可请求解锁";
+
+                    // 更新状态栏
+                    UpdateStatusBarLockInfo($"🔒 已锁定({_currentLockInfo.LockedUserName}) - {lockDuration}");
+                }
+
+                logger?.LogDebug("锁定时长已刷新: 单据ID={BillId}, 时长={Duration}",
+                    _currentLockInfo.BillID, lockDuration);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "刷新锁定时长显示失败");
             }
         }
 
@@ -5514,6 +5826,7 @@ namespace RUINORERP.UI.BaseForm
             if (EditEntity == null)
             {
                 MainForm.Instance.uclog.AddLog("编辑实体为空，无法发送解锁请求", UILogType.警告);
+                MainForm.Instance.ShowStatusText("⚠️ 编辑实体为空，无法发送解锁请求");
                 return;
             }
 
@@ -5522,6 +5835,7 @@ namespace RUINORERP.UI.BaseForm
             if (billId <= 0)
             {
                 MainForm.Instance.uclog.AddLog("单据ID无效，无法发送解锁请求", UILogType.警告);
+                MainForm.Instance.ShowStatusText("⚠️ 单据ID无效，无法发送解锁请求");
                 return;
             }
 
@@ -5537,6 +5851,7 @@ namespace RUINORERP.UI.BaseForm
                         if (!lockStatus.IsLocked)
                         {
                             logger?.LogWarning($"单据 {billId} 未被锁定，无需发送解锁请求");
+                            MainForm.Instance.ShowStatusText("📋 单据未被锁定或锁定状态已变更");
                             this.Invoke((MethodInvoker)(() =>
                             {
                                 MessageBox.Show("单据未被锁定或锁定状态已变更，无需发送解锁请求", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -5549,16 +5864,20 @@ namespace RUINORERP.UI.BaseForm
                         this.Invoke((MethodInvoker)(() =>
                         {
                             string message = $"该单据当前被用户 {lockStatus.LockInfo.LockedUserName} 锁定\n" +
-                                           $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n" +
+                                           $"锁定时间：{lockStatus.LockInfo.LockTime:yyyy-MM-dd HH:mm:ss}\n\n" +
                                            "是否向其发送解锁请求？";
                             DialogResult result = MessageBox.Show(message, "请求解锁", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                             confirmed = result == DialogResult.Yes;
                         }));
 
                         if (!confirmed)
+                        {
+                            MainForm.Instance.ShowStatusText("❌ 用户取消了解锁请求");
                             return;
+                        }
 
                         // 发送解锁请求
+                        MainForm.Instance.ShowStatusText($"📤 正在向 {lockStatus.LockInfo.LockedUserName} 发送解锁请求...");
                         var result = await _integratedLockService.RequestUnlockAsync(billId, CurMenuInfo.MenuID);
 
                         // 记录请求日志

@@ -835,7 +835,7 @@ namespace RUINORERP.UI
         /// <param name="message">变更状态的消息</param>
         private void OnMessageStatusChanged(object sender, MessageData message)
         {
-            if (message==null)
+            if (message == null)
             {
                 return;
             }
@@ -856,7 +856,7 @@ namespace RUINORERP.UI
             pageMessageCenter.TextDescription = "系统消息和通知";
             pageMessageCenter.UniqueName = "消息中心";
             pageMessageCenter.AllowDrop = false;
-           // pageMessageCenter.ClearFlags(KryptonPageFlags.All);
+            // pageMessageCenter.ClearFlags(KryptonPageFlags.All);
             pageMessageCenter.ClearFlags(KryptonPageFlags.DockingAllowClose);
             pageMessageCenter.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
             #endregion
@@ -1091,7 +1091,7 @@ namespace RUINORERP.UI
             // 使用CacheInitializationService 只加载要缓存的表结构。缓存从服务器取
             var cacheInitializationService = Startup.GetFromFac<EntityCacheInitializationService>();
             cacheInitializationService.InitializeAllTableSchemas();
-            
+
             // 验证初始化是否成功
             var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
             if (tableSchemaManager != null && !tableSchemaManager.IsInitialized)
@@ -3455,7 +3455,10 @@ namespace RUINORERP.UI
 
         }
 
-
+        /// <summary>
+        /// 显示信息到状态栏
+        /// </summary>
+        /// <param name="text"></param>
         public void ShowStatusText(string text)
         {
             this.lblStatusGlobal.Text = text;

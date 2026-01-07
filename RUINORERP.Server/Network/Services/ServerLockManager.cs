@@ -273,57 +273,105 @@ namespace RUINORERP.Server.Network.Services
 
 
         /// <summary>
-        /// 释放锁
+        /// 释放锁（优化版）
+        /// v2.1.0优化：增加边界条件检查、权限验证、状态一致性保证
         /// </summary>
-        /// <param name="request">解锁请求</param>
+        /// <param name="lockInfo">锁定信息</param>
         /// <returns>解锁响应</returns>
         public async Task<LockResponse> ReleaseLockAsync(LockInfo lockInfo)
         {
-            if (_isDisposed)
-                throw new ObjectDisposedException(nameof(ServerLockManager));
-
-            if (lockInfo == null || lockInfo.BillID <= 0)
+            // 边界条件检查：验证基本参数
+            if (lockInfo == null)
             {
-                return CreateErrorResponse(lockInfo, "无效的锁信息");
+                return CreateErrorResponse(new LockInfo { BillID = 0 }, "锁定信息为空");
+            }
+
+            if (lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "单据ID无效");
             }
 
             try
             {
-                if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
+                // 边界条件：检查锁是否存在
+                if (!_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
                 {
-                    // 验证锁的所有者
-                    if (existingLock.LockedUserId == lockInfo.LockedUserId &&
-                        existingLock.SessionId == lockInfo.SessionId)
-                    {
-                        // 移除锁
-                        if (_documentLocks.TryRemove(lockInfo.BillID, out _))
-                        {
-                            // 广播锁定状态更新
-                            existingLock.IsLocked = false;
-                            await BroadcastLockStatusAsync(existingLock);
+                    _logger.LogDebug("尝试释放不存在的锁 {BillId}", lockInfo.BillID);
 
-
-                            return new LockResponse
-                            {
-                                IsSuccess = true,
-                                Message = "解锁成功"
-                            };
-                        }
-                    }
-                    else
+                    // 幂等性：锁不存在也视为成功
+                    return new LockResponse
                     {
-                        _logger.LogWarning("用户 {UserId} 尝试释放不属于自己的锁 {BillId}",
-                            lockInfo.LockedUserId, lockInfo.BillID);
-                        return CreateErrorResponse(lockInfo, "无权限释放此锁");
-                    }
+                        IsSuccess = true,
+                        Message = "解锁成功（锁不存在）"
+                    };
+                }
+
+                // 边界条件：验证锁的所有者
+                if (existingLock.LockedUserId != lockInfo.LockedUserId ||
+                    existingLock.SessionId != lockInfo.SessionId)
+                {
+                    _logger.LogWarning("用户 {UserId} 尝试释放不属于自己的锁 {BillId}, 锁持有者: {OwnerUserId}",
+                        lockInfo.LockedUserId, lockInfo.BillID, existingLock.LockedUserId);
+
+                    return CreateErrorResponse(lockInfo, "无权限释放此锁");
+                }
+
+                // 边界条件：检查锁是否已过期
+                if (existingLock.IsExpired)
+                {
+                    _logger.LogDebug("锁 {BillId} 已过期，直接清理", lockInfo.BillID);
+                    _documentLocks.TryRemove(lockInfo.BillID, out _);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "解锁成功（锁已过期）"
+                    };
+                }
+
+                // 边界条件：检查会话是否仍然有效
+                var session = _sessionService?.GetSession(existingLock.SessionId);
+                if (session == null)
+                {
+                    _logger.LogDebug("会话 {SessionId} 不存在，直接清理锁 {BillId}",
+                        existingLock.SessionId, lockInfo.BillID);
+                    _documentLocks.TryRemove(lockInfo.BillID, out _);
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "解锁成功（会话已断开）"
+                    };
+                }
+
+                // 移除锁
+                if (_documentLocks.TryRemove(lockInfo.BillID, out _))
+                {
+                    _logger.LogDebug("成功释放锁 {BillId}, 锁持有者: {UserId}",
+                        lockInfo.BillID, lockInfo.LockedUserId);
+
+                    // 边界条件：确保锁状态为未锁定后再广播
+                    existingLock.IsLocked = false;
+                    existingLock.LastUpdateTime = DateTime.Now;
+
+                    // 广播锁定状态更新
+                    await BroadcastLockStatusAsync(existingLock);
+
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "解锁成功"
+                    };
                 }
                 else
                 {
-                    _logger.LogDebug("尝试释放不存在的锁 {BillId}", lockInfo.BillID);
-                    return CreateErrorResponse(lockInfo, "锁不存在");
-                }
+                    // 边界条件：并发情况下已被其他线程移除
+                    _logger.LogWarning("锁 {BillId} 已被移除（并发）", lockInfo.BillID);
 
-                return CreateErrorResponse(lockInfo, "解锁失败");
+                    return new LockResponse
+                    {
+                        IsSuccess = true,
+                        Message = "解锁成功（已被移除）"
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -1202,15 +1250,32 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 尝试锁定单据 (ILockManagerService接口方法)
+        /// 尝试锁定单据 (ILockManagerService接口方法) - 优化版
+        /// v2.1.0优化：增加边界条件检查、并发控制、状态一致性保证
         /// </summary>
         /// <param name="lockInfo">锁定信息</param>
         /// <returns>锁定结果，包含成功状态和详细信息</returns>
         public async Task<LockResponse> TryLockDocumentAsync(LockInfo lockInfo)
         {
-            if (lockInfo == null || lockInfo.BillID <= 0)
+            // 边界条件检查：验证基本参数
+            if (lockInfo == null)
             {
-                return CreateErrorResponse(lockInfo, "锁定信息无效或单据ID错误");
+                return CreateErrorResponse(new LockInfo { BillID = 0 }, "锁定信息为空");
+            }
+
+            if (lockInfo.BillID <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "单据ID无效");
+            }
+
+            if (lockInfo.LockedUserId <= 0)
+            {
+                return CreateErrorResponse(lockInfo, "锁定用户ID无效");
+            }
+
+            if (string.IsNullOrEmpty(lockInfo.SessionId))
+            {
+                return CreateErrorResponse(lockInfo, "会话ID为空");
             }
 
             try
@@ -1218,13 +1283,33 @@ namespace RUINORERP.Server.Network.Services
                 // 检查是否已被锁定
                 if (_documentLocks.TryGetValue(lockInfo.BillID, out var existingLock))
                 {
-                    // 检查锁是否已过期
+                    // 边界条件：检查锁是否已过期
                     if (!existingLock.IsExpired)
                     {
                         // 锁仍然有效
                         _logger.LogDebug("单据 {BillId} 已被用户 {UserId} 在时间 {LockTime} 锁定",
                             lockInfo.BillID, existingLock.LockedUserId, existingLock.LockTime);
 
+                        // 边界条件：检查是否是同一用户同一会话的重复锁定请求
+                        if (existingLock.LockedUserId == lockInfo.LockedUserId &&
+                            existingLock.SessionId == lockInfo.SessionId)
+                        {
+                            // 同一用户的重复锁定请求，返回成功（幂等性）
+                            _logger.LogDebug("单据 {BillId} 已被当前用户锁定，返回成功（幂等）", lockInfo.BillID);
+
+                            // 更新心跳时间，避免锁过期
+                            existingLock.UpdateHeartbeat();
+                            existingLock.ExpireTime = existingLock.LockTime.AddMinutes(30);
+
+                            return new LockResponse
+                            {
+                                IsSuccess = true,
+                                Message = "锁定成功（已持有锁）",
+                                LockInfo = existingLock
+                            };
+                        }
+
+                        // 其他用户的锁，返回失败
                         return new LockResponse
                         {
                             IsSuccess = false,
@@ -1240,35 +1325,54 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
+                // 边界条件：验证过期时间设置
+                var expireTime = lockInfo.ExpireTime;
+                if (expireTime.HasValue && expireTime.Value <= DateTime.Now)
+                {
+                    _logger.LogWarning("锁定过期时间无效: 单据ID={BillId}, 过期时间={ExpireTime}",
+                        lockInfo.BillID, expireTime.Value);
+                    expireTime = DateTime.Now.AddMinutes(30); // 设置默认30分钟过期
+                }
+
                 // 创建新锁
+                var now = DateTime.Now;
                 var serverLockInfo = new LockInfo
                 {
-                    LockKey = lockInfo.LockKey,
+                    LockKey = lockInfo.LockKey ?? $"lock:document:{lockInfo.BillID}",
                     BillID = lockInfo.BillID,
-                    BillNo = lockInfo.BillNo,
+                    BillNo = lockInfo.BillNo ?? string.Empty,
                     LockedUserId = lockInfo.LockedUserId,
-                    LockedUserName = lockInfo.LockedUserName,
-                    LockTime = DateTime.Now, // 使用当前时间作为锁定时间
-                    ExpireTime = lockInfo.ExpireTime,
-                    Remark = lockInfo.Remark,
+                    LockedUserName = lockInfo.LockedUserName ?? string.Empty,
+                    LockTime = now, // 使用当前时间作为锁定时间
+                    ExpireTime = expireTime ?? now.AddMinutes(30),
+                    Remark = lockInfo.Remark ?? string.Empty,
                     MenuID = lockInfo.MenuID,
-                    BizName = lockInfo.BizName,
-                    MenuName = lockInfo.MenuName,
+                    BizName = lockInfo.BizName ?? string.Empty,
+                    MenuName = lockInfo.MenuName ?? string.Empty,
                     bizType = lockInfo.bizType,
                     SessionId = lockInfo.SessionId,
                     IsLocked = true,
-                    LastHeartbeat = DateTime.Now, // 使用当前时间作为最后心跳时间
-                    LastUpdateTime = DateTime.Now, // 使用当前时间作为最后更新时间
+                    LastHeartbeat = now, // 使用当前时间作为最后心跳时间
+                    LastUpdateTime = now, // 使用当前时间作为最后更新时间
                     HeartbeatCount = 1, // 重置心跳次数为1
-                    Type = lockInfo.Type, // 使用传入的锁定类型
-                    Duration = lockInfo.Duration
+                    Type = lockInfo.Type,
+                    Duration = (long)((expireTime ?? now.AddMinutes(30) - now).TotalMilliseconds)
                 };
 
-                // 添加到锁集合
+                // 边界条件：确保LockKey已设置
+                if (string.IsNullOrEmpty(serverLockInfo.LockKey))
+                {
+                    serverLockInfo.SetLockKey();
+                }
+
+                // 添加到锁集合（原子操作，确保并发安全）
                 if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
                 {
                     // 广播锁定状态更新
                     await BroadcastLockStatusAsync(serverLockInfo);
+
+                    _logger.LogDebug("单据 {BillId} 锁定成功: 用户={UserId}, 会话={SessionId}, 过期时间={ExpireTime}",
+                        lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId, serverLockInfo.ExpireTime);
 
                     LockResponse lockResponse = new LockResponse();
                     lockResponse.IsSuccess = true;
@@ -1279,7 +1383,21 @@ namespace RUINORERP.Server.Network.Services
                 }
                 else
                 {
-                    // 并发情况下可能被其他线程锁定
+                    // 并发情况下可能被其他线程锁定，重新检查
+                    if (_documentLocks.TryGetValue(lockInfo.BillID, out var newExistingLock))
+                    {
+                        _logger.LogDebug("单据 {BillId} 锁定失败（并发）: 已被用户 {UserId} 锁定",
+                            lockInfo.BillID, newExistingLock.LockedUserId);
+
+                        return new LockResponse
+                        {
+                            IsSuccess = false,
+                            Message = $"单据已被用户 {newExistingLock.LockedUserName} 锁定（并发冲突）",
+                            LockInfo = newExistingLock
+                        };
+                    }
+
+                    // 边界条件：未知错误
                     return CreateErrorResponse(lockInfo, "锁定失败，请重试");
                 }
             }

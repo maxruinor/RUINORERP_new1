@@ -147,6 +147,7 @@ namespace RUINORERP.UI.Common
         /// <param name="_type"></param>
         public void InitializeFixedDictionaryMappings(Type _type)
         {
+            
             // 动态检查类型是否包含指定的属性
             foreach (var prop in _type.GetProperties())
             {
@@ -264,10 +265,12 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPStatus))));
                 }
-                else if (prop.Name == nameof(BizType) || prop.Name == "TargetBizType" || prop.Name == "SourceBizType")
+                else if (prop.Name == nameof(BizType) || prop.Name == "TargetBizType" 
+                    || prop.Name == "SourceBizType" || prop.Name == "RefBizType")
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "TargetBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
+                    FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "RefBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, "SourceBizType", Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
                 }
                 else if (prop.Name == nameof(ReceivePaymentType))

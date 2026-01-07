@@ -318,13 +318,14 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 锁定单据（线程安全实现）- 实现ILockStatusProvider接口
-        /// <para>优化说明：v2.1.0 - 使用细粒度锁、添加超时机制、优化缓存策略</para>
+        /// <para>优化说明：v2.1.1 - 增加状态一致性保证、边界条件检查、实时同步</para>
         /// <para>工作流程：
         /// 1. 使用细粒度锁，每个单据独立锁定，避免全局阻塞
         /// 2. 首先检查本地缓存，判断单据是否已被锁定
         /// 3. 如果缓存未命中或已过期，向服务器发送锁定请求
-        /// 4. 锁定成功后，同步更新本地缓存和活跃锁列表
+        /// 4. 锁定成功后，同步更新本地缓存、活跃锁列表和通知服务
         /// 5. 使用超时机制，避免长时间阻塞
+        /// 6. 增加边界条件检查，确保状态一致性
         /// </para>
         /// </summary>
         /// <param name="billId">单据ID</param>
@@ -340,6 +341,19 @@ namespace RUINORERP.UI.Network.Services
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            // 边界条件检查
+            if (billId <= 0)
+            {
+                _logger.LogWarning("锁定请求参数无效: 单据ID={BillId}", billId);
+                return LockResponseFactory.CreateFailedResponse("单据ID无效");
+            }
+
+            if (string.IsNullOrEmpty(BillNo))
+            {
+                _logger.LogWarning("锁定请求参数无效: 单据编号为空");
+                return LockResponseFactory.CreateFailedResponse("单据编号不能为空");
+            }
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -361,26 +375,57 @@ namespace RUINORERP.UI.Network.Services
 
                 try
                 {
-                    // 检查是否已锁定（本地缓存） 这里还要看是不是自己的锁
+                    // 边界条件检查：验证用户信息
+                    var currentUserId = MainForm.Instance.AppContext.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                    var currentUserName = MainForm.Instance.AppContext.CurUserInfo?.UserInfo?.UserName ?? string.Empty;
+                    var sessionId = MainForm.Instance.AppContext?.SessionId ?? string.Empty;
+
+                    if (currentUserId == 0)
+                    {
+                        _logger.LogWarning("用户未登录，无法执行锁定操作: 单据ID={BillId}", billId);
+                        return LockResponseFactory.CreateFailedResponse("用户未登录");
+                    }
+
+                    // 检查是否已锁定（本地缓存）
                     var islock = await _clientCache.IsLockedAsync(billId);
                     if (islock)
                     {
                         // 尝试获取锁信息
                         var lockInfoByLocal = await _clientCache.GetLockInfoAsync(billId);
-                        _logger.LogDebug("单据 {BillId} 已被锁定", billId);
-                        return new LockResponse
+
+                        // 边界条件：检查是否是自己的锁
+                        if (lockInfoByLocal != null && lockInfoByLocal.LockedUserId == currentUserId)
                         {
-                            IsSuccess = true,
-                            Message = "单据已被锁定",
-                            LockInfo = lockInfoByLocal
-                        };
+                            _logger.LogDebug("单据 {BillId} 已被当前用户锁定，直接返回成功", billId);
+                            // 确保缓存信息完整
+                            _clientCache.UpdateCacheItem(lockInfoByLocal);
+                            // 通知UI状态更新
+                            _notificationService?.NotifyLockStatusChanged(billId, lockInfoByLocal, LockStatusChangeType.StatusUpdated);
+
+                            return new LockResponse
+                            {
+                                IsSuccess = true,
+                                Message = "单据已被锁定",
+                                LockInfo = lockInfoByLocal
+                            };
+                        }
+                        else
+                        {
+                            _logger.LogDebug("单据 {BillId} 已被其他用户锁定", billId);
+                            return new LockResponse
+                            {
+                                IsSuccess = false,
+                                Message = $"单据已被用户 {lockInfoByLocal?.LockedUserName} 锁定",
+                                LockInfo = lockInfoByLocal
+                            };
+                        }
                     }
 
                     // 创建锁定请求
                     var lockInfo = CreateLockInfo(billId, menuId);
-                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
-                    lockInfo.LockedUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-                    lockInfo.LockedUserName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName;
+                    lockInfo.SessionId = sessionId;
+                    lockInfo.LockedUserId = currentUserId;
+                    lockInfo.LockedUserName = currentUserName;
                     lockInfo.bizType = bizType;
                     lockInfo.BillNo = BillNo;
                     var lockRequest = new LockRequest { LockInfo = lockInfo };
@@ -397,8 +442,23 @@ namespace RUINORERP.UI.Network.Services
                     {
                         return LockResponseFactory.CreateFailedResponse("响应为空");
                     }
+
                     if (response.IsSuccess)
                     {
+                        // 边界条件验证：响应中包含有效的锁信息
+                        if (response.LockInfo == null)
+                        {
+                            _logger.LogWarning("锁定成功但锁信息为空: 单据ID={BillId}", billId);
+                            return LockResponseFactory.CreateFailedResponse("锁信息无效");
+                        }
+
+                        // 边界条件验证：确保SessionId和UserId一致性
+                        if (response.LockInfo.SessionId != sessionId || response.LockInfo.LockedUserId != currentUserId)
+                        {
+                            _logger.LogWarning("锁信息与当前会话不匹配: 单据ID={BillId}, 响应SessionId={ResponseSessionId}, 响应UserId={ResponseUserId}",
+                                billId, response.LockInfo.SessionId, response.LockInfo.LockedUserId);
+                        }
+
                         // 添加到活跃锁列表 - 锁定成功后的关键操作
                         // 只有当锁成功获取后，才会将锁信息添加到_activeLocks集合中
                         // 这样可以确保_activeLocks只包含当前客户端实际持有的有效锁
@@ -410,13 +470,23 @@ namespace RUINORERP.UI.Network.Services
                             // 延长缓存时间，减少频繁更新
                             response.LockInfo.LastUpdateTime = DateTime.Now;
                             response.LockInfo.ExpireTime = DateTime.Now.AddMinutes(15);
-                           
+
                             _clientCache.UpdateCacheItem(response.LockInfo);
                         }
+
+                        // 实时通知UI状态更新
+                        _notificationService?.NotifyLockStatusChanged(billId, response.LockInfo, LockStatusChangeType.Locked);
                     }
                     else
                     {
                         _logger.Debug("单据 {BillId} 锁定失败: {Message}, 耗时 {ElapsedMs}ms", billId, response.Message, stopwatch.ElapsedMilliseconds);
+
+                        // 边界条件：如果服务器返回锁信息，也要更新缓存以保持一致性
+                        if (response.LockInfo != null)
+                        {
+                            _clientCache.UpdateCacheItem(response.LockInfo);
+                            _notificationService?.NotifyLockStatusChanged(billId, response.LockInfo, LockStatusChangeType.StatusUpdated);
+                        }
                     }
 
                     return response;
@@ -445,7 +515,7 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 解锁单据 - 实现ILockStatusProvider接口
         /// 这是主要实现版本，其他版本都调用此方法
-        /// 优化：使用细粒度锁，添加超时机制
+        /// <para>优化说明：v2.1.1 - 增加状态一致性保证、边界条件检查、实时通知</para>
         /// </summary>
         /// <param name="billId">单据ID</param>
         /// <param name="cancellationToken">取消令牌</param>
@@ -454,6 +524,13 @@ namespace RUINORERP.UI.Network.Services
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(nameof(ClientLockManagementService));
+
+            // 边界条件检查
+            if (billId <= 0)
+            {
+                _logger.LogWarning("解锁请求参数无效: 单据ID={BillId}", billId);
+                return LockResponseFactory.CreateFailedResponse("单据ID无效");
+            }
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -478,17 +555,28 @@ namespace RUINORERP.UI.Network.Services
 
                 try
                 {
+                    // 边界条件检查：验证用户信息
+                    var currentUserId = MainForm.Instance.AppContext.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                    var sessionId = MainForm.Instance.AppContext?.SessionId ?? string.Empty;
+
+                    if (currentUserId == 0)
+                    {
+                        _logger.LogWarning("用户未登录，无法执行解锁操作: 单据ID={BillId}", billId);
+                        return LockResponseFactory.CreateFailedResponse("用户未登录");
+                    }
+
                     // 从活跃锁列表中移除 - 解锁操作的第一步
                     // 在发送解锁请求前，先从_activeLocks中移除，这样可以确保即使网络请求失败
                     // 本地状态也能保持一致，不会留下孤儿锁引用
-                    _activeLocks.TryRemove(billId, out _);
+                    _activeLocks.TryRemove(billId, out var removedLock);
 
-                    // 缓存清除
+                    // 缓存清除（先清除，确保本地状态一致）
                     _clientCache.ClearCache(billId);
 
-                    // 发送解锁请求
+                    // 创建解锁请求
                     var lockInfo = CreateLockInfo(billId, 0);
-                    lockInfo.SessionId = MainForm.Instance.AppContext.SessionId;
+                    lockInfo.SessionId = sessionId;
+                    lockInfo.LockedUserId = currentUserId;
                     var unlockRequest = new LockRequest { LockInfo = lockInfo };
 
                     var response = await _communicationService.Value.SendCommandWithResponseAsync<LockResponse>(
@@ -499,6 +587,13 @@ namespace RUINORERP.UI.Network.Services
                     // 检查响应是否为空
                     if (response == null)
                     {
+                        // 边界条件：响应为空，恢复本地状态
+                        if (removedLock != null)
+                        {
+                            _activeLocks.TryAdd(billId, removedLock);
+                            _clientCache.UpdateCacheItem(removedLock);
+                            _logger.LogWarning("解锁响应为空，已恢复本地锁状态: 单据ID={BillId}", billId);
+                        }
                         return LockResponseFactory.CreateFailedResponse("响应为空");
                     }
 
@@ -506,10 +601,29 @@ namespace RUINORERP.UI.Network.Services
                     {
                         // 解锁成功后，从细粒度锁字典中移除
                         _billLocks.TryRemove(billId, out _);
+
+                        // 创建解锁状态通知
+                        var unlockedInfo = removedLock ?? new LockInfo
+                        {
+                            BillID = billId,
+                            IsLocked = false,
+                            LockedUserId = 0,
+                            SessionId = sessionId
+                        };
+
+                        // 实时通知UI状态更新
+                        _notificationService?.NotifyLockStatusChanged(billId, unlockedInfo, LockStatusChangeType.Unlocked);
                     }
                     else
                     {
-                       // _logger.LogWarning("单据 {BillId} 解锁失败: {Message}, 耗时 {ElapsedMs}ms", billId, response.Message, stopwatch.ElapsedMilliseconds);
+                        // 边界条件：解锁失败，恢复本地状态
+                        if (removedLock != null)
+                        {
+                            _activeLocks.TryAdd(billId, removedLock);
+                            _clientCache.UpdateCacheItem(removedLock);
+                            _logger.LogWarning("解锁失败，已恢复本地锁状态: 单据ID={BillId}, 原因: {Message}",
+                                billId, response.Message);
+                        }
                     }
 
                     return response;

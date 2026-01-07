@@ -144,7 +144,8 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         }
 
         /// <summary>
-        /// 处理锁请求命令
+        /// 处理锁请求命令（优化版）
+        /// v2.1.0优化：增加冲突处理机制、状态一致性保证、用户友好提示
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>处理结果</returns>
@@ -165,6 +166,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         {
                             _lockCache.UpdateCacheItem(lockResponse.LockInfo);
                             _logger.LogDebug("锁获取成功，更新本地缓存: 资源ID={BillId}", lockResponse.LockInfo.BillID);
+
+                            // 通知订阅者锁状态变化
+                            _notificationService?.NotifyLockStatusChanged(
+                                lockResponse.LockInfo.BillID,
+                                lockResponse.LockInfo,
+                                LockStatusChangeType.Locked);
                         }
                         // 触发锁获取成功事件或更新UI组件状态
                         // 例如：通知正在编辑的表单可以开始编辑
@@ -177,14 +184,30 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         // 如果有当前锁定信息，可以显示给用户
                         if (lockResponse.LockInfo != null)
                         {
-                            string message = $"资源已被锁定\n" +
-                                            $"锁定用户: {lockResponse.LockInfo.LockedUserName}\n" +
-                                            $"锁定时间: {lockResponse.LockInfo.LockTime}\n" +
-                                            $"客户端ID: {lockResponse.LockInfo.SessionId}";
-                            // 在UI线程显示提示
+                            string lockTimeStr = lockResponse.LockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
+                            string lockDuration = CalculateLockDuration(lockResponse.LockInfo.LockTime);
+
+                            string message = $"🔒 单据已被锁定\n\n" +
+                                            $"📋 单据编号: {lockResponse.LockInfo.BillNo ?? "未知"}\n" +
+                                            $"👤 锁定用户: {lockResponse.LockInfo.LockedUserName}\n" +
+                                            $"⏰ 锁定时间: {lockTimeStr}\n" +
+                                            $"⏱️ 已锁定时长: {lockDuration}\n" +
+                                            $"💡 提示: 您可以点击按钮请求解锁";
+
+                            // 在UI线程显示提示（优化版，更清晰直观）
                             InvokeOnUiThread(() =>
                             {
-                                MessageBox.Show(message, "锁定提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                var result = MessageBox.Show(
+                                    message + "\n\n是否请求解锁？",
+                                    "单据锁定提示",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Information);
+
+                                if (result == DialogResult.Yes)
+                                {
+                                    // 用户点击请求解锁
+                                    RequestUnlockForBill(lockResponse.LockInfo.BillID, lockResponse.LockInfo.MenuID);
+                                }
                             });
                         }
                         else
@@ -192,8 +215,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             // 显示通用的锁定失败消息
                             InvokeOnUiThread(() =>
                             {
-                                MessageBox.Show($"锁定失败：{lockResponse.Message}", "锁定失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show($"⚠️ 锁定失败：{lockResponse.Message}", "锁定失败",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             });
+                        }
+
+                        // 更新本地缓存为锁定状态
+                        if (_lockCache != null && lockResponse.LockInfo != null)
+                        {
+                            _lockCache.UpdateCacheItem(lockResponse.LockInfo);
+                            _notificationService?.NotifyLockStatusChanged(
+                                lockResponse.LockInfo.BillID,
+                                lockResponse.LockInfo,
+                                LockStatusChangeType.StatusUpdated);
                         }
                     }
                 }
@@ -202,31 +236,62 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 {
                     _logger.LogDebug($"收到锁定请求: BillID={lockRequest.LockInfo.BillID}, UserID={lockRequest.LockInfo.LockedUserId}");
 
-                    // 在UI线程显示锁定请求确认对话框
+                    // 在UI线程显示锁定请求确认对话框（优化版，更详细的信息）
                     InvokeOnUiThread(() =>
                     {
-                        DialogResult result = MessageBox.Show(
-                            $"用户 {lockRequest.LockInfo.LockedUserName} 请求锁定您当前正在编辑的单据 {lockRequest.LockInfo.BillID}。\n\n是否允许锁定？",
-                            "锁定请求",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question);
+                        try
+                        {
+                            var lockTimeStr = lockRequest.LockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
+                            string message = $"🔔 收到锁定请求\n\n" +
+                                            $"👤 请求用户: {lockRequest.LockInfo.LockedUserName}\n" +
+                                            $"📋 单据编号: {lockRequest.LockInfo.BillNo ?? "未知"}\n" +
+                                            $"🆔 单据ID: {lockRequest.LockInfo.BillID}\n" +
+                                            $"⏰ 请求时间: {lockTimeStr}\n\n" +
+                                            $"💡 提示:\n" +
+                                            $"• 点击“是”将解锁当前单据并允许对方锁定\n" +
+                                            $"• 点击“否”将拒绝对方的锁定请求";
 
-                        // 根据用户选择处理
-                        if (result == DialogResult.Yes)
-                        {
-                            _logger.LogDebug("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
-                            // 实现解锁当前单据的逻辑并更新本地缓存
-                            if (_lockCache != null && lockRequest.LockInfo != null)
+                            DialogResult result = MessageBox.Show(
+                                message,
+                                "锁定请求",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question,
+                                MessageBoxDefaultButton.Button2); // 默认选择"否"，防止误操作
+
+                            // 根据用户选择处理
+                            if (result == DialogResult.Yes)
                             {
-                                // 清除当前单据的锁定缓存，确保本地状态与服务器状态一致
-                                _lockCache.ClearCache(lockRequest.LockInfo.BillID);
-                                _logger.LogDebug("用户允许锁定，清除本地缓存: BillID={BillId}", lockRequest.LockInfo.BillID);
+                                _logger.LogDebug("用户允许其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
+
+                                // 实现解锁当前单据的逻辑并更新本地缓存
+                                if (_lockCache != null && lockRequest.LockInfo != null)
+                                {
+                                    // 清除当前单据的锁定缓存，确保本地状态与服务器状态一致
+                                    _lockCache.ClearCache(lockRequest.LockInfo.BillID);
+                                    _logger.LogDebug("用户允许锁定，清除本地缓存: BillID={BillId}", lockRequest.LockInfo.BillID);
+                                }
+
+                                // 通知订阅者解锁状态
+                                _notificationService?.NotifyLockStatusChanged(
+                                    lockRequest.LockInfo.BillID,
+                                    lockRequest.LockInfo,
+                                    LockStatusChangeType.Unlocked);
+
+                                // 可以触发其他解锁操作，如通知编辑中的表单关闭或只读模式
+                                MessageBox.Show("✅ 已解锁当前单据，对方可以锁定", "操作成功",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
-                            // 可以触发其他解锁操作，如通知编辑中的表单关闭或只读模式
+                            else
+                            {
+                                _logger.LogDebug("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
+                                // 不需要额外操作，LockCommandHandler会自动发送拒绝响应
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            _logger.LogDebug("用户拒绝其他用户锁定单据: BillID={BillID}", lockRequest.LockInfo.BillID);
+                            _logger.LogError(ex, "处理锁定请求确认对话框时发生异常");
+                            MessageBox.Show("❌ 处理锁定请求时发生错误", "错误",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     });
                 }
@@ -240,6 +305,65 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                 _logger.LogError(ex, "处理锁请求命令时发生错误");
             }
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 计算锁定时长
+        /// </summary>
+        /// <param name="lockTime">锁定时间</param>
+        /// <returns>格式化的锁定时长字符串</returns>
+        private string CalculateLockDuration(DateTime lockTime)
+        {
+            try
+            {
+                var duration = DateTime.Now - lockTime;
+                if (duration.TotalHours >= 1)
+                {
+                    return $"{(int)duration.TotalHours}小时{duration.Minutes}分钟";
+                }
+                else if (duration.TotalMinutes >= 1)
+                {
+                    return $"{duration.Minutes}分钟";
+                }
+                else
+                {
+                    return $"{duration.Seconds}秒";
+                }
+            }
+            catch
+            {
+                return "未知";
+            }
+        }
+
+        /// <summary>
+        /// 请求解锁单据
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="menuId">菜单ID</param>
+        private async void RequestUnlockForBill(long billId, long menuId)
+        {
+            try
+            {
+                var lockService = Startup.GetFromFac<ClientLockManagementService>();
+                if (lockService != null)
+                {
+                    var response = await lockService.RequestUnlockAsync(billId, menuId);
+                    if (response.IsSuccess)
+                    {
+                        _logger.LogDebug("已发送解锁请求: 单据ID={BillId}", billId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("发送解锁请求失败: 单据ID={BillId}, 原因: {Message}",
+                            billId, response.Message);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "请求解锁时发生异常: 单据ID={BillId}", billId);
+            }
         }
 
         /// <summary>

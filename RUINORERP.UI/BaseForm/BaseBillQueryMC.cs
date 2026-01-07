@@ -2738,14 +2738,18 @@ namespace RUINORERP.UI.BaseForm
                     {
                         Kpages.Add(ChildQuery());
                     }
-                    if (ChildRelatedEntityType == null)
-                    {
-                        ChildRelatedEntityType = typeof(C);
-                    }
-                    if (this.ChildRelatedEntityType != null)
-                    {
-                        Kpages.Add(Child_RelatedQuery());
-                    }
+
+                    //这里注释掉了关联的明细
+                    //if (ChildRelatedEntityType == null)
+                    //{
+                    //    ChildRelatedEntityType = typeof(C);
+                    //}
+                    //if (this.ChildRelatedEntityType != null)
+                    //{
+                    //    Kpages.Add(Child_RelatedQuery());
+                    //}
+
+
                     //如果需要分析功能
                     if (ResultAnalysis)
                     {

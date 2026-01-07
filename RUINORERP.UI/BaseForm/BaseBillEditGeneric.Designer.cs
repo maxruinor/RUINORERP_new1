@@ -17,13 +17,26 @@ namespace RUINORERP.UI.BaseForm
         {
             if (disposing && (components != null))
             {
+                // 停止锁状态定时刷新
+                try
+                {
+                    var stopRefreshMethod = typeof(BaseBillEditGeneric<T, C>).GetMethod("StopLockStatusRefresh",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    stopRefreshMethod?.Invoke(this, null);
+                }
+                catch (Exception ex)
+                {
+                    // 忽略停止定时器时的异常
+                    System.Diagnostics.Debug.WriteLine($"停止锁状态定时刷新失败: {ex.Message}");
+                }
+
                 components.Dispose();
-                
+
                 // 取消订阅锁状态变化
                 try
                 {
                     // 通过反射调用UnsubscribeFromLockStatusChanges方法
-                    var method = typeof(BaseBillEditGeneric<T, C>).GetMethod("UnsubscribeFromLockStatusChanges", 
+                    var method = typeof(BaseBillEditGeneric<T, C>).GetMethod("UnsubscribeFromLockStatusChanges",
                         System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     method?.Invoke(this, null);
                 }
@@ -46,6 +59,7 @@ namespace RUINORERP.UI.BaseForm
         {
             this.components = new System.ComponentModel.Container();
             this.timerAutoSave = new System.Windows.Forms.Timer(this.components);
+            this.timerLockStatusRefresh = new System.Windows.Forms.Timer(this.components);
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
@@ -60,6 +74,11 @@ namespace RUINORERP.UI.BaseForm
             // 
             this.timerAutoSave.Interval = 1000;
             this.timerAutoSave.Tick += new System.EventHandler(this.timerAutoSave_Tick);
+            // 
+            // timerLockStatusRefresh
+            // 
+            this.timerLockStatusRefresh.Interval = 10000;
+            this.timerLockStatusRefresh.Tick += new System.EventHandler(this.timerLockStatusRefresh_Tick);
             // 
             // openFileDialog1
             // 
@@ -82,6 +101,7 @@ namespace RUINORERP.UI.BaseForm
         #endregion
 
         private System.Windows.Forms.Timer timerAutoSave;
+        private System.Windows.Forms.Timer timerLockStatusRefresh;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
     }
 }

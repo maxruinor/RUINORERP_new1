@@ -19,9 +19,10 @@ using RUINORERP.Common.CollectionExtension;
 using RUINORERP.UI.Common;
 using Krypton.Workspace;
 using Krypton.Navigator;
-using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using FastReport.Table;
 using System.Threading.Tasks;
+using RUINORERP.Global;
 
 
 
@@ -221,54 +222,69 @@ namespace RUINORERP.UI.SysConfig
 
         private async Task RecordSave(bool w_EidtFlag)
         {
-            if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
+            if (tree_MainMenu.SelectedNode == null || tree_MainMenu.SelectedNode.Tag is not tb_MenuInfo)
             {
-                tb_MenuInfo info = tree_MainMenu.SelectedNode.Tag as tb_MenuInfo;
-                info.MenuName = this.txt_MenuName.Text.Trim();
+                MessageBox.Show("请选择要保存的菜单节点！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
 
-                if (txtBizType.Tag != null)
-                {
-                    info.BizType = (int)Enum.Parse(typeof(BizType), txtBizType.Tag.ToString());
-                }
+            tb_MenuInfo info = tree_MainMenu.SelectedNode.Tag as tb_MenuInfo;
+            info.MenuName = this.txt_MenuName.Text.Trim();
 
-                if (info.MenuType.Trim().Length == 0)
+            if (txtBizType.Tag != null)
+            {
+                if (txtBizType.Tag is BizType)
                 {
-                    MessageBox.Show("菜单类型不能为空！");
-                    return;
+                    info.BizType = (int)(BizType)txtBizType.Tag;
                 }
-                info.EntityName = txtEntityName.Text;
-                if (txtSort.Text.Trim().Length > 0)
+                else if (int.TryParse(txtBizType.Tag.ToString(), out int bizTypeValue))
                 {
-                    info.Sort = int.TryParse(txtSort.Text, out int sort) ? sort : 0;
+                    info.BizType = bizTypeValue;
                 }
+            }
 
+            if (info.MenuType.Trim().Length == 0)
+            {
+                MessageBox.Show("菜单类型不能为空！");
+                return;
+            }
+            info.EntityName = txtEntityName.Text;
+            if (txtSort.Text.Trim().Length > 0)
+            {
+                info.Sort = int.TryParse(txtSort.Text, out int sort) ? sort : 0;
+            }
 
+            // 更新排序值（如果拖动后需要重新计算）
+            if (tree_MainMenu.SelectedNode.Parent != null)
+            {
+                info.Sort = tree_MainMenu.SelectedNode.Index;
+            }
 
-                //暂时是子节点的个数
-                if (comboBoxTreeView1.TreeView.SelectedNode != null && info.Sort == 0)
-                {
-                    info.Sort = comboBoxTreeView1.TreeView.SelectedNode.Nodes.Count;
-                }
-                if (comboBoxTreeView1.TreeView.SelectedNode.Tag is tb_MenuInfo)
-                {
-                    tb_MenuInfo mi = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo);
-                    info.Parent_id = mi.MenuID;
-                    info.ModuleID = mi.ModuleID;
-                }
-                else
-                {
-                    info.Parent_id = 0;
-                }
+            // 更新父节点ID（如果拖动后父节点发生变化）
+            if (comboBoxTreeView1.TreeView.SelectedNode != null && comboBoxTreeView1.TreeView.SelectedNode.Tag is tb_MenuInfo)
+            {
+                tb_MenuInfo mi = (comboBoxTreeView1.TreeView.SelectedNode.Tag as tb_MenuInfo);
+                info.Parent_id = mi.MenuID;
+                info.ModuleID = mi.ModuleID;
+            }
+            else
+            {
+                info.Parent_id = 0;
+            }
 
-                bool vd = ShowInvalidMessage(mc.Validator(info));
-                if (!vd)
-                {
-                    return;
-                }
+            bool vd = ShowInvalidMessage(mc.Validator(info));
+            if (!vd)
+            {
+                return;
+            }
+            
+            try
+            {
                 if (!w_EidtFlag)//新加
                 {
                     info.Created_at = System.DateTime.Now;
                     await mc.AddMenuInfoAsync(info);
+                    MessageBox.Show("菜单添加成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else //修改
                 {
@@ -277,12 +293,25 @@ namespace RUINORERP.UI.SysConfig
                     {
                         info.MenuID = (tree_MainMenu.SelectedNode.Tag as tb_MenuInfo).MenuID;
                     }
-                    //drset.Created_by = UserSettings.Instance.EmpNo;
-                    w_EidtFlag = !await mc.UpdateMenuInfo(info);
+                    bool success = await mc.UpdateMenuInfo(info);
+                    if (success)
+                    {
+                        MessageBox.Show("菜单修改成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("菜单修改失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
-                //LoadEnevt();
+                
+                // 刷新菜单树显示最新数据
+                LoadEnevt();
                 CmdEnable(true);
                 w_EidtFlag = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -328,9 +357,13 @@ namespace RUINORERP.UI.SysConfig
         }
         private void tree_MainMenu_AfterSelect(object sender, TreeViewEventArgs e)
         {
+            if (tree_MainMenu.SelectedNode == null)
+                return;
+
             if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
             {
                 tb_MenuInfo info = tree_MainMenu.SelectedNode.Tag as tb_MenuInfo;
+                
                 //选中时 dg中也选中
                 dataGridView1.ClearSelection();
                 foreach (DataGridViewRow dr in dataGridView1.Rows)
@@ -346,48 +379,53 @@ namespace RUINORERP.UI.SysConfig
                                 dataGridView1.FirstDisplayedScrollingRowIndex = dr.Index;
                                 //dataGridView1.CurrentCell = dr.Cells[2]这个也可以
                             }
-
                             break;
                         }
-
                     }
                 }
-
-
-
-                //this.txt_MenuName.Text = info.MenuName;
-                //chkisview.Checked = info.IsVisble;
-                //chkEnable.Checked = info.IsEnabled;
-                //txtDiscription.Text = info.Discription;
-                //txt_CaptonC.Text = info.CaptionCN;
-                //txt_CaptionE.Text = info.CaptionEN;
-                //txtClassPath.Text = info.ClassPath;
-                //txtUIPropertyIdentifier.Text = info.UIPropertyIdentifier;
-                //txtBizInterface.Text = info.BizInterface;
-                //txtDiscription.Text = info.Discription;
-                //txtFormName.Text = info.FormName;
-                //txtEntityName.Text = info.EntityName;
-                //txtSort.Text = info.Sort.ToString();
-                //txtBIBaseForm.Text = info.BIBaseForm;
-                //txtBIBizBaseform.Text = info.BIBizBaseForm;
-                //if (info.BizType.HasValue)
-                //{
-                //    txtBizType.Text = info.BizType.ToString();
-                //    txtBizType.Tag = info.BizType;
-                //}
-                //else
-                //{
-                //    txtBizType.Text = "";
-                //    txtBizType.Tag = null;
-                //}
-                //cmbMenuType.SelectedIndex = cmbMenuType.FindString(info.MenuType);
 
                 BindData(info);
                 //设置上级菜单节点
                 SearchNodes(info.Parent_id.ToString(), comboBoxTreeView1.TreeView.Nodes, comboBoxTreeView1.TreeView);
 
+                // 如果当前处于编辑状态，保持编辑状态
+                if (!w_EidtFlag)
+                {
+                    CmdEnable(true);
+                }
+                
                 //treeView1.SelectedImageIndex = treeView1.SelectedNode.ImageIndex;
             }
+            else
+            {
+                // 清除绑定数据
+                ClearBindData();
+                CmdEnable(true);
+            }
+        }
+
+        /// <summary>
+        /// 清除绑定数据
+        /// </summary>
+        private void ClearBindData()
+        {
+            txt_MenuName.Text = "";
+            txtDiscription.Text = "";
+            txt_CaptonC.Text = "";
+            txt_CaptionE.Text = "";
+            txtClassPath.Text = "";
+            txtUIPropertyIdentifier.Text = "";
+            txtBizInterface.Text = "";
+            txtFormName.Text = "";
+            txtEntityName.Text = "";
+            txtSort.Text = "";
+            txtBIBaseForm.Text = "";
+            txtBIBizBaseform.Text = "";
+            txtBizType.Text = "";
+            txtBizType.Tag = null;
+            chkisview.Checked = false;
+            chkEnable.Checked = false;
+            cmbMenuType.SelectedIndex = -1;
         }
 
         #region TreeView查找并选中节点
@@ -443,10 +481,10 @@ namespace RUINORERP.UI.SysConfig
 
         private void CmdEnable(bool p_YesNo)
         {
-            this.btn_add.Enabled = p_YesNo;
-            this.btn_modify.Enabled = p_YesNo;
-            btn_save.Enabled = !p_YesNo;
-            btn_del.Enabled = p_YesNo;
+            this.btn_add.Enabled = p_YesNo && tree_MainMenu.SelectedNode != null;
+            this.btn_modify.Enabled = p_YesNo && tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo;
+            btn_save.Enabled = !p_YesNo && tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo;
+            btn_del.Enabled = p_YesNo && tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo;
             btn_cancel.Enabled = !p_YesNo;
             this.btn_Refresh.Enabled = p_YesNo;
         }
@@ -896,34 +934,21 @@ namespace RUINORERP.UI.SysConfig
                         int index = parentNode.Nodes.IndexOf(NewTargetNode);
                         parentNode.Nodes.Insert(index + 1, sourceNode);
 
-                        // 交换 sort 值
-                        int tempSort = SourceMenuInfo.Sort;
-                        SourceMenuInfo.Sort = NewTargetMenuInfo.Sort;
-                        NewTargetMenuInfo.Sort = tempSort;
-
-                        //实际上面三行交换sort的值没有啥用
-                        //更新排序     Level: 这个有用？
+                        // 更新排序
                         SourceMenuInfo.Sort = sourceNode.Index;
 
-                        //更新排序 要更新当前节点下面的所有子节点的排序值+1  or -1
-                        //List<tb_MenuInfo> levelMenuItems = mc.Query().Where(c => c.Parent_id == NewTargetMenuInfo.Parent_id && ).ToList();
-                        List<tb_MenuInfo> levelMenuItems = new List<tb_MenuInfo>();
+                        //更新排序 要更新当前节点下面的所有子节点的排序值
                         foreach (var item in NewTargetNode.Parent.Nodes)
                         {
                             if (item is TreeNode treeNode)
                             {
-                                if (treeNode.Index >= NewTargetNode.Index)
+                                if (treeNode.Tag is tb_MenuInfo sortNodeMenuInfo)
                                 {
-                                    if (treeNode.Tag is tb_MenuInfo sortNodeMenuInfo)
-                                    {
-                                        sortNodeMenuInfo.Sort = treeNode.Index;
-                                        await mc.UpdateMenuInfo(sortNodeMenuInfo);
-                                    }
+                                    sortNodeMenuInfo.Sort = treeNode.Index;
+                                    await mc.UpdateMenuInfo(sortNodeMenuInfo);
                                 }
                             }
                         }
-
-
 
                     }
                     else
@@ -931,25 +956,33 @@ namespace RUINORERP.UI.SysConfig
                         // 作为子节点 ，要换pid
                         // 作为子节点放置
                         NewTargetNode.Nodes.Add(sourceNode);
-                        // 交换 sort 值
-                        int tempSort = SourceMenuInfo.Sort;
-                        SourceMenuInfo.Sort = NewTargetMenuInfo.Sort;
-                        NewTargetMenuInfo.Sort = tempSort;
                         SourceMenuInfo.Parent_id = NewTargetMenuInfo.MenuID;
+                        SourceMenuInfo.Sort = sourceNode.Index;
 
-                        //实际上面三行交换sort的值没有啥用
-                        //更新排序
-                        //SourceMenuInfo.Sort = sourceNode.Index;
+                        // 更新子节点的排序
+                        foreach (var item in NewTargetNode.Nodes)
+                        {
+                            if (item is TreeNode treeNode)
+                            {
+                                if (treeNode.Tag is tb_MenuInfo sortNodeMenuInfo)
+                                {
+                                    sortNodeMenuInfo.Sort = treeNode.Index;
+                                    await mc.UpdateMenuInfo(sortNodeMenuInfo);
+                                }
+                            }
+                        }
                     }
 
-                    //await mc.UpdateMenuInfo(SourceMenuInfo);
-                    //await mc.UpdateMenuInfo(NewTargetMenuInfo);
+                    // 设置编辑状态，使保存按钮可用
+                    w_EidtFlag = true;
+                    CmdEnable(false);
+                    
+                    // 选中拖动后的节点
+                    tree_MainMenu.SelectedNode = sourceNode;
+                    
+                    // 更新显示
+                    tree_MainMenu.SelectedNode.EnsureVisible();
                 }
-
-
-
-
-
             }
         }
 

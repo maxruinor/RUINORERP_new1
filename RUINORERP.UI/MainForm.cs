@@ -105,6 +105,7 @@ using System.ComponentModel;
 using Padding = System.Windows.Forms.Padding;
 using System.Windows.Forms;
 using RUINORERP.PacketSpec.Models.Message;
+using FastReport.Editor.Dialogs;
 
 
 namespace RUINORERP.UI
@@ -685,10 +686,10 @@ namespace RUINORERP.UI
         public async Task<bool> UpdateSys(bool ShowMessageBox, bool forceUpdate = false)
         {
             bool rs = false;
-            var validatorMonitor = Startup.GetFromFac<SystemGlobalConfig>();
+
 
             // 如果未配置自动更新且非强制更新，则不执行更新检查
-            if (!validatorMonitor.客户端自动更新 && !forceUpdate)
+            if (!AppContext.SystemGlobalConfig.客户端自动更新 && !forceUpdate)
             {
                 if (ShowMessageBox)
                 {
@@ -1073,7 +1074,11 @@ namespace RUINORERP.UI
             ProgressManager.Instance.Initialize(lblStatusGlobal, progressBar);
             #endregion
 
-
+            var SystemGlobalMonitor = Startup.GetFromFac<IOptionsMonitor<SystemGlobalConfig>>();
+            SystemGlobalMonitor.OnChange(config =>
+            {
+                AppContext.SystemGlobalConfig = config;
+            });
 
             InitUpdateSystemWatcher();
 
@@ -3498,17 +3503,17 @@ namespace RUINORERP.UI
             if (validatorConfig?.SomeSetting != null && validatorConfig.SomeSetting.Trim().Length > 0)
             {
                 // 处理配置值
-                logger.LogInformation("获取到最新的验证配置: {Setting}", validatorConfig.SomeSetting);
+                // logger.LogInformation("获取到最新的验证配置: {Setting}", validatorConfig.SomeSetting);
             }
             var systemGlobalConfig = configManagerService.GetConfig<SystemGlobalConfig>();
             // 避免使用多个不同的配置源，统一使用ConfigManagerService
             // 以下代码已注释，避免配置不一致问题
-            var validatorMonitor = Startup.GetFromFac<IOptionsMonitor<ServerGlobalConfig>>();
-            var monitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
-            var serverConfigValidator = Startup.GetFromFac<ServerGlobalConfig>();
+
+            var GlobalValidatorMonitor = Startup.GetFromFac<IOptionsMonitor<GlobalValidatorConfig>>();
+            //这里只能通过客户端的配置处理器强制更新容器中的值，用IOptionsMonitor才能实时更新数据
+            //var serverConfigValidator = Startup.GetFromFac<ServerGlobalConfig>();
 
             await UI.Common.UIBizService.RequestCache<tb_UserInfo>(true);
-            MainForm.Instance.logger.LogError("LoginWebServer" + System.DateTime.Now.ToString());
             var ss = Business.BizMapperService.EntityMappingHelper.GetEntityType(BizType.采购订单);
 
             Process[] allProcess = Process.GetProcesses();
@@ -3525,7 +3530,6 @@ namespace RUINORERP.UI
                 }
             }
 
-            LoginWebServer();
             //if (MainForm.Instance.AppContext.IsSuperUser)
             //{
             //    //请为空时。是请求全部
@@ -3581,13 +3585,7 @@ namespace RUINORERP.UI
 
 #warning TODO: 这里需要完善具体逻辑，当前仅为占位
 
-            //RequestReminderCommand request = new RequestReminderCommand();
-            //request.requestType = RequestReminderType.删除提醒;
-            //ReminderData reminderRequest = new ReminderData();
-            //reminderRequest.BizPrimaryKey = 11231321;
-            //reminderRequest.BizType = BizType.CRM跟进计划;
-            //request.requestInfo = reminderRequest;
-            //MainForm.Instance.dispatcher.DispatchAsync(request, CancellationToken.None);
+
         }
 
         private void tsbtnSysTest_Click(object sender, EventArgs e)

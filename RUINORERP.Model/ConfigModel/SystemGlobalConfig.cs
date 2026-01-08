@@ -114,5 +114,10 @@ namespace RUINORERP.Model.ConfigModel
         [Category("日志配置")]
         [Description("日志级别")]
         public string LogLevel { get; set; }
+
+        [JsonProperty("EnableBillStatusMessage")]
+        [Category("消息配置")]
+        [Description("是否启用单据状态变化消息发送功能")]
+        public bool EnableBillStatusMessage { get; set; } = true;
     }
 }

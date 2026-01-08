@@ -39,6 +39,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.Model.Dto;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
@@ -6551,8 +6552,16 @@ namespace RUINORERP.UI.BaseForm
                 // 第一步：更新本地工作台（立即生效）
                 TodoSyncManager.Instance.PublishUpdate(update);
 
-                // 发送到服务器（不发送给自己，避免重复通知）
-                await SendTodoUpdateToServerAsync(update);
+                // 第二步：检查配置开关，决定是否发送到服务器
+                if (MainForm.Instance.AppContext != null && MainForm.Instance.AppContext.SystemGlobalConfig.EnableBillStatusMessage)
+                {
+                    // 发送到服务器（不发送给自己，避免重复通知）
+                    await SendTodoUpdateToServerAsync(update);
+                }
+                else
+                {
+                    MainForm.Instance.logger?.LogDebug("单据状态消息发送功能已关闭，跳过消息发送 - 业务类型: {BusinessType}", update.BusinessType);
+                }
 
 
                 MainForm.Instance.logger?.LogDebug("状态同步完成 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",

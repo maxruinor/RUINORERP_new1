@@ -262,6 +262,9 @@ namespace RUINORERP.UI.SysConfig
 
         private async void btnSave_Click(object sender, EventArgs e)
         {
+            // 确保所有编辑更改提交到数据源
+            bindingSourceList.EndEdit();
+
             tb_User_RoleController<tb_User_Role> ctr = Startup.GetFromFac<tb_User_RoleController<tb_User_Role>>();
             //  List<tb_User_Role> urs = new List<tb_User_Role>();
             foreach (DataGridViewRow dr in dataGridView1.Rows)
@@ -269,63 +272,13 @@ namespace RUINORERP.UI.SysConfig
                 object obj = dr.DataBoundItem;
                 if (obj is tb_User_Role ur)
                 {
-                    //urs.Add(ur);
-                    ReturnResults<tb_User_Role> rr = await ctr.SaveOrUpdate(ur);
+                    if (ur.HasChanged)
+                    {
+                        ReturnResults<tb_User_Role> rr = await ctr.SaveOrUpdate(ur);
+                    }
+                    ur.AcceptChanges();
                 }
-                /*
-               
-                if (TreeView1.SelectedNode.Checked)
-                {
-                    #region
-                    tb_UserInfo user = TreeView1.SelectedNode.Tag as tb_UserInfo;
-                    if (user.tb_User_Roles == null)
-                    {
-                        user.tb_User_Roles = new List<tb_User_Role>();
-                    }
-                    //如果这个人名下有这个角色就跳过
-                    // bool hasRole = user.tb_User_Roles != null && user.tb_User_Roles.Where(r => r.RoleID == obj.GetPropertyValue<tb_User_Role>(s => s.RoleID).ToLong()).Any();
-                    var ur = user.tb_User_Roles.FirstOrDefault(c => c.RoleID == obj.GetPropertyValue<tb_User_Role>(s => s.RoleID).ToLong() && c.User_ID == user.User_ID);
-                    if (ur == null)
-                    {
-                        ur = new tb_User_Role();
-                        ur.Authorized = obj.GetPropertyValue<SelectDto>(s => s.UserSelect).ToBool();
-                        ur.User_ID = user.User_ID;
-                        ur.RoleID = obj.GetPropertyValue<tb_User_Role>(s => s.RoleID).ToLong();
-                        await ctr.AddReEntityAsync(ur);
-                        user.tb_User_Roles.Add(ur);
-                    }
-                    else
-                    {
-                        ur.Authorized = obj.GetPropertyValue<SelectDto>(s => s.UserSelect).ToBool();
-                        //ur.User_ID = user.User_ID;
-                        //ur.RoleID = obj.GetPropertyValue<tb_User_Role>(s => s.RoleID).ToLong();
-                        await ctr.UpdateAsync(ur);
-                        #region
-                        //
-                        /*
-                         bool hasRole = user.tb_User_Roles != null && user.tb_User_Roles.Where(r => r.Authorized).Any();
-                        if (hasRole)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            //新勾选的
-                            if (obj.GetPropertyValue<SelectDto>(s => s.UserSelect).ToBool())
-                            {
-                                tb_User_Role ur = new tb_User_Role();
-                                ur.User_ID = user.User_ID;
-                                ur.RoleID = obj.GetPropertyValue<tb_User_Role>(s => s.RoleID).ToLong();
-                                ur.Authorized = true;
-                                await ctr.AddReEntityAsync(ur);
-                            }
-                        }
-                         */
-
             }
-
-
-
         }
 
 
@@ -552,6 +505,9 @@ namespace RUINORERP.UI.SysConfig
                 string ModifyColName = dataGridView1.CurrentCell.OwningColumn.Name;
                 if (ModifyColName == expSelected.GetMemberInfo().Name)
                 {
+                    // 确保编辑已提交
+                    bindingSourceList.EndEdit();
+
                     DataGridViewCheckBoxCell checkBoxCell = (DataGridViewCheckBoxCell)dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
                     bool isChecked = (bool)checkBoxCell.EditingCellFormattedValue;
                     if (isChecked)

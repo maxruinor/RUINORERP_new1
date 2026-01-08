@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CurrencyExchangeRate entity = item as tb_CurrencyExchangeRate;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CurrencyExchangeRate entity = item as tb_CurrencyExchangeRate;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -405,7 +405,7 @@ namespace RUINORERP.Business
             List<tb_CurrencyExchangeRate> list = await  _tb_CurrencyExchangeRateServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_CurrencyExchangeRate>(list);
@@ -417,7 +417,7 @@ namespace RUINORERP.Business
             List<tb_CurrencyExchangeRate> list =  _tb_CurrencyExchangeRateServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_CurrencyExchangeRate>(list);
@@ -429,7 +429,7 @@ namespace RUINORERP.Business
             List<tb_CurrencyExchangeRate> list =  _tb_CurrencyExchangeRateServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_CurrencyExchangeRate>(list);
@@ -441,7 +441,7 @@ namespace RUINORERP.Business
             List<tb_CurrencyExchangeRate> list = await _tb_CurrencyExchangeRateServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_CurrencyExchangeRate>(list);
@@ -460,7 +460,7 @@ namespace RUINORERP.Business
             List<tb_CurrencyExchangeRate> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CurrencyExchangeRate>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_CurrencyExchangeRate>(list);
@@ -482,7 +482,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -504,7 +504,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -526,7 +526,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -566,7 +566,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

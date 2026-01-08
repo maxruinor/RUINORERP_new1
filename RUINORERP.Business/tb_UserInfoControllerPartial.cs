@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
 
             _cacheManager.UpdateEntityList<tb_UserInfo>(list);
@@ -88,7 +88,7 @@ namespace RUINORERP.Business
 
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
 
             _cacheManager.UpdateEntityList<tb_UserInfo>(list);
@@ -162,7 +162,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ProdBase entity = item as <#= table.ClassName #>;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {

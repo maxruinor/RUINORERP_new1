@@ -175,7 +175,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_Prod entity = item as <#= table.ClassName #>;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {

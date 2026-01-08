@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ManufacturingOrder entity = item as tb_ManufacturingOrder;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ManufacturingOrder entity = item as tb_ManufacturingOrder;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list = await  _tb_ManufacturingOrderServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_ManufacturingOrder>(list);
@@ -416,7 +416,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list =  _tb_ManufacturingOrderServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_ManufacturingOrder>(list);
@@ -428,7 +428,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list =  _tb_ManufacturingOrderServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_ManufacturingOrder>(list);
@@ -440,7 +440,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list = await _tb_ManufacturingOrderServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_ManufacturingOrder>(list);
@@ -459,7 +459,7 @@ namespace RUINORERP.Business
             List<tb_ManufacturingOrder> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ManufacturingOrder>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_ManufacturingOrder>(list);
@@ -493,7 +493,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -527,7 +527,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -561,7 +561,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -613,7 +613,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

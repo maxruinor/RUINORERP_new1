@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_BOM_SDetailSecondary entity = item as tb_BOM_SDetailSecondary;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_BOM_SDetailSecondary entity = item as tb_BOM_SDetailSecondary;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetailSecondary> list = await  _tb_BOM_SDetailSecondaryServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSecondary>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetailSecondary> list =  _tb_BOM_SDetailSecondaryServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSecondary>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetailSecondary> list =  _tb_BOM_SDetailSecondaryServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSecondary>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetailSecondary> list = await _tb_BOM_SDetailSecondaryServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSecondary>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_BOM_SDetailSecondary> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_BOM_SDetailSecondary>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_BOM_SDetailSecondary>(list);
@@ -480,7 +480,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -502,7 +502,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -524,7 +524,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -564,7 +564,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

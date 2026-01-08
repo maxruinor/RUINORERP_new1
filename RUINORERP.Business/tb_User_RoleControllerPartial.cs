@@ -47,7 +47,7 @@ namespace RUINORERP.Business
                .ToListAsync();
                 foreach (var item in list)
                 {
-                    item.HasChanged = false;
+                    item.AcceptChanges();
                 }
             }
             catch (Exception ex)

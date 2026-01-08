@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_MenuInfo entity = item as tb_MenuInfo;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_MenuInfo entity = item as tb_MenuInfo;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -424,7 +424,7 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = await  _tb_MenuInfoServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_MenuInfo>(list);
@@ -436,7 +436,7 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list =  _tb_MenuInfoServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_MenuInfo>(list);
@@ -448,7 +448,7 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list =  _tb_MenuInfoServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_MenuInfo>(list);
@@ -460,7 +460,7 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = await _tb_MenuInfoServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_MenuInfo>(list);
@@ -479,7 +479,7 @@ namespace RUINORERP.Business
             List<tb_MenuInfo> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_MenuInfo>(list);
@@ -508,7 +508,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -537,7 +537,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -566,7 +566,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -613,7 +613,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

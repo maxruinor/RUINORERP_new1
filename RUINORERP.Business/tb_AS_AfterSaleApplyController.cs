@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_AS_AfterSaleApply entity = item as tb_AS_AfterSaleApply;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_AS_AfterSaleApply entity = item as tb_AS_AfterSaleApply;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
             List<tb_AS_AfterSaleApply> list = await  _tb_AS_AfterSaleApplyServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_AfterSaleApply>(list);
@@ -416,7 +416,7 @@ namespace RUINORERP.Business
             List<tb_AS_AfterSaleApply> list =  _tb_AS_AfterSaleApplyServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_AfterSaleApply>(list);
@@ -428,7 +428,7 @@ namespace RUINORERP.Business
             List<tb_AS_AfterSaleApply> list =  _tb_AS_AfterSaleApplyServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_AfterSaleApply>(list);
@@ -440,7 +440,7 @@ namespace RUINORERP.Business
             List<tb_AS_AfterSaleApply> list = await _tb_AS_AfterSaleApplyServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_AfterSaleApply>(list);
@@ -459,7 +459,7 @@ namespace RUINORERP.Business
             List<tb_AS_AfterSaleApply> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_AfterSaleApply>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_AfterSaleApply>(list);
@@ -486,7 +486,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -513,7 +513,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -540,7 +540,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -585,7 +585,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

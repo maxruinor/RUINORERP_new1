@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FlowchartDefinition entity = item as tb_FlowchartDefinition;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FlowchartDefinition entity = item as tb_FlowchartDefinition;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -400,7 +400,7 @@ namespace RUINORERP.Business
             List<tb_FlowchartDefinition> list = await  _tb_FlowchartDefinitionServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FlowchartDefinition>(list);
@@ -412,7 +412,7 @@ namespace RUINORERP.Business
             List<tb_FlowchartDefinition> list =  _tb_FlowchartDefinitionServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FlowchartDefinition>(list);
@@ -424,7 +424,7 @@ namespace RUINORERP.Business
             List<tb_FlowchartDefinition> list =  _tb_FlowchartDefinitionServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_FlowchartDefinition>(list);
@@ -436,7 +436,7 @@ namespace RUINORERP.Business
             List<tb_FlowchartDefinition> list = await _tb_FlowchartDefinitionServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_FlowchartDefinition>(list);
@@ -455,7 +455,7 @@ namespace RUINORERP.Business
             List<tb_FlowchartDefinition> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FlowchartDefinition>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_FlowchartDefinition>(list);
@@ -478,7 +478,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -501,7 +501,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -524,7 +524,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -565,7 +565,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

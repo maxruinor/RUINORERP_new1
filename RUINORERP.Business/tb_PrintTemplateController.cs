@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_PrintTemplate entity = item as tb_PrintTemplate;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_PrintTemplate entity = item as tb_PrintTemplate;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_PrintTemplate> list = await  _tb_PrintTemplateServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_PrintTemplate>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_PrintTemplate> list =  _tb_PrintTemplateServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_PrintTemplate>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_PrintTemplate> list =  _tb_PrintTemplateServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_PrintTemplate>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_PrintTemplate> list = await _tb_PrintTemplateServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_PrintTemplate>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_PrintTemplate> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_PrintTemplate>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_PrintTemplate>(list);
@@ -479,7 +479,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -500,7 +500,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -560,7 +560,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

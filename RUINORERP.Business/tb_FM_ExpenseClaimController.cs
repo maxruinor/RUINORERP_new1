@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FM_ExpenseClaim entity = item as tb_FM_ExpenseClaim;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FM_ExpenseClaim entity = item as tb_FM_ExpenseClaim;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -396,7 +396,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = await  _tb_FM_ExpenseClaimServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_ExpenseClaim>(list);
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list =  _tb_FM_ExpenseClaimServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_ExpenseClaim>(list);
@@ -420,7 +420,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list =  _tb_FM_ExpenseClaimServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_ExpenseClaim>(list);
@@ -432,7 +432,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = await _tb_FM_ExpenseClaimServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_ExpenseClaim>(list);
@@ -451,7 +451,7 @@ namespace RUINORERP.Business
             List<tb_FM_ExpenseClaim> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ExpenseClaim>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_ExpenseClaim>(list);
@@ -475,7 +475,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -499,7 +499,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -523,7 +523,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -565,7 +565,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

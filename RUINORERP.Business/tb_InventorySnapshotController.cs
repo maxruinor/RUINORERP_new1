@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_InventorySnapshot entity = item as tb_InventorySnapshot;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_InventorySnapshot entity = item as tb_InventorySnapshot;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_InventorySnapshot> list = await  _tb_InventorySnapshotServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_InventorySnapshot>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_InventorySnapshot> list =  _tb_InventorySnapshotServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_InventorySnapshot>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_InventorySnapshot> list =  _tb_InventorySnapshotServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_InventorySnapshot>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_InventorySnapshot> list = await _tb_InventorySnapshotServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_InventorySnapshot>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_InventorySnapshot> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_InventorySnapshot>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_InventorySnapshot>(list);
@@ -478,7 +478,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -498,7 +498,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -518,7 +518,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -556,7 +556,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

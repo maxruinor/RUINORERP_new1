@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ReminderRule entity = item as tb_ReminderRule;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ReminderRule entity = item as tb_ReminderRule;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -396,7 +396,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list = await  _tb_ReminderRuleServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list =  _tb_ReminderRuleServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -420,7 +420,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list =  _tb_ReminderRuleServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -432,7 +432,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list = await _tb_ReminderRuleServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -451,7 +451,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -472,7 +472,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -493,7 +493,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -514,7 +514,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -553,7 +553,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

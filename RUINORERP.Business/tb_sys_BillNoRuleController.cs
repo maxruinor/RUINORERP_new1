@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_sys_BillNoRule entity = item as tb_sys_BillNoRule;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_sys_BillNoRule entity = item as tb_sys_BillNoRule;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_sys_BillNoRule> list = await  _tb_sys_BillNoRuleServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_sys_BillNoRule>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_sys_BillNoRule> list =  _tb_sys_BillNoRuleServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_sys_BillNoRule>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_sys_BillNoRule> list =  _tb_sys_BillNoRuleServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_sys_BillNoRule>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_sys_BillNoRule> list = await _tb_sys_BillNoRuleServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_sys_BillNoRule>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_sys_BillNoRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_sys_BillNoRule>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_sys_BillNoRule>(list);
@@ -478,7 +478,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -498,7 +498,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -518,7 +518,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -556,7 +556,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

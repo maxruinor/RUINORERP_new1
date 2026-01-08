@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_P4RowAuthPolicyByUser entity = item as tb_P4RowAuthPolicyByUser;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_P4RowAuthPolicyByUser entity = item as tb_P4RowAuthPolicyByUser;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_P4RowAuthPolicyByUser> list = await  _tb_P4RowAuthPolicyByUserServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_P4RowAuthPolicyByUser>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_P4RowAuthPolicyByUser> list =  _tb_P4RowAuthPolicyByUserServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_P4RowAuthPolicyByUser>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_P4RowAuthPolicyByUser> list =  _tb_P4RowAuthPolicyByUserServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_P4RowAuthPolicyByUser>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_P4RowAuthPolicyByUser> list = await _tb_P4RowAuthPolicyByUserServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_P4RowAuthPolicyByUser>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_P4RowAuthPolicyByUser> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_P4RowAuthPolicyByUser>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_P4RowAuthPolicyByUser>(list);
@@ -481,7 +481,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -504,7 +504,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -527,7 +527,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -568,7 +568,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

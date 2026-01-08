@@ -58,7 +58,7 @@ namespace RUINORERP.Business
 
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
 
             _cacheManager.UpdateEntityList<tb_BOM_SDetail>(list);

@@ -1076,11 +1076,20 @@ namespace RUINORERP.Business
                         string tableName = typeof(T).Name;
                         string targetTableName = item.SubFilter.QueryTargetType.Name;
                         string fieldName = item.FieldName;
+                        string targetFieldName = item.FieldName;
+                        if (propertyInfo.PropertyType.Name == "Int64" && item.FriendlyFieldValueFromSource != null)
+                        {
+                            targetFieldName = item.FriendlyFieldValueFromSource;
+                        }
+                        if (propertyInfo.PropertyType.Name == "String" && item.FriendlyFieldNameFromSource != null)
+                        {
+                            targetFieldName = item.FriendlyFieldNameFromSource;
+                        }
 
                         // 构建基础EXISTS子查询
                         StringBuilder subQueryBuilder = new StringBuilder();
                         subQueryBuilder.Append($"EXISTS (SELECT 1 FROM [{targetTableName}] ");
-                        subQueryBuilder.Append($"WHERE [{tableName}].[{fieldName}] = [{targetTableName}].[{fieldName}] ");
+                        subQueryBuilder.Append($"WHERE [{tableName}].[{fieldName}] = [{targetTableName}].[{targetFieldName}] ");
 
                         // 获取子查询的过滤条件
                         var filterExpression = item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType);

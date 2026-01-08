@@ -2427,6 +2427,20 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
+                
+                // 确保编辑更改提交到数据源
+                if (dg == dataGridView1)
+                {
+                    bindingSource1.EndEdit();
+                }
+                else if (dg == dataGridView2)
+                {
+                    bindingSource2.EndEdit();
+                }
+                else if (dg == newSumDataGridViewRowAuthPolicy)
+                {
+                    bindingSourceRowAuthPolicy.EndEdit();
+                }
             }
 
         }
@@ -3213,6 +3227,10 @@ namespace RUINORERP.UI.SysConfig
                     {
                         // 添加到数据源
                         bindingSourceRowAuthPolicy.Add(newPolicyRelation);
+                        
+                        // 确保编辑更改提交到数据源
+                        bindingSourceRowAuthPolicy.EndEdit();
+                        
                         toolStripButtonSave.Enabled = true;
                     }
                     else

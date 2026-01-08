@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ProdSplitDetail entity = item as tb_ProdSplitDetail;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ProdSplitDetail entity = item as tb_ProdSplitDetail;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_ProdSplitDetail> list = await  _tb_ProdSplitDetailServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_ProdSplitDetail>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_ProdSplitDetail> list =  _tb_ProdSplitDetailServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_ProdSplitDetail>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_ProdSplitDetail> list =  _tb_ProdSplitDetailServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_ProdSplitDetail>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_ProdSplitDetail> list = await _tb_ProdSplitDetailServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_ProdSplitDetail>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_ProdSplitDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdSplitDetail>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_ProdSplitDetail>(list);
@@ -481,7 +481,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -504,7 +504,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -527,7 +527,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -568,7 +568,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

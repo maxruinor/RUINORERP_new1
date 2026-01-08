@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CRM_Customer entity = item as tb_CRM_Customer;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CRM_Customer entity = item as tb_CRM_Customer;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
             List<tb_CRM_Customer> list = await  _tb_CRM_CustomerServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
@@ -420,7 +420,7 @@ namespace RUINORERP.Business
             List<tb_CRM_Customer> list =  _tb_CRM_CustomerServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
@@ -432,7 +432,7 @@ namespace RUINORERP.Business
             List<tb_CRM_Customer> list =  _tb_CRM_CustomerServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
@@ -444,7 +444,7 @@ namespace RUINORERP.Business
             List<tb_CRM_Customer> list = await _tb_CRM_CustomerServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
@@ -463,7 +463,7 @@ namespace RUINORERP.Business
             List<tb_CRM_Customer> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_Customer>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_Customer>(list);
@@ -493,7 +493,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -523,7 +523,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -553,7 +553,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -601,7 +601,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

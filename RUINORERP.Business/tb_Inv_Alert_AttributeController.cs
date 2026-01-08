@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_Inv_Alert_Attribute entity = item as tb_Inv_Alert_Attribute;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_Inv_Alert_Attribute entity = item as tb_Inv_Alert_Attribute;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_Inv_Alert_Attribute> list = await  _tb_Inv_Alert_AttributeServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_Inv_Alert_Attribute>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_Inv_Alert_Attribute> list =  _tb_Inv_Alert_AttributeServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_Inv_Alert_Attribute>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_Inv_Alert_Attribute> list =  _tb_Inv_Alert_AttributeServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_Inv_Alert_Attribute>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_Inv_Alert_Attribute> list = await _tb_Inv_Alert_AttributeServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_Inv_Alert_Attribute>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_Inv_Alert_Attribute> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Inv_Alert_Attribute>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_Inv_Alert_Attribute>(list);
@@ -479,7 +479,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -500,7 +500,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -560,7 +560,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ReminderAlertHistory entity = item as tb_ReminderAlertHistory;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ReminderAlertHistory entity = item as tb_ReminderAlertHistory;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_ReminderAlertHistory> list = await  _tb_ReminderAlertHistoryServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             _cacheManager?.UpdateEntityList(list);
             return list;
@@ -414,7 +414,7 @@ namespace RUINORERP.Business
             List<tb_ReminderAlertHistory> list =  _tb_ReminderAlertHistoryServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             _cacheManager?.UpdateEntityList(list);
             return list;
@@ -425,7 +425,7 @@ namespace RUINORERP.Business
             List<tb_ReminderAlertHistory> list =  _tb_ReminderAlertHistoryServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             _cacheManager?.UpdateEntityList(list);
             return list;
@@ -436,7 +436,7 @@ namespace RUINORERP.Business
             List<tb_ReminderAlertHistory> list = await _tb_ReminderAlertHistoryServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             _cacheManager?.UpdateEntityList(list);
             return list;
@@ -454,7 +454,7 @@ namespace RUINORERP.Business
             List<tb_ReminderAlertHistory> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderAlertHistory>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             _cacheManager?.UpdateEntityList(list);
             return list;
@@ -475,7 +475,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
             _cacheManager?.UpdateEntityList(list);
@@ -496,7 +496,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
             _cacheManager?.UpdateEntityList(list);
@@ -517,7 +517,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
             _cacheManager?.UpdateEntityList(list);
@@ -554,7 +554,7 @@ namespace RUINORERP.Business
                                     .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
             _cacheManager?.UpdateEntity(entity);

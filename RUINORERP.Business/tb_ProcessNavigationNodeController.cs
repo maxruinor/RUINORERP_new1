@@ -158,7 +158,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ProcessNavigationNode entity = item as tb_ProcessNavigationNode;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -173,7 +173,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_ProcessNavigationNode entity = item as tb_ProcessNavigationNode;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -406,7 +406,7 @@ namespace RUINORERP.Business
             List<tb_ProcessNavigationNode> list = await  _tb_ProcessNavigationNodeServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_ProcessNavigationNode>(list);
@@ -418,7 +418,7 @@ namespace RUINORERP.Business
             List<tb_ProcessNavigationNode> list =  _tb_ProcessNavigationNodeServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_ProcessNavigationNode>(list);
@@ -430,7 +430,7 @@ namespace RUINORERP.Business
             List<tb_ProcessNavigationNode> list =  _tb_ProcessNavigationNodeServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_ProcessNavigationNode>(list);
@@ -442,7 +442,7 @@ namespace RUINORERP.Business
             List<tb_ProcessNavigationNode> list = await _tb_ProcessNavigationNodeServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_ProcessNavigationNode>(list);
@@ -461,7 +461,7 @@ namespace RUINORERP.Business
             List<tb_ProcessNavigationNode> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProcessNavigationNode>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_ProcessNavigationNode>(list);
@@ -485,7 +485,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -509,7 +509,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -533,7 +533,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -575,7 +575,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

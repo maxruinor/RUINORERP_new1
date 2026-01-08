@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_MaterialRequisitionDetail entity = item as tb_MaterialRequisitionDetail;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_MaterialRequisitionDetail entity = item as tb_MaterialRequisitionDetail;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_MaterialRequisitionDetail> list = await  _tb_MaterialRequisitionDetailServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisitionDetail>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_MaterialRequisitionDetail> list =  _tb_MaterialRequisitionDetailServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisitionDetail>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_MaterialRequisitionDetail> list =  _tb_MaterialRequisitionDetailServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisitionDetail>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_MaterialRequisitionDetail> list = await _tb_MaterialRequisitionDetailServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisitionDetail>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_MaterialRequisitionDetail> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_MaterialRequisitionDetail>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_MaterialRequisitionDetail>(list);
@@ -481,7 +481,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -504,7 +504,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -527,7 +527,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -568,7 +568,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

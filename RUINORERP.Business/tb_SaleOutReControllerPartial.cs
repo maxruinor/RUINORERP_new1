@@ -108,7 +108,7 @@ namespace RUINORERP.Business
                 //要注意的是  如果销售订单中有 多行相同SKU的的情况（实际是不同配置时） 出库退库要把订单的明细主键带上。
                 if (entity != null)
                 {
-                    entity.HasChanged = false;
+                    entity.AcceptChanges();
                 }
 
                 // 开启事务，保证数据一致性

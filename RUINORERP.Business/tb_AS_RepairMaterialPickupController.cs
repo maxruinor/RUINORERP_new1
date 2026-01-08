@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_AS_RepairMaterialPickup entity = item as tb_AS_RepairMaterialPickup;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_AS_RepairMaterialPickup entity = item as tb_AS_RepairMaterialPickup;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -396,7 +396,7 @@ namespace RUINORERP.Business
             List<tb_AS_RepairMaterialPickup> list = await  _tb_AS_RepairMaterialPickupServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickup>(list);
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
             List<tb_AS_RepairMaterialPickup> list =  _tb_AS_RepairMaterialPickupServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickup>(list);
@@ -420,7 +420,7 @@ namespace RUINORERP.Business
             List<tb_AS_RepairMaterialPickup> list =  _tb_AS_RepairMaterialPickupServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickup>(list);
@@ -432,7 +432,7 @@ namespace RUINORERP.Business
             List<tb_AS_RepairMaterialPickup> list = await _tb_AS_RepairMaterialPickupServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickup>(list);
@@ -451,7 +451,7 @@ namespace RUINORERP.Business
             List<tb_AS_RepairMaterialPickup> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_AS_RepairMaterialPickup>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_AS_RepairMaterialPickup>(list);
@@ -474,7 +474,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -497,7 +497,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -520,7 +520,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -561,7 +561,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

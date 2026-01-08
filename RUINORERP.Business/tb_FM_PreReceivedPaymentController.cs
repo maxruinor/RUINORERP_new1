@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FM_PreReceivedPayment entity = item as tb_FM_PreReceivedPayment;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FM_PreReceivedPayment entity = item as tb_FM_PreReceivedPayment;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -411,7 +411,7 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = await  _tb_FM_PreReceivedPaymentServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
@@ -423,7 +423,7 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list =  _tb_FM_PreReceivedPaymentServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
@@ -435,7 +435,7 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list =  _tb_FM_PreReceivedPaymentServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
@@ -447,7 +447,7 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = await _tb_FM_PreReceivedPaymentServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
@@ -466,7 +466,7 @@ namespace RUINORERP.Business
             List<tb_FM_PreReceivedPayment> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_FM_PreReceivedPayment>(list);
@@ -494,7 +494,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -522,7 +522,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -550,7 +550,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -596,7 +596,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CRM_FollowUpPlans entity = item as tb_CRM_FollowUpPlans;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_CRM_FollowUpPlans entity = item as tb_CRM_FollowUpPlans;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -396,7 +396,7 @@ namespace RUINORERP.Business
             List<tb_CRM_FollowUpPlans> list = await  _tb_CRM_FollowUpPlansServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_FollowUpPlans>(list);
@@ -408,7 +408,7 @@ namespace RUINORERP.Business
             List<tb_CRM_FollowUpPlans> list =  _tb_CRM_FollowUpPlansServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_FollowUpPlans>(list);
@@ -420,7 +420,7 @@ namespace RUINORERP.Business
             List<tb_CRM_FollowUpPlans> list =  _tb_CRM_FollowUpPlansServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_FollowUpPlans>(list);
@@ -432,7 +432,7 @@ namespace RUINORERP.Business
             List<tb_CRM_FollowUpPlans> list = await _tb_CRM_FollowUpPlansServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_FollowUpPlans>(list);
@@ -451,7 +451,7 @@ namespace RUINORERP.Business
             List<tb_CRM_FollowUpPlans> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_CRM_FollowUpPlans>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_CRM_FollowUpPlans>(list);
@@ -474,7 +474,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -497,7 +497,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -520,7 +520,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -561,7 +561,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

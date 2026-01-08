@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FinishedGoodsInv entity = item as tb_FinishedGoodsInv;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FinishedGoodsInv entity = item as tb_FinishedGoodsInv;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -404,7 +404,7 @@ namespace RUINORERP.Business
             List<tb_FinishedGoodsInv> list = await  _tb_FinishedGoodsInvServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FinishedGoodsInv>(list);
@@ -416,7 +416,7 @@ namespace RUINORERP.Business
             List<tb_FinishedGoodsInv> list =  _tb_FinishedGoodsInvServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FinishedGoodsInv>(list);
@@ -428,7 +428,7 @@ namespace RUINORERP.Business
             List<tb_FinishedGoodsInv> list =  _tb_FinishedGoodsInvServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_FinishedGoodsInv>(list);
@@ -440,7 +440,7 @@ namespace RUINORERP.Business
             List<tb_FinishedGoodsInv> list = await _tb_FinishedGoodsInvServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_FinishedGoodsInv>(list);
@@ -459,7 +459,7 @@ namespace RUINORERP.Business
             List<tb_FinishedGoodsInv> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FinishedGoodsInv>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_FinishedGoodsInv>(list);
@@ -485,7 +485,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -511,7 +511,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -537,7 +537,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -581,7 +581,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

@@ -109,7 +109,7 @@ namespace RUINORERP.Business.Security
                 // 处理实体缓存更新（与原方法保持一致的行为）
                 foreach (var item in users)
                 {
-                    item.HasChanged = false;
+                    item.AcceptChanges();
                 }
                 if (users == null || users.Count == 0)
                 {

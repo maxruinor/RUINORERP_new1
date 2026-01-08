@@ -159,7 +159,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FS_FileStorageVersion entity = item as tb_FS_FileStorageVersion;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
             foreach (var item in list)
             {
                 tb_FS_FileStorageVersion entity = item as tb_FS_FileStorageVersion;
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
             if (list != null)
             {
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_FS_FileStorageVersion> list = await  _tb_FS_FileStorageVersionServices.QueryAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_FS_FileStorageVersion> list =  _tb_FS_FileStorageVersionServices.Query();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
@@ -427,7 +427,7 @@ namespace RUINORERP.Business
             List<tb_FS_FileStorageVersion> list =  _tb_FS_FileStorageVersionServices.Query(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
   
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
@@ -439,7 +439,7 @@ namespace RUINORERP.Business
             List<tb_FS_FileStorageVersion> list = await _tb_FS_FileStorageVersionServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
  
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
@@ -458,7 +458,7 @@ namespace RUINORERP.Business
             List<tb_FS_FileStorageVersion> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FS_FileStorageVersion>().Where(exp).ToListAsync();
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
    
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_FileStorageVersion>(list);
@@ -479,7 +479,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
  
@@ -500,7 +500,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
   
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.HasChanged = false;
+                item.AcceptChanges();
             }
             
      
@@ -560,7 +560,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.HasChanged = false;
+                entity.AcceptChanges();
             }
 
          

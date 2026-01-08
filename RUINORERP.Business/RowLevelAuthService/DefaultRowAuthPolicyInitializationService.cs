@@ -22,6 +22,10 @@ namespace RUINORERP.Business.RowLevelAuthService
         private readonly ApplicationContext _appContext;
         // 使用并发集合跟踪已初始化的业务类型，避免重复检查
         private readonly ConcurrentDictionary<BizType, bool> _initializedBizTypes = new ConcurrentDictionary<BizType, bool>();
+        // 一次性加载所有默认策略，避免多次查询数据库
+        private List<tb_RowAuthPolicy> _allDefaultPolicies;
+        private readonly object _policiesLock = new object();
+        private bool _isAllPoliciesLoaded = false;
 
         public DefaultRowAuthPolicyInitializationService(
             ISqlSugarClient db,
@@ -37,11 +41,16 @@ namespace RUINORERP.Business.RowLevelAuthService
             _appContext = appContext;
         }
 
+        /// <summary>
+        /// 初始化默认行级权限策略
+        /// 优化版：一次性加载所有默认策略，避免多次查询数据库
+        /// </summary>
         public async Task InitializeDefaultPoliciesAsync()
         {
             try
             {
-                // _logger.Debug("开始初始化默认行级权限策略...");
+                // 一次性加载所有默认策略（只查询一次数据库）
+                await LoadAllDefaultPoliciesOnce();
 
                 // 获取所有业务类型
                 var allBizTypes = Enum.GetValues(typeof(BizType)).Cast<BizType>().ToList();
@@ -69,12 +78,49 @@ namespace RUINORERP.Business.RowLevelAuthService
                     }
                 }
 
-                // _logger.Debug("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",                    initializedCount, skippedCount);
+                _logger.LogInformation("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",
+                    initializedCount, skippedCount);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "初始化默认行级权限策略时发生错误");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 一次性加载所有默认策略到内存
+        /// 避免在循环中多次查询数据库
+        /// </summary>
+        private async Task LoadAllDefaultPoliciesOnce()
+        {
+            if (_isAllPoliciesLoaded && _allDefaultPolicies != null)
+            {
+                return;
+            }
+
+            lock (_policiesLock)
+            {
+                if (_isAllPoliciesLoaded && _allDefaultPolicies != null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    // 一次性查询所有默认策略
+                    _allDefaultPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                        .Where(p => p.DefaultRuleEnum.HasValue)
+                        .ToList();
+
+                    _isAllPoliciesLoaded = true;
+                    _logger.LogInformation("已加载所有默认策略：共 {Count} 条记录", _allDefaultPolicies.Count);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "加载所有默认策略失败");
+                    _allDefaultPolicies = new List<tb_RowAuthPolicy>();
+                }
             }
         }
 
@@ -92,6 +138,12 @@ namespace RUINORERP.Business.RowLevelAuthService
             }
         }
 
+        /// <summary>
+        /// 获取或创建指定业务类型的默认策略
+        /// 优化版：从内存中过滤已加载的默认策略，避免重复查询数据库
+        /// </summary>
+        /// <param name="bizType">业务类型</param>
+        /// <returns>默认策略列表</returns>
         public async Task<List<tb_RowAuthPolicy>> GetOrCreateDefaultPoliciesAsync(BizType bizType)
         {
             try
@@ -100,7 +152,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 var entityInfo = _entityInfoService.GetEntityInfo(bizType);
                 if (entityInfo == null)
                 {
-                    //                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
+                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
                     return new List<tb_RowAuthPolicy>();
                 }
 
@@ -112,8 +164,11 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return new List<tb_RowAuthPolicy>();
                 }
 
-                // 检查是否已存在默认策略
-                var existingPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                // 确保所有默认策略已加载到内存
+                await LoadAllDefaultPoliciesOnce();
+
+                // 从内存中过滤出该实体的默认策略
+                var existingPolicies = _allDefaultPolicies
                     .Where(p => p.TargetEntity == entityInfo.EntityName && p.DefaultRuleEnum.HasValue)
                     .ToList();
 
@@ -160,6 +215,15 @@ namespace RUINORERP.Business.RowLevelAuthService
 
                         // 提交事务
                         transaction.CommitTran();
+
+                        // 将新创建的策略添加到内存缓存中
+                        if (newPolicies.Any())
+                        {
+                            lock (_policiesLock)
+                            {
+                                _allDefaultPolicies.AddRange(newPolicies);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {

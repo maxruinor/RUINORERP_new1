@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.Security;
+using RUINORERP.Business.Security;
 using RUINORERP.Model;
 using SqlSugar;
 using System;
@@ -19,10 +19,11 @@ using System.Linq.Expressions;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.UserCenter.DataParts;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
-    public partial class UCSalePerformanceCell : UserControl
+    public partial class UCSalePerformanceCell : UCBaseCell
     {
         public UCSalePerformanceCell()
         {
@@ -31,8 +32,24 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void UCSaleCell_Load(object sender, EventArgs e)
         {
-            QuerySaleOrderStatus();
+            // 仅执行UI初始化操作，不包含数据库查询
+            menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             timer1.Start();
+        }
+
+        /// <summary>
+        /// 重写基类的LoadData方法，实现数据加载逻辑
+        /// </summary>
+        public override async Task LoadData()
+        {
+            try
+            {
+                await QuerySaleOrderStatus();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "UCSalePerformanceCell.LoadData 加载数据失败");
+            }
         }
 
 
@@ -88,48 +105,76 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
                     if (DataOverviewItems.Contains(数据概览.销售情况概览.ToString()))
                     {
-                        lblMonthlyOrderPerformance.Text = string.Empty;
-                        sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOrder m WITH (NOLOCK) RIGHT JOIN tb_SaleOrderDetail c WITH (NOLOCK) on m.SOrder_ID=c.SOrder_ID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and  YEAR(m.SaleDate) = YEAR('{0}') and  MONTH(m.SaleDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal orderAmount =await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        // 使用缓存获取销售业绩数据
+                        string cacheKeyOrderAmount = $"MonthlyOrderPerformance_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                        decimal orderAmount = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyOrderAmount, async () =>
+                        {
+                            sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOrder m WITH (NOLOCK) RIGHT JOIN tb_SaleOrderDetail c WITH (NOLOCK) on m.SOrder_ID=c.SOrder_ID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and  YEAR(m.SaleDate) = YEAR('{0}') and  MONTH(m.SaleDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                            return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        }, 30); // 缓存30分钟
+
                         lblMonthlyOrderPerformance.Text = "本月订单业绩:" + orderAmount.ToString("##,###0元");
 
-                        lblMonthlySalePerformance.Text = string.Empty;
-                        sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOut m WITH (NOLOCK) RIGHT JOIN tb_SaleOutDetail c  WITH (NOLOCK) on m.SaleOut_MainID=c.SaleOut_MainID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and YEAR(m.OutDate) = YEAR('{0}') and  MONTH(m.OutDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal RealAmount = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        string cacheKeyRealAmount = $"MonthlyRealPerformance_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                        decimal RealAmount = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyRealAmount, async () =>
+                        {
+                            sqlquery = string.Format("SELECT sum(c.TransactionPrice*(c.Quantity-c.TotalReturnedQty)) as 订单金额  from  tb_SaleOut m WITH (NOLOCK) RIGHT JOIN tb_SaleOutDetail c  WITH (NOLOCK) on m.SaleOut_MainID=c.SaleOut_MainID WHERE (m.DataStatus=4 or m.DataStatus=8) and m.ApprovalStatus=1 and m.ApprovalResults=1 and YEAR(m.OutDate) = YEAR('{0}') and  MONTH(m.OutDate) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                            return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        }, 30); // 缓存30分钟
+
                         lblMonthlySalePerformance.Text = "本月实际业绩:" + RealAmount.ToString("##,###0元");
 
                         //客户数量
-                        lblMonthlyCustomer.Text = string.Empty;
-                        sqlquery = string.Format(" SELECT COUNT(CustomerVendor_ID) as 新增客户数 from tb_CustomerVendor WITH (NOLOCK)  WHERE IsCustomer=1 and  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                        decimal NewCustomerQty = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        string cacheKeyNewCustomer = $"MonthlyNewCustomer_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                        decimal NewCustomerQty = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyNewCustomer, async () =>
+                        {
+                            sqlquery = string.Format(" SELECT COUNT(CustomerVendor_ID) as 新增客户数 from tb_CustomerVendor WITH (NOLOCK)  WHERE IsCustomer=1 and  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                            return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                        }, 30); // 缓存30分钟
+
                         lblMonthlyCustomer.Text = "本月新增客户:" + NewCustomerQty.ToString("##,###0个");
 
                         //如果CRM启用了
                         if (MainForm.Instance.AppContext.CanUsefunctionModules != null && MainForm.Instance.AppContext.CanUsefunctionModules.Contains(Global.GlobalFunctionModule.客户管理系统CRM))
                         {
                             //本月新增线索数
-                            lblMonthly商机.Text = string.Empty;
-                            sqlquery = string.Format(" SELECT COUNT(LeadID) as 新增线索数 from tb_CRM_Leads WITH (NOLOCK) WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal Leads = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            string cacheKeyLeads = $"MonthlyLeads_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                            decimal Leads = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyLeads, async () =>
+                            {
+                                sqlquery = string.Format(" SELECT COUNT(LeadID) as 新增线索数 from tb_CRM_Leads WITH (NOLOCK) WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                                return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            }, 30); // 缓存30分钟
+
                             lblMonthly商机.Text += "本月新增线索:" + Leads.ToString("##,###0个");
 
                             //本月新增潜客数
-                            lblMonthly潜客数.Text = string.Empty;
-                            sqlquery = string.Format(" SELECT COUNT(Customer_id) as 新增客户数 from tb_CRM_Customer WITH (NOLOCK)  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal NewCustomers = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
-                            lblMonthly潜客数.Text = "本月新增潜客:" + NewCustomerQty.ToString("##,###0个");
+                            string cacheKeyNewCustomers = $"MonthlyNewCustomers_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                            decimal NewCustomers = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyNewCustomers, async () =>
+                            {
+                                sqlquery = string.Format(" SELECT COUNT(Customer_id) as 新增客户数 from tb_CRM_Customer WITH (NOLOCK)  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                                return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            }, 30); // 缓存30分钟
 
+                            lblMonthly潜客数.Text = "本月新增潜客:" + NewCustomers.ToString("##,###0个");
 
                             //本月跟进记录数
-                            lblMonthlyFollowupRecords.Text = string.Empty;
-                            sqlquery = string.Format(" SELECT COUNT(RecordID) as 跟进记录数 from tb_CRM_FollowUpRecords  WITH (NOLOCK) WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal Records = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            string cacheKeyRecords = $"MonthlyFollowupRecords_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                            decimal Records = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyRecords, async () =>
+                            {
+                                sqlquery = string.Format(" SELECT COUNT(RecordID) as 跟进记录数 from tb_CRM_FollowUpRecords  WITH (NOLOCK) WHERE  YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                                return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            }, 30); // 缓存30分钟
+
                             lblMonthlyFollowupRecords.Text = "本月跟进记录数:" + Records.ToString("##,###0个");
 
                             //本月制定计划数
-                            lblMonthlyplans.Text = string.Empty;
-                            sqlquery = string.Format(" SELECT COUNT(PlanID) as 制定计划数 from tb_CRM_FollowUpPlans WITH (NOLOCK)  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
-                            decimal plans = await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            string cacheKeyPlans = $"MonthlyPlans_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";
+                            decimal plans = await DataCacheManager.Instance.GetOrSetAsync(cacheKeyPlans, async () =>
+                            {
+                                sqlquery = string.Format(" SELECT COUNT(PlanID) as 制定计划数 from tb_CRM_FollowUpPlans WITH (NOLOCK)  WHERE   YEAR(Created_at) = YEAR('{0}') and  MONTH(Created_at) = MONTH('{0}') " + WhereClause, System.DateTime.Now.ToString("yyyy-MM-dd"));
+                                return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
+                            }, 30); // 缓存30分钟
+
                             lblMonthlyplans.Text = "本月制定计划数:" + plans.ToString("##,###0个");
                         }
                         else
@@ -141,7 +186,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         }
 
                     }
-
 
 
 
@@ -172,7 +216,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
 
-        MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+        MenuPowerHelper menuPowerHelper;
 
 
         private void timer1_Tick(object sender, EventArgs e)

@@ -480,7 +480,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 同步调用异步方法
                 // 使用Task.Run以避免可能的死锁
-                return Task.Run(async () => await bizCodeService.GenerateBizBillNoAsync(bizType)).Result;
+                return Task.Run(async () => await bizCodeService.GenerateBizBillNoAsync(bizType)).GetAwaiter().GetResult();
             }
             catch (AggregateException ex)
             {
@@ -513,7 +513,8 @@ namespace RUINORERP.UI.Network.Services
                 }
 
                 // 同步调用异步方法
-                return Task.Run(async () => await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst)).Result;
+                // 使用Task.Run以避免可能的死锁
+                return Task.Run(async () => await bizCodeService.GenerateBaseInfoNoAsync(baseInfoType, paraConst)).GetAwaiter().GetResult();
             }
             catch (AggregateException ex)
             {

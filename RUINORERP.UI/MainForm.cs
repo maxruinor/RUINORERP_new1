@@ -1235,9 +1235,19 @@ namespace RUINORERP.UI
             kryptonDockableWorkspace1.ActivePageChanged += kryptonDockableWorkspace1_ActivePageChanged;
             GetActivePage(kryptonDockableWorkspace1);
 
-            // 在应用程序启动代码中添加
-            var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
-            await initializationService.InitializeDefaultPoliciesAsync();
+            // 在后台异步执行行级权限策略初始化，避免阻塞UI加载
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var initializationService = Startup.GetFromFac<IDefaultRowAuthPolicyInitializationService>();
+                    await initializationService.InitializeDefaultPoliciesAsync();
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogError(ex, "行级权限策略初始化失败");
+                }
+            });
 
             // 更新当前用户信息中的当前模块和当前窗体
             UpdateCurrentUserModuleAndForm();
@@ -1279,8 +1289,8 @@ namespace RUINORERP.UI
                 #region 本位币别
                 #region 查询对应的项目组
 
-                // 使用Invoke确保UI操作在主线程中执行
-                this.Invoke(new Action(() => PrintInfoLog("正在查询项目组...")));
+                // 使用BeginInvoke确保UI操作在主线程中执行，避免阻塞
+                this.BeginInvoke(new Action(() => PrintInfoLog("正在查询项目组...")));
 
                 //todo 后面再优化为缓存级吧
                 List<tb_ProjectGroup> projectGroups = new List<tb_ProjectGroup>();
@@ -1294,7 +1304,7 @@ namespace RUINORERP.UI
                 #endregion
 
                 #region  本位币别查询
-                this.Invoke(new Action(() => PrintInfoLog("正在查询本位币别...")));
+                this.BeginInvoke(new Action(() => PrintInfoLog("正在查询本位币别...")));
 
                 List<tb_Currency> currencies = new List<tb_Currency>();
                 currencies = _cacheManager.GetEntityList<tb_Currency>(nameof(tb_Currency));
@@ -1310,11 +1320,11 @@ namespace RUINORERP.UI
                     .Where(c => c.Is_BaseCurrency.HasValue && c.Is_BaseCurrency.Value == true).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
-                        this.Invoke(new Action(() => MessageBox.Show("请在基础设置中配置本位币别。")));
+                        this.BeginInvoke(new Action(() => MessageBox.Show("请在基础设置中配置本位币别。")));
                     }
                 }
 
-                this.Invoke(new Action(() => PrintInfoLog("本位币别查询完成。")));
+                this.BeginInvoke(new Action(() => PrintInfoLog("本位币别查询完成。")));
                 #endregion
 
 
@@ -1334,7 +1344,7 @@ namespace RUINORERP.UI
             {
                 await Task.Delay(10000);
                 #region  正在查询账期的设置
-                this.Invoke(new Action(() => PrintInfoLog("正在查询账期的设置")));
+                this.BeginInvoke(new Action(() => PrintInfoLog("正在查询账期的设置")));
 
                 List<tb_PaymentMethod> PaymentMethods = new List<tb_PaymentMethod>();
                 PaymentMethods = _cacheManager.GetEntityList<tb_PaymentMethod>(nameof(tb_PaymentMethod));
@@ -1350,11 +1360,11 @@ namespace RUINORERP.UI
                     .Where(c => c.Paytype_Name == DefaultPaymentMethod.账期.ToString()).Single();
                     if (MainForm.Instance.AppContext.BaseCurrency == null)
                     {
-                        this.Invoke(new Action(() => MessageBox.Show("请在基础设置中的付款方式添加【账期】。")));
+                        this.BeginInvoke(new Action(() => MessageBox.Show("请在基础设置中的付款方式添加【账期】。")));
                     }
                 }
 
-                this.Invoke(new Action(() => PrintInfoLog("账期设置查询完成。")));
+                this.BeginInvoke(new Action(() => PrintInfoLog("账期设置查询完成。")));
                 #endregion
             });
 

@@ -97,6 +97,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
                 else
                 {
+                    // 只加载需要的关联实体，避免加载tb_employee实体时的Created_at字段绑定错误
                     PURList = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_department)
@@ -112,17 +113,20 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                   .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
                   .OrderBy(c => c.RequirementDate)
-                  // .WithCache(60) // 缓存60秒
+                  .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
                 if (PURList.Count > 0)
                 {
+                    //在后台线程执行数据转换,避免阻塞UI
+                    var dataTable = await Task.Run(() => PURList.ToDataTable(array, true));
 
+                    //在UI线程绑定数据源
                     kryptonTreeGridView1.DataSource = null;
                     kryptonTreeGridView1.GridNodes.Clear();
                     kryptonTreeGridView1.SortColumnName = "RequirementDate";
-                    kryptonTreeGridView1.DataSource = PURList.ToDataTable(array, true); // PURList.ToDataTable<Proc_WorkCenterPUR>(expColumns);
+                    kryptonTreeGridView1.DataSource = dataTable;
                     if (kryptonTreeGridView1.ColumnCount > 0)
                     {
                         kryptonTreeGridView1.Columns[0].Width = 220;
@@ -248,11 +252,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error(ex);
-                //if (errorCount > 10)
-                //{
-                //    timer1.Stop();
-                //}
+                MainForm.Instance.logger.Error(ex,"MRP查询数据出错");
             }
             if (PURList.Count > 3)
             {

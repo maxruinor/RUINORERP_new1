@@ -307,14 +307,52 @@ namespace RUINORERP.Business.Security
                 appcontext.rolePropertyConfig = appcontext.CurrentRole.tb_rolepropertyconfig;
             }
 
-            //获取工作台配置
+            //获取工作台配置 - 使用同步加载方法
             appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
-            appcontext.WorkCenterConfigList = appcontext.Db.CopyNew().Queryable<tb_WorkCenterConfig>().Where(c => c.RoleID == appcontext.CurrentRole.RoleID).ToList();
+            LoadWorkCenterConfig(appcontext);
 
             loginSucceed = true;
             return loginSucceed;
         }
 
+        /// <summary>
+        /// 加载工作台配置（优化版）
+        /// 支持重试机制
+        /// </summary>
+        /// <param name="appcontext">应用上下文</param>
+        private static void LoadWorkCenterConfig(ApplicationContext appcontext)
+        {
+            const int maxRetryCount = 3;
+
+            for (int attempt = 1; attempt <= maxRetryCount; attempt++)
+            {
+                try
+                {
+                    // 使用后台线程执行查询，避免阻塞UI
+                    var configList = Task.Run(() =>
+                    {
+                        return appcontext.Db.CopyNew()
+                            .Queryable<tb_WorkCenterConfig>()
+                            .Where(c => c.RoleID == appcontext.CurrentRole.RoleID)
+                            .ToList();
+                    }).GetAwaiter().GetResult();
+
+                    appcontext.WorkCenterConfigList = configList ?? new List<tb_WorkCenterConfig>();
+                    return;
+                }
+                catch (Exception)
+                {
+                    // 如果是最后一次尝试，抛出异常
+                    if (attempt == maxRetryCount)
+                    {
+                        throw;
+                    }
+
+                    // 短暂延迟后重试
+                    System.Threading.Thread.Sleep(500 * attempt);
+                }
+            }
+        }
 
 
         public static void Logout(ApplicationContext appcontext)

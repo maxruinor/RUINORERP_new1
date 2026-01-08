@@ -28,9 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCStockCell));
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.kryptonHeaderGroup1 = new Krypton.Toolkit.KryptonHeaderGroup();
             this.buttonSpecHeaderGroup1 = new Krypton.Toolkit.ButtonSpecHeaderGroup();
             this.kryptonCommandRefresh = new Krypton.Toolkit.KryptonCommand();
@@ -65,11 +63,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridViewOtherOut)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonTreeGridView1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // timer1
-            // 
-            this.timer1.Interval = 1000;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // kryptonHeaderGroup1
             // 
@@ -295,7 +288,6 @@
 
         private Krypton.Toolkit.KryptonHeaderGroup kryptonHeaderGroup1;
         private Krypton.Toolkit.KryptonPanel kryptonPanelSaleMain;
-        private System.Windows.Forms.Timer timer1;
         private Krypton.Toolkit.Suite.Extended.TreeGridView.KryptonTreeGridView kryptonTreeGridView1;
         private System.Windows.Forms.DataGridViewTextBoxColumn 订单状态;
         private System.Windows.Forms.DataGridViewLinkColumn 数量;

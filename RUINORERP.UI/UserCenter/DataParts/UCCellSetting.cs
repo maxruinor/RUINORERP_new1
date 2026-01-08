@@ -128,6 +128,15 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
+
+            // 新增：检测空配置并提示
+            if (centerConfig == null || string.IsNullOrEmpty(centerConfig?.DataOverview))
+            {
+                MainForm.Instance.PrintInfoLog(
+                    "工作台配置为空或无效，无法显示工作单元。"
+                );
+            }
+
             BuilderCellListTreeView(centerConfig);
 
         }

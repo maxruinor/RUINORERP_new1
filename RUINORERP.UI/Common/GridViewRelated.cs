@@ -345,9 +345,18 @@ namespace RUINORERP.UI.Common
         /// <returns></returns>
         public async void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
         {
-
+            var clickColType = CurrentRow.Cells[GridViewColumnFieldName].Value.GetType();
+         
             tb_MenuInfo RelatedMenuInfo = null;
-            RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
+            RelatedInfo relatedRelationship = null;
+            if (clickColType == typeof(Int64))
+            {
+                 relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
+            }
+            if (clickColType == typeof(string))
+            {
+                 relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.TargetDisplayField == GridViewColumnFieldName);
+            }
             if (relatedRelationship != null)
             {
 

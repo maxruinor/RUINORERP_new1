@@ -109,7 +109,7 @@ namespace RUINORERP.UI.Network.DI
                                 try
                                 {
                                     var task = (Task)initializeMethod.Invoke(service, null);
-                                    task.Wait();
+                                    task.GetAwaiter().GetResult();
                                 }
                                 catch (Exception ex)
                                 {

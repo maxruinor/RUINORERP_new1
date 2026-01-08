@@ -19,10 +19,11 @@ using System.Linq.Expressions;
 using RUINORERP.Business;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
+using RUINORERP.UI.UserCenter.DataParts;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
-    public partial class UCStockCell : UserControl
+    public partial class UCStockCell : UCBaseCell
     {
         public UCStockCell()
         {
@@ -32,10 +33,25 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void UCStockCell_Load(object sender, EventArgs e)
         {
-            //QueryStockInfo();
-            QueryStockOtherIn();
-            QueryStockOtherOut();
-            timer1.Start();
+            // 仅执行UI初始化操作，不包含数据库查询
+        }
+
+        /// <summary>
+        /// 重写基类的LoadData方法，实现数据加载逻辑
+        /// </summary>
+        public override async Task LoadData()
+        {
+            try
+            {
+                // 在UI线程中执行数据加载，因为QueryStockOtherIn和QueryStockOtherOut方法中直接访问了UI元素
+                // 后续可以考虑重构这两个方法，将数据查询和UI更新分离
+                QueryStockOtherIn();
+                QueryStockOtherOut();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "UCStockCell.LoadData 加载数据失败");
+            }
         }
 
 
@@ -84,6 +100,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                 //覆盖性的设置了值。将kryptonTreeGridNodeRow的对应的DataGridView的第1行2列设置值
                 //kryptonTreeGridNodeRow.DataGridView.Rows[0].Cells[1].Value = "哈哈";
+
                 string WhereClause = " and 1=1 ";
                 if (!strEmployees.IsNullOrEmpty())
                 {
@@ -121,7 +138,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 }
 
                 /*
-
+                
                 KryptonTreeGridNodeRow kryptonTreeGridNodeRow1 = kryptonTreeGridNodeRow.Nodes.Add("kkkk");
 
                 //kryptonTreeGridNodeRow1.DataGridView.Rows[1].Cells[1].Value = "啦啦啦";
@@ -154,7 +171,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             //if (MainForm.GetLastInputTime() > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             //{
-
+            
             //    QueryStockOtherIn();
             //    QueryStockOtherOut();
             //}

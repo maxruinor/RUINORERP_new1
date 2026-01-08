@@ -525,7 +525,8 @@ namespace RUINORERP.UI.Common
                 Uri getUrl = new Uri(serviceAddress);
                 using var httpClient = new HttpClient();
                 httpClient.Timeout = new TimeSpan(0, 0, 60);
-                result = await httpClient.GetAsync(serviceAddress).Result.Content.ReadAsStringAsync();
+                var response = await httpClient.GetAsync(serviceAddress);
+                result = await response.Content.ReadAsStringAsync();
                 return result;
             }
             catch (Exception e)
@@ -547,7 +548,8 @@ namespace RUINORERP.UI.Common
                     httpContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                     using var httpClient = new HttpClient();
                     httpClient.Timeout = new TimeSpan(0, 0, 60);
-                    result = await httpClient.PostAsync(serviceAddress, httpContent).Result.Content.ReadAsStringAsync();
+                    var response = await httpClient.PostAsync(serviceAddress, httpContent);
+                    result = await response.Content.ReadAsStringAsync();
                 }
                 return result;
             }

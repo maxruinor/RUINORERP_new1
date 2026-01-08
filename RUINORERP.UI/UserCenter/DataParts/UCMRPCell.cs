@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.Security;
+using RUINORERP.Business.Security;
 using RUINORERP.Model;
 using SqlSugar;
 using System;
@@ -29,42 +29,63 @@ using RUINORERP.Common.Helper;
 using Krypton.Toolkit;
 using SuperSocket.ClientEngine;
 using System.Diagnostics;
+using RUINORERP.UI.UserCenter.DataParts;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
     /// <summary>
     /// 生产计划
     /// </summary>
-    public partial class UCMRPCell : UserControl
+    public partial class UCMRPCell : UCBaseCell
     {
         public UCMRPCell()
         {
             InitializeComponent();
         }
         UCMRP uCMRP = new UCMRP();
-        private async void UCPURCell_Load(object sender, EventArgs e)
+        private void UCPURCell_Load(object sender, EventArgs e)
         {
-            await Task.Delay(3000); // 等待5秒
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            int PURListCount = await uCMRP.QueryMRPDataStatus();
-            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
+            // 仅执行UI初始化操作，不包含数据库查询
             krypton生产.Controls.Add(uCMRP);
-            timer1.Start();
-            stopwatch.Stop();
-            MainForm.Instance.uclog.AddLog($"初始化UCMRP 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
+
+        /// <summary>
+        /// 重写基类的LoadData方法，实现数据加载逻辑
+        /// </summary>
+        public override async Task LoadData()
+        {
+            try
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                
+                // 移除长时间延迟，改用更合理的加载策略
+                int PURListCount = await uCMRP.QueryMRPDataStatus();
+                
+                // 在UI线程更新界面
+                this.Invoke((MethodInvoker)(() =>
+                {
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
+                }));
+                
+                stopwatch.Stop();
+                MainForm.Instance.uclog.AddLog($"初始化UCMRP 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "UCMRPCell.LoadData 加载数据失败");
+            }
+        }
+        
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private void timer1_Tick(object sender, EventArgs e)
         {
             long lastInputTime = MainForm.GetLastInputTime();
-
 
             //if (MainForm.GetLastInputTime() > 100000 && kryptonTreeGridView1.Rows.Count > 0)
             //{
             //    //刷新工作台数据？
             //    QueryMRPDataStatus();
             //}
-
         }
 
         //进度有两种，一种是有缴库过的。另一个是没有缴库过的。这种就按步骤来算一下进度。  前者用绿色进度条。后用橙色？  没有任何进度的 用灰色？
@@ -86,6 +107,4 @@ namespace RUINORERP.UI.UserCenter.DataParts
             menuPowerHelper.ExecuteEvents(menuinfo, null, null, uCMRP.PURList);
         }
     }
-
-
 }

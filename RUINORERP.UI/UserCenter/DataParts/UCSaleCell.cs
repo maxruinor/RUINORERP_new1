@@ -1,4 +1,4 @@
-﻿using RUINORERP.Business.Security;
+using RUINORERP.Business.Security;
 using RUINORERP.Model;
 using SqlSugar;
 using System;
@@ -29,29 +29,51 @@ using RUINORERP.Common.Helper;
 using Krypton.Toolkit;
 using SuperSocket.ClientEngine;
 using System.Diagnostics;
+using RUINORERP.UI.UserCenter.DataParts;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
     /// <summary>
     /// 销售出库
     /// </summary>
-    public partial class UCSaleCell : UserControl
+    public partial class UCSaleCell : UCBaseCell
     {
         public UCSaleCell()
         {
             InitializeComponent();
         }
         UCSale uCSale = new UCSale();
-        private async void UCPURCell_Load(object sender, EventArgs e)
+        private void UCPURCell_Load(object sender, EventArgs e)
         {
-            await Task.Delay(4000); // 等待5秒
-            Stopwatch stopwatch = Stopwatch.StartNew();
-            int ListCount = await uCSale.QueryData();
-            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】销售出库中";
+            // 仅执行UI初始化操作，不包含数据库查询
             kryptonPanelCell.Controls.Add(uCSale);
-            timer1.Start();
-            stopwatch.Stop();
-            MainForm.Instance.uclog.AddLog($"初始化UCSale 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+        }
+
+        /// <summary>
+        /// 重写基类的LoadData方法，实现数据加载逻辑
+        /// </summary>
+        public override async Task LoadData()
+        {
+            try
+            {
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                
+                // 移除长时间延迟，改用更合理的加载策略
+                int ListCount = await uCSale.QueryData();
+                
+                // 在UI线程更新界面
+                this.Invoke((MethodInvoker)(() =>
+                {
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】销售出库中";
+                }));
+                
+                stopwatch.Stop();
+                MainForm.Instance.uclog.AddLog($"初始化UCSale 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "UCSaleCell.LoadData 加载数据失败");
+            }
         }
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
         private void timer1_Tick(object sender, EventArgs e)

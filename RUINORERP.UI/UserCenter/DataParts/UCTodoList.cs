@@ -151,11 +151,33 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 查找匹配的工作中心配置
             CenterConfig = GetWorkCenterConfig(currentRole, currentUser);
 
+            // 新增：检测空配置并提示
+            if (CenterConfig == null || string.IsNullOrEmpty(CenterConfig.ToDoList))
+            {
+                MainForm.Instance.PrintInfoLog(
+                    "当前角色未配置待办事项，待办列表将显示空白。"
+                );
+
+                this.Invoke((MethodInvoker)(() =>
+                {
+                    System.Windows.Forms.MessageBox.Show(
+                        $"当前角色【{currentRole.RoleName}】未配置待办事项。\n\n" +
+                        "请联系管理员在【工作台配置】中配置待办事项列表。",
+                        "配置提示",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Information
+                    );
+                }));
+            }
+
             // 初始化同步订阅者
             InitializeSyncSubscriber();
 
-            // 构建待办事项树
-            await BuilderToDoListTreeView();
+            // 构建待办事项树（如果配置存在）
+            if (!string.IsNullOrEmpty(CenterConfig?.ToDoList))
+            {
+                await BuilderToDoListTreeView();
+            }
 
             // 设置上下文菜单
             kryptonTreeViewJobList.ContextMenuStrip = contextMenuStrip1;
@@ -1084,7 +1106,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var bizEntity = Activator.CreateInstance(tableType);
             TreeNode parentNode = new TreeNode(bizType.ToString());
             parentNode.Name = bizType.ToString();
-            var queryResult = await GetCombinedDataAsync(tableType, bizType, bizEntity);
+            
+            // 使用缓存获取组合数据
+            string cacheKey = $"TodoList_CombinedData_{bizType}_{DateTime.Now.ToString("yyyyMMdd")}";
+            var queryResult = await DataCacheManager.Instance.GetOrSetAsync(cacheKey, async () =>
+            {
+                return await GetCombinedDataAsync(tableType, bizType, bizEntity);
+            }, 60); // 缓存60分钟
+            
             if (queryResult.Data == null) return null;
 
             // 内存中处理状态分组

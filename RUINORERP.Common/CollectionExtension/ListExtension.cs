@@ -20,6 +20,18 @@ namespace RUINORERP.Common.CollectionExtension
     /// </summary>
     public static class ListExtension
     {
+        /// <summary>
+        /// 属性信息缓存,提升反射性能
+        /// Key: Type.FullName + 属性名
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, PropertyInfo> _propertyInfoCache = new ConcurrentDictionary<string, PropertyInfo>();
+
+        /// <summary>
+        /// 类型属性缓存
+        /// Key: Type.FullName
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, PropertyInfo[]> _typePropertiesCache = new ConcurrentDictionary<string, PropertyInfo[]>();
+
         //public static IQueryable<T> DataList<T>(this IQueryable<T> source, int page = 1, int rows = int.MaxValue, string sort = "Id", string order = "desc")
         //{
         //    return source.DataSort(sort, order).DataPage(page, rows);
@@ -252,45 +264,49 @@ namespace RUINORERP.Common.CollectionExtension
         public static DataTable ToDataTable<T>(this IList<T> varlist, params string[] columns)
         {
             DataTable dtReturn = new DataTable();
-            // column names 
+            // column names
             PropertyInfo[] oProps = null;
             if (varlist == null)
                 return dtReturn;
-            foreach (T rec in varlist)
+
+            // 使用缓存的属性信息
+            string typeKey = typeof(T).FullName;
+            if (!_typePropertiesCache.TryGetValue(typeKey, out oProps))
             {
-                if (oProps == null)
+                oProps = typeof(T).GetProperties();
+                _typePropertiesCache.TryAdd(typeKey, oProps);
+            }
+
+            foreach (PropertyInfo pi in oProps)
+            {
+                Type colType = pi.PropertyType;
+                if ((colType.IsGenericType) && (colType.GetGenericTypeDefinition() == typeof(Nullable<>)))
                 {
-                    oProps = ((Type)rec.GetType()).GetProperties();
-                    foreach (PropertyInfo pi in oProps)
+                    colType = colType.GetGenericArguments()[0];
+                }
+                if (columns != null && columns.Length > 0)
+                {
+                    if (columns.Contains(pi.Name))
                     {
-                        Type colType = pi.PropertyType;
-                        if ((colType.IsGenericType) && (colType.GetGenericTypeDefinition() == typeof(Nullable<>)))
-                        {
-                            colType = colType.GetGenericArguments()[0];
-                        }
-                        if (columns != null && columns.Length > 0)
-                        {
-                            if (columns.Contains(pi.Name))
-                            {
-                                dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
-                            }
-
-                        }
-                        else
-                        {
-                            dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
-                        }
-
+                        dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
                     }
                 }
+                else
+                {
+                    dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
+                }
+            }
+
+            foreach (T rec in varlist)
+            {
                 DataRow dr = dtReturn.NewRow();
                 foreach (PropertyInfo pi in oProps)
                 {
                     //包含在指定点中，才给值
                     if (dtReturn.Columns.Contains(pi.Name))
                     {
-                        dr[pi.Name] = pi.GetValue(rec, null) == null ? DBNull.Value : pi.GetValue
-                        (rec, null);
+                        object value = pi.GetValue(rec, null);
+                        dr[pi.Name] = value == null ? DBNull.Value : value;
                     }
                 }
                 dtReturn.Rows.Add(dr);
@@ -313,13 +329,19 @@ namespace RUINORERP.Common.CollectionExtension
             //key是英文属性列名，value是列的类型。先把这一波全部列出来，再按参数添加
             List<KeyValuePair<string, Type>> colsTypeList = new List<KeyValuePair<string, Type>>();
 
-            // column names 
+            // column names
             PropertyInfo[] oProps = null;
             if (varlist == null)
                 return dtReturn;
 
-            //找到实体中存在的属性当作列
-            oProps = typeof(T).GetProperties();
+            // 使用缓存的属性信息
+            string typeKey = typeof(T).FullName;
+            if (!_typePropertiesCache.TryGetValue(typeKey, out oProps))
+            {
+                oProps = typeof(T).GetProperties();
+                _typePropertiesCache.TryAdd(typeKey, oProps);
+            }
+
             foreach (PropertyInfo pi in oProps)
             {
                 Type colType = pi.PropertyType;
@@ -328,7 +350,7 @@ namespace RUINORERP.Common.CollectionExtension
                     colType = colType.GetGenericArguments()[0];
                 }
 
-                if (columnsCaption != null || columnsCaption.Length > 0)
+                if (columnsCaption != null && columnsCaption.Length > 0)
                 {
                     var col = columnsCaption.FirstOrDefault(c => c.Key == pi.Name);
                     if (col.Key != null)
@@ -376,12 +398,17 @@ namespace RUINORERP.Common.CollectionExtension
                     {
                         if (colsType.Value == typeof(DateTime) && IsShortDate)
                         {
-                            dr[col.ColumnName] = rec.GetPropertyValue<T>(col.ColumnName) == null ? DBNull.Value : rec.GetPropertyValue<T>(col.ColumnName);
-                            dr[col.ColumnName] = Convert.ToDateTime(dr[col.ColumnName]).ToString("yyyy-MM-dd");
+                            object value = rec.GetPropertyValue<T>(col.ColumnName);
+                            dr[col.ColumnName] = value == null ? DBNull.Value : value;
+                            if (dr[col.ColumnName] != DBNull.Value)
+                            {
+                                dr[col.ColumnName] = Convert.ToDateTime(dr[col.ColumnName]).ToString("yyyy-MM-dd");
+                            }
                         }
                         else
                         {
-                            dr[col.ColumnName] = rec.GetPropertyValue<T>(col.ColumnName) == null ? DBNull.Value : rec.GetPropertyValue<T>(col.ColumnName);
+                            object value = rec.GetPropertyValue<T>(col.ColumnName);
+                            dr[col.ColumnName] = value == null ? DBNull.Value : value;
                         }
                     }
                     else

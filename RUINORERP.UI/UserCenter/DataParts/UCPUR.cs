@@ -107,16 +107,20 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                   .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
                    .Where(c => c.DataStatus == (int)DataStatus.确认).OrderBy(c => c.PurDate)
-                    //.WithCache(60) // 缓存60秒
+                   .WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;
                 if (OrderList.Count > 0)
                 {
+                    //在后台线程执行数据转换,避免阻塞UI
+                    var dataTable = await Task.Run(() => OrderList.ToDataTable(array, true));
+
+                    //在UI线程绑定数据源
                     kryptonTreeGridView1.DataSource = null;
                     kryptonTreeGridView1.GridNodes.Clear();
                     kryptonTreeGridView1.SortColumnName = "PurDate";
-                    kryptonTreeGridView1.DataSource = OrderList.ToDataTable(array, true); // PURList.ToDataTable<Proc_WorkCenterPUR>(expColumns);
+                    kryptonTreeGridView1.DataSource = dataTable;
                     if (kryptonTreeGridView1.ColumnCount > 0)
                     {
                         kryptonTreeGridView1.Columns[0].Width = 220;
@@ -240,11 +244,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error(ex);
-                //if (errorCount > 10)
-                //{
-                //    timer1.Stop();
-                //}
+                MainForm.Instance.logger.Error(ex,"PUR采购工作台数据查询出错");
             }
             if (OrderList.Count > 3)
             {

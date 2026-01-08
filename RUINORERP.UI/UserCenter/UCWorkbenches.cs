@@ -90,9 +90,12 @@ namespace RUINORERP.UI.UserCenter
 
             if (Kpages.Count == 0)
             {
-                BuilderComponents(Kpages);
+                await BuilderComponents(Kpages);
             }
-            LoadDefaultLayoutFromDb(Kpages);
+            // 异步加载默认布局,避免阻塞UI线程
+            await LoadDefaultLayoutFromDbAsync(Kpages);
+
+            // 布局加载完成后加载初始页面
             LoadInitPages();
 
             for (int i = 0; i < kryptonDockingManager1.Pages.Count(); i++)
@@ -116,6 +119,56 @@ namespace RUINORERP.UI.UserCenter
             //        todoCell.Width = 245;
             //    }
             //}));
+
+            // UI加载完成后，统一调用各工作单元的LoadData方法加载数据
+            await LoadAllWorkCellsDataAsync();
+        }
+
+        /// <summary>
+        /// 统一加载所有工作单元的数据
+        /// 修改为顺序加载，避免并行导致的数据库连接池耗尽问题
+        /// </summary>
+        private async Task LoadAllWorkCellsDataAsync()
+        {
+            try
+            {
+                // 获取所有工作单元页面
+                var workCellPages = Kpages.ToList();
+                MainForm.Instance.logger?.LogInformation("开始加载 {Count} 个工作单元数据", workCellPages.Count);
+
+                int successCount = 0;
+                int failCount = 0;
+
+                // 顺序加载每个工作单元的数据，避免并行导致的数据库连接竞争
+                foreach (var page in workCellPages)
+                {
+                    foreach (Control control in page.Controls)
+                    {
+                        if (control is UCBaseCell workCell)
+                        {
+                            try
+                            {
+                                await workCell.LoadData();
+                                successCount++;
+                            }
+                            catch (Exception ex)
+                            {
+                                failCount++;
+                                MainForm.Instance.logger?.LogError(ex, "加载工作单元 {PageName} 数据失败", page.Text);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                MainForm.Instance.logger?.LogInformation(
+                    "工作单元数据加载完成，成功: {Success}，失败: {Fail}",
+                    successCount, failCount);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "统一加载工作单元数据失败");
+            }
         }
 
         private void ButtonSpecAny_Click(object sender, EventArgs e)
@@ -201,76 +254,152 @@ namespace RUINORERP.UI.UserCenter
 
 
         /// <summary>
-        /// 数据概览
+        /// 数据概览（优化版）
+        /// 增加空配置检测和友好提示
         /// </summary>
-        private void BuilderComponents(KryptonPageCollection Kpages)
+        private async Task BuilderComponents(KryptonPageCollection Kpages)
         {
-            //先取人，无人再取角色。
-            tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
-            tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            try
+            {
+                tb_RoleInfo CurrentRole = MainForm.Instance.AppContext.CurrentRole;
+                tb_UserInfo CurrentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
 
-            tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
-            if (centerConfig == null || (centerConfig != null && centerConfig.DataOverview.Split(',').ToList().Count == 0))
-            {
-                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
-            }
-            else if(string.IsNullOrEmpty(centerConfig.DataOverview))
-            {
-                centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
-            }
-            if (centerConfig != null)
-            {
-                List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
-                foreach (var item in DataOverviewItems)
+                // 先按用户和角色查找配置
+                tb_WorkCenterConfig centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList
+                    .FirstOrDefault(c => c.RoleID == CurrentRole.RoleID && c.User_ID == CurrentUser.User_ID);
+
+                // 如果没有用户级配置或配置为空，则使用角色级配置
+                if (centerConfig == null ||
+                    (centerConfig != null && centerConfig.DataOverview.Split(',').ToList().Count == 0))
                 {
-                    if (item.IsNullOrEmpty())
-                    {
-                        continue;
-                    }
-                    数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
-                    switch (DataOverview)
-                    {
-                        case 数据概览.销售情况概览:
-
-                            UCSalePerformanceCell uCSalePerformanceCell = new UCSalePerformanceCell();
-                            KryptonPage puCSalePerformanceCell = UIForKryptonHelper.NewPage("销售情况概览", uCSalePerformanceCell);
-
-                            Kpages.Add(puCSalePerformanceCell);
-                            break;
-
-                        case 数据概览.销售单元:
-                            UCSaleCell uCSaleCell = new UCSaleCell();
-                            KryptonPage pSalecell = UIForKryptonHelper.NewPage("销售单元", uCSaleCell);
-                            //pSalecell.ClearFlags(KryptonPageFlags.DockingAllowClose);
-                            //pSalecell.ClearFlags(KryptonPageFlags.All);
-
-                            Kpages.Add(pSalecell);
-                            break;
-                        case 数据概览.采购单元:
-                            UCPURCell uCPURCell = new UCPURCell();
-                            KryptonPage pPURcell = UIForKryptonHelper.NewPage("采购单元", uCPURCell);
-                            // pPURcell.ClearFlags(KryptonPageFlags.All);
-                            //  pPURcell.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked | KryptonPageFlags.DockingAllowClose);
-                            Kpages.Add(pPURcell);
-                            break;
-                        case 数据概览.库存单元:
-                            UCStockCell uCStockCell = new UCStockCell();
-                            KryptonPage pStockcell = UIForKryptonHelper.NewPage("库存单元", uCStockCell);
-                            // pStockcell.ClearFlags(KryptonPageFlags.All);
-                            Kpages.Add(pStockcell);
-                            break;
-                        case 数据概览.生产单元:
-                            UCMRPCell uCProduceCell = new UCMRPCell();
-                            KryptonPage pProducecell = UIForKryptonHelper.NewPage("生产单元", uCProduceCell);
-                            // pProducecell.ClearFlags(KryptonPageFlags.All);
-                            Kpages.Add(pProducecell);
-
-                            break;
-                        default:
-                            break;
-                    }
-
+                    centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList
+                        .FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
                 }
+                else if (string.IsNullOrEmpty(centerConfig.DataOverview))
+                {
+                    centerConfig = MainForm.Instance.AppContext.WorkCenterConfigList
+                        .FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+                }
+
+                // 新增：检测空配置并提示用户
+                if (centerConfig == null)
+                {
+                    MainForm.Instance.PrintInfoLog(
+                        "当前角色未配置数据概览单元，界面将显示空白。请联系管理员配置。"
+                    );
+
+                    // 在UI线程显示友好提示
+                    this.Invoke((MethodInvoker)(() =>
+                    {
+                        System.Windows.Forms.MessageBox.Show(
+                            $"当前角色【{CurrentRole.RoleName}】未配置数据概览单元，工作台将显示空白。\n\n" +
+                            "请联系管理员在【工作台配置】中配置数据概览。",
+                            "配置提示",
+                            System.Windows.Forms.MessageBoxButtons.OK,
+                            System.Windows.Forms.MessageBoxIcon.Information
+                        );
+                    }));
+                }
+                else if (string.IsNullOrEmpty(centerConfig.DataOverview))
+                {
+                    MainForm.Instance.PrintInfoLog(
+                        "当前角色配置了工作台，但数据概览为空。"
+                    );
+                }
+
+                if (centerConfig != null)
+                {
+                    List<string> DataOverviewItems = centerConfig.DataOverview.Split(',').ToList();
+
+                    foreach (var item in DataOverviewItems)
+                    {
+                        if (item.IsNullOrEmpty())
+                        {
+                            continue;
+                        }
+                        数据概览 DataOverview = (数据概览)Enum.Parse(typeof(数据概览), item);
+
+                        // 异步加载每个数据单元
+                        await LoadDataUnitAsync(DataOverview, Kpages);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "构建数据概览组件时发生异常");
+
+                this.Invoke((MethodInvoker)(() =>
+                {
+                    System.Windows.Forms.MessageBox.Show(
+                        "加载工作台数据概览失败，请刷新页面重试。\n\n" +
+                        "错误信息：" + ex.Message,
+                        "加载失败",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error
+                    );
+                }));
+            }
+        }
+
+        /// <summary>
+        /// 异步加载单个数据单元
+        /// </summary>
+        private async Task LoadDataUnitAsync(数据概览 DataOverview, KryptonPageCollection Kpages)
+        {
+            try
+            {
+                Control controlToAdd = null;
+                string pageName = "";
+                
+                // 创建控件实例
+                switch (DataOverview)
+                {
+                    case 数据概览.销售情况概览:
+                        controlToAdd = new UCSalePerformanceCell();
+                        pageName = "销售情况概览";
+                        break;
+
+                    case 数据概览.销售单元:
+                        controlToAdd = new UCSaleCell();
+                        pageName = "销售单元";
+                        break;
+
+                    case 数据概览.采购单元:
+                        controlToAdd = new UCPURCell();
+                        pageName = "采购单元";
+                        break;
+
+                    case 数据概览.库存单元:
+                        controlToAdd = new UCStockCell();
+                        pageName = "库存单元";
+                        break;
+
+                    case 数据概览.生产单元:
+                        controlToAdd = new UCMRPCell();
+                        pageName = "生产单元";
+                        break;
+
+                    default:
+                        return;
+                }
+
+                // 在UI线程中创建页面并添加到集合
+                await Task.Run(() =>
+                {
+                    if (controlToAdd != null)
+                    {
+                        KryptonPage page = UIForKryptonHelper.NewPage(pageName, controlToAdd);
+
+                        this.Invoke((MethodInvoker)(() =>
+                        {
+                            Kpages.Add(page);
+                        }));
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "加载数据单元 {DataOverview} 失败", DataOverview);
             }
         }
 
@@ -423,40 +552,73 @@ namespace RUINORERP.UI.UserCenter
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError("工作台布局保存异常", ex);
+                // 新增：统一异常处理和日志记录
+                MainForm.Instance.logger?.LogError(ex, "保存工作台布局时发生异常");
+
+                this.Invoke((MethodInvoker)(() =>
+                {
+                    System.Windows.Forms.MessageBox.Show(
+                        "保存工作台布局失败：" + ex.Message + "\n\n" +
+                        "请重试或联系管理员。",
+                        "保存失败",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error
+                    );
+                }));
             }
         }
 
-        private void LoadDefaultLayoutFromDb(KryptonPageCollection Kpages)
+        /// <summary>
+        /// 从数据库加载默认布局（异步优化版）
+        /// 避免阻塞UI线程，提升用户体验
+        /// </summary>
+        /// <param name="Kpages">Krypton页面集合</param>
+        private async Task LoadDefaultLayoutFromDbAsync(KryptonPageCollection Kpages)
         {
-            //没有个性化文件时用默认的
-            if (MainForm.Instance.AppContext.CurrentUser != null
+            //检查是否有布局配置
+            bool hasLayoutConfig = MainForm.Instance.AppContext.CurrentUser != null
                 && MainForm.Instance.AppContext.CurrentUser_Role_Personalized != null
-                && !string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout))
+                && !string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout);
+
+            if (!hasLayoutConfig)
             {
-                #region load
-                //加载XML文件
-                XmlDocument xmldoc = new XmlDocument();
-                //获取XML字符串
-                string xmlStr = xmldoc.InnerXml;
-                //字符串转XML
-                xmldoc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout);
+                return;
+            }
+
+            try
+            {
+                //在后台线程解析XML，避免阻塞UI
+                XmlDocument xmldoc = await Task.Run(() =>
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.LoadXml(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout);
+                    return doc;
+                });
+
+                //在UI线程中加载布局，但使用Yield让出控制权
+                await Task.Yield(); // 让UI有机会响应用户操作
 
                 XmlNodeReader nodeReader = new XmlNodeReader(xmldoc);
                 XmlReaderSettings settings = new XmlReaderSettings();
+
                 using (XmlReader reader = XmlReader.Create(nodeReader, settings))
                 {
                     while (reader.Read())
                     {
                         if (reader.NodeType == XmlNodeType.Element && reader.Name == "DW")
                         {
-                            //加载停靠信息
+                            //加载停靠信息 - 必须在UI线程执行
                             ws.LoadElementFromXml(reader, Kpages);
+                            
+                            // 每加载一个元素就让出控制权,让UI有机会刷新
+                            await Task.Yield();
                         }
                     }
-
                 }
-                #endregion
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "从数据库加载默认布局时发生异常");
             }
         }
 

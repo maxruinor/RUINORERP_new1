@@ -3270,9 +3270,16 @@
     </Compile>
     <Compile Include="UserCenter\DataParts\ConditionBuilderFactory.cs" />
     <Compile Include="UserCenter\DataParts\DataBoardUnit.cs" />
+    <Compile Include="UserCenter\DataParts\DataCacheManager.cs" />
     <Compile Include="UserCenter\DataParts\TaskStatusMonitor.cs" />
     <Compile Include="UserCenter\DataParts\TaskStatusSyncManager.cs" />
     <Compile Include="UserCenter\DataParts\TodoListManager.cs" />
+    <Compile Include="UserCenter\DataParts\UCBaseCell.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserCenter\DataParts\UCBaseCell.Designer.cs">
+      <DependentUpon>UCBaseCell.cs</DependentUpon>
+    </Compile>
     <Compile Include="UserCenter\DataParts\UCCellSetting.cs">
       <SubType>UserControl</SubType>
     </Compile>

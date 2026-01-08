@@ -294,7 +294,8 @@ namespace RUINORERP.UI.FM
             DisplayTextResolver.Initialize(_UCBillChildQuery.newSumDataGridViewChild);
 
             #region 双击单号后按业务类型查询显示对应业务窗体
-            _UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_StatementDetail, tb_FM_ReceivablePayable>(c => c.ARAPId, r => r.ARAPNo);
+            _UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_StatementDetail, tb_FM_ReceivablePayable>(c => c.ARAPNo, r => r.ARAPNo);
+            _UCBillChildQuery.GridRelated.SetRelatedInfo<tb_FM_StatementDetail, tb_FM_ReceivablePayable>(c => c.ARAPId, r => r.ARAPId);
             #endregion
         }
     }

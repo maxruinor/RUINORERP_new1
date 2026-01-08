@@ -267,19 +267,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ActualAmount= ((0));
-        /// <summary>
-        /// 实付金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ActualAmount",ColDesc = "实付金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实付金额" )]
-        public decimal ActualAmount
-        { 
-            get{return _ActualAmount;}
-            set{
-            SetProperty(ref _ActualAmount, value);
-                        }
-        }
+ 
 
         private decimal _TotalTaxAmount= ((0));
         /// <summary>
@@ -309,20 +297,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _DiscountAmount= ((0));
-        /// <summary>
-        /// 折扣金额总计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DiscountAmount",ColDesc = "折扣金额总计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "折扣金额总计" )]
-        public decimal DiscountAmount
-        { 
-            get{return _DiscountAmount;}
-            set{
-            SetProperty(ref _DiscountAmount, value);
-                        }
-        }
-
+       
         private DateTime _EntryDate;
         /// <summary>
         /// 入库日期

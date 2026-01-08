@@ -83,11 +83,8 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.KeepAccountsType).NotEmpty().When(x => x.KeepAccountsType.HasValue);
 
- RuleFor(x => x.Deposit).PrecisionScale(19,4,true).WithMessage("订金:小数位不能超过4。");
 
  RuleFor(tb_PurReturnEntry =>tb_PurReturnEntry.TaxDeductionType).NotEmpty().When(x => x.TaxDeductionType.HasValue);
-
- RuleFor(x => x.TotalDiscountAmount).PrecisionScale(19,4,true).WithMessage("折扣金额总计:小数位不能超过4。");
 
 
 //***** 

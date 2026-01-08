@@ -693,6 +693,10 @@ namespace RUINORERP.UI.Network
                 if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                 {
                     _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
+                    // 停止重连机制以避免资源浪费
+                    _connectionManager.StopAutoReconnect();
+                    // 停止心跳检测，因为系统已进入锁定状态
+                    StopHeartbeat();
                     // 异步触发阈值事件
                     Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
                 }
@@ -712,6 +716,13 @@ namespace RUINORERP.UI.Network
                     // 未登录状态，不发送心跳，但不返回true，让心跳失败计数器正常工作
                     _logger?.LogDebug("未登录状态，跳过心跳发送");
                     return false; // 修改：返回false以触发失败计数，确保心跳失败阈值机制正常工作
+                }
+
+                // 检查心跳失败次数，如果已达到阈值则停止发送心跳
+                if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
+                {
+                    _logger?.LogDebug("心跳失败次数已达到阈值，停止发送心跳请求");
+                    return false;
                 }
 
                 var heartbeatRequest = new HeartbeatRequest();

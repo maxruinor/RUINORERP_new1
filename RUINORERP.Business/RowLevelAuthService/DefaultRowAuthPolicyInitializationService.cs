@@ -152,7 +152,6 @@ namespace RUINORERP.Business.RowLevelAuthService
                 var entityInfo = _entityInfoService.GetEntityInfo(bizType);
                 if (entityInfo == null)
                 {
-                    _logger.LogWarning("未找到业务类型 {BizType} 对应的实体信息", bizType);
                     return new List<tb_RowAuthPolicy>();
                 }
 

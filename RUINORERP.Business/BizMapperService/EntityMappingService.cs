@@ -150,8 +150,6 @@ namespace RUINORERP.Business.BizMapperService
                 }
                 return entityInfo;
             }
-
-            _logger.LogDebug("未找到实体类型 {0} 对应的实体信息", entityType.FullName);
             return null;
         }
 

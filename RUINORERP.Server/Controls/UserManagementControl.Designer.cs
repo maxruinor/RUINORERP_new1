@@ -54,7 +54,7 @@ namespace RUINORERP.Server.Controls
             姓名列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             当前模块列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             当前窗体列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            登陆时间列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            登录时间列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             心跳数列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             最后心跳时间列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             客户端版本列ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -235,7 +235,7 @@ namespace RUINORERP.Server.Controls
             // 
             // 列显示选项ToolStripMenuItem
             // 
-            列显示选项ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { 用户名列ToolStripMenuItem, 姓名列ToolStripMenuItem, 当前模块列ToolStripMenuItem, 当前窗体列ToolStripMenuItem, 登陆时间列ToolStripMenuItem, 心跳数列ToolStripMenuItem, 最后心跳时间列ToolStripMenuItem, 客户端版本列ToolStripMenuItem, 客户端IP列ToolStripMenuItem, 静止时间列ToolStripMenuItem, 超级用户列ToolStripMenuItem, 在线状态列ToolStripMenuItem, 授权状态列ToolStripMenuItem });
+            列显示选项ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { 用户名列ToolStripMenuItem, 姓名列ToolStripMenuItem, 当前模块列ToolStripMenuItem, 当前窗体列ToolStripMenuItem, 登录时间列ToolStripMenuItem, 心跳数列ToolStripMenuItem, 最后心跳时间列ToolStripMenuItem, 客户端版本列ToolStripMenuItem, 客户端IP列ToolStripMenuItem, 静止时间列ToolStripMenuItem, 超级用户列ToolStripMenuItem, 在线状态列ToolStripMenuItem, 授权状态列ToolStripMenuItem });
             列显示选项ToolStripMenuItem.Name = "列显示选项ToolStripMenuItem";
             列显示选项ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             列显示选项ToolStripMenuItem.Text = "列显示选项";
@@ -272,13 +272,13 @@ namespace RUINORERP.Server.Controls
             当前窗体列ToolStripMenuItem.Text = "当前窗体";
             当前窗体列ToolStripMenuItem.CheckedChanged += 列显示选项_CheckedChanged;
             // 
-            // 登陆时间列ToolStripMenuItem
+            // 登录时间列ToolStripMenuItem
             // 
-            登陆时间列ToolStripMenuItem.CheckOnClick = true;
-            登陆时间列ToolStripMenuItem.Name = "登陆时间列ToolStripMenuItem";
-            登陆时间列ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
-            登陆时间列ToolStripMenuItem.Text = "登陆时间";
-            登陆时间列ToolStripMenuItem.CheckedChanged += 列显示选项_CheckedChanged;
+            登录时间列ToolStripMenuItem.CheckOnClick = true;
+            登录时间列ToolStripMenuItem.Name = "登录时间列ToolStripMenuItem";
+            登录时间列ToolStripMenuItem.Size = new System.Drawing.Size(148, 22);
+            登录时间列ToolStripMenuItem.Text = "登录时间";
+            登录时间列ToolStripMenuItem.CheckedChanged += 列显示选项_CheckedChanged;
             // 
             // 心跳数列ToolStripMenuItem
             // 
@@ -482,7 +482,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.ToolStripMenuItem 姓名列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 当前模块列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 当前窗体列ToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem 登陆时间列ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 登录时间列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 心跳数列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 最后心跳时间列ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 客户端版本列ToolStripMenuItem;

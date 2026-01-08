@@ -29,7 +29,7 @@ namespace RUINORERP.Server.Adapters
                 SessionId = sessionInfo.SessionID,
                 用户名 = sessionInfo.UserName,
                 客户端IP = sessionInfo.RemoteEndPoint is IPEndPoint ipEndPoint ? ipEndPoint.Address.ToString() : sessionInfo.RemoteEndPoint?.ToString() ?? "",
-                登陆时间 = sessionInfo.ConnectedTime,
+                登录时间 = sessionInfo.ConnectedTime,
                 心跳数 = sessionInfo.HeartbeatCount,
                 最后心跳时间 = sessionInfo.LastHeartbeat.ToString("yyyy-MM-dd HH:mm:ss"),
                 在线状态 = sessionInfo.IsConnected,
@@ -113,7 +113,7 @@ namespace RUINORERP.Server.Adapters
             sessionInfo.IsAdmin = userInfo.超级用户;
             sessionInfo.IsAuthenticated = userInfo.授权状态;
             sessionInfo.IsConnected = userInfo.在线状态;
-            sessionInfo.ConnectedTime = userInfo.登陆时间;
+            sessionInfo.ConnectedTime = userInfo.登录时间;
             sessionInfo.HeartbeatCount = userInfo.心跳数;
             
             // 尝试解析最后心跳时间
@@ -140,7 +140,7 @@ namespace RUINORERP.Server.Adapters
                 姓名 = userInfo.姓名,
                 当前模块 = userInfo.当前模块,
                 当前窗体 = userInfo.当前窗体,
-                登陆时间 = userInfo.登陆时间,
+                登录时间 = userInfo.登录时间,
                 心跳数 = userInfo.心跳数,
                 最后心跳时间 = userInfo.最后心跳时间,
                 客户端版本 = userInfo.客户端版本,

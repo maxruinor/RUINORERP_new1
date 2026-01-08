@@ -266,7 +266,6 @@ namespace RUINORERP.Model
             SetProperty(ref _TotalAmount, value);
                         }
         }
-
  
 
         private decimal _TotalTaxAmount= ((0));
@@ -520,20 +519,6 @@ namespace RUINORERP.Model
             get{return _KeepAccountsType;}
             set{
             SetProperty(ref _KeepAccountsType, value);
-                        }
-        }
-
-        private decimal? _Deposit;
-        /// <summary>
-        /// 订金
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Deposit",ColDesc = "订金")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "Deposit" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "订金" )]
-        public decimal? Deposit
-        { 
-            get{return _Deposit;}
-            set{
-            SetProperty(ref _Deposit, value);
                         }
         }
 

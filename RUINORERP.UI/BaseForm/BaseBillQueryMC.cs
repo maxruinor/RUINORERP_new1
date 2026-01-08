@@ -2941,10 +2941,10 @@ namespace RUINORERP.UI.BaseForm
                 await UIBizService.SetGridViewAsync(typeof(C), BaseSubDataGridView, CurMenuInfo, false, _UCBillChildQuery.InvisibleCols, _UCBillChildQuery.DefaultHideCols);
             }
 
-            if (_UCBillChildQuery_Related != null && _UCBillChildQuery_Related.newSumDataGridViewChild != null)
-            {
-                _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = false;
-            }
+            //if (_UCBillChildQuery_Related != null && _UCBillChildQuery_Related.newSumDataGridViewChild != null)
+            //{
+            //    _UCBillChildQuery_Related.newSumDataGridViewChild.NeedSaveColumnsXml = false;
+            //}
 
             //调用了_UCBillMasterQuery中的表格所以要放到后面不然为空
             BuildContextMenuController();
@@ -3030,10 +3030,10 @@ namespace RUINORERP.UI.BaseForm
             }
 
             //相关引用单据明细
-            if (OnQueryRelatedChild != null)
-            {
-                OnQueryRelatedChild(entity, _UCBillChildQuery_Related.bindingSourceChild);
-            }
+            //if (OnQueryRelatedChild != null)
+            //{
+            //    OnQueryRelatedChild(entity, _UCBillChildQuery_Related.bindingSourceChild);
+            //}
 
         }
 
@@ -3198,31 +3198,31 @@ namespace RUINORERP.UI.BaseForm
             return page;
         }
 
-        private UCBillChildQuery _UCBillChildQuery_Related;
+        //private UCBillChildQuery _UCBillChildQuery_Related;
 
-        private KryptonPage Child_RelatedQuery()
-        {
-            _UCBillChildQuery_Related = new UCBillChildQuery();
-            _UCBillChildQuery_Related.Name = "_UCBillChildQuery_Related";
-            _UCBillChildQuery_Related.entityType = ChildRelatedEntityType;
+        //private KryptonPage Child_RelatedQuery()
+        //{
+        //    _UCBillChildQuery_Related = new UCBillChildQuery();
+        //    _UCBillChildQuery_Related.Name = "_UCBillChildQuery_Related";
+        //    _UCBillChildQuery_Related.entityType = ChildRelatedEntityType;
 
-            List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
-            _UCBillChildQuery_Related.SummaryCols = childlist;
-            if (_UCBillChildQuery_Related.InvisibleCols == null)
-            {
-                _UCBillChildQuery_Related.InvisibleCols = new HashSet<string>();
-            }
-            _UCBillChildQuery_Related.InvisibleCols.AddRange(RuinorExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols).ToArray());
+        //    List<string> childlist = RuinorExpressionHelper.ExpressionListToStringList(ChildRelatedSummaryCols);
+        //    _UCBillChildQuery_Related.SummaryCols = childlist;
+        //    if (_UCBillChildQuery_Related.InvisibleCols == null)
+        //    {
+        //        _UCBillChildQuery_Related.InvisibleCols = new HashSet<string>();
+        //    }
+        //    _UCBillChildQuery_Related.InvisibleCols.AddRange(RuinorExpressionHelper.ExpressionListToHashSet(ChildRelatedInvisibleCols).ToArray());
 
-            _UCBillChildQuery_Related.DefaultHideCols = new HashSet<string>();
-            UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols, true);
+        //    _UCBillChildQuery_Related.DefaultHideCols = new HashSet<string>();
+        //    UIHelper.ControlColumnsInvisible(CurMenuInfo, _UCBillChildQuery_Related.InvisibleCols, _UCBillChildQuery_Related.DefaultHideCols, true);
 
-            _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
-            KryptonPage page = NewPage("关联信息", 1, _UCBillChildQuery_Related);
-            // Document pages cannot be docked or auto hidden
-            page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
-            return page;
-        }
+        //    _UCBillChildQuery_Related.ColNameDataDictionary = ChildColNameDataDictionary;
+        //    KryptonPage page = NewPage("关联信息", 1, _UCBillChildQuery_Related);
+        //    // Document pages cannot be docked or auto hidden
+        //    page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden | KryptonPageFlags.DockingAllowDocked);
+        //    return page;
+        //}
 
         public UCBillMasterQuery _UCBillMasterQuery;
         public UCBillChildQuery _UCBillChildQuery;

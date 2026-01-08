@@ -142,7 +142,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     if (commandId == AuthenticationCommands.Login)
                     {
-                        //登陆指令时上下文session是由服务器来指定的
+                        //登录指令时上下文session是由服务器来指定的
                         if (loginRequest == null)
                         {
                             return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet, "登录请求数据不能为空");

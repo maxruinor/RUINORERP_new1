@@ -260,7 +260,7 @@ namespace RUINORERP.Server.Controls
             姓名列ToolStripMenuItem.Checked = true;
             当前模块列ToolStripMenuItem.Checked = true;
             当前窗体列ToolStripMenuItem.Checked = true;
-            登陆时间列ToolStripMenuItem.Checked = true;
+            登录时间列ToolStripMenuItem.Checked = true;
             心跳数列ToolStripMenuItem.Checked = true;
             最后心跳时间列ToolStripMenuItem.Checked = true;
             客户端版本列ToolStripMenuItem.Checked = true;
@@ -288,7 +288,7 @@ namespace RUINORERP.Server.Controls
             listView1.Columns.Add("姓名", 100);           // 姓名
             listView1.Columns.Add("当前模块", 120);       // 当前模块
             listView1.Columns.Add("当前窗体", 120);       // 当前窗体
-            listView1.Columns.Add("登陆时间", 150);       // 登陆时间
+            listView1.Columns.Add("登录时间", 150);       // 登录时间
             listView1.Columns.Add("心跳数", 80);          // 心跳数
             listView1.Columns.Add("最后心跳时间", 150);   // 最后心跳时间
             listView1.Columns.Add("客户端版本", 300);     // 客户端版本

@@ -159,16 +159,36 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         if (updateInfo != null)
                         {
                             // 在UI线程显示更新提示
-                            DialogResult result = MessageBox.Show(
-                                $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
-                                "版本更新",
-                                MessageBoxButtons.YesNo,
-                                MessageBoxIcon.Information);
-
-                            if (result == DialogResult.Yes)
+                            if (MainForm.Instance.InvokeRequired)
                             {
-                                // 启动更新程序
-                                StartUpdateProcess(updateInfo);
+                                MainForm.Instance.Invoke(new Action(() =>
+                                {
+                                    DialogResult result = MessageBox.Show(
+                                        $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
+                                        "版本更新",
+                                        MessageBoxButtons.YesNo,
+                                        MessageBoxIcon.Information);
+
+                                    if (result == DialogResult.Yes)
+                                    {
+                                        // 启动更新程序
+                                        StartUpdateProcess(updateInfo);
+                                    }
+                                }));
+                            }
+                            else
+                            {
+                                DialogResult result = MessageBox.Show(
+                                    $"发现新版本: {updateInfo.Version}\n{updateInfo.Description}\n是否立即更新？",
+                                    "版本更新",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Information);
+
+                                if (result == DialogResult.Yes)
+                                {
+                                    // 启动更新程序
+                                    StartUpdateProcess(updateInfo);
+                                }
                             }
                         }
                         else
@@ -328,19 +348,46 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 如果强制更新，退出当前应用
                     if (updateInfo.ForceUpdate)
                     {
-                        System.Windows.Forms.Application.Exit();
+                        // 使用异步方式退出应用，避免阻塞
+                        Task.Run(() =>
+                        {
+                            Thread.Sleep(1000); // 等待1秒让更新程序启动
+                            System.Windows.Forms.Application.Exit();
+                        });
                     }
                 }
                 else
                 {
                     _logger.LogError($"更新程序不存在: {updateExePath}");
-                    MessageBox.Show("更新程序不存在，请联系管理员。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // 确保在UI线程中显示消息框
+                    if (MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            MessageBox.Show("更新程序不存在，请联系管理员。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }));
+                    }
+                    else
+                    {
+                        MessageBox.Show("更新程序不存在，请联系管理员。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "启动更新程序失败");
-                MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 确保在UI线程中显示消息框
+                if (MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

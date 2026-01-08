@@ -363,7 +363,19 @@ namespace RUINORERP.UI.Network
                 {
                     if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                     {
-                        MainForm.Instance.Invoke(new Action(() =>
+                        if (MainForm.Instance.InvokeRequired)
+                        {
+                            MainForm.Instance.BeginInvoke(new Action(() =>
+                            {
+                                // 使用状态标签显示重连失败信息
+                                string statusText = "重连失败，请检查网络连接或手动重试";
+                                MainForm.Instance.ShowStatusText(statusText);
+                                
+                                // 同时添加到日志
+                                MainForm.Instance.PrintInfoLog("重连失败，已达到最大重试次数");
+                            }));
+                        }
+                        else
                         {
                             // 使用状态标签显示重连失败信息
                             string statusText = "重连失败，请检查网络连接或手动重试";
@@ -371,7 +383,7 @@ namespace RUINORERP.UI.Network
                             
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog("重连失败，已达到最大重试次数");
-                        }));
+                        }
                     }
                 }
                 catch (Exception uiEx)
@@ -425,7 +437,19 @@ namespace RUINORERP.UI.Network
                 {
                     if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                     {
-                        MainForm.Instance.Invoke(new Action(() =>
+                        if (MainForm.Instance.InvokeRequired)
+                        {
+                            MainForm.Instance.BeginInvoke(new Action(() =>
+                            {
+                                // 使用状态标签显示重连信息
+                                string statusText = $"正在尝试重新连接服务器... ({currentAttempt}/{maxAttempts})";
+                                MainForm.Instance.ShowStatusText(statusText);
+                                
+                                // 同时添加到日志
+                                MainForm.Instance.PrintInfoLog($"重连尝试：第 {currentAttempt}/{maxAttempts} 次");
+                            }));
+                        }
+                        else
                         {
                             // 使用状态标签显示重连信息
                             string statusText = $"正在尝试重新连接服务器... ({currentAttempt}/{maxAttempts})";
@@ -433,7 +457,7 @@ namespace RUINORERP.UI.Network
                             
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog($"重连尝试：第 {currentAttempt}/{maxAttempts} 次");
-                        }));
+                        }
                     }
                 }
                 catch (Exception uiEx)
@@ -466,7 +490,19 @@ namespace RUINORERP.UI.Network
                 {
                     if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
                     {
-                        MainForm.Instance.Invoke(new Action(() =>
+                        if (MainForm.Instance.InvokeRequired)
+                        {
+                            MainForm.Instance.BeginInvoke(new Action(() =>
+                            {
+                                // 使用状态标签显示重连成功信息
+                                string statusText = "已成功重新连接到服务器";
+                                MainForm.Instance.ShowStatusText(statusText);
+                                
+                                // 同时添加到日志
+                                MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
+                            }));
+                        }
+                        else
                         {
                             // 使用状态标签显示重连成功信息
                             string statusText = "已成功重新连接到服务器";
@@ -474,7 +510,7 @@ namespace RUINORERP.UI.Network
                             
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
-                        }));
+                        }
                     }
                 }
                 catch (Exception uiEx)

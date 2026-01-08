@@ -55,7 +55,7 @@ namespace RUINORERP.UI.IM
             // 设置控件样式 - 企业级现代化设计
             this.BackColor = Color.White;
             this.Dock = DockStyle.Fill;
-            
+
             // 设置Krypton控件样式
             SetKryptonStyles();
 
@@ -279,7 +279,7 @@ namespace RUINORERP.UI.IM
                 bool isNewMessage = true;
                 foreach (DataGridViewRow row in dgvMessages.Rows)
                 {
-                    if (row.Cells["colMessageId"].Value != null && 
+                    if (row.Cells["colMessageId"].Value != null &&
                         row.Cells["colMessageId"].Value.ToString() == message.MessageId.ToString())
                     {
                         isNewMessage = false;
@@ -520,12 +520,6 @@ namespace RUINORERP.UI.IM
                 {
                     // 设置MessageData属性以触发消息显示更新
                     messagePrompt.MessageData = message;
-                    if (message.BizData is TodoUpdate todoUpdate)
-                    {
-
-                        message.Content = $"【{todoUpdate.BillNo}】-" + message.Content;
-                    }
-
                     var EntityInfo = EntityMappingHelper.GetEntityInfo(message.BizType);
                     // 显示消息提示窗口
                     if (Application.OpenForms.Count > 0)
@@ -588,9 +582,9 @@ namespace RUINORERP.UI.IM
                 // 根据消息内容包含的关键词或业务类型进行导航
                 string contentLower = (message.Content ?? "").ToLower();
                 string titleLower = (message.Title ?? "").ToLower();
-                
+
                 // 检查审批相关消息
-                if (contentLower.Contains("审批") || titleLower.Contains("审批") || 
+                if (contentLower.Contains("审批") || titleLower.Contains("审批") ||
                     contentLower.Contains("approve") || titleLower.Contains("approve"))
                 {
                     await NavigateToApprovalForm(message.BizId.ToString(), message.BizType);
@@ -638,6 +632,8 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private async Task NavigateToApprovalForm(string bizId, BizType bizType)
         {
+            //暂时不实现
+            return;
             try
             {
                 if (string.IsNullOrEmpty(bizId))
@@ -655,11 +651,11 @@ namespace RUINORERP.UI.IM
 
                 // 查找对应的菜单信息
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                var menuInfo = menuPowerHelper.MenuList.FirstOrDefault(m => m.EntityName.Equals(bizType.ToString(), StringComparison.OrdinalIgnoreCase));
+                var menuInfo = MainForm.Instance.MenuList.FirstOrDefault(m => m.EntityName.Equals(bizType.ToString(), StringComparison.OrdinalIgnoreCase));
 
                 if (menuInfo == null)
                 {
-                    MessageBox.Show($"未找到业务类型 '{bizType}' 对应的审批表单", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //MessageBox.Show($"未找到业务类型 '{bizType}' 对应的审批表单", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -1015,11 +1011,11 @@ namespace RUINORERP.UI.IM
             {
                 // 设置头部面板样式 - 使用更简单的属性设置方式
                 panelHeader.BackColor = Color.FromArgb(240, 240, 240);
-                
+
                 // 设置标签样式 - 使用更小的字体避免重叠
                 lblUnreadCount.ForeColor = Color.FromArgb(64, 64, 64);
                 lblUnreadCount.Font = new Font("微软雅黑", 9, FontStyle.Regular);
-                
+
                 // 设置按钮样式
                 var buttons = new[] { btnMarkAllRead, btnRefresh, btnSettings };
                 foreach (var button in buttons)
@@ -1028,23 +1024,23 @@ namespace RUINORERP.UI.IM
                     button.ForeColor = Color.White;
                     button.Font = new Font("微软雅黑", 9, FontStyle.Bold);
                 }
-                
+
                 // 设置DataGridView样式 - 确保表格模式正确显示
                 dgvMessages.BackgroundColor = Color.White;
                 dgvMessages.GridColor = Color.FromArgb(240, 240, 240);
                 dgvMessages.DefaultCellStyle.BackColor = Color.White;
                 dgvMessages.DefaultCellStyle.ForeColor = Color.FromArgb(64, 64, 64);
                 dgvMessages.DefaultCellStyle.Font = new Font("微软雅黑", 9);
-                
+
                 // 设置列头样式
                 dgvMessages.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(240, 240, 240);
                 dgvMessages.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(64, 64, 64);
                 dgvMessages.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9, FontStyle.Bold);
-                
+
                 // 设置选中行样式
                 dgvMessages.DefaultCellStyle.SelectionBackColor = Color.FromArgb(64, 158, 255);
                 dgvMessages.DefaultCellStyle.SelectionForeColor = Color.White;
-                
+
                 // 设置上下文菜单样式 - 确保右键菜单正常工作
                 contextMenuStripMessages.BackColor = Color.White;
             }
@@ -1065,19 +1061,19 @@ namespace RUINORERP.UI.IM
                 var settingsForm = new frmIMSetting();
                 settingsForm.StartPosition = FormStartPosition.CenterParent;
                 var result = settingsForm.ShowDialog(this);
-                
+
                 if (result == DialogResult.OK)
                 {
                     // 设置保存成功，显示提示信息
                     MainForm.Instance.ShowStatusText("消息提醒设置已更新");
-                    
+
                     // 重新加载配置以应用新设置
                     LoadMessages();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"打开设置窗体失败: {ex.Message}", "错误", 
+                MessageBox.Show($"打开设置窗体失败: {ex.Message}", "错误",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 System.Diagnostics.Debug.WriteLine($"打开设置窗体失败: {ex.ToString()}");
             }
@@ -1155,8 +1151,8 @@ namespace RUINORERP.UI.IM
                 // 重新加载消息列表
                 LoadMessages();
 
-              MainForm.Instance.ShowStatusText($"已成功清除{cutoffDate:yyyy-MM-dd}之前的{messagesToDelete.Count}条消息。"
-                   );
+                MainForm.Instance.ShowStatusText($"已成功清除{cutoffDate:yyyy-MM-dd}之前的{messagesToDelete.Count}条消息。"
+                     );
             }
             catch (Exception ex)
             {
@@ -1215,22 +1211,22 @@ namespace RUINORERP.UI.IM
         {
             // 确保菜单显示
             e.Cancel = false;
-            
+
             // 根据当前选中的消息数量启用/禁用菜单项
             bool hasSelection = dgvMessages.SelectedRows.Count > 0;
-            
+
             // 刷新菜单项始终可用
             menuRefreshMessages.Enabled = true;
-            
+
             // 删除菜单项根据选中情况启用/禁用
             menuDeleteSelected.Enabled = hasSelection;
-            
+
             // 清除消息的菜单项始终可用
             menuClear30Days.Enabled = true;
             menuClear60Days.Enabled = true;
             menuClear180Days.Enabled = true;
             menuClearAll.Enabled = true;
-            
+
             // 语音提醒菜单项根据选中情况启用/禁用
             _menuPlayVoiceReminder.Enabled = hasSelection;
         }
@@ -1286,10 +1282,10 @@ namespace RUINORERP.UI.IM
                 }
 
                 // 确认对话框
-                string message = dgvMessages.SelectedRows.Count == 1 
-                    ? "确定要删除选中的这条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。" 
+                string message = dgvMessages.SelectedRows.Count == 1
+                    ? "确定要删除选中的这条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。"
                     : $"确定要删除选中的{dgvMessages.SelectedRows.Count}条消息吗？\n\n此操作将删除消息，包括持久化数据，且无法恢复。";
-                
+
                 var result = MessageBox.Show(message, "确认删除消息", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (result != DialogResult.Yes)
@@ -1359,7 +1355,7 @@ namespace RUINORERP.UI.IM
         }
 
 
-     
+
     }
 
 }

@@ -152,16 +152,41 @@ namespace RUINORERP.UI
         {
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
             {
-                MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
+                // 确保在UI线程中显示消息框
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }));
+                    return;
+                }
+                else
+                {
+                    MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
             }
 
             // 验证基本输入
             if (txtUserName.Text.Trim() == "")
             {
-                errorProvider1.SetError(txtUserName, "用户名不能为空");
-                txtUserName.Focus();
-                return;
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        errorProvider1.SetError(txtUserName, "用户名不能为空");
+                        txtUserName.Focus();
+                        return;
+                    }));
+                    return;
+                }
+                else
+                {
+                    errorProvider1.SetError(txtUserName, "用户名不能为空");
+                    txtUserName.Focus();
+                    return;
+                }
             }
 
             // 检查IP地址不变时逻辑，快捷认证登录
@@ -262,8 +287,20 @@ namespace RUINORERP.UI
                     // 验证服务器端口
                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                     {
-                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
+                        // 确保在UI线程中显示消息框
+                        if (this.InvokeRequired)
+                        {
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }));
+                            return;
+                        }
+                        else
+                        {
+                            MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
                     }
 
                     // 执行本地权限验证
@@ -272,10 +309,24 @@ namespace RUINORERP.UI
 
                     if (!localAuthSuccess)
                     {
-                        errorProvider1.SetError(txtUserName, "账号密码有误");
-                        txtUserName.Focus();
-                        txtUserName.SelectAll();
-                        return;
+                        if (this.InvokeRequired)
+                        {
+                            this.BeginInvoke(new Action(() =>
+                            {
+                                errorProvider1.SetError(txtUserName, "账号密码有误");
+                                txtUserName.Focus();
+                                txtUserName.SelectAll();
+                                return;
+                            }));
+                            return;
+                        }
+                        else
+                        {
+                            errorProvider1.SetError(txtUserName, "账号密码有误");
+                            txtUserName.Focus();
+                            txtUserName.SelectAll();
+                            return;
+                        }
                     }
 
                     // 如果是超级管理员且为admin用户，直接完成登录
@@ -304,7 +355,18 @@ namespace RUINORERP.UI
                     ? "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。"
                     : $"登录失败: {ex.Message}";
 
-                MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 确保在UI线程中显示消息框
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -597,12 +659,34 @@ namespace RUINORERP.UI
                 else
                 {
                     var errorMsg = loginResponse?.ErrorMessage ?? "登录失败，请检查用户名和密码";
-                    MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // 确保在UI线程中显示消息框
+                    if (this.InvokeRequired)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }));
+                    }
+                    else
+                    {
+                        MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
-                MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 确保在UI线程中显示消息框
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }));
+                }
+                else
+                {
+                    MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             finally
             {
@@ -711,8 +795,21 @@ namespace RUINORERP.UI
 
                 // 完成登录
                 Program.AppContextData.IsOnline = true;
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                
+                // 在UI线程中完成登录
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
+                    }));
+                }
+                else
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
             }
             catch (Exception ex)
             {

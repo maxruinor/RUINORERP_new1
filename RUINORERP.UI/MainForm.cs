@@ -206,7 +206,7 @@ namespace RUINORERP.UI
                     // 在UI线程上执行注销操作
                     if (InvokeRequired)
                     {
-                        Invoke(new Action(() =>
+                        BeginInvoke(new Action(() =>
                         {
                             // 更新锁定状态显示
                             UpdateLockStatus(true);
@@ -222,15 +222,25 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-
                     // 如果当前不是登录中状态且已连接，则断开连接
                     if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
                     {
-                        Invoke(new Action(async () =>
+                        if (InvokeRequired)
                         {
-                            var disconnectResult = await communicationService.Disconnect();
-                            logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
-                        }));
+                            BeginInvoke(new Action(async () =>
+                            {
+                                var disconnectResult = await communicationService.Disconnect();
+                                logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
+                            }));
+                        }
+                        else
+                        {
+                            Task.Run(async () =>
+                            {
+                                var disconnectResult = await communicationService.Disconnect();
+                                logger?.LogInformation($"重连失败处理中断开连接结果: {disconnectResult}");
+                            });
+                        }
                     }
                 }
             }
@@ -258,7 +268,7 @@ namespace RUINORERP.UI
                     // 在UI线程上执行注销操作
                     if (InvokeRequired)
                     {
-                        Invoke(new Action(() =>
+                        BeginInvoke(new Action(() =>
                         {
                             // 更新锁定状态显示
                             UpdateLockStatus(true);
@@ -2071,8 +2081,111 @@ namespace RUINORERP.UI
             CurrentLoginStatus = LoginStatus.Locked;
             IsLocked = true; // 设置锁定状态标志
 
-            // 使用异步方式处理登录，避免在UI线程中阻塞
-            MainForm.Instance.BeginInvoke(new Action(() =>
+            // 确保在UI线程中执行UI相关操作
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(() =>
+                {
+                    try
+                    {
+                        Program.AppContextData.IsOnline = false;
+                        MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
+                        MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
+
+                        // 清除UI元素
+                        ClearUI();
+                        ClearRoles();
+
+                        // 禁用所有UI控件
+                        DisableAllUIComponents();
+
+                        System.GC.Collect();
+
+                        // 使用Task.Run来启动异步登录操作，避免阻塞UI线程
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                bool islogin = await Login();
+                                if (!islogin)
+                                {
+                                    // 登录失败时重置状态
+                                    if (this.InvokeRequired)
+                                    {
+                                        this.BeginInvoke(new Action(() =>
+                                        {
+                                            IsLoggingOut = false;
+                                            CurrentLoginStatus = LoginStatus.None;
+                                        }));
+                                    }
+                                    else
+                                    {
+                                        IsLoggingOut = false;
+                                        CurrentLoginStatus = LoginStatus.None;
+                                    }
+                                    return;
+                                }
+
+                                // 登录成功后加载界面
+                                if (this.InvokeRequired)
+                                {
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        LoadUIMenus();
+                                        LoadUIForIM_LogPages();
+
+                                        // 登录成功后重置状态
+                                        IsLoggingOut = false;
+                                        CurrentLoginStatus = LoginStatus.LoggedIn;
+                                        IsLocked = false; // 重置锁定状态
+                                        // 更新锁定状态为正常
+                                        UpdateLockStatus(false);
+                                        // 重新启用UI组件
+                                        ReenableUIComponents();
+                                    }));
+                                }
+                                else
+                                {
+                                    LoadUIMenus();
+                                    LoadUIForIM_LogPages();
+
+                                    // 登录成功后重置状态
+                                    IsLoggingOut = false;
+                                    CurrentLoginStatus = LoginStatus.LoggedIn;
+                                    IsLocked = false; // 重置锁定状态
+                                    // 更新锁定状态为正常
+                                    UpdateLockStatus(false);
+                                    // 重新启用UI组件
+                                    ReenableUIComponents();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                logger?.LogError(ex, "注销过程中发生异常");
+                                // 异常情况下重置注销状态
+                                if (this.InvokeRequired)
+                                {
+                                    this.BeginInvoke(new Action(() =>
+                                    {
+                                        IsLoggingOut = false;
+                                    }));
+                                }
+                                else
+                                {
+                                    IsLoggingOut = false;
+                                }
+                            }
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError(ex, "注销过程中发生异常");
+                        // 异常情况下重置注销状态
+                        IsLoggingOut = false;
+                    }
+                }));
+            }
+            else
             {
                 try
                 {
@@ -2100,7 +2213,7 @@ namespace RUINORERP.UI
                                 // 登录失败时重置状态
                                 if (this.InvokeRequired)
                                 {
-                                    this.Invoke(new Action(() =>
+                                    this.BeginInvoke(new Action(() =>
                                     {
                                         IsLoggingOut = false;
                                         CurrentLoginStatus = LoginStatus.None;
@@ -2117,7 +2230,7 @@ namespace RUINORERP.UI
                             // 登录成功后加载界面
                             if (this.InvokeRequired)
                             {
-                                this.Invoke(new Action(() =>
+                                this.BeginInvoke(new Action(() =>
                                 {
                                     LoadUIMenus();
                                     LoadUIForIM_LogPages();
@@ -2153,7 +2266,7 @@ namespace RUINORERP.UI
                             // 异常情况下重置注销状态
                             if (this.InvokeRequired)
                             {
-                                this.Invoke(new Action(() =>
+                                this.BeginInvoke(new Action(() =>
                                 {
                                     IsLoggingOut = false;
                                 }));
@@ -2171,7 +2284,7 @@ namespace RUINORERP.UI
                     // 异常情况下重置注销状态
                     IsLoggingOut = false;
                 }
-            }));
+            }
         }
 
         #endregion

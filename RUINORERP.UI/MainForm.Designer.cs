@@ -464,7 +464,7 @@ namespace RUINORERP.UI
             this.lblVer.Name = "lblVer";
             this.lblVer.Padding = new System.Windows.Forms.Padding(100, 0, 0, 0);
             this.lblVer.Size = new System.Drawing.Size(128, 17);
-            this.lblVer.Text = "v3.1";
+            this.lblVer.Text = "v3.2";
             // 
             // toolStrip1
             // 

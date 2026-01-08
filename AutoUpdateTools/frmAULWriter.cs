@@ -388,6 +388,7 @@ namespace AULWriter
             //从配置文件读取配置
             readConfigFromFile();
             btnDiff.Enabled = false;
+            btnrelease.Enabled = false; // 默认禁用发布按钮，直到生成差异文件列表
             this.txtTargetDirectory.TextChanged += new System.EventHandler(this.txtTargetDirectory_TextChanged);
         }
 
@@ -471,6 +472,7 @@ namespace AULWriter
         {
             // 禁用按钮防止重复点击
             btnGenerateNewlist.Enabled = false;
+            btnrelease.Enabled = false; // 在生成差异文件列表成功前禁用发布按钮
             prbProd.Value = 0;
             txtDiff.Clear();
             DiffFileList.Clear();
@@ -1370,6 +1372,8 @@ namespace AULWriter
         private void BgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             btnGenerateNewlist.Enabled = true;
+            // 在生成差异文件列表成功后启用发布按钮
+            btnrelease.Enabled = (DiffFileList.Count > 0);
 
             if (e.Error != null)
             {
@@ -3364,6 +3368,8 @@ namespace AULWriter
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bgWorker.CancelAsync();
+            // 取消操作后，根据是否有差异文件来决定发布按钮的状态
+            btnrelease.Enabled = (DiffFileList.Count > 0);
         }
 
         private void txtTargetDirectory_TextChanged(object sender, EventArgs e)

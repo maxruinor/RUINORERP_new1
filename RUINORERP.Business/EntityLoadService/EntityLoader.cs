@@ -52,6 +52,12 @@ namespace RUINORERP.Business.EntityLoadService
                 return null;
             }
 
+            // 在try外面定义临时变量保存查询相关信息
+            string debugInfo = $"开始加载实体: {entityType.Name}, 表名: {tableName}, BillNo: {billNo} (类型: {billNo?.GetType().Name ?? "null"})";
+            string entityConfigInfo = $"实体配置信息 - IdField: {config.IdField}, NoField: {config.NoField}, DetailProperty: {config.DetailProperty}";
+            string fieldName = "";
+            string sqlStatement = "";
+            
             try
             {
                 // 创建查询对象
@@ -66,18 +72,46 @@ namespace RUINORERP.Business.EntityLoadService
                 // 添加查询条件
                 if (billNo is long id)
                 {
+                    fieldName = config.IdField;
                     queryable = queryable.Where($"{config.IdField} = @id", new { id });
                 }
                 else if (billNo is string no)
                 {
+                    fieldName = config.NoField;
                     queryable = queryable.Where($"{config.NoField} = @no", new { no });
                 }
 
-                return queryable.Single();
+                // 获取查询的SQL语句以便调试
+                var sqlResult = queryable.ToSql();
+                // 检查返回类型并相应处理
+                var resultType = sqlResult.GetType();
+                if (resultType == typeof(KeyValuePair<string, List<SugarParameter>>))
+                {
+                    var sqlPair = (KeyValuePair<string, List<SugarParameter>>)sqlResult;
+                    sqlStatement = sqlPair.Key; // 获取SQL语句部分
+                }
+                else
+                {
+                    sqlStatement = sqlResult.ToString() ?? "未知SQL格式";
+                }
+
+                var result = queryable.Single();
+                
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
+                _logger.LogError($"加载实体数据失败 - {debugInfo}");
+                _logger.LogError($"{entityConfigInfo}");
+                
+                if (!string.IsNullOrEmpty(fieldName))
+                    _logger.LogError($"查询字段: {fieldName}, 值: {billNo}");
+                
+                if (!string.IsNullOrEmpty(sqlStatement))
+                    _logger.LogError($"执行的SQL语句: {sqlStatement}");
+
+                _logger.LogError(ex, $"加载实体数据失败: {entityType.Name}, BillNo: {billNo}, 类型: {billNo?.GetType().Name ?? "null"}");
+                
                 return null;
             }
         }
@@ -122,64 +156,24 @@ namespace RUINORERP.Business.EntityLoadService
                     .WithDescriptionField(bizEntityInfo.DescriptionField)
                     .WithDiscriminatorField(bizEntityInfo.DiscriminatorField);
 
-                // 1) 拿到 CreateQueryable<T>
-                var createMethod = GetType()
-                    .GetMethod(nameof(CreateQueryable), BindingFlags.NonPublic | BindingFlags.Instance)
+                // 简化反射调用，直接调用泛型LoadEntityCore方法
+                var loadCoreMethod = GetType()
+                    .GetMethod(nameof(LoadEntityCore), BindingFlags.NonPublic | BindingFlags.Instance)
                     .MakeGenericMethod(entityType);
 
-                // 2) 调 CreateQueryable<T>() 得到 ISugarQueryable<T>
-                var queryable = createMethod.Invoke(this, new object[] { fieldConfig });
-
-                // 3) 给 ISugarQueryable<T>.Where(...) 拼接动态条件
-                var sugarType = queryable.GetType();          // 运行时 T 已确定
-                var whereMethod = sugarType.GetMethods()
-                    .First(m => m.Name == "Where" && m.GetParameters().Length == 2 &&
-                                m.GetParameters()[0].ParameterType == typeof(string) &&
-                                m.GetParameters()[1].ParameterType == typeof(object))
-                    .MakeGenericMethod(entityType);           // 其实这里不需要再 MakeGeneric，因为 sugarType 已含 T
-
-                // 根据主键/编号字段构造 where
-                string fieldName;
-                object param;
-                if (billNo is long id)
-                {
-                    fieldName = bizEntityInfo.IdField;
-                    param = new { id };
-                }
-                else if (billNo is string no)
-                {
-                    fieldName = bizEntityInfo.NoField;
-                    param = new { no };
-                }
-                else
-                {
-                    throw new ArgumentException("billNo 必须是 long 或 string");
-                }
-
-
-                // 修改后的正确代码
-                // 动态调用 Where，使用正确的参数名
-                string sqlCondition;
-                if (billNo is long)
-                {
-                    sqlCondition = $"{fieldName} = @id";
-                }
-                else
-                {
-                    sqlCondition = $"{fieldName} = @no";
-                }
-                
-                queryable = whereMethod.Invoke(queryable, new object[] { sqlCondition, param });
-
-        
-
-                // 4) 取 Single()
-                var singleMethod = sugarType.GetMethod("Single", Type.EmptyTypes);
-                return singleMethod.Invoke(queryable, null);
+                // 调用LoadEntityCore执行查询
+                return loadCoreMethod.Invoke(this, new object[] { fieldConfig, billNo });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"EntityLoader加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
+                // 只在错误时记录详细日志，此时才构建调试信息
+                string debugInfo = $"EntityLoader加载实体数据失败 - 实体类型: {entityType.Name}, BillNo: {billNo} (类型: {billNo?.GetType().Name ?? "null"})";
+                string entityConfigInfo = $"实体配置信息 - IdField: {bizEntityInfo.IdField}, NoField: {bizEntityInfo.NoField}, DetailProperty: {bizEntityInfo.DetailProperty}";
+                
+                _logger.LogError(ex, $"{debugInfo}");
+                _logger.LogError($"{entityConfigInfo}");
+                _logger.LogError(ex, $"加载实体数据失败: {entityType.Name}, BillNo: {billNo}");
+                
                 return null;
             }
         }

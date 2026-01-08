@@ -231,8 +231,12 @@ namespace RUINORERP.UI.Common
         /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
         public void GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
         {
+            if (CurrentRowEntity is DataGridViewRow CurrentRow)
+            {
+                CurrentRowEntity = CurrentRow.DataBoundItem;
+            }
             tb_MenuInfo RelatedMenuInfo = null;
-
+            RelatedInfo relatedRelationship = new RelatedInfo();
             if (ComplexType)
             {
                 string TargetTableKey = string.Empty;
@@ -244,15 +248,23 @@ namespace RUINORERP.UI.Common
                     //通过业务类型找
                     TargetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
                     System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
+
+                    //通过业务类型找到目标表名对应的菜单   
+                    relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == TargetTableKey);
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
+                    //默认将自己为类型 查的就是自己业务表主表的业务编号
+                    //System.Diagnostics.Debug.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
+                    string billno = CurrentRowEntity.GetPropertyValue(GridViewColumnFieldName).ToString();
+
+                    //通过业务类型找到目标表名对应的菜单   
+                    relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.SourceTableName == CurrentRowEntity.GetType().Name);
+                    OpenTargetEntity(RelatedMenuInfo, CurrentRowEntity.GetType().Name, billno);
+                    return;
                 }
 
 
-                //通过业务类型找到目标表名对应的菜单   
-                RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == TargetTableKey);
                 if (relatedRelationship != null)
                 {
                     string tableName = relatedRelationship.TargetTableName.Name;
@@ -286,6 +298,7 @@ namespace RUINORERP.UI.Common
 
                             //有时 有收付款类型的情况。要通过实体中具体的数据来定菜单。则在查出实体后来更新菜单信息
                             OpenTargetEntity(RelatedMenuInfo, tableName, billno);
+                            return;
                         }
 
                     }
@@ -296,7 +309,7 @@ namespace RUINORERP.UI.Common
             else
             {
                 #region 普通类型
-                RelatedInfo relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
+                relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
                 if (relatedRelationship != null)
                 {
                     string tableName = relatedRelationship.TargetTableName.Key;
@@ -337,6 +350,8 @@ namespace RUINORERP.UI.Common
         }
 
 
+
+        /*
         /// <summary>
         /// 顺便传回业务主键 可能是ID，可能是编号
         /// </summary>
@@ -438,6 +453,9 @@ namespace RUINORERP.UI.Common
             }
 
         }
+        */
+
+
 
         public async void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
         {

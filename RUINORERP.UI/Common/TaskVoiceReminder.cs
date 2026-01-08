@@ -165,8 +165,8 @@ namespace RUINORERP.UI.Common
             // 根据消息类型生成不同的语音提示文本
             string voiceText = messageData.MessageType switch
             {
-                MessageType.Popup => $"弹出消息：{messageData.Title}",
-                MessageType.Business => $"业务消息：{messageData.Title}",
+                MessageType.Popup => $"温馨提示：{messageData.Title}",
+                MessageType.Business => $"{messageData.Title}",
                 MessageType.System => $"系统通知：{messageData.Title}",
                 _ => $"您有一条新消息：{messageData.Title}"
             };

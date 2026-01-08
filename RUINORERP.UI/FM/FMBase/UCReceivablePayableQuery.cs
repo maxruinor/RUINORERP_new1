@@ -975,6 +975,7 @@ namespace RUINORERP.UI.FM
                 KeyNamePair keyNamePair = new KeyNamePair(((int)((BizType)biztype)).ToString(), tableName.Name);
                 base._UCBillMasterQuery.GridRelated.SetRelatedInfo<tb_FM_ReceivablePayable>(c => c.SourceBillNo, keyNamePair);
             }
+
             #endregion
 
         }

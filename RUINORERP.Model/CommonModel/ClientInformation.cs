@@ -19,7 +19,7 @@ namespace RUINORERP.Model.CommonModel
         private string _姓名;
         private string _当前模块;
         private string _当前窗体;
-        private DateTime _登陆时间;
+        private DateTime _登录时间;
         private int _心跳数;
         private string _最后心跳时间;
         private string _客户端版本;
@@ -111,15 +111,15 @@ namespace RUINORERP.Model.CommonModel
             }
         }
 
-        public DateTime 登陆时间
+        public DateTime 登录时间
         {
-            get { return _登陆时间; }
+            get { return _登录时间; }
             set
             {
-                if (_登陆时间 != value)
+                if (_登录时间 != value)
                 {
-                    _登陆时间 = value;
-                    OnPropertyChanged(nameof(登陆时间));
+                    _登录时间 = value;
+                    OnPropertyChanged(nameof(登录时间));
                 }
             }
         }
@@ -225,7 +225,7 @@ namespace RUINORERP.Model.CommonModel
         }
 
         /// <summary>
-        /// 登陆过，还保持连接时，客户端会定时发送心跳包，服务器会记录最后一次收到心跳包的时间
+        /// 登录过，还保持连接时，客户端会定时发送心跳包，服务器会记录最后一次收到心跳包的时间
         /// </summary>
         public bool 在线状态
         {
@@ -244,7 +244,7 @@ namespace RUINORERP.Model.CommonModel
         private readonly object _lock = new object();
 
         /// <summary>
-        /// 登陆成功 的正常状态
+        /// 登录成功 的正常状态
         /// </summary>
         public bool 授权状态
         {

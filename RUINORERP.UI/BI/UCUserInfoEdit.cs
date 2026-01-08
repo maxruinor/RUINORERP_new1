@@ -171,7 +171,7 @@ namespace RUINORERP.UI.BI
                     //默认密码为123456
                     string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", _EditEntity.UserName);
                     _EditEntity.Password = enPwd;
-                    MessageBox.Show("当前用户【" + txtUserName.Text + "】" + "默认密码为:123456,请新用户登陆系统后修改密码！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("当前用户【" + txtUserName.Text + "】" + "默认密码为:123456,请新用户登录系统后修改密码！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 if (_EditEntity.User_ID > 0 && chkModifyPwd.Checked)
                 {

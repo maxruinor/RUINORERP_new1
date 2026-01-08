@@ -1118,7 +1118,7 @@ namespace RUINORERP.UI
                 System.Diagnostics.Debug.WriteLine($"客户端表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
             }
             this.Text = "企业数字化集成ERP ver3.2" + "-" + Program.ERPVersion;
-            //MessageBox.Show("登陆成功后，请要系统设置中添加公司基本资料。");
+            //MessageBox.Show("登录成功后，请要系统设置中添加公司基本资料。");
             using (StatusBusy busy = new StatusBusy("检测系统是否为最新版本 请稍候"))
             {
                 //更新是不是可以异步？
@@ -1917,11 +1917,11 @@ namespace RUINORERP.UI
                     {
                         if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
                         {
-                            this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                            this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
                         }
                         else
                         {
-                            this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
+                            this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.UserInfo.UserName}【{AppContext.CurrentRole.RoleName}】";
                         }
                     }
 
@@ -1942,7 +1942,7 @@ namespace RUINORERP.UI
                     }
 
                     //记入审计日志
-                    //MainForm.Instance.AuditLogHelper.CreateAuditLog("登陆", $"{System.Environment.MachineName}-成功登陆服务器");
+                    //MainForm.Instance.AuditLogHelper.CreateAuditLog("登录", $"{System.Environment.MachineName}-成功登录服务器");
                     if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                     {
                         try
@@ -1952,12 +1952,12 @@ namespace RUINORERP.UI
                         }
                         catch (Exception ex)
                         {
-                            logger.LogError("更新最后登陆时间出错。", ex);
+                            logger.LogError("更新最后登录时间出错。", ex);
                         }
 
                     }
 
-                    //登陆时已经获取了 登陆人所在部门对应的公司。特殊情况才会进入这个查询
+                    //登录时已经获取了 登录人所在部门对应的公司。特殊情况才会进入这个查询
                     if (MainForm.Instance.AppContext.CompanyInfo == null)
                     {
                         List<tb_Company> Companylist = await MainForm.Instance.AppContext.Db.Queryable<tb_Company>().ToListAsync();
@@ -2766,9 +2766,9 @@ namespace RUINORERP.UI
             try
             {
 
-                // HLH.Lib.Helper.log4netHelper.info("登陆系统" + DateTime.Now.ToString());
+                // HLH.Lib.Helper.log4netHelper.info("登录系统" + DateTime.Now.ToString());
 
-                //frmMain.Instance.PrintInfoLog("登陆系统-并开始检测授权");
+                //frmMain.Instance.PrintInfoLog("登录系统-并开始检测授权");
 
 
                 // SMTAPI.Entity.MultiUser.Instance.Serialize(SMTAPI.Entity.MultiUser.Instance);
@@ -2784,7 +2784,7 @@ namespace RUINORERP.UI
             }
             catch (Exception ex)
             {
-                // frmMain.Instance.PrintInfoLog("登陆系统-并开始检测授权" + ex.Message);
+                // frmMain.Instance.PrintInfoLog("登录系统-并开始检测授权" + ex.Message);
             }
         }
 
@@ -3513,7 +3513,7 @@ namespace RUINORERP.UI
                     //await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
-                    this.SystemOperatorState.Text = $"登陆: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
+                    this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
                 }
             }
         }
@@ -3663,7 +3663,7 @@ namespace RUINORERP.UI
                 //bool islogin = await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
                 //if (islogin)
                 //{
-                //    MainForm.Instance.uclog.AddLog($"{webServerUrl}登陆成功。");
+                //    MainForm.Instance.uclog.AddLog($"{webServerUrl}登录成功。");
                 //    //var ulid = Ulid.NewUlid();
                 //    //var ulidString = ulid.ToString();
                 //    //System.Diagnostics.Debug.WriteLine($"Generated ULID: {ulidString}");

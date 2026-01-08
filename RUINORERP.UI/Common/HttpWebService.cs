@@ -79,9 +79,9 @@ namespace RUINORERP.UI.Common
         #endregion
 
 
-        #region 登陆
+        #region 登录
         /// <summary>
-        /// 登陆webserver
+        /// 登录webserver
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>

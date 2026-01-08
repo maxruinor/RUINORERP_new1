@@ -30,7 +30,7 @@ namespace RUINORERP.PacketSpec.Commands
         public static readonly CommandId RefreshToken = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_RefreshToken & 0xFF));
 
         /// <summary>
-        /// T掉重复登陆的人员 - 当检测到重复登录时，强制下线先前的会话
+        /// T掉重复登录的人员 - 当检测到重复登录时，强制下线先前的会话
         /// </summary>
         public static readonly CommandId DuplicateLogin = new CommandId(CommandCategory.Authentication, (byte)(CommandCatalog.Authentication_DuplicateLogin & 0xFF));
 

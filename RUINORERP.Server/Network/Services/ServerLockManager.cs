@@ -1356,7 +1356,7 @@ namespace RUINORERP.Server.Network.Services
                     LastUpdateTime = now, // 使用当前时间作为最后更新时间
                     HeartbeatCount = 1, // 重置心跳次数为1
                     Type = lockInfo.Type,
-                    Duration = (long)((expireTime ?? now.AddMinutes(30) - now).TotalMilliseconds)
+                    Duration = (long)(((expireTime ?? now.AddMinutes(30)) - now).TotalMilliseconds)
                 };
 
                 // 边界条件：确保LockKey已设置

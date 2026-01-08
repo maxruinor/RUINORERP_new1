@@ -73,6 +73,7 @@ namespace RUINORERP.Server
             toolStripButtonSequenceManagement = new System.Windows.Forms.ToolStripButton();
             toolStripButtonSystemCheck = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            toolStripButtonDebugMode = new System.Windows.Forms.ToolStripDropDownButton();
             toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripDropDownButton();
             statusStripMain = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabelServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
@@ -92,7 +93,6 @@ namespace RUINORERP.Server
             tabControlMain = new System.Windows.Forms.TabControl();
             richTextBoxLog = new System.Windows.Forms.RichTextBox();
             splitterLog = new System.Windows.Forms.Splitter();
-            toolStripButtonDebugMode = new System.Windows.Forms.ToolStripDropDownButton();
             menuStripMain.SuspendLayout();
             toolStripMain.SuspendLayout();
             statusStripMain.SuspendLayout();
@@ -346,12 +346,21 @@ namespace RUINORERP.Server
             toolStripSeparator2.Name = "toolStripSeparator2";
             toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
+            // toolStripButtonDebugMode
+            // 
+            toolStripButtonDebugMode.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            toolStripButtonDebugMode.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonDebugMode.Name = "toolStripButtonDebugMode";
+            toolStripButtonDebugMode.Size = new System.Drawing.Size(69, 22);
+            toolStripButtonDebugMode.Text = "调试模式";
+            toolStripButtonDebugMode.Click += toolStripButtonDebugMode_Click;
+            // 
             // toolStripButtonNetworkMonitor
             // 
             toolStripButtonNetworkMonitor.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             toolStripButtonNetworkMonitor.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButtonNetworkMonitor.Name = "toolStripButtonNetworkMonitor";
-            toolStripButtonNetworkMonitor.Size = new System.Drawing.Size(60, 22);
+            toolStripButtonNetworkMonitor.Size = new System.Drawing.Size(69, 22);
             toolStripButtonNetworkMonitor.Text = "网络监控";
             toolStripButtonNetworkMonitor.Click += toolStripButtonNetworkMonitor_Click;
             // 
@@ -548,15 +557,6 @@ namespace RUINORERP.Server
             splitterLog.Size = new System.Drawing.Size(1167, 7);
             splitterLog.TabIndex = 5;
             splitterLog.TabStop = false;
-            // 
-            // toolStripButtonDebugMode
-            // 
-            toolStripButtonDebugMode.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            toolStripButtonDebugMode.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButtonDebugMode.Name = "toolStripButtonDebugMode";
-            toolStripButtonDebugMode.Size = new System.Drawing.Size(69, 22);
-            toolStripButtonDebugMode.Text = "调试模式";
-            toolStripButtonDebugMode.Click += toolStripButtonDebugMode_Click;
             // 
             // frmMainNew
             // 

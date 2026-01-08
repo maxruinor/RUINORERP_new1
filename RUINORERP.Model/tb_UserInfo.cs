@@ -152,10 +152,10 @@ namespace RUINORERP.Model
 
         private DateTime? _Lastlogin_at;
         /// <summary>
-        /// 最后登陆时间
+        /// 最后登录时间
         /// </summary>
-        [AdvQueryAttribute(ColName = "Lastlogin_at",ColDesc = "最后登陆时间")] 
-        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Lastlogin_at" ,IsNullable = true,ColumnDescription = "最后登陆时间" )]
+        [AdvQueryAttribute(ColName = "Lastlogin_at",ColDesc = "最后登录时间")] 
+        [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Lastlogin_at" ,IsNullable = true,ColumnDescription = "最后登录时间" )]
         public DateTime? Lastlogin_at
         { 
             get{return _Lastlogin_at;}

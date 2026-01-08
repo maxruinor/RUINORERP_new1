@@ -86,7 +86,7 @@ namespace RUINORERP.UI.Network.Services.Cache
 
 
         /// <summary>
-        /// 用户登陆成功时向服务器请求所有缓存数据的元数据信息，就是一个总表，保存了各个表的最后更新时间戳，数据行数等信息
+        /// 用户登录成功时向服务器请求所有缓存数据的元数据信息，就是一个总表，保存了各个表的最后更新时间戳，数据行数等信息
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>

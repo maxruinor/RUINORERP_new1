@@ -361,7 +361,7 @@ namespace RUINORERP.UI.Network.Services
 
                     AdditionalData = new System.Collections.Generic.Dictionary<string, object>
                     {
-                        ["Action"] = "你的账号在其它地方登陆。当前连接即将断开。请保存数据。",
+                        ["Action"] = "你的账号在其它地方登录。当前连接即将断开。请保存数据。",
                         ["TargetUserId"] = _duplicateLoginResult.ExistingSessions[0].SessionId.ToString()
                     }
                 };

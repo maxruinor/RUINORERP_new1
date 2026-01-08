@@ -132,7 +132,7 @@ namespace RUINORERP.UI.Forms
             this.btnCancelLogin.StateCommon.Border.Rounding = 6F;
             this.btnCancelLogin.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
             this.btnCancelLogin.TabIndex = 2;
-            this.btnCancelLogin.Values.Text = "❌ 取消登陆";
+            this.btnCancelLogin.Values.Text = "❌ 取消登录";
             // 
             // pnlProgress
             // 

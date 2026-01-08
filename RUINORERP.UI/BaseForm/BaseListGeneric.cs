@@ -151,7 +151,7 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-            //这里不这样了，直接用登陆时查出来的。按菜单路径找到菜单 去再搜索 字段。
+            //这里不这样了，直接用登录时查出来的。按菜单路径找到菜单 去再搜索 字段。
             //    显示按钮也一样的思路
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
 

@@ -424,7 +424,7 @@ namespace RUINORERP.Model.Context
         #region Settings
 
         /// <summary>
-        /// 是否相同用户名已经登陆了。默认否
+        /// 是否相同用户名已经登录了。默认否
         /// </summary>
         public bool AlreadyLogged { get; set; } = false;
 

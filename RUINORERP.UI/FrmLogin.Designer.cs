@@ -97,7 +97,7 @@ namespace RUINORERP.UI
             this.btnok.Name = "btnok";
             this.btnok.Size = new System.Drawing.Size(73, 35);
             this.btnok.TabIndex = 10;
-            this.btnok.Text = "登陆";
+            this.btnok.Text = "登录";
             this.btnok.Click += new System.EventHandler(this.btnok_Click);
             // 
             // txtPassWord
@@ -262,7 +262,7 @@ namespace RUINORERP.UI
             this.KeyPreview = true;
             this.Name = "FrmLogin";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "登陆窗口";
+            this.Text = "登录窗口";
             this.Load += new System.EventHandler(this.frmLogin_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();

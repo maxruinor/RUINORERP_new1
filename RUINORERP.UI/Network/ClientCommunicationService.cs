@@ -1738,7 +1738,7 @@ namespace RUINORERP.UI.Network
 
 
                 await AutoAttachTokenAsync(packet.ExecutionContext);
-                //除登陆登出命令，其他命令都需要附加令牌
+                //除登录登出命令，其他命令都需要附加令牌
                 if (packet.CommandId != AuthenticationCommands.Login)
                 {
                     if (packet.ExecutionContext.Token == null)

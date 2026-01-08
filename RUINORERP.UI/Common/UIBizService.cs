@@ -85,7 +85,7 @@ namespace RUINORERP.UI.Common
             bool SetResults = false;
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
 
-            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
+            //用户登录后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登录验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
@@ -448,7 +448,7 @@ namespace RUINORERP.UI.Common
             bool SetResults = false;
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
 
-            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
+            //用户登录后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登录验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
@@ -588,7 +588,7 @@ namespace RUINORERP.UI.Common
             }
             tb_UIMenuPersonalizationController<tb_UIMenuPersonalization> ctr = Startup.GetFromFac<tb_UIMenuPersonalizationController<tb_UIMenuPersonalization>>();
             dataGridView.NeedSaveColumnsXml = false;
-            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
+            //用户登录后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登录验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
             if (userPersonalized.tb_UIMenuPersonalizations == null)
             {
@@ -1840,7 +1840,7 @@ namespace RUINORERP.UI.Common
             //    return;
             //}
             //dataGridView.NeedSaveColumnsXml = false;
-            //用户登陆后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登陆验证时已经实现）。
+            //用户登录后会有对应的角色下的个性化配置数据。如果没有则给一个默认的（登录验证时已经实现）。
             tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
 
             if (userPersonalized.tb_UIMenuPersonalizations == null)

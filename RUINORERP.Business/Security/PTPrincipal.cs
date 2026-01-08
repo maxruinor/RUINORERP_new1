@@ -28,7 +28,7 @@ namespace RUINORERP.Business.Security
               };
                 var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);
                 appcontext.User = new ClaimsPrincipal(identity);
-                appcontext.Status = "登陆成功";
+                appcontext.Status = "登录成功";
                 NewUser?.Invoke();
             }
             catch
@@ -117,7 +117,7 @@ namespace RUINORERP.Business.Security
                     return loginSucceed;
                 }
 
-                //密码如果为初始123456，则每次登陆会提示修改
+                //密码如果为初始123456，则每次登录会提示修改
                 string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", username);
                 if (EnPassword == enPwd)
                 {
@@ -142,7 +142,7 @@ namespace RUINORERP.Business.Security
                    };
                         var identity = new ClaimsIdentity(claims, "Test", ClaimTypes.Name, ClaimTypes.Role);
                         appcontext.User = new ClaimsPrincipal(identity);
-                        appcontext.Status = "登陆成功";
+                        appcontext.Status = "登录成功";
                         if (user.tb_employee != null)
                         {
                             appcontext.log.Operator = user.tb_employee.Employee_Name;
@@ -216,7 +216,7 @@ namespace RUINORERP.Business.Security
         /// </summary>
         /// <param name="appcontext"></param>
         /// <param name="user"></param>
-        /// <param name="CurrentRole">正常登陆时传空，换角色时指定</param>
+        /// <param name="CurrentRole">正常登录时传空，换角色时指定</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public static bool SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
@@ -239,7 +239,7 @@ namespace RUINORERP.Business.Security
             appcontext.CurrentUser.用户名 = user.UserName;
             appcontext.CurrentUser.姓名 = user.tb_employee.Employee_Name;
             appcontext.CurrentUser.超级用户 = user.IsSuperUser;
-            appcontext.CurrentUser.登陆时间 = System.DateTime.Now;
+            appcontext.CurrentUser.登录时间 = System.DateTime.Now;
             appcontext.CurrentUser.在线状态 = true;
             appcontext.CurrentUser.授权状态 = true;
             

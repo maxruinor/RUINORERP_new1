@@ -107,22 +107,23 @@ namespace RUINORERP.Server
             // 初始化雪花ID生成器
             new IdHelperBootstrapper().SetWorkderId(1).Boot();
 
-#if DEBUG
-            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
-            bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");
-            if (!allowMultipleInstances && SingleInstanceChecker.IsAlreadyRunning())
-#else
-            if (SingleInstanceChecker.IsAlreadyRunning())
-#endif
-            {
-                // 已有实例运行则退出
-                Process instance = RunningInstance();
-                if (instance != null)
-                {
-                    HandleRunningInstance(instance);
-                }
-                return;
-            }
+//#if DEBUG
+//            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
+//            bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");
+//            if (!allowMultipleInstances && SingleInstanceChecker.IsAlreadyRunning())
+//#else
+//            if (SingleInstanceChecker.IsAlreadyRunning())
+//#endif
+//            {
+//                // 已有实例运行则退出
+//                Process instance = RunningInstance();
+//                if (instance != null)
+//                {
+//                    HandleRunningInstance(instance);
+//                }
+//                return;
+//            }
+
             try
             {
                 // 启动服务UI

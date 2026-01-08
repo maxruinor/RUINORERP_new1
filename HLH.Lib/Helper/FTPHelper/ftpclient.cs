@@ -47,7 +47,7 @@ namespace HLH.Lib.Helper.FTPHelper
         }
         #endregion
 
-        #region µÇÂ½
+        #region µÇÂ¼
         /// <summary>
         /// FTP·þÎñÆ÷IPµØÖ·
         /// </summary>
@@ -183,7 +183,7 @@ namespace HLH.Lib.Helper.FTPHelper
                 throw new IOException(strReply.Substring(4));
             }
 
-            // µÇÂ½
+            // µÇÂ¼
             SendCommand("USER " + strRemoteUser);
             if (!(iReplyCode == 331 || iReplyCode == 230))
             {

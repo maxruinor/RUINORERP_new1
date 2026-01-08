@@ -111,7 +111,7 @@ namespace RUINORERP.UI.Forms
 
 
             // 放弃登录按钮
-            btnCancelLogin.Values.Text = "取消当前登陆";
+            btnCancelLogin.Values.Text = "取消当前登录";
             btnCancelLogin.DialogResult = DialogResult.None;
             btnCancelLogin.Click += BtnCancelLogin_Click;
 

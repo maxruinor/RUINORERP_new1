@@ -477,10 +477,10 @@ namespace RUINORERP.UI
             {
                 if (keyData == Keys.Enter)
                 {
-                    //如果登陆按钮正在焦点则执行登陆
+                    //如果登录按钮正在焦点则执行登录
                     if (btnok.Focused)
                     {
-                        //登陆
+                        //登录
                         return base.ProcessCmdKey(ref msg, keyData);
                     }
                     else
@@ -738,7 +738,7 @@ namespace RUINORERP.UI
                 // 请求元数据同步
                 await _cacheClientService.RequestAllCacheSyncMetadataAsync();
 
-                //登陆成功后要去服务器请求最新配置
+                //登录成功后要去服务器请求最新配置
                 try
                 {
                     if (_configSyncService != null)
@@ -788,9 +788,9 @@ namespace RUINORERP.UI
                 await SaveUserConfig(isInitPwd);
 
                 // 记录登录时间
-                if (Program.AppContextData.CurrentUser.登陆时间 < DateTime.Now.AddYears(-30))
+                if (Program.AppContextData.CurrentUser.登录时间 < DateTime.Now.AddYears(-30))
                 {
-                    Program.AppContextData.CurrentUser.登陆时间 = DateTime.Now;
+                    Program.AppContextData.CurrentUser.登录时间 = DateTime.Now;
                 }
 
                 // 完成登录

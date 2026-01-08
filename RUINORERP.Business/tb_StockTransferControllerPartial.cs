@@ -149,7 +149,7 @@ namespace RUINORERP.Business
                     transactionTo.Location_ID = invTo.Location_ID;
                     transactionTo.BizType = (int)BizType.调拨单;
                     transactionTo.ReferenceId = entity.StockTransferID;
-                    transactionFrom.ReferenceNo = entity.StockTransferNo;
+                    transactionTo.ReferenceNo = entity.StockTransferNo;
                     transactionTo.QuantityChange = child.Qty; // 调入增加库存
                     transactionTo.AfterQuantity = invTo.Quantity;
                     transactionTo.UnitCost = realtimeCost; // 使用调出仓库的实时成本

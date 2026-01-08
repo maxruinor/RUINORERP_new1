@@ -56,7 +56,7 @@ namespace RUINORERP.UI.BI
                     bool rs = await ctrUser.UpdateAsync(userInfo);
                     if (rs)
                     {
-                        MessageBox.Show("修改成功！下次登陆生效。");
+                        MessageBox.Show("修改成功！下次登录生效。");
                         CloseTheForm(this);
                     }
                     else

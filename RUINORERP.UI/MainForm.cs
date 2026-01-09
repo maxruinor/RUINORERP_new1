@@ -3225,13 +3225,21 @@ namespace RUINORERP.UI
 
         }
 
+        /// <summary>
+        /// 打印信息日志（带颜色）
+        /// </summary>
+        /// <param name="msg">日志消息</param>
+        /// <param name="c">字体颜色</param>
         internal void PrintInfoLog(string msg, Color c)
         {
             try
             {
                 MainForm.Instance.Invoke(new Action(() =>
                 {
+                    // 添加到日志中心
                     uclog.AddLog("ex", msg);
+                    // 显示到状态栏
+                    ShowStatusText(msg);
                 }));
 
             }
@@ -3241,6 +3249,11 @@ namespace RUINORERP.UI
             }
         }
 
+        /// <summary>
+        /// 打印信息日志（带异常）
+        /// </summary>
+        /// <param name="msg">日志消息</param>
+        /// <param name="ex">异常对象</param>
         internal void PrintInfoLog(string msg, Exception ex)
         {
 
@@ -3248,7 +3261,12 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance.Invoke(new Action(() =>
                 {
-                    uclog.AddLog("ex", msg + ex.Message);
+                    string logMsg = msg + ex.Message;
+                    // 添加到日志中心
+                    uclog.AddLog("ex", logMsg);
+                    // 显示到状态栏
+                    ShowStatusText(logMsg);
+                    // 记录到日志文件
                     MainForm.Instance.logger.LogError(ex, "PrintInfoLog");
                 }));
 
@@ -3259,24 +3277,23 @@ namespace RUINORERP.UI
             }
         }
 
+        /// <summary>
+        /// 打印信息日志（默认）
+        /// </summary>
+        /// <param name="msg">日志消息</param>
         internal void PrintInfoLog(string msg)
         {
             try
             {
-
+                // 添加到日志中心
                 logManager.AddLog("日志", msg);
-                //MainForm.Instance.Invoke(new Action(() =>
-                //{
-                //    uclog.AddLog("print", msg);
-                //}));
-
+                // 显示到状态栏
+                ShowStatusText(msg);
             }
             catch (Exception ex)
             {
 
             }
-
-
         }
 
         private void kryptonButton6_Click(object sender, EventArgs e)

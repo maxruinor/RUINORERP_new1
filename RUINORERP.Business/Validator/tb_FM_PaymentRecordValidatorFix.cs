@@ -33,13 +33,18 @@ namespace RUINORERP.Business
         /// </summary>
         public override void Initialize()
         {
-            RuleFor(x => x.TotalLocalPayableAmount).NotEqual(0).WithMessage("应付金额本币:不能为零。");
+            // 验证收付款单总金额不能为零
+            // 红蓝单对冲核销功能仅限于对账单余额模式,不适用于普通收付款单
+            RuleFor(x => x.TotalLocalPayableAmount)
+                .NotEqual(0)
+                .WithMessage("收付款单总金额不能为零。");
 
-            // 验证付款单关联报销单时，付款金额必须与报销金额一致
+          
+            // 验证付款单关联报销单时,付款金额必须与报销金额一致
             RuleFor(x => x)
                 .Must(CheckExpenseClaimPaymentAmount)
                 .When(x => x.tb_FM_PaymentRecordDetails != null && x.tb_FM_PaymentRecordDetails.Any(d => d.SourceBizType == (int)BizType.费用报销单))
-                .WithMessage("付款单对报销单付款时，付款金额必须与报销金额一致。");
+                .WithMessage("付款单对报销单付款时,付款金额必须与报销金额一致。");
         }
 
         /// <summary>

@@ -60,6 +60,7 @@ namespace RUINORERP.UI.FM
 
     /// <summary>
     /// 应收应付对账单
+    /// 如果对账模式为余额模式，对账单最后总金额为0，则需要添加一个扩展按钮，红蓝单对冲核销
     /// </summary>
     [MenuAttrAssemblyInfo("对账单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.对账单)]
     [SharedIdRequired]
@@ -79,6 +80,106 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.新增);
             base.AddExcludeMenuList(MenuItemEnums.反结案);
             base.AddExcludeMenuList(MenuItemEnums.结案);
+        }
+
+        /// <summary>
+        /// 初始化红蓝单对冲核销按钮
+        /// </summary>
+        private void InitRedBlueBillWriteOffButton()
+        {
+            toolStripButton红蓝单对冲核销.Text = "红蓝单对冲核销";
+            toolStripButton红蓝单对冲核销.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
+            toolStripButton红蓝单对冲核销.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButton红蓝单对冲核销.Name = "红蓝单对冲核销";
+            toolStripButton红蓝单对冲核销.Visible = false;
+            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton红蓝单对冲核销);
+            toolStripButton红蓝单对冲核销.ToolTipText = "执行红蓝单对冲核销操作,将正负金额相互抵消。";
+            toolStripButton红蓝单对冲核销.Click += new System.EventHandler(this.toolStripButton红蓝单对冲核销_Click);
+        }
+
+        /// <summary>
+        /// 红蓝单对冲核销按钮点击事件
+        /// 执行红蓝单对冲核销流程
+        /// </summary>
+        private async void toolStripButton红蓝单对冲核销_Click(object sender, EventArgs e)
+        {
+            if (EditEntity == null)
+            {
+                return;
+            }
+
+            // 验证对账单条件
+            if (EditEntity.StatementStatus != (int)StatementStatus.确认)
+            {
+                MessageBox.Show("只有审核通过的对账单才能执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            bool isBalanceStatement = (StatementType)EditEntity.StatementType == StatementType.余额对账;
+            if (!isBalanceStatement)
+            {
+                MessageBox.Show("只有余额对账模式才能执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            bool isTotalAmountZero = Math.Abs(EditEntity.ClosingBalanceLocalAmount) < 0.01m;
+            if (!isTotalAmountZero)
+            {
+                MessageBox.Show($"当前对账单期末余额为{EditEntity.ClosingBalanceLocalAmount},只有余额为零时才能执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 确认操作
+            if (MessageBox.Show($"确定要对账单【{EditEntity.StatementNo}】执行红蓝单对冲核销吗?\n此操作将核销对账单中的所有应收应付明细。", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            {
+                return;
+            }
+
+            try
+            {
+                // 获取对账单控制器
+                var controller = Startup.GetFromFac<tb_FM_StatementController<tb_FM_Statement>>();
+
+                // 执行红蓝单对冲核销
+                var result = await controller.RedBlueBillWriteOffAsync(EditEntity);
+
+                if (result.Succeeded)
+                {
+                    MessageBox.Show("红蓝单对冲核销成功!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_Statement>("红蓝单对冲核销", EditEntity);
+
+                    // 刷新当前数据
+                    await RefreshCurrentEntity();
+                }
+                else
+                {
+                    MessageBox.Show($"红蓝单对冲核销失败:{result.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "红蓝单对冲核销失败");
+                MessageBox.Show($"红蓝单对冲核销失败:{ex.Message}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 刷新当前实体数据
+        /// </summary>
+        private async Task RefreshCurrentEntity()
+        {
+            if (EditEntity == null || EditEntity.StatementId <= 0)
+            {
+                return;
+            }
+
+            var controller = Startup.GetFromFac<tb_FM_StatementController<tb_FM_Statement>>();
+            var result = await controller.QueryEntityByNavAsync(EditEntity.StatementId);
+
+            if (result.Succeeded && result.ReturnObject != null)
+            {
+                BindData(result.ReturnObject);
+            }
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
@@ -450,7 +551,44 @@ namespace RUINORERP.UI.FM
                 toolStripbtnPrint.Enabled = false;
             }
 
+            // 控制红蓝单对冲核销按钮的显示状态
+            UpdateRedBlueBillWriteOffButtonVisibility();
+
             base.BindData(entity);
+        }
+
+        /// <summary>
+        /// 更新红蓝单对冲核销按钮的可见性
+        /// 只有余额对账模式且总金额为零时才显示该按钮
+        /// </summary>
+        private void UpdateRedBlueBillWriteOffButtonVisibility()
+        {
+            if (toolStripButton红蓝单对冲核销 == null)
+            {
+                return;
+            }
+
+            bool isVisible = false;
+
+            if (EditEntity != null && EditEntity.StatementId > 0)
+            {
+                // 检查是否为余额对账模式
+                bool isBalanceStatement = (StatementType)EditEntity.StatementType == StatementType.余额对账;
+
+                // 检查总金额是否为零
+                bool isTotalAmountZero = Math.Abs(EditEntity.ClosingBalanceLocalAmount) < 0.01m;
+
+                // 检查是否已审核
+                bool isApproved = EditEntity.StatementStatus == (int)StatementStatus.确认;
+
+                // 检查是否已结清(避免重复核销)
+                bool isSettled = EditEntity.StatementStatus == (int)StatementStatus.已结清;
+
+                // 只有满足所有条件时才显示按钮
+                isVisible = isBalanceStatement && isTotalAmountZero && isApproved && !isSettled;
+            }
+
+            toolStripButton红蓝单对冲核销.Visible = isVisible;
         }
 
         /// <summary>
@@ -609,6 +747,7 @@ namespace RUINORERP.UI.FM
         private void UCFMStatement_Load(object sender, EventArgs e)
         {
             AddExtendButton(CurMenuInfo);
+            InitRedBlueBillWriteOffButton();
             #region
             switch (PaymentType)
             {
@@ -691,11 +830,15 @@ namespace RUINORERP.UI.FM
             }
             UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
         }
+        #region 红蓝单对冲核销
+
+        ToolStripButton toolStripButton红蓝单对冲核销 = new System.Windows.Forms.ToolStripButton();
+
+        #endregion
+
         #region 坏账处理
 
         ToolStripButton toolStripButton坏账处理 = new System.Windows.Forms.ToolStripButton();
-
-
 
 
 

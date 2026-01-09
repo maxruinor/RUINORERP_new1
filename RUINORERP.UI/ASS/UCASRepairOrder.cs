@@ -161,7 +161,7 @@ namespace RUINORERP.UI.ASS
         ToolStripButton toolStripButton维修处理 = new System.Windows.Forms.ToolStripButton();
         ToolStripButton toolStripButton维修领料 = new System.Windows.Forms.ToolStripButton();
         /// <summary>
-        /// 添加回收
+        /// 添加回收1
         /// </summary>
         /// <returns></returns>
         public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)

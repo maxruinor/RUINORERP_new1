@@ -167,7 +167,8 @@ namespace RUINORERP.Business
         /// 4. 更新应收付款单的已对账金额并标记为不允许再加入对账单
         /// 5. 验证已对账金额不超过未核销金额
         /// 6. 更新对账单状态为已确认
-        /// 注：此审核由业务人员执行，后续财务人员将审核收款单确认实际收付情况
+        /// 7. 余额模式检查:如果总金额为零,允许对冲核销;非余额模式则禁止总金额为零
+        /// 注:此审核由业务人员执行,后续财务人员将审核收款单确认实际收付情况
         /// </summary>
         /// <param name="ObjectEntity">对账单实体</param>
         /// <param name="IsAutoApprove">是否自动审核</param>
@@ -196,10 +197,49 @@ namespace RUINORERP.Business
                 // 验证付款对账单是否有收款信息
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款 && !entity.PayeeInfoID.HasValue && !IsAutoApprove)
                 {
-                    rmrs.ErrorMsg = $"{entity.StatementNo}付款对账单时，对方的收款信息必填!";
+                    rmrs.ErrorMsg = $"{entity.StatementNo}付款对账单时,对方的收款信息必填!";
                     rmrs.Succeeded = false;
                     rmrs.ReturnObject = entity as T;
                     return rmrs;
+                }
+
+                // 完善余额模式逻辑检查
+                // 余额模式:允许正负数对冲使总金额为零
+                // 非余额模式:禁止总金额为零的情况
+                bool isBalanceStatement = (StatementType)entity.StatementType == StatementType.余额对账;
+                bool isTotalAmountZero = Math.Abs(entity.ClosingBalanceLocalAmount) < 0.01m;
+
+                if (isTotalAmountZero && !isBalanceStatement)
+                {
+                    rmrs.ErrorMsg = $"对账单总金额为零,非余额对账模式下不允许此情况。如需红蓝单对冲,请使用余额对账模式。";
+                    rmrs.Succeeded = false;
+                    rmrs.ReturnObject = entity as T;
+                    return rmrs;
+                }
+
+                // 如果是余额模式且总金额为零,需要检查是否包含正负数明细
+                if (isBalanceStatement && isTotalAmountZero)
+                {
+                    // 确保有明细且存在正负数对冲
+                    if (entity.tb_FM_StatementDetails == null || entity.tb_FM_StatementDetails.Count == 0)
+                    {
+                        rmrs.ErrorMsg = "余额对账单总金额为零时,必须包含对冲明细记录。";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
+
+                    // 检查是否存在正负数明细
+                    bool hasPositive = entity.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount > 0);
+                    bool hasNegative = entity.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount < 0);
+
+                    if (!hasPositive || !hasNegative)
+                    {
+                        rmrs.ErrorMsg = "余额对账单总金额为零时,必须包含正数和负数明细用于对冲。";
+                        rmrs.Succeeded = false;
+                        rmrs.ReturnObject = entity as T;
+                        return rmrs;
+                    }
                 }
 
                 // 获取对账单明细中的应收付款单ID
@@ -351,47 +391,47 @@ namespace RUINORERP.Business
 
             try
             {
-            // 验证是否为同一客户/供应商，如果是合并对账则不检查
-            var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
-            if (customerVendorIds.Count > 1 && !isMergeStatement)
-            {
-                rmrs.ErrorMsg = "对账单只能针对同一客户/供应商生成";
-                rmrs.Succeeded = false;
-                return rmrs;
-            }
+                // 验证是否为同一客户/供应商，如果是合并对账则不检查
+                var customerVendorIds = entities.Select(e => e.CustomerVendor_ID).Distinct().ToList();
+                if (customerVendorIds.Count > 1 && !isMergeStatement)
+                {
+                    rmrs.ErrorMsg = "对账单只能针对同一客户/供应商生成";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
 
-            long customerVendorId = customerVendorIds.First();
+                long customerVendorId = customerVendorIds.First();
 
-            // 创建对账单基本信息
-            tb_FM_Statement statement = new tb_FM_Statement();
-            statement.ApprovalResults = null;
-            statement.ApprovalStatus = (int)ApprovalStatus.未审核;
-            statement.Approver_at = null;
-            statement.Approver_by = null;
-            statement.PrintStatus = 0;
-            statement.ActionStatus = ActionStatus.新增;
-            statement.ApprovalOpinions = "";
-            statement.Modified_at = null;
-            statement.Modified_by = null;
-            statement.ReceivePaymentType = (int)receivePaymentType;
-            statement.StatementType = (int)statementType;
-            
-            // 如果是合并对账，设置客户供应商为0（表示多个单位合并）
-            if (isMergeStatement && customerVendorIds.Count > 1)
-            {
-                statement.CustomerVendor_ID = 0; // 0表示合并对账单
-                statement.IsMergeStatement = true;
-                // 保存合并单位的ID列表（JSON格式）
-                statement.MergedCustomerVendorIDs = System.Text.Json.JsonSerializer.Serialize(customerVendorIds);
-            }
-            else
-            {
-                statement.CustomerVendor_ID = customerVendorId;
-                statement.IsMergeStatement = false;
-                statement.MergedCustomerVendorIDs = null;
-            }
-            
-            statement.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
+                // 创建对账单基本信息
+                tb_FM_Statement statement = new tb_FM_Statement();
+                statement.ApprovalResults = null;
+                statement.ApprovalStatus = (int)ApprovalStatus.未审核;
+                statement.Approver_at = null;
+                statement.Approver_by = null;
+                statement.PrintStatus = 0;
+                statement.ActionStatus = ActionStatus.新增;
+                statement.ApprovalOpinions = "";
+                statement.Modified_at = null;
+                statement.Modified_by = null;
+                statement.ReceivePaymentType = (int)receivePaymentType;
+                statement.StatementType = (int)statementType;
+
+                // 如果是合并对账，设置客户供应商为0（表示多个单位合并）
+                if (isMergeStatement && customerVendorIds.Count > 1)
+                {
+                    statement.CustomerVendor_ID = 0; // 0表示合并对账单
+                    statement.IsMergeStatement = true;
+                    // 保存合并单位的ID列表（JSON格式）
+                    statement.MergedCustomerVendorIDs = System.Text.Json.JsonSerializer.Serialize(customerVendorIds);
+                }
+                else
+                {
+                    statement.CustomerVendor_ID = customerVendorId;
+                    statement.IsMergeStatement = false;
+                    statement.MergedCustomerVendorIDs = null;
+                }
+
+                statement.Employee_ID = _appContext.CurUserInfo.UserInfo.Employee_ID.Value;
                 // 生成对账单明细，考虑已对账金额
                 List<tb_FM_StatementDetail> details = new List<tb_FM_StatementDetail>();
 
@@ -422,7 +462,7 @@ namespace RUINORERP.Business
 
                 // 获取期初余额（按客户供应商和日期范围）
                 DateTime startDate = entities.Min(c => c.BusinessDate).Value;
-                
+
                 // 如果是合并对账，计算多个客户供应商的期初余额总和
                 if (isMergeStatement && customerVendorIds.Count > 1)
                 {
@@ -511,24 +551,24 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 期末，期间金额进行计算
+        /// 期末,期间金额进行计算
         /// </summary>
-        /// <param name="statement"></param>
-        /// <param name="details"></param>
-        /// <param name=nameof(ReceivePaymentType)></param>
-        /// <param name="statementType"></param>
-        /// <exception cref="Exception"></exception>
+        /// <param name="statement">对账单实体</param>
+        /// <param name="details">对账单明细列表</param>
+        /// <param name="receivePaymentType">收付款类型</param>
+        /// <param name="statementType">对账单类型</param>
+        /// <exception cref="Exception">计算错误时抛出异常</exception>
         public void CalculateTotalAmount(tb_FM_Statement statement, List<tb_FM_StatementDetail> details, ReceivePaymentType receivePaymentType, StatementType statementType)
         {
             // 计算期间收款和付款总额
-            // 严格按照使用说明书的业务规则：
+            // 严格按照使用说明书的业务规则:
             // - 收款类型的数据保持正数
-            // - 付款类型的数据直接使用原始值汇总，不使用绝对值
+            // - 付款类型的数据直接使用原始值汇总,不使用绝对值
             statement.TotalReceivableLocalAmount = details
                 .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.收款)
                 .Sum(c => c.IncludedLocalAmount);
 
-            // 付款类型的数据直接使用原始值汇总，不使用绝对值
+            // 付款类型的数据直接使用原始值汇总,不使用绝对值
             // 确保正确处理采购退货等场景下的负数付款金额
             statement.TotalPayableLocalAmount = details
                 .Where(c => c.ReceivePaymentType == (int)ReceivePaymentType.付款)
@@ -546,7 +586,7 @@ namespace RUINORERP.Business
 
 
             // 正确计算期末余额
-            // 假如：不是余额对账时是单向的，则全部累加就是期末余额，下面会针对余额对账再次计算覆盖
+            // 假如:不是余额对账时是单向的,则全部累加就是期末余额,下面会针对余额对账再次计算覆盖
             statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount + statement.TotalPayableLocalAmount);
 
 
@@ -555,23 +595,23 @@ namespace RUINORERP.Business
                 #region  余额对账要特殊处理
                 if (receivePaymentType == ReceivePaymentType.付款)
                 {
-                    //付款时，收进来算减去的金额
+                    //付款时,收进来算减去的金额
                     statement.TotalReceivableLocalAmount = -statement.TotalReceivableLocalAmount;
                     statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount - statement.TotalReceivableLocalAmount +
                                                   statement.TotalPayableLocalAmount);
 
-                    statement.Summary = ($"最终需要付款给供应商，金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                    statement.Summary = GenerateBalanceStatementSummary(statement, receivePaymentType);
                     statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
 
                 }
                 else if (receivePaymentType == ReceivePaymentType.收款)
                 {
                     statement.TotalPayableLocalAmount = -statement.TotalPayableLocalAmount;
-                    //收款时，付出去的算减去的金额
+                    //收款时,付出去的算减去的金额
                     statement.ClosingBalanceLocalAmount = (statement.OpeningBalanceLocalAmount + statement.TotalReceivableLocalAmount -
                                                   statement.TotalPayableLocalAmount);
 
-                    statement.Summary = ($"客户需要付款给你方（应收），金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                    statement.Summary = GenerateBalanceStatementSummary(statement, receivePaymentType);
                     statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
                 }
                 #endregion
@@ -582,24 +622,24 @@ namespace RUINORERP.Business
 
             if (netForeignAmount < 0 && statementType == StatementType.余额对账)
             {
-                throw new Exception("计算错误。余额对账时，结果不会为负数。");
+                throw new Exception("计算错误。余额对账时,结果不会为负数。");
             }
 
             // 根据对账模式调整对账单类型和提示信息
             if (statementType == StatementType.收款对账)
             {
-                // 收款对账模式：总是生成收款对账单
-                // 调整期末余额为正数，确保与收款类型匹配
+                // 收款对账模式:总是生成收款对账单
+                // 调整期末余额为正数,确保与收款类型匹配
                 statement.ClosingBalanceForeignAmount = Math.Abs(netForeignAmount);
-                statement.Summary = ($"客户需要付款给你方（应收），金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                statement.Summary = GenerateNonBalanceStatementSummary(statement, StatementType.收款对账);
                 statement.ReceivePaymentType = (int)ReceivePaymentType.收款;
             }
             else if (statementType == StatementType.付款对账)
             {
-                // 付款对账模式：总是生成付款对账单
-                // 调整期末余额为正数，确保与付款类型匹配
+                // 付款对账模式:总是生成付款对账单
+                // 调整期末余额为正数,确保与付款类型匹配
                 statement.ClosingBalanceForeignAmount = Math.Abs(netForeignAmount);
-                statement.Summary = ($"最终需要付款给供应商，金额：{statement.ClosingBalanceLocalAmount}（本币）");
+                statement.Summary = GenerateNonBalanceStatementSummary(statement, StatementType.付款对账);
                 statement.ReceivePaymentType = (int)ReceivePaymentType.付款;
             }
 
@@ -608,7 +648,217 @@ namespace RUINORERP.Business
             {
                 statement.ClosingBalanceLocalAmount = 0; // 确保余额为0
                 statement.ClosingBalanceForeignAmount = 0; // 确保外币余额为0
-                statement.Summary = ("双方无欠款，金额已平。");
+                statement.Summary = "期初:{0:F2},期间应收:{1:F2},期间应付:{2:F2},期末:{3:F2},金额已平";
+            }
+        }
+
+        /// <summary>
+        /// 生成余额对账单的摘要信息
+        /// 包含期初金额、期间应收/应付金额和期末金额
+        /// </summary>
+        /// <param name="statement">对账单实体</param>
+        /// <param name="receivePaymentType">收付款类型</param>
+        /// <returns>摘要字符串</returns>
+        private string GenerateBalanceStatementSummary(tb_FM_Statement statement, ReceivePaymentType receivePaymentType)
+        {
+            string summaryTemplate;
+            if (receivePaymentType == ReceivePaymentType.付款)
+            {
+                summaryTemplate = "期初:{0:F2},期间应收:{1:F2},期间应付:{2:F2},期末:{3:F2},需付供应商:{4:F2}";
+            }
+            else
+            {
+                summaryTemplate = "期初:{0:F2},期间应收:{1:F2},期间应付:{2:F2},期末:{3:F2},客户应付:{4:F2}";
+            }
+            return string.Format(summaryTemplate,
+                statement.OpeningBalanceLocalAmount,
+                statement.TotalReceivableLocalAmount,
+                statement.TotalPayableLocalAmount,
+                statement.ClosingBalanceLocalAmount,
+                statement.ClosingBalanceLocalAmount);
+        }
+
+        /// <summary>
+        /// 生成非余额对账单的摘要信息
+        /// 包含期初金额、期间应收/应付金额和期末金额
+        /// </summary>
+        /// <param name="statement">对账单实体</param>
+        /// <param name="statementType">对账单类型</param>
+        /// <returns>摘要字符串</returns>
+        private string GenerateNonBalanceStatementSummary(tb_FM_Statement statement, StatementType statementType)
+        {
+            string summaryTemplate;
+            if (statementType == StatementType.收款对账)
+            {
+                summaryTemplate = "期初:{0:F2},期间应收:{1:F2},期间应付:{2:F2},期末:{3:F2},客户应付:{4:F2}";
+            }
+            else
+            {
+                summaryTemplate = "期初:{0:F2},期间应收:{1:F2},期间应付:{2:F2},期末:{3:F2},需付供应商:{4:F2}";
+            }
+            return string.Format(summaryTemplate,
+                statement.OpeningBalanceLocalAmount,
+                statement.TotalReceivableLocalAmount,
+                statement.TotalPayableLocalAmount,
+                statement.ClosingBalanceLocalAmount,
+                statement.ClosingBalanceLocalAmount);
+        }
+
+        /// <summary>
+        /// 红蓝单对冲核销方法
+        /// 执行红蓝单对冲核销流程,将对账单中的正负金额明细相互抵消
+        /// </summary>
+        /// <param name="statement">对账单实体</param>
+        /// <returns>操作结果</returns>
+        public async Task<ReturnResults<tb_FM_Statement>> RedBlueBillWriteOffAsync(tb_FM_Statement statement)
+        {
+            ReturnResults<tb_FM_Statement> rmrs = new ReturnResults<tb_FM_Statement>();
+
+            try
+            {
+                // 参数验证
+                if (statement == null)
+                {
+                    rmrs.ErrorMsg = "对账单不能为空";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                // 状态验证
+                if (statement.StatementStatus != (int)StatementStatus.确认)
+                {
+                    rmrs.ErrorMsg = $"只有【已确认】状态的对账单才能执行红蓝单对冲核销。当前状态：{(StatementStatus)statement.StatementStatus}";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                // 模式验证
+                bool isBalanceStatement = (StatementType)statement.StatementType == StatementType.余额对账;
+                if (!isBalanceStatement)
+                {
+                    rmrs.ErrorMsg = "只有【余额对账】模式才能执行红蓝单对冲核销";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                // 金额验证
+                bool isTotalAmountZero = Math.Abs(statement.ClosingBalanceLocalAmount) < 0.01m;
+                if (!isTotalAmountZero)
+                {
+                    rmrs.ErrorMsg = $"只有期末余额为零时才能执行红蓝单对冲核销。当前余额：{statement.ClosingBalanceLocalAmount}";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                // 加载对账单明细
+                if (statement.tb_FM_StatementDetails == null || statement.tb_FM_StatementDetails.Count == 0)
+                {
+                    statement.tb_FM_StatementDetails = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_StatementDetail>()
+                        .Where(d => d.StatementId == statement.StatementId)
+                        .ToListAsync();
+                }
+
+                // 验证明细
+                bool hasPositive = statement.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount > 0);
+                bool hasNegative = statement.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount < 0);
+
+                if (!hasPositive || !hasNegative)
+                {
+                    rmrs.ErrorMsg = "红蓝单对冲核销必须同时包含正数和负数明细";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                // 开启事务
+                _unitOfWorkManage.BeginTran();
+
+                // 核销所有明细
+                foreach (var detail in statement.tb_FM_StatementDetails)
+                {
+                    var arap = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                        .Where(a => a.ARAPId == detail.ARAPId)
+                        .FirstAsync();
+
+                    if (arap == null)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = $"未找到应收应付单ID：{detail.ARAPId}";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+
+                    // 核销金额
+                    decimal writeOffAmount = detail.IncludedLocalAmount;
+
+                    // 更新核销金额
+                    arap.LocalPaidAmount += writeOffAmount;
+                    arap.ForeignPaidAmount += detail.IncludedForeignAmount;
+
+                    // 更新余额
+                    arap.LocalBalanceAmount -= writeOffAmount;
+                    arap.ForeignBalanceAmount -= detail.IncludedForeignAmount;
+
+                    // 更新核销状态
+                    if (Math.Abs(arap.LocalBalanceAmount) < 0.01m)
+                    {
+                        arap.ARAPStatus = (int)ARAPStatus.已冲销;
+                        arap.Remark += "（红蓝单对冲核销已完成）";
+                        //arap. = (int)ARAPWriteOffStatus.全额核销;
+                    }
+
+                    // 更新明细核销金额
+                    detail.WrittenOffLocalAmount = detail.IncludedLocalAmount;
+                    detail.WrittenOffForeignAmount = detail.IncludedForeignAmount;
+                    detail.RemainingLocalAmount = 0;
+                    detail.RemainingForeignAmount = 0;
+                    detail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.全额核销;
+                    detail.Summary = "红蓝单对冲核销";
+
+                    // 保存应收应付单
+                    await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();
+                }
+
+                // 更新对账单状态为已结清
+                statement.StatementStatus = (int)StatementStatus.全部结清;
+                statement.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                statement.ApprovalResults = true;
+                BusinessHelper.Instance.ApproverEntity(statement);
+
+                // 更新对账单明细
+                await _unitOfWorkManage.GetDbClient().Updateable(statement.tb_FM_StatementDetails).ExecuteCommandAsync();
+
+                // 更新对账单
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(statement).UpdateColumns(it => new
+                {
+                    it.StatementStatus,
+                    it.ApprovalStatus,
+                    it.ApprovalResults,
+                    it.ApprovalOpinions
+                }).ExecuteCommandAsync();
+
+                if (result <= 0)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    rmrs.ErrorMsg = "更新对账单失败";
+                    rmrs.Succeeded = false;
+                    return rmrs;
+                }
+
+                _unitOfWorkManage.CommitTran();
+                rmrs.Succeeded = true;
+                rmrs.ReturnObject = statement;
+
+                _logger.LogInformation($"对账单【{statement.StatementNo}】红蓝单对冲核销成功");
+
+                return rmrs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(statement));
+                rmrs.ErrorMsg = $"红蓝单对冲核销失败：{ex.Message}";
+                rmrs.Succeeded = false;
+                return rmrs;
             }
         }
 

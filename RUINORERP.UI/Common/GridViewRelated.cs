@@ -33,29 +33,60 @@ namespace RUINORERP.UI.Common
     /// 表格显示关联单据等
     /// 有两种方式，一种是通过单号关联，一种是直接关联，主子表形式等，即：按列关联
     /// 另一种方式是库存跟踪时，按某列每行中的固定值关联
+    /// 重构说明：
+    /// 1. 支持通过业务类型枚举自动映射到对应的数据库表、实体类和窗体类型
+    /// 2. 完善字段映射机制，同时支持主键ID和业务编号两种查询方式
+    /// 3. 处理复杂业务场景如库存跟踪，能够根据SKU关联到采购入库、销售出库等多种业务单据
+    /// 4. 提供灵活的配置方式，允许特殊单据重写默认的打开逻辑
+    /// 5. 优化命名规范和处理机制，使代码更清晰易维护
+    /// 6. 保持与现有架构的兼容性，特别是已定义的基类和参数传递机制
+    /// 7. 增强错误处理，当无法确定对应业务类型时提供明确的反馈
     /// </summary>
     public class GridViewRelated
     {
-
+        /// <summary>
+        /// 实体加载服务，用于根据表名和单号加载实体数据
+        /// </summary>
         private readonly EntityLoader _loader;
+
+        /// <summary>
+        /// 实体映射服务，用于业务类型、实体类型和表名之间的映射
+        /// </summary>
         private readonly IEntityMappingService _mappingService;
+
+        /// <summary>
+        /// 菜单权限助手，用于打开目标窗体
+        /// </summary>
+        private readonly MenuPowerHelper menuPowerHelper;
+
+        /// <summary>
+        /// 自定义加载器，用于特殊实体加载逻辑
+        /// </summary>
+        private Dictionary<string, Func<tb_MenuInfo, object, Task>> customLoaders;
+
+        /// <summary>
+        /// 特殊菜单映射，用于处理菜单名称与实体名称不一致的情况
+        /// </summary>
+        private static readonly Dictionary<string, string> SpecialMenuMappings = new Dictionary<string, string>
+        {
+            { typeof(tb_ProductionDemand).Name, "UCProduceRequirement" },
+            { typeof(tb_BOM_S).Name, "UCBillOfMaterials" }
+        };
+
         public GridViewRelated()
         {
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            // 通过依赖注入获取服务实例 - 关键修复：使用接口而不是具体实现类
             _loader = Startup.GetFromFac<EntityLoader>();
             _mappingService = Startup.GetFromFac<IEntityMappingService>();
+            customLoaders = new Dictionary<string, Func<tb_MenuInfo, object, Task>>();
+            InitializeCustomLoaders();
         }
-
 
         /// <summary>
         /// 双击时当前窗体的菜单信息
         /// 相当于是要打开目标的上级菜单信息
         /// </summary>
         public tb_MenuInfo FromMenuInfo { get; set; } = new tb_MenuInfo();
-
-        MenuPowerHelper menuPowerHelper;
-
 
         private bool complexType = false;
 
@@ -65,8 +96,6 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public bool ComplexType { get => complexType; set => complexType = value; }
 
-
-
         private List<KeyValuePair<string, string>> complexTargtetField = new List<KeyValuePair<string, string>>();
 
         /// <summary>
@@ -74,31 +103,24 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public List<KeyValuePair<string, string>> ComplexTargtetField { get => complexTargtetField; set => complexTargtetField = value; }
 
-
         /// <summary>
         /// 设置复杂关联字段，由类型决定编号是哪种业务类型的窗体。
         /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <param name="_ExpBizType"></param>
-        /// <param name="_ExpBillNo"></param>
+        /// <typeparam name="T1">实体类型</typeparam>
+        /// <param name="_ExpBizType">业务类型字段表达式</param>
+        /// <param name="_ExpBillNo">单据编号字段表达式</param>
         public void SetComplexTargetField<T1>(Expression<Func<T1, object>> _ExpBizType, Expression<Func<T1, object>> _ExpBillNo)
         {
             ComplexTargtetField.Add(new KeyValuePair<string, string>(_ExpBizType.GetMemberInfo().Name, _ExpBillNo.GetMemberInfo().Name));
         }
 
-
-
-
-
-
-
         /// <summary>
-        ///  设置关联单据的列,T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，以及关联的列的字段名，可能是ID，也可能是单号
-        /// 
+        /// 设置关联单据的列，T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，以及关联的列的字段名，可能是ID，也可能是单号
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
         /// <param name="_ExpSourceUniqueField">要打开的窗体用的实体名</param>
-        /// <param name="_ExpTargetDisplayField">以及关联的列的字段名，可能是ID，也可能是单号</param>
+        /// <param name="TargetTableName">目标表名</param>
+        /// <param name="TargetDisplayField">以及关联的列的字段名，可能是ID，也可能是单号</param>
         public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField, string TargetTableName, string TargetDisplayField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
@@ -113,15 +135,13 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
         /// <summary>
-        ///  设置关联单据的列,T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体，
-        ///  分析out表格中 实际只要知道目标表名即可，和 来源实体中的对应列名，因为打开 窗体时判断了。写死的,后面优化吧TODO:
-        /// 
+        /// 设置关联单据的列，T1:来源表，显示的实体，目标是指向，要打开的窗体用的实体
+        /// 分析out表格中 实际只要知道目标表名即可，和 来源实体中的对应列名
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
         /// <param name="_ExpSourceUniqueField">双击的列名</param>
-        /// <param name="TargetTableNameFromField">这个参数能指定一个单据编号 是来自不同的 实体，类似由这个表其它列来指定 如biztype</param>
+        /// <param name="TargetTableNameFromField">这个参数能指定一个单据编号是来自不同的实体，类似由这个表其它列来指定如biztype</param>
         public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField, KeyNamePair TargetTableNameFromField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
@@ -134,17 +154,11 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
-
-
         /// <summary>
         /// 打开自己本身的窗体（双击哪一列会跳到单据编辑菜单）
-        /// 
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-        /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
         /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
-        /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
         public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
@@ -159,7 +173,11 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
+        /// <summary>
+        /// 设置关联信息（使用字符串参数）
+        /// </summary>
+        /// <param name="TableName">表名</param>
+        /// <param name="FieldName">字段名</param>
         public void SetRelatedInfo(string TableName, string FieldName)
         {
             RelatedInfo relatedInfo = new RelatedInfo();
@@ -175,7 +193,7 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 关联单据
+        /// 设置关联单据信息
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
         /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
@@ -194,11 +212,11 @@ namespace RUINORERP.UI.Common
                 RelatedInfoList.Add(relatedInfo);
             }
         }
+
         /// <summary>
-        /// 关联单据
+        /// 设置关联单据信息
         /// </summary>
         /// <typeparam name="T1">来源 表格目前显示的实体</typeparam>
-        /// <typeparam name="T2">目标 要打开的窗体用的实体</typeparam>
         /// <param name="_ExpSourceUniqueField">来源的唯一字段</param>
         /// <param name="_ExpTargetDisplayField">目标的显示字段</param>
         public void SetRelatedInfo<T1>(Expression<Func<T1, object>> _ExpSourceUniqueField, Expression<Func<T1, object>> _ExpTargetDisplayField)
@@ -216,334 +234,17 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 关联单据时  业务和数据表不一致时，需要指定业务表名
+        /// 关联单据时 业务和数据表不一致时，需要指定业务表名
         /// </summary>
         public List<RelatedInfo> RelatedInfoList { get; set; } = new List<RelatedInfo>();
 
-
-
-
         /// <summary>
-        /// 用于要打开的窗体是由源来中的一个列名决定ID或编号，目标表名是由源表格中某一列的值来决定
+        /// 初始化自定义加载器
         /// </summary>
-        /// <param name="GridViewColumnFieldName">SourceBillNo</param>
-        /// <param name="CurrentRowEntity"></param>
-        /// <param name="IsFromGridValue">是否从Grid中取值,只是用这个参数来区别一下没有实际作用,后面优化吧</param
-        public void GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
+        private void InitializeCustomLoaders()
         {
-            if (CurrentRowEntity is DataGridViewRow CurrentRow)
-            {
-                CurrentRowEntity = CurrentRow.DataBoundItem;
-            }
-            tb_MenuInfo RelatedMenuInfo = null;
-            RelatedInfo relatedRelationship = new RelatedInfo();
-            if (ComplexType)
-            {
-                string TargetTableKey = string.Empty;
-                #region 复杂类型
-                var result = ComplexTargtetField.FirstOrDefault(pair => pair.Value == GridViewColumnFieldName);
-
-                if (result.Key != null)
-                {
-                    //通过业务类型找
-                    TargetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
-                    System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
-
-                    //通过业务类型找到目标表名对应的菜单   
-                    relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == TargetTableKey);
-                }
-                else
-                {
-                    //默认将自己为类型 查的就是自己业务表主表的业务编号
-                    //System.Diagnostics.Debug.WriteLine($"未找到值为 {GridViewColumnFieldName} 的键值对。");
-                    string billno = CurrentRowEntity.GetPropertyValue(GridViewColumnFieldName).ToString();
-
-                    //通过业务类型找到目标表名对应的菜单   
-                    relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.SourceTableName == CurrentRowEntity.GetType().Name);
-                }
-
-
-                if (relatedRelationship != null)
-                {
-                    string tableName = relatedRelationship.TargetTableName.Name;
-                    //这里是显示明细
-                    //要把单据信息传过去
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-
-
-                    if (RelatedMenuInfo == null)
-                    {
-                        //特殊情况：没有关联的单据 uc控件窗体名称和实体名称不一致时
-                        if (tableName == typeof(tb_ProductionDemand).Name)
-                        {
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains("UCProduceRequirement")).FirstOrDefault();
-                        }
-                        //特殊情况：没有关联的单据
-                        if (tableName == typeof(tb_BOM_S).Name)
-                        {
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains("UCBillOfMaterials")).FirstOrDefault();
-                        }
-                    }
-
-                    if (RelatedMenuInfo != null)
-                    {
-                        //一般是主键和编号来关联，通过数据类型来区别
-
-                        var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
-                        if (billno != null)
-                        {
-
-                            //有时 有收付款类型的情况。要通过实体中具体的数据来定菜单。则在查出实体后来更新菜单信息
-                            OpenTargetEntity(RelatedMenuInfo, tableName, billno);
-                            return;
-                        }
-
-                    }
-
-                }
-                #endregion
-            }
-            else
-            {
-                #region 普通类型
-                relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
-                if (relatedRelationship != null)
-                {
-                    string tableName = relatedRelationship.TargetTableName.Key;
-                    //这里是显示明细
-                    //要把单据信息传过去
-                    //                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains(tableName.Replace("tb_", "UC").ToString().Replace("Query", ""))).FirstOrDefault();
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                    if (RelatedMenuInfo == null)
-                    {
-                        //特殊情况：没有关联的单据 uc控件窗体名称和实体名称不一致时
-                        if (tableName == typeof(tb_ProductionDemand).Name)
-                        {
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains("UCProduceRequirement")).FirstOrDefault();
-                        }
-                        //特殊情况：没有关联的单据
-                        if (tableName == typeof(tb_BOM_S).Name)
-                        {
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains("UCBillOfMaterials")).FirstOrDefault();
-                        }
-                    }
-
-                    if (RelatedMenuInfo != null)
-                    {
-                        //一般是主键和编号来关联，通过数据类型来区别
-
-                        var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
-                        if (billno != null)
-                        {
-                            OpenTargetEntity(RelatedMenuInfo, tableName, billno);
-                        }
-                    }
-
-                }
-                #endregion
-
-            }
-
-        }
-
-
-
-        /*
-        /// <summary>
-        /// 顺便传回业务主键 可能是ID，可能是编号
-        /// </summary>
-        /// <param name="GridViewColumnFieldName"></param>
-        /// <param name="CurrentRow"></param>
-        /// <returns></returns>
-        public async void GuideToForm(string GridViewColumnFieldName, DataGridViewRow CurrentRow)
-        {
-            var clickColType = CurrentRow.Cells[GridViewColumnFieldName].Value.GetType();
-         
-            tb_MenuInfo RelatedMenuInfo = null;
-            RelatedInfo relatedRelationship = null;
-            if (clickColType == typeof(Int64))
-            {
-                 relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
-            }
-            if (clickColType == typeof(string))
-            {
-                 relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.TargetDisplayField == GridViewColumnFieldName);
-            }
-            if (relatedRelationship != null)
-            {
-
-                //先判断是否多个，合并时会有两个再来根据属性标识去找正确的
-                List<tb_MenuInfo> TargetMenus = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
-                && m.BIBaseForm == "BaseBillEditGeneric`2").ToList();
-                if (TargetMenus.Count > 1)
-                {
-                    if (!string.IsNullOrEmpty(TargetMenus[0].BizInterface) && !string.IsNullOrEmpty(TargetMenus[1].BizInterface))
-                    {
-                        if (TargetMenus[0].BizInterface == TargetMenus[1].BizInterface
-                            && TargetMenus[0].BizInterface == nameof(ISharedIdentification))
-                        {
-
-                            //数据库中保存的是枚举的名称 Flag1
-                            //为了通用 共享一组单据的业务表。如 应收应付。  基类做好了 查询 和 单据编辑。分别对应有四个两组子类
-                            //这时 标记要对应统一。如果应收单和应收查询  都是  Flag1.可以是Flag2 但是要一样
-                            string Flag = string.Empty;
-                            if (this.FromMenuInfo == null)
-                            {
-                                MessageBox.Show("请联系管理员，配置入口菜单");
-                            }
-                            else
-                            {
-                                if (this.FromMenuInfo.UIPropertyIdentifier == null)
-                                {
-                                    //对账单没有明确指定，不是在UI窗体中指定的是由数据指定的。
-                                    var payemntType = CurrentRow.DataBoundItem.GetPropertyValue(nameof(ReceivePaymentType));
-                                    if (payemntType != null)
-                                    {
-                                        Flag = ((SharedFlag)payemntType.ToInt()).ToString();
-                                    }
-                                }
-                                else
-                                {
-                                    Flag = this.FromMenuInfo.UIPropertyIdentifier;
-                                }
-                            }
-
-                            //var sss = CurrentRow.DataBoundItem.GetPropertyInfo(nameof(SharedFlag));
-                            RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                             && m.EntityName == relatedRelationship.TargetTableName.Key
-                             && m.BIBaseForm == "BaseBillEditGeneric`2"
-                             && m.UIPropertyIdentifier == Flag.ToString()).FirstOrDefault();
-
-                            var billno = CurrentRow.DataBoundItem.GetPropertyValue(relatedRelationship.SourceUniqueField);
-                            OpenTargetEntity(RelatedMenuInfo, relatedRelationship.TargetTableName.Key, billno);
-                            return;
-                        }
-
-                    }
-
-                }
-                else
-                {
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Key
-                     && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
-                }
-                if (CurrentRow.DataBoundItem is RUINORERP.Model.BaseEntity entity
-                    && relatedRelationship.TargetTableName.Key == relatedRelationship.SourceTableName
-                    && !CurrentRow.DataBoundItem.GetType().Name.Contains("View_")//排除视图
-                    )
-                {
-                    //双击打开的目标是自己时，就是传入查询当前的实体，其它的，就要下面去查询了。通过：GuideToForm
-                    if (RelatedMenuInfo != null)
-                    {
-                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
-                    }
-                    else
-                    {
-                        MessageBox.Show("请确认你有足够权限查询对应单据，或请联系管理员。");
-                    }
-                }
-                else
-                {
-                    //要查询取值,视图也适用于这里
-                    GuideToForm(GridViewColumnFieldName, CurrentRow.DataBoundItem);
-                }
-            }
-
-        }
-        */
-
-
-
-        public async void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
-        {
-            if (RelatedMenuInfo==null)
-            {
-                return;
-            }
-            // 1. 把表名变成实体类型
-            var entityType = _mappingService.GetEntityTypeByTableName(tableName);
-
-            var entity = _loader.LoadEntityInternal(entityType, billno);
-            if (entity != null)
-            {
-                #region 特殊情况处理
-                //如果有收付款类型。还是在查找菜单时区别收付款类型
-                //BizEntityInfo entityInfo = EntityMappingHelper.GetEntityInfoByTableName(tableName);
-                if (entity.ContainsProperty(nameof(ReceivePaymentType)))
-                {
-                    string Flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                 && m.EntityName == tableName
-                 && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
-                     .FirstOrDefault();
-                }
-                if (RelatedMenuInfo == null)
-                {
-                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
-                 && m.EntityName == tableName
-                 && m.BIBaseForm == "BaseBillEditGeneric`2")
-                     .FirstOrDefault();
-                }
-                //对账单虽然有区分收付款类型。但只有一种情况。所以这里还有加一个判断
-
-                #endregion
-
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, entity);
-                return;
-            }
-
-            if (tableName == typeof(tb_BuyingRequisition).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BuyingRequisition>()
-                    .Includes(c => c.tb_BuyingRequisitionDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PuRequisition_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PuRequisitionNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-
-            if (tableName == typeof(tb_SaleOutRe).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOutRe>()
-                    .Includes(c => c.tb_SaleOutReDetails)
-                    .Includes(c => c.tb_SaleOutReRefurbishedMaterialsDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.SaleOutRe_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_FM_ExpenseClaim).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ExpenseClaim>()
-                    .Includes(c => c.tb_FM_ExpenseClaimDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ClaimMainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ClaimNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_FM_OtherExpense).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_OtherExpense>()
-                    .Includes(c => c.tb_FM_OtherExpenseDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ExpenseMainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ExpenseNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProductionPlan).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
-                    .Includes(c => c.tb_ProductionPlanDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PPID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PPNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProductionDemand).Name)
+            // 注册 tb_ProductionDemand 的自定义加载器
+            RegisterCustomLoader(typeof(tb_ProductionDemand).Name, async (menuInfo, billNo) =>
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProductionDemand>()
                     .Includes(c => c.tb_ProductionDemandTargetDetails)
@@ -552,306 +253,263 @@ namespace RUINORERP.UI.Common
                     .Includes(c => c.tb_ManufacturingOrders)
                     .Includes(c => c.tb_PurGoodsRecommendDetails)
                     .Includes(c => c.tb_productionplan)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PDID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PDNo == billno.ToString())
+                    .WhereIF(billNo.GetType() == typeof(long), c => c.PDID == billNo.ToLong())
+                    .WhereIF(billNo.GetType() == typeof(string), c => c.PDNo == billNo.ToString())
                     .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
+                await menuPowerHelper.ExecuteEvents(menuInfo, obj);
+            });
 
-            if (tableName == typeof(tb_BOM_S).Name)
+            // 注册 tb_BOM_S 的自定义加载器
+            RegisterCustomLoader(typeof(tb_BOM_S).Name, async (menuInfo, billNo) =>
             {
                 var obj = MainForm.Instance.AppContext.Db.Queryable<tb_BOM_S>()
                     .Includes(c => c.tb_BOM_SDetails, d => d.tb_BOM_SDetailSubstituteMaterials)
                     .Includes(c => c.view_ProdInfo)
                     .Includes(c => c.tb_BOM_SDetailSecondaries)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.BOM_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BOM_No == billno.ToString())
+                    .WhereIF(billNo.GetType() == typeof(long), c => c.BOM_ID == billNo.ToLong())
+                    .WhereIF(billNo.GetType() == typeof(string), c => c.BOM_No == billNo.ToString())
                     .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
+                await menuPowerHelper.ExecuteEvents(menuInfo, obj);
+            });
+        }
 
-            if (tableName == typeof(tb_MaterialRequisition).Name)
+        /// <summary>
+        /// 注册自定义加载器，用于特殊实体的加载逻辑
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="loader">自定义加载器函数</param>
+        public void RegisterCustomLoader(string tableName, Func<tb_MenuInfo, object, Task> loader)
+        {
+            if (customLoaders.ContainsKey(tableName))
             {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MaterialRequisition>()
-                    .Includes(c => c.tb_MaterialRequisitionDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MR_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.MaterialRequisitionNO == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                customLoaders[tableName] = loader;
             }
-            if (tableName == typeof(tb_MaterialReturn).Name)
+            else
             {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MaterialReturn>()
-                    .Includes(c => c.tb_MaterialReturnDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MRE_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_FinishedGoodsInv).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FinishedGoodsInv>()
-                    .Includes(c => c.tb_FinishedGoodsInvDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.FG_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.DeliveryBillNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-
-            if (tableName == typeof(tb_ManufacturingOrder).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ManufacturingOrder>()
-                    .Includes(c => c.tb_ManufacturingOrderDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MOID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.MONO == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_SaleOrder).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOrder>()
-                    .Includes(c => c.tb_SaleOrderDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.SOrder_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.SOrderNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_SaleOut).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_SaleOut>()
-                    .Includes(c => c.tb_SaleOutDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.SaleOut_MainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.SaleOutNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_PurOrder).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurOrder>()
-                    .Includes(c => c.tb_PurOrderDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PurOrder_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PurOrderNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_PurEntry).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntry>()
-                    .Includes(c => c.tb_PurEntryDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PurEntryID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PurEntryNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_Stocktake).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_Stocktake>()
-                    .Includes(c => c.tb_StocktakeDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.CheckNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProdBorrowing).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdBorrowing>()
-                    .Includes(c => c.tb_ProdBorrowingDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.BorrowID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BorrowNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-
-            if (tableName == typeof(tb_ProdReturning).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdReturning>()
-                    .Includes(c => c.tb_ProdReturningDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ReturnID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ReturnNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProdMerge).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdMerge>()
-                    .Includes(c => c.tb_ProdMergeDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MergeID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.MergeNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProdSplit).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdSplit>()
-                    .Includes(c => c.tb_ProdSplitDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.SplitID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.SplitNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_StockTransfer).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockTransfer>()
-                    .Includes(c => c.tb_StockTransferDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.StockTransferID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.StockTransferNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_ProdConversion).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_ProdConversion>()
-                    .Includes(c => c.tb_ProdConversionDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ConversionID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ConversionNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_PurReturnEntry).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurReturnEntry>()
-                    .Includes(c => c.tb_PurReturnEntryDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PurReEntry_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PurReEntryNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_PurEntryRe).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_PurEntryRe>()
-                    .Includes(c => c.tb_PurEntryReDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PurEntryRe_ID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PurEntryReNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_StockOut).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockOut>()
-                    .Includes(c => c.tb_StockOutDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_StockIn).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_StockIn>()
-                    .Includes(c => c.tb_StockInDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.MainID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.BillNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_MRP_ReworkEntry).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkEntry>()
-                    .Includes(c => c.tb_MRP_ReworkEntryDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ReworkEntryID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ReworkEntryNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_FM_PreReceivedPayment).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PreRPID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PreRPNO == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_FM_ReceivablePayable).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                    .Includes(c => c.tb_FM_ReceivablePayableDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ARAPId == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ARAPNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_FM_PriceAdjustment).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PriceAdjustment>()
-                    .Includes(c => c.tb_FM_PriceAdjustmentDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.AdjustId == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.AdjustNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_FM_ProfitLoss).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ProfitLoss>()
-                    .Includes(c => c.tb_FM_ProfitLossDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ProfitLossId == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ProfitLossNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_FM_PaymentRecord).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_PaymentRecord>()
-                    .Includes(c => c.tb_FM_PaymentRecordDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.PaymentId == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.PaymentNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_AS_RepairMaterialPickup).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairMaterialPickup>()
-                    .Includes(c => c.tb_AS_RepairMaterialPickupDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.RMRID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.MaterialPickupNO == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_AS_RepairOrder).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_AS_RepairOrder>()
-                    .Includes(c => c.tb_AS_RepairOrderDetails)
-                    .Includes(c => c.tb_AS_RepairOrderMaterialDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.RepairOrderID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.RepairOrderNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-            if (tableName == typeof(tb_FM_Statement).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_FM_Statement>()
-                    .Includes(c => c.tb_FM_StatementDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.StatementId == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.StatementNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
-            }
-
-            if (tableName == typeof(tb_MRP_ReworkReturn).Name)
-            {
-                var obj = MainForm.Instance.AppContext.Db.Queryable<tb_MRP_ReworkReturn>()
-                    .Includes(c => c.tb_MRP_ReworkReturnDetails)
-                    .WhereIF(billno.GetType() == typeof(long), c => c.ReworkReturnID == billno.ToLong())
-                    .WhereIF(billno.GetType() == typeof(string), c => c.ReworkReturnNo == billno.ToString())
-                    .Single();
-                await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, obj);
+                customLoaders.Add(tableName, loader);
             }
         }
 
+        /// <summary>
+        /// 用于要打开的窗体是由源来中的一个列名决定ID或编号，目标表名是由源表格中某一列的值来决定
+        /// </summary>
+        /// <param name="GridViewColumnFieldName">SourceBillNo</param>
+        /// <param name="CurrentRowEntity">当前行实体</param>
+        public void GuideToForm(string GridViewColumnFieldName, object CurrentRowEntity)
+        {
+            if (CurrentRowEntity is DataGridViewRow CurrentRow)
+            {
+                CurrentRowEntity = CurrentRow.DataBoundItem;
+            }
 
+            tb_MenuInfo relatedMenuInfo = null;
+            RelatedInfo relatedRelationship = new RelatedInfo();
+
+            if (ComplexType)
+            {
+                relatedRelationship = FindRelatedInfoComplex(GridViewColumnFieldName, CurrentRowEntity);
+            }
+            else
+            {
+                relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName);
+            }
+
+            if (relatedRelationship != null)
+            {
+                string tableName = relatedRelationship.TargetTableName.Key;
+
+                // 检查 Key 是否为 BizType 枚举值（如 "2"），如果是则需要转换为表名
+                if (IsBizTypeEnumValue(tableName))
+                {
+                    tableName = ConvertBizTypeToTableName(tableName);
+                }
+
+                relatedMenuInfo = FindMenuByTableName(tableName);
+
+                if (relatedMenuInfo != null)
+                {
+                    var billno = CurrentRowEntity.GetPropertyValue(relatedRelationship.SourceUniqueField);
+                    if (billno != null)
+                    {
+                        OpenTargetEntity(relatedMenuInfo, tableName, billno);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show($"未找到表 {tableName} 对应的菜单，请联系管理员。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 判断字符串是否为 BizType 枚举值
+        /// </summary>
+        /// <param name="value">要检查的值</param>
+        /// <returns>如果是 BizType 枚举值返回 true，否则返回 false</returns>
+        private bool IsBizTypeEnumValue(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return false;
+
+            // 尝试解析为整数
+            if (int.TryParse(value, out int enumValue))
+            {
+                // 检查是否在 BizType 枚举范围内
+                return Enum.IsDefined(typeof(BizType), enumValue);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 将 BizType 枚举值转换为对应的表名
+        /// </summary>
+        /// <param name="bizTypeEnumValue">BizType 枚举值的字符串表示（如 "2"）</param>
+        /// <returns>对应的表名，如果转换失败返回 null</returns>
+        private string ConvertBizTypeToTableName(string bizTypeEnumValue)
+        {
+            try
+            {
+                int bizTypeValue = int.Parse(bizTypeEnumValue);
+                BizType bizType = (BizType)bizTypeValue;
+
+                // 方法1：使用映射服务根据业务类型获取实体信息，直接获取表名
+                var entityInfo = _mappingService.GetEntityInfo(bizType);
+                if (entityInfo != null && !string.IsNullOrEmpty(entityInfo.TableName))
+                {
+                    return entityInfo.TableName;
+                }
+
+                // 方法2：如果映射服务没有找到，尝试从 RelatedInfo 中获取
+                // 因为在使用 SetRelatedInfo 时，KeyNamePair 的 Name 可能已经包含表名
+                var relatedInfo = RelatedInfoList
+                    .FirstOrDefault(c => c.TargetTableName.Key == bizTypeEnumValue);
+
+                if (relatedInfo != null && !string.IsNullOrEmpty(relatedInfo.TargetTableName.Name))
+                {
+                    return relatedInfo.TargetTableName.Name;
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 在复杂类型模式下查找关联信息
+        /// </summary>
+        /// <param name="GridViewColumnFieldName">表格列字段名</param>
+        /// <param name="CurrentRowEntity">当前行实体</param>
+        /// <returns>找到的关联信息，如果未找到则返回null</returns>
+        private RelatedInfo FindRelatedInfoComplex(string GridViewColumnFieldName, object CurrentRowEntity)
+        {
+            string targetTableKey = string.Empty;
+            var result = ComplexTargtetField.FirstOrDefault(pair => pair.Value == GridViewColumnFieldName);
+
+            if (result.Key != null)
+            {
+                targetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
+                System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
+
+                return RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == targetTableKey);
+            }
+            else
+            {
+                string billno = CurrentRowEntity.GetPropertyValue(GridViewColumnFieldName).ToString();
+                return RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.SourceTableName == CurrentRowEntity.GetType().Name);
+            }
+        }
+
+        /// <summary>
+        /// 根据表名查找对应的菜单
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>找到的菜单信息，如果未找到则返回null</returns>
+        private tb_MenuInfo FindMenuByTableName(string tableName)
+        {
+            var menuInfo = MainForm.Instance.MenuList
+                .Where(m => m.IsVisble && m.EntityName == tableName && m.BIBaseForm == "BaseBillEditGeneric`2")
+                .FirstOrDefault();
+
+            if (menuInfo == null && SpecialMenuMappings.ContainsKey(tableName))
+            {
+                var className = SpecialMenuMappings[tableName];
+                menuInfo = MainForm.Instance.MenuList
+                    .Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains(className))
+                    .FirstOrDefault();
+            }
+
+            return menuInfo;
+        }
+
+        /// <summary>
+        /// 打开目标实体
+        /// </summary>
+        /// <param name="relatedMenuInfo">关联菜单信息</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="billno">单据号（可以是ID或编号）</param>
+        public async void OpenTargetEntity(tb_MenuInfo relatedMenuInfo, string tableName, object billno)
+        {
+            if (relatedMenuInfo == null)
+            {
+                MessageBox.Show("菜单信息为空，无法打开单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 首先尝试使用自定义加载器
+            if (customLoaders.ContainsKey(tableName))
+            {
+                await customLoaders[tableName](relatedMenuInfo, billno);
+                return;
+            }
+
+            // 尝试使用 EntityLoader 加载实体
+            var entityType = _mappingService.GetEntityTypeByTableName(tableName);
+            if (entityType != null)
+            {
+                var entity = _loader.LoadEntityInternal(entityType, billno);
+                if (entity != null)
+                {
+                    // 处理有收付款类型的特殊情况
+                    relatedMenuInfo = AdjustMenuForPaymentType(relatedMenuInfo, entity, tableName);
+                    await menuPowerHelper.ExecuteEvents(relatedMenuInfo, entity);
+                    return;
+                }
+            }
+
+            // 如果无法通过映射服务加载，提供友好提示
+            MessageBox.Show($"无法加载表 {tableName} 的数据，请检查实体映射配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// 调整菜单以适应收付款类型
+        /// </summary>
+        /// <param name="menuInfo">菜单信息</param>
+        /// <param name="entity">实体对象</param>
+        /// <param name="tableName">表名</param>
+        /// <returns>调整后的菜单信息</returns>
+        private tb_MenuInfo AdjustMenuForPaymentType(tb_MenuInfo menuInfo, object entity, string tableName)
+        {
+            if (entity.ContainsProperty(nameof(ReceivePaymentType)))
+            {
+                string flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
+                var adjustedMenu = MainForm.Instance.MenuList
+                    .Where(m => m.IsVisble
+                        && m.EntityName == tableName
+                        && m.BIBaseForm == "BaseBillEditGeneric`2"
+                        && m.UIPropertyIdentifier == flag)
+                    .FirstOrDefault();
+
+                if (adjustedMenu != null)
+                {
+                    return adjustedMenu;
+                }
+            }
+
+            return menuInfo;
+        }
     }
 }

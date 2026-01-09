@@ -103,6 +103,17 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
+                // 检查是否为余额对账模式且总金额为零
+                bool isBalanceStatement = (StatementType)source.StatementType == StatementType.余额对账;
+                bool isTotalAmountZero = Math.Abs(source.ClosingBalanceLocalAmount) < 0.01m;
+
+                if (isBalanceStatement && isTotalAmountZero)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"余额对账模式下，期末余额为0时不允许转单。如需核销，请使用【红蓝单对冲核销】功能。";
+                    return result;
+                }
+
                 // 添加关于金额计算的提示信息
                 decimal absAmount = Math.Abs(source.ClosingBalanceLocalAmount);
                 if (absAmount > 0)

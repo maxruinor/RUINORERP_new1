@@ -62,8 +62,7 @@ using RUINORERP.PacketSpec.Models.Core;
 
 using RUINORERP.Business.Cache;
 using System.Web.Caching;
-
-
+using RUINORERP.Business.RowLevelAuthService;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -232,7 +231,7 @@ namespace RUINORERP.UI.BaseForm
         public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver { get; set; }
 
         #region 分页功能相关属性和字段
-        
+
         /// <summary>
         /// 是否启用分页功能
         /// </summary>
@@ -1595,6 +1594,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 与高级查询执行结果公共使用，如果null时，则执行普通查询？
+        /// 支持应用行级权限规则
         /// </summary>
         /// <param name="UseNavQuery">是否使用自动导航</param>
         //[MustOverride]
@@ -1616,16 +1616,22 @@ namespace RUINORERP.UI.BaseForm
                 //两种条件组合为一起，一种是process中要处理器中设置好的，另一个是UI中 灵活设置的
                 Expression<Func<T, bool>> expression = QueryConditionFilter.GetFilterExpression<T>();
                 List<T> list = new List<T>();
+
+                // 获取行级权限策略
+                var rowAuthPolicies = GetRowAuthPolicies();
+
                 if (UseAutoNavQuery)
                 {
-                    list = await MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
+                    var query = MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
                    .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                   .ToListAsync();
+                   .ApplyRowLevelAuth(rowAuthPolicies, MainForm.Instance.AppContext.Db, MainForm.Instance.logger);
+                    list = await query.ToListAsync();
                 }
                 else
                 {
-                    list = await MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
-                  .ToListAsync();
+                    var query = MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
+                  .ApplyRowLevelAuth(rowAuthPolicies, MainForm.Instance.AppContext.Db, MainForm.Instance.logger);
+                    list = await query.ToListAsync();
                 }
 
                 List<string> masterlist = RuinorExpressionHelper.ExpressionListToStringList(SummaryCols);
@@ -1673,6 +1679,63 @@ namespace RUINORERP.UI.BaseForm
 
 
         protected BaseController<T> ctr;//= Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+        /// <summary>
+        /// 获取当前用户的行级权限策略
+        /// </summary>
+        /// <returns>行级权限策略列表</returns>
+        protected List<tb_RowAuthPolicy> GetRowAuthPolicies()
+        {
+            try
+            {
+                // 尝试从服务容器中获取行级权限策略查询服务
+
+                var policyQueryService = Startup.GetFromFac<IRowAuthPolicyQueryService>();
+                if (policyQueryService != null)
+                {
+                    // 获取当前用户信息
+                    var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
+                    if (currentUser != null)
+                    {
+                        // 获取当前菜单ID
+                        var currentMenu = CurMenuInfo;
+                        long? menuId = currentMenu?.MenuID;
+
+                        // 获取用户的角色列表
+                        var currentRole = MainForm.Instance?.AppContext?.CurrentRole;
+                        var roleIds = new List<long>();
+                        if (currentRole != null)
+                        {
+                            roleIds.Add(currentRole.RoleID);
+                        }
+
+                        // 并行获取用户策略和角色策略
+                        var task = policyQueryService.GetPoliciesByUserAndRolesAsync(
+                            currentUser.User_ID,
+                            roleIds,
+                            menuId);
+
+                        // 由于这是UI层，需要同步等待结果
+                        var policies = task.GetAwaiter().GetResult();
+
+                        return policies ?? new List<tb_RowAuthPolicy>();
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断查询
+                if (MainForm.Instance?.logger != null)
+                {
+                    MainForm.Instance.logger.LogError(ex, "获取行级权限策略失败，将跳过行级权限过滤");
+                }
+            }
+
+            // 如果获取失败，返回空列表，不应用任何行级权限
+            return new List<tb_RowAuthPolicy>();
+        }
+
         public async virtual Task<List<T>> Save()
         {
             List<T> Returnlist = new List<T>();
@@ -1970,7 +2033,7 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
-    
+
         private void kryptonHeaderGroupTop_CollapsedChanged(object sender, EventArgs e)
         {
 

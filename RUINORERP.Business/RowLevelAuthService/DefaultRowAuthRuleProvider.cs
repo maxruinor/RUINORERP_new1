@@ -51,8 +51,8 @@ namespace RUINORERP.Business.RowLevelAuthService
             // 初始化规则配置映射
             _ruleConfigurations = new Dictionary<RowLevelAuthRule, RuleConfiguration>
             {
-                { 
-                    RowLevelAuthRule.OnlyCustomer, 
+                {
+                    RowLevelAuthRule.OnlyCustomer,
                     new RuleConfiguration {
                         IsJoinRequired = true,
                         JoinTable = "tb_CustomerVendor",
@@ -61,12 +61,13 @@ namespace RUINORERP.Business.RowLevelAuthService
                         TargetTableJoinField = "CustomerVendor_ID",
                         JoinTableJoinField = "CustomerVendor_ID",
                         FilterClause = "tb_CustomerVendor.IsCustomer = 1",
+                        IsParameterized = false, // 此规则不需要参数
                         Name = "仅客户数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyCustomer]
                     }
                 },
-                { 
-                    RowLevelAuthRule.OnlySupplier, 
+                {
+                    RowLevelAuthRule.OnlySupplier,
                     new RuleConfiguration {
                         IsJoinRequired = true,
                         JoinTable = "tb_CustomerVendor",
@@ -75,43 +76,48 @@ namespace RUINORERP.Business.RowLevelAuthService
                         TargetTableJoinField = "CustomerVendor_ID",
                         JoinTableJoinField = "CustomerVendor_ID",
                         FilterClause = "tb_CustomerVendor.IsVendor = 1",
+                        IsParameterized = false, // 此规则不需要参数
                         Name = "仅供应商数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlySupplier]
                     }
                 },
-                { 
-                    RowLevelAuthRule.OnlyReceivable, 
+                {
+                    RowLevelAuthRule.OnlyReceivable,
                     new RuleConfiguration {
                         IsJoinRequired = false,
                         FilterClause = "ReceivePaymentType = 1",
+                        IsParameterized = false,
                         Name = "仅收款数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyReceivable]
                     }
                 },
-                { 
-                    RowLevelAuthRule.OnlyPayable, 
+                {
+                    RowLevelAuthRule.OnlyPayable,
                     new RuleConfiguration {
                         IsJoinRequired = false,
                         FilterClause = "ReceivePaymentType = 2",
+                        IsParameterized = false,
                         Name = "仅付款数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyPayable]
                     }
                 },
-                { 
-                    RowLevelAuthRule.OnlyOwner, 
+                {
+                    RowLevelAuthRule.OnlyOwner,
                     new RuleConfiguration {
                         IsJoinRequired = false,
-                        FilterClause = "Employee_ID = " + (_context.CurUserInfo?.UserInfo?.Employee_ID ?? 0),
+                        FilterClause = "Employee_ID = {EmployeeId}", // 使用参数占位符
+                        IsParameterized = true, // 标记为参数化规则
+                        ParameterizedFilterClause = "Employee_ID = {EmployeeId}",
                         Name = "仅自己负责的数据",
                         Description = _ruleDescriptions[RowLevelAuthRule.OnlyOwner]
                     }
                 },
-                { 
-                    RowLevelAuthRule.AllDataForOtherInOut, 
+                {
+                    RowLevelAuthRule.AllDataForOtherInOut,
                     CreateAllDataConfig("全部数据", _ruleDescriptions[RowLevelAuthRule.AllDataForOtherInOut])
                 },
-                { 
-                    RowLevelAuthRule.AllData, 
+                {
+                    RowLevelAuthRule.AllData,
                     CreateAllDataConfig("全部数据", _ruleDescriptions[RowLevelAuthRule.AllData])
                 }
             };
@@ -329,7 +335,7 @@ namespace RUINORERP.Business.RowLevelAuthService
             if (_ruleConfigurations.TryGetValue(rule, out var config))
             {
                 policy.IsJoinRequired = config.IsJoinRequired;
-                
+
                 if (config.IsJoinRequired)
                 {
                     policy.JoinTable = config.JoinTable;
@@ -339,10 +345,17 @@ namespace RUINORERP.Business.RowLevelAuthService
                     policy.TargetTableJoinField = config.TargetTableJoinField;
                     policy.JoinTableJoinField = config.JoinTableJoinField;
                 }
-                
+
+                // 支持参数化规则
+                policy.IsParameterized = config.IsParameterized;
                 policy.FilterClause = config.FilterClause;
-                
-                _logger.LogDebug("已为策略配置过滤条件: {RuleName}", config.Name);
+                if (config.IsParameterized)
+                {
+                    policy.ParameterizedFilterClause = config.ParameterizedFilterClause;
+                }
+
+                _logger.LogDebug("已为策略配置过滤条件: {RuleName} (参数化: {IsParameterized})",
+                    config.Name, config.IsParameterized);
             }
             else
             {

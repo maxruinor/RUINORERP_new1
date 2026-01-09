@@ -48,7 +48,6 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
             bool isDesignMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
-
             if (!isDesignMode)
             {
                 if (_cacheManager == null)
@@ -63,7 +62,9 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="cacheManager">实体缓存管理器</param>
         public BaseEditGeneric(IEntityCacheManager cacheManager = null)
-        {
+        {       
+            
+            InitializeComponent();
             // 使用LicenseManager.UsageMode检测设计模式，在构造函数中更可靠
             bool isDesignMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
             
@@ -76,7 +77,7 @@ namespace RUINORERP.UI.BaseForm
                 _cacheManager = cacheManager;
             }
             
-            InitializeComponent();
+  
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
         }

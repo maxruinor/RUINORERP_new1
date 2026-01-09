@@ -1,6 +1,5 @@
-using System.Text.RegularExpressions;
 using RUINORERP.Business.BizMapperService;
-using System;
+using System.Text.RegularExpressions;
 
 namespace RUINORERP.Business.RowLevelAuthService
 {
@@ -21,7 +20,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         public string JoinTable { get; set; }
 
         /// <summary>
-        /// 关联类型（如：INNER、LEFT、RIGHT等）
+        /// 关联类型(如:INNER、LEFT、RIGHT等)
         /// </summary>
         public string JoinType { get; set; }
 
@@ -42,9 +41,20 @@ namespace RUINORERP.Business.RowLevelAuthService
         public string JoinTableJoinField { get; set; }
 
         /// <summary>
-        /// 过滤条件SQL子句
+        /// 过滤条件SQL子句(静态条件)
         /// </summary>
         public string FilterClause { get; set; }
+
+        /// <summary>
+        /// 是否使用参数化过滤条件
+        /// </summary>
+        public bool IsParameterized { get; set; }
+
+        /// <summary>
+        /// 参数化过滤条件模板
+        /// 支持占位符: {UserId}, {EmployeeId}, {RoleId}等
+        /// </summary>
+        public string ParameterizedFilterClause { get; set; }
 
         /// <summary>
         /// 规则名称
@@ -55,6 +65,26 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 规则描述
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// 获取实际使用的过滤条件
+        /// 如果是参数化规则,返回ParameterizedFilterClause
+        /// 否则返回FilterClause
+        /// </summary>
+        /// <returns>过滤条件</returns>
+        public string GetEffectiveFilterClause()
+        {
+            return IsParameterized ? ParameterizedFilterClause : FilterClause;
+        }
+
+        /// <summary>
+        /// 判断是否为参数化规则
+        /// </summary>
+        /// <returns>是否为参数化规则</returns>
+        public bool IsParameterizedRule()
+        {
+            return IsParameterized && !string.IsNullOrEmpty(ParameterizedFilterClause);
+        }
 
         /// <summary>
         /// 基于模板生成关联条件
@@ -68,7 +98,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 return string.Empty;
             }
 
-            // 安全地格式化模板，避免SQL注入风险
+            // 安全地格式化模板,避免SQL注入风险
             return string.Format(JoinOnClauseTemplate, SanitizeTableName(mainTableName));
         }
 

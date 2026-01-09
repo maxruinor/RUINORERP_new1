@@ -459,7 +459,10 @@ namespace RUINORERP.UI.Common
 
         public async void OpenTargetEntity(tb_MenuInfo RelatedMenuInfo, string tableName, object billno)
         {
-
+            if (RelatedMenuInfo==null)
+            {
+                return;
+            }
             // 1. 把表名变成实体类型
             var entityType = _mappingService.GetEntityTypeByTableName(tableName);
 

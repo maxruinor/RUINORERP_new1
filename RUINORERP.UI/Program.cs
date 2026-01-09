@@ -44,6 +44,7 @@ using SqlSugar;
 using RUINORERP.UI.Network.DI;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;
+using RUINORERP.Business.RowLevelAuthService;
 
 
 namespace RUINORERP.UI
@@ -271,7 +272,7 @@ namespace RUINORERP.UI
             {
                 // 注册应用程序退出事件
                 Application.ApplicationExit += OnApplicationExit;
-                StartProgram(args);
+                MainAsync(args).GetAwaiter().GetResult();
             }
             finally
             {
@@ -279,6 +280,15 @@ namespace RUINORERP.UI
             }
 
         }
+
+        /// <summary>
+        /// 异步主程序入口
+        /// </summary>
+        static async Task MainAsync(string[] args)
+        {
+            await StartProgramAsync(args);
+        }
+ 
 
 
         private static void ActivateExistingInstance()
@@ -343,7 +353,7 @@ namespace RUINORERP.UI
 
 
 
-        private static void StartProgram(string[] args)
+        private static async Task StartProgramAsync(string[] args)
         {
             // 初始化帮助系统
             InitializeHelpSystem();
@@ -531,8 +541,30 @@ namespace RUINORERP.UI
                     /// 初始化实体映射服务
                     EntityMappingHelper.Initialize();
 
-
                     var form1 = Startup.ServiceProvider.GetService<MainForm>();
+
+                    // 加载行级权限策略（在主线程上异步加载）
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var rowAuthPolicyLoaderService = Startup.GetFromFac<IRowAuthPolicyLoaderService>();
+                            if (rowAuthPolicyLoaderService != null)
+                            {
+                                await rowAuthPolicyLoaderService.LoadAllPoliciesAsync();
+                                System.Diagnostics.Debug.WriteLine("[行级权限] 策略加载成功");
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("[警告] 未找到IRowAuthPolicyLoaderService服务，行级权限功能将不可用");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[错误] 加载行级权限策略失败: {ex.Message}");
+                        }
+                    });
+
                     Application.Run(form1);
 
                 }
@@ -547,6 +579,7 @@ namespace RUINORERP.UI
                     MessageBox.Show(s);
                     System.Diagnostics.Debug.WriteLine(s);
                 }
+      
 
                 return;
                 #endregion

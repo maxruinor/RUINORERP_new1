@@ -1251,6 +1251,7 @@ namespace RUINORERP.UI
             GetActivePage(kryptonDockableWorkspace1);
 
             // 在后台异步执行行级权限策略初始化，避免阻塞UI加载
+            //那么根据不同角色 不同用户 加载过程在哪里实现的呢？
             _ = Task.Run(async () =>
             {
                 try

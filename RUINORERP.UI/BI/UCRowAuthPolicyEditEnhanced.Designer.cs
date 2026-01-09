@@ -43,10 +43,15 @@ namespace RUINORERP.UI.BI
             this.grpPreview = new Krypton.Toolkit.KryptonGroupBox();
             this.txtPreview = new Krypton.Toolkit.KryptonTextBox();
             this.cmbDefaultRule = new Krypton.Toolkit.KryptonComboBox();
+            this.txtTargetTableJoinField = new Krypton.Toolkit.KryptonTextBox();
             this.lblDefaultRule = new Krypton.Toolkit.KryptonLabel();
+            this.lblTargetTableJoinField = new Krypton.Toolkit.KryptonLabel();
             this.txtPolicyDescription = new Krypton.Toolkit.KryptonTextBox();
             this.lblPolicyDescription = new Krypton.Toolkit.KryptonLabel();
             this.chkIsEnabled = new Krypton.Toolkit.KryptonCheckBox();
+            this.txtParameterizedFilterClause = new Krypton.Toolkit.KryptonTextBox();
+            this.lblParameterizedFilterClause = new Krypton.Toolkit.KryptonLabel();
+            this.chkIsParameterized = new Krypton.Toolkit.KryptonCheckBox();
             this.txtEntityType = new Krypton.Toolkit.KryptonTextBox();
             this.lblEntityType = new Krypton.Toolkit.KryptonLabel();
             this.chkIsJoinRequired = new Krypton.Toolkit.KryptonCheckBox();
@@ -57,8 +62,6 @@ namespace RUINORERP.UI.BI
             this.grpJoinTable = new Krypton.Toolkit.KryptonGroupBox();
             this.txtJoinTableJoinField = new Krypton.Toolkit.KryptonTextBox();
             this.lblJoinTableJoinField = new Krypton.Toolkit.KryptonLabel();
-            this.txtTargetTableJoinField = new Krypton.Toolkit.KryptonTextBox();
-            this.lblTargetTableJoinField = new Krypton.Toolkit.KryptonLabel();
             this.cmbJoinTable = new Krypton.Toolkit.KryptonComboBox();
             this.cmbJoinField = new Krypton.Toolkit.KryptonComboBox();
             this.lblJoinField = new Krypton.Toolkit.KryptonLabel();
@@ -82,7 +85,6 @@ namespace RUINORERP.UI.BI
             this.txtTargetTable = new Krypton.Toolkit.KryptonTextBox();
             this.lblTargetEntity = new Krypton.Toolkit.KryptonLabel();
             this.txtTargetEntity = new Krypton.Toolkit.KryptonTextBox();
-            this.btnGenerateFilterClause = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -109,7 +111,7 @@ namespace RUINORERP.UI.BI
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(489, 765);
+            this.btnOk.Location = new System.Drawing.Point(429, 1015);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -118,7 +120,7 @@ namespace RUINORERP.UI.BI
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(607, 765);
+            this.btnCancel.Location = new System.Drawing.Point(547, 1015);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -135,6 +137,9 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Controls.Add(this.txtPolicyDescription);
             this.kryptonPanel1.Controls.Add(this.lblPolicyDescription);
             this.kryptonPanel1.Controls.Add(this.chkIsEnabled);
+            this.kryptonPanel1.Controls.Add(this.txtParameterizedFilterClause);
+            this.kryptonPanel1.Controls.Add(this.lblParameterizedFilterClause);
+            this.kryptonPanel1.Controls.Add(this.chkIsParameterized);
             this.kryptonPanel1.Controls.Add(this.txtEntityType);
             this.kryptonPanel1.Controls.Add(this.lblEntityType);
             this.kryptonPanel1.Controls.Add(this.chkIsJoinRequired);
@@ -149,7 +154,7 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1144, 820);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1152, 1052);
             this.kryptonPanel1.TabIndex = 2;
             // 
             // grpPreview
@@ -185,6 +190,13 @@ namespace RUINORERP.UI.BI
             this.cmbDefaultRule.Size = new System.Drawing.Size(223, 21);
             this.cmbDefaultRule.TabIndex = 33;
             // 
+            // txtTargetTableJoinField
+            // 
+            this.txtTargetTableJoinField.Location = new System.Drawing.Point(643, 268);
+            this.txtTargetTableJoinField.Name = "txtTargetTableJoinField";
+            this.txtTargetTableJoinField.Size = new System.Drawing.Size(146, 23);
+            this.txtTargetTableJoinField.TabIndex = 32;
+            // 
             // lblDefaultRule
             // 
             this.lblDefaultRule.Location = new System.Drawing.Point(807, 12);
@@ -193,9 +205,17 @@ namespace RUINORERP.UI.BI
             this.lblDefaultRule.TabIndex = 32;
             this.lblDefaultRule.Values.Text = "默认规则";
             // 
+            // lblTargetTableJoinField
+            // 
+            this.lblTargetTableJoinField.Location = new System.Drawing.Point(536, 268);
+            this.lblTargetTableJoinField.Name = "lblTargetTableJoinField";
+            this.lblTargetTableJoinField.Size = new System.Drawing.Size(101, 20);
+            this.lblTargetTableJoinField.TabIndex = 31;
+            this.lblTargetTableJoinField.Values.Text = "目标表关联字段";
+            // 
             // txtPolicyDescription
             // 
-            this.txtPolicyDescription.Location = new System.Drawing.Point(174, 625);
+            this.txtPolicyDescription.Location = new System.Drawing.Point(172, 683);
             this.txtPolicyDescription.Multiline = true;
             this.txtPolicyDescription.Name = "txtPolicyDescription";
             this.txtPolicyDescription.Size = new System.Drawing.Size(818, 75);
@@ -203,7 +223,7 @@ namespace RUINORERP.UI.BI
             // 
             // lblPolicyDescription
             // 
-            this.lblPolicyDescription.Location = new System.Drawing.Point(104, 625);
+            this.lblPolicyDescription.Location = new System.Drawing.Point(104, 715);
             this.lblPolicyDescription.Name = "lblPolicyDescription";
             this.lblPolicyDescription.Size = new System.Drawing.Size(62, 20);
             this.lblPolicyDescription.TabIndex = 21;
@@ -211,22 +231,46 @@ namespace RUINORERP.UI.BI
             // 
             // chkIsEnabled
             // 
-            this.chkIsEnabled.Location = new System.Drawing.Point(917, 718);
+            this.chkIsEnabled.Location = new System.Drawing.Point(917, 808);
             this.chkIsEnabled.Name = "chkIsEnabled";
             this.chkIsEnabled.Size = new System.Drawing.Size(75, 20);
             this.chkIsEnabled.TabIndex = 20;
             this.chkIsEnabled.Values.Text = "是否启用";
             // 
+            // txtParameterizedFilterClause
+            // 
+            this.txtParameterizedFilterClause.Location = new System.Drawing.Point(174, 834);
+            this.txtParameterizedFilterClause.Multiline = true;
+            this.txtParameterizedFilterClause.Name = "txtParameterizedFilterClause";
+            this.txtParameterizedFilterClause.Size = new System.Drawing.Size(818, 80);
+            this.txtParameterizedFilterClause.TabIndex = 27;
+            // 
+            // lblParameterizedFilterClause
+            // 
+            this.lblParameterizedFilterClause.Location = new System.Drawing.Point(44, 834);
+            this.lblParameterizedFilterClause.Name = "lblParameterizedFilterClause";
+            this.lblParameterizedFilterClause.Size = new System.Drawing.Size(101, 20);
+            this.lblParameterizedFilterClause.TabIndex = 26;
+            this.lblParameterizedFilterClause.Values.Text = "参数化过滤条件";
+            // 
+            // chkIsParameterized
+            // 
+            this.chkIsParameterized.Location = new System.Drawing.Point(174, 808);
+            this.chkIsParameterized.Name = "chkIsParameterized";
+            this.chkIsParameterized.Size = new System.Drawing.Size(140, 20);
+            this.chkIsParameterized.TabIndex = 28;
+            this.chkIsParameterized.Values.Text = "是否使用参数化过滤";
+            // 
             // txtEntityType
             // 
-            this.txtEntityType.Location = new System.Drawing.Point(174, 715);
+            this.txtEntityType.Location = new System.Drawing.Point(174, 625);
             this.txtEntityType.Name = "txtEntityType";
             this.txtEntityType.Size = new System.Drawing.Size(615, 23);
             this.txtEntityType.TabIndex = 19;
             // 
             // lblEntityType
             // 
-            this.lblEntityType.Location = new System.Drawing.Point(75, 715);
+            this.lblEntityType.Location = new System.Drawing.Point(75, 625);
             this.lblEntityType.Name = "lblEntityType";
             this.lblEntityType.Size = new System.Drawing.Size(101, 20);
             this.lblEntityType.TabIndex = 18;
@@ -313,21 +357,6 @@ namespace RUINORERP.UI.BI
             this.lblJoinTableJoinField.Size = new System.Drawing.Size(101, 20);
             this.lblJoinTableJoinField.TabIndex = 33;
             this.lblJoinTableJoinField.Values.Text = "关联表关联字段";
-            // 
-            // txtTargetTableJoinField
-            // 
-            this.txtTargetTableJoinField.Location = new System.Drawing.Point(643, 268);
-            this.txtTargetTableJoinField.Name = "txtTargetTableJoinField";
-            this.txtTargetTableJoinField.Size = new System.Drawing.Size(146, 23);
-            this.txtTargetTableJoinField.TabIndex = 32;
-            // 
-            // lblTargetTableJoinField
-            // 
-            this.lblTargetTableJoinField.Location = new System.Drawing.Point(536, 268);
-            this.lblTargetTableJoinField.Name = "lblTargetTableJoinField";
-            this.lblTargetTableJoinField.Size = new System.Drawing.Size(101, 20);
-            this.lblTargetTableJoinField.TabIndex = 31;
-            this.lblTargetTableJoinField.Values.Text = "目标表关联字段";
             // 
             // cmbJoinTable
             // 
@@ -417,7 +446,6 @@ namespace RUINORERP.UI.BI
             // 
             // grpFilterCondition.Panel
             // 
-            this.grpFilterCondition.Panel.Controls.Add(this.btnGenerateFilterClause);
             this.grpFilterCondition.Panel.Controls.Add(this.txtFilterValue);
             this.grpFilterCondition.Panel.Controls.Add(this.lblFilterValue);
             this.grpFilterCondition.Panel.Controls.Add(this.cmbOperator);
@@ -540,21 +568,14 @@ namespace RUINORERP.UI.BI
             this.txtTargetEntity.Size = new System.Drawing.Size(161, 23);
             this.txtTargetEntity.TabIndex = 8;
             // 
-            // btnGenerateFilterClause
-            // 
-            this.btnGenerateFilterClause.Location = new System.Drawing.Point(523, 73);
-            this.btnGenerateFilterClause.Name = "btnGenerateFilterClause";
-            this.btnGenerateFilterClause.Size = new System.Drawing.Size(90, 25);
-            this.btnGenerateFilterClause.TabIndex = 36;
-            this.btnGenerateFilterClause.Values.Text = "生成条件";
-            // 
             // UCRowAuthPolicyEditEnhanced
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1144, 820);
+            this.ClientSize = new System.Drawing.Size(1152, 1052);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCRowAuthPolicyEditEnhanced";
+            this.Load += new System.EventHandler(this.UCRowAuthPolicyEditEnhanced_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
@@ -595,6 +616,9 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonTextBox txtPolicyDescription;
         private Krypton.Toolkit.KryptonLabel lblPolicyDescription;
         private Krypton.Toolkit.KryptonCheckBox chkIsEnabled;
+        private Krypton.Toolkit.KryptonCheckBox chkIsParameterized;
+        private Krypton.Toolkit.KryptonTextBox txtParameterizedFilterClause;
+        private Krypton.Toolkit.KryptonLabel lblParameterizedFilterClause;
         private Krypton.Toolkit.KryptonTextBox txtEntityType;
         private Krypton.Toolkit.KryptonLabel lblEntityType;
         private Krypton.Toolkit.KryptonTextBox txtFilterClause;
@@ -633,6 +657,5 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonLabel lblDefaultRule;
         private Krypton.Toolkit.KryptonGroupBox grpPreview;
         private Krypton.Toolkit.KryptonTextBox txtPreview;
-        private Krypton.Toolkit.KryptonButton btnGenerateFilterClause;
     }
 }

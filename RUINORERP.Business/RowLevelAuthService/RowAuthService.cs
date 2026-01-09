@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Global;
@@ -9,6 +8,7 @@ using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.RowLevelAuthService
@@ -20,7 +20,6 @@ namespace RUINORERP.Business.RowLevelAuthService
     public class RowAuthService : IRowAuthService
     {
         private readonly IDefaultRowAuthRuleProvider _defaultRuleProvider;
-        private readonly IEntityMappingService _entityBizMappingService;
         private readonly ApplicationContext _appContext;
         private readonly ILogger<RowAuthService> _logger;
         private readonly ISqlSugarClient _db;
@@ -30,14 +29,12 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 构造函数
         /// </summary>
         /// <param name="defaultRuleProvider">默认规则提供者</param>
-        /// <param name="entityBizMappingService">实体业务映射服务</param>
         /// <param name="context">应用程序上下文</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="db">数据库客户端</param>
         /// <param name="cacheManager">内存缓存管理器</param>
         public RowAuthService(
             IDefaultRowAuthRuleProvider defaultRuleProvider,
-            IEntityMappingService entityBizMappingService,
             ApplicationContext context,
             ILogger<RowAuthService> logger,
             ISqlSugarClient db,
@@ -46,7 +43,6 @@ namespace RUINORERP.Business.RowLevelAuthService
             _appContext = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _defaultRuleProvider = defaultRuleProvider ?? throw new ArgumentNullException(nameof(defaultRuleProvider));
-            _entityBizMappingService = entityBizMappingService ?? throw new ArgumentNullException(nameof(entityBizMappingService));
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _cacheManager = cacheManager ?? throw new ArgumentNullException(nameof(cacheManager));
         }
@@ -349,28 +345,27 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="entityType">实体类型</param>
         /// <param name="menuId">菜单ID，用于区分不同功能的数据规则</param>
         /// <returns>SQL过滤条件子句</returns>
-        public string GetUserRowAuthFilterClause(System.Type entityType, long menuId)
+        public string GetUserRowAuthFilterClause(Type entityType, long menuId)
         {
             // 检查是否为超级管理员，如果是则跳过行级权限过滤
-            if (_appContext != null && _appContext.IsSuperUser)
+            if (_appContext.IsSuperUser)
             {
                 _logger.LogDebug("当前用户为超级管理员，跳过行级权限过滤");
                 return string.Empty;
             }
+
             if (!_appContext.FunctionConfig.EnableRowLevelAuth)
             {
                 return string.Empty;
             }
+
             if (entityType == null)
             {
                 throw new ArgumentNullException(nameof(entityType), "实体类型不能为空");
             }
 
             // 增强缓存配置，添加绝对过期时间作为后备
-            var cacheEntryOptions = new MemoryCacheEntryOptions()
-                  .SetSlidingExpiration(TimeSpan.FromMinutes(30))
-                  .SetAbsoluteExpiration(TimeSpan.FromHours(2))
-                  .SetPriority(CacheItemPriority.Normal);
+            var cacheEntryOptions = CreateCacheEntryOptions();
 
             try
             {
@@ -394,74 +389,29 @@ namespace RUINORERP.Business.RowLevelAuthService
                     return null;
                 }
 
+                // 构建权限上下文
+                var context = BuildRowAuthContext(menuId, entityName);
+
                 // 获取当前用户的所有角色ID
-                var currentUserId = GetCurrentUserId();
                 var userRoleIds = _appContext.Roles.Select(r => r.RoleID).ToList();
 
                 if (!userRoleIds.Any())
                 {
                     // 用户没有角色，返回null表示无限制
-                    _logger.Debug("用户 {UserId} 没有任何角色，不应用行级权限限制", currentUserId);
+                    _logger.LogDebug("用户 {UserId} 没有任何角色，不应用行级权限限制", context.UserId);
                     _cacheManager.Set(cacheKey, "__NO_RESTRICTION__", cacheEntryOptions);
                     return null;
                 }
 
+                // 直接从数据库获取策略
+                var policies = GetPoliciesByUserAndMenu(context.UserId, userRoleIds, menuId);
 
-                var rolePolicies = _appContext.CurrentRole.tb_P4RowAuthPolicyByRoles.Where(k => k.MenuID == menuId)
-                    .Select(c => c.tb_rowauthpolicy)
-                    .ToList();
-
-
-                // 获取用户角色对应的权限规则（角色级别）
-                //var rolePolicies = _db.Queryable<tb_RowAuthPolicy>()
-                //    .InnerJoin<tb_P4RowAuthPolicyByRole>((p, r) => p.PolicyId == r.PolicyId)
-                //    .Where((p, r) => p.IsEnabled && p.TargetEntity == entityName)
-                //    .Where((p, r) => userRoleIds.Contains(r.RoleID))
-                //    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
-                //    .Where((p, r) => r.MenuID == menuId)
-                //    .Select((p, r) => new tb_RowAuthPolicy
-                //    {
-                //        PolicyId = p.PolicyId,
-                //        PolicyName = p.PolicyName,
-                //        TargetEntity = p.TargetEntity,
-                //        TargetTable = p.TargetTable,
-                //        IsJoinRequired = p.IsJoinRequired,
-                //        JoinTable = p.JoinTable,
-                //        JoinType = p.JoinType,
-                //        JoinOnClause = p.JoinOnClause,
-                //        FilterClause = p.FilterClause
-                //    })
-                //    .ToList();
-
-                // 获取用户直接绑定的权限规则（用户级别）
-                //var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
-                //    .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
-                //    .Where((p, u) => p.IsEnabled && p.TargetEntity == entityName)
-                //    .Where((p, u) => u.User_ID == currentUserId)
-                //    // 增加菜单ID过滤条件，只获取与当前菜单相关的规则
-                //    .Where((p, u) => u.MenuID == menuId)
-                //    .Select((p, u) => new tb_RowAuthPolicy
-                //    {
-                //        PolicyId = p.PolicyId,
-                //        PolicyName = p.PolicyName,
-                //        TargetEntity = p.TargetEntity,
-                //        TargetTable = p.TargetTable,
-                //        IsJoinRequired = p.IsJoinRequired,
-                //        JoinTable = p.JoinTable,
-                //        JoinType = p.JoinType,
-                //        JoinOnClause = p.JoinOnClause,
-                //        FilterClause = p.FilterClause
-                //    })
-                //    .ToList();
-
-                // 合并角色级别和用户级别的规则（去重）
-                //var policies = rolePolicies.Union(userPolicies).ToList();
-                var policies = rolePolicies;
                 if (policies != null && policies.Any())
                 {
                     _logger.LogDebug("找到 {PolicyCount} 条适用的行级权限规则", policies.Count);
-                    // 处理多条规则：用 OR 连接
-                    var filterClause = BuildFilterClauseFromPolicies(policies, entityName);
+
+                    // 构建过滤条件
+                    var filterClause = BuildFilterClauseFromPolicies(policies, entityName, context);
 
                     // 缓存生成的过滤条件
                     _cacheManager.Set(cacheKey, filterClause, cacheEntryOptions);
@@ -477,19 +427,45 @@ namespace RUINORERP.Business.RowLevelAuthService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "获取行级权限过滤条件失败: {EntityType}", entityType.FullName);
-                // 在生产环境中可以考虑返回null，确保系统不会因权限问题而崩溃
-                // 但在开发/测试环境中应该抛出异常以便及时发现问题
                 throw;
             }
         }
 
         /// <summary>
-        /// 从权限策略列表构建过滤条件
+        /// 获取用户对特定实体类型的数据权限过滤条件(Expression形式)
+        /// 适用于SqlSugar的Lambda表达式查询
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>Lambda表达式</returns>
+        public System.Linq.Expressions.Expression<Func<T, bool>> GetUserRowAuthFilterExpression<T>(long menuId) where T : class
+        {
+            try
+            {
+                var filterClause = GetUserRowAuthFilterClause(typeof(T), menuId);
+
+                if (string.IsNullOrEmpty(filterClause))
+                {
+                    return t => true;
+                }
+
+                return ExpressionFilterHelper.ConvertToExpression<T>(filterClause);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取行级权限过滤Expression失败");
+                return t => true;
+            }
+        }
+
+        /// <summary>
+        /// 从权限策略列表构建过滤条件(支持参数化)
         /// </summary>
         /// <param name="policies">权限策略列表</param>
         /// <param name="entityName">实体名称</param>
+        /// <param name="context">权限上下文</param>
         /// <returns>构建的过滤条件</returns>
-        private string BuildFilterClauseFromPolicies(List<tb_RowAuthPolicy> policies, string entityName)
+        private string BuildFilterClauseFromPolicies(List<tb_RowAuthPolicy> policies, string entityName, RowAuthContext context)
         {
             try
             {
@@ -497,7 +473,7 @@ namespace RUINORERP.Business.RowLevelAuthService
 
                 foreach (var policy in policies)
                 {
-                    string clause = BuildPolicyFilterClause(policy, entityName);
+                    string clause = BuildPolicyFilterClause(policy, entityName, context);
                     if (!string.IsNullOrEmpty(clause))
                     {
                         policyClauses.Add(clause);
@@ -520,23 +496,45 @@ namespace RUINORERP.Business.RowLevelAuthService
         }
 
         /// <summary>
-        /// 为单个策略构建过滤条件
+        /// 为单个策略构建过滤条件(支持参数化)
         /// </summary>
         /// <param name="policy">权限策略</param>
         /// <param name="entityName">实体名称</param>
+        /// <param name="context">权限上下文</param>
         /// <returns>构建的过滤条件</returns>
-        private string BuildPolicyFilterClause(tb_RowAuthPolicy policy, string entityName)
+        private string BuildPolicyFilterClause(tb_RowAuthPolicy policy, string entityName, RowAuthContext context)
         {
-            if (policy == null || string.IsNullOrEmpty(policy.FilterClause))
+            if (policy == null)
             {
-                _logger.LogWarning("策略或过滤条件为空，跳过");
+                _logger.LogWarning("策略为空,跳过");
+                return string.Empty;
+            }
+
+            // 检查是否为参数化规则
+            bool isParameterized = !string.IsNullOrEmpty(policy.ParameterizedFilterClause);
+
+            string filterClause = isParameterized
+                ? policy.ParameterizedFilterClause
+                : policy.FilterClause;
+
+            if (string.IsNullOrEmpty(filterClause))
+            {
+                _logger.LogWarning("策略过滤条件为空，跳过: {PolicyName}", policy.PolicyName);
                 return string.Empty;
             }
 
             // 如果是恒真条件，直接返回1=1
-            if (policy.FilterClause.Trim() == "1=1")
+            if (filterClause.Trim() == "1=1")
             {
                 return "1=1";
+            }
+
+            // 如果是参数化规则,解析参数
+            if (isParameterized)
+            {
+                filterClause = ParameterizedFilterHelper.ResolveFilterTemplate(filterClause, context);
+                _logger.LogDebug("解析参数化过滤条件: {Original} -> {Resolved}",
+                    policy.ParameterizedFilterClause, filterClause);
             }
 
             // 处理需要关联表的情况
@@ -549,13 +547,12 @@ namespace RUINORERP.Business.RowLevelAuthService
                 }
 
                 // 构建EXISTS子查询
-                // 使用SqlSugar支持的SQL语法格式
-                return BuildExistsSubqueryClause(policy);
+                return BuildExistsSubqueryClause(policy, filterClause);
             }
             else
             {
                 // 直接使用过滤条件
-                return SanitizeFilterClause(policy.FilterClause);
+                return SanitizeFilterClause(filterClause);
             }
         }
 
@@ -563,12 +560,45 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 构建EXISTS子查询过滤条件
         /// </summary>
         /// <param name="policy">权限策略</param>
+        /// <param name="resolvedFilterClause">解析后的过滤条件</param>
         /// <returns>EXISTS子查询SQL</returns>
-        private string BuildExistsSubqueryClause(tb_RowAuthPolicy policy)
+        private string BuildExistsSubqueryClause(tb_RowAuthPolicy policy, string resolvedFilterClause)
         {
             // 构建标准的EXISTS子查询格式，优化以适应SqlSugar的解析
             // 使用表别名避免可能的命名冲突
-            return $"EXISTS (SELECT 1 FROM {policy.JoinTable} jt WHERE {policy.JoinOnClause} AND ({SanitizeFilterClause(policy.FilterClause)}))";
+            return $"EXISTS (SELECT 1 FROM {policy.JoinTable} jt WHERE {policy.JoinOnClause} AND ({SanitizeFilterClause(resolvedFilterClause)}))";
+        }
+
+        /// <summary>
+        /// 构建权限上下文
+        /// </summary>
+        /// <param name="menuId">菜单ID</param>
+        /// <param name="entityName">实体名称</param>
+        /// <returns>权限上下文</returns>
+        private RowAuthContext BuildRowAuthContext(long menuId, string entityName)
+        {
+            return new RowAuthContext
+            {
+                UserId = GetCurrentUserId(),
+                RoleId = _appContext.CurrentRole?.RoleID ?? 0,
+                RoleIds = _appContext.Roles.Select(r => r.RoleID).ToList(),
+                EmployeeId = _appContext.CurUserInfo?.UserInfo?.Employee_ID,
+                DepartmentId = null, // 可从AppContext获取
+                MenuId = menuId,
+                EntityName = entityName
+            };
+        }
+
+        /// <summary>
+        /// 创建缓存选项
+        /// </summary>
+        /// <returns>缓存选项</returns>
+        private MemoryCacheEntryOptions CreateCacheEntryOptions()
+        {
+            return new MemoryCacheEntryOptions()
+                .SetSlidingExpiration(TimeSpan.FromMinutes(30))
+                .SetAbsoluteExpiration(TimeSpan.FromHours(2))
+                .SetPriority(CacheItemPriority.Normal);
         }
 
         /// <summary>
@@ -691,11 +721,12 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 生成缓存键
         /// </summary>
         /// <param name="entityName">实体名称</param>
+        /// <param name="roleId">角色ID</param>
         /// <param name="menuId">菜单ID，用于区分不同功能的数据规则</param>
         /// <returns>缓存键</returns>
         private string GenerateCacheKey(string entityName, long roleId, long menuId)
         {
-            return $"RowAuth:UserId:{GetCurrentUserId()}:Entity:{entityName}:Role:{roleId}Menu:{menuId}";
+            return $"RowAuth:UserId:{GetCurrentUserId()}:Entity:{entityName}:Role:{roleId}:Menu:{menuId}";
         }
 
         /// <summary>
@@ -712,6 +743,47 @@ namespace RUINORERP.Business.RowLevelAuthService
             {
                 _logger.LogWarning(ex, "获取当前用户ID失败，使用默认值0");
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// 获取用户在指定菜单上的所有权限策略(包含角色策略和用户策略)
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <param name="roleIds">角色ID列表</param>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>权限策略列表</returns>
+        private List<tb_RowAuthPolicy> GetPoliciesByUserAndMenu(long userId, List<long> roleIds, long menuId)
+        {
+            try
+            {
+                var policies = new List<tb_RowAuthPolicy>();
+
+                // 获取角色级别的策略
+                if (roleIds != null && roleIds.Any())
+                {
+                    var rolePolicies = _db.Queryable<tb_RowAuthPolicy>()
+                        .InnerJoin<tb_P4RowAuthPolicyByRole>((p, r) => p.PolicyId == r.PolicyId)
+                        .Where((p, r) => p.IsEnabled && roleIds.Contains(r.RoleID) && r.MenuID == menuId)
+                        .Select((p, r) => p)
+                        .ToList();
+                    policies.AddRange(rolePolicies);
+                }
+
+                // TODO: 获取用户级别的策略(如果实现了用户级权限)
+                // var userPolicies = _db.Queryable<tb_RowAuthPolicy>()
+                //     .InnerJoin<tb_P4RowAuthPolicyByUser>((p, u) => p.PolicyId == u.PolicyId)
+                //     .Where((p, u) => p.IsEnabled && u.User_ID == userId && u.MenuID == menuId)
+                //     .Select((p, u) => p)
+                //     .ToList();
+                // policies.AddRange(userPolicies);
+
+                return policies;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "查询用户 {UserId} 在菜单 {MenuId} 的权限策略失败", userId, menuId);
+                return new List<tb_RowAuthPolicy>();
             }
         }
     }

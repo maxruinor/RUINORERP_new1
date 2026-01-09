@@ -1,6 +1,8 @@
 using RUINORERP.Global;
 using RUINORERP.Model;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Business.RowLevelAuthService
@@ -17,7 +19,16 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// <param name="entityType">实体类型</param>
         /// <param name="menuId">菜单ID，用于区分不同功能的数据规则</param>
         /// <returns>SQL过滤条件子句</returns>
-        string GetUserRowAuthFilterClause(System.Type entityType, long menuId);
+        string GetUserRowAuthFilterClause(Type entityType, long menuId);
+
+        /// <summary>
+        /// 获取用户对特定实体类型的数据权限过滤条件(Expression形式)
+        /// 适用于SqlSugar的Lambda表达式查询
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="menuId">菜单ID</param>
+        /// <returns>Lambda表达式</returns>
+        Expression<Func<T, bool>> GetUserRowAuthFilterExpression<T>(long menuId) where T : class;
 
         /// <summary>
         /// 获取指定角色和业务类型的行级权限配置

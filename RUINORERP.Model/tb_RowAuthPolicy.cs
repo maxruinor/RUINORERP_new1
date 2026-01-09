@@ -179,15 +179,44 @@ namespace RUINORERP.Model
 
         private string _FilterClause;
         /// <summary>
-        /// 过滤条件
+        /// 过滤条件(静态条件)
         /// </summary>
-        [AdvQueryAttribute(ColName = "FilterClause",ColDesc = "过滤条件")] 
+        [AdvQueryAttribute(ColName = "FilterClause",ColDesc = "过滤条件")]
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "FilterClause" ,Length=1000,IsNullable = true,ColumnDescription = "过滤条件" )]
         public string FilterClause
-        { 
+        {
             get{return _FilterClause;}
             set{
             SetProperty(ref _FilterClause, value);
+                        }
+        }
+
+        private bool _IsParameterized = false;
+        /// <summary>
+        /// 是否使用参数化过滤条件
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsParameterized",ColDesc = "是否参数化")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsParameterized" ,IsNullable = false,ColumnDescription = "是否参数化")]
+        public bool IsParameterized
+        {
+            get{return _IsParameterized;}
+            set{
+            SetProperty(ref _IsParameterized, value);
+                        }
+        }
+
+        private string _ParameterizedFilterClause;
+        /// <summary>
+        /// 参数化过滤条件模板
+        /// 支持占位符: {UserId}, {EmployeeId}, {RoleId}等
+        /// </summary>
+        [AdvQueryAttribute(ColName = "ParameterizedFilterClause",ColDesc = "参数化过滤条件")]
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "ParameterizedFilterClause" ,Length=1000,IsNullable = true,ColumnDescription = "参数化过滤条件" )]
+        public string ParameterizedFilterClause
+        {
+            get{return _ParameterizedFilterClause;}
+            set{
+            SetProperty(ref _ParameterizedFilterClause, value);
                         }
         }
 

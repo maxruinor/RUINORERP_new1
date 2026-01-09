@@ -420,6 +420,20 @@ namespace RUINORERP.Business.DI
                     .InstancePerLifetimeScope()
                     .PropertiesAutowired();
 
+                // 注册行级权限策略查询服务（单例，提供缓存机制）
+                builder.RegisterType<RowAuthPolicyQueryService>()
+                    .As<IRowAuthPolicyQueryService>()
+                    .AsSelf()
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
+                // 注册行级权限策略加载服务（单例，系统启动时加载）
+                builder.RegisterType<RowAuthPolicyLoaderService>()
+                    .As<IRowAuthPolicyLoaderService>()
+                    .AsSelf()
+                    .SingleInstance()
+                    .PropertiesAutowired();
+
 
             }
             catch (Exception ex)

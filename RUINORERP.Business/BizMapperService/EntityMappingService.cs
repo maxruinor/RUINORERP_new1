@@ -238,7 +238,6 @@ namespace RUINORERP.Business.BizMapperService
                 }
             }
 
-            _logger.LogDebug("未找到表名 {0} 对应的实体信息", tableName);
             return null;
         }
 

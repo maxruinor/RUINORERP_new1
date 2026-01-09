@@ -104,7 +104,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_FM_PriceAdjustmentDetails).NotNull();
                 //RuleForEach(x => x.tb_FM_PriceAdjustmentDetails).NotNull();
                 //RuleFor(x => x.tb_FM_PriceAdjustmentDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

@@ -144,7 +144,7 @@ namespace RUINORERP.Business.BizMapperService
                 SafeRegister<tb_MRP_ReworkEntry>(BizType.返工入库单, e => e.ReworkEntryID, e => e.ReworkEntryNo, e => e.tb_MRP_ReworkEntryDetails);
 
                 // 付款申请（无明细）
-                SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo,e=>e.tb_fm_payeeinfo );
+                SafeRegister<tb_FM_PaymentApplication>(BizType.付款申请单, e => e.ApplicationID, e => e.ApplicationNo, e => e.tb_fm_payeeinfo);
                 SafeRegister<tb_FM_Statement>(BizType.对账单, e => e.StatementId, e => e.StatementNo, e => e.tb_FM_StatementDetails);
 
                 // 售后
@@ -160,6 +160,7 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 包装信息
                 SafeRegister<tb_Packing>(BizType.包装信息, e => e.Pack_ID, e => e.PackagingName);
+                SafeRegister<tb_EOP_WaterStorage>(BizType.蓄水订单, e => e.WSR_ID, e => e.WSRNo);
 
                 _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);
             }

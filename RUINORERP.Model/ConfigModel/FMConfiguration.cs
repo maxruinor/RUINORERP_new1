@@ -25,7 +25,7 @@ namespace RUINORERP.Model.ConfigModel
 
         /// <summary>
         /// 收款单自动核销应收款
-        /// 
+        
         /// 预收的收款单审核时。会自动去核销 销售出库的应收款 前提是 应收有审核了。没有审核则
         /// </summary>
         public bool EnablePaymentAutoOffsetAR { get; set; } = true;
@@ -71,6 +71,7 @@ namespace RUINORERP.Model.ConfigModel
 
 
 
+
         /// <summary>
         /// 平台订单取消作废时启用财务数据自动退款功能
         /// </summary>
@@ -80,6 +81,12 @@ namespace RUINORERP.Model.ConfigModel
         /// 费用报销的付款单自动审核
         /// </summary>
         public bool AutoAuditExpensePaymentRecord { get; set; } = false;
+
+        /// <summary>
+        /// 全额预收款订单，销售出库时可以自动审核。销售出库审核时会自动核销预收款单。
+        /// 账期订单或没有收到尾款的销售订单对应的销售出库则不会自动审核，由财务手工审核。
+        /// </summary>
+        public bool EnableAutoAuditSalesOutboundForFullPrepaymentOrders { get; set; } = false;
 
     }
 }

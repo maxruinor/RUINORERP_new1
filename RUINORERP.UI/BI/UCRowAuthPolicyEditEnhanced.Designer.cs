@@ -85,6 +85,7 @@ namespace RUINORERP.UI.BI
             this.txtTargetTable = new Krypton.Toolkit.KryptonTextBox();
             this.lblTargetEntity = new Krypton.Toolkit.KryptonLabel();
             this.txtTargetEntity = new Krypton.Toolkit.KryptonTextBox();
+            this.btnGenerateFilterClause = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -165,7 +166,7 @@ namespace RUINORERP.UI.BI
             // grpPreview.Panel
             // 
             this.grpPreview.Panel.Controls.Add(this.txtPreview);
-            this.grpPreview.Size = new System.Drawing.Size(820, 104);
+            this.grpPreview.Size = new System.Drawing.Size(820, 200);
             this.grpPreview.TabIndex = 34;
             this.grpPreview.Values.Heading = "SQL预览";
             // 
@@ -215,7 +216,7 @@ namespace RUINORERP.UI.BI
             // 
             // txtPolicyDescription
             // 
-            this.txtPolicyDescription.Location = new System.Drawing.Point(172, 683);
+            this.txtPolicyDescription.Location = new System.Drawing.Point(172, 779);
             this.txtPolicyDescription.Multiline = true;
             this.txtPolicyDescription.Name = "txtPolicyDescription";
             this.txtPolicyDescription.Size = new System.Drawing.Size(818, 75);
@@ -223,7 +224,7 @@ namespace RUINORERP.UI.BI
             // 
             // lblPolicyDescription
             // 
-            this.lblPolicyDescription.Location = new System.Drawing.Point(104, 715);
+            this.lblPolicyDescription.Location = new System.Drawing.Point(104, 811);
             this.lblPolicyDescription.Name = "lblPolicyDescription";
             this.lblPolicyDescription.Size = new System.Drawing.Size(62, 20);
             this.lblPolicyDescription.TabIndex = 21;
@@ -231,7 +232,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkIsEnabled
             // 
-            this.chkIsEnabled.Location = new System.Drawing.Point(917, 808);
+            this.chkIsEnabled.Location = new System.Drawing.Point(917, 904);
             this.chkIsEnabled.Name = "chkIsEnabled";
             this.chkIsEnabled.Size = new System.Drawing.Size(75, 20);
             this.chkIsEnabled.TabIndex = 20;
@@ -239,7 +240,7 @@ namespace RUINORERP.UI.BI
             // 
             // txtParameterizedFilterClause
             // 
-            this.txtParameterizedFilterClause.Location = new System.Drawing.Point(174, 834);
+            this.txtParameterizedFilterClause.Location = new System.Drawing.Point(174, 930);
             this.txtParameterizedFilterClause.Multiline = true;
             this.txtParameterizedFilterClause.Name = "txtParameterizedFilterClause";
             this.txtParameterizedFilterClause.Size = new System.Drawing.Size(818, 80);
@@ -247,7 +248,7 @@ namespace RUINORERP.UI.BI
             // 
             // lblParameterizedFilterClause
             // 
-            this.lblParameterizedFilterClause.Location = new System.Drawing.Point(44, 834);
+            this.lblParameterizedFilterClause.Location = new System.Drawing.Point(44, 930);
             this.lblParameterizedFilterClause.Name = "lblParameterizedFilterClause";
             this.lblParameterizedFilterClause.Size = new System.Drawing.Size(101, 20);
             this.lblParameterizedFilterClause.TabIndex = 26;
@@ -255,7 +256,7 @@ namespace RUINORERP.UI.BI
             // 
             // chkIsParameterized
             // 
-            this.chkIsParameterized.Location = new System.Drawing.Point(174, 808);
+            this.chkIsParameterized.Location = new System.Drawing.Point(174, 904);
             this.chkIsParameterized.Name = "chkIsParameterized";
             this.chkIsParameterized.Size = new System.Drawing.Size(140, 20);
             this.chkIsParameterized.TabIndex = 28;
@@ -263,14 +264,14 @@ namespace RUINORERP.UI.BI
             // 
             // txtEntityType
             // 
-            this.txtEntityType.Location = new System.Drawing.Point(174, 625);
+            this.txtEntityType.Location = new System.Drawing.Point(174, 721);
             this.txtEntityType.Name = "txtEntityType";
             this.txtEntityType.Size = new System.Drawing.Size(615, 23);
             this.txtEntityType.TabIndex = 19;
             // 
             // lblEntityType
             // 
-            this.lblEntityType.Location = new System.Drawing.Point(75, 625);
+            this.lblEntityType.Location = new System.Drawing.Point(75, 721);
             this.lblEntityType.Name = "lblEntityType";
             this.lblEntityType.Size = new System.Drawing.Size(101, 20);
             this.lblEntityType.TabIndex = 18;
@@ -446,6 +447,7 @@ namespace RUINORERP.UI.BI
             // 
             // grpFilterCondition.Panel
             // 
+            this.grpFilterCondition.Panel.Controls.Add(this.btnGenerateFilterClause);
             this.grpFilterCondition.Panel.Controls.Add(this.txtFilterValue);
             this.grpFilterCondition.Panel.Controls.Add(this.lblFilterValue);
             this.grpFilterCondition.Panel.Controls.Add(this.cmbOperator);
@@ -568,6 +570,14 @@ namespace RUINORERP.UI.BI
             this.txtTargetEntity.Size = new System.Drawing.Size(161, 23);
             this.txtTargetEntity.TabIndex = 8;
             // 
+            // btnGenerateFilterClause
+            // 
+            this.btnGenerateFilterClause.Location = new System.Drawing.Point(723, 146);
+            this.btnGenerateFilterClause.Name = "btnGenerateFilterClause";
+            this.btnGenerateFilterClause.Size = new System.Drawing.Size(90, 25);
+            this.btnGenerateFilterClause.TabIndex = 35;
+            this.btnGenerateFilterClause.Values.Text = "生成条件";
+            // 
             // UCRowAuthPolicyEditEnhanced
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -657,5 +667,6 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonLabel lblDefaultRule;
         private Krypton.Toolkit.KryptonGroupBox grpPreview;
         private Krypton.Toolkit.KryptonTextBox txtPreview;
+        private Krypton.Toolkit.KryptonButton btnGenerateFilterClause;
     }
 }

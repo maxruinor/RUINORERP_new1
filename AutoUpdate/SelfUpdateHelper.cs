@@ -26,6 +26,16 @@ namespace AutoUpdate
         {
             try
             {
+                // 检查新文件路径是否存在，如果不存在则不需要更新
+                if (string.IsNullOrEmpty(newFilesPath) || !Directory.Exists(newFilesPath))
+                {
+                    WriteLog("AutoUpdateLog.txt", $"新文件路径不存在或为空: {newFilesPath}，跳过更新");
+                    // 如果没有新文件，直接启动ERP主程序
+                    string targetDirNoUpdate = Path.GetDirectoryName(updaterExePath);
+                    StartERPApplication(targetDirNoUpdate);
+                    return false; // 返回false表示不需要更新
+                }
+                
                 // 查找AutoUpdateUpdater.exe
                 string targetDir = Path.GetDirectoryName(updaterExePath);
                 string autoUpdateUpdaterPath = Path.Combine(targetDir, "AutoUpdateUpdater.exe");
@@ -531,6 +541,18 @@ namespace AutoUpdate
                 else
                 {
                     WriteLog("AutoUpdateLog.txt", $"[ERP启动] 错误: 主程序文件不存在: {mainAppExe}");
+                    // 尝试在父目录中查找主程序
+                    string erpParentDir = Path.GetDirectoryName(targetDir);
+                    string parentMainAppExe = Path.Combine(erpParentDir, "企业数字化集成ERP.exe");
+                    
+                    if (File.Exists(parentMainAppExe))
+                    {
+                        WriteLog("AutoUpdateLog.txt", $"[ERP启动] 在父目录找到主程序: {parentMainAppExe}");
+                        ProcessStartInfo startInfo = new ProcessStartInfo(parentMainAppExe);
+                        startInfo.WorkingDirectory = Path.GetDirectoryName(parentMainAppExe);
+                        startInfo.UseShellExecute = true;
+                        Process.Start(startInfo);
+                    }
                 }
             }
             catch (Exception ex)

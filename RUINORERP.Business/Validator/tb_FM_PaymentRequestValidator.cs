@@ -106,7 +106,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_FM_PaymentRequestDetails).NotNull();
                 //RuleForEach(x => x.tb_FM_PaymentRequestDetails).NotNull();
                 //RuleFor(x => x.tb_FM_PaymentRequestDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

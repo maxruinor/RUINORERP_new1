@@ -1618,7 +1618,7 @@ namespace RUINORERP.UI.BaseForm
                 List<T> list = new List<T>();
 
                 // 获取行级权限策略
-                var rowAuthPolicies = GetRowAuthPolicies();
+                var rowAuthPolicies =await MainForm.Instance.GetRowAuthPolicies();
 
                 if (UseAutoNavQuery)
                 {
@@ -1680,61 +1680,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected BaseController<T> ctr;//= Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
 
-        /// <summary>
-        /// 获取当前用户的行级权限策略
-        /// </summary>
-        /// <returns>行级权限策略列表</returns>
-        protected List<tb_RowAuthPolicy> GetRowAuthPolicies()
-        {
-            try
-            {
-                // 尝试从服务容器中获取行级权限策略查询服务
 
-                var policyQueryService = Startup.GetFromFac<IRowAuthPolicyQueryService>();
-                if (policyQueryService != null)
-                {
-                    // 获取当前用户信息
-                    var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
-                    if (currentUser != null)
-                    {
-                        // 获取当前菜单ID
-                        var currentMenu = CurMenuInfo;
-                        long? menuId = currentMenu?.MenuID;
-
-                        // 获取用户的角色列表
-                        var currentRole = MainForm.Instance?.AppContext?.CurrentRole;
-                        var roleIds = new List<long>();
-                        if (currentRole != null)
-                        {
-                            roleIds.Add(currentRole.RoleID);
-                        }
-
-                        // 并行获取用户策略和角色策略
-                        var task = policyQueryService.GetPoliciesByUserAndRolesAsync(
-                            currentUser.User_ID,
-                            roleIds,
-                            menuId);
-
-                        // 由于这是UI层，需要同步等待结果
-                        var policies = task.GetAwaiter().GetResult();
-
-                        return policies ?? new List<tb_RowAuthPolicy>();
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                // 记录错误但不中断查询
-                if (MainForm.Instance?.logger != null)
-                {
-                    MainForm.Instance.logger.LogError(ex, "获取行级权限策略失败，将跳过行级权限过滤");
-                }
-            }
-
-            // 如果获取失败，返回空列表，不应用任何行级权限
-            return new List<tb_RowAuthPolicy>();
-        }
 
         public async virtual Task<List<T>> Save()
         {

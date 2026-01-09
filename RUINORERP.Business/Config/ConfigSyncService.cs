@@ -82,7 +82,6 @@ namespace RUINORERP.Business.Config
             }
 
             UpdateConfigInstance(e.NewConfig);
-            _logger.LogInformation("配置已更新: {ConfigType}, 原因: {Reason}", typeof(T).Name, e.Reason);
         }
     }
 

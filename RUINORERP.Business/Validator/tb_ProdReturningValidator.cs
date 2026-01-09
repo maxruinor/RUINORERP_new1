@@ -87,7 +87,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ProdReturningDetails).NotNull();
                 //RuleForEach(x => x.tb_ProdReturningDetails).NotNull();
                 //RuleFor(x => x.tb_ProdReturningDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

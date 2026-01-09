@@ -171,7 +171,7 @@ namespace RUINORERP.Business.Document.Converters
             // 记录提示信息
             if (tipsMsg.Count > 0)
             {
-                _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));
+               // _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));
             }
 
             target.tb_PurEntryReDetails = newDetails;

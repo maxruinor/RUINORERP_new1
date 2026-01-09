@@ -346,6 +346,9 @@ namespace RUINORERP.UI.PSI.PUR
             {
                 if (s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
                 {
+                    //往来单位变化了。为了数据准备性。先把相关的付款信息清空。
+                    entity.PayeeInfoID = null;
+
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
                     cmbPayeeInfoID.DataBindings.Clear();
                     //创建表达式

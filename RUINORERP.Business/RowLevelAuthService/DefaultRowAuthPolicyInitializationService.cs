@@ -77,9 +77,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                         _initializedBizTypes.TryAdd(bizType, true);
                     }
                 }
-
-                _logger.LogInformation("默认行级权限策略初始化完成：已初始化 {InitializedCount} 个业务类型，跳过 {SkippedCount} 个已初始化业务类型",
-                    initializedCount, skippedCount);
+ 
             }
             catch (Exception ex)
             {

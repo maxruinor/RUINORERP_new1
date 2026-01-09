@@ -161,6 +161,7 @@ namespace RUINORERP.UI.FM
             {
                 if (s2.PropertyName == entity.GetPropertyName<tb_FM_PaymentApplication>(c => c.CustomerVendor_ID))
                 {
+                   
                     //如果线索引入相关数据
                     #region 收款信息可以根据往来单位带出 ，并且可以添加
 

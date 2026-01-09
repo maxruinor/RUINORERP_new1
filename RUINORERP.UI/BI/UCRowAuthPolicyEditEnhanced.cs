@@ -80,7 +80,7 @@ namespace RUINORERP.UI.BI
         /// 初始化智能组件
         /// </summary>
         private void InitializeSmartComponents()
-        {
+        {   
             // 加载所有注册的业务类型
             LoadBusinessTypes();
             // 添加事件处理
@@ -96,7 +96,12 @@ namespace RUINORERP.UI.BI
             txtFilterClause.TextChanged += UpdatePreview;
             txtJoinOnClause.TextChanged += UpdatePreview;
             txtJoinType.TextChanged += UpdatePreview;
-            cmbJoinTable.SelectedIndexChanged += UpdatePreview; // 添加cmbJoinTable的预览更新事件
+            cmbJoinTable.SelectedIndexChanged += UpdatePreview;
+            cmbOperator.SelectedIndexChanged += UpdatePreview;
+            txtFilterValue.TextChanged += UpdatePreview;
+            btnGenerateFilterClause.Click += UpdatePreview;
+            txtTargetTableJoinField.TextChanged += UpdatePreview;
+            txtJoinTableJoinField.TextChanged += UpdatePreview;
 
             // 初始化操作符下拉列表
             cmbOperator.Items.Clear();
@@ -542,6 +547,10 @@ namespace RUINORERP.UI.BI
             catch (Exception ex)
             {
                 MainForm.Instance.logger.LogError(ex, "处理过滤字段选择失败");
+            }
+            finally
+            {
+                UpdatePreview(sender, e);
             }
         }
 
@@ -1060,7 +1069,7 @@ namespace RUINORERP.UI.BI
 
                 // 从TableSchemaManager获取基础数据表
                 var baseTableSchemas = _tableSchemaManager.GetAllSchemaInfo()
-                    .Where(s => s.Type == TableType.Base && s.IsCacheable)
+                    .Where(s => s.IsCacheable)
                     .OrderBy(s => s.Description)
                     .ToList();
 
@@ -1102,7 +1111,7 @@ namespace RUINORERP.UI.BI
 
         }
 
-    
+
     }
 
     /// <summary>

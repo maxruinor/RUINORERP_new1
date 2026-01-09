@@ -64,7 +64,6 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                _logger.LogInformation($"开始转换采购退货单 {source.PurEntryReNo} 到采购退货入库单");
 
                 // 使用AutoMapper进行基础属性映射
                 _mapper.Map(source, target);
@@ -118,7 +117,6 @@ namespace RUINORERP.Business.Document.Converters
                 // 初始化实体
                 BusinessHelper.Instance.InitEntity(target);
 
-                _logger.LogInformation($"成功转换采购退货单 {source.PurEntryReNo} 到采购退货入库单 {target.PurReEntryNo}");
             }
             catch (Exception ex)
             {
@@ -154,7 +152,7 @@ namespace RUINORERP.Business.Document.Converters
             // 保留重要提示，移除简单日志记录
             if (tipsMsg.Any())
             {
-                _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));
+               // _logger.LogInformation("转换过程中的提示信息：{Tips}", string.Join("; ", tipsMsg));
             }
         }
 

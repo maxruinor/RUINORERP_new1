@@ -33,7 +33,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 预加载指定用户的行级权限策略
         /// </summary>
         /// <param name="userId">用户ID</param>
-        Task LoadPoliciesForUserAsync(long userId);
+        Task LoadPoliciesForUserAsync(long userId, List<long> userRoles);
 
         /// <summary>
         /// 预加载指定角色的行级权限策略
@@ -90,8 +90,6 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                _logger.LogInformation("开始加载行级权限策略...");
-
                 // 获取所有启用的策略
                 var allPolicies = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_RowAuthPolicy>()
@@ -122,14 +120,11 @@ namespace RUINORERP.Business.RowLevelAuthService
                     .Distinct()
                     .ToList();
 
-                _logger.LogInformation($"发现 {allPolicies.Count} 条启用策略，关联 {userIds.Count} 个用户，{roleIds.Count} 个角色");
-
                 // 预加载所有用户的策略缓存
-                var loadTasks = userIds.Select(userId => LoadPoliciesForUserAsync(userId));
+                var loadTasks = userIds.Select(userId => LoadPoliciesForUserAsync(userId, roleIds));
                 await Task.WhenAll(loadTasks);
 
                 _isLoaded = true;
-                _logger.LogInformation($"行级权限策略加载完成，已为 {userIds.Count} 个用户加载策略缓存");
             }
             catch (Exception ex)
             {
@@ -142,14 +137,10 @@ namespace RUINORERP.Business.RowLevelAuthService
         /// 预加载指定用户的行级权限策略
         /// </summary>
         /// <param name="userId">用户ID</param>
-        public async Task LoadPoliciesForUserAsync(long userId)
+        public async Task LoadPoliciesForUserAsync(long userId, List<long> userRoles)
         {
             try
             {
-                // 获取用户的角色列表（这里需要根据实际的用户角色关联表调整）
-                // 假设用户与角色的关联存储在tb_UserRole表中
-                var userRoles = await GetUserRolesAsync(userId);
-
                 // 使用策略查询服务获取策略（会自动缓存）
                 await _policyQueryService.GetPoliciesByUserAndRolesAsync(userId, userRoles);
 
@@ -187,7 +178,6 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                _logger.LogInformation("开始刷新行级权限策略缓存...");
 
                 // 清除缓存
                 _policyQueryService.ClearPolicyCache();
@@ -195,43 +185,11 @@ namespace RUINORERP.Business.RowLevelAuthService
                 // 重新加载所有策略
                 await LoadAllPoliciesAsync();
 
-                _logger.LogInformation("行级权限策略缓存刷新完成");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "刷新行级权限策略缓存失败");
                 throw;
-            }
-        }
-
-        /// <summary>
-        /// 获取用户的角色列表
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <returns>角色ID列表</returns>
-        private async Task<List<long>> GetUserRolesAsync(long userId)
-        {
-            try
-            {
-                // 根据实际的用户角色关联表查询
-                // 这里假设存在tb_UserRole表
-                // 如果不存在，需要根据实际情况调整
-                
-                // 查询用户-角色关联
-                var userRoles = await _unitOfWorkManage.GetDbClient()
-                    .Queryable<tb_RoleInfo>()
-                    .ToListAsync();
-
-                // 如果用户对象中有角色ID字段，直接解析
-                // 这里需要根据实际的UserInfo模型调整
-                
-                // 暂时返回空列表，实际实现需要根据数据库结构调整
-                return new List<long>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"获取用户 {userId} 的角色列表失败");
-                return new List<long>();
             }
         }
     }

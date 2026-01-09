@@ -89,7 +89,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_FM_ProfitLossDetails).NotNull();
                 //RuleForEach(x => x.tb_FM_ProfitLossDetails).NotNull();
                 //RuleFor(x => x.tb_FM_ProfitLossDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

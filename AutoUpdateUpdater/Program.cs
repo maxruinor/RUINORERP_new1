@@ -78,9 +78,11 @@ namespace AutoUpdateUpdater
                 }
                 else
                 {
-                    // 更新失败，保留配置文件以便排查问题
-                    WriteLog("AutoUpdateUpdaterLog.txt", "更新失败，保留配置文件以便排查问题");
-                    MessageBox.Show("AutoUpdate更新失败，请手动更新", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    // 更新失败或不需要更新，清理配置文件
+                    CleanupConfigFile(configFilePath);
+                    WriteLog("AutoUpdateUpdaterLog.txt", "更新失败或不需要更新，清理配置文件");
+                    // 确保ERP主程序被启动
+                    StartERPApplication();
                 }
             }
             catch (Exception ex)
@@ -99,7 +101,9 @@ namespace AutoUpdateUpdater
                 // 检查源目录是否存在
                 if (!Directory.Exists(sourceDir))
                 {
-                    MessageBox.Show($"源目录不存在：{sourceDir}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"源目录不存在：{sourceDir}，跳过更新");
+                    // 如果源目录不存在，可能是不需要更新，直接启动ERP主程序
+                    StartERPApplication();
                     return false;
                 }
                 
@@ -113,8 +117,28 @@ namespace AutoUpdateUpdater
                 string sourceFile = FindSourceFile(sourceDir, exeName);
                 if (!File.Exists(sourceFile))
                 {
-                    MessageBox.Show($"源文件不存在：{sourceFile}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"源文件不存在：{sourceFile}，跳过更新");
+                    // 如果源文件不存在，可能是不需要更新，直接启动ERP主程序
+                    StartERPApplication();
                     return false;
+                }
+                
+                // 计算源文件和目标文件的校验和，判断是否真的需要更新
+                string targetFile = Path.Combine(targetDir, exeName);
+                if (File.Exists(targetFile))
+                {
+                    // 比较文件大小和修改时间，如果相同则跳过更新
+                    var sourceInfo = new FileInfo(sourceFile);
+                    var targetInfo = new FileInfo(targetFile);
+                    
+                    if (sourceInfo.Length == targetInfo.Length && 
+                        sourceInfo.LastWriteTime <= targetInfo.LastWriteTime)
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"目标文件已是最新版本，跳过更新: {targetFile}");
+                        // 更新完成，启动ERP主程序
+                        StartERPApplication();
+                        return true; // 返回true表示操作成功（即使没有实际更新）
+                    }
                 }
                 
                 // 如果指定了AutoUpdate.exe的直接路径，优先使用该路径
@@ -122,9 +146,6 @@ namespace AutoUpdateUpdater
                 {
                     WriteLog("AutoUpdateUpdaterLog.txt", $"使用直接指定的AutoUpdate.exe路径: {autoUpdateExePath}");
                 }
-                
-                // 目标文件路径
-                string targetFile = Path.Combine(targetDir, exeName);
                 
                 // 如果目标文件存在，先尝试关闭正在运行的AutoUpdate进程
                 if (File.Exists(targetFile))

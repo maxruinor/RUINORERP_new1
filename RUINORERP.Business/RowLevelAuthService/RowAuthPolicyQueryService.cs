@@ -281,7 +281,6 @@ namespace RUINORERP.Business.RowLevelAuthService
                 {
                     _policyCache.Clear();
                 }
-                _logger.LogInformation("已清除行级权限策略缓存");
             }
             catch (Exception ex)
             {

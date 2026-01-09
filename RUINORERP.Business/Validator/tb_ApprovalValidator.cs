@@ -53,7 +53,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ApprovalProcessDetails).NotNull();
                 //RuleForEach(x => x.tb_ApprovalProcessDetails).NotNull();
                 //RuleFor(x => x.tb_ApprovalProcessDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

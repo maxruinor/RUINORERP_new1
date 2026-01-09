@@ -106,6 +106,7 @@ using Padding = System.Windows.Forms.Padding;
 using System.Windows.Forms;
 using RUINORERP.PacketSpec.Models.Message;
 using FastReport.Editor.Dialogs;
+using RUINORERP.UI.Network.ClientCommandHandlers;
 
 
 namespace RUINORERP.UI
@@ -176,6 +177,16 @@ namespace RUINORERP.UI
         /// 系统锁定状态标志
         /// </summary>
         public bool IsLocked { get; private set; }
+
+        /// <summary>
+        /// 待处理的更新信息
+        /// </summary>
+        private static VersionUpdateInfo _pendingUpdateInfo;
+
+        /// <summary>
+        /// 待处理更新信息的锁
+        /// </summary>
+        private static readonly object _pendingUpdateLock = new object();
 
         #region 当前系统中所有用户信息
         private List<UserInfo> userInfos = new List<UserInfo>();
@@ -1596,12 +1607,24 @@ namespace RUINORERP.UI
                 {
                     _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
                     _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+
+                    // 如果是解锁状态，检查是否有待处理的更新
+                    if (!isLocked)
+                    {
+                        CheckAndProcessPendingUpdate();
+                    }
                 }));
             }
             else if (_lockStatusLabel != null)
             {
                 _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
                 _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+
+                // 如果是解锁状态，检查是否有待处理的更新
+                if (!isLocked)
+                {
+                    CheckAndProcessPendingUpdate();
+                }
             }
         }
 
@@ -1639,6 +1662,123 @@ namespace RUINORERP.UI
             this.Controls.Add(statusStrip);
         }
 
+        /// <summary>
+        /// 检查并处理待处理的更新
+        /// </summary>
+        private void CheckAndProcessPendingUpdate()
+        {
+            VersionUpdateInfo pendingUpdate;
+            lock (_pendingUpdateLock)
+            {
+                pendingUpdate = _pendingUpdateInfo;
+                _pendingUpdateInfo = null; // 清空待处理更新
+            }
+
+            if (pendingUpdate != null)
+            {
+                // 延迟一段时间再显示更新提示，确保界面状态完全恢复
+                Task.Delay(1000).ContinueWith(_ =>
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        // 检查当前是否仍有登录窗口显示
+                        bool isLoginScreenVisible = false;
+                        foreach (Form form in Application.OpenForms)
+                        {
+                            if (form.GetType().Name.Contains("FrmLogin"))
+                            {
+                                isLoginScreenVisible = form.Visible;
+                                break;
+                            }
+                        }
+
+                        if (!isLoginScreenVisible)
+                        {
+                            DialogResult result = MessageBox.Show(
+                                $"发现新版本: {pendingUpdate.Version}\n{pendingUpdate.Description}\n是否立即更新？",
+                                "版本更新",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Information);
+
+                            if (result == DialogResult.Yes)
+                            {
+                                StartUpdateProcess(pendingUpdate);
+                            }
+                        }
+                        else
+                        {
+                            // 如果仍有登录窗口，重新放入待处理队列
+                            lock (_pendingUpdateLock)
+                            {
+                                _pendingUpdateInfo = pendingUpdate;
+                            }
+                        }
+                    }));
+                });
+            }
+        }
+
+
+        /// <summary>
+        /// 获取当前用户的行级权限策略
+        /// </summary>
+        /// <returns>行级权限策略列表</returns>
+        public async Task<List<tb_RowAuthPolicy>> GetRowAuthPolicies()
+        {
+            try
+            {
+                // 尝试从服务容器中获取行级权限策略查询服务
+                var policyQueryService = Startup.GetFromFac<IRowAuthPolicyQueryService>();
+                if (policyQueryService != null)
+                {
+                    // 获取当前用户信息
+                    var currentUser = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo;
+                    if (currentUser != null)
+                    {
+
+                        // 获取用户的角色列表
+                        var currentRole = MainForm.Instance?.AppContext?.CurrentRole;
+                        var roleIds = new List<long>();
+                        if (currentRole != null)
+                        {
+                            roleIds.Add(currentRole.RoleID);
+                        }
+
+                        // 并行获取用户策略和角色策略
+                        var task = policyQueryService.GetPoliciesByUserAndRolesAsync(
+                            currentUser.User_ID,
+                            roleIds
+                            );
+
+                        return await task;
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不中断查询
+                if (MainForm.Instance?.logger != null)
+                {
+                    MainForm.Instance.logger.LogError(ex, "获取行级权限策略失败，将跳过行级权限过滤");
+                }
+            }
+
+            // 如果获取失败，返回空列表，不应用任何行级权限
+            return new List<tb_RowAuthPolicy>();
+        }
+
+        /// <summary>
+        /// 设置待处理的更新信息
+        /// </summary>
+        /// <param name="updateInfo">版本更新信息</param>
+        public static void SetPendingUpdate(VersionUpdateInfo updateInfo)
+        {
+            lock (_pendingUpdateLock)
+            {
+                _pendingUpdateInfo = updateInfo;
+            }
+        }
 
         private void LoadUIForIM_LogPages()
         {
@@ -3069,7 +3209,6 @@ namespace RUINORERP.UI
                 await Logout();
 
                 var disconnectResult = await communicationService.Disconnect();
-                logger?.LogInformation($"程序关闭时断开连接结果: {disconnectResult}");
 
                 logManager.Dispose();
             }
@@ -3253,7 +3392,6 @@ namespace RUINORERP.UI
 
                 // 禁用状态栏交互
 
-                logger?.LogInformation("已禁用所有UI组件，系统处于锁定状态");
             }
             catch (Exception ex)
             {
@@ -3293,7 +3431,6 @@ namespace RUINORERP.UI
 
 
 
-                logger?.LogInformation("已重新启用所有UI组件，系统恢复正常操作状态");
             }
             catch (Exception ex)
             {
@@ -3604,7 +3741,6 @@ namespace RUINORERP.UI
         private async void btntsbRefresh_Click(object sender, EventArgs e)
         {
 
-            logger.LogInformation("获取到最新的验证配置111");
 
             logger.Debug("2222");
             // 注意：validatorMonitor和validatorConfig来自不同的配置源，可能导致值不一致
@@ -3785,6 +3921,53 @@ namespace RUINORERP.UI
 
 
                });
+        }
+
+        /// <summary>
+        /// 启动更新程序
+        /// </summary>
+        /// <param name="updateInfo">版本更新信息</param>
+        private void StartUpdateProcess(VersionUpdateInfo updateInfo)
+        {
+            try
+            {
+
+                // 假设更新程序路径
+                string updateExePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdate\\AutoUpdate.exe");
+
+                if (File.Exists(updateExePath))
+                {
+                    System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = updateExePath,
+                        Arguments = $"--version={updateInfo.Version} --url={updateInfo.DownloadUrl} --force={updateInfo.ForceUpdate}",
+                        UseShellExecute = true
+                    };
+
+                    System.Diagnostics.Process.Start(startInfo);
+
+                    // 如果强制更新，退出当前应用
+                    if (updateInfo.ForceUpdate)
+                    {
+                        // 使用异步方式退出应用，避免阻塞
+                        Task.Run(() =>
+                        {
+                            Thread.Sleep(1000); // 等待1秒让更新程序启动
+                            System.Windows.Forms.Application.Exit();
+                        });
+                    }
+                }
+                else
+                {
+                    logger?.LogError($"更新程序不存在: {updateExePath}");
+                    MessageBox.Show("更新程序不存在，请联系管理员。", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "启动更新程序失败");
+                MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>

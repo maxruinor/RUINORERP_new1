@@ -133,7 +133,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_FM_ReceivablePayableDetails).NotNull();
                 //RuleForEach(x => x.tb_FM_ReceivablePayableDetails).NotNull();
                 //RuleFor(x => x.tb_FM_ReceivablePayableDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

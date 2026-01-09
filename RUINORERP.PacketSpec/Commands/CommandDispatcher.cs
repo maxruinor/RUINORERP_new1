@@ -558,7 +558,6 @@ namespace RUINORERP.PacketSpec.Commands
                 if (withDetailedExceptions)
                 {
                     // 区分超时/取消异常与外部取消请求
-                    Logger.LogInformation("命令处理超时:{CommandId}", cmd.Packet.CommandId.ToString());
 
                     var timeoutResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "命令处理超时");
                     timeoutResponse.ResponseErrorType = ErrorType.SystemError;
@@ -576,7 +575,6 @@ namespace RUINORERP.PacketSpec.Commands
                 if (withDetailedExceptions)
                 {
                     // 外部取消请求
-                    Logger.LogInformation("命令处理被外部取消: {CommandId}", cmd.Packet.CommandId.ToString());
 
                     var canceledResponse = ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, errorMessage: "命令处理被取消");
                     canceledResponse.ResponseErrorType = ErrorType.BusinessError; // 取消请求视为业务错误，不触发熔断

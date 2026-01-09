@@ -1,7 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
+using RUINORERP.Business.Config;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.Model.ConfigModel;
 
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Requests;
@@ -1586,7 +1589,11 @@ namespace RUINORERP.Server.Controls
                 }
             }
         }
-        private void tsbtn推送系统配置_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 推送系统配置到选中客户端
+        /// 发送 SystemGlobalConfig 和 GlobalValidatorConfig 两个配置
+        /// </summary>
+        private async void tsbtn推送系统配置_Click(object sender, EventArgs e)
         {
             var selectedSessions = SelectSessions();
             if (selectedSessions.Count == 0)
@@ -1605,7 +1612,7 @@ namespace RUINORERP.Server.Controls
 
             // 统一确认推送操作
             var confirmResult = MessageBox.Show(
-                $"确定要向选中的 {validSessions.Count} 个会话推送系统配置吗？",
+                $"确定要向选中的 {validSessions.Count} 个会话推送系统配置吗？\n将推送 SystemGlobalConfig 和 GlobalValidatorConfig",
                 "确认推送系统配置",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -1615,49 +1622,124 @@ namespace RUINORERP.Server.Controls
                 return;
             }
 
-            int successCount = 0;
-            int failedCount = 0;
-
-            foreach (var session in validSessions)
+            try
             {
-                try
+                // 获取配置管理服务
+                var configManagerService = Program.ServiceProvider.GetRequiredService<IConfigManagerService>();
+
+                // 加载 SystemGlobalConfig
+                var systemGlobalConfig = configManagerService.LoadConfig<SystemGlobalConfig>("SystemGlobalConfig");
+
+                // 加载 GlobalValidatorConfig
+                var globalValidatorConfig = configManagerService.LoadConfig<GlobalValidatorConfig>("GlobalValidatorConfig");
+
+                int successCount = 0;
+                int failedCount = 0;
+
+                foreach (var session in validSessions)
                 {
-                    // 构造系统配置推送命令
-                    SystemCommandRequest systemCommandRequest = new SystemCommandRequest();
-                    systemCommandRequest.CommandType = SystemManagementType.PushVersionUpdate; // 使用现有枚举值
-                    systemCommandRequest.Parameters = new Dictionary<string, object> { { "ConfigType", "SystemConfig" } };
-
-                    // 发送命令到客户端
-                    bool success = _sessionService.SendCommandAsync(
-                        session.SessionID,
-                        SystemCommands.SystemManagement,
-                        systemCommandRequest).Result; // 保持原有的同步行为
-
-                    if (success)
+                    try
                     {
-                        successCount++;
-                        LogStatusChange(session, "已推送系统配置");
+                        // 推送 SystemGlobalConfig
+                        bool systemConfigSuccess = await PushConfigToSession(session, systemGlobalConfig, "SystemGlobalConfig");
+                        if (systemConfigSuccess)
+                        {
+                            LogStatusChange(session, "已推送 SystemGlobalConfig");
+                        }
+
+                        // 推送 GlobalValidatorConfig
+                        bool validatorConfigSuccess = await PushConfigToSession(session, globalValidatorConfig, "GlobalValidatorConfig");
+                        if (validatorConfigSuccess)
+                        {
+                            LogStatusChange(session, "已推送 GlobalValidatorConfig");
+                        }
+
+                        // 两个配置都推送成功才算成功
+                        if (systemConfigSuccess && validatorConfigSuccess)
+                        {
+                            successCount++;
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置部分失败", null, session);
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
                         failedCount++;
-                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置失败", null, session);
+                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置时出错", ex, session);
                     }
                 }
-                catch (Exception ex)
+
+                // 显示操作结果
+                string resultMessage = $"系统配置推送完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话";
+                MessageBox.Show(
+                    resultMessage,
+                    "推送结果",
+                    MessageBoxButtons.OK,
+                    successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                LogError("推送系统配置时发生错误", ex);
+                MessageBox.Show($"推送系统配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 推送单个配置到指定会话
+        /// </summary>
+        /// <param name="session">目标会话</param>
+        /// <param name="config">配置对象</param>
+        /// <param name="configType">配置类型名称</param>
+        /// <returns>是否推送成功</returns>
+        private async Task<bool> PushConfigToSession(SessionInfo session, BaseConfig config, string configType)
+        {
+            try
+            {
+                if (config == null)
                 {
-                    failedCount++;
-                    LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 推送系统配置时出错", ex, session);
+                    LogError($"配置对象为空: {configType}", null, session);
+                    return false;
+                }
+
+                // 序列化配置为JSON
+                string configData = JsonConvert.SerializeObject(config, Formatting.Indented);
+
+                // 创建通用请求（与 GlobalConfigControl 中的格式保持一致）
+                var request = new GeneralRequest
+                {
+                    Data = new
+                    {
+                        ConfigType = configType,
+                        ConfigData = configData,
+                        Version = DateTime.Now.ToString("yyyyMMddHHmmssfff"),
+                        ForceApply = true
+                    }
+                };
+
+                // 获取通用广播服务
+                var generalBroadcastService = Program.ServiceProvider.GetRequiredService<IGeneralBroadcastService>();
+
+                // 发送配置同步命令到指定会话
+                var response = await generalBroadcastService.SendRequestToSession(session.SessionID, GeneralCommands.ConfigSync, request);
+
+                if (response != null && response.IsSuccess)
+                {
+                    return true;
+                }
+                else
+                {
+                    LogError($"推送配置 {configType} 失败，响应为空或不成功", null, session);
+                    return false;
                 }
             }
-
-            // 显示操作结果
-            string resultMessage = $"系统配置推送完成: 成功 {successCount} 个, 失败 {failedCount} 个";
-            MessageBox.Show(
-                resultMessage,
-                "推送结果",
-                MessageBoxButtons.OK,
-                successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            catch (Exception ex)
+            {
+                LogError($"推送配置 {configType} 时发生异常", ex, session);
+                return false;
+            }
         }
 
         private void tsbtn推送缓存_Click(object sender, EventArgs e)

@@ -729,6 +729,15 @@
     </Compile>
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BI\frmReminderLinkConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\frmReminderLinkConfig.designer.cs">
+      <DependentUpon>frmReminderLinkConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\JoinType.cs" />
+    <Compile Include="BI\RoleFilterConfig.cs" />
+    <Compile Include="BI\TableType.cs" />
     <Compile Include="BI\UCFMAuditLogsTracker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -812,6 +821,18 @@
     </Compile>
     <Compile Include="BI\UCProjectGroupAssigneeEmployees.Designer.cs">
       <DependentUpon>UCProjectGroupAssigneeEmployees.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCReminderObjectLinkEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\UCReminderObjectLinkEdit.designer.cs">
+      <DependentUpon>UCReminderObjectLinkEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BI\UCReminderObjectLinkList.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BI\UCReminderObjectLinkList.designer.cs">
+      <DependentUpon>UCReminderObjectLinkList.cs</DependentUpon>
     </Compile>
     <Compile Include="BI\UCReminderRuleEdit.cs">
       <SubType>Form</SubType>

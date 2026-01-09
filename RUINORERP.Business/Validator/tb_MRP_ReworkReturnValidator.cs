@@ -100,7 +100,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_MRP_ReworkReturnDetails).NotNull();
                 //RuleForEach(x => x.tb_MRP_ReworkReturnDetails).NotNull();
                 //RuleFor(x => x.tb_MRP_ReworkReturnDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

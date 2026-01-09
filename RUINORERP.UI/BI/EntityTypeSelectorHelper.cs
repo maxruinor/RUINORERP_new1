@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -133,58 +134,9 @@ namespace RUINORERP.UI.BI
                 return null;
             }
         }
+ 
 
-        /// <summary>
-        /// 根据实体类型全限定名获取表信息
-        /// </summary>
-        /// <param name="entityType">实体类型全限定名</param>
-        /// <returns>表信息</returns>
-        public async Task<TableInfo> GetTableInfoByEntityTypeAsync(string entityType)
-        {
-            try
-            {
-                // 从缓存中查找
-                var cachedTableInfo = _tableInfoCache.Values.FirstOrDefault(t => t.EntityType == entityType);
-                if (cachedTableInfo != null)
-                {
-                    return cachedTableInfo;
-                }
-
-                // 尝试通过反射获取表名
-                var tableAttribute = Type.GetType(entityType)?.GetCustomAttribute<SugarTableAttribute>();
-                if (tableAttribute == null || string.IsNullOrEmpty(tableAttribute.TableName))
-                {
-                    _logger.LogWarning($"实体类型 {entityType} 未找到表名");
-                    return null;
-                }
-
-                return await GetTableInfoAsync(tableAttribute.TableName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"根据实体类型 {entityType} 获取表信息失败");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 获取指定表的所有字段信息
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>字段信息列表</returns>
-        public async Task<List<ColumnInfo>> GetTableColumnsAsync(string tableName)
-        {
-            try
-            {
-                var columns = await _tableSchemaManager.GetColumnsByTableNameAsync(tableName);
-                return columns ?? new List<ColumnInfo>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"获取表 {tableName} 的字段信息失败");
-                return new List<ColumnInfo>();
-            }
-        }
+ 
 
         /// <summary>
         /// 获取实体类的描述信息

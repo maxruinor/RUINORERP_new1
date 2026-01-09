@@ -190,7 +190,6 @@ namespace RUINORERP.UI
                 {
                     CurrentNavigation = totalNavigation;
                     _processNavigationManager.CurrentNavigation = totalNavigation;
-                    logger?.LogInformation($"已加载系统总览图：{totalNavigation.ProcessNavName}");
                     return;
                 }
 
@@ -204,7 +203,6 @@ namespace RUINORERP.UI
                 {
                     CurrentNavigation = firstTotalNavigation;
                     _processNavigationManager.CurrentNavigation = firstTotalNavigation;
-                    logger?.LogInformation($"已加载第一个总览图：{firstTotalNavigation.ProcessNavName}");
                     return;
                 }
 
@@ -249,7 +247,6 @@ namespace RUINORERP.UI
                 {
                     CurrentNavigation = moduleNavigation;
                     _processNavigationManager.CurrentNavigation = moduleNavigation;
-                    logger?.LogInformation($"已加载模块导航图：{moduleNavigation.ProcessNavName}");
                 }
                 else
                 {
@@ -351,7 +348,6 @@ namespace RUINORERP.UI
             try
             {
                 CurrentNavigation = e.Navigation;
-                logger?.LogInformation($"当前流程导航图已切换为：{e.Navigation?.ProcessNavName}");
             }
             catch (Exception ex)
             {

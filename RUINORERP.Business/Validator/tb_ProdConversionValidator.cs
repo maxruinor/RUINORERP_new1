@@ -77,7 +77,6 @@ namespace RUINORERP.Business
                 //RuleFor(c => c.tb_ProdConversionDetails).NotNull();
                 //RuleForEach(x => x.tb_ProdConversionDetails).NotNull();
                 //RuleFor(x => x.tb_ProdConversionDetails).Must(DetailedRecordsNotEmpty).WithMessage("明细不能为空");
-                    Initialize();
      }
 
 

@@ -139,6 +139,10 @@ namespace RUINORERP.Business.EntityLoadService
 
         public object LoadEntityInternal(Type entityType, object billNo)
         {
+            if (entityType==null)
+            {
+                return null;
+            }
             var bizEntityInfo = _mappingService.GetEntityInfo(entityType);
             if (bizEntityInfo == null)
             {

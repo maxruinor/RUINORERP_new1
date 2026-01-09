@@ -3184,7 +3184,6 @@ namespace RUINORERP.UI.BaseForm
             };
 
 
-
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
             {
@@ -3199,8 +3198,6 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
             //如果已经审核并且审核通过，则不能再次审核
-
-            //
             //CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
             CommonUI.frmApproval frm = new CommonUI.frmApproval();
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
@@ -3277,8 +3274,6 @@ namespace RUINORERP.UI.BaseForm
                     return reviewResult;
                     #endregion
                 }
-
-
                 //中间中的所有字段，都给值到单据主表中，后面需要处理审核历史这种再完善
                 PropertyInfo[] array_property = ae.GetType().GetProperties();
                 {
@@ -3325,7 +3320,8 @@ namespace RUINORERP.UI.BaseForm
                         await SyncTodoStatusAsync(updateData, "审核");
                     }
 
-                    //如果是出库单审核，则上传到服务器 锁定订单无法修改                    if (ae.bizType == BizType.销售出库单)
+                    //如果是出库单审核，则上传到服务器 锁定订单无法修改
+                    if (ae.bizType == BizType.销售出库单)
                     {
                         //锁定对应的订单
                         if (EditEntity is tb_SaleOut saleOut)
@@ -5665,8 +5661,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
-
         /// <summary>提交单据</summary>
         protected async Task<bool> Submit<TStatus>(TStatus targetStatus)
             where TStatus : Enum
@@ -6350,9 +6344,9 @@ namespace RUINORERP.UI.BaseForm
 
         private async void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {
-            timerAutoSave.Start();
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
+                timerAutoSave.Start();
                 if (!this.DesignMode)
                 {
                     QueryConditionBuilder();

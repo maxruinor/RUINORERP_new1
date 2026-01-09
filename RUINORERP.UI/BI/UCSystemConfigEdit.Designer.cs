@@ -42,6 +42,7 @@ namespace RUINORERP.UI.BI
             this.chkEnableAPAutoOffsetPrepay = new Krypton.Toolkit.KryptonCheckBox();
             this.chkAutoAuditPreReceive = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableARAutoOffsetPreReceive = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableFinancialModule = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableMultiCurrency = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();
@@ -182,6 +183,7 @@ namespace RUINORERP.UI.BI
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAPAutoOffsetPrepay);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPreReceive);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableARAutoOffsetPreReceive);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableFinancialModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableMultiCurrency);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableVoucherModule);
@@ -205,7 +207,7 @@ namespace RUINORERP.UI.BI
             // 
             this.chkAutoAuditExpensePaymentRecord.Location = new System.Drawing.Point(262, 16);
             this.chkAutoAuditExpensePaymentRecord.Name = "chkAutoAuditExpensePaymentRecord";
-            this.chkAutoAuditExpensePaymentRecord.Size = new System.Drawing.Size(205, 20);
+            this.chkAutoAuditExpensePaymentRecord.Size = new System.Drawing.Size(179, 20);
             this.chkAutoAuditExpensePaymentRecord.TabIndex = 209;
             this.chkAutoAuditExpensePaymentRecord.Values.Text = "费用报销的付款单自动审核";
             // 
@@ -290,6 +292,14 @@ namespace RUINORERP.UI.BI
             this.chkEnableARAutoOffsetPreReceive.Size = new System.Drawing.Size(153, 20);
             this.chkEnableARAutoOffsetPreReceive.TabIndex = 202;
             this.chkEnableARAutoOffsetPreReceive.Values.Text = "应收款自动核销预收款";
+            // 
+            // chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders
+            // 
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Location = new System.Drawing.Point(16, 317);
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Name = "chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders";
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Size = new System.Drawing.Size(218, 20);
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.TabIndex = 210;
+            this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Values.Text = "全额预收款订单销售出库自动审核";
             // 
             // chkEnableFinancialModule
             // 
@@ -797,6 +807,7 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditPaymentable;
         private Krypton.Toolkit.KryptonCheckBox chkEnableAutoRefundOnOrderCancel;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditExpensePaymentRecord;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders;
         private Krypton.Toolkit.KryptonCheckBox chkEnableRowLevelAuth;
     }
 }

@@ -260,8 +260,6 @@ namespace RUINORERP.UI.Common
 
                     //通过业务类型找到目标表名对应的菜单   
                     relatedRelationship = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.SourceTableName == CurrentRowEntity.GetType().Name);
-                    OpenTargetEntity(RelatedMenuInfo, CurrentRowEntity.GetType().Name, billno);
-                    return;
                 }
 
 
@@ -270,7 +268,6 @@ namespace RUINORERP.UI.Common
                     string tableName = relatedRelationship.TargetTableName.Name;
                     //这里是显示明细
                     //要把单据信息传过去
-
                     RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == relatedRelationship.TargetTableName.Name && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
 
 

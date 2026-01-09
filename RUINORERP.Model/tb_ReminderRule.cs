@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -261,6 +261,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long _LinkId;
+        /// <summary>
+        /// 关联的链路ID
+        /// </summary>
+        [AdvQueryAttribute(ColName = "LinkId",ColDesc = "关联的链路ID")] 
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "LinkId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "关联的链路ID" )]
+        public long LinkId
+        {
+            get{return _LinkId;}
+            set{
+            SetProperty(ref _LinkId, value);
+                        }
+        }
+
         private DateTime _Created_at;
         /// <summary>
         /// 创建时间
@@ -268,7 +282,7 @@ namespace RUINORERP.Model
         [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = false,ColumnDescription = "创建时间" )]
         public DateTime Created_at
-        { 
+        {
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);

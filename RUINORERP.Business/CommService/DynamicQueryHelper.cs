@@ -120,7 +120,6 @@ namespace RUINORERP.Business.CommService
                     
                     if (exactMethod != null)
                     {
-                        _logger.LogInformation("找到精确匹配的AS方法");
                         return exactMethod;
                     }
                     
@@ -128,7 +127,6 @@ namespace RUINORERP.Business.CommService
                     var nonGenericMethod = asMethods.FirstOrDefault(m => !m.IsGenericMethod && !m.ContainsGenericParameters);
                     if (nonGenericMethod != null)
                     {
-                        _logger.LogInformation("使用非泛型AS方法");
                         return nonGenericMethod;
                     }
                     
@@ -390,7 +388,6 @@ namespace RUINORERP.Business.CommService
                             {
                                 var genericWhereMethod = whereMethod.MakeGenericMethod(entityType);
                                 queryable = genericWhereMethod.Invoke(null, new[] { queryable, whereCondition, parameters });
-                                _logger.LogInformation($"成功应用条件查询: {whereCondition}");
                             }
                             else
                             {

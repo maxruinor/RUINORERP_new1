@@ -2648,7 +2648,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// esc退出窗体
+        /// 激活回车键查询功能，但对特殊控件（如下拉框）进行过滤以避免重复触发
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="keyData"></param>
@@ -2696,6 +2696,22 @@ namespace RUINORERP.UI.BaseForm
                         }
                         return true;
                     case Keys.Enter:
+                        // 检查当前焦点控件是否为下拉控件或其他特殊控件，避免重复触发查询
+                        if (this.ContainsFocus)
+                        {
+                            Control focusedControl = this.FindFocusedControl();
+                            if (focusedControl != null)
+                            {
+                                // 如果焦点在下拉控件、列表控件等特殊控件上，不执行查询
+                                // 防止在下拉控件选择后触发重复查询
+                                if (IsSpecialInputControl(focusedControl))
+                                {
+                                    // 对于下拉控件等，让其正常处理回车事件而不触发查询
+                                    return base.ProcessCmdKey(ref msg, keyData);
+                                }
+                            }
+                        }
+                        
                         Query(QueryDtoProxy);
                         toolStripSplitButtonPrint.Enabled = true;
                         break;
@@ -3369,5 +3385,96 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        /// <summary>
+        /// 查找当前获得焦点的控件
+        /// </summary>
+        /// <returns></returns>
+        private Control FindFocusedControl()
+        {
+            Control focusedControl = null;
+            if (this.ContainsFocus)
+            {
+                focusedControl = GetFocusedControlRecursive(this);
+            }
+            return focusedControl;
+        }
+
+        /// <summary>
+        /// 递归查找获得焦点的控件
+        /// </summary>
+        /// <param name="control"></param>
+        /// <returns></returns>
+        private Control GetFocusedControlRecursive(Control control)
+        {
+            foreach (Control childControl in control.Controls)
+            {
+                if (childControl.Focused)
+                {
+                    return childControl;
+                }
+                
+                if (childControl.ContainsFocus)
+                {
+                    Control result = GetFocusedControlRecursive(childControl);
+                    if (result != null)
+                    {
+                        return result;
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 判断控件是否为特殊的输入控件（如下拉框等），这些控件在按回车时不应触发查询
+        /// </summary>
+        /// <param name="control">要检查的控件</param>
+        /// <returns>如果是特殊输入控件则返回true，否则返回false</returns>
+        private bool IsSpecialInputControl(Control control)
+        {
+            if (control == null) return false;
+            
+            // 检查是否为下拉框控件
+            if (control is ComboBox || control.GetType().Name.Contains("ComboBox"))
+            {
+                return true;
+            }
+            
+            // 检查是否为Krypton下拉框控件
+            if (control.GetType().Name.Contains("KryptonComboBox") || 
+                control.GetType().Name.Contains("KryptonDomainUpDown") ||
+                control.GetType().Name.Contains("KryptonNumericUpDown"))
+            {
+                return true;
+            }
+            
+            // 检查是否为列表类控件
+            if (control is System.Windows.Forms.ListBox || control.GetType().Name.Contains("ListBox"))
+            {
+                return true;
+            }
+            
+            // 检查是否为树形控件
+            if (control.GetType().Name.Contains("TreeView"))
+            {
+                return true;
+            }
+            
+            // 检查是否为DataGrid类控件
+            if (control.GetType().Name.Contains("DataGridView") || 
+                control.GetType().Name.Contains("NewSumDataGridView"))
+            {
+                return true;
+            }
+            
+            // 检查是否为自定义的下拉控件
+            if (control.GetType().Name.Contains("ComBoBoxEx") ||
+                control.GetType().Name.Contains("CodeTextBox"))
+            {
+                return true;
+            }
+            
+            return false;
+        }
     }
 }

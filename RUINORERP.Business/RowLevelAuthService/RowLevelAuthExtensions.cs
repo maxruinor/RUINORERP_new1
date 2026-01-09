@@ -59,7 +59,6 @@ namespace RUINORERP.Business
                     query = ApplyPolicy(query, policy, db, logger);
                 }
 
-                logger?.LogInformation($"已为实体 {entityType} 应用 {applicablePolicies.Count} 条行级权限规则");
             }
             catch (Exception ex)
             {

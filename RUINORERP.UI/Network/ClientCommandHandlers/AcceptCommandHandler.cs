@@ -114,7 +114,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                     // 显示倒计时提示
                                     string message = $"系统将在 {delaySeconds} 秒后退出，这是管理员要求的操作。";
                                     string title = "系统即将退出";
-                                    _logger.LogInformation($"收到延时退出命令，将在{delaySeconds}秒后退出系统");
                                     
                                     // 创建一个新的线程来执行延时退出
                                     ThreadPool.QueueUserWorkItem((state) =>
@@ -125,7 +124,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                             Thread.Sleep(delaySeconds * 1000);
                                             
                                             // 延时后执行系统退出
-                                            _logger.LogInformation("延时结束，执行系统退出");
                                             System.Windows.Forms.Application.Exit();
                                         }
                                         catch (Exception ex)
@@ -140,7 +138,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 else
                                 {
                                     // 立即执行系统退出
-                                    _logger.LogInformation("收到立即退出命令，执行系统退出");
                                     System.Windows.Forms.Application.Exit();
                                 }
                             }
@@ -158,6 +155,19 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                         if (updateInfo != null)
                         {
+                            // 检查系统是否处于锁定状态或登录界面显示状态，避免弹窗冲突
+                            bool isSystemLocked = MainForm.Instance?.IsLocked ?? false;
+                            bool isLoginScreenVisible = IsLoginScreenVisible();
+                            
+                            if (isSystemLocked || isLoginScreenVisible)
+                            {
+                                _logger.LogWarning($"系统处于锁定状态或登录界面显示中，暂时不显示更新提示。锁定状态: {isSystemLocked}, 登录界面显示: {isLoginScreenVisible}");
+                                
+                                // 将更新信息存储起来，等系统解锁或登录界面关闭后再显示
+                                StorePendingUpdateInfo(updateInfo);
+                                return; // 提前返回，不显示更新对话框
+                            }
+                            
                             // 在UI线程显示更新提示
                             if (MainForm.Instance.InvokeRequired)
                             {
@@ -321,6 +331,49 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             return null;
         }
 
+        /// <summary>
+        /// 检查登录界面是否可见
+        /// </summary>
+        /// <returns>登录界面是否可见</returns>
+        private bool IsLoginScreenVisible()
+        {
+            try
+            {
+                // 检查是否有登录窗口实例正在显示
+                foreach (Form form in Application.OpenForms)
+                {
+                    if (form.GetType().Name.Contains("FrmLogin"))
+                    {
+                        return form.Visible;
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查登录界面可见性时发生异常");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 存储待处理的更新信息
+        /// </summary>
+        /// <param name="updateInfo">版本更新信息</param>
+        private void StorePendingUpdateInfo(VersionUpdateInfo updateInfo)
+        {
+            try
+            {
+                // 使用MainForm的静态方法存储待处理更新信息
+                MainForm.SetPendingUpdate(updateInfo);
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "存储待处理更新信息时发生异常");
+            }
+        }
+        
         /// <summary>
         /// 启动更新程序
         /// </summary>

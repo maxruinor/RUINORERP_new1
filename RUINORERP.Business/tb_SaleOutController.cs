@@ -76,8 +76,8 @@ namespace RUINORERP.Business
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">销售出库单实体</param>
+        /// <returns>保存结果</returns>
         public async Task<ReturnResults<tb_SaleOut>> SaveOrUpdate(tb_SaleOut entity)
         {
             ReturnResults<tb_SaleOut> rr = new ReturnResults<tb_SaleOut>();

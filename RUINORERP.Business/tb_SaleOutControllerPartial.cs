@@ -296,13 +296,13 @@ namespace RUINORERP.Business
         //- 生成收款单并审核 → 自动核销应收单	- 应收应付表：生成应收单（状态=已审核）
         //- 收付款表：插入收款单（状态=已审核）
         //- 核销表：自动生成核销记录
-        //2. 账期销售（分期收款）	- 销售出库生成应收单
+        ///2. 账期销售（分期收款）	- 销售出库生成应收单
         //- 分次生成收款单 → 手动核销	- 每次核销更新 应收应付表.RemainAmount
         //- 最后一次核销标记 IsFullySettled = 1
 
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">销售出库单实体</param>
+        /// <returns>审核结果</returns>
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rrs = new ReturnResults<T>();
@@ -938,6 +938,152 @@ namespace RUINORERP.Business
                 return rrs;
             }
 
+        }
+
+        /// <summary>
+        /// 判断销售出库单是否满足自动审核条件
+        /// 条件：配置开关启用 + 财务模块启用 + 销售订单为全额预收款类型 + 存在未核销预收款
+        /// </summary>
+        /// <param name="saleOut">销售出库单</param>
+        /// <returns>是否满足自动审核条件</returns>
+        private async Task<bool> ShouldAutoAuditSalesOut(tb_SaleOut saleOut)
+        {
+            // 检查配置开关是否启用
+            if (!_appContext.FMConfig.EnableAutoAuditSalesOutboundForFullPrepaymentOrders)
+            {
+                return false;
+            }
+
+            // 检查财务模块是否启用
+            AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+            if (!authorizeController.EnableFinancialModule())
+            {
+                return false;
+            }
+
+            // 检查是否有关联的销售订单
+            if (!saleOut.SOrder_ID.HasValue)
+            {
+                return false;
+            }
+
+            // 加载销售订单数据
+            var saleOrder = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                .Where(c => c.SOrder_ID == saleOut.SOrder_ID.Value)
+                .FirstAsync();
+
+            if (saleOrder == null)
+            {
+                return false;
+            }
+
+            // 判断是否为全额预收款订单
+            // 通过检查 Paytype_ID 是否为全额预收款类型(假设ID=1表示全额预收款)
+            // 实际应根据业务配置确定具体的全额预收款类型ID
+            if (!saleOrder.Paytype_ID.HasValue)
+            {
+                return false;
+            }
+
+            // 加载付款类型信息
+            var paymentMethod = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
+                .Where(c => c.Paytype_ID == saleOrder.Paytype_ID.Value)
+                .FirstAsync();
+
+            if (paymentMethod == null)
+            {
+                return false;
+            }
+
+            // 检查是否为全额预收款类型(根据付款类型名称或特定字段判断)
+            // 这里假设付款类型名称包含"全额预收款"或特定标识
+            bool isFullPrepaymentType = paymentMethod.PayTypeName.Contains("全额预收款") || 
+                                        paymentMethod.PayTypeName.Contains("全款");
+
+            if (!isFullPrepaymentType)
+            {
+                return false;
+            }
+
+            // 检查是否存在未核销的预收款
+            var prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                && x.CustomerVendor_ID == saleOut.CustomerVendor_ID
+                && x.IsAvailable == true
+                && x.SourceBizType == (int)BizType.销售订单
+                && x.SourceBillId == saleOut.SOrder_ID.Value
+                && x.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                .ToListAsync();
+
+            if (prePayments == null || prePayments.Count == 0)
+            {
+                return false;
+            }
+
+            // 计算预收款总额
+            decimal totalPrePayment = prePayments.Sum(x => x.LocalPrePayAmount - x.LocalWrittenOffAmount);
+
+            // 检查预收款是否足够支付出库金额
+            if (totalPrePayment < saleOut.TotalAmount - 0.01m) // 允许0.01的误差
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 销售出库单保存后自动审核
+        /// 当满足全额预收款条件时,自动执行审核流程
+        /// </summary>
+        /// <param name="saleOut">销售出库单</param>
+        /// <returns>审核结果</returns>
+        public async Task<ReturnResults<tb_SaleOut>> AutoAuditSalesOutAsync(tb_SaleOut saleOut)
+        {
+            ReturnResults<tb_SaleOut> result = new ReturnResults<tb_SaleOut>();
+
+            try
+            {
+                // 检查是否满足自动审核条件
+                bool shouldAutoAudit = await ShouldAutoAuditSalesOut(saleOut);
+
+                if (!shouldAutoAudit)
+                {
+                    result.Succeeded = true;
+                    result.ErrorMsg = "不满足自动审核条件,跳过自动审核";
+                    return result;
+                }
+
+                // 设置审核信息
+                saleOut.ApprovalResults = true;
+                saleOut.ApprovalOpinions = "系统自动审核(全额预收款订单)";
+                BusinessHelper.Instance.ApproverEntity(saleOut);
+
+                // 执行审核流程
+                var approvalResult = await ApprovalAsync(saleOut as T);
+
+                if (approvalResult.Succeeded)
+                {
+                    _logger.LogInformation($"销售出库单【{saleOut.SaleOutNo}】自动审核成功(全额预收款订单)");
+                    result.Succeeded = true;
+                    result.ReturnObject = saleOut;
+                }
+                else
+                {
+                    _logger.LogWarning($"销售出库单【{saleOut.SaleOutNo}】自动审核失败:{approvalResult.ErrorMsg}");
+                    result.Succeeded = false;
+                    result.ErrorMsg = $"自动审核失败:{approvalResult.ErrorMsg}";
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"销售出库单【{saleOut.SaleOutNo}】自动审核异常");
+                result.Succeeded = false;
+                result.ErrorMsg = $"自动审核异常:{ex.Message}";
+                return result;
+            }
         }
 
 

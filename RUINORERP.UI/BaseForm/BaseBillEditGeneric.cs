@@ -2256,6 +2256,9 @@ namespace RUINORERP.UI.BaseForm
                             //提交后别人可以审核 
                             UNLock();
                             // 状态同步已在提交方法内部处理，无需重复调用
+                            
+                            // 调用提交成功后的处理逻辑（虚方法，子类可重写）
+                            await AfterSubmitAsync();
                         }
                     }
                     catch (Exception ex)
@@ -5658,6 +5661,18 @@ namespace RUINORERP.UI.BaseForm
                 await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存式提交", EditEntity, $"结果:{(rs ? "成功" : "失败")}");
             }
             return submitrs;
+        }
+
+        /// <summary>
+        /// 提交成功后的处理（虚方法，子类可重写）
+        /// 用于执行提交后的自定义业务逻辑
+        /// </summary>
+        /// <returns>处理结果</returns>
+        protected virtual async Task<bool> AfterSubmitAsync()
+        {
+            // 默认实现为空，子类可重写此方法
+            await Task.CompletedTask;
+            return true;
         }
 
 

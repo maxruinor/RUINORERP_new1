@@ -1078,6 +1078,71 @@ namespace RUINORERP.UI.PSI.SAL
             return false;
         }
 
+        /// <summary>
+        /// 提交成功后的处理 - 在基类中提交成功后调用
+        /// 用于执行提交后的业务逻辑，如自动审核全额预收款订单
+        /// </summary>
+        /// <returns>处理结果</returns>
+        protected async override Task<bool> AfterSubmitAsync()
+        {
+            // 先执行基类的提交后处理
+            bool baseResult = await base.AfterSubmitAsync();
+            if (!baseResult)
+            {
+                return false;
+            }
+
+            // 检查是否需要自动审核全额预收款订单
+            if (EditEntity != null && EditEntity.SaleOut_MainID > 0)
+            {
+                try
+                {
+                    // 异步执行自动审核，不阻塞主流程
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var ctr = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                            var autoAuditResult = await ctr.AutoAuditSalesOutAsync(EditEntity);
+                            
+                            if (autoAuditResult.Succeeded)
+                            {
+                                // 在UI线程中刷新显示
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】自动审核成功(全额预收款订单)");
+                                    // 刷新当前单据状态
+                                    Refreshs();
+                                });
+                            }
+                            else if (!string.IsNullOrEmpty(autoAuditResult.ErrorMsg) && 
+                                    !autoAuditResult.ErrorMsg.Contains("不满足自动审核条件"))
+                            {
+                                this.Invoke((MethodInvoker)delegate
+                                {
+                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】自动审核失败:{autoAuditResult.ErrorMsg}", Color.Red);
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                MainForm.Instance.uclog.AddLog($"销售出库单【{EditEntity?.SaleOutNo}】自动审核异常:{ex.Message}", UILogType.错误);
+                            });
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // 自动审核异常不影响主提交流程
+                    MainForm.Instance.uclog.AddLog($"触发自动审核失败:{ex.Message}", UILogType.警告);
+                }
+            }
+
+            return true;
+        }
+
         //protected async override Task<ReturnResults<tb_SaleOut>> Delete()
         //{
         //    ReturnResults<tb_SaleOut> rss = new ReturnResults<tb_SaleOut>();

@@ -8,6 +8,7 @@ using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.SmartReminder;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -592,6 +593,69 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger.LogDebug($"获取磁盘I/O信息失败: {ex.Message}");
+            }
+
+            // 更新库存缓存统计信息 (Phase 2.4 优化)
+            UpdateStockCacheStatistics();
+        }
+
+        /// <summary>
+        /// 更新库存缓存统计信息
+        /// </summary>
+        private void UpdateStockCacheStatistics()
+        {
+            try
+            {
+                var stockCacheService = Startup.GetFromFac<IStockCacheService>();
+                if (stockCacheService == null)
+                {
+                    _logger.LogDebug("无法获取 IStockCacheService 服务实例");
+                    return;
+                }
+
+                var stats = stockCacheService.GetCacheStatistics();
+
+                // 查找现有的缓存统计标签，如果没有则跳过（避免UI错误）
+                Label lblCacheHitRatio = Controls.Find("lblCacheHitRatioValue", true).FirstOrDefault() as Label;
+                Label lblCacheSize = Controls.Find("lblCacheSizeValue", true).FirstOrDefault() as Label;
+                Label lblCacheHitCount = Controls.Find("lblCacheHitCountValue", true).FirstOrDefault() as Label;
+                Label lblCacheMissCount = Controls.Find("lblCacheMissCountValue", true).FirstOrDefault() as Label;
+                Label lblCacheMissRatio = Controls.Find("lblCacheMissRatioValue", true).FirstOrDefault() as Label;
+
+                if (lblCacheHitRatio != null)
+                {
+                    double hitRatio = stats.HitRatio * 100;
+                    lblCacheHitRatio.Text = $"{hitRatio:F2}%";
+                    lblCacheHitRatio.ForeColor = hitRatio >= 90 ? Color.Green : hitRatio >= 80 ? Color.Orange : Color.Red;
+                }
+
+                if (lblCacheSize != null)
+                {
+                    lblCacheSize.Text = stats.CurrentCacheSize.ToString("N0");
+                }
+
+                if (lblCacheHitCount != null)
+                {
+                    lblCacheHitCount.Text = stats.CacheHits.ToString("N0");
+                }
+
+                if (lblCacheMissCount != null)
+                {
+                    lblCacheMissCount.Text = stats.CacheMisses.ToString("N0");
+                }
+
+                if (lblCacheMissRatio != null)
+                {
+                    double missRatio = (1 - stats.HitRatio) * 100;
+                    lblCacheMissRatio.Text = $"{missRatio:F2}%";
+                }
+
+                _logger.LogDebug("更新缓存统计: 命中率={HitRatio:P2}, 缓存大小={Size}, 命中={Hits}, 未命中={Misses}",
+                    stats.HitRatio, stats.CurrentCacheSize, stats.CacheHits, stats.CacheMisses);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"更新缓存统计时出错: {ex.Message}");
             }
         }
 

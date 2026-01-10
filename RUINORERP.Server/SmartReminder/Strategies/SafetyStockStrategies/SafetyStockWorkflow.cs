@@ -41,7 +41,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         /// 工作流ID  仅保留运行时数据
         /// </summary>
         public string WorkflowId { get; set; }
- 
+
 
         // 临时存储当前产品的销售数据
         public List<SalesHistory> CurrentSalesData { get; set; }
@@ -52,7 +52,8 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         // 添加产品信息缓存字典
         public Dictionary<long, View_Inventory> ProductInfoCache { get; set; } = new Dictionary<long, View_Inventory>();
 
-
+        // 批量销售历史数据缓存 (优化N+1查询)
+        public Dictionary<long, List<SalesHistory>> SalesDataCache { get; set; } = new Dictionary<long, List<SalesHistory>>();
     }
 
     /// <summary>
@@ -152,6 +153,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 
             }
 
+
             return ExecutionResult.Next();
         }
 
@@ -170,7 +172,76 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
     }
 
     /// <summary>
-    /// 获取销售历史数据步骤
+    /// 批量获取销售历史数据步骤 (优化N+1查询问题)
+    /// </summary>
+    public class BatchLoadSalesHistory : StepBodyAsync
+    {
+        private readonly ILogger<BatchLoadSalesHistory> logger;
+        public BatchLoadSalesHistory(ILogger<BatchLoadSalesHistory> _logger)
+        {
+            logger = _logger;
+        }
+
+        public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
+        {
+            var data = context.Workflow.Data as SafetyStockData;
+            int days = data.Config.CalculationPeriodDays;
+
+            if (data.Config.ProductIds == null || !data.Config.ProductIds.Any())
+            {
+                logger.LogWarning("没有产品ID，跳过批量加载销售历史数据");
+                return ExecutionResult.Next();
+            }
+
+            ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
+            var db = sugarScope;
+
+            var endDate = DateTime.Now.Date;
+            var startDate = endDate.AddDays(-days);
+
+            // 批量查询所有产品的销售历史数据 (优化: 单次查询替代N次查询)
+            var allSalesData = await db.Queryable<View_SaleOutItems>()
+                .Where(i => data.Config.ProductIds.Contains(i.ProdDetailID.Value)
+                            && i.OutDate.Value >= startDate
+                            && i.OutDate.Value <= endDate)
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+            // 按产品ID分组
+            var salesByProduct = allSalesData
+                .GroupBy(i => i.ProdDetailID)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.GroupBy(d => d.OutDate.Value.Date)
+                        .Select(dg => new SalesHistory
+                        {
+                            Date = dg.Key,
+                            Quantity = dg.Sum(d => (decimal)d.Quantity)
+                        })
+                        .OrderBy(d => d.Date)
+                        .ToList()
+                );
+
+            // 存储到缓存字典
+            foreach (var productId in data.Config.ProductIds)
+            {
+                if (salesByProduct.TryGetValue(productId, out var salesData))
+                {
+                    data.SalesDataCache[productId] = salesData;
+                }
+                else
+                {
+                    data.SalesDataCache[productId] = new List<SalesHistory>();
+                }
+            }
+
+            logger.LogInformation($"批量加载销售历史数据完成，产品数: {data.Config.ProductIds.Count}, 总记录数: {allSalesData.Count}");
+            return ExecutionResult.Next();
+        }
+    }
+
+    /// <summary>
+    /// 获取销售历史数据步骤 (修改为从缓存获取)
     /// </summary>
     public class GetSalesHistory : StepBodyAsync
     {
@@ -186,29 +257,18 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         public override async Task<ExecutionResult> RunAsync(IStepExecutionContext context)
         {
             var data = context.Workflow.Data as SafetyStockData;
-            int days = data.Config.CalculationPeriodDays;
 
-            ISqlSugarClient sugarScope = Startup.GetFromFac<ISqlSugarClient>();
-            // 移除using块，让SqlSugar自己管理连接生命周期
-            var db = sugarScope;
-            var endDate = DateTime.Now.Date;
-            var startDate = endDate.AddDays(-days);
+            // 从批量加载的缓存中获取数据 (优化: 避免N+1查询)
+            if (data.SalesDataCache.TryGetValue(ProductId, out var salesData))
+            {
+                data.CurrentSalesData = salesData;
+            }
+            else
+            {
+                logger.LogWarning($"产品 {ProductId} 的销售历史数据不存在于缓存中");
+                data.CurrentSalesData = new List<SalesHistory>();
+            }
 
-            // 修复查询条件：包含结束日期当天的数据
-            data.CurrentSalesData = await db.Queryable<View_SaleOutItems>()
-                .Where(i => i.ProdDetailID == ProductId
-                            && i.OutDate.Value >= startDate
-                            && i.OutDate.Value <= endDate) // 修复：改为 <= 包含结束日期
-                .GroupBy(i => i.OutDate.Value.Date) // 按日期分组
-                .Select(g => new SalesHistory
-                {
-                    Date = g.OutDate.Value.Date, // 修复：使用正确的字段名
-                    Quantity = (decimal)SqlFunc.AggregateSum(g.Quantity)
-                })
-                .OrderBy(i => i.Date)
-                .ToListAsync();
-            
-            //logger.LogInformation($"获取产品 {ProductId} 的销售历史数据，共 {data.CurrentSalesData?.Count ?? 0} 条记录");
             return ExecutionResult.Next();
         }
     }
@@ -362,9 +422,12 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                     .Input(step => step.Config, data => data.Config)
                     .Input(step => step.ProductIds, data => data.Config.ProductIds)
 
+                // 批量加载销售历史数据 (优化: 在ForEach之前一次性加载所有数据)
+                .Then<BatchLoadSalesHistory>()
+
                 .ForEach(data => data.Config.ProductIds)
                     .Do(foreachBuilder => foreachBuilder
-                        // 获取销售历史数据
+                        // 从缓存获取销售历史数据 (优化: 避免N+1查询)
                         .StartWith<GetSalesHistory>()
                         .Input(step => step.ProductId, (data, context) => (long)context.Item)
                         // 计算安全库存
@@ -428,6 +491,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
             // 注册步骤和工作流
             services.AddTransient<SafetyStockWorkflow>();
             services.AddTransient<InitializeParameters>();
+            services.AddTransient<BatchLoadSalesHistory>(); // 注册批量加载步骤
             services.AddTransient<GetSalesHistory>();
             services.AddTransient<CalculateSafetyStock>();
             services.AddTransient<SendAlertNotification>();

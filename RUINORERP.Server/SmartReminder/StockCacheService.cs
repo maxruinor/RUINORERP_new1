@@ -88,9 +88,12 @@ namespace RUINORERP.Server.SmartReminder
         private const int PREHEAT_BATCH_SIZE = 100;  // 降低批次大小从500到100，减少启动时内存占用
         private const int MAX_PREHEAT_COUNT = 10000;  // 最大预热数量限制，防止过度预热
         private const int PREHEAT_DELAY_MS = 100;  // 批次间延迟，避免数据库压力过大
-        
-        // 缓存统计信息
-        private readonly CacheStatistics _statistics = new CacheStatistics();
+
+        // 缓存统计信息 - 使用volatile变量支持Interlocked操作
+        private volatile int _totalRequests = 0;
+        private volatile int _cacheHits = 0;
+        private volatile int _cacheMisses = 0;
+        private volatile int _currentCacheSize = 0;
         private readonly ConcurrentDictionary<string, bool> _cacheKeys = new ConcurrentDictionary<string, bool>();
         private readonly ReaderWriterLockSlim _statisticsLock = new ReaderWriterLockSlim();
         
@@ -175,46 +178,52 @@ namespace RUINORERP.Server.SmartReminder
         {
             if (productIds == null || !productIds.Any())
                 return new Dictionary<long, tb_Inventory>();
-            
-            var result = new Dictionary<long, tb_Inventory>();
+
+            var productIdsList = productIds.ToList();
+            var result = new Dictionary<long, tb_Inventory>(productIdsList.Count);
             var missingProductIds = new List<long>();
-            
-            // 统计请求
-            IncrementRequestCount(productIds.Count());
-            
-            // 首先尝试从缓存获取
-            foreach (long productId in productIds)
+            var cacheKeys = productIdsList.ToDictionary(id => id, id => $"{STOCK_CACHE_PREFIX}{id}");
+
+            // 使用 Interlocked 批量统计请求，减少锁竞争
+            Interlocked.Add(ref _totalRequests, productIdsList.Count);
+
+            // 首先尝试从缓存获取 (优化: 批量查找)
+            foreach (var (productId, cacheKey) in cacheKeys)
             {
-                string cacheKey = $"{STOCK_CACHE_PREFIX}{productId}";
                 if (_cache.TryGetValue(cacheKey, out tb_Inventory cachedStock))
                 {
                     result[productId] = cachedStock;
-                    IncrementCacheHit();
+                    Interlocked.Increment(ref _cacheHits);
                     _logger.LogDebug("批量获取缓存命中: ProductID={ProductId}", productId);
                 }
                 else
                 {
                     missingProductIds.Add(productId);
-                    IncrementCacheMiss();
+                    Interlocked.Increment(ref _cacheMisses);
                 }
             }
-            
+
             // 批量查询缺失的数据
-            if (missingProductIds.Any())
+            if (missingProductIds.Count > 0)
             {
                 var missingStocks = await LoadStocksFromDatabaseAsync(missingProductIds).ConfigureAwait(false);
 
-                // 更新缓存
-                foreach (var stock in missingStocks)
+                // 并行更新缓存 (优化: 减少 async 等待)
+                if (missingStocks.Count > 0)
                 {
-                    if (stock != null)
+                    var cacheTasks = missingStocks.Select(async stock =>
                     {
-                        await RefreshStockCacheInternalAsync(stock).ConfigureAwait(false);
-                        result[stock.ProdDetailID] = stock;
-                    }
+                        if (stock != null)
+                        {
+                            await RefreshStockCacheInternalAsync(stock).ConfigureAwait(false);
+                            result[stock.ProdDetailID] = stock;
+                        }
+                    });
+
+                    await Task.WhenAll(cacheTasks).ConfigureAwait(false);
                 }
             }
-            
+
             return result;
         }
         
@@ -324,9 +333,9 @@ namespace RUINORERP.Server.SmartReminder
             {
                 return new CacheStatistics
                 {
-                    CacheHits = _statistics.CacheHits,
-                    CacheMisses = _statistics.CacheMisses,
-                    TotalRequests = _statistics.TotalRequests,
+                    CacheHits = _cacheHits,
+                    CacheMisses = _cacheMisses,
+                    TotalRequests = _totalRequests,
                     CurrentCacheSize = _cacheKeys.Count
                 };
             }
@@ -455,52 +464,52 @@ namespace RUINORERP.Server.SmartReminder
         }
         
         #region 统计信息更新方法
-        
+
         private void IncrementRequestCount(int count = 1)
         {
             _statisticsLock.EnterWriteLock();
             try
             {
-                _statistics.TotalRequests += count;
+                _totalRequests += count;
             }
             finally
             {
                 _statisticsLock.ExitWriteLock();
             }
         }
-        
+
         private void IncrementCacheHit()
         {
             _statisticsLock.EnterWriteLock();
             try
             {
-                _statistics.CacheHits++;
+                _cacheHits++;
             }
             finally
             {
                 _statisticsLock.ExitWriteLock();
             }
         }
-        
+
         private void IncrementCacheMiss()
         {
             _statisticsLock.EnterWriteLock();
             try
             {
-                _statistics.CacheMisses++;
+                _cacheMisses++;
             }
             finally
             {
                 _statisticsLock.ExitWriteLock();
             }
         }
-        
+
         private void UpdateCacheSize()
         {
             _statisticsLock.EnterWriteLock();
             try
             {
-                _statistics.CurrentCacheSize = _cacheKeys.Count;
+                _currentCacheSize = _cacheKeys.Count;
             }
             finally
             {

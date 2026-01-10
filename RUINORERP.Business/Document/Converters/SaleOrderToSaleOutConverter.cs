@@ -20,6 +20,8 @@ using RUINORERP.Model.Context;
 using RUINORERP.IServices;
 using System.Threading;
 using RUINORERP.Business.Cache;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks; // 确保引入IUnitOfWorkManage所在的命名空间
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -33,21 +35,25 @@ namespace RUINORERP.Business.Document.Converters
         private readonly ILogger<SaleOrderToSaleOutConverter> _logger;
         private readonly tb_SaleOrderController<tb_SaleOrder> _saleOrderController;
         private readonly IEntityCacheManager _cacheManager;
+        private readonly IUnitOfWorkManage _unitOfWorkManage; // 添加IUnitOfWorkManage依赖
         /// <summary>
         /// 构造函数 - 依赖注入
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="saleOrderController">销售订单控制器（用于调用核心转换逻辑）</param>
+        /// <param name="cacheManager">实体缓存管理器</param>
+        /// <param name="unitOfWorkManage">工作单元管理器</param>
         public SaleOrderToSaleOutConverter(
             ILogger<SaleOrderToSaleOutConverter> logger,
             tb_SaleOrderController<tb_SaleOrder> saleOrderController,
-            IEntityCacheManager cacheManager)
+            IEntityCacheManager cacheManager,
+            IUnitOfWorkManage unitOfWorkManage)
             : base(logger)
         {
             _saleOrderController = saleOrderController ?? throw new ArgumentNullException(nameof(saleOrderController));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheManager = cacheManager;
-
+            _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
         }
 
         /// <summary>
@@ -120,6 +126,18 @@ namespace RUINORERP.Business.Document.Converters
                     result.CanConvert = false;
                     result.ErrorMessage = "销售订单没有明细，无法生成销售出库单";
                     return result;
+                }
+
+                // 检查当前销售订单是否已生成过销售出库单
+                int existingCount = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
+                    .Where(c => c.SOrder_ID == source.SOrder_ID)
+                    .CountAsync();
+
+                if (existingCount > 0)
+                {
+                    // 添加警告信息，提示用户当前销售订单已生成过销售出库单
+                    result.WarningMessages.Add($"当前销售订单已生成过{existingCount}张销售出库单，是否继续生成？");
+                    result.InfoMessages.Add("系统支持同一销售订单的多次出库操作，但请注意避免重复生成相同的出库单。");
                 }
 
                 // 添加明细数量业务验证

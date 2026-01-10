@@ -946,28 +946,28 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="saleOut">销售出库单</param>
         /// <returns>是否满足自动审核条件</returns>
-        private async Task<bool> ShouldAutoAuditSalesOut(tb_SaleOut saleOut)
+        private async Task<(bool IsSuccess, string Reason)> ShouldAutoAuditSalesOut(tb_SaleOut saleOut)
         {
             // 检查财务模块是否启用
             AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
             if (!authorizeController.EnableFinancialModule())
             {
-                return false;
+                return (false, "财务模块未启用");
             }
             // 检查配置开关是否启用
             if (!_appContext.FMConfig.EnableAutoAuditSalesOutboundForFullPrepaymentOrders)
             {
-                return false;
+                return (false, "未启用全额预收款订单自动审核配置");
             }
             if (saleOut.PayStatus != (int)PayStatus.全额预付)
             {
-                return false;
+                return (false, "付款状态不是全额预付");
             }
 
             // 检查是否有关联的销售订单
             if (!saleOut.SOrder_ID.HasValue)
             {
-                return false;
+                return (false, "未关联销售订单");
             }
 
             // 加载销售订单数据
@@ -977,7 +977,7 @@ namespace RUINORERP.Business
 
             if (saleOrder == null)
             {
-                return false;
+                return (false, "关联的销售订单不存在");
             }
 
             // 判断是否为全额预收款订单
@@ -985,15 +985,14 @@ namespace RUINORERP.Business
             // 实际应根据业务配置确定具体的全额预收款类型ID
             if (!saleOrder.Paytype_ID.HasValue)
             {
-                return false;
+                return (false, "销售订单未设置付款类型");
             }
 
             //如果为账期付款类型则不处理
             if (_appContext.PaymentMethodOfPeriod.Paytype_ID == saleOrder.Paytype_ID.Value)
             {
-                return false;
+                return (false, "账期付款类型订单不支持自动审核");
             }
-
 
 
             // 加载付款类型信息
@@ -1003,7 +1002,7 @@ namespace RUINORERP.Business
 
             if (paymentMethod == null)
             {
-                return false;
+                return (false, "付款类型不存在");
             }
 
 
@@ -1019,7 +1018,7 @@ namespace RUINORERP.Business
 
             if (prePayments == null || prePayments.Count == 0)
             {
-                return false;
+                return (false, "不存在未核销的预收款");
             }
 
             // 计算预收款总额
@@ -1028,10 +1027,10 @@ namespace RUINORERP.Business
             // 检查预收款是否足够支付出库金额
             if (totalPrePayment < saleOut.TotalAmount - 0.01m) // 允许0.01的误差
             {
-                return false;
+                return (false, $"预收款金额不足，需要{saleOut.TotalAmount}，可用{totalPrePayment}");
             }
 
-            return true;
+            return (true, "满足自动审核条件");
         }
 
         /// <summary>
@@ -1047,12 +1046,12 @@ namespace RUINORERP.Business
             try
             {
                 // 检查是否满足自动审核条件
-                bool shouldAutoAudit = await ShouldAutoAuditSalesOut(saleOut);
+                var autoAuditResult = await ShouldAutoAuditSalesOut(saleOut);
 
-                if (!shouldAutoAudit)
+                if (!autoAuditResult.IsSuccess)
                 {
                     result.Succeeded = false;
-                    result.ErrorMsg = "不满足自动审核条件,跳过自动审核";
+                    result.ErrorMsg = $"不满足自动审核条件,跳过自动审核: {autoAuditResult.Reason}";
                     return result;
                 }
 

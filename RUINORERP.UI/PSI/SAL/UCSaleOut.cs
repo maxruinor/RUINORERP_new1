@@ -1115,12 +1115,11 @@ namespace RUINORERP.UI.PSI.SAL
                                     Refreshs();
                                 });
                             }
-                            else if (!string.IsNullOrEmpty(autoAuditResult.ErrorMsg) && 
-                                    !autoAuditResult.ErrorMsg.Contains("不满足自动审核条件"))
+                            else if (!string.IsNullOrEmpty(autoAuditResult.ErrorMsg))
                             {
                                 this.Invoke((MethodInvoker)delegate
                                 {
-                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】自动审核失败:{autoAuditResult.ErrorMsg}", Color.Red);
+                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】{autoAuditResult.ErrorMsg}", Color.Red);
                                 });
                             }
                         }

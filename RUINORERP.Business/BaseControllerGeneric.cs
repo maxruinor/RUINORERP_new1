@@ -451,7 +451,7 @@ namespace RUINORERP.Business
 
         public virtual ISugarQueryable<T> BaseGetQueryableAsync()
         {
-            return _unitOfWorkManage.GetDbClient().Queryable<T>();
+            return _unitOfWorkManage.GetDbClient().Queryable<T>().With(SqlWith.NoLock);
 
             //子类重写
             //throw new Exception("子类要重写BaseGetQueryableAsync");

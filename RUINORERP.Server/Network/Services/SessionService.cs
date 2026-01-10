@@ -1407,6 +1407,9 @@ namespace RUINORERP.Server.Network.Services
                 // 检查心跳异常
                 var abnormalCount = HeartbeatCheck();
 
+                // 清理过期的待处理请求
+                CleanupPendingRequests();
+
                 lock (_lockObject)
                 {
                     _statistics.TimeoutSessions += removedCount;
@@ -1418,6 +1421,36 @@ namespace RUINORERP.Server.Network.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "清理和心跳检查回调执行失败");
+            }
+        }
+
+        /// <summary>
+        /// 清理过期的待处理请求，防止内存泄漏
+        /// </summary>
+        private void CleanupPendingRequests()
+        {
+            try
+            {
+                var cleanedCount = 0;
+                var now = DateTime.UtcNow;
+
+                // 查找已完成的任务（Task.IsCompleted为true）
+                foreach (var kvp in _pendingRequests.Where(kvp => kvp.Value.Task.IsCompleted))
+                {
+                    if (_pendingRequests.TryRemove(kvp.Key, out var tcs))
+                    {
+                        cleanedCount++;
+                    }
+                }
+
+                if (cleanedCount > 0)
+                {
+                    _logger.LogDebug("清理了 {Count} 个已完成的待处理请求", cleanedCount);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理待处理请求时发生错误");
             }
         }
 

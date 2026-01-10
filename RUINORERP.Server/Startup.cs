@@ -475,11 +475,24 @@ namespace RUINORERP.Server
 
 
 
-            //Add Memory Cache
+
+            //Add Memory Cache - 统一配置单个MemoryCache实例，避免重复注册占用内存
             services.AddOptions();
-            services.AddMemoryCache();
-            services.AddMemoryCacheSetup();
-            services.AddDistributedMemoryCache();
+            services.AddMemoryCache(options =>
+            {
+                // 设置内存缓存大小限制为500MB
+                options.SizeLimit = 500 * 1024 * 1024;
+
+                // 当内存压力达到75%时，开始压缩缓存
+                options.CompactionPercentage = 0.25;
+
+                // 每1分钟扫描一次过期缓存
+                options.ExpirationScanFrequency = TimeSpan.FromMinutes(1);
+            });
+
+            // 注释掉重复的缓存注册，避免多个独立的内存池
+            // services.AddMemoryCacheSetup();
+            // services.AddDistributedMemoryCache();
 
 
 

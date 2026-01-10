@@ -85,7 +85,9 @@ namespace RUINORERP.Server.SmartReminder
         private const int DEFAULT_CACHE_EXPIRATION_SECONDS = 30;
         private const int HIGH_PRIORITY_CACHE_EXPIRATION_SECONDS = 60;
         private const int BULK_QUERY_BATCH_SIZE = 100;
-        private const int PREHEAT_BATCH_SIZE = 500;
+        private const int PREHEAT_BATCH_SIZE = 100;  // 降低批次大小从500到100，减少启动时内存占用
+        private const int MAX_PREHEAT_COUNT = 10000;  // 最大预热数量限制，防止过度预热
+        private const int PREHEAT_DELAY_MS = 100;  // 批次间延迟，避免数据库压力过大
         
         // 缓存统计信息
         private readonly CacheStatistics _statistics = new CacheStatistics();
@@ -200,14 +202,14 @@ namespace RUINORERP.Server.SmartReminder
             // 批量查询缺失的数据
             if (missingProductIds.Any())
             {
-                var missingStocks = await LoadStocksFromDatabaseAsync(missingProductIds);
-                
+                var missingStocks = await LoadStocksFromDatabaseAsync(missingProductIds).ConfigureAwait(false);
+
                 // 更新缓存
                 foreach (var stock in missingStocks)
                 {
                     if (stock != null)
                     {
-                        await RefreshStockCacheInternalAsync(stock);
+                        await RefreshStockCacheInternalAsync(stock).ConfigureAwait(false);
                         result[stock.ProdDetailID] = stock;
                     }
                 }
@@ -218,10 +220,10 @@ namespace RUINORERP.Server.SmartReminder
         
         public async Task RefreshStockCacheAsync(long productId)
         {
-            tb_Inventory stock = await LoadStockFromDatabaseAsync(productId);
+            tb_Inventory stock = await LoadStockFromDatabaseAsync(productId).ConfigureAwait(false);
             if (stock != null)
             {
-                await RefreshStockCacheInternalAsync(stock);
+                await RefreshStockCacheInternalAsync(stock).ConfigureAwait(false);
                 _logger.LogInformation("库存缓存已刷新: ProductID={ProductId}", productId);
             }
         }
@@ -230,17 +232,17 @@ namespace RUINORERP.Server.SmartReminder
         {
             if (productIds == null || !productIds.Any())
                 return;
-            
-            var stocks = await LoadStocksFromDatabaseAsync(productIds);
-            
+
+            var stocks = await LoadStocksFromDatabaseAsync(productIds).ConfigureAwait(false);
+
             foreach (var stock in stocks)
             {
                 if (stock != null)
                 {
-                    await RefreshStockCacheInternalAsync(stock);
+                    await RefreshStockCacheInternalAsync(stock).ConfigureAwait(false);
                 }
             }
-            
+
             _logger.LogInformation("批量库存缓存已刷新: 数量={Count}", stocks.Count);
         }
         
@@ -272,29 +274,36 @@ namespace RUINORERP.Server.SmartReminder
                 
                 _isPreheating = true;
                 _logger.LogInformation("开始缓存预热");
-                
+
                 int totalPreheated = 0;
                 int batchNumber = 1;
-                
-                // 分批获取产品ID并预热缓存
-                while (true)
+
+                // 分批获取产品ID并预热缓存，添加最大数量限制
+                while (totalPreheated < MAX_PREHEAT_COUNT)
                 {
-                    var productIds = await GetProductIdsForPreheatAsync(batchNumber, batchSize);
+                    var productIds = await GetProductIdsForPreheatAsync(batchNumber, batchSize).ConfigureAwait(false);
                     if (!productIds.Any())
                         break;
-                    
-                    await GetStocksAsync(productIds);
+
+                    await GetStocksAsync(productIds).ConfigureAwait(false);
                     totalPreheated += productIds.Count;
-                    
-                    _logger.LogInformation("缓存预热批次 {BatchNumber} 已完成，预热数量: {Count}, 累计预热: {Total}", 
+
+                    _logger.LogInformation("缓存预热批次 {BatchNumber} 已完成，预热数量: {Count}, 累计预热: {Total}",
                         batchNumber, productIds.Count, totalPreheated);
-                    
+
                     batchNumber++;
-                    
-                    // 避免预热过程占用过多资源
-                    await Task.Delay(500);
+
+                    // 达到最大预热数量，停止预热
+                    if (totalPreheated >= MAX_PREHEAT_COUNT)
+                    {
+                        _logger.LogInformation("已达到最大预热数量限制 {MaxCount}", MAX_PREHEAT_COUNT);
+                        break;
+                    }
+
+                    // 使用配置的批次间延迟，避免数据库压力过大
+                    await Task.Delay(PREHEAT_DELAY_MS).ConfigureAwait(false);
                 }
-                
+
                 _logger.LogInformation("缓存预热完成，共预热 {Count} 条记录", totalPreheated);
             }
             catch (Exception ex)

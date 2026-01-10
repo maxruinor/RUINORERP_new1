@@ -3905,6 +3905,9 @@
     <EmbeddedResource Include="BI\UCGroupEmployeesAssignee.resx">
       <DependentUpon>UCGroupEmployeesAssignee.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="BI\UCReminderObjectLinkEdit.resx">
+      <DependentUpon>UCReminderObjectLinkEdit.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="BI\UCReminderRuleEdit.resx">
       <DependentUpon>UCReminderRuleEdit.cs</DependentUpon>
     </EmbeddedResource>

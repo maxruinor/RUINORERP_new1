@@ -261,26 +261,7 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        private void btnConfigLink_Click(object sender, EventArgs e)
-        {
-            // 打开提醒对象链路配置界面
-            using (var frmLinkConfig = new frmReminderLinkConfig())
-            {
-                if (frmLinkConfig.ShowDialog() == DialogResult.OK)
-                {
-                    // 获取选择的链路ID
-                    var selectedLinkId = frmLinkConfig.SelectedLinkId;
-                    if (selectedLinkId > 0)
-                    {
-                        // 将链路ID保存到规则中
-                        entity.LinkId = selectedLinkId;
-                        // 界面显示将在后续UI设计中添加
-                    }
-                }
-            }
-        }
-
-
+       
 
         private  void UCReminderRuleEdit_Load(object sender, EventArgs e)
         {

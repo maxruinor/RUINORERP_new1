@@ -58,18 +58,22 @@ namespace RUINORERP.UI.BI
             this.btnTest = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBasicInfo)).BeginInit();
             this.kryptonPageBasicInfo.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageSourceConfig)).BeginInit();
             this.kryptonPageSourceConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelSourceValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbSourceType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBillConfig)).BeginInit();
             this.kryptonPageBillConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.txtBillStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbActionType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageTargetConfig)).BeginInit();
             this.kryptonPageTargetConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelTargetValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbTargetType)).BeginInit();
@@ -119,6 +123,7 @@ namespace RUINORERP.UI.BI
             // 
             // kryptonPageBasicInfo
             // 
+            this.kryptonPageBasicInfo.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.kryptonPageBasicInfo.Controls.Add(this.chkIsEnabled);
             this.kryptonPageBasicInfo.Controls.Add(this.txtDescription);
             this.kryptonPageBasicInfo.Controls.Add(this.kryptonLabel3);
@@ -129,14 +134,16 @@ namespace RUINORERP.UI.BI
             this.kryptonPageBasicInfo.LastVisibleSet = true;
             this.kryptonPageBasicInfo.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageBasicInfo.Name = "kryptonPageBasicInfo";
-            this.kryptonPageBasicInfo.Size = new System.Drawing.Size(672, 386);
+            this.kryptonPageBasicInfo.Size = new System.Drawing.Size(678, 389);
             this.kryptonPageBasicInfo.Text = "基本信息";
+            this.kryptonPageBasicInfo.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageBasicInfo.UniqueName = "b604054d1e0d41459981d99bf1c3d4c4";
             // 
             // chkIsEnabled
             // 
             this.chkIsEnabled.Location = new System.Drawing.Point(120, 140);
             this.chkIsEnabled.Name = "chkIsEnabled";
-            this.chkIsEnabled.Size = new System.Drawing.Size(80, 20);
+            this.chkIsEnabled.Size = new System.Drawing.Size(49, 20);
             this.chkIsEnabled.TabIndex = 5;
             this.chkIsEnabled.Values.Text = "启用";
             // 
@@ -152,7 +159,7 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel3.Location = new System.Drawing.Point(30, 70);
             this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel3.TabIndex = 3;
             this.kryptonLabel3.Values.Text = "链路描述:";
             // 
@@ -167,7 +174,7 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel2.Location = new System.Drawing.Point(30, 140);
             this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel2.Size = new System.Drawing.Size(39, 20);
             this.kryptonLabel2.TabIndex = 1;
             this.kryptonLabel2.Values.Text = "状态:";
             // 
@@ -175,12 +182,13 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel1.Location = new System.Drawing.Point(30, 30);
             this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel1.TabIndex = 0;
             this.kryptonLabel1.Values.Text = "链路名称:";
             // 
             // kryptonPageSourceConfig
             // 
+            this.kryptonPageSourceConfig.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.kryptonPageSourceConfig.Controls.Add(this.panelSourceValue);
             this.kryptonPageSourceConfig.Controls.Add(this.cmbSourceType);
             this.kryptonPageSourceConfig.Controls.Add(this.kryptonLabel5);
@@ -189,8 +197,10 @@ namespace RUINORERP.UI.BI
             this.kryptonPageSourceConfig.LastVisibleSet = true;
             this.kryptonPageSourceConfig.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageSourceConfig.Name = "kryptonPageSourceConfig";
-            this.kryptonPageSourceConfig.Size = new System.Drawing.Size(672, 386);
+            this.kryptonPageSourceConfig.Size = new System.Drawing.Size(678, 389);
             this.kryptonPageSourceConfig.Text = "提醒源配置";
+            this.kryptonPageSourceConfig.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageSourceConfig.UniqueName = "eee0760e76ef4507bb5d4e986b7b937a";
             // 
             // panelSourceValue
             // 
@@ -202,16 +212,18 @@ namespace RUINORERP.UI.BI
             // cmbSourceType
             // 
             this.cmbSourceType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbSourceType.DropDownWidth = 250;
+            this.cmbSourceType.IntegralHeight = false;
             this.cmbSourceType.Location = new System.Drawing.Point(120, 30);
             this.cmbSourceType.Name = "cmbSourceType";
-            this.cmbSourceType.Size = new System.Drawing.Size(250, 23);
+            this.cmbSourceType.Size = new System.Drawing.Size(250, 21);
             this.cmbSourceType.TabIndex = 2;
             // 
             // kryptonLabel5
             // 
             this.kryptonLabel5.Location = new System.Drawing.Point(30, 70);
             this.kryptonLabel5.Name = "kryptonLabel5";
-            this.kryptonLabel5.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel5.Size = new System.Drawing.Size(52, 20);
             this.kryptonLabel5.TabIndex = 1;
             this.kryptonLabel5.Values.Text = "提醒源:";
             // 
@@ -219,12 +231,13 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel4.Location = new System.Drawing.Point(30, 30);
             this.kryptonLabel4.Name = "kryptonLabel4";
-            this.kryptonLabel4.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel4.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel4.TabIndex = 0;
             this.kryptonLabel4.Values.Text = "提醒源类型:";
             // 
             // kryptonPageBillConfig
             // 
+            this.kryptonPageBillConfig.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.kryptonPageBillConfig.Controls.Add(this.txtBillStatus);
             this.kryptonPageBillConfig.Controls.Add(this.cmbActionType);
             this.kryptonPageBillConfig.Controls.Add(this.cmbBizType);
@@ -235,8 +248,10 @@ namespace RUINORERP.UI.BI
             this.kryptonPageBillConfig.LastVisibleSet = true;
             this.kryptonPageBillConfig.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageBillConfig.Name = "kryptonPageBillConfig";
-            this.kryptonPageBillConfig.Size = new System.Drawing.Size(672, 386);
+            this.kryptonPageBillConfig.Size = new System.Drawing.Size(678, 389);
             this.kryptonPageBillConfig.Text = "单据配置";
+            this.kryptonPageBillConfig.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageBillConfig.UniqueName = "0c5f23026c3f43daa0b9c03179b3eb53";
             // 
             // txtBillStatus
             // 
@@ -248,24 +263,28 @@ namespace RUINORERP.UI.BI
             // cmbActionType
             // 
             this.cmbActionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbActionType.DropDownWidth = 250;
+            this.cmbActionType.IntegralHeight = false;
             this.cmbActionType.Location = new System.Drawing.Point(120, 70);
             this.cmbActionType.Name = "cmbActionType";
-            this.cmbActionType.Size = new System.Drawing.Size(250, 23);
+            this.cmbActionType.Size = new System.Drawing.Size(250, 21);
             this.cmbActionType.TabIndex = 4;
             // 
             // cmbBizType
             // 
             this.cmbBizType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbBizType.DropDownWidth = 250;
+            this.cmbBizType.IntegralHeight = false;
             this.cmbBizType.Location = new System.Drawing.Point(120, 30);
             this.cmbBizType.Name = "cmbBizType";
-            this.cmbBizType.Size = new System.Drawing.Size(250, 23);
+            this.cmbBizType.Size = new System.Drawing.Size(250, 21);
             this.cmbBizType.TabIndex = 3;
             // 
             // kryptonLabel8
             // 
             this.kryptonLabel8.Location = new System.Drawing.Point(30, 110);
             this.kryptonLabel8.Name = "kryptonLabel8";
-            this.kryptonLabel8.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel8.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel8.TabIndex = 2;
             this.kryptonLabel8.Values.Text = "单据状态:";
             // 
@@ -273,7 +292,7 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel7.Location = new System.Drawing.Point(30, 70);
             this.kryptonLabel7.Name = "kryptonLabel7";
-            this.kryptonLabel7.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel7.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel7.TabIndex = 1;
             this.kryptonLabel7.Values.Text = "操作类型:";
             // 
@@ -281,12 +300,13 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel6.Location = new System.Drawing.Point(30, 30);
             this.kryptonLabel6.Name = "kryptonLabel6";
-            this.kryptonLabel6.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel6.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel6.TabIndex = 0;
             this.kryptonLabel6.Values.Text = "单据类型:";
             // 
             // kryptonPageTargetConfig
             // 
+            this.kryptonPageTargetConfig.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.kryptonPageTargetConfig.Controls.Add(this.panelTargetValue);
             this.kryptonPageTargetConfig.Controls.Add(this.cmbTargetType);
             this.kryptonPageTargetConfig.Controls.Add(this.kryptonLabel10);
@@ -295,8 +315,10 @@ namespace RUINORERP.UI.BI
             this.kryptonPageTargetConfig.LastVisibleSet = true;
             this.kryptonPageTargetConfig.MinimumSize = new System.Drawing.Size(50, 50);
             this.kryptonPageTargetConfig.Name = "kryptonPageTargetConfig";
-            this.kryptonPageTargetConfig.Size = new System.Drawing.Size(672, 386);
+            this.kryptonPageTargetConfig.Size = new System.Drawing.Size(678, 389);
             this.kryptonPageTargetConfig.Text = "提醒目标配置";
+            this.kryptonPageTargetConfig.ToolTipTitle = "Page ToolTip";
+            this.kryptonPageTargetConfig.UniqueName = "143fe1ed50a848849c4c9a76c4f934cc";
             // 
             // panelTargetValue
             // 
@@ -308,16 +330,18 @@ namespace RUINORERP.UI.BI
             // cmbTargetType
             // 
             this.cmbTargetType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbTargetType.DropDownWidth = 250;
+            this.cmbTargetType.IntegralHeight = false;
             this.cmbTargetType.Location = new System.Drawing.Point(120, 30);
             this.cmbTargetType.Name = "cmbTargetType";
-            this.cmbTargetType.Size = new System.Drawing.Size(250, 23);
+            this.cmbTargetType.Size = new System.Drawing.Size(250, 21);
             this.cmbTargetType.TabIndex = 2;
             // 
             // kryptonLabel10
             // 
             this.kryptonLabel10.Location = new System.Drawing.Point(30, 70);
             this.kryptonLabel10.Name = "kryptonLabel10";
-            this.kryptonLabel10.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel10.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel10.TabIndex = 1;
             this.kryptonLabel10.Values.Text = "提醒目标:";
             // 
@@ -325,7 +349,7 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonLabel9.Location = new System.Drawing.Point(30, 30);
             this.kryptonLabel9.Name = "kryptonLabel9";
-            this.kryptonLabel9.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel9.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel9.TabIndex = 0;
             this.kryptonLabel9.Values.Text = "目标类型:";
             // 
@@ -382,21 +406,25 @@ namespace RUINORERP.UI.BI
             this.Name = "UCReminderObjectLinkEdit";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "提醒对象链路编辑";
+            ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).EndInit();
             this.kryptonNavigator1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBasicInfo)).EndInit();
             this.kryptonPageBasicInfo.ResumeLayout(false);
             this.kryptonPageBasicInfo.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageSourceConfig)).EndInit();
             this.kryptonPageSourceConfig.ResumeLayout(false);
             this.kryptonPageSourceConfig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelSourceValue)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbSourceType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBillConfig)).EndInit();
             this.kryptonPageBillConfig.ResumeLayout(false);
             this.kryptonPageBillConfig.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.txtBillStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbActionType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbBizType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonPageTargetConfig)).EndInit();
             this.kryptonPageTargetConfig.ResumeLayout(false);
             this.kryptonPageTargetConfig.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelTargetValue)).EndInit();

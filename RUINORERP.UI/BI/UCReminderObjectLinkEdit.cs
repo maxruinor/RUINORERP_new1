@@ -21,6 +21,7 @@ using RUINORERP.UI.ToolForm;
 using RUINORERP.Model.ReminderModel;
 using RUINORERP.Common.Helper;
 using RUINORERP.Business.CommService;
+using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.BI
 {
@@ -40,7 +41,18 @@ namespace RUINORERP.UI.BI
 
         public override void BindData(BaseEntity _entity)
         {
+            // 设计时不执行数据绑定逻辑，避免访问运行时服务
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             entity = _entity as tb_ReminderObjectLink;
+            if (entity == null)
+            {
+                return;
+            }
+
             if (entity.LinkId == 0)
             {
                 entity.IsEnabled = true;
@@ -53,9 +65,17 @@ namespace RUINORERP.UI.BI
             }
 
             // 加载基础数据
-            UserInfos = _cacheManager.GetEntityList<tb_UserInfo>();
-            RoleInfos = _cacheManager.GetEntityList<tb_RoleInfo>();
-            DepartmentInfos = _cacheManager.GetEntityList<tb_Department>();
+            try
+            {
+                UserInfos = _cacheManager.GetEntityList<tb_UserInfo>();
+                RoleInfos = _cacheManager.GetEntityList<tb_RoleInfo>();
+                DepartmentInfos = _cacheManager.GetEntityList<tb_Department>();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger.Error(ex, "加载基础数据失败");
+                return;
+            }
 
             // 绑定基本信息
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.LinkName, txtLinkName, BindDataType4TextBox.Text, false);
@@ -70,9 +90,19 @@ namespace RUINORERP.UI.BI
             BindTargetConfig();
 
             // 初始化验证
-            if (entity != null && !string.IsNullOrEmpty(entity.LinkName))
+            if (!string.IsNullOrEmpty(entity.LinkName))
             {
-                base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkValidator>(), kryptonPanel1.Controls);
+                try
+                {
+                    if (MainForm.Instance?.AppContext != null)
+                    {
+                        base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkValidator>(), kryptonPanel1.Controls);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogError(ex, "初始化验证失败");
+                }
             }
 
             // 属性变化事件
@@ -258,12 +288,29 @@ namespace RUINORERP.UI.BI
             {
                 if (cmb.SelectedItem != null)
                 {
-                    var selectedItem = cmb.SelectedItem;
-                    var type = selectedItem.GetType();
-                    var property = type.GetProperty("PrimaryKeyID");
-                    if (property != null)
+                    // 检查设计时
+                    if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
                     {
-                        entity.SourceValue = Convert.ToInt64(property.GetValue(selectedItem));
+                        return;
+                    }
+
+                    var selectedItem = cmb.SelectedItem;
+                    if (selectedItem != null)
+                    {
+                        try
+                        {
+                            // 尝试获取Value属性，这是我们在CreateComboBoxControl中创建的匿名类型属性
+                            var type = selectedItem.GetType();
+                            var valueProperty = type.GetProperty("Value");
+                            if (valueProperty != null)
+                            {
+                                entity.SourceValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance?.logger?.LogError(ex, "更新提醒源值失败");
+                        }
                     }
                 }
             }
@@ -278,12 +325,29 @@ namespace RUINORERP.UI.BI
             {
                 if (cmb.SelectedItem != null)
                 {
-                    var selectedItem = cmb.SelectedItem;
-                    var type = selectedItem.GetType();
-                    var property = type.GetProperty("PrimaryKeyID");
-                    if (property != null)
+                    // 检查设计时
+                    if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
                     {
-                        entity.TargetValue = Convert.ToInt64(property.GetValue(selectedItem));
+                        return;
+                    }
+
+                    var selectedItem = cmb.SelectedItem;
+                    if (selectedItem != null)
+                    {
+                        try
+                        {
+                            // 尝试获取Value属性，这是我们在CreateComboBoxControl中创建的匿名类型属性
+                            var type = selectedItem.GetType();
+                            var valueProperty = type.GetProperty("Value");
+                            if (valueProperty != null)
+                            {
+                                entity.TargetValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance?.logger?.LogError(ex, "更新提醒目标值失败");
+                        }
                     }
                 }
             }
@@ -291,6 +355,12 @@ namespace RUINORERP.UI.BI
 
         private void btnTest_Click(object sender, EventArgs e)
         {
+            // 设计时不执行测试逻辑
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             // 测试链路配置
             try
             {

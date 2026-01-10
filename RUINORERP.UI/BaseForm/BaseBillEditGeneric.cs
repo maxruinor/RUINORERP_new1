@@ -141,17 +141,17 @@ namespace RUINORERP.UI.BaseForm
                 // 创建消息数据
                 MessageData messageData = new MessageData
                 {
-                    MessageId = Guid.NewGuid().ToString(),
+                    MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
                     Title = $"单据{update.OperationDescription}",
                     Content = $"单据{update.BillNo}已{update.OperationDescription}",
-                    MessageType = MessageType.TaskStatusChange,
-                    BizType = (int)update.BusinessType,
+                    MessageType = MessageType.Business,
+                    BizType = update.BusinessType,
                     BizData = update,
                     SenderId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                     SenderName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName,
                     CreateTime = DateTime.Now,
                     IsRead = false,
-                    Priority = MessagePriority.Normal
+                    Priority = 0
                 };
 
                 // 获取提醒对象链路引擎
@@ -161,7 +161,7 @@ namespace RUINORERP.UI.BaseForm
                 await linkEngine.ProcessBillStatusChangeAsync(
                     (int)update.BusinessType,
                     (int)update.UpdateType,
-                    (int)update.CurrentStatus,
+                    0,
                     update.InitiatorUserId.ToLong(),
                     messageData);
             }

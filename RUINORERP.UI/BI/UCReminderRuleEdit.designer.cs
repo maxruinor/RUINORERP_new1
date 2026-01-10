@@ -54,6 +54,11 @@ namespace RUINORERP.UI.BI
             this.lblJsonConfig = new Krypton.Toolkit.KryptonLabel();
             this.cmbRuleEngineType = new Krypton.Toolkit.KryptonComboBox();
             this.jsonViewer1 = new RUINORERP.UI.Monitoring.Auditing.JsonViewer();
+            // 链路关联相关控件实例化
+            this.linkGroupBox = new Krypton.Toolkit.KryptonGroupBox();
+            this.btnAddLink = new Krypton.Toolkit.KryptonButton();
+            this.btnRemoveLink = new Krypton.Toolkit.KryptonButton();
+            this.dgvLinkedLinks = new Krypton.Toolkit.KryptonDataGridView();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -61,6 +66,8 @@ namespace RUINORERP.UI.BI
             ((System.ComponentModel.ISupportInitialize)(this.cmbReminderBizType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbRuleEngineType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.jsonViewer1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.linkGroupBox.Panel)).BeginInit();
+            this.linkGroupBox.Panel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -110,10 +117,10 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             
-            // 添加链路关联控件到分组框
-            this.linkGroupBox.Controls.Add(this.btnAddLink);
-            this.linkGroupBox.Controls.Add(this.btnRemoveLink);
-            this.linkGroupBox.Controls.Add(this.dgvLinkedLinks);
+            // 添加链路关联控件到分组框的Panel
+            this.linkGroupBox.Panel.Controls.Add(this.btnAddLink);
+            this.linkGroupBox.Panel.Controls.Add(this.btnRemoveLink);
+            this.linkGroupBox.Panel.Controls.Add(this.dgvLinkedLinks);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
@@ -354,6 +361,8 @@ namespace RUINORERP.UI.BI
             ((System.ComponentModel.ISupportInitialize)(this.cmbReminderBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbRuleEngineType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvLinkedLinks)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.linkGroupBox.Panel)).EndInit();
+            this.linkGroupBox.Panel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.linkGroupBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.jsonViewer1)).EndInit();
             this.ResumeLayout(false);

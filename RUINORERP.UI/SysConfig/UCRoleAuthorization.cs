@@ -1359,8 +1359,17 @@ namespace RUINORERP.UI.SysConfig
                 {
                     try
                     {
-                        InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                        await imm.InitToolStripItemAsync(mai, SelectedMenuInfo);
+                        // 在UI线程上下文中获取服务实例（InitModuleMenu构造函数需要STA线程）
+                        InitModuleMenu imm = null;
+                        await Task.Factory.StartNew(() =>
+                        {
+                            imm = Startup.GetFromFac<InitModuleMenu>();
+                        }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+
+                        if (imm != null)
+                        {
+                            await imm.InitToolStripItemAsync(mai, SelectedMenuInfo);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1518,16 +1527,19 @@ namespace RUINORERP.UI.SysConfig
             if (mai != null)
             {
                 InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                //imm.InitFieldInoMainAndSub(mai, menuInfo, false, "");
-                await imm.InitFieldInoMainAndSubAsync(mai, menuInfo, false, "");
-                //尝试找子表类型
-                string childType = typeNames.FirstOrDefault(s => s.Contains(mai.Name + "Detail"));
-                if (!string.IsNullOrEmpty(childType))
+                if (imm != null)
                 {
-                    Type cType = ModelTypes.FirstOrDefault(t => t.FullName == mai.FullName + "Detail");
-                    if (cType != null)
+                    //imm.InitFieldInoMainAndSub(mai, menuInfo, false, "");
+                    await imm.InitFieldInoMainAndSubAsync(mai, menuInfo, false, "");
+                    //尝试找子表类型
+                    string childType = typeNames.FirstOrDefault(s => s.Contains(mai.Name + "Detail"));
+                    if (!string.IsNullOrEmpty(childType))
                     {
-                        await imm.InitFieldInoMainAndSubAsync(cType, menuInfo, true, childType);
+                        Type cType = ModelTypes.FirstOrDefault(t => t.FullName == mai.FullName + "Detail");
+                        if (cType != null)
+                        {
+                            await imm.InitFieldInoMainAndSubAsync(cType, menuInfo, true, childType);
+                        }
                     }
                 }
             }
@@ -1624,17 +1636,26 @@ namespace RUINORERP.UI.SysConfig
 
                         if (mainType != null)
                         {
-                            var imm = Startup.GetFromFac<InitModuleMenu>();
-                            await imm.InitFieldInoMainAndSubAsync(mainType, SelectedMenuInfo, false, "");
-
-                            // 尝试找子表类型
-                            var childTypeName = typeNames.FirstOrDefault(s => s.Contains(mainType.Name + "Detail"));
-                            if (!string.IsNullOrEmpty(childTypeName))
+                            // 在UI线程上下文中获取服务实例（InitModuleMenu构造函数需要STA线程）
+                            InitModuleMenu imm = null;
+                            await Task.Factory.StartNew(() =>
                             {
-                                var childType = modelTypes.FirstOrDefault(t => t.FullName == mainType.FullName + "Detail");
-                                if (childType != null)
+                                imm = Startup.GetFromFac<InitModuleMenu>();
+                            }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+
+                            if (imm != null)
+                            {
+                                await imm.InitFieldInoMainAndSubAsync(mainType, SelectedMenuInfo, false, "");
+
+                                // 尝试找子表类型
+                                var childTypeName = typeNames.FirstOrDefault(s => s.Contains(mainType.Name + "Detail"));
+                                if (!string.IsNullOrEmpty(childTypeName))
                                 {
-                                    await imm.InitFieldInoMainAndSubAsync(childType, SelectedMenuInfo, true, childTypeName);
+                                    var childType = modelTypes.FirstOrDefault(t => t.FullName == mainType.FullName + "Detail");
+                                    if (childType != null)
+                                    {
+                                        await imm.InitFieldInoMainAndSubAsync(childType, SelectedMenuInfo, true, childTypeName);
+                                    }
                                 }
                             }
                         }

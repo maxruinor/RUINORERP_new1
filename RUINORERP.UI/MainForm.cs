@@ -2530,13 +2530,21 @@ namespace RUINORERP.UI
             //CreateMenu(list, 0, 0);
             Stopwatch stopwatch = Stopwatch.StartNew();
             InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
-            try
+            if (init != null)
             {
-                await init.InitModuleAndMenuAsync();
+                try
+                {
+                    await init.InitModuleAndMenuAsync();
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                throw ex;
+                MainForm.Instance.logger.Error("无法获取InitModuleMenu服务实例");
+                throw new InvalidOperationException("无法获取InitModuleMenu服务实例");
             }
             stopwatch.Stop();
             MainForm.Instance.logger.LogInformation($"初始化菜单执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
@@ -3052,20 +3060,23 @@ namespace RUINORERP.UI
         {
             UCUnitList t = Startup.GetFromFac<UCUnitList>();// 或进一步取字段特性也可以
             InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
-            var btns = init.FindControls<ToolStrip>(t as Control);
-            foreach (var item in btns)
+            if (init != null)
             {
-                if (item.GetType().Name == "ToolStrip")
+                    var btns = init.FindControls<ToolStrip>(t as Control);
+                foreach (var item in btns)
                 {
-                    foreach (var btnItem in item.Items)
+                    if (item.GetType().Name == "ToolStrip")
                     {
-                        if (btnItem is ToolStripItem)
+                        foreach (var btnItem in item.Items)
                         {
-                            ToolStripItem btn = btnItem as ToolStripItem;
-                            //按钮名至少大于1
-                            if (btn.Text.Trim().Length > 1)
+                            if (btnItem is ToolStripItem)
                             {
-                                //添加
+                                ToolStripItem btn = btnItem as ToolStripItem;
+                                //按钮名至少大于1
+                                if (btn.Text.Trim().Length > 1)
+                                {
+                                    //添加
+                                }
                             }
                         }
                     }

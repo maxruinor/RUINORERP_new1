@@ -10,7 +10,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderResults
 {
     public class DocApprovalResult : BaseReminderResult
     {
-        public override ReminderBizType BusinessType => ReminderBizType.单据审批提醒;
+        public override ReminderBizType BusinessType => ReminderBizType.单据提交审批提醒;
         public override string Title => $"{DocumentType}待审批 - {DocumentNumber}";
         public override string Summary => $"状态: {DocumentStatus}，创建人: {Creator}";
 

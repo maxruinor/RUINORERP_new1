@@ -234,22 +234,25 @@ namespace RUINORERP.UI.BI
                     await MainForm.Instance.InvokeAsync(async () =>
                     {
                         var initModuleMenu = Startup.GetFromFac<InitModuleMenu>();
-                        var existingButtons = await initModuleMenu.InitToolStripItemAsync(menuAttrInfo, menuInfo, false);
+                        if (initModuleMenu != null)
+                        {
+                            var existingButtons = await initModuleMenu.InitToolStripItemAsync(menuAttrInfo, menuInfo, false);
 
                         // 获取当前类路径下的所有按钮
                         var classPathButtons = buttonList
                             .Where(bi => bi.ClassPath == classPath)
                             .ToList();
 
-                        // 筛选出在buttonList中存在但不在existingButtons中的按钮
-                        var buttonsToSelect = classPathButtons
-                            .Where(bi => !existingButtons.Any(eb => eb.BtnName == bi.BtnName && eb.BtnText == bi.BtnText))
-                            .ToList();
+                            // 筛选出在buttonList中存在但不在existingButtons中的按钮
+                            var buttonsToSelect = classPathButtons
+                                .Where(bi => !existingButtons.Any(eb => eb.BtnName == bi.BtnName && eb.BtnText == bi.BtnText))
+                                .ToList();
 
-                        // 更新选中状态
-                        foreach (var button in buttonsToSelect)
-                        {
-                            button.Selected = true;
+                            // 更新选中状态
+                            foreach (var button in buttonsToSelect)
+                            {
+                                button.Selected = true;
+                            }
                         }
                     });
                 }

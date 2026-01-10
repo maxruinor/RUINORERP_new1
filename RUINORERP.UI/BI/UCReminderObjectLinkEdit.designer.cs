@@ -37,6 +37,10 @@ namespace RUINORERP.UI.BI
             this.txtLinkName = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            // 规则关联相关控件实例化
+            this.btnAddRule = new Krypton.Toolkit.KryptonButton();
+            this.btnRemoveRule = new Krypton.Toolkit.KryptonButton();
+            this.dgvLinkedRules = new Krypton.Toolkit.KryptonDataGridView();
             this.kryptonPageSourceConfig = new Krypton.Navigator.KryptonPage();
             this.panelSourceValue = new Krypton.Toolkit.KryptonPanel();
             this.cmbSourceType = new Krypton.Toolkit.KryptonComboBox();

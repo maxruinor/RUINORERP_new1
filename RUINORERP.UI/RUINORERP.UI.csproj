@@ -735,6 +735,12 @@
     <Compile Include="BI\frmReminderLinkConfig.designer.cs">
       <DependentUpon>frmReminderLinkConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="BI\frmReminderRuleConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BI\frmReminderRuleConfig.Designer.cs">
+      <DependentUpon>frmReminderRuleConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="BI\JoinType.cs" />
     <Compile Include="BI\RoleFilterConfig.cs" />
     <Compile Include="BI\TableType.cs" />

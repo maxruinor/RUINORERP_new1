@@ -24,7 +24,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
     /// </summary>
     /// <typeparam name="TMaster"></typeparam>
     /// <typeparam name="TDetail"></typeparam>
-    public abstract class SourceGridCoordinator<TMaster, TDetail>
+    public abstract class SourceGridCoordinator<TMaster, TDetail> : IDisposable
         where TMaster : BaseEntity
         where TDetail : BaseEntity
     {
@@ -32,8 +32,9 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         private List<TDetail> details;
         public readonly SourceGridHelper _gridHelper;
         private readonly System.Threading.Timer _calculationTimer;
-        private readonly ConcurrentQueue<GridChangeEvent> _pendingEvents = new();
+        private readonly ConcurrentDictionary<GridChangeEvent, byte> _pendingEvents = new();
         private volatile bool _isProcessing;
+        private volatile bool _disposed;
         private const int CalculationDelay = 300; // ms
 
         public Dictionary<string, string> MapFields { get; private set; } = new Dictionary<string, string>();
@@ -48,6 +49,9 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             Master = master;
             Details = details;
             _gridHelper = gridHelper;
+
+            // 初始化字段映射
+            SetMapFields();
 
             // 注册主表变更监听
             Master.PropertyChanged += (s, e) =>
@@ -75,14 +79,16 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         {
             if (MapFields.ContainsKey(masterPropertyName))
             {
-                _pendingEvents.Enqueue(new GridChangeEvent(changeType, masterPropertyName));
+                var evt = new GridChangeEvent(changeType, masterPropertyName);
+                _pendingEvents[evt] = 1;
                 ResetCalculationTimer();
             }
         }
 
         public void EnqueueEvent(GridChangeType changeType, TDetail detail)
         {
-            _pendingEvents.Enqueue(new GridChangeEvent(changeType, Master, detail));
+            var evt = new GridChangeEvent(changeType, Master, detail);
+            _pendingEvents[evt] = 1;
             ResetCalculationTimer();
         }
 
@@ -93,20 +99,21 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
         private void ProcessQueue()
         {
-            if (_isProcessing) return;
+            if (_isProcessing || _disposed) return;
             _isProcessing = true;
             try
             {
-                while (_pendingEvents.TryDequeue(out var changeEvent))
+                foreach (var kvp in _pendingEvents.ToArray())
                 {
                     try
                     {
+                        var changeEvent = kvp.Key;
                         switch (changeEvent.ChangeType)
                         {
                             case GridChangeType.MasterProperty:
                                 if (Master != null && Details != null)
                                 {
-                                    HandleMasterPropertyChange(changeEvent.MasterEntity.ToString());
+                                    HandleMasterPropertyChange((string)changeEvent.MasterEntity);
                                 }
                                 break;
                             case GridChangeType.DetailCell:
@@ -120,6 +127,11 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                     catch (Exception ex)
                     {
                         // 记录错误但不中断处理
+                    }
+                    finally
+                    {
+                        // 处理完成后移除事件
+                        _pendingEvents.TryRemove(kvp.Key, out _);
                     }
                 }
             }
@@ -157,6 +169,20 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             {
                 _isProcessing = false;
             }
+        }
+
+        /// <summary>
+        /// 释放定时器资源
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _calculationTimer?.Dispose();
+                _pendingEvents.Clear();
+                _disposed = true;
+            }
+            GC.SuppressFinalize(this);
         }
     }
 

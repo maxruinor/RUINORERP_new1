@@ -125,6 +125,10 @@ namespace RUINORERP.UI.BI
             // 
             this.kryptonPageBasicInfo.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
             this.kryptonPageBasicInfo.Controls.Add(this.chkIsEnabled);
+            this.kryptonPageBasicInfo.Controls.Add(this.btnRemoveRule);
+            this.kryptonPageBasicInfo.Controls.Add(this.btnAddRule);
+            this.kryptonPageBasicInfo.Controls.Add(this.dgvLinkedRules);
+            this.kryptonPageBasicInfo.Controls.Add(this.lblLinkedRules);
             this.kryptonPageBasicInfo.Controls.Add(this.txtDescription);
             this.kryptonPageBasicInfo.Controls.Add(this.kryptonLabel3);
             this.kryptonPageBasicInfo.Controls.Add(this.txtLinkName);
@@ -141,11 +145,46 @@ namespace RUINORERP.UI.BI
             // 
             // chkIsEnabled
             // 
-            this.chkIsEnabled.Location = new System.Drawing.Point(120, 140);
+            this.chkIsEnabled.Location = new System.Drawing.Point(120, 280);
             this.chkIsEnabled.Name = "chkIsEnabled";
             this.chkIsEnabled.Size = new System.Drawing.Size(49, 20);
-            this.chkIsEnabled.TabIndex = 5;
+            this.chkIsEnabled.TabIndex = 10;
             this.chkIsEnabled.Values.Text = "启用";
+            // 
+            // btnRemoveRule
+            // 
+            this.btnRemoveRule.Location = new System.Drawing.Point(500, 240);
+            this.btnRemoveRule.Name = "btnRemoveRule";
+            this.btnRemoveRule.Size = new System.Drawing.Size(90, 25);
+            this.btnRemoveRule.TabIndex = 9;
+            this.btnRemoveRule.Values.Text = "移除规则";
+            // 
+            // btnAddRule
+            // 
+            this.btnAddRule.Location = new System.Drawing.Point(500, 200);
+            this.btnAddRule.Name = "btnAddRule";
+            this.btnAddRule.Size = new System.Drawing.Size(90, 25);
+            this.btnAddRule.TabIndex = 8;
+            this.btnAddRule.Values.Text = "添加规则";
+            // 
+            // dgvLinkedRules
+            // 
+            this.dgvLinkedRules.AllowUserToAddRows = false;
+            this.dgvLinkedRules.AllowUserToDeleteRows = false;
+            this.dgvLinkedRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvLinkedRules.Location = new System.Drawing.Point(120, 140);
+            this.dgvLinkedRules.Name = "dgvLinkedRules";
+            this.dgvLinkedRules.ReadOnly = true;
+            this.dgvLinkedRules.Size = new System.Drawing.Size(350, 130);
+            this.dgvLinkedRules.TabIndex = 7;
+            // 
+            // lblLinkedRules
+            // 
+            this.lblLinkedRules.Location = new System.Drawing.Point(30, 140);
+            this.lblLinkedRules.Name = "lblLinkedRules";
+            this.lblLinkedRules.Size = new System.Drawing.Size(65, 20);
+            this.lblLinkedRules.TabIndex = 6;
+            this.lblLinkedRules.Values.Text = "关联规则:";
             // 
             // txtDescription
             // 
@@ -153,29 +192,29 @@ namespace RUINORERP.UI.BI
             this.txtDescription.Multiline = true;
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.Size = new System.Drawing.Size(450, 60);
-            this.txtDescription.TabIndex = 4;
+            this.txtDescription.TabIndex = 5;
             // 
             // kryptonLabel3
             // 
             this.kryptonLabel3.Location = new System.Drawing.Point(30, 70);
             this.kryptonLabel3.Name = "kryptonLabel3";
             this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabel3.TabIndex = 3;
+            this.kryptonLabel3.TabIndex = 4;
             this.kryptonLabel3.Values.Text = "链路描述:";
             // 
             // txtLinkName
             // 
             this.txtLinkName.Location = new System.Drawing.Point(120, 30);
             this.txtLinkName.Name = "txtLinkName";
-            this.txtLinkName.Size = new System.Drawing.Size(250, 23);
-            this.txtLinkName.TabIndex = 2;
+            this.txtLinkName.Size = new System.Drawing.Size(450, 23);
+            this.txtLinkName.TabIndex = 3;
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(30, 140);
+            this.kryptonLabel2.Location = new System.Drawing.Point(30, 280);
             this.kryptonLabel2.Name = "kryptonLabel2";
             this.kryptonLabel2.Size = new System.Drawing.Size(39, 20);
-            this.kryptonLabel2.TabIndex = 1;
+            this.kryptonLabel2.TabIndex = 2;
             this.kryptonLabel2.Values.Text = "状态:";
             // 
             // kryptonLabel1
@@ -183,7 +222,7 @@ namespace RUINORERP.UI.BI
             this.kryptonLabel1.Location = new System.Drawing.Point(30, 30);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(65, 20);
-            this.kryptonLabel1.TabIndex = 0;
+            this.kryptonLabel1.TabIndex = 1;
             this.kryptonLabel1.Values.Text = "链路名称:";
             // 
             // kryptonPageSourceConfig
@@ -467,5 +506,9 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonButton btnTest;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonButton btnOk;
+        private Krypton.Toolkit.KryptonLabel lblLinkedRules;
+        private Krypton.Toolkit.KryptonDataGridView dgvLinkedRules;
+        private Krypton.Toolkit.KryptonButton btnAddRule;
+        private Krypton.Toolkit.KryptonButton btnRemoveRule;
     }
 }

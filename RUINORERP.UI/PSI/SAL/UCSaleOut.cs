@@ -975,24 +975,16 @@ namespace RUINORERP.UI.PSI.SAL
                     return false;
                 }
 
-                //如果所有数据都出库。运费成本也要一致。否则提醒
+                //如果所有数据都出库。运费成本也要一致。系统会自动分摊,无需提示
                 if (NeedValidated)
                 {
                     if (EditEntity.FreightCost != details.Sum(c => c.AllocatedFreightCost))
                     {
                         _coordinator.HandleMasterPropertyChange(c => c.FreightCost);
-
-                        if (MessageBox.Show($"运费成本{EditEntity.FreightCost}与明细运费成本分摊的总金额{details.Sum(c => c.AllocatedFreightCost)}不一致\r\n" +
-                            $"系统已经自动分摊，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
-                            return false;
-
                     }
                     if (EditEntity.FreightIncome != details.Sum(c => c.AllocatedFreightIncome))
                     {
                         _coordinator.HandleMasterPropertyChange(c => c.FreightIncome);
-                        if (MessageBox.Show($"运费收入{EditEntity.FreightIncome}与明细运费收入分摊总金额{details.Sum(c => c.AllocatedFreightIncome)}不一致\r\n" +
-                            $"系统已经自动分摊，确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
-                            return false;
                     }
                 }
 

@@ -80,10 +80,10 @@ namespace RUINORERP.Business.Security
         /// <summary>
         /// 取金额的精度
         /// </summary>
-        /// <returns></returns>
+        /// <returns>统一按系统配置中的金额精度参数</returns>
         public int GetMoneyDataPrecision()
         {
-            return !_context.IsSuperUser ? (_context.rolePropertyConfig?.MoneyDataPrecision ?? _context.SysConfig.MoneyDataPrecision) : 4;
+            return _context.SysConfig?.MoneyDataPrecision ?? 2;
         }
 
         /// <summary>
@@ -290,20 +290,13 @@ namespace RUINORERP.Business.Security
 
 
         /// <summary>
-        /// 获取角色的金额精度，先看角色级的配置，再看系统级的配置。
+        /// 获取金额精度，统一按系统配置中的金额精度参数
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns>不限制返回false</returns>
+        /// <param name="context">应用上下文</param>
+        /// <returns>系统配置中的金额精度，默认2位</returns>
         public static int GetMoneyDataPrecision(ApplicationContext context)
         {
-            if (context.rolePropertyConfig != null)
-            {
-                return context.rolePropertyConfig.MoneyDataPrecision;
-            }
-            else
-            {
-                return context.SysConfig.MoneyDataPrecision;
-            }
+            return context.SysConfig?.MoneyDataPrecision ?? 2;
         }
 
 

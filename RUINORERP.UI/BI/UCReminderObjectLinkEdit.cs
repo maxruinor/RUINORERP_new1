@@ -39,6 +39,11 @@ namespace RUINORERP.UI.BI
         List<tb_RoleInfo> RoleInfos = new List<tb_RoleInfo>();
         List<tb_Department> DepartmentInfos = new List<tb_Department>();
 
+        // 规则关联相关字段
+        private tb_ReminderRuleController<tb_ReminderRule> _ruleController;
+        private tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation> _relationController;
+        private List<tb_ReminderRule> _linkedRules;
+
         public override void BindData(BaseEntity _entity)
         {
             // 设计时不执行数据绑定逻辑，避免访问运行时服务
@@ -77,6 +82,10 @@ namespace RUINORERP.UI.BI
                 return;
             }
 
+            // 初始化控制器
+            _ruleController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderRuleController<tb_ReminderRule>>();
+            _relationController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation>>();
+
             // 绑定基本信息
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.LinkName, txtLinkName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text, false);
@@ -88,6 +97,10 @@ namespace RUINORERP.UI.BI
             BindBillConfig();
             // 绑定提醒目标配置
             BindTargetConfig();
+            // 绑定规则按钮事件
+            BindRuleButtons();
+            // 加载已关联的规则
+            LoadLinkedRules();
 
             // 初始化验证
             if (!string.IsNullOrEmpty(entity.LinkName))
@@ -236,7 +249,7 @@ namespace RUINORERP.UI.BI
             {
                 cmb.SelectedValue = selectedValue.Value;
             }
-            
+
             // 添加到容器
             container.Controls.Add(cmb);
         }
@@ -264,7 +277,7 @@ namespace RUINORERP.UI.BI
             this.Close();
         }
 
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())
             {
@@ -272,8 +285,15 @@ namespace RUINORERP.UI.BI
                 UpdateSourceValueFromControl();
                 // 更新提醒目标值
                 UpdateTargetValueFromControl();
-                
+
                 bindingSourceEdit.EndEdit();
+
+                if (bindingSourceEdit.Current is tb_ReminderObjectLink link)
+                {
+                    // 保存关联规则
+                    await SaveLinkedRulesAsync(link);
+                }
+
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
@@ -375,5 +395,207 @@ namespace RUINORERP.UI.BI
                 MessageBox.Show($"测试失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        /// <summary>
+        /// 绑定规则相关按钮事件
+        /// </summary>
+        private void BindRuleButtons()
+        {
+            btnAddRule.Click += btnAddRule_Click;
+            btnRemoveRule.Click += btnRemoveRule_Click;
+        }
+
+        /// <summary>
+        /// 加载已关联的规则
+        /// </summary>
+        private async void LoadLinkedRules()
+        {
+            try
+            {
+                if (entity == null || entity.LinkId == 0)
+                {
+                    dgvLinkedRules.DataSource = new List<tb_ReminderRule>();
+                    return;
+                }
+
+                // 查询关联关系
+                var relations = await _relationController.QueryAsync(r => r.LinkId == entity.LinkId);
+                if (relations == null || relations.Count == 0)
+                {
+                    dgvLinkedRules.DataSource = new List<tb_ReminderRule>();
+                    return;
+                }
+
+                // 查询关联的规则
+                var ruleIds = relations.Select(r => r.RuleId).ToList();
+                _linkedRules = await _ruleController.QueryAsync(l => ruleIds.Contains(l.RuleId));
+                dgvLinkedRules.DataSource = _linkedRules;
+
+                // 设置列标题
+                if (dgvLinkedRules.Columns.Count > 0)
+                {
+                    dgvLinkedRules.Columns["RuleId"].HeaderText = "规则ID";
+                    dgvLinkedRules.Columns["RuleName"].HeaderText = "规则名称";
+                    dgvLinkedRules.Columns["Description"].HeaderText = "规则描述";
+                    dgvLinkedRules.Columns["RuleEngineType"].HeaderText = "引擎类型";
+                    dgvLinkedRules.Columns["ReminderBizType"].HeaderText = "业务类型";
+                    dgvLinkedRules.Columns["ReminderPriority"].HeaderText = "优先级";
+                    dgvLinkedRules.Columns["IsEnabled"].HeaderText = "是否启用";
+
+                    // 隐藏不必要的列
+                    dgvLinkedRules.Columns["NotifyChannels"].Visible = false;
+                    dgvLinkedRules.Columns["NotifyRecipients"].Visible = false;
+                    dgvLinkedRules.Columns["JsonConfig"].Visible = false;
+                    dgvLinkedRules.Columns["EffectiveDate"].Visible = false;
+                    dgvLinkedRules.Columns["ExpireDate"].Visible = false;
+                    dgvLinkedRules.Columns["Created_at"].Visible = false;
+                    dgvLinkedRules.Columns["Created_by"].Visible = false;
+                    dgvLinkedRules.Columns["Updated_at"].Visible = false;
+                    dgvLinkedRules.Columns["Updated_by"].Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载关联规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 添加规则按钮点击事件
+        /// </summary>
+        private async void btnAddRule_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new frmReminderRuleConfig())
+                {
+                    if (form.ShowDialog() == DialogResult.OK && form.SelectedRuleId > 0)
+                    {
+                        // 检查是否已关联
+                        if (_linkedRules != null && _linkedRules.Any(r => r.RuleId == form.SelectedRuleId))
+                        {
+                            MessageBox.Show("该规则已关联，无需重复添加", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+
+                        // 查询规则信息
+                        var rule = await _ruleController.BaseQueryByIdNavAsync(form.SelectedRuleId);
+                        if (rule != null)
+                        {
+                            // 添加到本地列表
+                            if (_linkedRules == null)
+                            {
+                                _linkedRules = new List<tb_ReminderRule>();
+                            }
+                            _linkedRules.Add(rule);
+
+                            // 更新数据源
+                            dgvLinkedRules.DataSource = null;
+                            dgvLinkedRules.DataSource = _linkedRules;
+
+                            // 设置列标题
+                            if (dgvLinkedRules.Columns.Count > 0)
+                            {
+                                dgvLinkedRules.Columns["RuleId"].HeaderText = "规则ID";
+                                dgvLinkedRules.Columns["RuleName"].HeaderText = "规则名称";
+                                dgvLinkedRules.Columns["Description"].HeaderText = "规则描述";
+                                dgvLinkedRules.Columns["RuleEngineType"].HeaderText = "引擎类型";
+                                dgvLinkedRules.Columns["ReminderBizType"].HeaderText = "业务类型";
+                                dgvLinkedRules.Columns["ReminderPriority"].HeaderText = "优先级";
+                                dgvLinkedRules.Columns["IsEnabled"].HeaderText = "是否启用";
+
+                                // 隐藏不必要的列
+                                dgvLinkedRules.Columns["NotifyChannels"].Visible = false;
+                                dgvLinkedRules.Columns["NotifyRecipients"].Visible = false;
+                                dgvLinkedRules.Columns["JsonConfig"].Visible = false;
+                                dgvLinkedRules.Columns["EffectiveDate"].Visible = false;
+                                dgvLinkedRules.Columns["ExpireDate"].Visible = false;
+                                dgvLinkedRules.Columns["Created_at"].Visible = false;
+                                dgvLinkedRules.Columns["Created_by"].Visible = false;
+                                dgvLinkedRules.Columns["Updated_at"].Visible = false;
+                                dgvLinkedRules.Columns["Updated_by"].Visible = false;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 移除规则按钮点击事件
+        /// </summary>
+        private void btnRemoveRule_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dgvLinkedRules.SelectedRows.Count > 0)
+                {
+                    var selectedRow = dgvLinkedRules.SelectedRows[0];
+                    if (selectedRow.DataBoundItem is tb_ReminderRule selectedRule)
+                    {
+                        if (MessageBox.Show($"确定要移除规则 '{selectedRule.RuleName}' 吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            // 从本地列表中移除
+                            _linkedRules.Remove(selectedRule);
+
+                            // 更新数据源
+                            dgvLinkedRules.DataSource = null;
+                            dgvLinkedRules.DataSource = _linkedRules;
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("请先选择要移除的规则", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"移除规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 保存关联规则
+        /// </summary>
+        /// <param name="link">提醒对象链路</param>
+        private async Task SaveLinkedRulesAsync(tb_ReminderObjectLink link)
+        {
+            try
+            {
+                if (link == null || link.LinkId == 0)
+                    return;
+
+                // 删除现有关联
+                var existingRelations = await _relationController.QueryAsync(r => r.LinkId == link.LinkId);
+                if (existingRelations != null && existingRelations.Count > 0)
+                {
+                    await _relationController.BaseDeleteAsync(existingRelations);
+                }
+
+                // 保存新关联
+                if (_linkedRules != null && _linkedRules.Count > 0)
+                {
+                    var newRelations = _linkedRules.Select(rule => new tb_ReminderLinkRuleRelation
+                    {
+                        LinkId = link.LinkId,
+                        RuleId = rule.RuleId,
+                        Created_at = DateTime.UtcNow,
+                        Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID
+                    }).ToList();
+
+                    await _relationController.AddAsync(newRelations);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存关联规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }

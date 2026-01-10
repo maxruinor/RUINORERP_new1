@@ -60,75 +60,72 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         }
 
         /// <summary>
-        /// 主表字段变化时调用
+        /// 运费分摊计算：采用"比例分配+余数调整"算法
+        /// 确保分摊总和严格等于主表值，最后一行承担所有四舍五入误差
         /// </summary>
-        /// <param name="masterValue"></param>
-        /// <param name="detailSelector"></param>
+        /// <param name="masterValue">主表运费总额</param>
+        /// <param name="detailSelector">明细运费分摊字段选择器</param>
         private void AllocateFreight(decimal masterValue, Expression<Func<tb_PurEntryDetail, decimal>> detailSelector)
         {
-            if (Details == null)
-            {
-                return;
-            }
-            if (masterValue == 0 && Details.Sum(d => d.AllocatedFreightCost) == 0)
+            if (Details == null || Details.Count == 0)
             {
                 return;
             }
 
-            string detailPropertyName = detailSelector.GetMemberInfo().Name;
+            // 主表运费和当前分摊总和都为0时，无需计算
+            var detailPropertyName = detailSelector.GetMemberInfo().Name;
+            var currentAllocatedTotal = Details.Sum(d => (decimal?)typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
+            if (masterValue == 0 && currentAllocatedTotal == 0)
+            {
+                return;
+            }
+
+            // 验证字段映射关系
             string mapKey = MapFields.FirstOrDefault(m => m.Value == detailPropertyName).Key;
-
             if (mapKey == null) return;
 
-            var allocatedTotal = Details.Sum(d => (decimal?)typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.GetValue(d) ?? 0m);
-            if (Math.Abs((decimal)typeof(tb_PurEntry).GetProperty(mapKey)?.GetValue(Master) - allocatedTotal) < 0.001m)
+            // 如果当前分摊总和已经等于主表值，无需重新分摊
+            var masterFieldValue = (decimal?)typeof(tb_PurEntry).GetProperty(mapKey)?.GetValue(Master) ?? 0m;
+            if (Math.Abs(masterFieldValue - currentAllocatedTotal) < 0.001m)
                 return;
 
+            // 检查分摊规则配置
             if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules != (int)FreightAllocationRules.产品数量占比)
                 return;
 
-
+            // 验证总数量
             if (Master.TotalQty <= 0) return;
 
-            foreach (var detail in Details)
+            // 获取系统配置的金额精度
+            int precision = _authController.GetMoneyDataPrecision();
+
+            // 采用"比例分配+余数调整"算法，确保总和严格等于主表值
+            decimal remainingAmount = masterValue;
+            int lastDetailIndex = Details.Count - 1;
+
+            for (int i = 0; i < Details.Count; i++)
             {
+                var detail = Details[i];
                 var quantity = detail.Quantity.ObjToDecimal();
-                var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
-                typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
-            }
 
-            if (masterValue != Details.Sum(d => d.AllocatedFreightCost))
-            {
-                #region 如果因为分摊时 四舍五入导致总和不等于主表值，再采用“比例分配+余数调整”的方法重新分摊
-                decimal remainingFreight = masterValue;
-                int lastDetailIndex = Details.Count - 1;
-
-                for (int i = 0; i < Details.Count; i++)
+                if (i == lastDetailIndex)
                 {
-                    var detail = Details[i];
-                    var quantity = detail.Quantity.ObjToDecimal();
-
-                    if (i == lastDetailIndex)
-                    {
-                        // 最后一行调整余数，确保总和等于主表值
-                        var allocatedValue = remainingFreight.ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
-                        detail.SetPropertyValue(detailPropertyName, allocatedValue);
-                        //typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
-                        remainingFreight -= allocatedValue;
-                    }
-                    else
-                    {
-                        var allocatedValue = masterValue * (quantity / Master.TotalQty).ToRoundDecimalPlaces(_authController.GetMoneyDataPrecision());
-                        //typeof(tb_PurEntryDetail).GetProperty(detailPropertyName)?.SetValue(detail, allocatedValue);
-                        detail.SetPropertyValue(detailPropertyName, allocatedValue);
-                        remainingFreight -= allocatedValue;
-                    }
-
+                    // 最后一行：直接使用剩余金额，承担所有四舍五入误差
+                    var allocatedValue = remainingAmount.ToRoundDecimalPlaces(precision);
+                    detail.SetPropertyValue(detailPropertyName, allocatedValue);
                 }
-                #endregion
+                else
+                {
+                    // 非最后一行：按数量比例分摊
+                    var allocatedValue = masterValue * (quantity / Master.TotalQty)
+                        .ToRoundDecimalPlaces(precision);
+                    detail.SetPropertyValue(detailPropertyName, allocatedValue);
+                    remainingAmount -= allocatedValue;
+                }
             }
-            _gridHelper.UpdateGridColumn<tb_PurEntryDetail>(detailPropertyName);
 
+            // 更新网格显示
+            _gridHelper.UpdateGridColumn<tb_PurEntryDetail>(detailPropertyName);
         }
 
         protected override void HandleDetailChange(tb_PurEntry master, tb_PurEntryDetail detail)

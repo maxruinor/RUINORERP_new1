@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.BI
+namespace RUINORERP.UI.BI
 {
     partial class UCReminderRuleEdit
     {
@@ -84,6 +84,7 @@
             // kryptonPanel1
             // 
             this.kryptonPanel1.Controls.Add(this.jsonViewer1);
+            this.kryptonPanel1.Controls.Add(this.linkGroupBox);
             this.kryptonPanel1.Controls.Add(this.txtNotifyRecipientNames);
             this.kryptonPanel1.Controls.Add(this.clbNotifyChannels);
             this.kryptonPanel1.Controls.Add(this.btnSelectNotifyRecipients);
@@ -108,6 +109,11 @@
             this.kryptonPanel1.Controls.Add(this.cmbRuleEngineType);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
+            
+            // 添加链路关联控件到分组框
+            this.linkGroupBox.Controls.Add(this.btnAddLink);
+            this.linkGroupBox.Controls.Add(this.btnRemoveLink);
+            this.linkGroupBox.Controls.Add(this.dgvLinkedLinks);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
@@ -290,12 +296,47 @@
             this.cmbRuleEngineType.Size = new System.Drawing.Size(180, 21);
             this.cmbRuleEngineType.TabIndex = 7;
             // 
-            // auditLogViewer1
+            // linkGroupBox
+            // 
+            this.linkGroupBox.Location = new System.Drawing.Point(507, 142);
+            this.linkGroupBox.Name = "linkGroupBox";
+            this.linkGroupBox.Size = new System.Drawing.Size(365, 243);
+            this.linkGroupBox.TabIndex = 54;
+            this.linkGroupBox.Values.Heading = "关联链路";
+            // 
+            // btnAddLink
+            // 
+            this.btnAddLink.Location = new System.Drawing.Point(260, 15);
+            this.btnAddLink.Name = "btnAddLink";
+            this.btnAddLink.Size = new System.Drawing.Size(90, 25);
+            this.btnAddLink.TabIndex = 0;
+            this.btnAddLink.Values.Text = "添加链路";
+            // 
+            // btnRemoveLink
+            // 
+            this.btnRemoveLink.Location = new System.Drawing.Point(260, 46);
+            this.btnRemoveLink.Name = "btnRemoveLink";
+            this.btnRemoveLink.Size = new System.Drawing.Size(90, 25);
+            this.btnRemoveLink.TabIndex = 1;
+            this.btnRemoveLink.Values.Text = "移除链路";
+            // 
+            // dgvLinkedLinks
+            // 
+            this.dgvLinkedLinks.AllowUserToAddRows = false;
+            this.dgvLinkedLinks.AllowUserToDeleteRows = false;
+            this.dgvLinkedLinks.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvLinkedLinks.Location = new System.Drawing.Point(10, 15);
+            this.dgvLinkedLinks.Name = "dgvLinkedLinks";
+            this.dgvLinkedLinks.ReadOnly = true;
+            this.dgvLinkedLinks.Size = new System.Drawing.Size(244, 215);
+            this.dgvLinkedLinks.TabIndex = 2;
+            // 
+            // jsonViewer1
             // 
             this.jsonViewer1.Location = new System.Drawing.Point(144, 394);
-            this.jsonViewer1.Name = "auditLogViewer1";
+            this.jsonViewer1.Name = "jsonViewer1";
             this.jsonViewer1.Size = new System.Drawing.Size(629, 366);
-            this.jsonViewer1.TabIndex = 53;
+            this.jsonViewer1.TabIndex = 55;
             // 
             // UCReminderRuleEdit
             // 
@@ -312,6 +353,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbPriority)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbReminderBizType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbRuleEngineType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLinkedLinks)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.linkGroupBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.jsonViewer1)).EndInit();
             this.ResumeLayout(false);
 
@@ -344,6 +387,10 @@
         private Krypton.Toolkit.KryptonButton btnSelectNotifyRecipients;
         private Krypton.Toolkit.KryptonCheckedListBox clbNotifyChannels;
         private Krypton.Toolkit.KryptonCheckedListBox txtNotifyRecipientNames;
+        private Krypton.Toolkit.KryptonGroupBox linkGroupBox;
+        private Krypton.Toolkit.KryptonButton btnAddLink;
+        private Krypton.Toolkit.KryptonButton btnRemoveLink;
+        private Krypton.Toolkit.KryptonDataGridView dgvLinkedLinks;
         private Monitoring.Auditing.JsonViewer jsonViewer1;
     }
 }

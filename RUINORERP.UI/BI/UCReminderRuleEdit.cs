@@ -45,6 +45,11 @@ namespace RUINORERP.UI.BI
         public tb_ReminderRule entity { get; set; }
 
         List<tb_UserInfo> UserInfos = new List<tb_UserInfo>();
+        // 链路关联相关字段
+        private tb_ReminderObjectLinkController<tb_ReminderObjectLink> _linkController;
+        private tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation> _relationController;
+        private List<tb_ReminderObjectLink> _linkedLinks;
+
         public override void BindData(BaseEntity _entity)
         {
             entity = _entity as tb_ReminderRule;
@@ -60,6 +65,10 @@ namespace RUINORERP.UI.BI
             {
                 BusinessHelper.Instance.EditEntity(entity);
             }
+
+            // 初始化控制器
+            _linkController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkController<tb_ReminderObjectLink>>();
+            _relationController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation>>();
 
             UserInfos = _cacheManager.GetEntityList<tb_UserInfo>();
 
@@ -95,6 +104,12 @@ namespace RUINORERP.UI.BI
                 jsonViewer1.LoadAuditData(entity.JsonConfig);
             }
 
+            // 加载关联的链路
+            LoadLinkedLinks();
+
+            // 绑定按钮事件
+            BindLinkButtons();
+
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -125,6 +140,167 @@ namespace RUINORERP.UI.BI
 
 
             base.BindData(entity);
+        }
+
+        /// <summary>
+        /// 绑定链路相关按钮事件
+        /// </summary>
+        private void BindLinkButtons()
+        {
+            btnAddLink.Click += btnAddLink_Click;
+            btnRemoveLink.Click += btnRemoveLink_Click;
+        }
+
+        /// <summary>
+        /// 加载已关联的链路
+        /// </summary>
+        private async void LoadLinkedLinks()
+        {
+            try
+            {
+                if (entity == null || entity.RuleId == 0)
+                {
+                    dgvLinkedLinks.DataSource = new List<tb_ReminderObjectLink>();
+                    return;
+                }
+
+                // 查询关联关系
+                var relations = await _relationController.QueryAsync(r => r.RuleId == entity.RuleId);
+                if (relations == null || relations.Count == 0)
+                {
+                    dgvLinkedLinks.DataSource = new List<tb_ReminderObjectLink>();
+                    return;
+                }
+
+                // 查询关联的链路
+                var linkIds = relations.Select(r => r.LinkId).ToList();
+                _linkedLinks = await _linkController.QueryAsync(l => linkIds.Contains(l.LinkId));
+                dgvLinkedLinks.DataSource = _linkedLinks;
+
+                // 设置列标题
+                if (dgvLinkedLinks.Columns.Count > 0)
+                {
+                    dgvLinkedLinks.Columns["LinkId"].HeaderText = "链路ID";
+                    dgvLinkedLinks.Columns["LinkName"].HeaderText = "链路名称";
+                    dgvLinkedLinks.Columns["Description"].HeaderText = "链路描述";
+                    dgvLinkedLinks.Columns["SourceType"].HeaderText = "提醒源类型";
+                    dgvLinkedLinks.Columns["BizType"].HeaderText = "单据类型";
+                    dgvLinkedLinks.Columns["ActionType"].HeaderText = "操作类型";
+                    dgvLinkedLinks.Columns["TargetType"].HeaderText = "提醒目标类型";
+                    dgvLinkedLinks.Columns["IsEnabled"].HeaderText = "是否启用";
+
+                    // 隐藏不必要的列
+                    dgvLinkedLinks.Columns["SourceValue"].Visible = false;
+                    dgvLinkedLinks.Columns["TargetValue"].Visible = false;
+                    dgvLinkedLinks.Columns["BillStatus"].Visible = false;
+                    dgvLinkedLinks.Columns["Created_at"].Visible = false;
+                    dgvLinkedLinks.Columns["CreateUserId"].Visible = false;
+                    dgvLinkedLinks.Columns["Updated_at"].Visible = false;
+                    dgvLinkedLinks.Columns["UpdateUserId"].Visible = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载关联链路失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 添加链路按钮点击事件
+        /// </summary>
+        private async void btnAddLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var form = new frmReminderLinkConfig())
+                {
+                    if (form.ShowDialog() == DialogResult.OK && form.SelectedLinkId > 0)
+                    {
+                        // 检查是否已关联
+                        if (_linkedLinks != null && _linkedLinks.Any(l => l.LinkId == form.SelectedLinkId))
+                        {
+                            MessageBox.Show("该链路已关联，无需重复添加", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            return;
+                        }
+
+                        // 查询链路信息
+                        var link = await _linkController.BaseQueryByIdNavAsync(form.SelectedLinkId);
+                        if (link != null)
+                        {
+                            // 添加到本地列表
+                            if (_linkedLinks == null)
+                            {
+                                _linkedLinks = new List<tb_ReminderObjectLink>();
+                            }
+                            _linkedLinks.Add(link);
+
+                            // 更新数据源
+                            dgvLinkedLinks.DataSource = null;
+                            dgvLinkedLinks.DataSource = _linkedLinks;
+
+                            // 设置列标题
+                            if (dgvLinkedLinks.Columns.Count > 0)
+                            {
+                                dgvLinkedLinks.Columns["LinkId"].HeaderText = "链路ID";
+                                dgvLinkedLinks.Columns["LinkName"].HeaderText = "链路名称";
+                                dgvLinkedLinks.Columns["Description"].HeaderText = "链路描述";
+                                dgvLinkedLinks.Columns["SourceType"].HeaderText = "提醒源类型";
+                                dgvLinkedLinks.Columns["BizType"].HeaderText = "单据类型";
+                                dgvLinkedLinks.Columns["ActionType"].HeaderText = "操作类型";
+                                dgvLinkedLinks.Columns["TargetType"].HeaderText = "提醒目标类型";
+                                dgvLinkedLinks.Columns["IsEnabled"].HeaderText = "是否启用";
+
+                                // 隐藏不必要的列
+                                dgvLinkedLinks.Columns["SourceValue"].Visible = false;
+                                dgvLinkedLinks.Columns["TargetValue"].Visible = false;
+                                dgvLinkedLinks.Columns["BillStatus"].Visible = false;
+                                dgvLinkedLinks.Columns["Created_at"].Visible = false;
+                                dgvLinkedLinks.Columns["CreateUserId"].Visible = false;
+                                dgvLinkedLinks.Columns["Updated_at"].Visible = false;
+                                dgvLinkedLinks.Columns["UpdateUserId"].Visible = false;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加链路失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 移除链路按钮点击事件
+        /// </summary>
+        private void btnRemoveLink_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dgvLinkedLinks.SelectedRows.Count > 0)
+                {
+                    var selectedRow = dgvLinkedLinks.SelectedRows[0];
+                    if (selectedRow.DataBoundItem is tb_ReminderObjectLink selectedLink)
+                    {
+                        if (MessageBox.Show($"确定要移除链路 '{selectedLink.LinkName}' 吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            // 从本地列表中移除
+                            _linkedLinks.Remove(selectedLink);
+
+                            // 更新数据源
+                            dgvLinkedLinks.DataSource = null;
+                            dgvLinkedLinks.DataSource = _linkedLinks;
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("请先选择要移除的链路", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"移除链路失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private object LoadBusinessConfig(int reminderBizType)
@@ -172,7 +348,7 @@ namespace RUINORERP.UI.BI
         }
 
 
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
             if (base.Validator())
             {
@@ -185,10 +361,51 @@ namespace RUINORERP.UI.BI
                         MessageBox.Show("通知接收人员不能为空", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return;
                     }
+
+                    // 保存关联关系
+                    await SaveLinkedLinksAsync(reminderRule);
                 }
 
                 this.DialogResult = DialogResult.OK;
                 this.Close();
+            }
+        }
+
+        /// <summary>
+        /// 保存关联的链路关系
+        /// </summary>
+        /// <param name="rule">提醒规则</param>
+        private async Task SaveLinkedLinksAsync(tb_ReminderRule rule)
+        {
+            try
+            {
+                if (rule == null || rule.RuleId == 0)
+                    return;
+
+                // 删除现有关联
+                var existingRelations = await _relationController.QueryAsync(r => r.RuleId == rule.RuleId);
+                if (existingRelations != null && existingRelations.Count > 0)
+                {
+                    await _relationController.BaseDeleteAsync(existingRelations);
+                }
+
+                // 保存新关联
+                if (_linkedLinks != null && _linkedLinks.Count > 0)
+                {
+                    var newRelations = _linkedLinks.Select(link => new tb_ReminderLinkRuleRelation
+                    {
+                        RuleId = rule.RuleId,
+                        LinkId = link.LinkId,
+                        Created_at = DateTime.UtcNow,
+                        Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID
+                    }).ToList();
+
+                    await _relationController.AddAsync(newRelations);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存关联关系失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

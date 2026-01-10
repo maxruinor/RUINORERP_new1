@@ -127,6 +127,50 @@ namespace RUINORERP.UI.BaseForm
             return list;
         }
 
+
+
+        /// <summary>
+        /// 使用提醒对象链路引擎处理单据状态变化
+        /// </summary>
+        /// <param name="update">任务更新数据</param>
+        /// <param name="operationType">操作类型</param>
+        private async Task ProcessBillStatusChangeWithLinkEngine(TodoUpdate update, string operationType)
+        {
+            try
+            {
+                // 创建消息数据
+                MessageData messageData = new MessageData
+                {
+                    MessageId = Guid.NewGuid().ToString(),
+                    Title = $"单据{update.OperationDescription}",
+                    Content = $"单据{update.BillNo}已{update.OperationDescription}",
+                    MessageType = MessageType.TaskStatusChange,
+                    BizType = (int)update.BusinessType,
+                    BizData = update,
+                    SenderId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
+                    SenderName = MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName,
+                    CreateTime = DateTime.Now,
+                    IsRead = false,
+                    Priority = MessagePriority.Normal
+                };
+
+                // 获取提醒对象链路引擎
+                var linkEngine = new RUINORERP.Business.LogicaService.ReminderObjectLinkEngine();
+
+                // 处理单据状态变化，匹配规则并发送提醒
+                await linkEngine.ProcessBillStatusChangeAsync(
+                    (int)update.BusinessType,
+                    (int)update.UpdateType,
+                    (int)update.CurrentStatus,
+                    update.InitiatorUserId.ToLong(),
+                    messageData);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "使用提醒对象链路引擎处理单据状态变化失败");
+            }
+        }
+
         /// <summary>
         /// 集成式锁管理服务 v2.0.0
         /// 推荐使用新的集成式服务，提供心跳集成、智能缓存和异常恢复功能
@@ -6555,24 +6599,42 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
+                // 记录同步开始日志
+                MainForm.Instance.logger?.LogDebug("开始状态同步 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",
+                    operationType, update.BusinessType, update.BillId);
+
                 // 设置操作描述（如果未设置）
                 if (string.IsNullOrEmpty(update.OperationDescription))
                 {
                     update.OperationDescription = $"单据{operationType}";
+                    MainForm.Instance.logger?.LogDebug("自动设置操作描述: {OperationDescription}", update.OperationDescription);
                 }
 
                 // 第一步：更新本地工作台（立即生效）
                 TodoSyncManager.Instance.PublishUpdate(update);
+                MainForm.Instance.logger?.LogDebug("本地工作台已更新");
 
-                // 第二步：检查配置开关，决定是否发送到服务器
-                if (MainForm.Instance.AppContext != null && MainForm.Instance.AppContext.SystemGlobalConfig.EnableBillStatusMessage)
+                // 第二步：使用提醒对象链路引擎处理单据状态变化
+                await ProcessBillStatusChangeWithLinkEngine(update, operationType);
+                MainForm.Instance.logger?.LogDebug("提醒对象链路引擎处理完成");
+
+                // 第三步：检查配置开关，决定是否发送到服务器
+                if (MainForm.Instance.AppContext != null)
                 {
-                    // 发送到服务器（不发送给自己，避免重复通知）
-                    await SendTodoUpdateToServerAsync(update);
+                    if (MainForm.Instance.AppContext.SystemGlobalConfig.EnableBillStatusMessage)
+                    {
+                        // 发送到服务器（不发送给自己，避免重复通知）
+                        await SendTodoUpdateToServerAsync(update);
+                        MainForm.Instance.logger?.LogDebug("已发送到服务器");
+                    }
+                    else
+                    {
+                        MainForm.Instance.logger?.LogDebug("单据状态消息发送功能已关闭，跳过消息发送 - 业务类型: {BusinessType}", update.BusinessType);
+                    }
                 }
                 else
                 {
-                    MainForm.Instance.logger?.LogDebug("单据状态消息发送功能已关闭，跳过消息发送 - 业务类型: {BusinessType}", update.BusinessType);
+                    MainForm.Instance.logger?.LogWarning("应用上下文为空，无法检查单据状态消息发送配置");
                 }
 
 
@@ -6581,7 +6643,9 @@ namespace RUINORERP.UI.BaseForm
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger?.LogError(ex, "状态同步时发生异常 - 操作类型: {OperationType}", operationType);
+                // 优化异常处理，提供更详细的错误信息
+                MainForm.Instance.logger?.LogError(ex, "状态同步时发生异常 - 操作类型: {OperationType}, 业务类型: {BusinessType}, 单据ID: {BillId}",
+                    operationType, update?.BusinessType, update?.BillId);
             }
         }
 

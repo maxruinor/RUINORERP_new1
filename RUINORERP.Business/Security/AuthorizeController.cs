@@ -78,7 +78,7 @@ namespace RUINORERP.Business.Security
         }
 
         /// <summary>
-        /// 或取金额的精度
+        /// 取金额的精度
         /// </summary>
         /// <returns></returns>
         public int GetMoneyDataPrecision()

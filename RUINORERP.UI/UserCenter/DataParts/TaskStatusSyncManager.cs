@@ -20,7 +20,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
     public class TodoSyncManager : IExcludeFromRegistration
     {
         #region 单例模式
-        private static readonly Lazy<TodoSyncManager> _instance = 
+        private static readonly Lazy<TodoSyncManager> _instance =
             new Lazy<TodoSyncManager>(() => new TodoSyncManager());
 
         /// <summary>
@@ -84,8 +84,9 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public void PublishUpdate(TodoUpdate update)
         {
             if (update == null)
-                throw new ArgumentNullException(nameof(update));
-
+            {
+                return;
+            }
             _pendingUpdates.Enqueue(update);
             ProcessPendingUpdates();
         }
@@ -106,7 +107,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             ProcessPendingUpdates();
         }
 
-     
+
         #endregion
 
         #region 私有方法
@@ -149,16 +150,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             // 获取当前用户ID，用于过滤掉自己发起的更新
             string currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID.ToString();
-            
+
             // 过滤掉当前用户自己发起的更新，避免自我通知
             var filteredUpdates = updates.Where(u => u.InitiatorUserId != currentUserId).ToList();
-            
+
             // 如果没有需要处理的更新，直接返回
             if (!filteredUpdates.Any())
             {
                 return;
             }
-            
+
             // 对订阅者进行分组，根据其感兴趣的业务类型
             var subscribersByBusinessType = new Dictionary<BizType, List<TodoSyncSubscriber>>();
             var globalSubscribers = new List<TodoSyncSubscriber>(); // 订阅所有业务类型的订阅者
@@ -228,7 +229,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     }
                 }
             }
-            
+
 
         }
 
@@ -317,6 +318,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
     }
-    
+
     #endregion
 }

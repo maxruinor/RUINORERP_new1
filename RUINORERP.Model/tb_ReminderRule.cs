@@ -261,19 +261,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long _LinkId;
-        /// <summary>
-        /// 关联的链路ID
-        /// </summary>
-        [AdvQueryAttribute(ColName = "LinkId",ColDesc = "关联的链路ID")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "LinkId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "关联的链路ID" )]
-        public long LinkId
-        {
-            get{return _LinkId;}
-            set{
-            SetProperty(ref _LinkId, value);
-                        }
-        }
+
 
         private DateTime _Created_at;
         /// <summary>
@@ -343,6 +331,9 @@ namespace RUINORERP.Model
         //RuleId.FK_TB_REMINDERRESULT_REF_TB_REMINDERRULE)
         //tb_ReminderRule.RuleId)
 
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ReminderLinkRuleRelation.RuleId))]
+        public virtual List<tb_ReminderLinkRuleRelation> tb_ReminderLinkRuleRelations { get; set; }
 
         #endregion
 

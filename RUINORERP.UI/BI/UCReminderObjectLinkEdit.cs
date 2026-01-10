@@ -189,23 +189,17 @@ namespace RUINORERP.UI.BI
             KryptonComboBox cmb = new KryptonComboBox();
             cmb.Name = controlName;
             cmb.Dock = DockStyle.Fill;
-            cmb.DataSource = dataSource;
-            cmb.ValueMember = "PrimaryKeyID";
-            cmb.DisplayMember = "DisplayName";
 
-            // 为数据源创建临时显示名称
-            foreach (var item in dataSource)
+            // 创建匿名类型数据源，包含值和显示文本
+            var items = dataSource.Select(item => new
             {
-                var displayName = displayMember(item);
-                var primaryKey = valueMember(item);
-                // 使用反射设置临时属性
-                var type = item.GetType();
-                var property = type.GetProperty("PrimaryKeyID");
-                if (property != null)
-                {
-                    cmb.Items.Add(new { PrimaryKeyID = property.GetValue(item), DisplayName = displayName });
-                }
-            }
+                Value = valueMember(item),
+                Text = displayMember(item)
+            }).ToList();
+
+            cmb.DataSource = items;
+            cmb.ValueMember = "Value";
+            cmb.DisplayMember = "Text";
 
             // 设置选中值
             if (selectedValue.HasValue)

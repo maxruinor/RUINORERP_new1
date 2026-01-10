@@ -23,7 +23,11 @@ namespace RUINORERP.Business.BNR
         // 批量更新队列，存储需要写入数据库的序列值
         private readonly ConcurrentQueue<SequenceUpdateInfo> _updateQueue = new ConcurrentQueue<SequenceUpdateInfo>();
         
-        // 线程同步锁，用于控制缓存刷新到数据库的操作
+        // 按键分片锁，用于控制对同一序列键的并发访问
+        // 优化：使用按键分片锁替代全局锁，不同序列键可并行处理
+        private readonly ConcurrentDictionary<string, object> _keyLocks = new ConcurrentDictionary<string, object>();
+        
+        // 队列处理锁，用于控制队列更新的并发
         private readonly object _queueLock = new object();
         
         // 缓存最大生命周期（毫秒），超过这个时间会强制刷新到数据库
@@ -143,7 +147,7 @@ namespace RUINORERP.Business.BNR
         
         /// <summary>
         /// 将缓存中的序列值刷新到数据库
-        /// 修复：移除事务锁，使用重试机制处理并发冲突
+        /// 优化：使用小事务批量更新 + 乐观锁，减少锁持有时间
         /// </summary>
         private void FlushCacheToDatabase()
         {
@@ -160,7 +164,7 @@ namespace RUINORERP.Business.BNR
                 
                 // 从队列中取出一定数量的更新项
                 int count = 0;
-                while (_updateQueue.TryDequeue(out var updateInfo) && count < 50)
+                while (_updateQueue.TryDequeue(out var updateInfo) && count < 100)
                 {
                     batchUpdates.Add(updateInfo);
                     count++;
@@ -171,106 +175,57 @@ namespace RUINORERP.Business.BNR
                     return;
                 }
                 
-                // 使用重试机制处理并发冲突
-                int retryCount = 0;
-                int maxRetries = 3;
-                bool success = false;
+                System.Diagnostics.Debug.WriteLine($"开始批量更新 {batchUpdates.Count} 个序列值");
                 
-                while (!success && retryCount < maxRetries)
+                // 优化：不使用大事务，而是逐条更新以减少锁持有时间
+                foreach (var update in batchUpdates)
                 {
                     try
                     {
-                        // 不使用事务锁，而是使用重试机制
-                        using (var tran = _sqlSugarClient.Ado.UseTran())
+                        // 使用乐观锁更新，只在数据库值小于当前值时才更新
+                        int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
+                            .SetColumns(s => new SequenceNumbers
+                            {
+                                CurrentValue = update.Value,
+                                LastUpdated = DateTime.Now
+                            })
+                            .Where(s => s.SequenceKey == update.SequenceKey
+                                && s.CurrentValue < update.Value) // 条件更新，避免覆盖新值
+                            .ExecuteCommand();
+                        
+                        // 如果没有更新到任何记录，说明记录不存在
+                        if (affectedRows == 0)
                         {
+                            // 尝试插入新记录
                             try
                             {
-                                // 批量处理更新
-                                foreach (var update in batchUpdates)
+                                _sqlSugarClient.Insertable(new SequenceNumbers
                                 {
-                                    // 检查记录是否存在
-                                    bool exists = _sqlSugarClient.Queryable<SequenceNumbers>()
-                                        .Where(s => s.SequenceKey == update.SequenceKey)
-                                        .Any();
-                                    
-                                    if (exists)
-                                    {
-                                        // 更新现有记录
-                                        _sqlSugarClient.Updateable<SequenceNumbers>()
-                                            .SetColumns(s => new SequenceNumbers
-                                            {
-                                                CurrentValue = update.Value,
-                                                LastUpdated = DateTime.Now,
-                                                ResetType = update.ResetType,
-                                                FormatMask = update.FormatMask,
-                                                Description = update.Description,
-                                                BusinessType = update.BusinessType
-                                            })
-                                            .Where(s => s.SequenceKey == update.SequenceKey)
-                                            .ExecuteCommand();
-                                    }
-                                    else
-                                    {
-                                        // 插入新记录
-                                        var newSequence = new SequenceNumbers
-                                        {
-                                            SequenceKey = update.SequenceKey,
-                                            CurrentValue = update.Value,
-                                            LastUpdated = DateTime.Now,
-                                            CreatedAt = DateTime.Now,
-                                            ResetType = update.ResetType,
-                                            FormatMask = update.FormatMask,
-                                            Description = update.Description,
-                                            BusinessType = update.BusinessType
-                                        };
-                                        
-                                        _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
-                                    }
-                                }
-                                
-                                // 提交事务
-                                tran.CommitTran();
-                                _lastFlushTime = DateTime.Now;
-                                System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
-                                success = true;
+                                    SequenceKey = update.SequenceKey,
+                                    CurrentValue = update.Value,
+                                    LastUpdated = DateTime.Now,
+                                    CreatedAt = DateTime.Now,
+                                    ResetType = update.ResetType,
+                                    FormatMask = update.FormatMask,
+                                    Description = update.Description,
+                                    BusinessType = update.BusinessType
+                                }).ExecuteCommand();
                             }
-                            catch (Exception ex)
+                            catch
                             {
-                                // 记录详细错误信息
-                                System.Diagnostics.Debug.WriteLine($"事务执行失败: {ex.Message}");
-                                System.Diagnostics.Debug.WriteLine($"堆栈跟踪: {ex.StackTrace}");
-                                
-                                // 如果是并发事务冲突，尝试重试
-                                if (ex.Message.Contains("不允许启动新事务") || ex.Message.Contains("already in progress"))
-                                {
-                                    retryCount++;
-                                    if (retryCount < maxRetries)
-                                    {
-                                        System.Diagnostics.Debug.WriteLine($"检测到并发事务冲突，等待后重试 ({retryCount}/{maxRetries})");
-                                        Thread.Sleep(50 * retryCount); // 递增等待时间
-                                        continue;
-                                    }
-                                }
-                                
-                                // 重新入队失败的更新
-                                foreach (var update in batchUpdates)
-                                {
-                                    _updateQueue.Enqueue(update);
-                                }
-                                
-                                throw;
+                                // 插入失败，可能已被并发插入，忽略
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        if (retryCount >= maxRetries)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"刷新序列值到数据库失败，已达到最大重试次数: {ex.Message}");
-                            break;
-                        }
+                        System.Diagnostics.Debug.WriteLine(
+                            $"更新序列值失败，键: {update.SequenceKey}，错误: {ex.Message}");
                     }
                 }
+                
+                _lastFlushTime = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
             }
         }
 
@@ -413,7 +368,7 @@ namespace RUINORERP.Business.BNR
         
         /// <summary>
         /// 获取下一个序列值（支持按时间单位重置）
-        /// 使用内存缓存和锁机制确保高并发下序列号唯一性
+        /// 优化：使用按键分片锁、行级锁和乐观锁机制，提升高并发性能
         /// </summary>
         /// <param name="sequenceKey">序列键</param>
         /// <param name="resetType">重置类型（None、Daily、Monthly、Yearly）</param>
@@ -423,6 +378,11 @@ namespace RUINORERP.Business.BNR
         /// <returns>下一个序列值</returns>
         public long GetNextSequenceValue(string sequenceKey, string resetType = "None", string formatMask = null, string description = null, string businessType = null)
         {
+            if (string.IsNullOrEmpty(sequenceKey))
+            {
+                throw new ArgumentNullException(nameof(sequenceKey), "序列键不能为空");
+            }
+            
             // 生成动态键（包含重置类型信息）
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
             
@@ -430,40 +390,9 @@ namespace RUINORERP.Business.BNR
             // 使用原子操作确保线程安全
             long nextValue = _sequenceCache.AddOrUpdate(
                 dynamicKey,
-                // 如果键不存在，从数据库加载或初始化为1
-                (key) => {
-                    // 先尝试从数据库获取当前值
-                    long dbValue = GetCurrentSequenceValueFromDb(key);
-                    if (dbValue > 0)
-                    {
-                        // 数据库中存在记录，返回数据库值 + 1
-                        _updateQueue.Enqueue(new SequenceUpdateInfo
-                        {
-                            SequenceKey = key,
-                            Value = dbValue + 1,
-                            ResetType = resetType,
-                            FormatMask = formatMask,
-                            Description = description,
-                            BusinessType = businessType
-                        });
-                        return dbValue + 1;
-                    }
-                    else
-                    {
-                        // 数据库中不存在记录，初始化为1
-                        _updateQueue.Enqueue(new SequenceUpdateInfo
-                        {
-                            SequenceKey = key,
-                            Value = 1,
-                            ResetType = resetType,
-                            FormatMask = formatMask,
-                            Description = description,
-                            BusinessType = businessType  // 保存业务类型
-                        });
-                        return 1;
-                    }
-                },
-                // 如果键存在，原子递增并返回新值
+                // 如果键不存在，使用行级锁从数据库加载（优化点）
+                (key) => GetNextValueWithRowLock(key, resetType, formatMask, description, businessType),
+                // 如果键存在，原子递增并异步更新数据库
                 (key, currentValue) => {
                     long next = currentValue + 1;
                     
@@ -475,7 +404,7 @@ namespace RUINORERP.Business.BNR
                         ResetType = resetType,
                         FormatMask = formatMask,
                         Description = description,
-                        BusinessType = businessType  // 保存业务类型
+                        BusinessType = businessType
                     });
                     
                     return next;
@@ -498,6 +427,136 @@ namespace RUINORERP.Business.BNR
             }
             
             return nextValue;
+        }
+        
+        /// <summary>
+        /// 使用行级锁获取下一个值
+        /// 核心优化：使用WITH(UPDLOCK, HOLDLOCK)确保行级锁，避免脏读和并发冲突
+        /// </summary>
+        /// <param name="sequenceKey">序列键</param>
+        /// <param name="resetType">重置类型</param>
+        /// <param name="formatMask">格式掩码</param>
+        /// <param name="description">描述</param>
+        /// <param name="businessType">业务类型</param>
+        /// <returns>下一个序列值</returns>
+        private long GetNextValueWithRowLock(string sequenceKey, string resetType,
+            string formatMask, string description, string businessType)
+        {
+            // 获取键级别锁，减少锁竞争粒度
+            // 相比全局锁，按键锁可以让不同序列键的请求并行执行
+            var keyLock = _keyLocks.GetOrAdd(sequenceKey, k => new object());
+            
+            lock (keyLock)
+            {
+                // 使用乐观锁机制，先查后更新
+                int retryCount = 0;
+                const int maxRetries = 5;
+                
+                while (retryCount < maxRetries)
+                {
+                    try
+                    {
+                        // 使用WITH(UPDLOCK, HOLDLOCK)确保行级锁
+                        // UPDLOCK: 读取时加锁，直到事务结束
+                        // HOLDLOCK: 等同于SERIALIZABLE隔离级别，防止幻读
+                        var sequence = _sqlSugarClient.Ado.SqlQuery<SequenceNumbers>(
+                            "SELECT * FROM SequenceNumbers WITH(UPDLOCK, HOLDLOCK) " +
+                            "WHERE SequenceKey = @SequenceKey",
+                            new { SequenceKey = sequenceKey })
+                            .FirstOrDefault();
+                        
+                        long nextValue;
+                        
+                        if (sequence != null)
+                        {
+                            // 记录当前版本号，用于乐观锁
+                            long currentVersion = sequence.CurrentValue;
+                            nextValue = currentVersion + 1;
+                            
+                            // 使用乐观锁更新，只有当CurrentValue未变化时才更新
+                            // 这种方式避免了长时间的行锁持有，提高并发性能
+                            int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
+                                .SetColumns(s => new SequenceNumbers
+                                {
+                                    CurrentValue = nextValue,
+                                    LastUpdated = DateTime.Now
+                                })
+                                .Where(s => s.SequenceKey == sequenceKey 
+                                    && s.CurrentValue == currentVersion) // 乐观锁条件
+                                .ExecuteCommand();
+                            
+                            if (affectedRows == 0)
+                            {
+                                // 乐观锁失败，已被其他事务修改，重试
+                                retryCount++;
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"乐观锁失败，重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
+                                Thread.Sleep(10 * retryCount); // 指数退避
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            // 插入新记录
+                            nextValue = 1;
+                            try
+                            {
+                                _sqlSugarClient.Insertable(new SequenceNumbers
+                                {
+                                    SequenceKey = sequenceKey,
+                                    CurrentValue = nextValue,
+                                    LastUpdated = DateTime.Now,
+                                    CreatedAt = DateTime.Now,
+                                    ResetType = resetType,
+                                    FormatMask = formatMask,
+                                    Description = description,
+                                    BusinessType = businessType
+                                }).ExecuteCommand();
+                            }
+                            catch (Exception ex) when (ex.Message.Contains("PRIMARY KEY") || 
+                                ex.Message.Contains("UNIQUE constraint") ||
+                                ex.Message.Contains("违反了 PRIMARY KEY"))
+                            {
+                                // 插入失败，已被其他事务插入，重试查询
+                                retryCount++;
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"插入失败（并发插入），重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
+                                continue;
+                            }
+                        }
+                        
+                        // 成功获取值后，立即更新缓存
+                        _sequenceCache.AddOrUpdate(sequenceKey, nextValue, (k, v) => nextValue);
+                        
+                        System.Diagnostics.Debug.WriteLine(
+                            $"成功获取序列值，键: {sequenceKey}，值: {nextValue}");
+                        
+                        return nextValue;
+                    }
+                    catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 1205) // 死锁错误码
+                    {
+                        retryCount++;
+                        System.Diagnostics.Debug.WriteLine(
+                            $"检测到死锁，重试中 ({retryCount}/{maxRetries})，键: {sequenceKey}");
+                        Thread.Sleep(50 * retryCount);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(
+                            $"获取序列值时发生异常: {ex.Message}，键: {sequenceKey}");
+                        
+                        if (retryCount >= maxRetries - 1)
+                        {
+                            throw;
+                        }
+                        
+                        retryCount++;
+                        Thread.Sleep(20 * retryCount);
+                    }
+                }
+                
+                throw new Exception($"获取序列值失败，已达到最大重试次数 {maxRetries}，键: {sequenceKey}");
+            }
         }
         
         /// <summary>

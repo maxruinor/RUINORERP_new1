@@ -916,7 +916,7 @@ namespace RUINORERP.Business
                     counter++;
                 }
                 sql = select + where;
-                if (!sql.IsNotEmptyOrNull() && !sqlList.Contains(sql))
+                if (sql.IsNotEmptyOrNull() && !sqlList.Contains(sql))
                 {
                     sqlList.Add(sql);
                 }

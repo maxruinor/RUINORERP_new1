@@ -1023,7 +1023,7 @@ namespace RUINORERP.Business
             }
 
             // 计算预收款总额
-            decimal totalPrePayment = prePayments.Sum(x => x.ForeignBalanceAmount);
+            decimal totalPrePayment = prePayments.Sum(x => x.LocalBalanceAmount);
 
             // 检查预收款是否足够支付出库金额
             if (totalPrePayment < saleOut.TotalAmount - 0.01m) // 允许0.01的误差
@@ -1051,7 +1051,7 @@ namespace RUINORERP.Business
 
                 if (!shouldAutoAudit)
                 {
-                    result.Succeeded = true;
+                    result.Succeeded = false;
                     result.ErrorMsg = "不满足自动审核条件,跳过自动审核";
                     return result;
                 }
@@ -1063,10 +1063,8 @@ namespace RUINORERP.Business
 
                 // 执行审核流程
                 var approvalResult = await ApprovalAsync(saleOut as T);
-
                 if (approvalResult.Succeeded)
                 {
-                    _logger.LogInformation($"销售出库单【{saleOut.SaleOutNo}】自动审核成功(全额预收款订单)");
                     result.Succeeded = true;
                     result.ReturnObject = saleOut;
                 }

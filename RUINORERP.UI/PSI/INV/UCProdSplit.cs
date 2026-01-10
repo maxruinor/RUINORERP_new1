@@ -464,6 +464,7 @@ namespace RUINORERP.UI.PSI.INV
                 foreach (var item in RowDetails)
                 {
                     tb_ProdSplitDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_ProdSplitDetail>(item);
+                    bOM_SDetail.PrimaryKeyID = 0;
                     bOM_SDetail.Qty = 0;
                     details.Add(bOM_SDetail);
                 }

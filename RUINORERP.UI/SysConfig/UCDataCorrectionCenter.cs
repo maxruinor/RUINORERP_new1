@@ -1915,6 +1915,7 @@ namespace RUINORERP.UI.SysConfig
                     {
 
                         tb_CRM_Customer entity = MainForm.Instance.mapper.Map<tb_CRM_Customer>(Customer);
+                        entity.PrimaryKeyID= 0;
                         BusinessHelper.Instance.InitEntity(entity);
                         customers.Add(entity);
                     }

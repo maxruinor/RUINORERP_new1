@@ -268,6 +268,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 初始化DataStatus状态转换规则
+        /// 支持多次提交功能:允许从新建状态再次提交(重新提交审核)
         /// </summary>
         private void InitializeDataStatusTransitionRules()
         {
@@ -275,7 +276,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
                 [DataStatus.草稿] = new List<object> { DataStatus.新建, DataStatus.作废 },
-                [DataStatus.新建] = new List<object> { DataStatus.确认, DataStatus.作废 },
+                [DataStatus.新建] = new List<object> { DataStatus.新建, DataStatus.确认, DataStatus.作废 }, // 支持多次提交:新建状态可再次提交到新建状态(重新提交)
                 [DataStatus.确认] = new List<object> { DataStatus.新建, DataStatus.完结, DataStatus.作废 },
                 [DataStatus.完结] = new List<object> { }, // 完结状态不能再转换
                 [DataStatus.作废] = new List<object> { } // 作废状态就不再使用
@@ -661,8 +662,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
+            // 支持多次提交:新建状态下允许重新提交
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             /// 确认状态：不允许修改和删除，允许反审核，可以结案
             AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false);
@@ -952,7 +954,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var flexibleModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核, MenuItemEnums.保存 }, // 支持多次提交
                 [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
                 [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
@@ -961,7 +963,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },//不能修改
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核 },//支持多次提交，不能修改
                 [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
                 [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
@@ -1517,7 +1519,19 @@ namespace RUINORERP.Model.Base.StatusManager
             // 如果是DataStatus类型，直接映射
             if (statusType == typeof(DataStatus))
             {
-                if (action == MenuItemEnums.提交) return DataStatus.新建;
+                // 提交操作:根据当前状态决定目标状态
+                if (action == MenuItemEnums.提交)
+                {
+                    // 草稿状态 -> 提交到新建
+                    if (currentStatus != null && currentStatus.Equals(DataStatus.草稿))
+                        return DataStatus.新建;
+                    // 新建状态 -> 重新提交到新建(多次提交)
+                    if (currentStatus != null && currentStatus.Equals(DataStatus.新建))
+                        return DataStatus.新建;
+                    // 其他状态不允许提交,返回当前状态
+                    return currentStatus;
+                }
+
                 if (action == MenuItemEnums.审核) return DataStatus.确认;
                 if (action == MenuItemEnums.反审) return DataStatus.新建;
                 if (action == MenuItemEnums.结案) return DataStatus.完结;

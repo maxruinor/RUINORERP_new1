@@ -1296,6 +1296,7 @@ namespace RUINORERP.Business
                 entity.Modified_by = null;
                 entity.PayStatus = saleorder.PayStatus;
                 entity.Paytype_ID = saleorder.Paytype_ID;
+                entity.PrimaryKeyID = 0;
                 List<string> tipsMsg = new List<string>();
                 List<tb_SaleOutDetail> details = mapper.Map<List<tb_SaleOutDetail>>(saleorder.tb_SaleOrderDetails);
                 List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
@@ -1381,7 +1382,6 @@ namespace RUINORERP.Business
                         }
                         #endregion
                     }
-
                 }
 
                 if (NewDetails.Count == 0)

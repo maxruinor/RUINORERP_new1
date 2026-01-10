@@ -2253,12 +2253,12 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                            //提交后别人可以审核 
-                            UNLock();
-                            // 状态同步已在提交方法内部处理，无需重复调用
-                            
+                                    
                             // 调用提交成功后的处理逻辑（虚方法，子类可重写）
                             await AfterSubmitAsync();
+                            //提交后别人可以审核 
+                            UNLock();
+                    
                         }
                     }
                     catch (Exception ex)
@@ -5480,6 +5480,7 @@ namespace RUINORERP.UI.BaseForm
             //var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
             BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
             bool submitrs = false;
+            bool autoAuditSuccess = true; // 跟踪自动审核结果
             string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             if (pkid > 0)
@@ -5571,6 +5572,7 @@ namespace RUINORERP.UI.BaseForm
                                         command.Undo();
                                         //审核失败 要恢复之前的值
                                         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg}请联系管理员！", Color.Red);
+                                        autoAuditSuccess = false; // 自动审核失败
                                     }
                                 }
                             }
@@ -5617,12 +5619,13 @@ namespace RUINORERP.UI.BaseForm
                                         command.Undo();
                                         //审核失败 要恢复之前的值
                                         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
+                                        autoAuditSuccess = false; // 自动审核失败
 
                                     }
                                 }
                             }
                         }
-                        submitrs = true;
+                        submitrs = autoAuditSuccess; // 提交成功与否取决于自动审核结果
                         var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
                         string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();

@@ -197,7 +197,7 @@ namespace RUINORERP.Business.Document.Converters
                     // 对decimal类型使用Math.Ceiling需要先转换为double，再转回decimal
                     shouldQty = (decimal)Math.Ceiling((double)shouldQty);
                 }
-
+                details[i].PrimaryKeyID = 0;
                 // 设置应发数量
                 details[i].ShouldSendQty = shouldQty.ToInt();
 

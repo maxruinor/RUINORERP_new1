@@ -178,7 +178,7 @@ namespace RUINORERP.Business.Document.Converters
 
             // 一个制令单就一个成品，就一行数据
             tb_FinishedGoodsInvDetail newDetail = _mapper.Map<tb_FinishedGoodsInvDetail>(source);
-            
+            newDetail.PrimaryKeyID=0; // 新增明细，主键ID设为0
             // 计算应缴数量 = 生产数量 - 已交付数量
             newDetail.PayableQty = source.ManufacturingQty - source.QuantityDelivered;
             newDetail.Qty = 0; // 实缴数量初始化为0，由用户手动输入

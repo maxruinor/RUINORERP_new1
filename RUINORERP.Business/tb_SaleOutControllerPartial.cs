@@ -314,11 +314,11 @@ namespace RUINORERP.Business
                     .Where(c => c.SaleOut_MainID == entity.SaleOut_MainID)
                     .Select(c => new { c.DataStatus, c.ApprovalStatus, c.ApprovalResults })
                     .FirstAsync();
-                
+
                 if (existingEntity != null)
                 {
                     // 检查是否已经审核通过
-                    if (existingEntity.DataStatus == (int)DataStatus.确认 || 
+                    if (existingEntity.DataStatus == (int)DataStatus.确认 ||
                         existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 ||
                         (existingEntity.ApprovalResults.HasValue && existingEntity.ApprovalResults.Value))
                     {
@@ -948,15 +948,18 @@ namespace RUINORERP.Business
         /// <returns>是否满足自动审核条件</returns>
         private async Task<bool> ShouldAutoAuditSalesOut(tb_SaleOut saleOut)
         {
+            // 检查财务模块是否启用
+            AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+            if (!authorizeController.EnableFinancialModule())
+            {
+                return false;
+            }
             // 检查配置开关是否启用
             if (!_appContext.FMConfig.EnableAutoAuditSalesOutboundForFullPrepaymentOrders)
             {
                 return false;
             }
-
-            // 检查财务模块是否启用
-            AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-            if (!authorizeController.EnableFinancialModule())
+            if (saleOut.PayStatus != (int)PayStatus.全额预付)
             {
                 return false;
             }
@@ -985,6 +988,14 @@ namespace RUINORERP.Business
                 return false;
             }
 
+            //如果为账期付款类型则不处理
+            if (_appContext.PaymentMethodOfPeriod.Paytype_ID == saleOrder.Paytype_ID.Value)
+            {
+                return false;
+            }
+
+
+
             // 加载付款类型信息
             var paymentMethod = await _unitOfWorkManage.GetDbClient().Queryable<tb_PaymentMethod>()
                 .Where(c => c.Paytype_ID == saleOrder.Paytype_ID.Value)
@@ -995,15 +1006,6 @@ namespace RUINORERP.Business
                 return false;
             }
 
-            // 检查是否为全额预收款类型(根据付款类型名称或特定字段判断)
-            // 这里假设付款类型名称包含"全额预收款"或特定标识
-            bool isFullPrepaymentType = paymentMethod.PayTypeName.Contains("全额预收款") || 
-                                        paymentMethod.PayTypeName.Contains("全款");
-
-            if (!isFullPrepaymentType)
-            {
-                return false;
-            }
 
             // 检查是否存在未核销的预收款
             var prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
@@ -1021,7 +1023,7 @@ namespace RUINORERP.Business
             }
 
             // 计算预收款总额
-            decimal totalPrePayment = prePayments.Sum(x => x.LocalPrePayAmount - x.LocalWrittenOffAmount);
+            decimal totalPrePayment = prePayments.Sum(x => x.ForeignBalanceAmount);
 
             // 检查预收款是否足够支付出库金额
             if (totalPrePayment < saleOut.TotalAmount - 0.01m) // 允许0.01的误差

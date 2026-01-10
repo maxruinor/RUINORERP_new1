@@ -174,6 +174,11 @@ namespace RUINORERP.UI
         private readonly EnhancedMessageManager _messageManager;
 
         /// <summary>
+        /// 测试管理器
+        /// </summary>
+        private readonly Services.TestManager.ITestManager _testManager;
+
+        /// <summary>
         /// 系统锁定状态标志
         /// </summary>
         public bool IsLocked { get; private set; }
@@ -310,29 +315,19 @@ namespace RUINORERP.UI
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
-
-
         }
 
-
-
-
-
-
+ 
 
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
         /// </summary>
         public List<View_ProdDetail> View_ProdDetailList = new List<View_ProdDetail>();
 
-        // 消息相关的集合和锁已移至MessageManager类中管理
-        // 移除了内部ReminderData类，使用RUINORERP.PacketSpec.Models.Message.ReminderData
-
-        ///// <summary>
-        ///// 用于连接上服务器后。保存与服务器连接的id
-        ///   逻辑已经 在这里有了 EasyClientService
-        ///// </summary>
-        //public string SessionID { get; set; }
+        /// <summary>
+        /// 消息相关的集合和锁已移至MessageManager类中管理
+        /// 移除了内部ReminderData类，使用RUINORERP.PacketSpec.Models.Message.ReminderData
+        /// </summary>
         /// <summary>
         /// 保存了所有工作流的队列，包括通知，审批相关
         /// </summary>
@@ -475,7 +470,8 @@ namespace RUINORERP.UI
 
 
         public MainForm(ILogger<MainForm> _logger, AuditLogHelper _auditLogHelper,
-            FMAuditLogHelper _fmauditLogHelper, EnhancedMessageManager messageManager)
+            FMAuditLogHelper _fmauditLogHelper, EnhancedMessageManager messageManager,
+            Services.TestManager.ITestManager testManager)
         {
             InitializeComponent();
 
@@ -492,6 +488,9 @@ namespace RUINORERP.UI
             _main = this;
             // 初始化消息管理器
             _messageManager = messageManager;
+
+            // 初始化测试管理器
+            _testManager = testManager ?? throw new ArgumentNullException(nameof(testManager));
             // 订阅消息状态变更事件，用于更新UI显示
             _messageManager.MessageStatusChanged += OnMessageStatusChanged;
 
@@ -515,8 +514,6 @@ namespace RUINORERP.UI
 
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
-            kryptonDockableWorkspace1.WorkspaceCellRemoved += KryptonDockableWorkspace1_WorkspaceCellRemoved;
-            kryptonDockableWorkspace1.ControlRemoved += KryptonDockableWorkspace1_ControlRemoved;
             kryptonDockableWorkspace1.PageCloseClicked += KryptonDockableWorkspace1_PageCloseClicked;
 
 
@@ -571,17 +568,6 @@ namespace RUINORERP.UI
             }
 
         }
-
-        private void KryptonDockableWorkspace1_ControlRemoved(object sender, ControlEventArgs e)
-        {
-
-        }
-
-        private void KryptonDockableWorkspace1_WorkspaceCellRemoved(object sender, WorkspaceCellEventArgs e)
-        {
-
-        }
-
 
         /// <summary>
         /// 更新当前用户信息中的当前模块和当前窗体
@@ -811,14 +797,7 @@ namespace RUINORERP.UI
             return rs;
         }
 
-
-        private void AddMDIChildWindow()
-        {
-            frmTest f = new frmTest();
-            f.Text = "Child " + (2).ToString();
-            //f.MdiParent = this;
-            f.ShowDialog();
-        }
+ 
 
         private void kryptonButton1_Click(object sender, EventArgs e)
         {
@@ -887,16 +866,7 @@ namespace RUINORERP.UI
             return pageMessageCenter;
         }
 
-
-        //private KryptonPage NewIMMsg()
-
-        //    KryptonPage pageMsg = NewPage("通讯中心", 2, ucMsg);
-        //    //pageMsg.ClearFlags(KryptonPageFlags.All);
-        //    pageMsg.ClearFlags(KryptonPageFlags.DockingAllowClose);
-        //    pageMsg.ClearFlags(KryptonPageFlags.DockingAllowFloating);//控制托出的单独窗体是否能关掉
-        //    pageMsg.Height = 30;
-        //    return pageMsg;
-        //}
+ 
         private KryptonPage NewForm()
         {
             return NewPage("NewForm ", 1, new UserControl1());
@@ -944,17 +914,7 @@ namespace RUINORERP.UI
 
         private string version = string.Empty;
 
-
-
-        /// <summary>
-        /// 保存锁定信息集合
-        /// </summary>
-        //public ConcurrentDictionary<long, BillLockInfo> LockInfoList = new ConcurrentDictionary<long, BillLockInfo>();
-
-
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-        // public LockManager lockManager = new LockManager();
-
+ 
 
         /// <summary>
         /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
@@ -1279,18 +1239,17 @@ namespace RUINORERP.UI
             // 更新当前用户信息中的当前模块和当前窗体
             UpdateCurrentUserModuleAndForm();
 
-
-
-
-
-            if (AppContext.IsSuperUser)
+            // 控制测试按钮显示（通过TestManager统一管理）
+            if (_testManager != null && _testManager.IsTestButtonsVisible())
             {
                 tsbtnSysTest.Visible = true;
+                btnUnDoTest.Visible = true;
             }
-
-            MainForm.Instance.kryptonDockingManager1.PageCloseRequest += KryptonDockingManager1_PageCloseRequest;
-
-            MainForm.Instance.kryptonDockingManager1.DockspaceCellRemoved += KryptonDockingManager1_DockspaceCellRemoved;
+            else
+            {
+                tsbtnSysTest.Visible = false;
+                btnUnDoTest.Visible = false;
+            }
 
             MainForm.Instance.kryptonDockingManager1.DockspaceRemoved += KryptonDockingManager1_DockspaceRemoved;
 
@@ -1535,16 +1494,6 @@ namespace RUINORERP.UI
 
         }
 
-        private void KryptonDockingManager1_DockspaceCellRemoved(object sender, DockspaceCellEventArgs e)
-        {
-
-        }
-
-        private void KryptonDockingManager1_PageCloseRequest(object sender, CloseRequestEventArgs e)
-        {
-
-        }
-
 
         public AuthorizeController authorizeController;
 
@@ -1628,40 +1577,7 @@ namespace RUINORERP.UI
             }
         }
 
-        private void LoadStatus()
-        {
-            // 创建StatusStrip控件
-            StatusStrip statusStrip = new StatusStrip();
-            statusStrip.Dock = DockStyle.Bottom;
-            // 添加账号信息
-            ToolStripStatusLabel accountLabel = new ToolStripStatusLabel();
-            accountLabel.Text = "账号: user1";
-            statusStrip.Items.Add(accountLabel);
-            // 添加角色信息
-            ToolStripStatusLabel roleLabel = new ToolStripStatusLabel();
-            roleLabel.Text = "角色: 管理员";
-            statusStrip.Items.Add(roleLabel);
-            // 添加操作位置信息
-            ToolStripStatusLabel locationLabel = new ToolStripStatusLabel();
-            locationLabel.Text = "操作位置: 主界面";
-            statusStrip.Items.Add(locationLabel);
-            // 添加锁定状态信息
-            _lockStatusLabel = new ToolStripStatusLabel();
-            _lockStatusLabel.Text = "状态: 正常";
-            _lockStatusLabel.ForeColor = Color.Green;
-            statusStrip.Items.Add(_lockStatusLabel);
-            // 添加进度条
-            ToolStripProgressBar progressBar = new ToolStripProgressBar();
-            progressBar.Value = 50;
-            statusStrip.Items.Add(progressBar);
-            // 添加版本信息
-            ToolStripStatusLabel versionLabel = new ToolStripStatusLabel();
-            versionLabel.Text = "版本: v1.0";
-            statusStrip.Items.Add(versionLabel);
-            // 将StatusStrip控件添加到窗口的Controls集合中
-            this.Controls.Add(statusStrip);
-        }
-
+ 
         /// <summary>
         /// 检查并处理待处理的更新
         /// </summary>
@@ -2603,12 +2519,7 @@ namespace RUINORERP.UI
             e.Action = CloseButtonAction.RemovePageAndDispose;
         }
 
-
-        private async Task InitCacheConfig(bool LoadData)
-        {
-            // _cacheManager.InitCacheDict(LoadData); // 已废弃，使用CacheInitializationService替代
-            await Task.Delay(5);
-        }
+ 
 
         /// <summary>
         /// 只执行一次,初始化菜单
@@ -2633,62 +2544,7 @@ namespace RUINORERP.UI
         }
 
 
-        private List<tb_MenuInfo> LoadTypes()
-        {
-            tb_MenuInfo menuInfoparent = new tb_MenuInfo();
-            List<tb_MenuInfo> menuList = new List<tb_MenuInfo>();
-            Type[]? types = System.Reflection.Assembly.GetExecutingAssembly()?.GetExportedTypes();
-            if (types != null)
-            {
-                var descType = typeof(MenuAttrAssemblyInfo);
-                foreach (Type type in types)
-                {
-                    // 强制为自定义特性
-                    MenuAttrAssemblyInfo? attribute = type.GetCustomAttribute(descType, false) as MenuAttrAssemblyInfo;
-                    // 如果强制失败或者不需要注入的窗体跳过，进入下一个循环
-                    if (attribute == null || !attribute.Enabled)
-                        continue;
-
-                    if (!attribute.Enabled)
-                    {
-                        continue;
-                    }
-
-                    if (string.IsNullOrEmpty(attribute.MenuPath))
-                    {
-                        continue;
-                    }
-                    Model.tb_MenuInfo info = new tb_MenuInfo();
-                    string[] sz = attribute.MenuPath.Split('|');
-                    if (sz.Length == 2)
-                    {
-                        menuInfoparent.MenuName = sz[0];
-                        menuInfoparent.IsVisble = true;
-                        menuInfoparent.IsEnabled = true;
-                        menuInfoparent.CaptionCN = sz[0];
-                        menuInfoparent.MenuType = "导航菜单";
-                    }
-
-                    #region menu 
-                    info.MenuName = attribute.Describe;
-                    info.IsVisble = true;
-                    info.IsEnabled = true;
-                    info.CaptionCN = attribute.Describe;
-                    info.ClassPath = type.FullName;
-                    info.FormName = type.Name;
-                    info.Parent_id = 0;
-                    if (attribute.MenuBizType.HasValue)
-                    {
-                        info.BizType = (int)attribute.MenuBizType;
-                    }
-                    info.MenuType = "行为菜单";
-                    #endregion
-                    menuList.Add(info);
-                }
-            }
-            return menuList;
-        }
-
+     
         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
 
 
@@ -2749,13 +2605,7 @@ namespace RUINORERP.UI
             }
         }
 
-        private void AnalysisMenuPath(MenuAttrAssemblyInfo menuInfo, string caption)
-        {
-            if (menuInfo.MenuPath.Contains("caption"))
-            {
-                menuInfo.MenuPath = menuInfo.MenuPath.Replace(caption + "|", "");
-            }
-        }
+
 
         /// <summary>
         /// 缓存给后面使用的菜单列表，注意权限控制
@@ -2771,21 +2621,7 @@ namespace RUINORERP.UI
                 //AutoTaskTimer.Elapsed += AutoTaskTimer_Elapsed;//委托，要执行的方法
                 //AutoTaskTimer.AutoReset = true;//获取该定时器自动执行
                 //AutoTaskTimer.Enabled = true;//这个一定要写，要不然定时器不会执行的
-                /*
-                voidHandler handler = new voidHandler(LoadEvent);
-                //异步操作接口(注意BeginInvoke方法的不同！)
-                IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
-                Thread.Sleep(2000);
-                */
-                ////加载完成后，才执行
-                //frmMainCenter center = new frmMainCenter();
-                // center.WindowState = FormWindowState.Maximized;
-                //center.MdiParent = frmMain.Instance;
-                //center.Show();
-                //TX();
-                //this.tbr_Toolbar.ButtonClick += new System.Windows.Forms.ToolBarButtonClickEventHandler(this.tbr_Toolbar_ButtonClick);
                 this.menuStripMain.Items.Clear();
-                //MenuPowerHelper p = new MenuPowerHelper();
                 MenuPowerHelper p = Startup.GetFromFac<MenuPowerHelper>();
                 MenuList = p.AddMenu(this.menuStripMain);
 
@@ -2843,23 +2679,8 @@ namespace RUINORERP.UI
                 p.MainMenu = this.menuStripMain;
 
                 voidHandler handler = new voidHandler(LoadEvent);
-                //异步操作接口(注意BeginInvoke方法的不同！)
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
                 Thread.Sleep(100);
-                //for csla 
-                //if (AuthenticationType == "Windows")
-                if (false)
-                {
-                    // AppDomain.CurrentDomain.SetPrincipalPolicy(
-                    //   System.Security.Principal.PrincipalPolicy.WindowsPrincipal);
-                    // ApplyAuthorizationRules();
-                }
-                else
-                {
-
-                }
-                // initialize cache of role list
-                //var task = RoleList.CacheListAsync();
 
 
 
@@ -2930,54 +2751,7 @@ namespace RUINORERP.UI
         }
 
 
-        #region  显示提示，不阻塞进程
-        public void ShowTips(string Title, string Content, object para)
-        {
-            try
-            {
-
-                kryptonTaskDialog.RadioButtons.Clear();
-                //if (checkBoxRadioButtons.Checked)
-                //    kryptonTaskDialog.RadioButtons.AddRange(new KryptonTaskDialogCommand[] { kryptonTaskDialogCommand1, kryptonTaskDialogCommand2, kryptonTaskDialogCommand3 });
-
-                kryptonTaskDialog.CommandButtons.Clear();
-                // if (checkBoxCommandButtons.Checked)
-                //kryptonTaskDialog.CommandButtons.AddRange(new KryptonTaskDialogCommand[] { kryptonTaskDialogCommand4, kryptonTaskDialogCommand5, kryptonTaskDialogCommand6 });
-                kryptonTaskDialogCommand1.Tag = para;
-                kryptonTaskDialog.CommandButtons.AddRange(new KryptonTaskDialogCommand[] { kryptonTaskDialogCommand1 });
-
-
-
-                kryptonTaskDialog.WindowTitle = Title;
-                //kryptonTaskDialog.MainInstruction = textBoxMainInstructions.Text;
-                kryptonTaskDialog.Content = Content;
-                //  kryptonTaskDialog.Icon = (MessageBoxIcon)Enum.Parse(typeof(MessageBoxIcon), comboBoxIcon.Text);
-                //  kryptonTaskDialog.CommonButtons = commonButtons;
-                //  kryptonTaskDialog.CheckboxText = textBoxCheckBoxText.Text;
-                //  kryptonTaskDialog.CheckboxState = checkBoxInitialState.Checked;
-                kryptonTaskDialog.FooterText = "请及时处理。";
-                // kryptonTaskDialog.FooterHyperlink = textBoxFooterHyperlink.Text;
-                // kryptonTaskDialog.FooterIcon = (MessageBoxIcon)Enum.Parse(typeof(MessageBoxIcon), comboBoxFooterIcon.Text);
-                kryptonTaskDialog.ShowDialog(this);
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex);
-            }
-        }
-
-        public delegate void ShowHandler(string Title, string Content, object para);
-        public void ShowCallback(IAsyncResult result)
-        {
-            ShowHandler handler = (ShowHandler)((AsyncResult)result).AsyncDelegate;
-            handler.EndInvoke(result);
-            // MainForm.Instance.PrintInfoLog(handler.EndInvoke(result));
-            MainForm.Instance.PrintInfoLog(result.AsyncState.ToString());
-            MainForm.Instance.PrintInfoLog("ShowCallback 加载完成。");
-
-        }
-
-        #endregion
+ 
 
         public delegate void voidHandler();
         void callback(IAsyncResult result)
@@ -3045,12 +2819,7 @@ namespace RUINORERP.UI
             //db.DbFirst.IsCreateAttribute().CreateClassFile("c:\\temp\\sq", "Models");
             db.DbFirst.IsCreateAttribute().CreateClassFile(@"G:\数据仓库\软件编程\RUINORERP\RUINORERPTester\RUINORERPTester\Models", "Model");
 
-            //参数1：简化用法
-
-
-
-            //var dt = db.Ado.GetDataTable("select * from tb_Supplier where id>3");
-
+   
 
         }
 
@@ -3109,8 +2878,6 @@ namespace RUINORERP.UI
             db.Insertable(tbunit).ExecuteReturnSnowflakeId(); //都是参数化实现
 
 
-
-
             MessageBox.Show(results.Errors.Count.ToString());
         }
 
@@ -3119,25 +2886,6 @@ namespace RUINORERP.UI
             Form2 frm = Startup.GetFromFac<Form2>();
             frm.Show();
             return;
-
-            // RoleService rs = new RoleService();
-
-            //Type t = System.Reflection.Assembly.GetExecutingAssembly().GetType("RUINORERP.UI.SS.MenuInit");
-            //var test = Startup.GetFromFacByName(t.FullName, t);
-            //var SS = Startup.GetFromFac<RUINORERP.UI.SS.MenuInit>();
-
-            var menu = Startup.GetFromFacByName<UserControl>("MENU");
-
-            KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
-            if (cell == null)
-            {
-                cell = new KryptonWorkspaceCell();
-                kryptonDockableWorkspace1.Root.Children.Add(cell);
-            }
-
-            // Create new document to be added into workspace
-            KryptonPage page = NewPage("Input111", 1, menu);
-            cell.Pages.Add(page);
         }
 
 
@@ -3178,10 +2926,19 @@ namespace RUINORERP.UI
         }
 
 
+        /// <summary>
+        /// 撤销测试按钮点击事件
+        /// </summary>
         private void btnUnDoTest_Click(object sender, EventArgs e)
         {
-            frmTest frm = new frmTest();
-            frm.Show();
+            try
+            {
+                _testManager?.ShowUndoTest();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "撤销测试窗体打开失败");
+            }
         }
 
 
@@ -3193,16 +2950,11 @@ namespace RUINORERP.UI
             _byteArray = kryptonDockableWorkspace1.SaveLayoutToArray();
             try
             {
-
-
-
                 watcher.EnableRaisingEvents = false;
                 watcher.Dispose();
 
-                _menuTracker.SaveToDb(); // 确保退出时保存
+                await _menuTracker.SaveToDb(); // 确保退出时保存
 
-                //if (MessageBox.Show(this, "确定退出本系统吗?", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                //{
 
                 e.Cancel = false;
                 System.GC.Collect();
@@ -3512,7 +3264,6 @@ namespace RUINORERP.UI
         {
             using (StatusBusy busy = new StatusBusy("系统正在加载数据... 请稍候"))
             {
-                //InitEditObjectValue();
                 LoadMenuOfTop();
                 LoadMenuPagesByLeft();
             }
@@ -3523,13 +3274,6 @@ namespace RUINORERP.UI
             await UpdateSys(true);
         }
 
-        //public async Task Create(CreateUpdateRoleDto createUpdateRoleDto)
-        //{
-        //    IRoleService _roleService = new RoleService(new );
-        //    RequiredHelper.IsValid(createUpdateRoleDto);
-        //    await _roleService.CreateAsync(createUpdateRoleDto);
-        //    return Create();
-        //}
 
 
 
@@ -3619,40 +3363,11 @@ namespace RUINORERP.UI
             }
         }
 
-        // 此方法已迁移到 NotificationService
-        // public void ShowMsg(string msg, string Caption = null)
-        // { ... }
 
-
-        /*
-        public List<MoveForm> ListMoveForms = new List<MoveForm>();
-
-        /// <summary>
-        /// 获取下一个需要显示的窗口的纵坐标
-        /// </summary>
-        /// <returns></returns>
-        public int TopPointY
-        {
-            get
-            {
-                int topPointY = Screen.AllScreens[0].WorkingArea.Height;
-                foreach (MoveForm m in this.ListMoveForms)
-                {
-                    if (m.Y < topPointY)
-                    {
-                        topPointY = m.Y;
-                    }
-                }
-                return topPointY;
-            }
-        }
-        */
 
         #endregion
 
-        #region 提醒
-        // 通知功能已迁移到 NotificationService
-        #endregion
+
 
         private void cmbRoles_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -3811,17 +3526,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                //ConfigManager configManager = Startup.GetFromFac<ConfigManager>();
-                //var webServerUrl = configManager.GetValue("WebServerUrl");
-                //bool islogin = await httpWebService.Login(MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName, MainForm.Instance.AppContext.CurUserInfo.UserInfo.Password, webServerUrl + @"/login");
-                //if (islogin)
-                //{
-                //    MainForm.Instance.uclog.AddLog($"{webServerUrl}登录成功。");
-                //    //var ulid = Ulid.NewUlid();
-                //    //var ulidString = ulid.ToString();
-                //    //System.Diagnostics.Debug.WriteLine($"Generated ULID: {ulidString}");
-                //}
+
             }
             catch (Exception ex)
             {
@@ -3842,33 +3547,21 @@ namespace RUINORERP.UI
         private void tsbtnloginFileServer_Click(object sender, EventArgs e)
         {
 
-            var entityInfoService = Startup.GetFromFac<Business.BizMapperService.IEntityMappingService>();
-
-            // 获取实体信息
-            var entityInfo = entityInfoService.GetEntityInfo(BizType.借出单);
-
-
-            //如果删除了。服务器上的工作流就可以删除了。
-
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-
         }
 
+        /// <summary>
+        /// 系统测试按钮点击事件
+        /// </summary>
         private void tsbtnSysTest_Click(object sender, EventArgs e)
         {
-            // 确保密钥长度正确
-            // string key = EncryptionHelper.NormalizeKeyLength("黄利华", 32);
-
-            //一次性统计加密码一下密码：
-            string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", "张三");
-
-            string pwd = EncryptionHelper.AesDecryptByHashKey(enPwd, "张三");
-
-            frmTest f = new frmTest();
-            f.Text = "Child " + (2).ToString();
-            //f.MdiParent = this;
-            f.ShowDialog();
+            try
+            {
+                _testManager?.ShowSystemTest();
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "系统测试窗体打开失败");
+            }
         }
 
         /// <summary>
@@ -3902,8 +3595,6 @@ namespace RUINORERP.UI
                    }
 
 
-
-
                    #region 查询对应的项目组
 
                    //todo 后面再优化为缓存级吧
@@ -3935,8 +3626,6 @@ namespace RUINORERP.UI
 
 
                    #endregion
-
-
                });
         }
 
@@ -3984,24 +3673,6 @@ namespace RUINORERP.UI
             {
                 logger?.LogError(ex, "启动更新程序失败");
                 MessageBox.Show($"启动更新程序失败: {ex.Message}", "更新失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 服务缓存测试菜单项点击事件处理
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void 服务缓存测试ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "打开服务缓存测试窗体时发生错误");
-                MessageBox.Show($"打开服务缓存测试窗体时发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

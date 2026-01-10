@@ -51,7 +51,8 @@ namespace RUINORERP.Business.Processor
 
             // 设置查询字段
             // 产品详情 - 支持组合查询（产品编码、产品名称等）
-            queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.ProdDetailID, true);
+            //queryFilter.SetQueryField<tb_InventorySnapshot, View_ProdDetail>(c => c.ProdDetailID, c => c.SKU, r => r.SKU);
+            queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.ProdDetailID, typeof(View_ProdDetail), true);
 
             // 库位 - 支持下拉选择
             queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.Location_ID, true);

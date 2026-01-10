@@ -590,7 +590,6 @@ namespace RUINORERP.UI
             this.服务缓存测试ToolStripMenuItem.Name = "服务缓存测试ToolStripMenuItem";
             this.服务缓存测试ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.服务缓存测试ToolStripMenuItem.Text = "服务缓存测试";
-            this.服务缓存测试ToolStripMenuItem.Click += new System.EventHandler(this.服务缓存测试ToolStripMenuItem_Click);
             // 
             // kryptonManager
             // 

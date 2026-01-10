@@ -407,9 +407,16 @@ namespace RUINORERP.UI
             services.AddSingleton<WindowsTtsVoiceReminder>();
             // 注册SystemSpeechVoiceReminder，方便直接使用
             services.AddSingleton<SystemSpeechVoiceReminder>();
-            
+
             // 注册增强版消息管理器
             services.AddScoped<EnhancedMessageManager>();
+
+            // 注册测试管理器 - 统一管理系统测试功能
+            services.AddSingleton<Services.TestManager.ITestManager>(sp =>
+                new Services.TestManager.TestManager(
+                    sp.GetRequiredService<ILogger<Services.TestManager.TestManager>>(),
+                    showTestButtons: false // 默认隐藏测试按钮，可通过配置修改
+                ));
 
             services.AddMemoryCacheSetup();
             services.AddAppContext(Program.AppContextData);

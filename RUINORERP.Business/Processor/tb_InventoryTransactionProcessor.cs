@@ -51,13 +51,13 @@ namespace RUINORERP.Business.Processor
 
             // 设置查询字段
             // 产品详情 - 支持组合查询（产品编码、产品名称等）
-            queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.ProdDetailID, true);
+            queryFilter.SetQueryField<tb_InventoryTransaction, tb_ProdDetail>(c => c.ProdDetailID, c => c.ProdDetailID, C => C.SKU);
 
             // 库位 - 支持下拉选择
             queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.Location_ID, true);
 
             // 业务类型 - 支持下拉选择（从业务类型字典加载）
-            queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.BizType, true);
+            queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.BizType, QueryFieldType.CmbEnum, typeof(BizType));
 
             // 业务单据编号 - 支持模糊查询
             queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.ReferenceNo);
@@ -72,7 +72,7 @@ namespace RUINORERP.Business.Processor
             //queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.BatchNumber);
 
             // 单位成本 - 支持范围查询
-            queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.UnitCost);
+            // queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.UnitCost);
 
             // 操作时间 - 支持日期范围查询
             queryFilter.SetQueryField<tb_InventoryTransaction>(c => c.TransactionTime);

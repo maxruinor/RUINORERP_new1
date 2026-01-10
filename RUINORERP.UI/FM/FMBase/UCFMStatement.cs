@@ -149,7 +149,7 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.FMAuditLogHelper.CreateAuditLog<tb_FM_Statement>("红蓝单对冲核销", EditEntity);
 
                     // 刷新当前数据
-                    await RefreshCurrentEntity();
+                    Refreshs();
                 }
                 else
                 {
@@ -163,24 +163,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 刷新当前实体数据
-        /// </summary>
-        private async Task RefreshCurrentEntity()
-        {
-            if (EditEntity == null || EditEntity.StatementId <= 0)
-            {
-                return;
-            }
 
-            var controller = Startup.GetFromFac<tb_FM_StatementController<tb_FM_Statement>>();
-            var result = await controller.QueryEntityByNavAsync(EditEntity.StatementId);
-
-            if (result.Succeeded && result.ReturnObject != null)
-            {
-                BindData(result.ReturnObject);
-            }
-        }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_FM_Statement statement)
@@ -291,7 +274,7 @@ namespace RUINORERP.UI.FM
                 // 注意：不要覆盖基类已设置的状态值，BaseBillEdit.LoadDataToUI中已处理
                 // entity.PrimaryKeyID = entity.StatementId; // 移到基类处理
                 // entity.ActionStatus = ActionStatus.加载;   // 移到基类处理
-                
+
                 //如果审核了，审核要灰色
                 LoadPayeeInfo(entity, false);
             }
@@ -375,7 +358,7 @@ namespace RUINORERP.UI.FM
 
             // 始终设置表格数据源，即使明细数据为空
             details = entity.tb_FM_StatementDetails ?? new List<tb_FM_StatementDetail>();
-          
+
 
             //新建和草稿时子表编辑也可以保存。
             foreach (var item in details)
@@ -502,8 +485,8 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-            // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中统一调用，移除重复调用
-            // await base.ToolBarEnabledControl(entity);
+                // 注意：ToolBarEnabledControl 已在基类 LoadDataToUI 中统一调用，移除重复调用
+                // await base.ToolBarEnabledControl(entity);
 
             };
 
@@ -582,7 +565,7 @@ namespace RUINORERP.UI.FM
                 bool isApproved = EditEntity.StatementStatus == (int)StatementStatus.确认;
 
                 // 检查是否已结清(避免重复核销)
-                bool isSettled = EditEntity.StatementStatus == (int)StatementStatus.已结清;
+                bool isSettled = EditEntity.StatementStatus == (int)StatementStatus.全部结清;
 
                 // 只有满足所有条件时才显示按钮
                 isVisible = isBalanceStatement && isTotalAmountZero && isApproved && !isSettled;
@@ -773,7 +756,7 @@ namespace RUINORERP.UI.FM
 
             #endregion
 
-        
+
             if (CurMenuInfo != null)
             {
                 lblBillText.Text = CurMenuInfo.CaptionCN;

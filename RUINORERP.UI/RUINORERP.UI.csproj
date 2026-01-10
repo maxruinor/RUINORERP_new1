@@ -2385,6 +2385,9 @@
       <DependentUpon>UCInventoryTransactionQuery.cs</DependentUpon>
     </Compile>
     <Compile Include="Services\ClientSystemInfoService.cs" />
+    <Compile Include="Services\ILogManagerService.cs" />
+    <Compile Include="Services\TestManager\ITestManager.cs" />
+    <Compile Include="Services\TestManager\TestManager.cs" />
     <Compile Include="SmartReminderClient\DetailForm.cs">
       <SubType>Form</SubType>
     </Compile>

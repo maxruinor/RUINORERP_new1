@@ -1,13 +1,13 @@
-
+﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 20:42:13
+// 时间：01/10/2026 23:59:01
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -149,19 +149,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        //private string _NotifyChannels;
-        ///// <summary>
-        ///// 通知渠道
-        ///// </summary>
-        //[AdvQueryAttribute(ColName = "NotifyChannels",ColDesc = "通知渠道")] 
-        //[SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "NotifyChannels" ,Length=50,IsNullable = false,ColumnDescription = "通知渠道" )]
-        //public string NotifyChannels
-        //{ 
-        //    get{return _NotifyChannels;}
-        //    set{
-        //    SetProperty(ref _NotifyChannels, value);
-        //                }
-        //}
+
 
         private DateTime _EffectiveDate;
         /// <summary>
@@ -219,19 +207,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        //private string _NotifyRecipients;
-        ///// <summary>
-        ///// 通知接收人员ID
-        ///// </summary>
-        //[AdvQueryAttribute(ColName = "NotifyRecipients",ColDesc = "通知接收人员ID")] 
-        //[SugarColumn(ColumnDataType = "text", SqlParameterDbType ="String",  ColumnName = "NotifyRecipients" ,Length=2147483647,IsNullable = false,ColumnDescription = "通知接收人员ID" )]
-        //public string NotifyRecipients
-        //{ 
-        //    get{return _NotifyRecipients;}
-        //    set{
-        //    SetProperty(ref _NotifyRecipients, value);
-        //                }
-        //}
+
 
         private string _NotifyMessage;
         /// <summary>
@@ -261,8 +237,6 @@ namespace RUINORERP.Model
                         }
         }
 
-
-
         private DateTime _Created_at;
         /// <summary>
         /// 创建时间
@@ -270,7 +244,7 @@ namespace RUINORERP.Model
         [AdvQueryAttribute(ColName = "Created_at",ColDesc = "创建时间")] 
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "Created_at" ,IsNullable = false,ColumnDescription = "创建时间" )]
         public DateTime Created_at
-        {
+        { 
             get{return _Created_at;}
             set{
             SetProperty(ref _Created_at, value);
@@ -323,17 +297,16 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_ReminderResult.RuleId))]
-        public virtual List<tb_ReminderResult> tb_ReminderResults { get; set; }
-        //tb_ReminderResult.RuleId)
-        //RuleId.FK_TB_REMINDERRESULT_REF_TB_REMINDERRULE)
-        //tb_ReminderRule.RuleId)
 
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_ReminderLinkRuleRelation.RuleId))]
         public virtual List<tb_ReminderLinkRuleRelation> tb_ReminderLinkRuleRelations { get; set; }
+
+
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToMany, nameof(tb_ReminderResult.RuleId))]
+        public virtual List<tb_ReminderResult> tb_ReminderResults { get; set; }
+
 
         #endregion
 

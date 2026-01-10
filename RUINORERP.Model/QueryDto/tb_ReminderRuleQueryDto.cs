@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：07/26/2025 12:18:33
+// 时间：01/10/2026 23:59:01
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -124,16 +124,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private string _NotifyChannel;
+        private string _NotifyChannels;
         /// <summary>
         /// 通知渠道
         /// </summary>
-        [AdvQueryAttribute(ColName = "NotifyChannel",ColDesc = "通知渠道")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "NotifyChannel",Length=50,IsNullable = false,ColumnDescription = "通知渠道" )]
-        public string NotifyChannel 
+        [AdvQueryAttribute(ColName = "NotifyChannels",ColDesc = "通知渠道")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "NotifyChannels",Length=50,IsNullable = false,ColumnDescription = "通知渠道" )]
+        public string NotifyChannels 
         { 
-            get{return _NotifyChannel;}
-            set{SetProperty(ref _NotifyChannel, value);}
+            get{return _NotifyChannels;}
+            set{SetProperty(ref _NotifyChannels, value);}
         }
      
 
@@ -277,19 +277,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _Modified_by;}
             set{SetProperty(ref _Modified_by, value);}
-        }
-     
-
-        private bool _IsEnabled3= false;
-        /// <summary>
-        /// 是否启用
-        /// </summary>
-        [AdvQueryAttribute(ColName = "IsEnabled3",ColDesc = "是否启用")]
-        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsEnabled3",IsNullable = false,ColumnDescription = "是否启用" )]
-        public bool IsEnabled3 
-        { 
-            get{return _IsEnabled3;}
-            set{SetProperty(ref _IsEnabled3, value);}
         }
 
 

@@ -2,7 +2,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 19:43:21
+// 时间：01/10/2026 23:59:01
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,6 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
@@ -247,12 +246,14 @@ namespace RUINORERP.Business
             {
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ReminderRule>(entity as tb_ReminderRule)
-                        .Include(m => m.tb_ReminderResults)
+                        .Include(m => m.tb_ReminderLinkRuleRelations)
+                    .Include(m => m.tb_ReminderResults)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ReminderRule>(entity as tb_ReminderRule)
+                .Include(m => m.tb_ReminderLinkRuleRelations)
                 .Include(m => m.tb_ReminderResults)
          
                 .ExecuteCommandAsync();
@@ -287,7 +288,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                                .Includes(m => m.tb_ReminderResults)
+                                                .Includes(m => m.tb_ReminderLinkRuleRelations)
+                        .Includes(m => m.tb_ReminderResults)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -297,7 +299,8 @@ namespace RUINORERP.Business
         {
             tb_ReminderRule entity = model as tb_ReminderRule;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ReminderRule>(m => m.RuleId== entity.RuleId)
-                                .Include(m => m.tb_ReminderResults)
+                                .Include(m => m.tb_ReminderLinkRuleRelations)
+                        .Include(m => m.tb_ReminderResults)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -396,7 +399,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list = await  _tb_ReminderRuleServices.QueryAsync();
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -408,7 +411,7 @@ namespace RUINORERP.Business
             List<tb_ReminderRule> list =  _tb_ReminderRuleServices.Query();
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_ReminderRule>(list);
@@ -467,12 +470,13 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ReminderRule>> QueryByNavAsync()
         {
             List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>()
-                                            .Includes(t => t.tb_ReminderResults )
+                                            .Includes(t => t.tb_ReminderLinkRuleRelations )
+                                .Includes(t => t.tb_ReminderResults )
                         .ToListAsync();
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
  
@@ -488,12 +492,13 @@ namespace RUINORERP.Business
          public virtual async Task<List<tb_ReminderRule>> QueryByNavAsync(Expression<Func<tb_ReminderRule, bool>> exp)
         {
             List<tb_ReminderRule> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp)
-                                            .Includes(t => t.tb_ReminderResults )
+                                            .Includes(t => t.tb_ReminderLinkRuleRelations )
+                                .Includes(t => t.tb_ReminderResults )
                         .ToListAsync();
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
   
@@ -509,12 +514,13 @@ namespace RUINORERP.Business
          public virtual List<tb_ReminderRule> QueryByNav(Expression<Func<tb_ReminderRule, bool>> exp)
         {
             List<tb_ReminderRule> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(exp)
-                                        .Includes(t => t.tb_ReminderResults )
+                                        .Includes(t => t.tb_ReminderLinkRuleRelations )
+                            .Includes(t => t.tb_ReminderResults )
                         .ToList();
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
      
@@ -549,11 +555,12 @@ namespace RUINORERP.Business
             tb_ReminderRule entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ReminderRule>().Where(w => w.RuleId == (long)id)
                          
 
+                                            .Includes(t => t.tb_ReminderLinkRuleRelations )
                                             .Includes(t => t.tb_ReminderResults )
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.AcceptChanges();
+                entity.HasChanged = false;
             }
 
          

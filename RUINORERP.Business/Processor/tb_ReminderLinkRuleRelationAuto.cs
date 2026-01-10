@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/10/2026 23:59:01
+// 时间：01/10/2026 23:58:59
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -29,12 +29,12 @@ using RUINORERP.Common.Helper;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 用户接收提醒内容
+    /// 链路与规则关联表
     /// </summary>
-    public partial class tb_ReminderResultProcessor:BaseProcessor 
+    public partial class tb_ReminderLinkRuleRelationProcessor:BaseProcessor 
     {
        
-        public tb_ReminderResultProcessor(ILogger<tb_ReminderResultProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        public tb_ReminderLinkRuleRelationProcessor(ILogger<tb_ReminderLinkRuleRelationProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
            _unitOfWorkManage = unitOfWorkManage;

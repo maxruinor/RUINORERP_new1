@@ -18,6 +18,8 @@ using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 using RUINORERP.Model.ProductAttribute;
+// 引入BNR架构命名空间
+using RUINORERP.Business.BNR;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -91,6 +93,67 @@ namespace RUINORERP.UI.Network.Services
             }
 
             throw new Exception(response.ErrorMessage ?? "生成基础信息编号失败");
+        }
+
+        /// <summary>
+        /// 本地生成基础信息编号
+        /// 使用BNR架构体系的轻量级实现，不依赖数据库和Redis
+        /// </summary>
+        /// <param name="baseInfoType">基础信息类型枚举</param>
+        /// <param name="paraConst">参数常量（可选）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>生成的基础信息编号</returns>
+        public async Task<string> GenerateLocalBaseInfoNoAsync(BaseInfoType baseInfoType, string paraConst = null, CancellationToken ct = default)
+        {
+            try
+            {
+                _logger?.LogInformation("开始本地生成基础信息编号 - 类型: {BaseInfoType}, 参数: {ParaConst}", baseInfoType.ToString(), paraConst);
+
+                // 使用BNR架构的轻量级工厂来生成序号
+                LightweightBNRFactory bnrFactory = new LightweightBNRFactory();
+
+                // 根据不同的基础信息类型，使用不同的生成规则
+                string rule = GetBNRRuleByBaseInfoType(baseInfoType);
+                _logger?.LogInformation("使用BNR规则生成编号 - 规则: {Rule}", rule);
+
+                // 生成编号
+                string generatedCode = bnrFactory.Create(rule);
+
+                _logger?.LogInformation("本地生成基础信息编号成功 - 结果: {GeneratedCode}", generatedCode);
+                return generatedCode;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "本地生成基础信息编号失败 - 类型: {BaseInfoType}", baseInfoType.ToString());
+                throw new Exception($"本地生成基础信息编号失败: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 根据基础信息类型获取BNR生成规则
+        /// </summary>
+        /// <param name="baseInfoType">基础信息类型</param>
+        /// <returns>BNR生成规则字符串</returns>
+        private string GetBNRRuleByBaseInfoType(BaseInfoType baseInfoType)
+        {
+            // 根据不同的基础信息类型返回不同的BNR生成规则
+            // 规则格式说明：{S:前缀}{D:日期格式}{N:序号键/序号格式}
+            return baseInfoType switch
+            {
+                BaseInfoType.ModuleDefinition => "{S:MOD}{D:yyyyMMdd}{N:ModuleDefinition/0000}",
+                BaseInfoType.Customer => "{S:CUST}{D:yyyyMMdd}{N:Customer/00000}",
+                BaseInfoType.Supplier => "{S:SUPP}{D:yyyyMMdd}{N:Supplier/00000}",
+                BaseInfoType.CVOther => "{S:CV}{D:yyyyMMdd}{N:CVOther/00000}",
+                BaseInfoType.BusinessPartner => "{S:BP}{D:yyyyMMdd}{N:BusinessPartner/00000}",
+                BaseInfoType.CRM_RegionCode => "{S:REG}{D:yyyyMM}{N:CRM_RegionCode/0000}",
+                BaseInfoType.Department => "{S:DEPT}{D:yyyyMM}{N:Department/000}",
+                BaseInfoType.Employee => "{S:EMP}{D:yyyyMM}{N:Employee/0000}",
+                BaseInfoType.Location => "{S:LOC}{D:yyyyMM}{N:Location/0000}",
+                BaseInfoType.ProjectGroupCode => "{S:PG}{D:yyyyMM}{N:ProjectGroup/0000}",
+                BaseInfoType.StoreCode => "{S:STORE}{D:yyyyMM}{N:Store/0000}",
+                BaseInfoType.FMSubject => "{S:FS}{D:yyyyMM}{N:FMSubject/0000}",
+                _ => "{S:BASE}{D:yyyyMMdd}{N:Default/0000}"
+            };
         }
 
 
@@ -524,6 +587,49 @@ namespace RUINORERP.UI.Network.Services
                     throw ex.InnerException;
                 }
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 本地获取基础信息编号（静态方法，兼容旧的调用模式）
+        /// 内部使用同步方式调用异步方法
+        /// </summary>
+        /// <param name="baseInfoType">基础信息类型枚举</param>
+        /// <param name="paraConst">参数常量（可选）</param>
+        /// <returns>生成的基础信息编号</returns>
+        /// <exception cref="Exception">生成失败时抛出异常</exception>
+        public static string GetLocalBaseInfoNo(BaseInfoType baseInfoType, string paraConst = null)
+        {
+            try
+            {
+                // 从依赖注入容器中获取服务实例
+                var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
+                if (bizCodeService == null)
+                {
+                    throw new Exception("无法从容器中获取BizCodeService实例");
+                }
+
+                // 同步调用本地异步方法
+                // 使用Task.Run以避免可能的死锁
+                return Task.Run(async () => await bizCodeService.GenerateLocalBaseInfoNoAsync(baseInfoType, paraConst)).GetAwaiter().GetResult();
+            }
+            catch (AggregateException ex)
+            {
+                // 解包AggregateException，获取内部异常
+                if (ex.InnerException != null)
+                {
+                    throw ex.InnerException;
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // 如果本地生成失败，尝试使用原有的远程生成方式作为备选
+                var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
+                logger?.LogWarning(ex, "本地生成基础信息编号失败，尝试使用远程生成方式 - 类型: {BaseInfoType}", baseInfoType.ToString());
+                
+                // 回退到原有的远程生成方式
+                return GetBaseInfoNo(baseInfoType, paraConst);
             }
         }
 

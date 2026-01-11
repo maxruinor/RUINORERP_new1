@@ -102,7 +102,7 @@ namespace RUINORERP.UI.Common
                         {
                             ModuleName = moduleDto.Name,
                             //这里是系统初始化时需要的编号，需要使用本地编号的生成服务
-                            ModuleNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
+                            ModuleNo = ClientBizCodeService.GetLocalBaseInfoNo(BaseInfoType.ModuleDefinition),
                             Available = true,
                             Visible = true
                         };
@@ -906,7 +906,7 @@ namespace RUINORERP.UI.Common
                 //定义模块
                 tb_ModuleDefinition mod = new tb_ModuleDefinition();
                 mod.ModuleName = item.Name;
-                mod.ModuleNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition);
+                mod.ModuleNo = ClientBizCodeService.GetLocalBaseInfoNo(BaseInfoType.ModuleDefinition);
                 mod.Available = true;
                 mod.Visible = true;
                 tb_ModuleDefinition isExistt = ExistModuleList.FirstOrDefault(e => e.ModuleName == mod.ModuleName);

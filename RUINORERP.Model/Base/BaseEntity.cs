@@ -900,33 +900,36 @@ namespace RUINORERP.Model
         /// <param name="propertyName"></param>
         protected void SetProperty<T>(ref T storage, T value, [CallerMemberName] String propertyName = null)
         {
-
             // 简化为单次高效比较
             if (EqualityComparer<T>.Default.Equals(storage, value))
                 return;
 
             T oldValue = storage;
             storage = value;
-            // 简化变更记录逻辑
-            if (_changedProperties.TryGetValue(propertyName, out var record))
+            
+            // 添加propertyName空值检查，防止反射调用时抛出异常
+            if (!string.IsNullOrEmpty(propertyName))
             {
-                record.CurrentValue = value;
-                // 若值变回原始值，移除变更记录
-                if (object.Equals(record.OriginalValue, value))
+                // 简化变更记录逻辑
+                if (_changedProperties.TryGetValue(propertyName, out var record))
                 {
-                    _changedProperties.TryRemove(propertyName, out _);
+                    record.CurrentValue = value;
+                    // 若值变回原始值，移除变更记录
+                    if (object.Equals(record.OriginalValue, value))
+                    {
+                        _changedProperties.TryRemove(propertyName, out _);
+                    }
                 }
-            }
-            else if (!object.Equals(oldValue, value)) // 首次变更需检查有效性
-            {
-                _changedProperties[propertyName] = new PropertyChangeRecord(originalValue: oldValue, currentValue: value);
-            }
+                else if (!object.Equals(oldValue, value)) // 首次变更需检查有效性
+                {
+                    _changedProperties[propertyName] = new PropertyChangeRecord(originalValue: oldValue, currentValue: value);
+                }
 
+                // 合并通知事件
+                OnPropertyChanged(propertyName, oldValue, value);
+            }
+            
             HasChanged = true;
-
-            // 合并通知事件
-            OnPropertyChanged(propertyName, oldValue, value);
-
         }
 
         // 在 BaseEntity 类中添加

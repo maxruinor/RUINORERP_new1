@@ -94,22 +94,27 @@ namespace RUINORERP.UI.Common
                     .ToListAsync() ?? new List<tb_ModuleDefinition>();
 
                 // 处理模块和顶级菜单
+                var newModules = new List<tb_ModuleDefinition>();
+                var newMenus = new List<tb_MenuInfo>();
+                
                 foreach (var moduleDto in modules)
                 {
                     // 查找或创建模块定义
-                    var module = existModuleList.FirstOrDefault(e => e.ModuleName == moduleDto.Name)
-                        ?? new tb_ModuleDefinition
+                    var module = existModuleList.FirstOrDefault(e => e.ModuleName == moduleDto.Name);
+                    
+                    if (module == null)
+                    {
+                        module = new tb_ModuleDefinition
                         {
                             ModuleName = moduleDto.Name,
                             //这里是系统初始化时需要的编号，需要使用本地编号的生成服务
                             ModuleNo = ClientBizCodeService.GetLocalBaseInfoNo(BaseInfoType.ModuleDefinition),
                             Available = true,
-                            Visible = true
+                            Visible = true,
+                            tb_MenuInfos = new List<tb_MenuInfo>() // 初始化菜单集合
                         };
-
-                    if (module.ModuleID == 0)
-                    {
                         existModuleList.Add(module);
+                        newModules.Add(module);
                     }
 
                     // 确保模块的菜单集合已初始化
@@ -118,9 +123,15 @@ namespace RUINORERP.UI.Common
                         module.tb_MenuInfos = new List<tb_MenuInfo>();
                     }
 
+                    // 创建模块菜单副本，避免枚举时修改集合
+                    var moduleMenus = module.tb_MenuInfos.ToList();
+                    
                     // 查找或创建顶级菜单
-                    var topMenu = module.tb_MenuInfos.FirstOrDefault(e => e.MenuName == moduleDto.Name && e.Parent_id == 0)
-                        ?? new tb_MenuInfo
+                    var topMenu = moduleMenus.FirstOrDefault(e => e.MenuName == moduleDto.Name && e.Parent_id == 0);
+                    
+                    if (topMenu == null)
+                    {
+                        topMenu = new tb_MenuInfo
                         {
                             MenuName = moduleDto.Name,
                             IsVisble = true,
@@ -129,17 +140,18 @@ namespace RUINORERP.UI.Common
                             CaptionCN = moduleDto.Name,
                             MenuType = "导航菜单",
                             Parent_id = 0,
-                            Created_at = System.DateTime.Now
+                            Created_at = System.DateTime.Now,
+                            tb_moduledefinition = null // 暂时不设置模块引用
                         };
-
-                    if (topMenu.MenuID == 0)
-                    {
+                        
+                        // 添加到模块菜单集合
                         module.tb_MenuInfos.Add(topMenu);
+                        topMenu.tb_moduledefinition = module; // 然后设置模块引用
+                        newMenus.Add(topMenu);
                     }
                 }
 
                 // 批量插入新模块
-                var newModules = existModuleList.Where(c => c.ModuleID == 0).ToList();
                 if (newModules.Any())
                 {
                     var moduleIds = await MainForm.Instance.AppContext.Db
@@ -153,22 +165,13 @@ namespace RUINORERP.UI.Common
                     }
                 }
 
-                // 关联菜单与模块
-                foreach (var module in existModuleList)
+                // 更新所有新菜单的ModuleID
+                foreach (var menu in newMenus)
                 {
-                    foreach (var menu in module.tb_MenuInfos)
-                    {
-                        menu.ModuleID = module.ModuleID;
-                        menu.tb_moduledefinition = module;
-                    }
+                    menu.ModuleID = menu.tb_moduledefinition.ModuleID;
                 }
 
                 // 批量插入新菜单
-                var newMenus = existModuleList
-                    .SelectMany(m => m.tb_MenuInfos)
-                    .Where(m => m.MenuID == 0)
-                    .ToList();
-
                 if (newMenus.Any())
                 {
                     var menuIds = await MainForm.Instance.AppContext.Db
@@ -319,7 +322,8 @@ namespace RUINORERP.UI.Common
                 var menuAssemblyPairs = new List<(MenuAttrAssemblyInfo, tb_MenuInfo)>();
                 var newActionMenus = new List<tb_MenuInfo>();
                 
-                // 第一阶段：收集所有待添加的菜单项
+                // 第一阶段：收集所有待处理的菜单组件信息
+                var menuComponentsToProcess = new List<(MenuAttrAssemblyInfo, tb_MenuInfo)>();
                 foreach (var nextMenuInfo in existMenuInfoList)
                 {
                     var menulist = list.Where(it =>
@@ -328,22 +332,37 @@ namespace RUINORERP.UI.Common
 
                     foreach (var menuinfo in menulist)
                     {
-                        // 查找或创建菜单项
-                        var actionMenu = await CreateMenuItemIfNotExistsAsync(menuinfo, nextMenuInfo);
-                        if (actionMenu != null)
+                        menuComponentsToProcess.Add((menuinfo, nextMenuInfo));
+                    }
+                }
+                
+                // 第二阶段：创建所有菜单项（批量创建，避免并发修改集合）
+                foreach (var (menuinfo, nextMenuInfo) in menuComponentsToProcess)
+                {
+                    // 查找或创建菜单项
+                    var actionMenu = await CreateMenuItemIfNotExistsAsync(menuinfo, nextMenuInfo);
+                    if (actionMenu != null)
+                    {
+                        menuAssemblyPairs.Add((menuinfo, actionMenu));
+                        if (actionMenu.MenuID == 0)
                         {
-                            menuAssemblyPairs.Add((menuinfo, actionMenu));
-                            if (actionMenu.MenuID == 0)
-                            {
-                                newActionMenus.Add(actionMenu);
-                            }
+                            newActionMenus.Add(actionMenu);
                         }
                     }
                 }
                 
-                // 第二阶段：批量插入新菜单项
+                // 第三阶段：批量插入新菜单项到数据库
                 if (newActionMenus.Any())
                 {
+                    // 将新菜单项从父集合中移除，避免批量插入时出现问题
+                    var moduleMenuList = newActionMenus[0].tb_moduledefinition.tb_MenuInfos;
+                    var menusToRemove = newActionMenus.Where(m => moduleMenuList.Contains(m)).ToList();
+                    foreach (var menu in menusToRemove)
+                    {
+                        moduleMenuList.Remove(menu);
+                    }
+                    
+                    // 批量插入新菜单项
                     var actionMenuIds = await MainForm.Instance.AppContext.Db
                         .Insertable(newActionMenus)
                         .ExecuteReturnSnowflakeIdListAsync();
@@ -353,9 +372,12 @@ namespace RUINORERP.UI.Common
                     {
                         newActionMenus[i].MenuID = actionMenuIds[i];
                     }
+                    
+                    // 将菜单项重新添加到父集合
+                    moduleMenuList.AddRange(newActionMenus);
                 }
                 
-                // 第三阶段：批量初始化按钮和字段信息
+                // 第四阶段：批量初始化按钮和字段信息
                 foreach (var (menuinfo, actionMenu) in menuAssemblyPairs)
                 {
                     await InitToolStripItemAsync(menuinfo, actionMenu);
@@ -385,14 +407,19 @@ namespace RUINORERP.UI.Common
                     parentMenuInfo.tb_moduledefinition.tb_MenuInfos = new List<tb_MenuInfo>();
                 }
 
-                // 获取现有菜单项
-                var existMenuInfoList = parentMenuInfo.tb_moduledefinition.tb_MenuInfos
+                // 获取现有菜单项（创建副本，避免枚举时修改集合）
+                var allMenuInfos = parentMenuInfo.tb_moduledefinition.tb_MenuInfos.ToList();
+                var existMenuInfoList = allMenuInfos
                     .Where(c => c.Parent_id == parentMenuInfo.MenuID)
                     .ToList();
 
                 // 查找或创建菜单项
-                var menu = existMenuInfoList.FirstOrDefault(e => e.MenuName == info.Caption && e.Parent_id == parentMenuInfo.MenuID)
-                    ?? new tb_MenuInfo
+                var menu = existMenuInfoList.FirstOrDefault(e => e.MenuName == info.Caption && e.Parent_id == parentMenuInfo.MenuID);
+                
+                if (menu == null)
+                {
+                    // 创建新菜单项，先不设置tb_moduledefinition，避免自动添加到集合
+                    menu = new tb_MenuInfo
                     {
                         MenuName = info.Caption,
                         ModuleID = parentMenuInfo.ModuleID,
@@ -408,11 +435,17 @@ namespace RUINORERP.UI.Common
                         BizType = info.MenuBizType.HasValue ? (int)info.MenuBizType : 0,
                         MenuType = "行为菜单",
                         EntityName = info.EntityName,
-                        Created_at = System.DateTime.Now
+                        Created_at = System.DateTime.Now,
+                        tb_moduledefinition = null // 暂时不设置模块引用
                     };
-
-                if (menu.MenuID == 0)
-                {
+                    
+                    // 手动添加到父模块的菜单集合
+                    parentMenuInfo.tb_moduledefinition.tb_MenuInfos.Add(menu);
+                    
+                    // 然后设置模块引用
+                    menu.tb_moduledefinition = parentMenuInfo.tb_moduledefinition;
+                    
+                    // 添加到现有列表中
                     existMenuInfoList.Add(menu);
                 }
                 

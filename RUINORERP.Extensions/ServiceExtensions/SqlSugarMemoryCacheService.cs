@@ -83,6 +83,15 @@ namespace RUINORERP.Extensions
                 .ToList();
         }
 
+
+        /// <summary>
+        /// 缓存创建
+        /// </summary>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="cacheKey"></param>
+        /// <param name="create"></param>
+        /// <param name="cacheDurationInSeconds"></param>
+        /// <returns></returns>
         public V GetOrCreate<V>(string cacheKey, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
         {
             var fullKey = CachePrefix + cacheKey;

@@ -173,7 +173,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询所有数据
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <returns>数据列表</returns>
         public async Task<List<TEntity>> QueryAsync()
@@ -183,7 +182,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询所有数据
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <returns>数据列表</returns>
         public List<TEntity> Query()
@@ -193,7 +191,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="where">条件</param>
         /// <returns>数据列表</returns>
@@ -204,7 +201,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="whereExpression">whereExpression</param>
         /// <returns>数据列表</returns>
@@ -215,7 +211,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:按照特定列查询数据列表
-        /// 作　　者:RUINORERP
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="expression"></param>
@@ -227,7 +222,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:按照特定列查询数据列表带条件排序
-        /// 作　　者:RUINORERP
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="whereExpression">过滤条件</param>
@@ -241,7 +235,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
@@ -258,7 +251,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="where">条件</param>
         /// <param name="orderByFileds">排序字段，如name asc,age desc</param>
@@ -293,7 +285,6 @@ namespace RUINORERP.Services.BASE
         }
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="top">前N条</param>
@@ -306,7 +297,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="where">条件</param>
         /// <param name="top">前N条</param>
@@ -322,7 +312,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="pageIndex">页码（下标0）</param>
@@ -344,7 +333,6 @@ namespace RUINORERP.Services.BASE
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:AZLinli.RUINORERP
         /// </summary>
         /// <param name="where">条件</param>
         /// <param name="pageIndex">页码（下标0）</param>

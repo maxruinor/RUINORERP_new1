@@ -348,7 +348,7 @@ namespace RUINORERP.Model
 
         private long? _Created_by;
         /// <summary>
-        /// 创建人
+        /// 创建人 可能为空
         /// </summary>
         [AdvQueryAttribute(ColName = "Created_by",ColDesc = "创建人")] 
         [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Created_by" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "创建人" )]

@@ -1155,14 +1155,10 @@ namespace RUINORERP.UI
                 await UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
                 await UIBizService.RequestCache(typeof(tb_ProductType), useBackground: true);
                 await UIBizService.RequestCache(typeof(View_ProdDetail), useBackground: true);
-
+                tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
+                List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
-                    tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-                    List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
-                    //var rslist = _cacheManager.CacheEntityList.Get(nameof(tb_MenuInfo));
-                    //if (rslist != null)
-                    //{
                     MainForm.Instance.AppContext.UserMenuList = menuList;
 
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:

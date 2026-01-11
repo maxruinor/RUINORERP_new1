@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common;
+using RUINORERP.Common;
 using RUINORERP.IRepository.Base;
 using RUINORERP.Model;
 using SqlSugar;

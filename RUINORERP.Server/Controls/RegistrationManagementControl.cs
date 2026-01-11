@@ -46,8 +46,8 @@ namespace RUINORERP.Server.Controls
 
         private async void RegistrationManagementControl_Load(object sender, EventArgs e)
         {
-            await LoadRegistrationInfo();
             InitializeFunctionModules();
+            await LoadRegistrationInfo();
         }
 
         /// <summary>
@@ -137,18 +137,41 @@ namespace RUINORERP.Server.Controls
             // 清除现有绑定
             ClearDataBindings();
 
+            txtCompanyName.DataBindings.Clear();
             // 添加新的数据绑定
             txtCompanyName.DataBindings.Add(new Binding("Text", entity, nameof(entity.CompanyName), true, DataSourceUpdateMode.OnValidation));
+
+            txtContactName.DataBindings.Clear();
             txtContactName.DataBindings.Add(new Binding("Text", entity, nameof(entity.ContactName), true, DataSourceUpdateMode.OnValidation));
+
+            txtPhoneNumber.DataBindings.Clear();
             txtPhoneNumber.DataBindings.Add(new Binding("Text", entity, nameof(entity.PhoneNumber), true, DataSourceUpdateMode.OnValidation));
+
+            txtRegistrationCode.DataBindings.Clear();
             txtRegistrationCode.DataBindings.Add(new Binding("Text", entity, nameof(entity.RegistrationCode), true, DataSourceUpdateMode.OnValidation));
+
+            txtConcurrentUsers.DataBindings.Clear();
             txtConcurrentUsers.DataBindings.Add(new Binding("Text", entity, nameof(entity.ConcurrentUsers), true, DataSourceUpdateMode.OnValidation));
+
+            dtpExpirationDate.DataBindings.Clear();
             dtpExpirationDate.DataBindings.Add(new Binding("Value", entity, nameof(entity.ExpirationDate), true, DataSourceUpdateMode.OnValidation));
+
+            txtProductVersion.DataBindings.Clear();
             txtProductVersion.DataBindings.Add(new Binding("Text", entity, nameof(entity.ProductVersion), true, DataSourceUpdateMode.OnValidation));
+
+            txtMachineCode.DataBindings.Clear();
             txtMachineCode.DataBindings.Add(new Binding("Text", entity, nameof(entity.MachineCode), true, DataSourceUpdateMode.OnValidation));
+
+            dtpPurchaseDate.DataBindings.Clear();
             dtpPurchaseDate.DataBindings.Add(new Binding("Value", entity, nameof(entity.PurchaseDate), true, DataSourceUpdateMode.OnValidation));
+
+            dtpRegistrationDate.DataBindings.Clear();
             dtpRegistrationDate.DataBindings.Add(new Binding("Value", entity, nameof(entity.RegistrationDate), true, DataSourceUpdateMode.OnValidation));
+
+            chkIsRegistered.DataBindings.Clear();
             chkIsRegistered.DataBindings.Add(new Binding("Checked", entity, nameof(entity.IsRegistered), true, DataSourceUpdateMode.OnValidation));
+
+            txtRemarks.DataBindings.Clear();
             txtRemarks.DataBindings.Add(new Binding("Text", entity, nameof(entity.Remarks), true, DataSourceUpdateMode.OnValidation));
 
             // 设置授权类型
@@ -191,25 +214,26 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                // 解密功能模块信息
-                string decryptedModule = EncryptionHelper.AesDecryptByHashKey(functionModule, "FunctionModule");
+                List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
 
                 // 将逗号分隔的枚举名称字符串转换为List<GlobalFunctionModule>
-                List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
-                string[] enumNameArray = decryptedModule.Split(',');
+                string[] enumNameArray = functionModule.Split(',');
                 foreach (var item in enumNameArray)
                 {
-                    if (Enum.TryParse(typeof(GlobalFunctionModule), item, out object module))
+                    var trimmedItem = item.Trim();
+                    if (!string.IsNullOrEmpty(trimmedItem) && Enum.TryParse(typeof(GlobalFunctionModule), trimmedItem, out object module))
                     {
                         selectedModules.Add((GlobalFunctionModule)module);
                     }
                 }
 
                 LoadSelections(selectedModules);
+                _logger.LogInformation("成功加载功能模块，共加载 {ModuleCount} 个模块", selectedModules.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "加载功能模块失败");
+                MessageBox.Show("加载功能模块失败，请检查注册信息是否正确。", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -347,6 +371,15 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private async void tsbtnSaveRegInfo_Click(object sender, EventArgs e)
         {
+            await SaveRegistrationInfoAsync("保存");
+        }
+
+        /// <summary>
+        /// 公共注册信息保存方法，处理注册、续期和保存操作
+        /// </summary>
+        /// <param name="operationType">操作类型：注册、续期或保存</param>
+        private async Task SaveRegistrationInfoAsync(string operationType)
+        {
             if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
                 return;
@@ -356,29 +389,56 @@ namespace RUINORERP.Server.Controls
             {
                 // 获取选中的功能模块
                 var selectedModules = GetSelectedFunctionModules();
-                _currentRegistrationInfo.FunctionModule = string.Join(",", selectedModules);
+                string moduleString = string.Join(",", selectedModules);
 
-                // 加密功能模块信息
-                _currentRegistrationInfo.FunctionModule = EncryptionHelper.AesEncryptByHashKey(
-                    _currentRegistrationInfo.FunctionModule, "FunctionModule");
+                // 无论是否处于调试模式，功能模块都使用明码保存
+                _currentRegistrationInfo.FunctionModule = moduleString;
+                _logger.LogInformation("功能模块已使用明码保存");
+
+                _currentRegistrationInfo.IsRegistered = true;
 
                 // 保存到数据库
                 var result = await _registrationService.SaveRegistrationInfoAsync(_currentRegistrationInfo);
 
                 if (result)
                 {
-                    MessageBox.Show("保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string successMsg = operationType switch
+                    {
+                        "注册" => "注册成功",
+                        "续期" => "续期成功",
+                        "保存" => "保存成功",
+                        _ => "操作成功"
+                    };
+                    MessageBox.Show(successMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 记录到日志
+                    frmMainNew.Instance.SafeLogOperation($"系统{operationType}成功，已保存最新的注册信息", Color.Green);
+                    _logger.LogInformation($"系统{operationType}成功，公司名称: {_currentRegistrationInfo.CompanyName}");
+
+                    // 更新主窗体的注册信息
+                    UpdateMainFormRegistrationInfo();
+
+                    // 更新UI状态
+                    await LoadRegistrationInfo();
+                    UpdateUIState(true);
                 }
                 else
                 {
-                    MessageBox.Show("保存失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    _logger.LogWarning("注册信息保存失败");
+                    string failMsg = operationType switch
+                    {
+                        "注册" => "注册失败",
+                        "续期" => "续期失败",
+                        "保存" => "保存失败",
+                        _ => "操作失败"
+                    };
+                    MessageBox.Show(failMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _logger.LogWarning($"注册信息{operationType}失败");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "保存注册信息失败");
-                MessageBox.Show($"保存失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _logger.LogError(ex, $"{operationType}注册信息失败");
+                MessageBox.Show($"{operationType}失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -387,50 +447,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private async void btnCreateRegInfo_Click(object sender, EventArgs e)
         {
-            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
-            {
-                return;
-            }
-
-            try
-            {
-                // 获取选中的功能模块（生成机器码前不加密）
-                var selectedModules = GetSelectedFunctionModules();
-                _currentRegistrationInfo.FunctionModule = string.Join(",", selectedModules);
-
-                // 加密功能模块信息
-                _currentRegistrationInfo.FunctionModule = EncryptionHelper.AesEncryptByHashKey(
-                    _currentRegistrationInfo.FunctionModule, "FunctionModule");
-
-                //                MessageBox.Show("注册信息已准备好，请先生成机器码并获取注册码后点击注册按钮完成注册。", "提示",MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-
-                try
-                {
-                    // 保存到数据库
-                    var result = await _registrationService.SaveRegistrationInfoAsync(_currentRegistrationInfo);
-
-                    if (result)
-                    {
-                        MessageBox.Show("注册成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("保存失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        _logger.LogWarning("注册信息保存失败");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "保存注册信息失败");
-                    MessageBox.Show($"保存失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "注册准备失败");
-                MessageBox.Show($"注册准备失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            await SaveRegistrationInfoAsync("注册");
         }
 
         /// <summary>
@@ -461,32 +478,67 @@ namespace RUINORERP.Server.Controls
                     return;
                 }
 
-                // 验证注册码
-                bool isValid = await _registrationService.ValidateRegistrationAsync(registrationCode);
-
-                if (isValid)
+                // 注册码格式预验证
+                if (!IsValidRegistrationCodeFormat(registrationCode))
                 {
-                    // 判断是续期还是新注册
-                    bool isRenewal = _currentRegistrationInfo.IsRegistered &&
-                                   _registrationService.IsRegistrationExpired(_currentRegistrationInfo);
-
-                    string successMsg = isRenewal ?
-                        "恭喜您，续期成功！系统注册已延期。" :
-                        "恭喜您，注册成功！";
-
-                    MessageBox.Show(successMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 更新主窗体的注册信息
-                    await UpdateMainFormRegistrationInfo();
-
-                    UpdateUIState(true);
+                    MessageBox.Show("注册码格式无效，请检查后重新输入", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
-                else
+
+                // 显示验证中的提示
+                var progressForm = new Form
                 {
-                    string errorTitle = _currentRegistrationInfo.IsRegistered ? "续期失败" : "注册失败";
-                    MessageBox.Show($"{errorTitle}！注册码无效。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    _currentRegistrationInfo.IsRegistered = false;
-                    _logger.LogWarning($"{errorTitle}验证失败：注册码无效");
+                    Text = "正在验证",
+                    Size = new Size(300, 100),
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    StartPosition = FormStartPosition.CenterScreen,
+                    ControlBox = false
+                };
+                var label = new Label
+                {
+                    Text = "正在验证注册码，请稍候...",
+                    Dock = DockStyle.Fill,
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+                progressForm.Controls.Add(label);
+
+                // 异步显示验证对话框
+                progressForm.Show();
+
+                try
+                {
+                    // 验证注册码
+                    bool isValid = await _registrationService.ValidateRegistrationAsync(registrationCode);
+
+                    if (isValid)
+                    {
+                        // 判断是续期还是新注册
+                        bool isRenewal = _currentRegistrationInfo.IsRegistered &&
+                                       _registrationService.IsRegistrationExpired(_currentRegistrationInfo);
+
+                        string successMsg = isRenewal ?
+                            "恭喜您，续期成功！系统注册已延期。" :
+                            "恭喜您，注册成功！";
+
+                        MessageBox.Show(successMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        // 更新主窗体的注册信息
+                        UpdateMainFormRegistrationInfo();
+
+                        UpdateUIState(true);
+                    }
+                    else
+                    {
+                        string errorTitle = _currentRegistrationInfo.IsRegistered ? "续期失败" : "注册失败";
+                        MessageBox.Show($"{errorTitle}！注册码无效。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        _currentRegistrationInfo.IsRegistered = false;
+                        _logger.LogWarning($"{errorTitle}验证失败：注册码无效");
+                    }
+                }
+                finally
+                {
+                    // 关闭验证对话框
+                    progressForm.Close();
                 }
             }
             catch (Exception ex)
@@ -494,6 +546,25 @@ namespace RUINORERP.Server.Controls
                 _logger.LogError(ex, "注册/续期失败");
                 MessageBox.Show($"操作失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 注册码格式预验证
+        /// </summary>
+        /// <param name="registrationCode">注册码</param>
+        /// <returns>格式是否有效</returns>
+        private bool IsValidRegistrationCodeFormat(string registrationCode)
+        {
+            // 简单的注册码格式验证，可根据实际需求调整
+            if (string.IsNullOrWhiteSpace(registrationCode))
+                return false;
+
+            // 例如：注册码长度必须在10-50个字符之间
+            if (registrationCode.Length < 10 || registrationCode.Length > 50)
+                return false;
+
+            // 例如：注册码只能包含字母、数字和连字符
+            return System.Text.RegularExpressions.Regex.IsMatch(registrationCode, @"^[A-Z0-9\-]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         }
 
         /// <summary>
@@ -531,26 +602,6 @@ namespace RUINORERP.Server.Controls
             {
                 MessageBox.Show("请选择要使用的功能模块。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
-            }
-
-            try
-            {
-                if (registrationInfo != null)
-                {
-                    bool isValid = _registrationService.CheckRegistered(registrationInfo);
-                    if (isValid)
-                    {
-                        MessageBox.Show("注册信息验证通过", "验证结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("注册信息验证失败", "验证结果", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"验证注册信息时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             return true;
@@ -612,61 +663,13 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         private async void btnRenewRegInfo_Click(object sender, EventArgs e)
         {
-
-            #region 保存续期的注册信息
-
-            if (!ValidateRegistrationInfo(_currentRegistrationInfo))
-            {
-                return;
-            }
-
-            try
-            {
-                // 获取选中的功能模块（生成机器码前不加密）
-                var selectedModules = GetSelectedFunctionModules();
-                _currentRegistrationInfo.FunctionModule = string.Join(",", selectedModules);
-
-                // 加密功能模块信息
-                _currentRegistrationInfo.FunctionModule = EncryptionHelper.AesEncryptByHashKey(
-                    _currentRegistrationInfo.FunctionModule, "FunctionModule");
-
-                // 保存到数据库
-                var result = await _registrationService.SaveRegistrationInfoAsync(_currentRegistrationInfo);
-
-                if (result)
-                {
-                    MessageBox.Show("续期成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 记录到日志
-                    frmMainNew.Instance.SafeLogOperation("系统续期成功，已保存最新的注册信息", Color.Green);
-
-                    // 更新主窗体的注册信息
-                    await UpdateMainFormRegistrationInfo();
-
-                    // 更新UI状态
-                    await LoadRegistrationInfo();
-                    UpdateUIState(false);
-                }
-                else
-                {
-                    MessageBox.Show("续期失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    _logger.LogWarning("续期注册信息保存失败");
-                }
-
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "续期注册准备失败");
-                MessageBox.Show($"续期注册准备失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            #endregion
+            await SaveRegistrationInfoAsync("续期");
         }
 
         /// <summary>
         /// 启用续期模式
         /// </summary>
-        private async Task EnableRenewalMode()
+        private void EnableRenewalMode()
         {
             // 启用工具栏的续期相关按钮
             tsbtnCreateRegInfo.Enabled = true;
@@ -683,8 +686,6 @@ namespace RUINORERP.Server.Controls
 
             // 聚焦到授权期限选择
             cmbDays.Focus();
-
-
         }
 
         /// <summary>
@@ -745,7 +746,7 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 更新主窗体的注册信息
         /// </summary>
-        private async Task UpdateMainFormRegistrationInfo()
+        private void UpdateMainFormRegistrationInfo()
         {
             try
             {
@@ -780,50 +781,65 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 生成机器码
-                if (_currentRegistrationInfo != null)
+                if (_currentRegistrationInfo == null)
                 {
-                    // 校验授权到期时间至少比当前时间大一个月
-                    if (_currentRegistrationInfo.ExpirationDate <= DateTime.Now.AddMonths(1))
-                    {
-                        MessageBox.Show("授权到期时间不足一个月，请先完成授权续期后再生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    // 检查是否选择了功能模块
-                    var selectedModules = GetSelectedFunctionModules();
-                    if (selectedModules.Count == 0)
-                    {
-                        MessageBox.Show("请至少选择一个功能模块，否则无法生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    string machineCode = _registrationService.CreateMachineCode(_currentRegistrationInfo);
-                    txtMachineCode.Text = machineCode;
-                    //// 将机器码复制到剪贴板 - 使用Invoke确保在UI线程上执行
-                    //this.Invoke(new Action(() =>
-                    //{
-                    //    Clipboard.SetText(machineCode);
-
-                    //    // 显示成功消息
-                    //    MessageBox.Show("机器码已生成并复制到剪贴板，方便发送给软件服务商进行注册。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    //}));
-
-
-
-                    //// 记录到日志
-                    frmMainNew.Instance.SafeLogOperation("请将机器码发送给软件服务商获取注册码", Color.Blue);
+                    MessageBox.Show("注册信息未加载，无法生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
+
+                // 校验授权到期时间至少比当前时间大一个月
+                if (_currentRegistrationInfo.ExpirationDate <= DateTime.Now.AddMonths(1))
+                {
+                    MessageBox.Show("授权到期时间不足一个月，请先完成授权续期后再生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 检查是否选择了功能模块
+                var selectedModules = GetSelectedFunctionModules();
+                if (selectedModules.Count == 0)
+                {
+                    MessageBox.Show("请至少选择一个功能模块，否则无法生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 保存当前选中的功能模块到注册信息中
+                _currentRegistrationInfo.FunctionModule = string.Join(",", selectedModules);
+
+                // 生成机器码
+                string machineCode = _registrationService.CreateMachineCode(_currentRegistrationInfo);
+                txtMachineCode.Text = machineCode;
+
+                // 将机器码复制到剪贴板，使用Invoke确保在UI线程上执行
+                this.Invoke(new Action(() =>
+                {
+                    try
+                    {
+                        Clipboard.SetText(machineCode);
+                        // 显示成功消息
+                        MessageBox.Show("机器码已生成并复制到剪贴板，方便发送给软件服务商进行注册。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "复制机器码到剪贴板失败");
+                        // 不影响主要功能，只记录日志
+                    }
+                }));
+
+                // 记录到日志
+                frmMainNew.Instance.SafeLogOperation("请将机器码发送给软件服务商获取注册码", Color.Blue);
+                _logger.LogInformation("成功生成机器码，公司名称: {CompanyName}", _currentRegistrationInfo.CompanyName);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "生成机器码时出错");
                 MessageBox.Show($"生成机器码时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                // 记录错误到日志
-                frmMainNew.Instance.SafeLogOperation($"生成机器码时出错: {ex.Message}", Color.Red);
             }
         }
 
-        private void btnRenewRegInfo_Click_1(object sender, EventArgs e)
+        /// <summary>
+        /// 我要续期按钮点击事件
+        /// </summary>
+        private void btnStartRenewal_Click(object sender, EventArgs e)
         {
 
             if (_currentRegistrationInfo == null)

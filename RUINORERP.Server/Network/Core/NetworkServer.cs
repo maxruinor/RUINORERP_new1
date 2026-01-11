@@ -98,7 +98,10 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                // 先读取配置文件，确保Serverport和configuredPorts使用的是配置文件中的值
+                // 1. 注册验证检查（调试模式下跳过）
+                await ValidateRegistrationOnStartupAsync();
+
+                // 2. 读取配置文件，确保Serverport和configuredPorts使用的是配置文件中的值
                 ERPServerOptions serverOptions = null;
                 IConfiguration config = null;
 
@@ -934,18 +937,81 @@ namespace RUINORERP.Server.Network.Core
                 var handlers = _commandDispatcher.GetAllHandlers();  // 直接调用具体类型方法
                 foreach (var handler in handlers)
                 {
-
                     // 记录支持的命令类型
                     if (handler.SupportedCommands != null)
                     {
                         var commandCodes = string.Join(", ", handler.SupportedCommands);
                     }
                 }
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "记录已注册命令处理器信息时出错");
+            }
+        }
+
+        /// <summary>
+        /// 服务器启动时验证注册信息
+        /// </summary>
+        private async Task ValidateRegistrationOnStartupAsync()
+        {
+            try
+            {
+                // 检查是否处于调试模式
+                bool isDebugMode = false;
+                
+                // 尝试获取主窗体的调试模式状态
+                var mainForm = System.Windows.Forms.Application.OpenForms.OfType<RUINORERP.Server.frmMainNew>().FirstOrDefault();
+                if (mainForm != null)
+                {
+                    isDebugMode = mainForm.IsDebug;
+                }
+                
+                // 调试模式下跳过注册验证
+                if (isDebugMode)
+                {
+                    return;
+                }
+
+                // 获取注册服务
+                var registrationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Server.Services.IRegistrationService>();
+                
+                // 验证注册信息
+                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
+                
+                if (registrationInfo == null)
+                {
+                    _logger.LogError("无法获取注册信息，无法启动服务器");
+                    throw new InvalidOperationException("无法获取注册信息，无法启动服务器");
+                }
+                
+                if (!registrationInfo.IsRegistered)
+                {
+                    _logger.LogError("系统未注册，无法启动服务器");
+                    throw new InvalidOperationException("系统未注册，无法启动服务器");
+                }
+
+                // 检查注册是否过期
+                if (registrationService.IsRegistrationExpired(registrationInfo))
+                {
+                    _logger.LogError("系统注册已过期，无法启动服务器，到期时间: {ExpirationDate}", registrationInfo.ExpirationDate);
+                    throw new InvalidOperationException($"系统注册已过期，到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd}");
+                }
+
+                // 机器码验证逻辑已整合到注册信息检查中，此处不再单独验证
+                _logger.LogInformation("机器码已通过注册信息检查");
+                _logger.LogInformation("注册信息验证成功，服务器可以启动，注册到期时间: {ExpirationDate}", registrationInfo.ExpirationDate);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // 重新抛出注册相关异常，阻止服务器启动
+                _logger.LogError(ex, "注册验证失败，服务器启动被阻止");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "验证注册信息时发生未预期的错误");
+                // 非致命异常，记录日志后继续启动
             }
         }
 

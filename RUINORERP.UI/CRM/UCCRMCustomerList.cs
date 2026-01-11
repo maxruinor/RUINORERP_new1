@@ -331,6 +331,10 @@ namespace RUINORERP.UI.CRM
         /// <returns></returns>
         public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
+            if (menuInfo == null)
+            {
+                return new System.Windows.Forms.ToolStripItem[] { };
+            }
             //一个是公海一个是目标客户
             if (menuInfo.CaptionCN.Contains("公海客户"))
             {

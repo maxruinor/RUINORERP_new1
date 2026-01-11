@@ -502,7 +502,7 @@ namespace RUINORERP.Server.Controls
             btnRenewRegInfo.TabIndex = 28;
             btnRenewRegInfo.Text = "我要续期";
             btnRenewRegInfo.UseVisualStyleBackColor = true;
-            btnRenewRegInfo.Click += btnRenewRegInfo_Click_1;
+            btnRenewRegInfo.Click += btnStartRenewal_Click;
             // 
             // groupBox2
             // 

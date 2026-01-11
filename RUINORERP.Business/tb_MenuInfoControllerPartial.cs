@@ -47,18 +47,7 @@ namespace RUINORERP.Business
         //    _validator = validator;
         //}
 
-
-
-
-        /// <summary>
-        /// 检测是否进行过初始化
-        /// </summary>
-        /// <returns></returns>
-        public bool CheckMenuInitialized()
-        {
-            bool rs = _unitOfWorkManage.GetDbClient().Queryable<tb_MenuInfo>().Any();
-            return rs;
-        }
+ 
 
         public bool ClearAllMenuItems()
         {

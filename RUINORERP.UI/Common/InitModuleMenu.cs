@@ -60,7 +60,6 @@ namespace RUINORERP.UI.Common
             try
             {
 
-
                 // 加载模型类型信息
                 var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
                 _modelTypes = dalAssemble.GetExportedTypes();
@@ -102,6 +101,7 @@ namespace RUINORERP.UI.Common
                         ?? new tb_ModuleDefinition
                         {
                             ModuleName = moduleDto.Name,
+                            //这里是系统初始化时需要的编号，需要使用本地编号的生成服务
                             ModuleNo = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ModuleDefinition),
                             Available = true,
                             Visible = true

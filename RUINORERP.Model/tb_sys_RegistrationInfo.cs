@@ -69,7 +69,7 @@ namespace RUINORERP.Model
 
         private string _FunctionModule;
         /// <summary>
-        /// 功能模块
+        /// 功能模块明码
         /// </summary>
         [AdvQueryAttribute(ColName = "FunctionModule", ColDesc = "功能模块")]
         [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "FunctionModule", Length = 3000, IsNullable = true, ColumnDescription = "功能模块")]
@@ -244,6 +244,22 @@ namespace RUINORERP.Model
             set
             {
                 SetProperty(ref _IsRegistered, value);
+            }
+        }
+
+
+        private bool _SystemInitialized;
+        /// <summary>
+        /// 系统初始化
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SystemInitialized", ColDesc = "系统初始化")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "SystemInitialized", IsNullable = false, ColumnDescription = "系统初始化")]
+        public bool SystemInitialized
+        {
+            get { return _SystemInitialized; }
+            set
+            {
+                SetProperty(ref _SystemInitialized, value);
             }
         }
 

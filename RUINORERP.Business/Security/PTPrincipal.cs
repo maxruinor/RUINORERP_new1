@@ -44,7 +44,7 @@ namespace RUINORERP.Business.Security
             bool loginSucceed = false;
             appcontext.CurUserInfo = null;
             //超级密码，为了第一次进系统
-            if (username == "admin" && password == "amwtjhwxf")
+            if (!appcontext.RegistrationInfo.SystemInitialized && (username == "admin" && password == "amwtjhwxf"))
             {
                 appcontext.IsSuperUser = true;
                 #region 暂时性写死给账号权限等
@@ -57,13 +57,59 @@ namespace RUINORERP.Business.Security
                       new Claim(ClaimTypes.Name, "watson"),
                         new Claim(ClaimTypes.Role,RUINORERP.Business.Security.Roles.Administrator),
                     };
-                    var identity = new ClaimsIdentity(claims, "admin", ClaimTypes.Name, ClaimTypes.Role);
+                    var identity = new ClaimsIdentity(claims, "超级管理员", ClaimTypes.Name, ClaimTypes.Role);
                     appcontext.User = new ClaimsPrincipal(identity);
                 }
 
                 #endregion
+
+                #region superUser
+
+                CurrentUserInfo cuser = new CurrentUserInfo();
+                cuser.Name = "超级管理员";
+                cuser.Id = 0;
+                appcontext.CurUserInfo = cuser;
+
+                cuser.UserInfo = new tb_UserInfo();
+                cuser.UserInfo.UserName = "超级管理员";
+                cuser.UserInfo.Password = "123456";
+
+                string EnPassword = EncryptionHelper.AesEncryptByHashKey(cuser.UserInfo.Password, cuser.UserInfo.UserName);
+                cuser.UserInfo.Password = EnPassword;
+                //先删除，通常如果系统初始化成功后。就不会执行这里了
+                appcontext.Db.Deleteable<tb_UserInfo>(c => c.UserName == cuser.UserInfo.UserName).ExecuteCommand();
+
+                cuser.UserInfo = appcontext.Db.Storageable<tb_UserInfo>(cuser.UserInfo).ExecuteReturnEntity();
+
+                appcontext.CurUserInfo = cuser;
+
+                List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
+                //两套方式 正常是用P4表来控制的  超级管理员用默认菜单结构
+                // 添加SqlSugar缓存，键包含用户名信息，缓存5分钟
+                string cacheKey = $"MenuPermission:SuperAdmin:{username}";
+                // 开始计时查询
+                queryStopwatch.Start();
+                modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
+                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
+                            .WithCache(cacheKey, 300) // 缓存5分钟
+                            .ToList();
+                // 结束计时并记录
+                queryStopwatch.Stop();
+                string queryTimeInfo = $"超级管理员菜单权限查询时间: {queryStopwatch.ElapsedMilliseconds} 毫秒 (可能来自缓存)";
+                System.Diagnostics.Debug.WriteLine(queryTimeInfo);
+                // 重置计时器
+                queryStopwatch.Reset();
+
+                appcontext.CurUserInfo.UserModList = modlist;
+                loginSucceed = true;
+                #endregion
+
             }
-            if (username != "admin")
+            if (appcontext.RegistrationInfo.SystemInitialized && username != "admin")
             {
                 #region 正常用户验证  两套方式  正常是用P4表来控制的
 
@@ -71,12 +117,12 @@ namespace RUINORERP.Business.Security
                 string EnPassword = EncryptionHelper.AesEncryptByHashKey(password, username);
 
                 // 添加SqlSugar缓存，键包含用户名信息，缓存5分钟
-            string cacheKey = $"MenuPermission:User:{username}";
-            tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
-            List<tb_UserInfo> users = new List<tb_UserInfo>();
-            
-            // 开始计时查询
-            queryStopwatch.Start();
+                string cacheKey = $"MenuPermission:User:{username}";
+                tb_UserInfoController<tb_UserInfo> ctrUser = appcontext.GetRequiredService<tb_UserInfoController<tb_UserInfo>>();
+                List<tb_UserInfo> users = new List<tb_UserInfo>();
+
+                // 开始计时查询
+                queryStopwatch.Start();
                 // 使用直接数据库查询并添加缓存，而不是通过控制器方法
                 users = appcontext.Db.CopyNew().Queryable<tb_UserInfo>()
                             .Where(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled)
@@ -98,14 +144,14 @@ namespace RUINORERP.Business.Security
                             .Includes(a => a.tb_User_Roles, b => b.tb_roleinfo, c => c.tb_P4RowAuthPolicyByRoles, d => d.tb_rowauthpolicy)
                             .WithCache(cacheKey, 300) // 缓存5分钟
                             .ToList();
-                            
+
                 // 结束计时并记录
                 queryStopwatch.Stop();
                 string queryTimeInfo = $"普通用户权限查询时间: {queryStopwatch.ElapsedMilliseconds} 毫秒 (可能来自缓存)";
                 System.Diagnostics.Debug.WriteLine(queryTimeInfo);
                 // 重置计时器
                 queryStopwatch.Reset();
-                
+
                 // 处理实体缓存更新（与原方法保持一致的行为）
                 foreach (var item in users)
                 {
@@ -166,44 +212,6 @@ namespace RUINORERP.Business.Security
                 }
                 #endregion 
             }
-            else
-            {
-                #region superUser
-
-                CurrentUserInfo cuser = new CurrentUserInfo();
-                cuser.Name = "超级管理员";
-                cuser.Id = 0;
-                appcontext.CurUserInfo = cuser;
-
-                cuser.UserInfo = new tb_UserInfo();
-                cuser.UserInfo.UserName = "超级管理员";
-
-                List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
-                //两套方式 正常是用P4表来控制的  超级管理员用默认菜单结构
-                // 添加SqlSugar缓存，键包含用户名信息，缓存5分钟
-                string cacheKey = $"MenuPermission:SuperAdmin:{username}";
-                // 开始计时查询
-                queryStopwatch.Start();
-                modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
-                            .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
-                            .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
-                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_userpersonalized)
-                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIQueryConditions)
-                            .Includes(a => a.tb_MenuInfos, b => b.tb_UIMenuPersonalizations, c => c.tb_UIGridSettings)
-                            .WithCache(cacheKey, 300) // 缓存5分钟
-                            .ToList();
-                // 结束计时并记录
-                queryStopwatch.Stop();
-                string queryTimeInfo = $"超级管理员菜单权限查询时间: {queryStopwatch.ElapsedMilliseconds} 毫秒 (可能来自缓存)";
-                System.Diagnostics.Debug.WriteLine(queryTimeInfo);
-                // 重置计时器
-                queryStopwatch.Reset();
-
-
-                appcontext.CurUserInfo.UserModList = modlist;
-                loginSucceed = true;
-                #endregion
-            }
 
 
 
@@ -231,7 +239,7 @@ namespace RUINORERP.Business.Security
             {
                 throw new Exception("您使用的账号没有所属员工。");
             }
-            
+
             // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser
             appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
             appcontext.CurrentUser.Employee_ID = user.tb_employee.Employee_ID;
@@ -242,13 +250,13 @@ namespace RUINORERP.Business.Security
             appcontext.CurrentUser.登录时间 = System.DateTime.Now;
             appcontext.CurrentUser.在线状态 = true;
             appcontext.CurrentUser.授权状态 = true;
-            
+
             // 设置超级用户标志
             if (user.IsSuperUser)
             {
                 ApplicationContext.Current.IsSuperUser = true;
             }
-            
+
             appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
             appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
 
@@ -282,7 +290,6 @@ namespace RUINORERP.Business.Security
                 appcontext.CurrentRole = CurrentRole;
                 appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
             }
-
 
 
             //每个用户和角色对应一个用户配置
@@ -353,7 +360,6 @@ namespace RUINORERP.Business.Security
                 }
             }
         }
-
 
         public static void Logout(ApplicationContext appcontext)
         {

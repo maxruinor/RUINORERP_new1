@@ -300,7 +300,7 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                  // logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
+                    // logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
                 }
             }
             catch (Exception ex)
@@ -317,7 +317,7 @@ namespace RUINORERP.UI
             base.OnFormClosing(e);
         }
 
- 
+
 
         /// <summary>
         /// 这个用来缓存，录入表单时的详情产品数据。后面看优化为一个全局缓存。
@@ -797,7 +797,7 @@ namespace RUINORERP.UI
             return rs;
         }
 
- 
+
 
         private void kryptonButton1_Click(object sender, EventArgs e)
         {
@@ -866,7 +866,7 @@ namespace RUINORERP.UI
             return pageMessageCenter;
         }
 
- 
+
         private KryptonPage NewForm()
         {
             return NewPage("NewForm ", 1, new UserControl1());
@@ -914,7 +914,7 @@ namespace RUINORERP.UI
 
         private string version = string.Empty;
 
- 
+
 
         /// <summary>
         /// 转发单据审核锁定 https://www.cnblogs.com/fanfan-90/p/12151924.html
@@ -1110,11 +1110,52 @@ namespace RUINORERP.UI
                 MessageBox.Show(ex.Message, "Error Loading from File");
             }
             //
-            ClearData();
+            await ClearData();
             ClearUI();
 
             RUINORERP.Extensions.SqlsugarSetup.CheckEvent += SqlsugarSetup_CheckEvent;
             RUINORERP.Extensions.SqlsugarSetup.RemindEvent += SqlsugarSetup_RemindEvent;
+            #region 检查是否注册
+            ////没有返回Null，如果结果大于1条会抛出错误
+            AppContext.RegistrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
+            if (AppContext.RegistrationInfo == null)
+            {
+                MessageBox.Show("系统未注册，请在服务器端先完成注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                Application.Exit();
+            }
+            else
+            {
+                if (AppContext.RegistrationInfo.IsRegistered == false)
+                {
+                    MessageBox.Show("系统未注册，请在服务器端先完成注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    Application.Exit();
+                }
+
+                MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
+                //注册成功！！！
+                //注意这里并不是直接取字段值。因为这个值会放到加密串的。明码可能会修改
+                //功能模块可以显示到UI。但是保存到DB中是加密了的。取出来到时也要解密
+                if (!string.IsNullOrEmpty(AppContext.RegistrationInfo.FunctionModule))
+                {
+                    //解密
+                    //AppContext.RegistrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(AppContext.RegistrationInfo.FunctionModule, "FunctionModule");
+                    //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
+                    List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
+                    string[] enumNameArray = AppContext.RegistrationInfo.FunctionModule.Split(',');
+                    foreach (var item in enumNameArray)
+                    {
+                        MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                    }
+                }
+            }
+
+            if (MainForm.Instance.AppContext.CanUsefunctionModules == null)
+            {
+                MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
+            }
+
+            #endregion
+
             bool islogin = await Login();
             if (!islogin)
             {
@@ -1134,49 +1175,15 @@ namespace RUINORERP.UI
                     //if (rslist != null)
                     //{
                     MainForm.Instance.AppContext.UserMenuList = menuList;
-                    #region 检查是否注册
-                    ////没有返回Null，如果结果大于1条会抛出错误
-                    tb_sys_RegistrationInfo registrationInfo = await Program.AppContextData.Db.CopyNew().Queryable<tb_sys_RegistrationInfo>().SingleAsync();
-                    if (registrationInfo == null)
-                    {
-                        MessageBox.Show("系统未注册，请在服务器端先完成注册", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        Application.Exit();
-                    }
-                    else
-                    {
-                        MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
-                        //注册成功！！！
-                        //注意这里并不是直接取字段值。因为这个值会放到加密串的。明码可能会修改
-                        //功能模块可以显示到UI。但是保存到DB中是加密了的。取出来到时也要解密
-                        if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
-                        {
-                            //解密
-                            registrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
-                            //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
-                            List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
-                            string[] enumNameArray = registrationInfo.FunctionModule.Split(',');
-                            foreach (var item in enumNameArray)
-                            {
-                                MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
-                            }
-                        }
-                    }
-
-                    if (MainForm.Instance.AppContext.CanUsefunctionModules == null)
-                    {
-                        MainForm.Instance.AppContext.CanUsefunctionModules = new List<GlobalFunctionModule>();
-                    }
-
-                    #endregion
+           
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
                     {
-                        bool rs = mc.CheckMenuInitialized();
-                        if (!rs)
-                        {
+                       
                             //如果从来没有初始化过菜单，则执行
-                            InitMenu();
-                        }
+                            await InitMenu(AppContext.RegistrationInfo.SystemInitialized);
+                          
+                        
                     }
                     catch (Exception ex)
                     {
@@ -1572,7 +1579,7 @@ namespace RUINORERP.UI
             }
         }
 
- 
+
         /// <summary>
         /// 检查并处理待处理的更新
         /// </summary>
@@ -1922,8 +1929,12 @@ namespace RUINORERP.UI
 
         #region Login/Logout
 
-
-        private async Task<bool> Login()
+        /// <summary>
+        /// 登录系统
+        /// </summary>
+        /// <param name="SystemInitialized">是否设置超级管理员及初始化菜单数据</param>
+        /// <returns></returns>
+        private async Task<bool> Login(bool SystemInitialized = true)
         {
             // 检查是否已经在登录过程中或已登录，避免重复弹出登录窗口
             if (CurrentLoginStatus == LoginStatus.LoggingIn || CurrentLoginStatus == LoginStatus.LoggedIn)
@@ -1999,6 +2010,12 @@ namespace RUINORERP.UI
                     {
                         try
                         {
+                            //先去数据库中找一下
+                            //MainForm.Instance.AppContext.curUserInfo.UserInfo = this;
+                            //               string username = UserGlobalConfig.Instance.UseName;
+                            //string password = UserGlobalConfig.Instance.PassWord;
+                            //string EnPassword = EncryptionHelper.AesEncryptByHashKey(password, username);
+
                             MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogin_at = System.DateTime.Now;
                             await MainForm.Instance.AppContext.Db.CopyNew().Storageable<tb_UserInfo>(MainForm.Instance.AppContext.CurUserInfo.UserInfo).ExecuteReturnEntityAsync();
                         }
@@ -2031,9 +2048,7 @@ namespace RUINORERP.UI
                         var cacheClientService = Startup.GetFromFac<CacheClientService>();
                         if (cacheClientService != null)
                         {
-                            logger.LogInformation("登录成功,开始订阅所有基础业务表");
                             await cacheClientService.SubscribeAllBaseTablesAsync();
-                            logger.LogInformation("登录成功,所有基础业务表订阅完成");
                         }
                         else
                         {
@@ -2535,15 +2550,17 @@ namespace RUINORERP.UI
             e.Action = CloseButtonAction.RemovePageAndDispose;
         }
 
- 
+
 
         /// <summary>
         /// 只执行一次,初始化菜单
         /// </summary>
-        private async Task InitMenu()
+        private async Task InitMenu(bool SystemInitialized)
         {
-            //List<MenuAssemblyInfo> list = UIHelper.RegisterForm();
-            //CreateMenu(list, 0, 0);
+            if (SystemInitialized)
+            {
+                return;
+            }
             Stopwatch stopwatch = Stopwatch.StartNew();
             InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
             if (init != null)
@@ -2551,6 +2568,8 @@ namespace RUINORERP.UI
                 try
                 {
                     await init.InitModuleAndMenuAsync();
+                    AppContext.RegistrationInfo.SystemInitialized = true;
+                    await Program.AppContextData.Db.CopyNew().Updateable<tb_sys_RegistrationInfo>(AppContext.RegistrationInfo).ExecuteCommandAsync();
                 }
                 catch (Exception ex)
                 {
@@ -2563,12 +2582,11 @@ namespace RUINORERP.UI
                 throw new InvalidOperationException("无法获取InitModuleMenu服务实例");
             }
             stopwatch.Stop();
-            MainForm.Instance.logger.LogInformation($"初始化菜单执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             MainForm.Instance.uclog.AddLog($"初始化菜单执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
         }
 
 
-     
+
         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
 
 
@@ -2775,7 +2793,7 @@ namespace RUINORERP.UI
         }
 
 
- 
+
 
         public delegate void voidHandler();
         void callback(IAsyncResult result)
@@ -2843,7 +2861,7 @@ namespace RUINORERP.UI
             //db.DbFirst.IsCreateAttribute().CreateClassFile("c:\\temp\\sq", "Models");
             db.DbFirst.IsCreateAttribute().CreateClassFile(@"G:\数据仓库\软件编程\RUINORERP\RUINORERPTester\RUINORERPTester\Models", "Model");
 
-   
+
 
         }
 
@@ -3078,7 +3096,7 @@ namespace RUINORERP.UI
             InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
             if (init != null)
             {
-                    var btns = init.FindControls<ToolStrip>(t as Control);
+                var btns = init.FindControls<ToolStrip>(t as Control);
                 foreach (var item in btns)
                 {
                     if (item.GetType().Name == "ToolStrip")

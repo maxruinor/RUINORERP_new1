@@ -157,17 +157,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 MainForm.Instance.PrintInfoLog(
                     "当前角色未配置待办事项，待办列表将显示空白。"
                 );
-
-                this.Invoke((MethodInvoker)(() =>
-                {
-                    System.Windows.Forms.MessageBox.Show(
-                        $"当前角色【{currentRole.RoleName}】未配置待办事项。\n\n" +
-                        "请联系管理员在【工作台配置】中配置待办事项列表。",
-                        "配置提示",
-                        System.Windows.Forms.MessageBoxButtons.OK,
-                        System.Windows.Forms.MessageBoxIcon.Information
-                    );
-                }));
             }
 
             // 初始化同步订阅者

@@ -287,18 +287,6 @@ namespace RUINORERP.UI.UserCenter
                     MainForm.Instance.PrintInfoLog(
                         "当前角色未配置数据概览单元，界面将显示空白。请联系管理员配置。"
                     );
-
-                    // 在UI线程显示友好提示
-                    this.Invoke((MethodInvoker)(() =>
-                    {
-                        System.Windows.Forms.MessageBox.Show(
-                            $"当前角色【{CurrentRole.RoleName}】未配置数据概览单元，工作台将显示空白。\n\n" +
-                            "请联系管理员在【工作台配置】中配置数据概览。",
-                            "配置提示",
-                            System.Windows.Forms.MessageBoxButtons.OK,
-                            System.Windows.Forms.MessageBoxIcon.Information
-                        );
-                    }));
                 }
                 else if (string.IsNullOrEmpty(centerConfig.DataOverview))
                 {

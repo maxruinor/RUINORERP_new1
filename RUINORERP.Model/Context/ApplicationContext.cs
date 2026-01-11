@@ -27,6 +27,12 @@ namespace RUINORERP.Model.Context
     public class ApplicationContext
     {
         /// <summary>
+        /// 系统的注册信息
+        /// </summary>
+        public tb_sys_RegistrationInfo RegistrationInfo { get; set; }
+
+
+        /// <summary>
         /// 当前应用程序上下文实例
         /// </summary>
         public static ApplicationContext Current

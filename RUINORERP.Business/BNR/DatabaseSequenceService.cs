@@ -16,36 +16,36 @@ namespace RUINORERP.Business.BNR
     public class DatabaseSequenceService : IDisposable
     {
         private readonly ISqlSugarClient _sqlSugarClient;
-        
+
         // 内存缓存，用于存储序列当前值，减少数据库访问
         private readonly ConcurrentDictionary<string, long> _sequenceCache = new ConcurrentDictionary<string, long>();
-        
+
         // 批量更新队列，存储需要写入数据库的序列值
         private readonly ConcurrentQueue<SequenceUpdateInfo> _updateQueue = new ConcurrentQueue<SequenceUpdateInfo>();
-        
+
         // 按键分片锁，用于控制对同一序列键的并发访问
         // 优化：使用按键分片锁替代全局锁，不同序列键可并行处理
         private readonly ConcurrentDictionary<string, object> _keyLocks = new ConcurrentDictionary<string, object>();
-        
+
         // 队列处理锁，用于控制队列更新的并发
         private readonly object _queueLock = new object();
-        
+
         // 缓存最大生命周期（毫秒），超过这个时间会强制刷新到数据库
         private const int CACHE_MAX_LIFETIME = 5000;
-        
+
         // 批量更新阈值，当队列超过这个数量时触发批量更新
         // 将常量改为可变的静态字段，支持动态调整
         private static int _batchUpdateThreshold = 20;
-        
+
         // 上次刷新时间
         private DateTime _lastFlushTime;
-        
+
         // 取消令牌，用于控制后台任务的停止
         private CancellationTokenSource _cancellationTokenSource;
-        
+
         // 后台任务
         private Task _backgroundTask;
-        
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -55,14 +55,14 @@ namespace RUINORERP.Business.BNR
             _sqlSugarClient = sqlSugarClient;
             // 初始化最后刷新时间
             _lastFlushTime = DateTime.Now;
-            
+
             // 初始化取消令牌
             _cancellationTokenSource = new CancellationTokenSource();
-            
+
             // 启动后台任务，定期将缓存中的序列值刷新到数据库
             _backgroundTask = Task.Run(() => BackgroundFlushTask(_cancellationTokenSource.Token));
         }
-        
+
         /// <summary>
         /// 序列更新信息
         /// </summary>
@@ -75,7 +75,7 @@ namespace RUINORERP.Business.BNR
             public string Description { get; set; }
             public string BusinessType { get; set; }
         }
-        
+
         /// <summary>
         /// 后台刷新任务，定期将缓存中的序列值写入数据库
         /// </summary>
@@ -87,7 +87,7 @@ namespace RUINORERP.Business.BNR
                 {
                     // 等待一段时间，可取消
                     await Task.Delay(1000, cancellationToken);
-                    
+
                     // 检查是否需要刷新
                     TimeSpan elapsed = DateTime.Now - _lastFlushTime;
                     if (elapsed.TotalMilliseconds >= CACHE_MAX_LIFETIME || _updateQueue.Count >= _batchUpdateThreshold)
@@ -106,7 +106,7 @@ namespace RUINORERP.Business.BNR
                 }
             }
         }
-        
+
         /// <summary>
         /// 手动刷新所有缓存到数据库
         /// 在服务关闭前调用此方法确保数据持久化
@@ -115,7 +115,7 @@ namespace RUINORERP.Business.BNR
         {
             FlushCacheToDatabase();
         }
-        
+
         /// <summary>
         /// 释放资源
         /// </summary>
@@ -125,17 +125,17 @@ namespace RUINORERP.Business.BNR
             {
                 // 取消后台任务
                 _cancellationTokenSource?.Cancel();
-                
+
                 // 等待后台任务完成
                 if (_backgroundTask != null && !_backgroundTask.IsCompleted)
                 {
                     // 使用Task.Wait替代_task.Wait()以避免潜在的死锁
                     Task.WaitAny(_backgroundTask, Task.Delay(2000)); // 等待最多2秒
                 }
-                
+
                 // 最后一次刷新缓存到数据库
                 FlushAllToDatabase();
-                
+
                 // 释放取消令牌
                 _cancellationTokenSource?.Dispose();
             }
@@ -144,7 +144,7 @@ namespace RUINORERP.Business.BNR
                 System.Diagnostics.Debug.WriteLine($"释放 DatabaseSequenceService 资源时出错: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 将缓存中的序列值刷新到数据库
         /// 优化：使用小事务批量更新 + 乐观锁，减少锁持有时间
@@ -154,14 +154,14 @@ namespace RUINORERP.Business.BNR
             // 使用双重检查锁定模式，减少锁竞争
             if (_updateQueue.IsEmpty)
                 return;
-                
+
             lock (_queueLock)
             {
                 if (_updateQueue.IsEmpty)
                     return;
-                
+
                 List<SequenceUpdateInfo> batchUpdates = new List<SequenceUpdateInfo>();
-                
+
                 // 从队列中取出一定数量的更新项
                 int count = 0;
                 while (_updateQueue.TryDequeue(out var updateInfo) && count < 100)
@@ -169,14 +169,14 @@ namespace RUINORERP.Business.BNR
                     batchUpdates.Add(updateInfo);
                     count++;
                 }
-                
+
                 if (batchUpdates.Count == 0)
                 {
                     return;
                 }
-                
+
                 System.Diagnostics.Debug.WriteLine($"开始批量更新 {batchUpdates.Count} 个序列值");
-                
+
                 // 优化：不使用大事务，而是逐条更新以减少锁持有时间
                 foreach (var update in batchUpdates)
                 {
@@ -192,7 +192,7 @@ namespace RUINORERP.Business.BNR
                             .Where(s => s.SequenceKey == update.SequenceKey
                                 && s.CurrentValue < update.Value) // 条件更新，避免覆盖新值
                             .ExecuteCommand();
-                        
+
                         // 如果没有更新到任何记录，说明记录不存在
                         if (affectedRows == 0)
                         {
@@ -223,15 +223,15 @@ namespace RUINORERP.Business.BNR
                             $"更新序列值失败，键: {update.SequenceKey}，错误: {ex.Message}");
                     }
                 }
-                
+
                 _lastFlushTime = DateTime.Now;
                 System.Diagnostics.Debug.WriteLine($"成功将 {batchUpdates.Count} 个序列值刷新到数据库");
             }
         }
 
-       
- 
-        
+
+
+
         /// <summary>
         /// 生成动态键
         /// 优化后：保持键的规范性，同时确保按时间重置功能正常工作
@@ -240,11 +240,13 @@ namespace RUINORERP.Business.BNR
         /// <param name="resetType">重置类型</param>
         /// <returns>动态键</returns>
         private string GenerateDynamicKey(string key, string resetType)
-        {            string dynamicKey = key;
-            
+        {
+            string dynamicKey = key;
+
             if (!string.IsNullOrEmpty(resetType))
-            {                switch (resetType.ToUpper())
-                {    
+            {
+                switch (resetType.ToUpper())
+                {
                     case "DAILY":
                         dynamicKey = $"{key}_{DateTime.Now.ToString("yyyyMMdd")}";
                         break;
@@ -259,10 +261,10 @@ namespace RUINORERP.Business.BNR
                         break;
                 }
             }
-            
+
             // 确保键格式规范，避免特殊字符
             dynamicKey = System.Text.RegularExpressions.Regex.Replace(dynamicKey, "[^a-zA-Z0-9_一-龥]", "_");
-            
+
             return dynamicKey;
         }
 
@@ -278,7 +280,7 @@ namespace RUINORERP.Business.BNR
                 var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                     .Where(s => s.SequenceKey == sequenceKey)
                     .First();
-                
+
                 return sequence?.CurrentValue ?? 0;
             }
             catch (Exception ex)
@@ -301,7 +303,7 @@ namespace RUINORERP.Business.BNR
             int retryCount = 0;
             int maxRetries = 3;
             bool success = false;
-            
+
             while (!success && retryCount < maxRetries)
             {
                 try
@@ -311,7 +313,7 @@ namespace RUINORERP.Business.BNR
                         var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == sequenceKey)
                             .First();
-                        
+
                         if (sequence != null)
                         {
                             sequence.CurrentValue = newValue;
@@ -335,7 +337,7 @@ namespace RUINORERP.Business.BNR
                             };
                             _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                         }
-                        
+
                         // 提交事务
                         tran.CommitTran();
                         success = true;
@@ -354,18 +356,18 @@ namespace RUINORERP.Business.BNR
                             continue;
                         }
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"更新序列值失败: {ex.Message}");
                     throw;
                 }
             }
-            
+
             if (!success)
             {
                 throw new Exception($"更新序列值失败，已达到最大重试次数 ({maxRetries})");
             }
         }
-        
+
         /// <summary>
         /// 获取下一个序列值（支持按时间单位重置）
         /// 优化：使用按键分片锁、行级锁和乐观锁机制，提升高并发性能
@@ -382,10 +384,10 @@ namespace RUINORERP.Business.BNR
             {
                 throw new ArgumentNullException(nameof(sequenceKey), "序列键不能为空");
             }
-            
+
             // 生成动态键（包含重置类型信息）
             string dynamicKey = GenerateDynamicKey(sequenceKey, resetType);
-            
+
             // 尝试从内存缓存中获取并递增序列值
             // 使用原子操作确保线程安全
             long nextValue = _sequenceCache.AddOrUpdate(
@@ -393,9 +395,10 @@ namespace RUINORERP.Business.BNR
                 // 如果键不存在，使用行级锁从数据库加载（优化点）
                 (key) => GetNextValueWithRowLock(key, resetType, formatMask, description, businessType),
                 // 如果键存在，原子递增并异步更新数据库
-                (key, currentValue) => {
+                (key, currentValue) =>
+                {
                     long next = currentValue + 1;
-                    
+
                     // 将更新添加到队列，等待批量写入数据库
                     _updateQueue.Enqueue(new SequenceUpdateInfo
                     {
@@ -406,15 +409,16 @@ namespace RUINORERP.Business.BNR
                         Description = description,
                         BusinessType = businessType
                     });
-                    
+
                     return next;
                 });
-            
+
             // 检查是否需要立即刷新缓存到数据库（避免内存缓存过大）
             if (_updateQueue.Count >= _batchUpdateThreshold)
             {
                 // 使用单独的任务刷新缓存，避免阻塞当前线程
-                Task.Run(() => {
+                Task.Run(() =>
+                {
                     try
                     {
                         FlushCacheToDatabase();
@@ -425,10 +429,10 @@ namespace RUINORERP.Business.BNR
                     }
                 });
             }
-            
+
             return nextValue;
         }
-        
+
         /// <summary>
         /// 使用行级锁获取下一个值
         /// 核心优化：使用WITH(UPDLOCK, HOLDLOCK)确保行级锁，避免脏读和并发冲突
@@ -442,16 +446,22 @@ namespace RUINORERP.Business.BNR
         private long GetNextValueWithRowLock(string sequenceKey, string resetType,
             string formatMask, string description, string businessType)
         {
+
+            if (description == null)
+            {
+                description = string.Empty;
+            }
+
             // 获取键级别锁，减少锁竞争粒度
             // 相比全局锁，按键锁可以让不同序列键的请求并行执行
             var keyLock = _keyLocks.GetOrAdd(sequenceKey, k => new object());
-            
+
             lock (keyLock)
             {
                 // 使用乐观锁机制，先查后更新
                 int retryCount = 0;
                 const int maxRetries = 5;
-                
+
                 while (retryCount < maxRetries)
                 {
                     try
@@ -464,15 +474,15 @@ namespace RUINORERP.Business.BNR
                             "WHERE SequenceKey = @SequenceKey",
                             new { SequenceKey = sequenceKey })
                             .FirstOrDefault();
-                        
+
                         long nextValue;
-                        
+
                         if (sequence != null)
                         {
                             // 记录当前版本号，用于乐观锁
                             long currentVersion = sequence.CurrentValue;
                             nextValue = currentVersion + 1;
-                            
+
                             // 使用乐观锁更新，只有当CurrentValue未变化时才更新
                             // 这种方式避免了长时间的行锁持有，提高并发性能
                             int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
@@ -481,10 +491,10 @@ namespace RUINORERP.Business.BNR
                                     CurrentValue = nextValue,
                                     LastUpdated = DateTime.Now
                                 })
-                                .Where(s => s.SequenceKey == sequenceKey 
+                                .Where(s => s.SequenceKey == sequenceKey
                                     && s.CurrentValue == currentVersion) // 乐观锁条件
                                 .ExecuteCommand();
-                            
+
                             if (affectedRows == 0)
                             {
                                 // 乐观锁失败，已被其他事务修改，重试
@@ -513,7 +523,7 @@ namespace RUINORERP.Business.BNR
                                     BusinessType = businessType
                                 }).ExecuteCommand();
                             }
-                            catch (Exception ex) when (ex.Message.Contains("PRIMARY KEY") || 
+                            catch (Exception ex) when (ex.Message.Contains("PRIMARY KEY") ||
                                 ex.Message.Contains("UNIQUE constraint") ||
                                 ex.Message.Contains("违反了 PRIMARY KEY"))
                             {
@@ -524,13 +534,13 @@ namespace RUINORERP.Business.BNR
                                 continue;
                             }
                         }
-                        
+
                         // 成功获取值后，立即更新缓存
                         _sequenceCache.AddOrUpdate(sequenceKey, nextValue, (k, v) => nextValue);
-                        
+
                         System.Diagnostics.Debug.WriteLine(
                             $"成功获取序列值，键: {sequenceKey}，值: {nextValue}");
-                        
+
                         return nextValue;
                     }
                     catch (System.Data.SqlClient.SqlException ex) when (ex.Number == 1205) // 死锁错误码
@@ -544,21 +554,21 @@ namespace RUINORERP.Business.BNR
                     {
                         System.Diagnostics.Debug.WriteLine(
                             $"获取序列值时发生异常: {ex.Message}，键: {sequenceKey}");
-                        
+
                         if (retryCount >= maxRetries - 1)
                         {
                             throw;
                         }
-                        
+
                         retryCount++;
                         Thread.Sleep(20 * retryCount);
                     }
                 }
-                
+
                 throw new Exception($"获取序列值失败，已达到最大重试次数 {maxRetries}，键: {sequenceKey}");
             }
         }
-        
+
         /// <summary>
         /// 从数据库获取当前序列值
         /// </summary>
@@ -571,7 +581,7 @@ namespace RUINORERP.Business.BNR
                 var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                     .Where(s => s.SequenceKey == sequenceKey)
                     .First();
-                
+
                 return sequence?.CurrentValue ?? 0;
             }
             catch (Exception ex)
@@ -602,7 +612,7 @@ namespace RUINORERP.Business.BNR
             int retryCount = 0;
             int maxRetries = 3;
             bool success = false;
-            
+
             while (!success && retryCount < maxRetries)
             {
                 try
@@ -613,19 +623,19 @@ namespace RUINORERP.Business.BNR
                         var sequences = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == key || s.SequenceKey.StartsWith($"{key}_"))
                             .ToList();
-                        
+
                         if (sequences.Count == 0)
                         {
                             throw new Exception($"未找到序列键 '{key}' 相关的记录");
                         }
-                        
+
                         foreach (var sequence in sequences)
                         {
                             sequence.CurrentValue = 1;
                             sequence.LastUpdated = DateTime.Now;
                             _sqlSugarClient.Updateable(sequence).ExecuteCommand();
                         }
-                        
+
                         // 提交事务
                         tran.CommitTran();
                         success = true;
@@ -644,12 +654,12 @@ namespace RUINORERP.Business.BNR
                             continue;
                         }
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"重置序列失败: {ex.Message}");
                     throw;
                 }
             }
-            
+
             if (!success)
             {
                 throw new Exception($"重置序列失败，已达到最大重试次数 ({maxRetries})");
@@ -665,14 +675,14 @@ namespace RUINORERP.Business.BNR
         public long GetCurrentSequenceValue(string key, string resetType = "None")
         {
             string dynamicKey = GenerateDynamicKey(key, resetType);
-            
+
             var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                 .Where(s => s.SequenceKey == dynamicKey)
                 .First();
-                
+
             return sequence?.CurrentValue ?? 0;
         }
-        
+
         /// <summary>
         /// 获取所有序列
         /// </summary>
@@ -683,7 +693,7 @@ namespace RUINORERP.Business.BNR
                 .OrderBy(s => s.Id)
                 .ToList();
         }
-        
+
         /// <summary>
         /// 根据业务类型获取序列
         /// </summary>
@@ -696,7 +706,7 @@ namespace RUINORERP.Business.BNR
                 .OrderBy(s => s.Id)
                 .ToList();
         }
-        
+
         /// <summary>
         /// 更新序列信息
         /// 修复：移除事务锁，使用重试机制处理并发冲突
@@ -712,7 +722,7 @@ namespace RUINORERP.Business.BNR
             int retryCount = 0;
             int maxRetries = 3;
             bool success = false;
-            
+
             while (!success && retryCount < maxRetries)
             {
                 try
@@ -722,29 +732,29 @@ namespace RUINORERP.Business.BNR
                         var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == key)
                             .First();
-                        
+
                         if (sequence == null)
                         {
                             throw new Exception($"未找到序列键 '{key}' 的记录");
                         }
-                        
+
                         // 更新非空字段
                         if (!string.IsNullOrEmpty(resetType))
                             sequence.ResetType = resetType;
-                        
+
                         if (!string.IsNullOrEmpty(formatMask))
                             sequence.FormatMask = formatMask;
-                        
+
                         if (!string.IsNullOrEmpty(description))
                             sequence.Description = description;
-                        
+
                         if (!string.IsNullOrEmpty(businessType))
                             sequence.BusinessType = businessType;
-                        
+
                         sequence.LastUpdated = DateTime.Now;
-                        
+
                         _sqlSugarClient.Updateable(sequence).ExecuteCommand();
-                        
+
                         // 提交事务
                         tran.CommitTran();
                         success = true;
@@ -763,12 +773,12 @@ namespace RUINORERP.Business.BNR
                             continue;
                         }
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"更新序列信息失败: {ex.Message}");
                     throw;
                 }
             }
-            
+
             if (!success)
             {
                 throw new Exception($"更新序列信息失败，已达到最大重试次数 ({maxRetries})");
@@ -788,7 +798,7 @@ namespace RUINORERP.Business.BNR
             int retryCount = 0;
             int maxRetries = 3;
             bool success = false;
-            
+
             while (!success && retryCount < maxRetries)
             {
                 try
@@ -798,7 +808,7 @@ namespace RUINORERP.Business.BNR
                         var sequence = _sqlSugarClient.Queryable<SequenceNumbers>()
                             .Where(s => s.SequenceKey == key)
                             .First();
-                         
+
                         if (sequence != null)
                         {
                             sequence.CurrentValue = newValue;
@@ -822,7 +832,7 @@ namespace RUINORERP.Business.BNR
                             };
                             _sqlSugarClient.Insertable(newSequence).ExecuteCommand();
                         }
-                        
+
                         // 提交事务
                         tran.CommitTran();
                         success = true;
@@ -841,12 +851,12 @@ namespace RUINORERP.Business.BNR
                             continue;
                         }
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"重置序列值失败: {ex.Message}");
                     throw;
                 }
             }
-            
+
             if (!success)
             {
                 throw new Exception($"重置序列值失败，已达到最大重试次数 ({maxRetries})");
@@ -878,7 +888,7 @@ namespace RUINORERP.Business.BNR
 
             return count > 0;
         }
-        
+
         /// <summary>
         /// 测试序号表功能
         /// 用于验证表结构是否正确创建及序列生成是否正常
@@ -889,7 +899,7 @@ namespace RUINORERP.Business.BNR
             try
             {
                 StringBuilder result = new StringBuilder();
-                
+
                 // 检查表是否存在
                 if (_sqlSugarClient.DbMaintenance.IsAnyTable("SequenceNumbers"))
                 {
@@ -899,17 +909,17 @@ namespace RUINORERP.Business.BNR
                 {
                     return "错误：序号表不存在！";
                 }
-                
+
                 // 测试生成序号
                 string testKey = "TEST_KEY_" + DateTime.Now.ToString("yyyyMMddHHmmss");
                 long sequenceValue = GetNextSequenceValue(testKey);
                 result.AppendLine($"生成测试序号成功：{testKey} = {sequenceValue}");
-                
+
                 // 验证序号已保存
                 if (SequenceExists(testKey))
                 {
                     result.AppendLine("序号记录已正确保存到数据库");
-                    
+
                     // 清理测试数据
                     DeleteSequence(testKey);
                     result.AppendLine("测试数据已清理");
@@ -918,7 +928,7 @@ namespace RUINORERP.Business.BNR
                 {
                     result.AppendLine("警告：序号记录未保存到数据库");
                 }
-                
+
                 return result.ToString();
             }
             catch (Exception ex)
@@ -926,7 +936,7 @@ namespace RUINORERP.Business.BNR
                 return $"测试失败：{ex.Message}";
             }
         }
-        
+
         /// <summary>
         /// 设置批量更新阈值
         /// </summary>
@@ -939,7 +949,7 @@ namespace RUINORERP.Business.BNR
                 System.Diagnostics.Debug.WriteLine($"批量更新阈值已设置为: {threshold}");
             }
         }
-        
+
         /// <summary>
         /// 获取当前批量更新阈值
         /// </summary>
@@ -986,25 +996,25 @@ namespace RUINORERP.Business.BNR
         /// </summary>
         [SugarColumn(ColumnDataType = "datetime2", SqlParameterDbType = "DateTime", ColumnName = "CreatedAt", IsNullable = false, ColumnDescription = "创建时间")]
         public DateTime CreatedAt { get; set; }
-        
+
         /// <summary>
         /// 重置类型: None, Daily, Monthly, Yearly
         /// </summary>
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "ResetType", Length = 20, IsNullable = true, ColumnDescription = "重置类型: None, Daily, Monthly, Yearly")]
         public string ResetType { get; set; }
-        
+
         /// <summary>
         /// 格式化掩码，如 000
         /// </summary>
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "FormatMask", Length = 50, IsNullable = true, ColumnDescription = "格式化掩码，如 000")]
         public string FormatMask { get; set; }
-        
+
         /// <summary>
         /// 序列描述
         /// </summary>
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "Description", Length = 255, IsNullable = true, ColumnDescription = "序列描述")]
         public string Description { get; set; }
-        
+
         /// <summary>
         /// 业务类型
         /// </summary>

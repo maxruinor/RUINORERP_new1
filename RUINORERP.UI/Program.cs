@@ -88,6 +88,9 @@ namespace RUINORERP.UI
             set => _AppContextData = value;
         }
 
+
+
+
         /// <summary>
         /// 初始化应用程序上下文
         /// </summary>
@@ -288,7 +291,7 @@ namespace RUINORERP.UI
         {
             await StartProgramAsync(args);
         }
- 
+
 
 
         private static void ActivateExistingInstance()
@@ -511,13 +514,13 @@ namespace RUINORERP.UI
 
                     IEntityCacheManager entityCacheManager = Startup.GetFromFac<IEntityCacheManager>();
                     // 验证EntityCacheManager是否正确注册
-                    
+
                     // 验证TableSchemaManager是否正确注册为单例
                     try
                     {
                         var tableSchemaManager1 = Startup.GetFromFac<ITableSchemaManager>();
                         var tableSchemaManager2 = Startup.GetFromFac<ITableSchemaManager>();
-                        
+
                         if (!ReferenceEquals(tableSchemaManager1, tableSchemaManager2))
                         {
                             System.Diagnostics.Debug.WriteLine("[严重错误] Program.cs中的TableSchemaManager未正确注册为单例!");
@@ -579,7 +582,7 @@ namespace RUINORERP.UI
                     MessageBox.Show(s);
                     System.Diagnostics.Debug.WriteLine(s);
                 }
-      
+
 
                 return;
                 #endregion

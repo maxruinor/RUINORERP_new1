@@ -29,7 +29,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.ConfigModel;
- 
+
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Message;
@@ -602,15 +602,17 @@ namespace RUINORERP.Server
         private NetworkServer _networkServer;
 
         private readonly EntityCacheInitializationService _entityCacheInitializationService;
+        private readonly IRegistrationService _registrationService;
+        public frmMainNew(ILogger<frmMainNew> logger,
 
-        public frmMainNew(ILogger<frmMainNew> logger, IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalConfig> config)
+            IWorkflowHost workflowHost, IOptionsMonitor<SystemGlobalConfig> config)
         {
             InitializeComponent();
             _main = this;
             _sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+            _registrationService = Startup.GetFromFac<IRegistrationService>();
             _logger = logger;
             WorkflowHost = workflowHost;
-
             // 注入缓存初始化服务
             _entityCacheInitializationService = Program.ServiceProvider.GetRequiredService<EntityCacheInitializationService>();
 
@@ -640,7 +642,7 @@ namespace RUINORERP.Server
 
             // 初始化服务器监控选项卡页面（默认显示）
             InitializeDefaultTab();
-            
+
             // 启动UI日志处理泵
             StartUiLogPump();
         }
@@ -1054,7 +1056,7 @@ namespace RUINORERP.Server
             // 记录日志级别变更
             var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger<frmMainNew>();
-    
+
 
             // 更新菜单项选中状态
             Instance?.UpdateLogLevelMenuCheckState();
@@ -1337,7 +1339,7 @@ namespace RUINORERP.Server
                 }
 
                 PrintInfoLog("服务器启动中...");
-     
+
 
                 // 启动核心服务
                 await StartServerCore();
@@ -1401,7 +1403,7 @@ namespace RUINORERP.Server
                 // 显示更友好的错误消息，特别是端口占用情况
                 string errorMessage = ex.Message;
                 string errorTitle = "错误";
-                
+
                 // 检查是否是端口占用错误，提供更友好的显示
                 if (ex.Message.Contains("端口已被占用") || ex.Message.Contains("端口") && ex.Message.Contains("占用"))
                 {
@@ -1412,7 +1414,7 @@ namespace RUINORERP.Server
                 {
                     errorTitle = "配置错误";
                 }
-                
+
                 MessageBox.Show(errorMessage, errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -1879,7 +1881,7 @@ namespace RUINORERP.Server
 
         // 标记UI日志是否可用的标志
         private volatile bool _uiLoggingEnabled = true;
-        
+
         // 日志生产者-消费者队列相关
         private readonly BlockingCollection<string> _uiLogQueue = new BlockingCollection<string>(new ConcurrentQueue<string>(), 1000);
         private CancellationTokenSource _uiLogCts;
@@ -1893,10 +1895,10 @@ namespace RUINORERP.Server
         {
             if (_uiLogCts != null)
                 return;
-            
+
             _uiLogCts = new CancellationTokenSource();
             var ct = _uiLogCts.Token;
-            
+
             Task.Factory.StartNew(async () =>
             {
                 var sb = new StringBuilder();
@@ -1916,7 +1918,7 @@ namespace RUINORERP.Server
                             }
                             continue;
                         }
-                        
+
                         sb.Append(msg);
                         // 继续尝试拉取以批量合并（短时间窗口）
                         while (_uiLogQueue.TryTake(out msg))
@@ -1925,7 +1927,7 @@ namespace RUINORERP.Server
                             if (sb.Length > UI_LOG_MAX_BATCH_SIZE)
                                 break;
                         }
-                        
+
                         var batch2 = sb.ToString();
                         sb.Clear();
                         AppendLogToUi(batch2);
@@ -1966,7 +1968,7 @@ namespace RUINORERP.Server
         {
             if (IsDisposed)
                 return;
-                
+
             if (InvokeRequired)
             {
                 try
@@ -1989,7 +1991,7 @@ namespace RUINORERP.Server
                 richTextBoxLog.SuspendLayout();
                 richTextBoxLog.AppendText(batch);
                 richTextBoxLog.ScrollToCaret();
-                
+
                 // 确保日志行数不超过限制
                 EnsureMaxLinesSafe(richTextBoxLog, 500);
             }
@@ -2018,7 +2020,7 @@ namespace RUINORERP.Server
         {
             if (!_uiLoggingEnabled)
                 return;
-                
+
             if (!_uiLogQueue.TryAdd(formattedMsg))
             {
                 // 队列满时回退到文件记录
@@ -2229,7 +2231,7 @@ namespace RUINORERP.Server
             // 禁止新的UI日志，停止泵
             _uiLoggingEnabled = false;
             StopUiLogPump();
-            
+
             await ShutdownAsync();
         }
 
@@ -2260,7 +2262,7 @@ namespace RUINORERP.Server
                 if (host != null)
                 {
                     PrintInfoLog("网络服务器启动成功");
-
+                    _logger?.LogInformation($"ERP网络服务器启动成功");
                     // 启动服务器信息刷新定时器
                     if (_serverInfoTimer != null)
                     {
@@ -2290,11 +2292,11 @@ namespace RUINORERP.Server
 
                     // 加载提醒数据
                     DataServiceChannel loadService = Startup.GetFromFac<DataServiceChannel>();
-                    loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
+                    await loadService.LoadCRMFollowUpPlansData(ReminderBizDataList);
 
                     // 启动提醒工作流调度器
                     _reminderScheduler = new RUINORERP.Server.Workflow.ReminderWorkflowScheduler(
-                        WorkflowHost, 
+                        WorkflowHost,
                         loadService,
                         Startup.GetFromFac<Microsoft.Extensions.Logging.ILogger<RUINORERP.Server.Workflow.ReminderWorkflowScheduler>>()
                     );
@@ -2321,7 +2323,7 @@ namespace RUINORERP.Server
             {
                 _logger?.LogError($"NetworkServer启动异常: {hostex.Message}", hostex);
                 PrintErrorLog($"NetworkServer启动异常: {hostex.Message}");
-                throw ; // 重新抛出异常以便上层处理
+                throw; // 重新抛出异常以便上层处理
             }
         }
 
@@ -2570,6 +2572,13 @@ namespace RUINORERP.Server
             {
                 PrintInfoLog("正在检查系统注册状态...");
 
+                // 检查是否处于调试模式
+                if (IsDebug)
+                {
+                    PrintInfoLog("系统处于调试模式，跳过注册状态检查");
+                    return;
+                }
+
                 // 从依赖注入容器获取注册服务
                 var registrationService = Startup.GetFromFac<IRegistrationService>();
                 if (registrationService == null)
@@ -2624,7 +2633,8 @@ namespace RUINORERP.Server
                 {
                     try
                     {
-                        string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        //string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        string decryptedModules = registrationInfo.FunctionModule;
                         PrintInfoLog($"已授权功能模块: {decryptedModules}");
                     }
                     catch (Exception ex)
@@ -2652,6 +2662,13 @@ namespace RUINORERP.Server
             {
                 PrintInfoLog("正在执行服务器启动时的注册验证...");
 
+                // 检查是否处于调试模式
+                if (IsDebug)
+                {
+                    PrintInfoLog("系统处于调试模式，跳过注册严格验证");
+                    return true;
+                }
+
                 // 从依赖注入容器获取注册服务
                 var registrationService = Startup.GetFromFac<IRegistrationService>();
                 if (registrationService == null)
@@ -2670,6 +2687,20 @@ namespace RUINORERP.Server
 
                 // 将注册信息赋值给实例变量
                 frmMainNew.Instance.registrationInfo = registrationInfo;
+
+                /*
+                // 生成机器码
+                string machineCode = _registrationService.CreateMachineCode(registrationInfo);
+                //根据注册信息实时生成机器码与注册信息中的机器码比较检测
+                if (!machineCode.Equals(registrationInfo.MachineCode))
+                {
+                    PrintErrorLog("机器码检测失败，服务器无法启动");
+                    MessageBox.Show("机器码检测失败,如果您有更换过主机，请联系软件提供商更新注册信息。",
+                                  "机器码检测失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                */
+
 
                 // 执行严格的注册验证
                 bool isRegistered = registrationService.CheckRegistered(registrationInfo);
@@ -2728,7 +2759,8 @@ namespace RUINORERP.Server
                 {
                     try
                     {
-                        string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        //string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
+                        string decryptedModules = registrationInfo.FunctionModule;
                         PrintInfoLog($"已授权功能模块: {decryptedModules}");
                     }
                     catch (Exception ex)

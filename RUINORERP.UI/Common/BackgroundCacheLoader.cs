@@ -14,11 +14,11 @@ using RUINORERP.Model;
 namespace RUINORERP.UI.Common
 {
     /// <summary>
-    /// 后台缓存管理器 - 简化版本，负责在后台异步加载缓存数据，避免阻塞UI线程
+    /// 后台缓存加载器 - 简化版本，负责在后台异步加载缓存数据，避免阻塞UI线程
     /// </summary>
-    public class BackgroundCacheManager : IDisposable
+    public class BackgroundCacheLoader : IDisposable
     {
-        private readonly ILogger<BackgroundCacheManager> _logger;
+        private readonly ILogger<BackgroundCacheLoader> _logger;
         private readonly CacheClientService _cacheClient;
         private readonly SemaphoreSlim _semaphore;
         private readonly CancellationTokenSource _cancellationTokenSource;
@@ -27,17 +27,46 @@ namespace RUINORERP.UI.Common
         private Task _backgroundWorker;
         private volatile bool _disposed = false;
 
+        // 任务优先级枚举
+        private enum TaskPriority
+        {
+            Low = 0,
+            Normal = 1,
+            High = 2
+        }
+
+        // 缓存任务结构
+        private class CacheTask
+        {
+            public TaskPriority Priority { get; set; }
+            public string TableName { get; set; }
+            public Type EntityType { get; set; }
+            public bool ForceRefresh { get; set; }
+            public int TimeoutMs { get; set; }
+            public TaskCompletionSource<bool> CompletionSource { get; set; }
+            public DateTime CreatedTime { get; set; }
+        }
+
         // 配置参数
         private const int MaxConcurrentRequests = 3;
         private const int DefaultTimeoutMs = 10000;
         private const int MaxRetries = 2;
+        
+        // 任务队列 - 按优先级排序
+        private readonly List<CacheTask> _taskQueue = new List<CacheTask>();
+        // 用于保护任务队列的锁
+        private readonly object _queueLock = new object();
+        // 用于通知工作线程有新任务的信号量
+        private readonly SemaphoreSlim _queueSemaphore = new SemaphoreSlim(0, int.MaxValue);
+        // Task对象池，用于复用TaskCompletionSource，减少GC压力
+        private readonly TaskPool<bool> _taskPool;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="cacheClient">缓存客户端服务</param>
-        public BackgroundCacheManager(ILogger<BackgroundCacheManager> logger, CacheClientService cacheClient, IEntityCacheManager entityCacheManager)
+        public BackgroundCacheLoader(ILogger<BackgroundCacheLoader> logger, CacheClientService cacheClient, IEntityCacheManager entityCacheManager)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _cacheClient = cacheClient ?? throw new ArgumentNullException(nameof(cacheClient));
@@ -45,11 +74,13 @@ namespace RUINORERP.UI.Common
             _cancellationTokenSource = new CancellationTokenSource();
             _entityCacheManager = entityCacheManager ?? throw new ArgumentNullException(nameof(entityCacheManager));
             _loadingTasks = new ConcurrentDictionary<string, TaskCompletionSource<bool>>();
+            // 初始化Task对象池，初始大小20，最大100
+            _taskPool = new TaskPool<bool>(20, 100, true);
 
             // 启动后台工作线程
             _backgroundWorker = Task.Run(() => BackgroundWorkerAsync(_cancellationTokenSource.Token));
 
-            _logger.LogDebug("后台缓存管理器已初始化");
+            _logger.LogDebug("后台缓存加载器已初始化");
         }
 
         /// <summary>
@@ -62,7 +93,7 @@ namespace RUINORERP.UI.Common
         /// <returns>加载任务</returns>
         public Task<bool> AddHighPriorityTaskAsync(string tableName, Type entityType = null, bool forceRefresh = false, int timeoutMs = DefaultTimeoutMs)
         {
-            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs);
+            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs, TaskPriority.High);
         }
 
         /// <summary>
@@ -75,7 +106,7 @@ namespace RUINORERP.UI.Common
         /// <returns>加载任务</returns>
         public Task<bool> AddNormalPriorityTaskAsync(string tableName, Type entityType = null, bool forceRefresh = false, int timeoutMs = DefaultTimeoutMs)
         {
-            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs);
+            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs, TaskPriority.Normal);
         }
 
         /// <summary>
@@ -88,7 +119,7 @@ namespace RUINORERP.UI.Common
         /// <returns>加载任务</returns>
         public Task<bool> AddLowPriorityTaskAsync(string tableName, Type entityType = null, bool forceRefresh = false, int timeoutMs = DefaultTimeoutMs)
         {
-            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs);
+            return AddTaskAsync(tableName, entityType, forceRefresh, timeoutMs, TaskPriority.Low);
         }
 
         /// <summary>
@@ -104,7 +135,7 @@ namespace RUINORERP.UI.Common
             {
                 if (!string.IsNullOrEmpty(tableName))
                 {
-                    tasks[tableName] = AddTaskAsync(tableName, null, forceRefresh, DefaultTimeoutMs);
+                    tasks[tableName] = AddTaskAsync(tableName, null, forceRefresh, DefaultTimeoutMs, TaskPriority.Normal);
                 }
             }
 
@@ -163,7 +194,7 @@ namespace RUINORERP.UI.Common
         /// <param name="forceRefresh">是否强制刷新</param>
         /// <param name="timeoutMs">超时时间</param>
         /// <returns>加载任务</returns>
-        private Task<bool> AddTaskAsync(string tableName, Type entityType, bool forceRefresh, int timeoutMs)
+        private Task<bool> AddTaskAsync(string tableName, Type entityType, bool forceRefresh, int timeoutMs, TaskPriority priority)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -171,7 +202,7 @@ namespace RUINORERP.UI.Common
             }
 
             // 检查是否已在加载中
-            var existingTask = _loadingTasks.GetOrAdd(tableName, _ => new TaskCompletionSource<bool>());
+            var existingTask = _loadingTasks.GetOrAdd(tableName, _ => _taskPool.Get());
 
             // 如果不是强制刷新且缓存已存在，直接返回成功
             if (!forceRefresh && IsCacheLoaded(tableName))
@@ -180,11 +211,35 @@ namespace RUINORERP.UI.Common
                 return existingTask.Task;
             }
 
-            // 启动后台加载任务（不等待，避免阻塞）
-            _ = Task.Run(async () =>
+            // 创建缓存任务
+            var cacheTask = new CacheTask
             {
-                await LoadCacheAsync(tableName, entityType, forceRefresh, timeoutMs, existingTask);
-            }, _cancellationTokenSource.Token);
+                Priority = priority,
+                TableName = tableName,
+                EntityType = entityType,
+                ForceRefresh = forceRefresh,
+                TimeoutMs = timeoutMs,
+                CompletionSource = existingTask,
+                CreatedTime = DateTime.Now
+            };
+
+            // 添加到任务队列（按优先级排序）
+            lock (_queueLock)
+            {
+                // 查找合适的位置插入，按优先级从高到低排序
+                int index = _taskQueue.FindIndex(t => t.Priority < priority);
+                if (index == -1)
+                {
+                    _taskQueue.Add(cacheTask);
+                }
+                else
+                {
+                    _taskQueue.Insert(index, cacheTask);
+                }
+            }
+
+            // 通知工作线程有新任务
+            _queueSemaphore.Release();
 
             return existingTask.Task;
         }
@@ -194,28 +249,67 @@ namespace RUINORERP.UI.Common
         /// </summary>
         private async Task BackgroundWorkerAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("后台缓存管理器工作线程已启动");
+            _logger.LogDebug("后台缓存加载器工作线程已启动");
 
             try
             {
+                var cleanupInterval = TimeSpan.FromSeconds(10);
+                var lastCleanupTime = DateTime.Now;
+
                 while (!cancellationToken.IsCancellationRequested && !_disposed)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+                    // 检查是否需要清理已完成的任务
+                    if (DateTime.Now - lastCleanupTime > cleanupInterval)
+                    {
+                        CleanupCompletedTasks();
+                        lastCleanupTime = DateTime.Now;
+                    }
 
-                    // 定期清理已完成的任务引用
-                    CleanupCompletedTasks();
+                    // 尝试从队列获取任务
+                    CacheTask cacheTask = null;
+                    bool hasTask = false;
+
+                    // 从队列中取出一个任务（按优先级）
+                    lock (_queueLock)
+                    {
+                        if (_taskQueue.Count > 0)
+                        {
+                            cacheTask = _taskQueue[0];
+                            _taskQueue.RemoveAt(0);
+                            hasTask = true;
+                        }
+                    }
+
+                    if (hasTask && cacheTask != null)
+                    {
+                        // 执行缓存加载任务
+                        await LoadCacheAsync(cacheTask.TableName, cacheTask.EntityType, cacheTask.ForceRefresh, cacheTask.TimeoutMs, cacheTask.CompletionSource);
+                    }
+                    else
+                    {
+                        // 没有任务时，等待新任务或超时
+                        try
+                        {
+                            await _queueSemaphore.WaitAsync(cleanupInterval, cancellationToken);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // 取消操作，退出循环
+                            break;
+                        }
+                    }
                 }
             }
             catch (OperationCanceledException)
             {
-                _logger.LogDebug("后台缓存管理器工作线程被取消");
+                _logger.LogDebug("后台缓存加载器工作线程被取消");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "后台缓存管理器工作线程发生异常");
+                _logger.LogError(ex, "后台缓存加载器工作线程发生异常");
             }
 
-            _logger.LogDebug("后台缓存管理器工作线程已停止");
+            _logger.LogDebug("后台缓存加载器工作线程已停止");
         }
 
         /// <summary>
@@ -340,14 +434,15 @@ namespace RUINORERP.UI.Common
             {
                 var completedTasks = _loadingTasks
                     .Where(kvp => kvp.Value.Task.IsCompleted)
-                    .Select(kvp => kvp.Key)
                     .ToList();
 
-                foreach (var tableName in completedTasks)
+                foreach (var kvp in completedTasks)
                 {
-                    if (_loadingTasks.TryRemove(tableName, out _))
+                    if (_loadingTasks.TryRemove(kvp.Key, out var tcs))
                     {
-                        _logger.LogDebug("清理已完成的缓存任务: {TableName}", tableName);
+                        // 将TaskCompletionSource归还到对象池
+                        _taskPool.Return(tcs);
+                        _logger.LogDebug("清理已完成的缓存任务: {TableName}", kvp.Key);
                     }
                 }
             }
@@ -358,7 +453,7 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 检查缓存是否已加载
+        /// 检查缓存是否已加载1
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>是否已加载</returns>
@@ -407,7 +502,7 @@ namespace RUINORERP.UI.Common
 
             try
             {
-                _logger.LogDebug("开始释放后台缓存管理器资源");
+                _logger.LogDebug("开始释放后台缓存加载器资源");
 
                 // 取消所有操作
                 _cancellationTokenSource.Cancel();
@@ -428,12 +523,14 @@ namespace RUINORERP.UI.Common
                     }
                 }
 
-                // 完成所有待处理任务
+                // 完成所有待处理任务并归还到对象池
                 foreach (var kvp in _loadingTasks)
                 {
                     try
                     {
                         kvp.Value.TrySetResult(false);
+                        // 将TaskCompletionSource归还到对象池
+                        _taskPool.Return(kvp.Value);
                     }
                     catch
                     {
@@ -445,12 +542,13 @@ namespace RUINORERP.UI.Common
                 // 释放资源
                 _semaphore?.Dispose();
                 _cancellationTokenSource?.Dispose();
+                _taskPool?.Dispose();
 
-                _logger.LogDebug("后台缓存管理器资源释放完成");
+                _logger.LogDebug("后台缓存加载器资源释放完成");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "释放后台缓存管理器资源时发生错误");
+                _logger.LogError(ex, "释放后台缓存加载器资源时发生错误");
             }
         }
 

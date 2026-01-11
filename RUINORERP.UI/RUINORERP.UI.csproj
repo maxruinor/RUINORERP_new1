@@ -913,7 +913,7 @@
       <DependentUpon>frmGenericOpinion.cs</DependentUpon>
     </Compile>
     <Compile Include="Common\AbstractGridViewDisplayTextResolver.cs" />
-    <Compile Include="Common\BackgroundCacheManager.cs" />
+    <Compile Include="Common\BackgroundCacheLoader.cs" />
     <Compile Include="Common\CheckedListBoxHelper.cs" />
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlBindingHelper.cs" />
@@ -922,6 +922,7 @@
     <Compile Include="Common\HardwareHelper.cs" />
     <Compile Include="Common\IVoiceReminder.cs" />
     <Compile Include="Common\NullVoiceReminder.cs" />
+    <Compile Include="Common\TaskPool.cs" />
     <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
     <Compile Include="Forms\LockInfoDetailForm.cs">

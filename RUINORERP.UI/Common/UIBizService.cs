@@ -412,7 +412,7 @@ namespace RUINORERP.UI.Common
                 {
                     try
                     {
-                        await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                        await BackgroundCacheLoader.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
                     }
                     catch (Exception ex)
                     {
@@ -1514,24 +1514,24 @@ namespace RUINORERP.UI.Common
         #region 缓存请求方法
 
         /// <summary>
-        /// 后台缓存管理器实例
+        /// 后台缓存加载器实例
         /// </summary>
-        private static BackgroundCacheManager _backgroundCacheManager;
+        private static BackgroundCacheLoader _backgroundCacheLoader;
 
         /// <summary>
         /// 获取后台缓存管理器实例
         /// </summary>
-        public static BackgroundCacheManager BackgroundCacheManager
+        public static BackgroundCacheLoader BackgroundCacheLoader
         {
             get
             {
-                if (_backgroundCacheManager == null)
+                if (_backgroundCacheLoader == null)
                 {
-                    var logger = Startup.GetFromFac<ILogger<BackgroundCacheManager>>();
+                    var logger = Startup.GetFromFac<ILogger<BackgroundCacheLoader>>();
                     var cacheClient = Startup.GetFromFac<CacheClientService>();
-                    _backgroundCacheManager = new BackgroundCacheManager(logger, cacheClient, CacheManager);
+                    _backgroundCacheLoader = new BackgroundCacheLoader(logger, cacheClient, CacheManager);
                 }
-                return _backgroundCacheManager;
+                return _backgroundCacheLoader;
             }
         }
 
@@ -1552,7 +1552,7 @@ namespace RUINORERP.UI.Common
             if (useBackground)
             {
                 // 使用后台异步模式，不阻塞UI线程
-                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(typeof(T).Name, typeof(T), forceRefresh, timeoutMs);
+                var task = BackgroundCacheLoader.AddHighPriorityTaskAsync(typeof(T).Name, typeof(T), forceRefresh, timeoutMs);
                 return; // 立即返回，不等待结果
             }
             await RequestCache(typeof(T).Name, typeof(T), forceRefresh, timeoutMs, cancellationToken);
@@ -1573,7 +1573,7 @@ namespace RUINORERP.UI.Common
             if (useBackground)
             {
                 // 使用后台异步模式，不阻塞UI线程
-                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(type.Name, type, forceRefresh, timeoutMs);
+                var task = BackgroundCacheLoader.AddHighPriorityTaskAsync(type.Name, type, forceRefresh, timeoutMs);
                 return; // 立即返回，不等待结果
             }
             await RequestCache(type.Name, type, forceRefresh, timeoutMs, cancellationToken);
@@ -1594,7 +1594,7 @@ namespace RUINORERP.UI.Common
             if (useBackground)
             {
                 // 使用后台异步模式，不阻塞UI线程
-                var task = BackgroundCacheManager.AddHighPriorityTaskAsync(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs);
+                var task = BackgroundCacheLoader.AddHighPriorityTaskAsync(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs);
                 return; // 立即返回，不等待结果
             }
             await RequestCache(entity.GetType().Name, entity.GetType(), forceRefresh, timeoutMs, cancellationToken);
@@ -1635,7 +1635,7 @@ namespace RUINORERP.UI.Common
                 try
                 {
                     // 立即返回，不等待结果，避免UI线程阻塞
-                    _ = BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
+                    _ = BackgroundCacheLoader.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs);
 
                     // 记录后台任务已启动
                     MainForm.Instance.logger.LogDebug($"缓存请求已添加到后台任务队列: {tableName}");
@@ -1775,7 +1775,7 @@ namespace RUINORERP.UI.Common
                     {
                         try
                         {
-                            await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                            await BackgroundCacheLoader.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
                         }
                         catch (Exception ex)
                         {
@@ -1797,7 +1797,7 @@ namespace RUINORERP.UI.Common
                         try
                         {
                             await Task.Delay(1000); // 延迟1秒后重试
-                            await BackgroundCacheManager.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
+                            await BackgroundCacheLoader.AddHighPriorityTaskAsync(tableName, type, forceRefresh, timeoutMs * 2);
                         }
                         catch (Exception retryEx)
                         {

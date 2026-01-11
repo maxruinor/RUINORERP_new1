@@ -300,7 +300,7 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
+                  // logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
                 }
             }
             catch (Exception ex)

@@ -26,6 +26,7 @@ namespace RUINORERP.UI.Network.Services
     /// <summary>
     /// 缓存客户端服务类，负责管理缓存订阅、同步和请求操作
     /// 处理本地缓存变更事件并同步到服务器
+    /// 
     /// </summary>
     public class CacheClientService : CacheValidationBase, IDisposable
     {

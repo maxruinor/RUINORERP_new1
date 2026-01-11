@@ -27,11 +27,15 @@ namespace RUINORERP.UI.Network
         private bool _disposed = false;
         private Task _reconnectTask = null;
         private bool _reconnectStopped = false; // 新增：重连是否已停止标志
+        private bool _isNetworkAvailable = true; // 当前网络状态
 
         private string _serverAddress = string.Empty;
         private int _serverPort = 0;
         private DateTime _lastReconnectAttempt = DateTime.MinValue; // 新增：最后一次重连尝试时间
         private readonly object _reconnectStateLock = new object(); // 新增：重连状态同步锁
+
+        // 网络状态变化事件句柄
+        private readonly System.Net.NetworkInformation.NetworkAvailabilityChangedEventHandler _networkAvailabilityChangedHandler;
 
         /// <summary>
         /// 连接状态变更事件
@@ -93,6 +97,13 @@ namespace RUINORERP.UI.Network
 
             // 订阅Socket客户端事件
             _socketClient.Closed += OnSocketClosed;
+
+            // 初始化网络状态变化事件处理
+            _networkAvailabilityChangedHandler = OnNetworkAvailabilityChanged;
+            System.Net.NetworkInformation.NetworkChange.NetworkAvailabilityChanged += _networkAvailabilityChangedHandler;
+            // 初始检查网络状态
+            _isNetworkAvailable = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable();
+            _logger?.LogDebug("初始网络状态：{IsAvailable}", _isNetworkAvailable);
         }
 
         /// <summary>
@@ -437,6 +448,15 @@ namespace RUINORERP.UI.Network
         /// <returns>下一个退避间隔</returns>
         private int CalculateNextBackoffInterval(int attempts, int currentInterval)
         {
+            // 如果网络不可用，使用更长的重连间隔
+            if (!_isNetworkAvailable)
+            {
+                // 网络不可用时，使用最大间隔的一半
+                int networkDownInterval = _config.MaxBackoffInterval / 2;
+                _logger?.LogDebug("网络不可用，使用更长的重连间隔 {Interval} 毫秒", networkDownInterval);
+                return networkDownInterval;
+            }
+
             if (!_config.EnableExponentialBackoff || attempts <= 0)
             {
                 return _config.ReconnectInterval;
@@ -623,6 +643,42 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 网络可用性变化事件处理
+        /// </summary>
+        /// <param name="sender">发送者</param>
+        /// <param name="e">事件参数</param>
+        private void OnNetworkAvailabilityChanged(object sender, System.Net.NetworkInformation.NetworkAvailabilityEventArgs e)
+        {
+            bool oldState = _isNetworkAvailable;
+            _isNetworkAvailable = e.IsAvailable;
+            
+            _logger?.LogDebug("网络状态变化：从 {OldState} 变为 {NewState}", oldState, _isNetworkAvailable);
+            
+            // 如果网络从不可用变为可用，且当前未连接，触发重连
+            if (!oldState && _isNetworkAvailable && !IsConnected)
+            {
+                _logger?.LogInformation("网络恢复，尝试重新连接到服务器 {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
+                
+                // 检查服务器信息完整性
+                if (HasValidServerInfo())
+                {
+                    // 使用Task.Run避免阻塞事件线程
+                    _ = Task.Run(async () =>
+                    {
+                        // 延迟一下再重连，确保网络完全恢复
+                        await Task.Delay(1000);
+                        
+                        // 检查是否应该重连
+                        if (_config.AutoReconnect && !IsConnected && !_isReconnecting && !_disposed)
+                        {
+                            StartAutoReconnect();
+                        }
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// 手动触发重连
         /// </summary>
         /// <returns>重连任务</returns>
@@ -689,6 +745,9 @@ namespace RUINORERP.UI.Network
                 {
                     _socketClient.Closed -= OnSocketClosed;
                 }
+
+                // 取消网络状态变化事件订阅
+                System.Net.NetworkInformation.NetworkChange.NetworkAvailabilityChanged -= _networkAvailabilityChangedHandler;
 
                 // 清空所有事件处理器
                 ConnectionStateChanged = null;

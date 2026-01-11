@@ -385,7 +385,7 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 注册系统
         /// </summary>
-        private void btnCreateRegInfo_Click(object sender, EventArgs e)
+        private async void btnCreateRegInfo_Click(object sender, EventArgs e)
         {
             if (!ValidateRegistrationInfo(_currentRegistrationInfo))
             {
@@ -402,9 +402,29 @@ namespace RUINORERP.Server.Controls
                 _currentRegistrationInfo.FunctionModule = EncryptionHelper.AesEncryptByHashKey(
                     _currentRegistrationInfo.FunctionModule, "FunctionModule");
 
-                MessageBox.Show("注册信息已准备好，请先生成机器码并获取注册码后点击注册按钮完成注册。", "提示",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //                MessageBox.Show("注册信息已准备好，请先生成机器码并获取注册码后点击注册按钮完成注册。", "提示",MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+
+                try
+                {
+                    // 保存到数据库
+                    var result = await _registrationService.SaveRegistrationInfoAsync(_currentRegistrationInfo);
+
+                    if (result)
+                    {
+                        MessageBox.Show("注册成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        MessageBox.Show("保存失败", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        _logger.LogWarning("注册信息保存失败");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "保存注册信息失败");
+                    MessageBox.Show($"保存失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
             catch (Exception ex)
             {
@@ -776,18 +796,20 @@ namespace RUINORERP.Server.Controls
                         MessageBox.Show("请至少选择一个功能模块，否则无法生成机器码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
-                    
+
                     string machineCode = _registrationService.CreateMachineCode(_currentRegistrationInfo);
                     txtMachineCode.Text = machineCode;
                     //// 将机器码复制到剪贴板 - 使用Invoke确保在UI线程上执行
                     //this.Invoke(new Action(() =>
                     //{
                     //    Clipboard.SetText(machineCode);
-                        
+
                     //    // 显示成功消息
                     //    MessageBox.Show("机器码已生成并复制到剪贴板，方便发送给软件服务商进行注册。", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     //}));
-                    
+
+
+
                     //// 记录到日志
                     frmMainNew.Instance.SafeLogOperation("请将机器码发送给软件服务商获取注册码", Color.Blue);
                 }
@@ -795,7 +817,7 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 MessageBox.Show($"生成机器码时出错: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                
+
                 // 记录错误到日志
                 frmMainNew.Instance.SafeLogOperation($"生成机器码时出错: {ex.Message}", Color.Red);
             }

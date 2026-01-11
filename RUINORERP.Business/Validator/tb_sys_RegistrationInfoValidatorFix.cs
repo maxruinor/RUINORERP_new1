@@ -55,7 +55,7 @@ namespace RUINORERP.Business
         public override void Initialize()
         {
             // 这里添加额外的初始化代码
-            RuleFor(tb_StockTransfer => tb_StockTransfer.ExpirationDate).GreaterThan(System.DateTime.Now.AddDays(30)).WithMessage("截止时间:要大于30天。");
+            RuleFor(tb_StockTransfer => tb_StockTransfer.ExpirationDate).GreaterThan(System.DateTime.Now.AddDays(30)).WithMessage("截止时间:要大于30天。请设置授权期限");
             RuleFor(tb_sys_RegistrationInfo => tb_sys_RegistrationInfo.LicenseType).MinimumLength(3).WithMessage("授权类型:请选择正确的授权类型.");
         }
     }

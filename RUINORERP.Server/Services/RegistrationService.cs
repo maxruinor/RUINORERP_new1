@@ -28,7 +28,7 @@ namespace RUINORERP.Server.Services
         private readonly ISecurityService _securityService;
         private readonly IServiceProvider _serviceProvider;
         public readonly IUnitOfWorkManage _unitOfWorkManage;
-    
+
         public RegistrationService(
             ILogger<RegistrationService> logger,
             IHardwareInfoService hardwareInfoService,
@@ -50,34 +50,34 @@ namespace RUINORERP.Server.Services
         {
             try
             {
-                    // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
-                    var db = _unitOfWorkManage.GetDbClient().CopyNew();
-                    var registrationInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+                // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
+                var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                var registrationInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
 
-                    if (registrationInfo == null)
+                if (registrationInfo == null)
+                {
+                    // 如果没有注册信息，创建默认信息
+                    registrationInfo = new tb_sys_RegistrationInfo
                     {
-                        // 如果没有注册信息，创建默认信息
-                        registrationInfo = new tb_sys_RegistrationInfo
-                        {
-                            CompanyName = "",
-                            ContactName = "",
-                            PhoneNumber = "",
-                            LicenseType = "试用版",
-                            ExpirationDate = DateTime.Now.AddDays(30),
-                            ConcurrentUsers = 1,
-                            ProductVersion = Application.ProductVersion,
-                            MachineCode = "",
-                            RegistrationCode = "",
-                            PurchaseDate = DateTime.Now,
-                            RegistrationDate = DateTime.MinValue,
-                            IsRegistered = false,
-                            FunctionModule = "",
-                            Remarks = ""
-                        };
-                    }
+                        CompanyName = "",
+                        ContactName = "",
+                        PhoneNumber = "",
+                        LicenseType = "试用版",
+                        ExpirationDate = DateTime.Now.AddDays(30),
+                        ConcurrentUsers = 1,
+                        ProductVersion = Application.ProductVersion,
+                        MachineCode = "",
+                        RegistrationCode = "",
+                        PurchaseDate = DateTime.Now,
+                        RegistrationDate = DateTime.MinValue,
+                        IsRegistered = false,
+                        FunctionModule = "",
+                        Remarks = ""
+                    };
+                }
 
-                    return registrationInfo;
-                
+                return registrationInfo;
+
             }
             catch (Exception ex)
             {
@@ -95,29 +95,24 @@ namespace RUINORERP.Server.Services
         {
             try
             {
-            
-                  // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
-                  var db = _unitOfWorkManage.GetDbClient().CopyNew();
-                  
-                    var existingInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
-                    if (existingInfo != null)
-                    {
-                        // 更新现有记录
-                        registrationInfo.RegistrationInfoD = existingInfo.RegistrationInfoD;
-                        // registrationInfo.Modified_by = "System";
-                        registrationInfo.Modified_at = DateTime.Now;
+                // 使用CopyNew()创建独立的数据库连接上下文，避免IsAutoCloseConnection=true导致的连接提前关闭问题
+                var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                var existingInfo = await db.Queryable<tb_sys_RegistrationInfo>().FirstAsync();
+                if (existingInfo != null)
+                {
+                    // 更新现有记录
+                    registrationInfo.RegistrationInfoD = existingInfo.RegistrationInfoD;
+                    registrationInfo.Modified_at = DateTime.Now;
+                    return await db.Updateable(registrationInfo).ExecuteCommandAsync() > 0;
+                }
+                else
+                {
+                    // 插入新记录
+                    registrationInfo.Created_at = DateTime.Now;
+                    var regInfo = await db.Storageable(registrationInfo).ExecuteReturnEntityAsync();
+                    return regInfo.RegistrationInfoD > 0;
+                }
 
-                        return await db.Updateable(registrationInfo).ExecuteCommandAsync() > 0;
-                    }
-                    else
-                    {
-                        // 插入新记录
-                        // registrationInfo.Created_by = "System";
-                        registrationInfo.Created_at = DateTime.Now;
-
-                        return await db.Insertable(registrationInfo).ExecuteCommandAsync() > 0;
-                    }
-              
             }
             catch (Exception ex)
             {
@@ -184,7 +179,7 @@ namespace RUINORERP.Server.Services
             {
                 return false;
             }
-            
+
             string key = "ruinor1234567890"; // 这应该是一个密钥
             string machineCode = regInfo.MachineCode; // 这可能是计算机的硬件信息或唯一标识符
             // 假设用户输入的注册码
@@ -266,7 +261,7 @@ namespace RUINORERP.Server.Services
                 return false;
             }
         }
- 
+
 
         /// <summary>
         /// 检查注册是否过期
@@ -279,17 +274,17 @@ namespace RUINORERP.Server.Services
             {
                 return true;
             }
-            
+
             // 检查授权到期日期
             if (registrationInfo.ExpirationDate < DateTime.Now)
             {
                 return true;
             }
-            
+
             return false;
         }
 
- 
+
     }
 
     /// <summary>

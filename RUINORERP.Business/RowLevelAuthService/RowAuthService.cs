@@ -737,7 +737,7 @@ namespace RUINORERP.Business.RowLevelAuthService
         {
             try
             {
-                return _appContext.CurrentUser?.UserID ?? 0;
+                return _appContext.CurUserInfo?.UserID ?? 0;
             }
             catch (Exception ex)
             {

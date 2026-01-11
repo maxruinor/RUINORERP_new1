@@ -1,8 +1,9 @@
-using System;
-using System.Collections.Generic;
+﻿using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
+using System;
+using System.Collections.Generic;
 namespace RUINORERP.PacketSpec.Models.Requests
 {
     /// <summary>
@@ -25,7 +26,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <summary>
         /// 客户端进程运行时间（秒）
         /// </summary>
-        public UserInfo UserInfo { get; set; }
+        public CurrentUserInfo UserInfo { get; set; }
 
         /// <summary>
         /// 客户端时间戳

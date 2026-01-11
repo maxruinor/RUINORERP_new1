@@ -5435,7 +5435,7 @@ namespace RUINORERP.UI.BaseForm
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
                     if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
                     {
-                        if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.Id.ToString())
+                        if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.EmpID.ToString())
                         {
                             MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             rss.ErrorMsg = "只有创建人才能删除提交的单据。";
@@ -6237,7 +6237,7 @@ namespace RUINORERP.UI.BaseForm
                     // 异步释放锁定，不阻塞UI线程
                     if (EditEntity != null && CurMenuInfo.MenuID > 0 && _integratedLockService != null)
                     {
-                        _ = Task.Run(async () =>
+                        _ = Task.Run((Func<Task>)(async () =>
                         {
                             try
                             {
@@ -6256,7 +6256,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 MainForm.Instance.logger.LogError(ex, $"表单关闭时释放锁定失败：单据ID={EditEntity.PrimaryKeyID}");
                             }
-                        });
+                        }));
                     }
                 }
                 catch (Exception ex)
@@ -6445,7 +6445,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     //自动保存的时间秒数  30秒
-                    if (MainForm.Instance.AppContext.CurrentUser.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
+                    if (MainForm.Instance.AppContext.CurUserInfo.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
                     {
                         bool result = await AutoSaveDataAsync();
                         if (!result)

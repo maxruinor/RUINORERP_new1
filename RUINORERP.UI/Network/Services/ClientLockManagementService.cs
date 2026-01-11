@@ -1,8 +1,13 @@
-using RUINORERP.PacketSpec.Models.Lock;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Models.Responses;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.UI.Network.Authentication;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,10 +15,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.UI.Network.Authentication;
-using RUINORERP.Model.CommonModel;
-using RUINORERP.Global;
-using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -720,11 +721,11 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 获取当前用户信息
         /// </summary>
-        private UserInfo GetCurrentUser()
+        private CurrentUserInfo GetCurrentUser()
         {
             try
             {
-                return MainForm.Instance?.AppContext?.CurrentUser;
+                return MainForm.Instance?.AppContext?.CurUserInfo;
             }
             catch (Exception ex)
             {

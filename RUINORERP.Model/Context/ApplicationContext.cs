@@ -272,11 +272,7 @@ namespace RUINORERP.Model.Context
         /// </summary>
         public ISqlSugarClient Db { get; set; }
 
-        /// <summary>
-        /// 内存中的业务级的用户信息
-        /// </summary>
-        public UserInfo CurrentUser { get; set; } = new UserInfo();
-
+ 
 
         /// <summary>
         /// 公司的信息
@@ -287,7 +283,7 @@ namespace RUINORERP.Model.Context
         /// <summary>
         /// 数据库级的用户信息
         /// </summary>
-        public ICurrentUserInfo CurUserInfo { get; set; }
+        public CurrentUserInfo CurUserInfo { get; set; }
         public string Status { get; set; }
 
         /// <summary>

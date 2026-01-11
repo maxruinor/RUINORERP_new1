@@ -1,5 +1,12 @@
+using Microsoft.Extensions.Logging;
+using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
+using RUINORERP.PacketSpec.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Security;
 using SuperSocket.Connection;
 using SuperSocket.Server;
 using SuperSocket.Server.Abstractions.Session;
@@ -7,15 +14,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Core;
-using RUINORERP.PacketSpec.Security;
-using Microsoft.Extensions.Logging;
-using System.Net.Sockets;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models;
 
 namespace RUINORERP.Server.Network.Models
 {
@@ -33,7 +34,7 @@ namespace RUINORERP.Server.Network.Models
         /// <summary>
         /// 用户信息
         /// </summary>
-        public UserInfo UserInfo { get; set; } = new();
+        public CurrentUserInfo UserInfo { get; set; } = new();
 
         /// <summary>
         /// 客户端系统信息

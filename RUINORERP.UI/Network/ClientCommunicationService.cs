@@ -793,7 +793,7 @@ namespace RUINORERP.UI.Network
                 // 可以根据需要添加系统信息
                 // 注意：获取系统信息可能耗时，谨慎使用
 
-                heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurrentUser;
+                heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurUserInfo;
 
 
                 var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
@@ -1227,9 +1227,9 @@ namespace RUINORERP.UI.Network
                 if (_applicationContext != null)
                 {
                     _applicationContext.SessionId = packet.SessionId;
-                    if (_applicationContext.CurrentUser != null)
+                    if (_applicationContext.CurUserInfo != null)
                     {
-                        _applicationContext.CurrentUser.SessionId = packet.SessionId;
+                        _applicationContext.CurUserInfo.SessionId = packet.SessionId;
                     }
                 }
 
@@ -1755,7 +1755,7 @@ namespace RUINORERP.UI.Network
                 packet.ExecutionContext.RequestId = request.RequestId;
                 packet.CommandId = commandId;
                 packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;
-                packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurrentUser.UserID;
+                packet.ExecutionContext.UserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
                 if (ResponseTypeName == null)
                 {
                     //默认给基类。因为服务器处理时只是会在最后响应时才看是否真的需要响应。因为处理中会响应错误信息。

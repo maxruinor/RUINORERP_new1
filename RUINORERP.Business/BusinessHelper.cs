@@ -57,7 +57,7 @@ namespace RUINORERP.Business
             if (entity.ContainsProperty("Created_at"))
                 entity.SetPropertyValue("Created_at", DateTime.Now);
             if (entity.ContainsProperty("Created_by"))
-                entity.SetPropertyValue("Created_by", curUser?.Id);
+                entity.SetPropertyValue("Created_by", curUser?.EmpID);
             if (entity.ContainsProperty("isdeleted"))
                 entity.SetPropertyValue("isdeleted", false);
             if (entity.ContainsProperty("PrintStatus"))
@@ -77,7 +77,7 @@ namespace RUINORERP.Business
             if (entity.ContainsProperty("Modified_at"))
                 entity.SetPropertyValue("Modified_at", DateTime.Now);
             if (entity.ContainsProperty("Modified_by"))
-                entity.SetPropertyValue("Modified_by", curUser?.Id);
+                entity.SetPropertyValue("Modified_by", curUser?.EmpID);
         }
 
         public void ClearEntityEditInfo(object entity)
@@ -107,7 +107,7 @@ namespace RUINORERP.Business
             if (entity.ContainsProperty("Approver_at"))
                 entity.SetPropertyValue("Approver_at", DateTime.Now);
             if (entity.ContainsProperty("Approver_by"))
-                entity.SetPropertyValue("Approver_by", curUser?.Id);
+                entity.SetPropertyValue("Approver_by", curUser?.EmpID);
         }
 
         public void ClearEntityApproverInfo(object entity)
@@ -154,7 +154,7 @@ namespace RUINORERP.Business
             if (entity.ContainsProperty("Modified_at"))
                 entity.SetPropertyValue("Modified_at", DateTime.Now);
             if (entity.ContainsProperty("Modified_by"))
-                entity.SetPropertyValue("Modified_by", curUser?.Id);
+                entity.SetPropertyValue("Modified_by", curUser?.EmpID);
             if (entity.ContainsProperty("isdeleted"))
                 entity.SetPropertyValue("isdeleted", true);
         }

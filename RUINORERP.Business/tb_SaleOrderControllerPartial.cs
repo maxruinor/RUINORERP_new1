@@ -1093,7 +1093,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.未审核;
                 if (_appContext != null && _appContext.CurUserInfo != null)
                 {
-                    entity.ApprovalOpinions += $"【被{_appContext.CurUserInfo.Name}反审】";
+                    entity.ApprovalOpinions += $"【被{_appContext.CurUserInfo.tb_Employee.Employee_Name}反审】";
                 }
                 else
                 {

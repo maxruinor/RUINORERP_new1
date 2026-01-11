@@ -48,7 +48,7 @@ namespace RUINORERP.UI.ATechnologyStack.AOP
         /// <param name="invocation">包含被拦截方法的信息</param>
         public void Intercept(IInvocation invocation)
         {
-            UserName = _appContext?.CurUserInfo?.Name;
+            UserName = _appContext?.CurUserInfo?.tb_Employee.Employee_Name;
             string json;
             try
             {

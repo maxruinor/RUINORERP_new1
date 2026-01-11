@@ -564,7 +564,7 @@ namespace RUINORERP.UI.UserCenter
         private async Task LoadDefaultLayoutFromDbAsync(KryptonPageCollection Kpages)
         {
             //检查是否有布局配置
-            bool hasLayoutConfig = MainForm.Instance.AppContext.CurrentUser != null
+            bool hasLayoutConfig = MainForm.Instance.AppContext.CurUserInfo != null
                 && MainForm.Instance.AppContext.CurrentUser_Role_Personalized != null
                 && !string.IsNullOrEmpty(MainForm.Instance.AppContext.CurrentUser_Role_Personalized.WorkCellLayout);
 

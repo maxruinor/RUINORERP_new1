@@ -1102,7 +1102,7 @@ namespace RUINORERP.UI.FM
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
                     if ((dataStatus == StatementStatus.新建 || dataStatus == StatementStatus.确认) && !AppContext.IsSuperUser)
                     {
-                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
+                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.EmpID)
                         {
                             rss.ErrorMsg = $"只有创建人才能删除{((StatementStatus)dataStatus).ToString()}的对账单。";
                             MessageBox.Show(rss.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);

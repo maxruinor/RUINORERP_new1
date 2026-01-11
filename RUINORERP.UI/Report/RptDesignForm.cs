@@ -37,7 +37,7 @@ namespace RUINORERP.UI.Report
 
         public List<tb_Company> companyInfos { get; set; }
 
-        public List<ICurrentUserInfo> currUserInfos { get; set; }
+        public List<CurrentUserInfo> currUserInfos { get; set; }
 
 
         string reportTemplateFile = string.Empty;

@@ -238,7 +238,7 @@ namespace RUINORERP.UI
                     if (quickLoginResult != null && quickLoginResult.IsSuccess)
                     {
                         // 快捷登录验证成功，直接设置在线状态并完成登录
-                        MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                        MainForm.Instance.AppContext.CurUserInfo.在线状态 = true;
 
                         // 保存用户配置
                         try
@@ -733,9 +733,9 @@ namespace RUINORERP.UI
                 }
 
                 // 设置在线状态
-                if (MainForm.Instance?.AppContext?.CurrentUser != null)
+                if (MainForm.Instance?.AppContext?.CurUserInfo != null)
                 {
-                    MainForm.Instance.AppContext.CurrentUser.在线状态 = true;
+                    MainForm.Instance.AppContext.CurUserInfo.在线状态 = true;
                 }
 
                 // 请求元数据同步
@@ -791,9 +791,9 @@ namespace RUINORERP.UI
                 await SaveUserConfig(isInitPwd);
 
                 // 记录登录时间
-                if (Program.AppContextData.CurrentUser.登录时间 < DateTime.Now.AddYears(-30))
+                if (Program.AppContextData.CurUserInfo.登录时间 < DateTime.Now.AddYears(-30))
                 {
-                    Program.AppContextData.CurrentUser.登录时间 = DateTime.Now;
+                    Program.AppContextData.CurUserInfo.登录时间 = DateTime.Now;
                 }
 
                 // 完成登录

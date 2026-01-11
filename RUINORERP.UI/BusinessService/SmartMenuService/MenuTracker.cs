@@ -158,6 +158,11 @@ namespace RUINORERP.UI.BusinessService.SmartMenuService
         // 保存到数据库
         public async Task<bool> SaveToDb()
         {
+            if (_appContext.CurrentUser_Role_Personalized == null)
+            {
+                return false;
+            }
+
             if (!_menuUsage.Any())
                 return false;
 

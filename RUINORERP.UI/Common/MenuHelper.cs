@@ -83,7 +83,7 @@ namespace RUINORERP.UI.Common
             ms.Items.CopyTo(fixedItems, 0);
             ms.Items.Clear();
             //两套逻辑 要区分处理
-            if (appContext.CurUserInfo.Name == "超级管理员")
+            if (appContext.CurUserInfo.UserInfo.UserName == "超级管理员")
             {
                 // 没有配置时按默认的加载
                 foreach (var item in appContext.CurUserInfo.UserModList)
@@ -100,6 +100,7 @@ namespace RUINORERP.UI.Common
             else
             {
                 List<tb_MenuInfo> tempList = new List<tb_MenuInfo>();
+
                 if (appContext.CurrentRole.tb_P4Menus == null)
                 {
                     appContext.CurrentRole.tb_P4Menus = new List<tb_P4Menu>();

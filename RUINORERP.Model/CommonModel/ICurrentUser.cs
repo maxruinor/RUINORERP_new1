@@ -5,6 +5,9 @@ using System.Security.Claims;
 namespace RUINORERP.Model
 
 {
+    /*
+
+
     /// <summary>
     /// 当前用户 认为任何系统都会有一个当前用户
     /// </summary>
@@ -17,7 +20,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// 当前登录用户ID empID
         /// </summary>
-        long Id { get; set; }
+        long EmpID { get; set; }
 
 
         #region 数据库级别
@@ -33,4 +36,7 @@ namespace RUINORERP.Model
 
         #endregion
     }
+
+    */
+
 }

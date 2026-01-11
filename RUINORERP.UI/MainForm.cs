@@ -194,17 +194,6 @@ namespace RUINORERP.UI
         private static readonly object _pendingUpdateLock = new object();
 
         #region 当前系统中所有用户信息
-        private List<UserInfo> userInfos = new List<UserInfo>();
-
-
-
-        /// <summary>
-        /// 当前系统所有用户信息列表
-        /// </summary>
-        public List<UserInfo> UserInfos { get => userInfos; set => userInfos = value; }
-
-
-
         /// <summary>
         /// 处理重连失败事件，自动进入注销锁定状态
         /// </summary>
@@ -442,7 +431,7 @@ namespace RUINORERP.UI
                     {
                         if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
                         {
-                            this.SystemOperatorState.Text = $"已登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                            this.SystemOperatorState.Text = $"已登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole?.RoleName}】";
                         }
                         else
                         {
@@ -576,17 +565,17 @@ namespace RUINORERP.UI
         {
             try
             {
-                if (AppContext?.CurrentUser != null)
+                if (AppContext?.CurUserInfo != null)
                 {
                     if (kryptonDockableWorkspace1?.ActivePage != null)
                     {
-                        AppContext.CurrentUser.当前模块 = "主界面";
-                        AppContext.CurrentUser.当前窗体 = kryptonDockableWorkspace1.ActivePage.Text;
+                        AppContext.CurUserInfo.当前模块 = "主界面";
+                        AppContext.CurUserInfo.当前窗体 = kryptonDockableWorkspace1.ActivePage.Text;
                     }
                     else
                     {
-                        AppContext.CurrentUser.当前模块 = "主界面";
-                        AppContext.CurrentUser.当前窗体 = "工作台";
+                        AppContext.CurUserInfo.当前模块 = "主界面";
+                        AppContext.CurUserInfo.当前窗体 = "工作台";
                     }
                 }
             }
@@ -1175,15 +1164,15 @@ namespace RUINORERP.UI
                     //if (rslist != null)
                     //{
                     MainForm.Instance.AppContext.UserMenuList = menuList;
-           
+
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
                     {
-                       
-                            //如果从来没有初始化过菜单，则执行
-                            await InitMenu(AppContext.RegistrationInfo.SystemInitialized);
-                          
-                        
+
+                        //如果从来没有初始化过菜单，则执行
+                        await InitMenu(AppContext.RegistrationInfo.SystemInitialized);
+
+
                     }
                     catch (Exception ex)
                     {
@@ -1292,7 +1281,7 @@ namespace RUINORERP.UI
                 .Queryable<tb_ProjectGroupEmployees>()
                 .Includes(a => a.tb_projectgroup, b => b.tb_department)
                 .Includes(c => c.tb_projectgroup, d => d.tb_ProjectGroupAccountMappers, e => e.tb_fm_account)
-                .Where(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.Id).ToList();
+                .Where(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.EmpID).ToList();
                 MainForm.Instance.AppContext.projectGroups = groupEmployees.Select(c => c.tb_projectgroup).ToList();
                 #endregion
 
@@ -1525,19 +1514,19 @@ namespace RUINORERP.UI
                 }
 
                 // 更新当前用户信息中的当前模块和当前窗体
-                if (AppContext?.CurrentUser != null)
+                if (AppContext?.CurUserInfo != null)
                 {
-                    AppContext.CurrentUser.当前模块 = "主界面";
-                    AppContext.CurrentUser.当前窗体 = kp.TextTitle;
+                    AppContext.CurUserInfo.当前模块 = "主界面";
+                    AppContext.CurUserInfo.当前窗体 = kp.TextTitle;
                 }
             }
             else
             {
                 // 如果没有活动页面，设置默认值
-                if (AppContext?.CurrentUser != null)
+                if (AppContext?.CurUserInfo != null)
                 {
-                    AppContext.CurrentUser.当前模块 = "主界面";
-                    AppContext.CurrentUser.当前窗体 = "工作台";
+                    AppContext.CurUserInfo.当前模块 = "主界面";
+                    AppContext.CurUserInfo.当前窗体 = "工作台";
                 }
             }
         }
@@ -1752,7 +1741,7 @@ namespace RUINORERP.UI
         private void LoadMenuPagesByLeft()
         {
             kryptonNavigator1.Pages.Clear();
-            if (AppContext.CurUserInfo.Name == "超级管理员")
+            if (AppContext.CurUserInfo.UserInfo.UserName == "超级管理员")
             {
                 foreach (tb_ModuleDefinition item in AppContext.CurUserInfo.UserModList)
                 {
@@ -1980,7 +1969,7 @@ namespace RUINORERP.UI
                     {
                         if (AppContext.CurUserInfo.UserInfo != null && AppContext.CurUserInfo.UserInfo.tb_employee != null)
                         {
-                            this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
+                            this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.UserInfo.UserName}-{AppContext.CurUserInfo.UserInfo.tb_employee.Employee_Name}【{AppContext.CurrentRole?.RoleName}】";
                         }
                         else
                         {
@@ -2177,8 +2166,8 @@ namespace RUINORERP.UI
                     try
                     {
                         Program.AppContextData.IsOnline = false;
-                        MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                        MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
+                        MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
+                        MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
 
                         // 清除UI元素
                         ClearUI();
@@ -2278,8 +2267,8 @@ namespace RUINORERP.UI
                 try
                 {
                     Program.AppContextData.IsOnline = false;
-                    MainForm.Instance.AppContext.CurrentUser.授权状态 = false;
-                    MainForm.Instance.AppContext.CurrentUser.在线状态 = false;
+                    MainForm.Instance.AppContext.CurUserInfo.授权状态 = false;
+                    MainForm.Instance.AppContext.CurUserInfo.在线状态 = false;
 
                     // 清除UI元素
                     ClearUI();
@@ -3428,7 +3417,7 @@ namespace RUINORERP.UI
                     //await InitConfig();
                     LoadUIMenus();
                     LoadUIForIM_LogPages();
-                    this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.Name}【{AppContext.CurrentRole.RoleName}】";
+                    this.SystemOperatorState.Text = $"登录: {AppContext.CurUserInfo.tb_Employee.Employee_Name}【{AppContext.CurrentRole.RoleName}】";
                 }
             }
         }
@@ -3436,7 +3425,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance.AppContext.CurrentUser.静止时间 = GetLastInputTime();
+                MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
 
 
                 if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
@@ -3477,17 +3466,17 @@ namespace RUINORERP.UI
                 System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
                 System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
                 //重置一下
-                MainForm.Instance.AppContext.CurrentUser.客户端版本 = string.Empty;
+                MainForm.Instance.AppContext.CurUserInfo.客户端版本 = string.Empty;
                 if (!string.IsNullOrEmpty(version))
                 {
-                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + version;
+                    MainForm.Instance.AppContext.CurUserInfo.客户端版本 += "-" + version;
                 }
 
-                MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + updateTime;
+                MainForm.Instance.AppContext.CurUserInfo.客户端版本 += "-" + updateTime;
 
                 if (!string.IsNullOrEmpty(url))
                 {
-                    MainForm.Instance.AppContext.CurrentUser.客户端版本 += "-" + url;
+                    MainForm.Instance.AppContext.CurUserInfo.客户端版本 += "-" + url;
                 }
             }
             catch (Exception)
@@ -3614,7 +3603,7 @@ namespace RUINORERP.UI
         /// </summary>
         internal void RefreshGlobalConfig()
         {
-            _ = Task.Run(async () =>
+            _ = Task.Run((Func<Task>)(async () =>
                {
                    await Task.Delay(2000);
 
@@ -3635,7 +3624,7 @@ namespace RUINORERP.UI
                        tb_UserInfo user = users[0];
                        if (user != null)
                        {
-                           PTPrincipal.SetCurrentUserInfo(AppContext, AppContext.CurUserInfo.UserInfo);
+                           PTPrincipal.SetCurrentUserInfo(AppContext, (tb_UserInfo)AppContext.CurUserInfo.UserInfo);
                        }
                    }
 
@@ -3649,7 +3638,7 @@ namespace RUINORERP.UI
                    .Queryable<tb_ProjectGroupEmployees>()
                    .Includes(a => a.tb_projectgroup, b => b.tb_department)
                    .Includes(c => c.tb_projectgroup, d => d.tb_ProjectGroupAccountMappers, e => e.tb_fm_account)
-                   .Where(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.Id).ToListAsync();
+                   .Where((Expression<Func<tb_ProjectGroupEmployees, bool>>)(c => c.Employee_ID == MainForm.Instance.AppContext.CurUserInfo.EmpID)).ToListAsync();
 
                    MainForm.Instance.AppContext.projectGroups = groupEmployees.Select(c => c.tb_projectgroup).ToList();
 
@@ -3671,7 +3660,7 @@ namespace RUINORERP.UI
 
 
                    #endregion
-               });
+               }));
         }
 
         /// <summary>

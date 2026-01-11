@@ -19,12 +19,12 @@ namespace RUINORERP.Server.Adapters
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>用户信息</returns>
-        public static UserInfo ToUserInfo(SessionInfo sessionInfo)
+        public static CurrentUserInfo ToUserInfo(SessionInfo sessionInfo)
         {
             if (sessionInfo == null)
                 return null;
 
-            var userInfo = new UserInfo
+            var userInfo = new CurrentUserInfo
             {
                 SessionId = sessionInfo.SessionID,
                 用户名 = sessionInfo.UserName,
@@ -66,10 +66,10 @@ namespace RUINORERP.Server.Adapters
         /// </summary>
         /// <param name="sessionInfos">会话信息列表</param>
         /// <returns>用户信息列表</returns>
-        public static List<UserInfo> ToUserInfoList(IEnumerable<SessionInfo> sessionInfos)
+        public static List<CurrentUserInfo> ToUserInfoList(IEnumerable<SessionInfo> sessionInfos)
         {
             if (sessionInfos == null)
-                return new List<UserInfo>();
+                return new List<CurrentUserInfo>();
 
             return sessionInfos.Select(ToUserInfo).Where(u => u != null).ToList();
         }
@@ -89,7 +89,7 @@ namespace RUINORERP.Server.Adapters
         /// </summary>
         /// <param name="userInfo">用户信息</param>
         /// <returns>会话ID</returns>
-        public static string GetSessionId(UserInfo userInfo)
+        public static string GetSessionId(CurrentUserInfo userInfo)
         {
             return userInfo?.SessionId;
         }
@@ -99,7 +99,7 @@ namespace RUINORERP.Server.Adapters
         /// </summary>
         /// <param name="userInfo">用户信息</param>
         /// <returns>会话信息</returns>
-        public static SessionInfo ToSessionInfo(UserInfo userInfo)
+        public static SessionInfo ToSessionInfo(CurrentUserInfo userInfo)
         {
             if (userInfo == null)
                 return null;
@@ -133,7 +133,7 @@ namespace RUINORERP.Server.Adapters
             }
             
             // 创建并设置UserInfo属性
-            sessionInfo.UserInfo = new UserInfo
+            sessionInfo.UserInfo = new CurrentUserInfo
             {
                 SessionId = userInfo.SessionId,
                 用户名 = userInfo.用户名,
@@ -188,7 +188,7 @@ namespace RUINORERP.Server.Adapters
             // 如果需要，还可以设置嵌套的UserInfo对象
             if (sessionInfo.UserInfo == null)
             {
-                sessionInfo.UserInfo = new UserInfo();
+                sessionInfo.UserInfo = new CurrentUserInfo();
             }
             sessionInfo.UserInfo.UserID = userInfo.User_ID;
             sessionInfo.UserInfo.用户名 = userInfo.UserName;

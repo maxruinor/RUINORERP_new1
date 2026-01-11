@@ -131,7 +131,7 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
+                if (MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
                 {
                     return;
                 }
@@ -213,7 +213,7 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                if (MainForm.Instance.AppContext.CurrentUser == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
+                if (MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo == null || MainForm.Instance.AppContext.CurUserInfo.UserInfo == null)
                 {
                     return;
                 }

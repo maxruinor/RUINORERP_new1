@@ -52,7 +52,7 @@ namespace RUINORERP.UI.Report
 
         public List<tb_Company> companyInfos { get; set; }
 
-        public List<ICurrentUserInfo> currUserInfos { get; set; }
+        public List<CurrentUserInfo> currUserInfos { get; set; }
 
         public RptPrintConfig()
         {
@@ -76,7 +76,7 @@ namespace RUINORERP.UI.Report
                     {
                         if (template.Created_by != null)
                         {
-                            if (template.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.Id)
+                            if (template.Created_by.Value != MainForm.Instance.AppContext.CurUserInfo.EmpID)
                             {
                                 MessageBox.Show("只有创建人，才能删除打印配置。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
@@ -260,7 +260,7 @@ namespace RUINORERP.UI.Report
 
 
                 TargetReport.RegisterData(PrintDataSources, "rd");
-                List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
+                List<CurrentUserInfo> currUserInfo = new List<CurrentUserInfo>();
                 currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
 
                 List<tb_Company> companyInfo = new List<tb_Company>();

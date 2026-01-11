@@ -245,7 +245,7 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                long userid = MainForm.Instance.AppContext.CurrentUser.UserID;
+                long userid = MainForm.Instance.AppContext.CurUserInfo.UserID;
                 // 使用正确的异步调用方式，避免死锁
                 await _lockCacheService.UnlockAsync(lockInfo.BillID, userid);
                 await lockManagementService.UnlockBillAsync(lockInfo.BillID);

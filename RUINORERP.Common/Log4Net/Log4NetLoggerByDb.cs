@@ -129,7 +129,7 @@ namespace RUINORERP.Common.Log4Net
                     return;
                 }
                 
-                if (_appcontext.CurrentUser == null)
+                if (_appcontext.CurUserInfo == null)
                 {
                     System.Diagnostics.Debug.WriteLine("警告: 当前用户上下文为空");
                     return;
@@ -151,7 +151,7 @@ namespace RUINORERP.Common.Log4Net
                 log4net.MDC.Set("Path", _appcontext.log.Path);
                 log4net.MDC.Set("MAC", _appcontext.log.MAC);
                 log4net.MDC.Set("MachineName", _appcontext.log.MachineName);
-                log4net.MDC.Set("Operator", _appcontext.CurrentUser.客户端版本 ?? "未登录用户");
+                log4net.MDC.Set("Operator", _appcontext.CurUserInfo.客户端版本 ?? "未登录用户");
                 log4net.MDC.Set("Message", message ?? "");
                 log4net.MDC.Set("Exception", exception?.StackTrace ?? "");
                 

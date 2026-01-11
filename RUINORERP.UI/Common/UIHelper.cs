@@ -1238,14 +1238,14 @@ namespace RUINORERP.UI.Common
         public static ConcurrentDictionary<string, string> GetFieldNameList(bool PrimaryKey = false, params Type[] types)
         {
             ConcurrentDictionary<string, string> fieldNameList = new ConcurrentDictionary<string, string>();
-            
+
             foreach (var type in types)
             {
                 // 获取所有属性，排除导航属性（IsIgnore = true）
                 var properties = type.GetProperties()
                     .Where(p => !IsNavigationProperty(p))
                     .ToList();
-                
+
                 foreach (PropertyInfo field in properties)
                 {
                     // 直接获取SugarColumn特性，避免遍历所有特性
@@ -1254,24 +1254,24 @@ namespace RUINORERP.UI.Common
                     {
                         continue;
                     }
-                    
+
                     // 检查BrowsableAttribute
                     bool isBrowsable = IsPropertyBrowsable(field);
-                    
+
                     // 应用过滤条件
                     if (!IsValidColumn(sugarColumn, PrimaryKey, isBrowsable))
                     {
                         continue;
                     }
-                    
+
                     // 添加有效字段
                     fieldNameList.TryAdd(field.Name, sugarColumn.ColumnDescription);
                 }
             }
-            
+
             return fieldNameList;
         }
-        
+
         /// <summary>
         /// 判断属性是否为导航属性（应该排除）
         /// </summary>
@@ -1285,24 +1285,24 @@ namespace RUINORERP.UI.Common
             {
                 return true;
             }
-            
+
             // 检查Navigate特性
             var navigateAttr = property.GetCustomAttribute<Navigate>();
             if (navigateAttr != null)
             {
                 return true;
             }
-            
+
             // 检查属性类型是否为集合类型（通常是导航属性）
-            if (property.PropertyType.IsGenericType && 
+            if (property.PropertyType.IsGenericType &&
                 typeof(System.Collections.IEnumerable).IsAssignableFrom(property.PropertyType))
             {
                 return true;
             }
-            
+
             return false;
         }
-        
+
         /// <summary>
         /// 检查属性是否可浏览
         /// </summary>
@@ -1313,7 +1313,7 @@ namespace RUINORERP.UI.Common
             var browsableAttr = property.GetCustomAttribute<BrowsableAttribute>();
             return browsableAttr == null || browsableAttr.Browsable;
         }
-        
+
         /// <summary>
         /// 检查字段是否有效
         /// </summary>
@@ -1328,25 +1328,25 @@ namespace RUINORERP.UI.Common
             {
                 return false;
             }
-            
+
             // 排除自增字段
             if (sugarColumn.IsIdentity)
             {
                 return false;
             }
-            
+
             // 检查主键处理
             if (!includePrimaryKey && sugarColumn.IsPrimaryKey)
             {
                 return false;
             }
-            
+
             // 检查是否可浏览
             if (!isBrowsable)
             {
                 return false;
             }
-            
+
             return true;
         }
 
@@ -1371,14 +1371,14 @@ namespace RUINORERP.UI.Common
         public static ConcurrentDictionary<string, KeyValuePair<string, bool>> GetFieldNameColList(bool IncludePK = false, params Type[] types)
         {
             ConcurrentDictionary<string, KeyValuePair<string, bool>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
-            
+
             foreach (var type in types)
             {
                 // 复用GetFieldNameList方法的逻辑
                 var properties = type.GetProperties()
                     .Where(p => !IsNavigationProperty(p))
                     .ToList();
-                
+
                 foreach (PropertyInfo field in properties)
                 {
                     var sugarColumn = field.GetCustomAttribute<SugarColumn>();
@@ -1386,29 +1386,29 @@ namespace RUINORERP.UI.Common
                     {
                         continue;
                     }
-                    
+
                     bool isBrowsable = IsPropertyBrowsable(field);
-                    
+
                     // 应用过滤条件，复用已有逻辑
                     if (!IsValidColumnForColList(sugarColumn, IncludePK, isBrowsable))
                     {
                         continue;
                     }
-                    
+
                     // 确定可见性：主键根据IncludePK参数决定，其他字段默认可见
                     bool isVisible = true;
                     if (sugarColumn.IsPrimaryKey)
                     {
                         isVisible = IncludePK;
                     }
-                    
+
                     fieldNameList.TryAdd(field.Name, new KeyValuePair<string, bool>(sugarColumn.ColumnDescription, isVisible));
                 }
             }
-            
+
             return fieldNameList;
         }
-        
+
         /// <summary>
         /// 检查字段是否有效（用于GetFieldNameColList方法）
         /// </summary>
@@ -1423,25 +1423,25 @@ namespace RUINORERP.UI.Common
             {
                 return false;
             }
-            
+
             // 排除自增字段
             if (sugarColumn.IsIdentity)
             {
                 return false;
             }
-            
+
             // 检查是否可浏览
             if (!isBrowsable)
             {
                 return false;
             }
-            
+
             // 对于主键字段，根据includePrimaryKey参数决定
             if (sugarColumn.IsPrimaryKey)
             {
                 return includePrimaryKey;
             }
-            
+
             return true;
         }
 
@@ -1454,14 +1454,14 @@ namespace RUINORERP.UI.Common
         public static List<ColDisplayController> GetColumnDisplayList(params Type[] types)
         {
             List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
-            
+
             foreach (var type in types)
             {
                 // 复用已有的属性过滤逻辑
                 var properties = type.GetProperties()
                     .Where(p => !IsNavigationProperty(p))
                     .ToList();
-                
+
                 foreach (PropertyInfo field in properties)
                 {
                     var sugarColumn = field.GetCustomAttribute<SugarColumn>();
@@ -1469,9 +1469,9 @@ namespace RUINORERP.UI.Common
                     {
                         continue;
                     }
-                    
+
                     bool isBrowsable = IsPropertyBrowsable(field);
-                    
+
                     // 创建列控制器
                     ColDisplayController col = new ColDisplayController
                     {
@@ -1480,28 +1480,28 @@ namespace RUINORERP.UI.Common
                         ColDisplayText = sugarColumn.ColumnDescription ?? string.Empty,
                         ColDisplayIndex = columnDisplayControllers.Count
                     };
-                    
+
                     // 设置数据库类型
                     if (sugarColumn.SqlParameterDbType != null)
                     {
                         col.DataPropertyName = sugarColumn.SqlParameterDbType.ToString();
                     }
-                    
+
                     // 确定列的可视性和禁用状态
                     bool isVisible = IsColumnVisible(sugarColumn, isBrowsable);
                     bool isDisabled = IsColumnDisabled(sugarColumn, isBrowsable);
-                    
+
                     col.Visible = isVisible;
                     col.Disable = isDisabled;
                     col.IsPrimaryKey = sugarColumn.IsPrimaryKey;
-                    
+
                     columnDisplayControllers.Add(col);
                 }
             }
-            
+
             return columnDisplayControllers;
         }
-        
+
         /// <summary>
         /// 确定列是否可见
         /// </summary>
@@ -1515,23 +1515,23 @@ namespace RUINORERP.UI.Common
             {
                 return false;
             }
-            
+
             // 忽略字段或自增字段不显示
             if (sugarColumn.IsIgnore || sugarColumn.IsIdentity)
             {
                 return false;
             }
-            
+
             // 主键默认不显示
             if (sugarColumn.IsPrimaryKey)
             {
                 return false;
             }
-            
+
             // 检查是否可浏览
             return isBrowsable;
         }
-        
+
         /// <summary>
         /// 确定列是否禁用
         /// </summary>
@@ -1545,19 +1545,19 @@ namespace RUINORERP.UI.Common
             {
                 return true;
             }
-            
+
             // 描述为空时禁用
             if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
             {
                 return true;
             }
-            
+
             // 忽略字段或自增字段禁用
             if (sugarColumn.IsIgnore || sugarColumn.IsIdentity)
             {
                 return true;
             }
-            
+
             return false;
         }
 
@@ -1572,14 +1572,14 @@ namespace RUINORERP.UI.Common
         public static ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>> GetFieldNamePropertyInfoList(params Type[] types)
         {
             ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>> fieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, SugarColumn>>();
-            
+
             foreach (var type in types)
             {
                 // 复用已有的属性过滤逻辑
                 var properties = type.GetProperties()
                     .Where(p => !IsNavigationProperty(p))
                     .ToList();
-                
+
                 foreach (PropertyInfo field in properties)
                 {
                     var sugarColumn = field.GetCustomAttribute<SugarColumn>();
@@ -1587,22 +1587,22 @@ namespace RUINORERP.UI.Common
                     {
                         continue;
                     }
-                    
+
                     bool isBrowsable = IsPropertyBrowsable(field);
-                    
+
                     // 应用过滤条件
                     if (!IsValidColumnForPropertyInfo(sugarColumn, isBrowsable))
                     {
                         continue;
                     }
-                    
+
                     fieldNameList.TryAdd(field.Name, new KeyValuePair<string, SugarColumn>(sugarColumn.ColumnDescription, sugarColumn));
                 }
             }
-            
+
             return fieldNameList;
         }
-        
+
         /// <summary>
         /// 检查字段是否有效（用于GetFieldNamePropertyInfoList方法）
         /// </summary>
@@ -1616,19 +1616,19 @@ namespace RUINORERP.UI.Common
             {
                 return false;
             }
-            
+
             // 排除自增字段
             if (sugarColumn.IsIdentity)
             {
                 return false;
             }
-            
+
             // 检查是否可浏览
             if (!isBrowsable)
             {
                 return false;
             }
-            
+
             return true;
         }
 
@@ -1683,6 +1683,11 @@ namespace RUINORERP.UI.Common
             {
                 return;
             }
+            //超级管理员不管控
+            if (MainForm.Instance.AppContext.IsSuperUser)
+            {
+                return;
+            }
             if (ExcludeMenuList != null && ExcludeMenuList.Any(c => c.ToString() == btnItem.Text))
             {
                 btnItem.Visible = false;
@@ -1711,185 +1716,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        /*
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripSplitButton btnItem)
-        {
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                btnItem.Visible = true;
-                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                btnItem.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    btnItem.Visible = p4b.IsVisble;
-                    btnItem.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    btnItem.Visible = false;
-                }
-            }
 
-        }
-
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripMenuItem btnItem)
-        {
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                btnItem.Visible = true;
-                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                btnItem.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    btnItem.Visible = p4b.IsVisble;
-                    btnItem.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    btnItem.Visible = false;
-                }
-            }
-
-        }
-
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripDropDownButton btnItem)
-        {
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                btnItem.Visible = true;
-                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                btnItem.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    btnItem.Visible = p4b.IsVisble;
-                    btnItem.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    btnItem.Visible = false;
-                }
-            }
-
-        }
-
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripButton btnItem)
-        {
-            // || MainForm.Instance.AppContext.IsSuperUser
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                btnItem.Visible = true;
-                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                btnItem.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    btnItem.Visible = p4b.IsVisble;
-                    btnItem.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    btnItem.Visible = false;
-                }
-            }
-
-        }
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripItem btnItem)
-        {
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                btnItem.Visible = true;
-                btnItem.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                btnItem.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == btnItem.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    btnItem.Visible = p4b.IsVisble;
-                    btnItem.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    btnItem.Visible = false;
-                }
-            }
-
-        }
-        public static void ControlButton(tb_MenuInfo CurMenuInfo, ToolStripControlHost tsc)
-        {
-            if (CurMenuInfo == null)
-            {
-                return;
-            }
-            if (CurMenuInfo.tb_P4Buttons == null)
-            {
-                tsc.Visible = true;
-                tsc.ToolTipText = "按钮无法使用，请联系管理员进行权限配置";
-                tsc.Enabled = false;
-                return;
-            }
-            else
-            {
-                //如果因为热键 Text改变了。到时再处理
-                tb_P4Button p4b = CurMenuInfo.tb_P4Buttons.Where(b => b.tb_buttoninfo.BtnText == tsc.Text).FirstOrDefault();
-                if (p4b != null)
-                {
-                    tsc.Visible = p4b.IsVisble;
-                    tsc.Enabled = p4b.IsEnabled;
-                }
-                else
-                {
-                    tsc.Visible = false;
-                }
-            }
-        }
-       */
         #endregion
 
 

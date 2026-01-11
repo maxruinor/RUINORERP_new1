@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using RUINORERP.Business.Config;
+using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.Model.ConfigModel;
 
@@ -227,7 +228,7 @@ namespace RUINORERP.Server.Controls
                     try
                     {
                         // 检查会话是否已授权，未授权的会话不添加到表格中
-                        var userInfo = session.UserInfo ?? new UserInfo();
+                        var userInfo = session.UserInfo ?? new CurrentUserInfo();
                         if (!userInfo.授权状态)
                         {
                             skippedCount++;
@@ -462,7 +463,7 @@ namespace RUINORERP.Server.Controls
                     if (item.Tag is SessionInfo data)
                     {
                         sessionData = data;
-                        var userInfo = data.UserInfo ?? new UserInfo();
+                        var userInfo = data.UserInfo ?? new CurrentUserInfo();
                         sessionInfo = $"用户: {GetDisplayUserName(userInfo)}, IP: {data.ClientIp}";
                     }
 
@@ -507,7 +508,7 @@ namespace RUINORERP.Server.Controls
             };
 
             // 从UserInfo获取详细信息，从SessionInfo获取连接信息
-            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+            var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
 
             item.ToolTipText = $"SessionID: {sessionInfo.SessionID}\n用户名: {GetDisplayUserName(userInfo)}\n客户端IP: {sessionInfo.ClientIp}";
 
@@ -544,7 +545,7 @@ namespace RUINORERP.Server.Controls
             if (item.SubItems.Count < 18) return;
 
             // 从UserInfo获取详细信息
-            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+            var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
 
             // 更新所有列的数据
             item.SubItems[1].Text = GetDisplayUserName(userInfo);
@@ -574,7 +575,7 @@ namespace RUINORERP.Server.Controls
         /// <param name="item">ListView项</param>
         /// <param name="sessionInfo">会话信息</param>
         /// <param name="userInfo">用户信息</param>
-        private void SetSessionItemStyle(ListViewItem item, SessionInfo sessionInfo, UserInfo userInfo)
+        private void SetSessionItemStyle(ListViewItem item, SessionInfo sessionInfo, CurrentUserInfo userInfo)
         {
             try
             {
@@ -668,7 +669,7 @@ namespace RUINORERP.Server.Controls
                 return false;
             }
 
-            var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+            var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
             return userInfo.授权状态;
         }
 
@@ -687,7 +688,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         /// <param name="userInfo">用户信息</param>
         /// <returns>显示用户名</returns>
-        private string GetDisplayUserName(UserInfo userInfo)
+        private string GetDisplayUserName(CurrentUserInfo userInfo)
         {
             if (userInfo != null && !string.IsNullOrEmpty(userInfo.用户名))
             {
@@ -701,7 +702,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         /// <param name="userInfo">用户信息</param>
         /// <returns>超级用户状态</returns>
-        private string GetSuperUserStatus(UserInfo userInfo)
+        private string GetSuperUserStatus(CurrentUserInfo userInfo)
         {
             if (userInfo != null)
             {
@@ -715,7 +716,7 @@ namespace RUINORERP.Server.Controls
         /// </summary>
         /// <param name="userInfo">用户信息</param>
         /// <returns>授权状态</returns>
-        private string GetAuthorizationStatus(UserInfo userInfo)
+        private string GetAuthorizationStatus(CurrentUserInfo userInfo)
         {
             if (userInfo != null)
             {
@@ -856,7 +857,7 @@ namespace RUINORERP.Server.Controls
                         else if (item.ForeColor == Color.Red)
                         {
                             // 恢复正常样式
-                            SetSessionItemStyle(item, sessionInfo, sessionInfo.UserInfo ?? new UserInfo());
+                            SetSessionItemStyle(item, sessionInfo, sessionInfo.UserInfo ?? new CurrentUserInfo());
                         }
                     }
                 }
@@ -991,7 +992,7 @@ namespace RUINORERP.Server.Controls
                                     statusChanged = true;
                                     statusChangedCount++;
                                     string statusDesc = sessionInfo.IsConnected ? "已连接" : "已断开";
-                                    LogStatusChange(sessionInfo, $"会话状态变更为{statusDesc}: {GetDisplayUserName(sessionInfo.UserInfo ?? new UserInfo())} - {sessionInfo.ClientIp}");
+                                    LogStatusChange(sessionInfo, $"会话状态变更为{statusDesc}: {GetDisplayUserName(sessionInfo.UserInfo ?? new CurrentUserInfo())} - {sessionInfo.ClientIp}");
                                 }
                             }
 
@@ -1130,7 +1131,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 检查会话是否已授权，未授权的新会话不添加到表格中
-                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
                 if (!userInfo.授权状态 && !_sessionItemMap.ContainsKey(sessionInfo.SessionID))
                 {
                     LogStatusChange(null, $"忽略未授权的新会话: {GetDisplayUserName(userInfo)} - {sessionInfo.ClientIp}");
@@ -1176,7 +1177,7 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
                 string userName = GetDisplayUserName(userInfo);
                 string clientIp = sessionInfo.ClientIp ?? "未知IP";
 
@@ -1280,7 +1281,7 @@ namespace RUINORERP.Server.Controls
                 // 如果提供了会话信息，添加会话详情
                 if (sessionInfo != null)
                 {
-                    var userInfo = sessionInfo.UserInfo ?? new UserInfo();
+                    var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
                     string userDisplayName = GetDisplayUserName(userInfo);
                     string userRealName = GetDisplayName(userInfo?.姓名) ?? "未知姓名";
                     sessionDetails = $"用户: {userDisplayName} ({userRealName}) - {sessionInfo.ClientIp ?? "未知IP"}";
@@ -1489,7 +1490,7 @@ namespace RUINORERP.Server.Controls
         }
 
 
-        private async void HandleSendMessage(List<UserInfo> users)
+        private async void HandleSendMessage(List<CurrentUserInfo> users)
         {
             frmMessager frmMessager = new frmMessager();
             frmMessager.MustDisplay = true;

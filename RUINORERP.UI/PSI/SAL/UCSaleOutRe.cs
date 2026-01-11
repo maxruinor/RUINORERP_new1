@@ -626,7 +626,7 @@ namespace RUINORERP.UI.PSI.SAL
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
                     if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
                     {
-                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.Id)
+                        if (EditEntity.Created_by.Value != AppContext.CurUserInfo.EmpID)
                         {
                             MessageBox.Show("只能删除自己创建的销售退回单。或请求超级管理员处理", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             rss.ErrorMsg = "只能删除自己创建的销售退回单。";

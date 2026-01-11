@@ -66,14 +66,13 @@ namespace RUINORERP.Business.Security
                 #region superUser
 
                 CurrentUserInfo cuser = new CurrentUserInfo();
-                cuser.Name = "超级管理员";
-                cuser.Id = 0;
+                cuser.EmpID = 0;
                 appcontext.CurUserInfo = cuser;
 
                 cuser.UserInfo = new tb_UserInfo();
                 cuser.UserInfo.UserName = "超级管理员";
                 cuser.UserInfo.Password = "123456";
-
+                cuser.UserInfo.IsSuperUser = true;
                 string EnPassword = EncryptionHelper.AesEncryptByHashKey(cuser.UserInfo.Password, cuser.UserInfo.UserName);
                 cuser.UserInfo.Password = EnPassword;
                 //先删除，通常如果系统初始化成功后。就不会执行这里了
@@ -82,7 +81,6 @@ namespace RUINORERP.Business.Security
                 cuser.UserInfo = appcontext.Db.Storageable<tb_UserInfo>(cuser.UserInfo).ExecuteReturnEntity();
 
                 appcontext.CurUserInfo = cuser;
-
                 List<tb_ModuleDefinition> modlist = new List<tb_ModuleDefinition>();
                 //两套方式 正常是用P4表来控制的  超级管理员用默认菜单结构
                 // 添加SqlSugar缓存，键包含用户名信息，缓存5分钟
@@ -195,7 +193,7 @@ namespace RUINORERP.Business.Security
                         }
                         appcontext.log.User_ID = user.User_ID;
                         //获取本地计算机名+本地计算机登录名
-                        appcontext.log.MachineName = appcontext.CurrentUser.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
+                        appcontext.log.MachineName = appcontext.CurUserInfo.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
 
                         //调用方法
                         MacAddressHelper macHelper = new MacAddressHelper();
@@ -235,21 +233,32 @@ namespace RUINORERP.Business.Security
                 appcontext.CurUserInfo = new CurrentUserInfo();
             }
             appcontext.CurUserInfo.UserInfo = user;
-            if (user.tb_employee == null)
+            if (user.tb_employee == null && !user.IsSuperUser)
             {
                 throw new Exception("您使用的账号没有所属员工。");
             }
+            if (user.tb_employee == null && user.IsSuperUser)
+            {
+                user.tb_employee = new tb_Employee();
+                user.tb_employee.Employee_Name = user.UserName;
 
+                var modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
+                             .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
+                             .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
+                             .ToList();
+                appcontext.CurUserInfo.UserModList = modlist;
+
+            }
             // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser
-            appcontext.CurUserInfo.Id = user.tb_employee.Employee_ID;
-            appcontext.CurrentUser.Employee_ID = user.tb_employee.Employee_ID;
-            appcontext.CurrentUser.UserID = user.User_ID;
-            appcontext.CurrentUser.用户名 = user.UserName;
-            appcontext.CurrentUser.姓名 = user.tb_employee.Employee_Name;
-            appcontext.CurrentUser.超级用户 = user.IsSuperUser;
-            appcontext.CurrentUser.登录时间 = System.DateTime.Now;
-            appcontext.CurrentUser.在线状态 = true;
-            appcontext.CurrentUser.授权状态 = true;
+            appcontext.CurUserInfo.EmpID = user.tb_employee.Employee_ID;
+            appcontext.CurUserInfo.Employee_ID = user.tb_employee.Employee_ID;
+            appcontext.CurUserInfo.UserID = user.User_ID;
+            appcontext.CurUserInfo.用户名 = user.UserName;
+            appcontext.CurUserInfo.姓名 = user.tb_employee.Employee_Name;
+            appcontext.CurUserInfo.超级用户 = user.IsSuperUser;
+            appcontext.CurUserInfo.登录时间 = System.DateTime.Now;
+            appcontext.CurUserInfo.在线状态 = true;
+            appcontext.CurUserInfo.授权状态 = true;
 
             // 设置超级用户标志
             if (user.IsSuperUser)
@@ -257,8 +266,11 @@ namespace RUINORERP.Business.Security
                 ApplicationContext.Current.IsSuperUser = true;
             }
 
-            appcontext.CurUserInfo.Name = user.tb_employee.Employee_Name;
-            appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
+            if (user.tb_employee.tb_department != null)
+            {
+                appcontext.CompanyInfo = user.tb_employee.tb_department.tb_company;
+            }
+
 
             //一个人能在不同的角色组。可以多个。但是需要为已授权
             List<tb_RoleInfo> roles = new List<tb_RoleInfo>();
@@ -268,55 +280,60 @@ namespace RUINORERP.Business.Security
             CheckRoles = CheckRoles.Distinct().ToList();//应该不会重复
                                                         //默认的排前面
             CheckRoles = CheckRoles.OrderByDescending(c => c.DefaultRole).ThenBy(c => c.ID).ToList();
-            if (CheckRoles.Count == 0)
+            if (CheckRoles.Count == 0 && !user.IsSuperUser)
             {
                 System.Windows.Forms.MessageBox.Show("您不属于任何角色组，请联系管理员。");
                 loginSucceed = false;
                 return loginSucceed;
             }
-            //系统支持多个组，但是每次生效只一个。按第一个优化
-            foreach (var item in CheckRoles)
+            else if (CheckRoles.Count > 0)
             {
-                roles.Add(item.tb_roleinfo);
-            }
-            appcontext.Roles = roles;
-            if (CurrentRole == null)
-            {
-                appcontext.CurrentRole = roles[0];
-                appcontext.CurrentUser_Role = CheckRoles[0];
-            }
-            else
-            {
-                appcontext.CurrentRole = CurrentRole;
-                appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
-            }
+                //系统支持多个组，但是每次生效只一个。按第一个优化
+                foreach (var item in CheckRoles)
+                {
+                    roles.Add(item.tb_roleinfo);
+                }
+                appcontext.Roles = roles;
+                if (CurrentRole == null)
+                {
+                    appcontext.CurrentRole = roles[0];
+                    appcontext.CurrentUser_Role = CheckRoles[0];
+                }
+                else
+                {
+                    appcontext.CurrentRole = CurrentRole;
+                    appcontext.CurrentUser_Role = CheckRoles.FirstOrDefault(c => c.RoleID == CurrentRole.RoleID);
+                }
+
+                //设置角色的属性配置，默认只取第一个角色组的配置,，并且设置提前了一级
+                if (appcontext.CurrentRole.tb_rolepropertyconfig != null)
+                {
+                    appcontext.rolePropertyConfig = appcontext.CurrentRole.tb_rolepropertyconfig;
+                }
 
 
-            //每个用户和角色对应一个用户配置
-            if (appcontext.CurrentUser_Role.tb_UserPersonalizeds == null)
-            {
-                appcontext.CurrentUser_Role.tb_UserPersonalizeds = new();
+                //每个用户和角色对应一个用户配置
+                if (appcontext.CurrentUser_Role.tb_UserPersonalizeds == null)
+                {
+                    appcontext.CurrentUser_Role.tb_UserPersonalizeds = new();
+
+                }
+                appcontext.CurrentUser_Role_Personalized = appcontext.CurrentUser_Role.tb_UserPersonalizeds.FirstOrDefault(c => c.ID == appcontext.CurrentUser_Role.ID);
+                if (appcontext.CurrentUser_Role_Personalized == null)
+                {
+                    appcontext.CurrentUser_Role_Personalized = new tb_UserPersonalized();
+                    appcontext.CurrentUser_Role_Personalized.ID = appcontext.CurrentUser_Role.ID;
+                    appcontext.CurrentUser_Role.tb_UserPersonalizeds.Add(appcontext.CurrentUser_Role_Personalized);
+                    RUINORERP.Business.BusinessHelper.Instance.InitEntity(appcontext.CurrentUser_Role_Personalized);
+                    appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
+                }
+
+                //获取工作台配置 - 使用同步加载方法
+                appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
+                LoadWorkCenterConfig(appcontext);
+
 
             }
-            appcontext.CurrentUser_Role_Personalized = appcontext.CurrentUser_Role.tb_UserPersonalizeds.FirstOrDefault(c => c.ID == appcontext.CurrentUser_Role.ID);
-            if (appcontext.CurrentUser_Role_Personalized == null)
-            {
-                appcontext.CurrentUser_Role_Personalized = new tb_UserPersonalized();
-                appcontext.CurrentUser_Role_Personalized.ID = appcontext.CurrentUser_Role.ID;
-                appcontext.CurrentUser_Role.tb_UserPersonalizeds.Add(appcontext.CurrentUser_Role_Personalized);
-                RUINORERP.Business.BusinessHelper.Instance.InitEntity(appcontext.CurrentUser_Role_Personalized);
-                appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
-            }
-
-            //设置角色的属性配置，默认只取第一个角色组的配置,，并且设置提前了一级
-            if (appcontext.CurrentRole.tb_rolepropertyconfig != null)
-            {
-                appcontext.rolePropertyConfig = appcontext.CurrentRole.tb_rolepropertyconfig;
-            }
-
-            //获取工作台配置 - 使用同步加载方法
-            appcontext.WorkCenterConfigList = new List<tb_WorkCenterConfig>();
-            LoadWorkCenterConfig(appcontext);
 
             loginSucceed = true;
             return loginSucceed;
@@ -329,7 +346,12 @@ namespace RUINORERP.Business.Security
         /// <param name="appcontext">应用上下文</param>
         private static void LoadWorkCenterConfig(ApplicationContext appcontext)
         {
+            if (appcontext.CurrentRole == null)
+            {
+                return;
+            }
             const int maxRetryCount = 3;
+
 
             for (int attempt = 1; attempt <= maxRetryCount; attempt++)
             {

@@ -84,7 +84,7 @@ namespace RUINORERP.UI.Report
                     {
                         objlist.Add(item);
                     }
-                    List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
+                    List<CurrentUserInfo> currUserInfo = new List<CurrentUserInfo>();
                     currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
 
                     List<tb_Company> companyInfo = new List<tb_Company>();
@@ -207,7 +207,7 @@ namespace RUINORERP.UI.Report
                 {
                     return rs;
                 }
-                List<ICurrentUserInfo> currUserInfos = new List<ICurrentUserInfo>();
+                List<CurrentUserInfo> currUserInfos = new List<CurrentUserInfo>();
                 currUserInfos.Add(MainForm.Instance.AppContext.CurUserInfo);
 
                 List<tb_Company> companyInfos = new List<tb_Company>();
@@ -410,7 +410,7 @@ namespace RUINORERP.UI.Report
             {
                 return rs;
             }
-            List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
+            List<CurrentUserInfo> currUserInfo = new List<CurrentUserInfo>();
             currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
 
             List<tb_Company> companyInfo = new List<tb_Company>();
@@ -555,7 +555,7 @@ namespace RUINORERP.UI.Report
         public static bool PrintCustomData<C>(object CustomData, RptMode rptMode, tb_PrintConfig printConfig)
         {
             bool rs = false;
-            List<ICurrentUserInfo> currUserInfo = new List<ICurrentUserInfo>();
+            List<CurrentUserInfo> currUserInfo = new List<CurrentUserInfo>();
             currUserInfo.Add(MainForm.Instance.AppContext.CurUserInfo);
 
             List<tb_Company> companyInfo = new List<tb_Company>();
@@ -784,7 +784,7 @@ namespace RUINORERP.UI.Report
         private static void DESIGN(tb_PrintConfig printConfig,
             List<object> objlist,
             List<tb_Company> companies = null,
-            List<ICurrentUserInfo> currentUsers = null,
+            List<CurrentUserInfo> currentUsers = null,
         string PKFieldName = null
         )
         {

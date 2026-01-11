@@ -233,7 +233,7 @@ namespace RUINORERP.UI.Forms
                 if (MessageBox.Show("确认要解锁此单据吗？此操作可能会影响正在编辑的用户。", "操作确认", 
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
-                    long currentUserId = MainForm.Instance.AppContext.CurrentUser.UserID;
+                    long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
                     bool success = await _lockCacheService.UnlockAsync(_lockInfo.BillID, currentUserId);
                     
                     if (success)

@@ -1035,7 +1035,7 @@ namespace RUINORERP.Business
             List<tb_BuyingRequisitionDetail> BuyingDetails = mapper.Map<List<tb_BuyingRequisitionDetail>>(PurDetails);
             foreach (var item in BuyingDetails)
             {
-                BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.Name}在生产需要分析{demand.PDNo}时自动生成";
+                BuyingRequisition.Purpose = $"由{_appContext.CurUserInfo.tb_Employee.Employee_Name}在生产需要分析{demand.PDNo}时自动生成";
                 //设置一个默认的需求日期
                 if (BuyingRequisition.RequirementDate == null && item.RequirementDate.HasValue)
                 {
@@ -1070,7 +1070,7 @@ namespace RUINORERP.Business
                 BuyingRequisition.DepartmentID = demand.tb_productionplan.DepartmentID;
 
             }
-            BuyingRequisition.Employee_ID = _appContext.CurUserInfo.Id;
+            BuyingRequisition.Employee_ID = _appContext.CurUserInfo.EmpID;
 
             BuyingRequisition.tb_BuyingRequisitionDetails = BuyingDetails;
             BuyingRequisition.ApplicationDate = System.DateTime.Now;
@@ -1225,7 +1225,7 @@ namespace RUINORERP.Business
             }
 
             // ManufacturingOrder.PeopleQty = bom.PeopleQty * item.RecommendQty;
-            ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.Id;
+            ManufacturingOrder.Employee_ID = _appContext.CurUserInfo.EmpID;
 
             #region 明细
 

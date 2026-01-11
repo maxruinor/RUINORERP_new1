@@ -61,7 +61,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         }
 
         /// <summary>
-        /// 处理缓存响应（使用完整的响应对象）
+        /// 处理缓存响应（使用完整的响应对象）- 增强版，包含数据完整性验证
         /// </summary>
         public void ProcessCacheResponse(CacheResponse response)
         {
@@ -75,10 +75,21 @@ namespace RUINORERP.UI.Network.Services.Cache
 
             try
             {
+                // 记录同步元数据
+                LogSyncMetadata(response);
+
                 // 统一验证成功状态和表名（Manage操作允许失败状态）
                 if (!response.IsSuccess && response.Operation != CacheOperation.Manage)
                 {
                     _log?.LogWarning("缓存响应未成功，表名={0}, 操作类型={1}", response.TableName, response.Operation);
+                }
+
+                // 数据完整性验证
+                if (!ValidateDataIntegrity(response))
+                {
+                    _log?.LogError("缓存响应数据完整性验证失败，表名={0}, 操作={1}",
+                        response.TableName, response.Operation);
+                    return;
                 }
 
                 switch (response.Operation)
@@ -99,6 +110,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                         }
 
                         ProcessCacheData(response.TableName, response.CacheData.EntityByte);
+                        LogSyncSuccess(response, "数据更新成功");
                         break;
 
                     case CacheOperation.Remove:
@@ -106,6 +118,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                         if (!string.IsNullOrEmpty(response.TableName))
                         {
                             HandleRemoveOperation(response);
+                            LogSyncSuccess(response, "数据删除成功");
                         }
                         else
                         {
@@ -118,6 +131,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                         if (!string.IsNullOrEmpty(response.TableName))
                         {
                             CleanCacheSafely(response.TableName);
+                            LogSyncSuccess(response, "缓存清空成功");
                         }
                         else
                         {
@@ -139,6 +153,97 @@ namespace RUINORERP.UI.Network.Services.Cache
                 _log?.LogError(ex, "处理缓存响应失败，表名={0}, 操作类型={1}, 错误信息={2}",
                     response.TableName, response.Operation, ex.Message);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 验证数据完整性
+        /// </summary>
+        private bool ValidateDataIntegrity(CacheResponse response)
+        {
+            try
+            {
+                // 基本验证
+                if (string.IsNullOrEmpty(response.TableName))
+                {
+                    return false;
+                }
+
+                // Set/Get操作必须有数据
+                if ((response.Operation == CacheOperation.Set || response.Operation == CacheOperation.Get)
+                    && response.CacheData == null)
+                {
+                    _log?.LogWarning("数据完整性验证失败: Set/Get操作缺少缓存数据，表名={0}", response.TableName);
+                    return false;
+                }
+
+                // 如果有数据，验证数据不为空
+                if (response.CacheData != null && response.CacheData.EntityByte == null
+                    && response.Operation != CacheOperation.Remove && response.Operation != CacheOperation.Clear)
+                {
+                    _log?.LogWarning("数据完整性验证失败: 缓存数据为空，表名={0}", response.TableName);
+                    return false;
+                }
+
+                // 时间戳验证（如果存在）
+                if (response.Timestamp != default && response.Timestamp > DateTime.UtcNow.AddHours(1))
+                {
+                    _log?.LogWarning("数据完整性验证失败: 时间戳无效，表名={0}, 时间={1}",
+                        response.TableName, response.Timestamp);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "验证数据完整性时发生异常，表名={0}", response.TableName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 记录同步元数据
+        /// </summary>
+        private void LogSyncMetadata(CacheResponse response)
+        {
+            try
+            {
+                if (response.Metadata != null && response.Metadata.Count > 0)
+                {
+                    if (response.Metadata.TryGetValue("SyncType", out var syncType))
+                    {
+                        _log?.LogDebug("同步类型={0}, 表名={1}", syncType, response.TableName);
+                    }
+                    if (response.Metadata.TryGetValue("ServerTimestamp", out var serverTimestamp))
+                    {
+                        _log?.LogDebug("服务器时间戳={0}, 表名={1}", serverTimestamp, response.TableName);
+                    }
+                    if (response.Metadata.TryGetValue("SourceSessionId", out var sourceSessionId))
+                    {
+                        _log?.LogDebug("源会话ID={0}, 表名={1}", sourceSessionId, response.TableName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogDebug(ex, "记录同步元数据时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 记录同步成功
+        /// </summary>
+        private void LogSyncSuccess(CacheResponse response, string message)
+        {
+            try
+            {
+                _log?.LogInformation("缓存同步成功: {0}, 表名={1}, 操作={2}, 时间={3}",
+                    message, response.TableName, response.Operation, DateTime.Now);
+            }
+            catch
+            {
+                // 忽略日志记录错误
             }
         }
 

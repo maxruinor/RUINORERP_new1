@@ -329,9 +329,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 广播缓存变更到订阅该表的客户端
+        /// 广播缓存变更到订阅该表的客户端(增强版 - 包含完整数据)
         /// </summary>
-        /// <param name="request">缓存响应数据</param>
+        /// <param name="request">缓存请求数据</param>
         /// <param name="excludeSessionId">排除的会话ID（发起变更的客户端）</param>
         /// <param name="cancellationToken">取消令牌</param>
         private async Task BroadcastCacheChangeAsync(CacheRequest request, string excludeSessionId, CancellationToken cancellationToken)
@@ -342,6 +342,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var subscribedSessions = _subscriptionManager.GetSubscribers(request.TableName);
                 if (subscribedSessions == null || !subscribedSessions.Any())
                 {
+                    LogDebug($"表 {request.TableName} 没有订阅者,跳过广播");
                     return;
                 }
 
@@ -349,11 +350,41 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var targetSessionIds = subscribedSessions.Where(s => s != excludeSessionId).ToList();
                 if (!targetSessionIds.Any())
                 {
+                    LogDebug($"表 {request.TableName} 没有其他订阅者,跳过广播");
                     return;
                 }
 
-                // 构建推送数据包
-                var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, request)
+                // 确保请求包含完整的数据
+                if (request.CacheData == null && request.Operation == CacheOperation.Set)
+                {
+                    LogWarning($"缓存同步请求缺少数据,表名={request.TableName},操作={request.Operation}");
+                    return;
+                }
+
+                // 创建完整的缓存响应(包含数据和元数据)
+                var cacheResponse = new CacheResponse
+                {
+                    RequestId = request.RequestId,
+                    TableName = request.TableName,
+                    Operation = request.Operation,
+                    IsSuccess = true,
+                    Message = "服务器推送缓存更新",
+                    CacheData = request.CacheData, // 包含完整的数据
+                    Timestamp = DateTime.UtcNow,
+                    CacheTime = DateTime.UtcNow,
+                    ServerVersion = Program.AppVersion
+                };
+
+                // 添加同步元数据,用于客户端验证
+                cacheResponse.Metadata = new Dictionary<string, object>
+                {
+                    { "SyncType", "ServerPush" },
+                    { "ServerTimestamp", DateTime.UtcNow.ToString("O") },
+                    { "SourceSessionId", excludeSessionId ?? "Server" }
+                };
+
+                // 构建推送数据包 - 使用CacheResponse作为推送数据
+                var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, cacheResponse)
                     .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerRequest);
 
                 // 序列化数据包
@@ -371,8 +402,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var allSessions = _sessionService.GetAllUserSessions();
                 var targetSessions = allSessions.Where(s => targetSessionIds.Contains(s.SessionID)).ToList();
 
+                if (targetSessions.Count == 0)
+                {
+                    LogWarning($"没有找到目标会话,表名={request.TableName},订阅者={string.Join(",", targetSessionIds)}");
+                    return;
+                }
+
                 int successCount = 0;
                 int failCount = 0;
+                var failedSessions = new List<string>();
 
                 foreach (var sessionInfo in targetSessions)
                 {
@@ -380,23 +418,31 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         await sessionInfo.SendAsync(encryptedData.ToArray(), cancellationToken);
                         successCount++;
+                        LogDebug($"成功推送缓存更新到会话: {sessionInfo.SessionID}, 表: {request.TableName}");
                     }
                     catch (Exception ex)
                     {
                         failCount++;
+                        failedSessions.Add(sessionInfo.SessionID);
                         LogError($"推送缓存更新到会话失败: {sessionInfo.SessionID}, 表: {request.TableName}, 错误: {ex.Message}");
                     }
                 }
 
-                // 只在有失败时记录详细信息
+                // 记录推送结果
                 if (failCount > 0)
                 {
-                    LogWarning($"广播缓存变更部分失败: 表={request.TableName}, 目标客户端数量={targetSessions.Count}, 成功={successCount}, 失败={failCount}");
+                    LogWarning($"广播缓存变更部分失败: 表={request.TableName}, " +
+                               $"目标客户端数量={targetSessions.Count}, 成功={successCount}, 失败={failCount}, " +
+                               $"失败会话ID: {string.Join(", ", failedSessions)}");
+                }
+                else
+                {
+                    LogInfo($"广播缓存变更成功: 表={request.TableName}, 目标客户端数量={targetSessions.Count}");
                 }
             }
             catch (Exception ex)
             {
-                LogError($"广播缓存变更异常: {ex.Message}", ex);
+                LogError($"广播缓存变更异常: 表={request.TableName}, 错误: {ex.Message}", ex);
             }
         }
 

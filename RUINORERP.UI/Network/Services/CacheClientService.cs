@@ -110,7 +110,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 注册缓存同步命令处理器
+        /// 注册缓存同步命令处理器(增强版 - 支持多种数据格式和完整性验证)
         /// 处理服务器推送的缓存数据
         /// </summary>
         private void RegisterCacheSyncHandler()
@@ -119,21 +119,34 @@ namespace RUINORERP.UI.Network.Services
             {
                 try
                 {
-                    // 优先处理packet.Request（服务器主动推送的数据）
+                    // 优先处理CacheResponse格式(服务器推送的完整响应)
+                    if (data is CacheResponse cacheResponse)
+                    {
+                        ProcessServerPushedResponse(cacheResponse, packet.CommandId);
+                        return;
+                    }
+
+                    // 处理CacheRequest格式(服务器主动推送的数据)
                     if (packet.Request is CacheRequest cacheRequest)
                     {
-                        // 处理缓存请求（服务器推送的）
-                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequest);
+                        ProcessServerPushedRequest(cacheRequest, packet.CommandId);
+                        return;
                     }
                     else if (data is CacheRequest cacheRequestData)
                     {
-                        // 处理缓存数据（备用路径）
-                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequestData);
+                        ProcessServerPushedRequest(cacheRequestData, packet.CommandId);
+                        return;
                     }
-                    else
+
+                    // 处理批量同步(List<CacheResponse>)
+                    if (data is List<CacheResponse> responses)
                     {
-                        _log.LogWarning("缓存同步数据格式无效，期望CacheRequest，实际类型={0}", data?.GetType().Name ?? "null");
+                        ProcessBatchSyncResponses(responses, packet.CommandId);
+                        return;
                     }
+
+                    _log.LogWarning("缓存同步数据格式无效，期望CacheResponse/CacheRequest/List<CacheResponse>，实际类型={0}",
+                        data?.GetType().Name ?? "null");
                 }
                 catch (Exception ex)
                 {
@@ -141,6 +154,182 @@ namespace RUINORERP.UI.Network.Services
                     // 不抛出异常，避免影响其他命令处理
                 }
             });
+        }
+
+        /// <summary>
+        /// 处理服务器推送的缓存响应(带完整性验证)
+        /// </summary>
+        private void ProcessServerPushedResponse(CacheResponse response, CommandId commandId)
+        {
+            try
+            {
+                // 验证响应基本信息
+                if (response == null)
+                {
+                    _log.LogWarning("服务器推送的缓存响应为空");
+                    return;
+                }
+
+                // 验证表名
+                if (string.IsNullOrEmpty(response.TableName))
+                {
+                    _log.LogWarning("服务器推送的缓存响应缺少表名");
+                    return;
+                }
+
+                // 验证操作类型
+                if (!Enum.IsDefined(typeof(CacheOperation), response.Operation))
+                {
+                    _log.LogWarning($"服务器推送的缓存响应包含无效操作类型: {response.Operation}");
+                    return;
+                }
+
+                // 记录同步元数据(如果存在)
+                if (response.Metadata != null && response.Metadata.Count > 0)
+                {
+                    LogSyncMetadata(response);
+                }
+
+                // 检查数据完整性
+                if (response.Operation == CacheOperation.Set && response.CacheData == null)
+                {
+                    _log.LogWarning($"服务器推送的缓存响应缺少数据，表名={response.TableName}");
+                    return;
+                }
+
+                // 处理缓存响应
+                _cacheResponseProcessor.ProcessCacheResponse(response);
+
+                _log.LogDebug("成功处理服务器推送的缓存响应，表名={0},操作={1}",
+                    response.TableName, response.Operation);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "处理服务器推送的缓存响应失败，表名={0},命令ID={1}",
+                    response?.TableName ?? "Unknown", commandId);
+            }
+        }
+
+        /// <summary>
+        /// 处理服务器推送的缓存请求(带完整性验证)
+        /// </summary>
+        private void ProcessServerPushedRequest(CacheRequest request, CommandId commandId)
+        {
+            try
+            {
+                // 验证请求基本信息
+                if (request == null)
+                {
+                    _log.LogWarning("服务器推送的缓存请求为空");
+                    return;
+                }
+
+                // 验证表名
+                if (string.IsNullOrEmpty(request.TableName))
+                {
+                    _log.LogWarning("服务器推送的缓存请求缺少表名");
+                    return;
+                }
+
+                // 验证操作类型
+                if (!Enum.IsDefined(typeof(CacheOperation), request.Operation))
+                {
+                    _log.LogWarning($"服务器推送的缓存请求包含无效操作类型: {request.Operation}");
+                    return;
+                }
+
+                // 记录同步信息
+                _log.LogDebug("收到服务器推送的缓存请求，表名={0},操作={1},时间戳={2}",
+                    request.TableName, request.Operation, request.Timestamp);
+
+                // 处理缓存请求
+                _cacheResponseProcessor.ProcessCacheRequest(request);
+
+                _log.LogDebug("成功处理服务器推送的缓存请求，表名={0},操作={1}",
+                    request.TableName, request.Operation);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "处理服务器推送的缓存请求失败，表名={0},命令ID={1}",
+                    request?.TableName ?? "Unknown", commandId);
+            }
+        }
+
+        /// <summary>
+        /// 处理批量同步响应
+        /// </summary>
+        private void ProcessBatchSyncResponses(List<CacheResponse> responses, CommandId commandId)
+        {
+            try
+            {
+                if (responses == null || responses.Count == 0)
+                {
+                    _log.LogWarning("批量同步响应列表为空");
+                    return;
+                }
+
+                _log.LogDebug("收到批量同步响应，数量={0}", responses.Count);
+
+                int successCount = 0;
+                int failCount = 0;
+                var failedTables = new List<string>();
+
+                foreach (var response in responses)
+                {
+                    try
+                    {
+                        ProcessServerPushedResponse(response, commandId);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        failedTables.Add(response?.TableName ?? "Unknown");
+                        _log.LogError(ex, "批量同步中处理单个响应失败，表名={0}", response?.TableName ?? "Unknown");
+                    }
+                }
+
+                _log.LogInformation("批量同步处理完成，总数={0},成功={1},失败={2}",
+                    responses.Count, successCount, failCount);
+
+                if (failCount > 0)
+                {
+                    _log.LogWarning("批量同步失败的表: {0}", string.Join(", ", failedTables));
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "处理批量同步响应失败，命令ID={0}", commandId);
+            }
+        }
+
+        /// <summary>
+        /// 记录同步元数据
+        /// </summary>
+        private void LogSyncMetadata(CacheResponse response)
+        {
+            try
+            {
+                if (response.Metadata != null)
+                {
+                    if (response.Metadata.TryGetValue("SyncType", out var syncType))
+                    {
+                        _log.LogDebug("同步类型={0}", syncType);
+                    }
+                    if (response.Metadata.TryGetValue("ServerTimestamp", out var serverTimestamp))
+                    {
+                        _log.LogDebug("服务器时间戳={0}", serverTimestamp);
+                    }
+                    if (response.Metadata.TryGetValue("SourceSessionId", out var sourceSessionId))
+                    {
+                        _log.LogDebug("源会话ID={0}", sourceSessionId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _log.LogDebug(ex, "记录同步元数据时发生错误");
+            }
         }
 
         /// <summary>
@@ -182,49 +371,82 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 注册缓存批量同步命令处理器 这里还没有实现
+        /// 注册缓存批量同步命令处理器
         /// </summary>
         private void RegisterCacheBatchSyncHandler()
         {
             _commService.SubscribeCommand(CacheCommands.CacheSync, async (packet, data) =>
             {
-                //批处理实现还没有实现吧。这个同步上面也有执行。RegisterCacheSyncHandler
-                return;
-
                 try
                 {
-                    if (packet.Request != null)
-                    {
-
-                    }
-                    if (packet.Request is CacheRequest cacheRequest)
-                    {
-                        if (cacheRequest.Operation == CacheOperation.Manage)
-                        {
-
-                        }
-                    }
-
-                    if (data is List<CacheResponse> responses)
+                    // 批量同步处理 - 支持List<CacheResponse>格式
+                    if (data is List<CacheResponse> responses && responses.Count > 0)
                     {
                         _log.LogDebug("批量缓存同步数据包解析成功，响应数量={0}", responses.Count);
 
-                        // 直接处理每个缓存响应
+                        int successCount = 0;
+                        int failCount = 0;
+
+                        // 逐个处理缓存响应,确保完整性
                         foreach (var response in responses)
                         {
-                            _cacheResponseProcessor.ProcessCacheResponse(response);
+                            try
+                            {
+                                // 验证响应数据完整性
+                                if (response == null || string.IsNullOrEmpty(response.TableName))
+                                {
+                                    _log.LogWarning("批量同步中发现无效响应,跳过处理");
+                                    failCount++;
+                                    continue;
+                                }
+
+                                // 使用CacheResponseProcessor处理单个响应
+                                _cacheResponseProcessor.ProcessCacheResponse(response);
+                                successCount++;
+                            }
+                            catch (Exception ex)
+                            {
+                                failCount++;
+                                _log.LogError(ex, "批量同步中处理单个缓存响应失败,表名={0}", response?.TableName ?? "Unknown");
+                            }
                         }
 
-                        _log.LogInformation("批量缓存同步处理成功，响应数量={0}", responses.Count);
+                        _log.LogInformation("批量缓存同步处理完成,总数={0},成功={1},失败={2}",
+                            responses.Count, successCount, failCount);
+
+                        // 如果失败数过多,记录警告
+                        if (failCount > 0 && failCount > responses.Count * 0.3)
+                        {
+                            _log.LogWarning("批量缓存同步失败率过高: {0:P2}", (double)failCount / responses.Count);
+                        }
+                    }
+                    // 兼容单个CacheResponse的推送(通过CacheSync命令)
+                    else if (data is CacheResponse singleResponse)
+                    {
+                        _log.LogDebug("收到单个缓存同步响应,表名={0}", singleResponse.TableName);
+                        _cacheResponseProcessor.ProcessCacheResponse(singleResponse);
+                    }
+                    // 兼容CacheRequest格式的推送(服务器主动推送的数据)
+                    else if (packet.Request is CacheRequest cacheRequest)
+                    {
+                        _log.LogDebug("收到缓存同步请求(来自packet.Request),表名={0},操作={1}", cacheRequest.TableName, cacheRequest.Operation);
+                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequest);
+                    }
+                    else if (data is CacheRequest cacheRequestData)
+                    {
+                        _log.LogDebug("收到缓存同步请求(来自data),表名={0},操作={1}", cacheRequestData.TableName, cacheRequestData.Operation);
+                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequestData);
                     }
                     else
                     {
-                        _log.LogWarning($"批量缓存同步数据格式无效{packet.CommandId.ToString()}，期望List<CacheResponse>，实际类型={0}", data?.GetType().Name ?? "null");
+                        _log.LogWarning("批量缓存同步数据格式无效,期望List<CacheResponse>、CacheResponse或CacheRequest,实际类型={0}",
+                            data?.GetType().Name ?? "null");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _log.LogError(ex, "处理批量缓存同步命令失败，命令ID={0}", packet.CommandId);
+                    _log.LogError(ex, "处理批量缓存同步命令失败,命令ID={0}", packet.CommandId);
+                    // 不抛出异常,避免影响其他命令处理
                 }
             });
         }

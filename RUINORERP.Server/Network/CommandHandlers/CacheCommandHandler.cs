@@ -12,6 +12,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.Cache;
+using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Cache;
@@ -383,21 +384,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     { "SourceSessionId", excludeSessionId ?? "Server" }
                 };
 
-                // 构建推送数据包 - 使用CacheResponse作为推送数据
-                var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, cacheResponse)
-                    .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerRequest);
-
-                // 序列化数据包
-                var serializedData = JsonCompressionSerializationService.Serialize(package).ToArray();
-
-                // 加密数据
-                var originalData = new OriginalData(
-                    (byte)package.CommandId.Category,
-                    new byte[] { package.CommandId.OperationCode },
-                    serializedData
-                );
-                var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
-
                 // 获取目标会话并推送
                 var allSessions = _sessionService.GetAllUserSessions();
                 var targetSessions = allSessions.Where(s => targetSessionIds.Contains(s.SessionID)).ToList();
@@ -416,7 +402,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     try
                     {
-                        await sessionInfo.SendAsync(encryptedData.ToArray(), cancellationToken);
+                        // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含打包、序列化、加密和发送过程
+                        await _sessionService.SendPacketCoreAsync<CacheRequest>(sessionInfo, CacheCommands.CacheSync, request, 30000, cancellationToken, PacketDirection.ServerResponse);
                         successCount++;
                         LogDebug($"成功推送缓存更新到会话: {sessionInfo.SessionID}, 表: {request.TableName}");
                     }
@@ -864,18 +851,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                // 创建更新通知
-                var updateNotification = new
-                {
-                    Type = "Update",
-                    TableName = tableName,
-                    Timestamp = DateTime.Now,
-                    Data = data
-                };
 
-                // 序列化通知
-                string json = JsonConvert.SerializeObject(updateNotification);
-                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
 
                 // 只广播给订阅了该表的客户端
                 var subscribers = _subscriptionManager.GetSubscribers(tableName);
@@ -885,13 +861,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 int successCount = 0;
                 int failCount = 0;
 
+                //这里要调试。要看引用方的数据情况
+                CacheRequest cacheRequest = CacheRequest.Create(tableName);
+                cacheRequest.CacheData = new CacheData
+                {
+                    TableName = tableName,
+                    //  Data = JsonConvert.SerializeObject(data),
+                    CacheTime = DateTime.Now,
+                    ExpirationTime = DateTime.Now.AddMinutes(30),
+                    Version = "1.0"
+                };
+
                 foreach (var session in targetSessions)
                 {
                     try
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-                            await (session).SendAsync(dataBytes);
+                            // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含加密和构建过程
+                            await _sessionService.SendPacketCoreAsync<CacheRequest>(session, CacheCommands.CacheSync, cacheRequest, 30000, CancellationToken.None, PacketDirection.ServerResponse);
                             successCount++;
                         }
                     }
@@ -1028,10 +1016,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     Timestamp = DateTime.Now
                 };
 
-                // 序列化通知
-                string json = JsonConvert.SerializeObject(notification);
-                byte[] dataBytes = Encoding.UTF8.GetBytes(json);
-
                 // 只广播给订阅了该表的客户端（排除发送者）
                 var subscribers = _subscriptionManager.GetSubscribers(request.TableName);
                 var allSessions = _sessionService.GetAllUserSessions();
@@ -1050,7 +1034,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         if (session != null && !string.IsNullOrEmpty(session.SessionID))
                         {
-                            await (session).SendAsync(dataBytes);
+                            // 使用ISessionService.SendPacketCoreAsync统一处理发送，包含加密和构建过程
+                            await _sessionService.SendPacketCoreAsync<CacheRequest>(session, CacheCommands.CacheSync, request, 30000, CancellationToken.None, PacketDirection.ServerResponse);
                             successCount++;
                         }
                     }

@@ -1540,8 +1540,6 @@ namespace RUINORERP.UI
 
         // 锁定状态标签
         private ToolStripStatusLabel _lockStatusLabel;
-        // 当前锁定状态
-        private bool _isLocked = false;
 
         /// <summary>
         /// 更新锁定状态显示
@@ -1549,7 +1547,7 @@ namespace RUINORERP.UI
         /// <param name="isLocked">是否锁定</param>
         public void UpdateLockStatus(bool isLocked)
         {
-            _isLocked = isLocked;
+            IsLocked = isLocked; // 更新系统级锁定状态
             if (_lockStatusLabel != null && this.InvokeRequired)
             {
                 this.Invoke(new Action(() =>

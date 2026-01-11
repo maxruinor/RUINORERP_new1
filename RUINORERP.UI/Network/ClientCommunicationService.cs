@@ -504,6 +504,7 @@ namespace RUINORERP.UI.Network
                                 // 如果之前是锁定状态，现在应该解除锁定
                                 if (MainForm.Instance.IsLocked)
                                 {
+                                    // 更新系统级锁定状态
                                     MainForm.Instance.UpdateLockStatus(false);
                                 }
                             }));
@@ -752,31 +753,8 @@ namespace RUINORERP.UI.Network
                     _connectionManager.StopAutoReconnect();
                     // 停止心跳检测，因为系统已进入锁定状态
                     StopHeartbeat();
-                    // 异步触发阈值事件
+                    // 异步触发阈值事件，由MainForm的事件处理程序负责系统锁定
                     Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
-                    
-                    // 确保MainForm进入锁定状态
-                    if (MainForm.Instance != null && !MainForm.Instance.IsLocked)
-                    {
-                        try
-                        {
-                            if (MainForm.Instance.InvokeRequired)
-                            {
-                                MainForm.Instance.BeginInvoke(new Action(() =>
-                                {
-                                    MainForm.Instance.UpdateLockStatus(true);
-                                }));
-                            }
-                            else
-                            {
-                                MainForm.Instance.UpdateLockStatus(true);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogWarning(ex, "更新MainForm锁定状态时发生异常");
-                        }
-                    }
                 }
             }
         }

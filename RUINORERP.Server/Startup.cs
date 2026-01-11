@@ -476,6 +476,14 @@ namespace RUINORERP.Server
 
 
 
+
+
+            //// 注册统一重试策略服务 (Phase 3.1 优化)
+            //services.AddSingleton<RetryPolicy>();
+            //services.AddSingleton<RetryPolicy.RetryConfig>();
+
+
+
             //Add Memory Cache - 统一配置单个MemoryCache实例，避免重复注册占用内存
             services.AddOptions();
             services.AddMemoryCache(options =>

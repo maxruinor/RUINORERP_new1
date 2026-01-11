@@ -56,7 +56,10 @@ namespace RUINORERP.Server.SmartReminder
             {
                 // 这里可以执行一个简单的数据库查询或缓存检查
                 var quickTestKey = "HealthCheck_QuickTest";
-                _cache.Set(quickTestKey, DateTime.Now, TimeSpan.FromSeconds(5));
+                var options = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromSeconds(5))
+                    .SetSize(1); // Phase 1.4 修复：指定缓存项大小（必需，因为Startup.cs中设置了SizeLimit）
+                _cache.Set(quickTestKey, DateTime.Now, options);
                 return _cache.TryGetValue(quickTestKey, out _);
             }
             catch (Exception ex)
@@ -296,7 +299,8 @@ namespace RUINORERP.Server.SmartReminder
                     .RegisterPostEvictionCallback((key, value, reason, state) =>
                     {
                         _logger.LogDebug("规则缓存已过期或被移除，原因: {Reason}", reason);
-                    });
+                    })
+                    .SetSize(1); // Phase 1.4 修复：指定缓存项大小（必需，因为Startup.cs中设置了SizeLimit）
 
                 _cache.Set(cacheKey, policies, cacheOptions);
 

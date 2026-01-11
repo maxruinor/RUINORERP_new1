@@ -99,6 +99,43 @@ namespace RUINORERP.Server
         public static string AppVersion { get; internal set; }
 
         /// <summary>
+        /// Phase 3.2 优化：配置线程池参数
+        /// 根据系统资源动态调整线程池，提高并发性能
+        /// </summary>
+        private static void ConfigureThreadPool()
+        {
+            try
+            {
+                // 获取系统CPU核心数
+                int processorCount = Environment.ProcessorCount;
+
+                // 计算最小和最大工作线程数
+                // 最小线程数 = CPU核心数 * 2（确保有足够的线程处理并发请求）
+                // 最大线程数 = CPU核心数 * 10（允许在负载高峰时扩展）
+                int minWorkerThreads = processorCount * 2;
+                int minCompletionPortThreads = processorCount;
+                int maxWorkerThreads = processorCount * 10;
+                int maxCompletionPortThreads = processorCount * 5;
+
+                // 设置最小工作线程数（避免线程创建延迟）
+                ThreadPool.SetMinThreads(minWorkerThreads, minCompletionPortThreads);
+
+                // 设置最大工作线程数（限制线程数量避免过度消耗资源）
+                ThreadPool.SetMaxThreads(maxWorkerThreads, maxCompletionPortThreads);
+
+                // 记录配置结果
+                Console.WriteLine($"[线程池配置] CPU核心数: {processorCount}");
+                Console.WriteLine($"[线程池配置] 最小工作线程: {minWorkerThreads}, 最小IO线程: {minCompletionPortThreads}");
+                Console.WriteLine($"[线程池配置] 最大工作线程: {maxWorkerThreads}, 最大IO线程: {maxCompletionPortThreads}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[线程池配置失败] {ex.Message}");
+                // 失败不影响程序启动，使用默认配置
+            }
+        }
+
+        /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
@@ -106,6 +143,9 @@ namespace RUINORERP.Server
         {
             // 初始化雪花ID生成器
             new IdHelperBootstrapper().SetWorkderId(1).Boot();
+
+            // Phase 3.2 优化：配置线程池参数，提高并发性能
+            ConfigureThreadPool();
 
 //#if DEBUG
 //            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行

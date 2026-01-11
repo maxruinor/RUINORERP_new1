@@ -146,21 +146,22 @@ namespace RUINORERP.Server.SmartReminder
                 if (stock != null)
                 {
                     // 根据业务重要性设置不同的过期时间
-                    TimeSpan expiration = IsHighPriorityProduct(productId) 
-                        ? TimeSpan.FromSeconds(HIGH_PRIORITY_CACHE_EXPIRATION_SECONDS) 
+                    TimeSpan expiration = IsHighPriorityProduct(productId)
+                        ? TimeSpan.FromSeconds(HIGH_PRIORITY_CACHE_EXPIRATION_SECONDS)
                         : TimeSpan.FromSeconds(DEFAULT_CACHE_EXPIRATION_SECONDS);
-                    
+
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
                         .SetAbsoluteExpiration(expiration)
                         .SetSlidingExpiration(TimeSpan.FromSeconds(10))
                         .RegisterPostEvictionCallback(OnCacheEvicted)
-                        .SetPriority(IsHighPriorityProduct(productId) 
-                            ? CacheItemPriority.High 
-                            : CacheItemPriority.Normal);
-                    
+                        .SetPriority(IsHighPriorityProduct(productId)
+                            ? CacheItemPriority.High
+                            : CacheItemPriority.Normal)
+                        .SetSize(1); // Phase 1.4 修复：指定缓存项大小（必需，因为Startup.cs中设置了SizeLimit）
+
                     _cache.Set(cacheKey, stock, cacheEntryOptions);
                     _cacheKeys.TryAdd(cacheKey, true);
-                    
+
                     // 更新统计信息
                     UpdateCacheSize();
                 }
@@ -427,20 +428,21 @@ namespace RUINORERP.Server.SmartReminder
                 return;
                 
             string cacheKey = $"{STOCK_CACHE_PREFIX}{stock.ProdDetailID}";
-            
+
             // 根据业务重要性设置不同的过期时间
-            TimeSpan expiration = IsHighPriorityProduct(stock.ProdDetailID) 
-                ? TimeSpan.FromSeconds(HIGH_PRIORITY_CACHE_EXPIRATION_SECONDS) 
+            TimeSpan expiration = IsHighPriorityProduct(stock.ProdDetailID)
+                ? TimeSpan.FromSeconds(HIGH_PRIORITY_CACHE_EXPIRATION_SECONDS)
                 : TimeSpan.FromSeconds(DEFAULT_CACHE_EXPIRATION_SECONDS);
-            
+
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(expiration)
                 .SetSlidingExpiration(TimeSpan.FromSeconds(10))
                 .RegisterPostEvictionCallback(OnCacheEvicted)
-                .SetPriority(IsHighPriorityProduct(stock.ProdDetailID) 
-                    ? CacheItemPriority.High 
-                    : CacheItemPriority.Normal);
-            
+                .SetPriority(IsHighPriorityProduct(stock.ProdDetailID)
+                    ? CacheItemPriority.High
+                    : CacheItemPriority.Normal)
+                .SetSize(1); // Phase 1.4 修复：指定缓存项大小（必需，因为Startup.cs中设置了SizeLimit）
+
             _cache.Set(cacheKey, stock, cacheEntryOptions);
             _cacheKeys.TryAdd(cacheKey, true);
             UpdateCacheSize();

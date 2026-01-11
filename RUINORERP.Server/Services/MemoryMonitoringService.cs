@@ -19,6 +19,12 @@ namespace RUINORERP.Server.Services
         // 内存使用阈值（以MB为单位）
         public long WarningThreshold { get; set; } = 1024; // 1GB
         public long CriticalThreshold { get; set; } = 2048; // 2GB
+
+        // Phase 3.3 优化：自动垃圾回收配置
+        private long _autoGCThreshold = 1536; // 1.5GB 时自动GC
+        private long _lastGCTime = 0; // 上次GC时间（Unix时间戳）
+        private const int GC_COOLDOWN_SECONDS = 300; // GC冷却时间：5分钟
+        private const int MAX_GC_ATTEMPTS_PER_HOUR = 12; // 每小时最多GC 12次
         
         // 内存监控事件
         public event EventHandler<MemoryUsageEventArgs> MemoryUsageWarning;
@@ -63,7 +69,16 @@ namespace RUINORERP.Server.Services
             {
                 var memoryInfo = GetCurrentMemoryUsage();
                 _logger.LogDebug($"内存使用情况 - 工作集: {memoryInfo.WorkingSetMB} MB, 托管内存: {memoryInfo.ManagedMemoryMB} MB");
-                
+
+                // Phase 3.3 优化：自动垃圾回收
+                long currentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                if (memoryInfo.WorkingSetMB >= _autoGCThreshold &&
+                    (currentTime - _lastGCTime) > GC_COOLDOWN_SECONDS)
+                {
+                    _logger.LogInformation($"内存使用达到自动GC阈值: {memoryInfo.WorkingSetMB} MB (阈值: {_autoGCThreshold} MB)");
+                    PerformAutoGC();
+                }
+
                 // 根据内存使用情况触发相应事件
                 if (memoryInfo.WorkingSetMB >= CriticalThreshold)
                 {
@@ -83,6 +98,33 @@ namespace RUINORERP.Server.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "监控内存使用情况时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// Phase 3.3 优化：执行自动垃圾回收
+        /// </summary>
+        private void PerformAutoGC()
+        {
+            try
+            {
+                _logger.LogInformation("开始自动垃圾回收");
+                var beforeMemory = GetCurrentMemoryUsage();
+
+                // 执行垃圾回收
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
+                GC.WaitForPendingFinalizers();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized, blocking: true, compacting: true);
+
+                var afterMemory = GetCurrentMemoryUsage();
+                _lastGCTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+                _logger.LogInformation($"自动垃圾回收完成 - 回收前: {beforeMemory.WorkingSetMB} MB, 回收后: {afterMemory.WorkingSetMB} MB, " +
+                                      $"回收了 {(beforeMemory.WorkingSet - afterMemory.WorkingSet) / (1024 * 1024)} MB");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "执行自动垃圾回收时发生错误");
             }
         }
         

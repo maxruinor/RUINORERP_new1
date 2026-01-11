@@ -402,35 +402,38 @@ namespace RUINORERP.UI
         {
             try
             {
-
-                //在指定的毫秒数后取消task执行
-                source.CancelAfter(0);
-                //取消任务后的回调
-                source.Token.Register(() =>
+                // 创建局部的取消令牌源，避免静态实例导致的问题
+                using (var localSource = new CancellationTokenSource())
                 {
-                    //不延迟会获取不到正确的状态
-                    Thread.Sleep(50);
-                });
+                    // 立即取消
+                    localSource.Cancel();
+                }
 
                 // 取消登录时，如果已连接则断开连接
                 if (MainForm.Instance?.communicationService?.IsConnected == true)
                 {
-                    await MainForm.Instance.communicationService.Disconnect();
-                    MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                    // 使用异步断开连接，但设置超时以避免长时间等待
+                    var disconnectTask = MainForm.Instance.communicationService.Disconnect();
+                    if (await Task.WhenAny(disconnectTask, Task.Delay(2000)) == disconnectTask)
+                    {
+                        // 断开连接成功完成
+                        await disconnectTask;
+                        MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                    }
+                    else
+                    {
+                        // 断开连接超时，继续取消流程
+                    }
                 }
 
+                // 设置对话框结果并关闭
                 this.DialogResult = DialogResult.Cancel;
                 this.Close();
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-            }
-            finally
-            {
-                Application.DoEvents();
-                Application.Exit();
+                // 记录错误但不中断流程
+                MainForm.Instance?.logger?.LogError(ex, "取消登录时发生错误");
             }
         }
 

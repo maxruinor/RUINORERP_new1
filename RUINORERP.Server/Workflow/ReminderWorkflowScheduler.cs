@@ -55,10 +55,10 @@ namespace RUINORERP.Server.Workflow
             try
             {
                 _isRunning = true;
-                
-                // 立即执行一次检查
-                Task.Run(() => CheckAndStartReminderWorkflowsAsync());
-                
+
+                // Phase 3.4 优化：移除不必要的Task.Run，Timer回调已经是异步的
+                // Task.Run(() => CheckAndStartReminderWorkflowsAsync());
+
                 // 启动定时器，每分钟检查一次
                 _checkTimer = new Timer(
                     async _ => await CheckAndStartReminderWorkflowsAsync(),

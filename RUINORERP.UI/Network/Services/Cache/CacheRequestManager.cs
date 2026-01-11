@@ -58,15 +58,8 @@ namespace RUINORERP.UI.Network.Services.Cache
             cancellationToken.ThrowIfCancellationRequested();
 
             // 检查限流和缓存有效性，任一条件不满足则跳过请求
-            if (!CheckRequestFrequency(tableName, CacheOperation.Get))
+            if (!CheckRequestFrequency(tableName, CacheOperation.Get) || IsLocalCacheValid(tableName))
             {
-                _log.LogDebug("请求频率过高，跳过请求，表名={0}", tableName);
-                return;
-            }
-
-            if (IsLocalCacheValid(tableName))
-            {
-                _log.LogDebug("本地缓存有效，跳过请求，表名={0}", tableName);
                 return;
             }
 
@@ -153,7 +146,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         /// <summary>
         /// 统一处理缓存请求
         /// </summary>
-        /// <param name="command">命令ID 区别是同步，还是操作</param>  
+        /// <param name="command">命令ID 区别是同步，还是操作</param>
         /// <param name="request">请求参数</param>
         /// <param name="cancellationToken">取消令牌</param>
         internal async Task<CacheResponse> ProcessCacheOperationAsync(CommandId command, CacheRequest request, CancellationToken cancellationToken = default)
@@ -168,7 +161,6 @@ namespace RUINORERP.UI.Network.Services.Cache
             // 检查请求频率
             if (!CheckRequestFrequency(request.TableName, request.Operation))
             {
-                _log.LogDebug("请求频率过高，跳过请求，表名={0}, 操作类型={1}", request.TableName, request.Operation);
                 return null;
             }
 
@@ -183,7 +175,6 @@ namespace RUINORERP.UI.Network.Services.Cache
             }
             catch (OperationCanceledException)
             {
-                _log.LogDebug("缓存请求被取消，表名={0}, 操作类型={1}", request.TableName, request.Operation);
                 throw;
             }
             catch (Exception ex)

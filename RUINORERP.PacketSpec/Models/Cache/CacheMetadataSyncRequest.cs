@@ -126,10 +126,14 @@ namespace RUINORERP.PacketSpec.Models.Cache
     /// <summary>
     /// 缓存元数据同步响应
     /// </summary>
+    [Serializable]
     public class CacheMetadataSyncResponse : ResponseBase
     {
-
+        /// <summary>
+        /// 缓存元数据字典
+        /// </summary>
         public Dictionary<string, CacheSyncInfo> CacheMetadataData { get; set; }
+
         /// <summary>
         /// 成功更新的表数量
         /// </summary>
@@ -145,32 +149,39 @@ namespace RUINORERP.PacketSpec.Models.Cache
         /// </summary>
         public DateTime ClientSyncTimestamp { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// 无参构造函数
+        /// </summary>
+        public CacheMetadataSyncResponse() : base()
+        {
+            CacheMetadataData = new Dictionary<string, CacheSyncInfo>();
+        }
 
         /// <summary>
         /// 构造函数（成功响应）
         /// </summary>
         /// <param name="updatedCount">成功更新的表数量</param>
         /// <param name="skippedCount">跳过的表数量</param>
-        /// <param name="clientSessionId">客户端会话ID</param>
-        public CacheMetadataSyncResponse(int updatedCount, int skippedCount, Dictionary<string, CacheSyncInfo> cacheMetadataData)
+        /// <param name="cacheMetadataData">缓存元数据</param>
+        public CacheMetadataSyncResponse(int updatedCount, int skippedCount, Dictionary<string, CacheSyncInfo> cacheMetadataData) : base()
         {
             IsSuccess = true;
             UpdatedCount = updatedCount;
             SkippedCount = skippedCount;
             ClientSyncTimestamp = DateTime.Now;
-            CacheMetadataData = cacheMetadataData;
+            CacheMetadataData = cacheMetadataData ?? new Dictionary<string, CacheSyncInfo>();
         }
 
         /// <summary>
         /// 构造函数（失败响应）
         /// </summary>
         /// <param name="errorMessage">错误消息</param>
-        /// <param name="clientSessionId">客户端会话ID</param>
-        public CacheMetadataSyncResponse(string errorMessage)
+        public CacheMetadataSyncResponse(string errorMessage) : base()
         {
             IsSuccess = false;
             ErrorMessage = errorMessage;
             ClientSyncTimestamp = DateTime.Now;
+            CacheMetadataData = new Dictionary<string, CacheSyncInfo>();
         }
     }
 }

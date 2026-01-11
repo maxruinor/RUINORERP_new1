@@ -30,6 +30,7 @@ using System.IO.Packaging;
 using RUINORERP.PacketSpec.Serialization;
 using System.Net.Sockets;
 using System.Net;
+using System.Management;
 
 namespace RUINORERP.Server.Network.Core
 {
@@ -789,7 +790,19 @@ namespace RUINORERP.Server.Network.Core
                             {
                                 if (line.Contains($":{port}"))
                                 {
-                                    processInfo.AppendLine($"   {line.Trim()}");
+                                    // 解析PID
+                                    var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                    if (parts.Length >= 5)
+                                    {
+                                        var pidStr = parts[4];
+                                        if (int.TryParse(pidStr, out int pid))
+                                        {
+                                            // 获取进程信息
+                                            var processDetails = GetProcessDetails(pid);
+                                            processInfo.AppendLine($"   {line.Trim()}");
+                                            processInfo.AppendLine($"   进程信息: {processDetails}");
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -798,9 +811,49 @@ namespace RUINORERP.Server.Network.Core
                 
                 return processInfo.Length > 0 ? processInfo.ToString() : "无法获取进程信息";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger?.LogWarning(ex, "获取端口占用进程信息时发生异常");
                 return "无法获取进程信息";
+            }
+        }
+
+        /// <summary>
+        /// 根据进程ID获取进程的详细信息
+        /// </summary>
+        /// <param name="pid">进程ID</param>
+        /// <returns>进程详细信息</returns>
+        private string GetProcessDetails(int pid)
+        {
+            try
+            {
+                using (var process = Process.GetProcessById(pid))
+                {
+                    string processName = process.ProcessName;
+                    string processPath = string.Empty;
+                    
+                    // 尝试获取进程路径
+                    try
+                    {
+                        processPath = process.MainModule?.FileName ?? "无法获取路径";
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, $"获取进程 {pid} 路径时发生异常，可能需要管理员权限");
+                        processPath = "无法获取路径(需要管理员权限)";
+                    }
+                    
+                    return $"PID: {pid}, 名称: {processName}, 路径: {processPath}";
+                }
+            }
+            catch (ArgumentException)
+            {
+                return $"PID: {pid}, 进程已终止";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"获取进程 {pid} 详情时发生异常");
+                return $"PID: {pid}, 无法获取详情";
             }
         }
         

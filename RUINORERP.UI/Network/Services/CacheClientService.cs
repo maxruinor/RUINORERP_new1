@@ -119,19 +119,20 @@ namespace RUINORERP.UI.Network.Services
             {
                 try
                 {
-                    if (packet.Request != null)
-                    {
-
-                    }
-
+                    // 优先处理packet.Request（服务器主动推送的数据）
                     if (packet.Request is CacheRequest cacheRequest)
                     {
-                        // 处理缓存响应
+                        // 处理缓存请求（服务器推送的）
                         _cacheResponseProcessor.ProcessCacheRequest(cacheRequest);
+                    }
+                    else if (data is CacheRequest cacheRequestData)
+                    {
+                        // 处理缓存数据（备用路径）
+                        _cacheResponseProcessor.ProcessCacheRequest(cacheRequestData);
                     }
                     else
                     {
-                        _log.LogWarning("缓存同步数据格式无效，期望CacheResponse，实际类型={0}", data?.GetType().Name ?? "null");
+                        _log.LogWarning("缓存同步数据格式无效，期望CacheRequest，实际类型={0}", data?.GetType().Name ?? "null");
                     }
                 }
                 catch (Exception ex)
@@ -181,7 +182,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 注册缓存批量同步命令处理器
+        /// 注册缓存批量同步命令处理器 这里还没有实现
         /// </summary>
         private void RegisterCacheBatchSyncHandler()
         {

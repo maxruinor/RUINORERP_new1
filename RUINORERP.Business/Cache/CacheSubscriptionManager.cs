@@ -43,8 +43,6 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentNullException(nameof(sessionId), "会话ID不能为空");
             }
 
-            _logger.LogDebug("开始添加会话 {SessionId} 对表 {TableName} 的订阅", sessionId, tableName);
-
             await Task.Run(() =>
             {
                 lock (_lock)
@@ -57,8 +55,6 @@ namespace RUINORERP.Business.Cache
                     subscribers.Add(sessionId);
                 }
             });
-
-            _logger.LogDebug("会话 {SessionId} 对表 {TableName} 的订阅已添加", sessionId, tableName);
         }
 
         /// <summary>
@@ -78,9 +74,6 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentNullException(nameof(sessionId), "会话ID不能为空");
             }
 
-            _logger.LogDebug("开始取消会话 {SessionId} 对表 {TableName} 的订阅", sessionId, tableName);
-
-
             lock (_lock)
             {
                 if (_tableSubscribers.TryGetValue(tableName, out var subscribers))
@@ -94,9 +87,6 @@ namespace RUINORERP.Business.Cache
                     }
                 }
             }
-
-
-            _logger.LogDebug("会话 {SessionId} 对表 {TableName} 的订阅已取消", sessionId, tableName);
         }
 
         /// <summary>
@@ -111,9 +101,7 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentNullException(nameof(sessionId), "会话ID不能为空");
             }
 
-            _logger.LogDebug("开始取消会话 {SessionId} 的所有订阅", sessionId);
             int removedCount = 0;
-
 
             lock (_lock)
             {
@@ -135,10 +123,6 @@ namespace RUINORERP.Business.Cache
                     }
                 }
             }
-
-
-            _logger.LogDebug("会话 {SessionId} 的所有订阅已取消，共 {RemovedCount} 个表",
-                sessionId, removedCount);
 
             return removedCount;
         }
@@ -205,7 +189,6 @@ namespace RUINORERP.Business.Cache
                 throw new ArgumentNullException(nameof(sessionId), "会话ID不能为空");
             }
 
-            _logger.LogDebug("获取会话 {SessionId} 订阅的所有表名", sessionId);
             List<string> subscribedTables = new List<string>();
 
             lock (_lock)
@@ -219,7 +202,6 @@ namespace RUINORERP.Business.Cache
                 }
             }
 
-            _logger.LogDebug("会话 {SessionId} 订阅了 {Count} 个表", sessionId, subscribedTables.Count);
             return subscribedTables;
         }
 

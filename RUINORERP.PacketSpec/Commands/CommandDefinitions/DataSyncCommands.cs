@@ -3,7 +3,7 @@
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 数据同步相关命令
+    /// 数据同步相关命令 将来使用，与缓存类似。比缓存简单。就是一个查询的过程
     /// </summary>
     public static class DataSyncCommands
     {

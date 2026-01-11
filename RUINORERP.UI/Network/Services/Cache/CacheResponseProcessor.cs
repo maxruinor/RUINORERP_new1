@@ -145,7 +145,7 @@ namespace RUINORERP.UI.Network.Services.Cache
 
 
         /// <summary>
-        /// 处理缓存请（使用完整的响应对象）
+        /// 处理缓存请求（使用完整的响应对象）
         /// 服务器主动推送过来的缓存请求
         /// </summary>
         public void ProcessCacheRequest(CacheRequest request)
@@ -159,30 +159,32 @@ namespace RUINORERP.UI.Network.Services.Cache
 
             try
             {
-                // 统一验证成功状态和表名（Manage操作允许失败状态）
-                if (request != null && request.CacheData == null)
-                {
-                    _log?.LogWarning("服务缓存推送数据异常，表名={0}, 操作类型={1}", request.TableName, request.Operation);
-                }
-
                 switch (request.Operation)
                 {
                     case CacheOperation.Get:
-                    case CacheOperation.Set:
-                        // 对于Set操作，先清理旧缓存
-                        if (request.Operation == CacheOperation.Set)
-                        {
-                            CleanCacheSafely(request.TableName);
-                        }
+                        // Get操作直接处理数据
+                        ProcessCacheData(request.TableName, request.CacheData?.EntityByte);
+                        break;
 
-                        ProcessCacheData(request.TableName, request.CacheData.EntityByte);
+                    case CacheOperation.Set:
+                        // Set操作：更新或添加单个实体到缓存（不清空整个表）
+                        ProcessSingleEntityUpdate(request.TableName, request.CacheData?.EntityByte);
                         break;
 
                     case CacheOperation.Remove:
                         // 统一处理删除操作
                         if (!string.IsNullOrEmpty(request.TableName))
                         {
-                            CleanCacheSafely(request.TableName);
+                            if (request.PrimaryKeyValue != null)
+                            {
+                                // 删除单个实体
+                                RemoveSingleEntity(request.TableName, request.PrimaryKeyValue);
+                            }
+                            else
+                            {
+                                // 清空整个表
+                                CleanCacheSafely(request.TableName);
+                            }
                         }
                         else
                         {
@@ -472,7 +474,6 @@ namespace RUINORERP.UI.Network.Services.Cache
             {
                 if (data == null)
                 {
-                    _log?.LogWarning("缓存数据为空，表名={0}", tableName);
                     return;
                 }
 
@@ -480,7 +481,6 @@ namespace RUINORERP.UI.Network.Services.Cache
                 var entityType = _cacheManager.GetEntityType(tableName);
                 if (entityType == null)
                 {
-                    _log?.LogWarning("未找到表{0}的实体类型", tableName);
                     return;
                 }
 
@@ -489,17 +489,139 @@ namespace RUINORERP.UI.Network.Services.Cache
                 if (entityList != null && entityList.Count > 0)
                 {
                     _cacheManager.UpdateEntityList(tableName, entityList);
-                    _log?.LogDebug("更新缓存成功，表名={0}，记录数={1}", tableName, entityList.Count);
-                }
-                else
-                {
-                    _log?.LogDebug("缓存数据为空列表或转换失败，表名={0}", tableName);
                 }
             }
             catch (Exception ex)
             {
                 _log?.LogError(ex, "处理缓存数据失败，表名={0}", tableName);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 处理单个实体的更新（不清理整个表，只更新单个实体）
+        /// </summary>
+        private void ProcessSingleEntityUpdate(string tableName, object data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    return;
+                }
+
+                // 获取实体类型
+                var entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType == null)
+                {
+                    return;
+                }
+
+                // 转换数据为实体对象
+                var entity = ConvertToSingleEntity(data, entityType);
+                if (entity != null)
+                {
+                    // 使用UpdateEntity方法更新单个实体（会自动处理新增或更新）
+                    _cacheManager.UpdateEntity(tableName, entity);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "处理单个实体更新失败，表名={0}", tableName);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 删除单个实体
+        /// </summary>
+        private void RemoveSingleEntity(string tableName, object primaryKeyValue)
+        {
+            try
+            {
+                if (primaryKeyValue == null)
+                {
+                    return;
+                }
+
+                // 尝试将主键值转换为long类型
+                long entityId;
+                if (primaryKeyValue is long longValue)
+                {
+                    entityId = longValue;
+                }
+                else if (primaryKeyValue is int intValue)
+                {
+                    entityId = intValue;
+                }
+                else if (long.TryParse(primaryKeyValue.ToString(), out entityId))
+                {
+                    // 成功转换
+                }
+                else
+                {
+                    _log?.LogWarning("无法将主键值转换为long类型，表名={0}, 值={1}", tableName, primaryKeyValue);
+                    return;
+                }
+
+                // 删除单个实体
+                _cacheManager.DeleteEntity(tableName, entityId);
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "删除单个实体失败，表名={0}", tableName);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 将数据转换为单个实体对象
+        /// </summary>
+        private object ConvertToSingleEntity(object data, Type entityType)
+        {
+            try
+            {
+                if (data is JArray jArray && jArray.Count > 0)
+                {
+                    // 如果是JArray，取第一个元素
+                    return JsonConvert.DeserializeObject(jArray.First.ToString(), entityType);
+                }
+                else if (data is JObject jObject)
+                {
+                    // 直接是单个对象
+                    return JsonConvert.DeserializeObject(jObject.ToString(), entityType);
+                }
+                else if (data is string jsonString && !string.IsNullOrEmpty(jsonString))
+                {
+                    try
+                    {
+                        // 尝试解析为JArray并取第一个
+                        var parsedJArray = JArray.Parse(jsonString);
+                        if (parsedJArray.Count > 0)
+                        {
+                            return JsonConvert.DeserializeObject(parsedJArray.First.ToString(), entityType);
+                        }
+                    }
+                    catch
+                    {
+                        // 尝试直接解析为单个对象
+                        try
+                        {
+                            return JsonConvert.DeserializeObject(jsonString, entityType);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log?.LogWarning(ex, "JSON字符串反序列化失败");
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "转换单个实体失败");
+                return null;
             }
         }
 

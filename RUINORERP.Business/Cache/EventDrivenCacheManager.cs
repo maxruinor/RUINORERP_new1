@@ -8,7 +8,7 @@ namespace RUINORERP.Business.Cache
 {
     /// <summary>
     /// 事件驱动缓存管理器，用于处理本地缓存变更事件
-    /// 可以被服务器和客户端共同使用
+    /// 可以被服务器和客户端共同使用 
     /// </summary>
     public class EventDrivenCacheManager
     {

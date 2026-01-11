@@ -79,8 +79,6 @@ namespace RUINORERP.UI.Common
 
             // 启动后台工作线程
             _backgroundWorker = Task.Run(() => BackgroundWorkerAsync(_cancellationTokenSource.Token));
-
-            _logger.LogDebug("后台缓存加载器已初始化");
         }
 
         /// <summary>
@@ -249,8 +247,6 @@ namespace RUINORERP.UI.Common
         /// </summary>
         private async Task BackgroundWorkerAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("后台缓存加载器工作线程已启动");
-
             try
             {
                 var cleanupInterval = TimeSpan.FromSeconds(10);

@@ -1538,9 +1538,6 @@ namespace RUINORERP.UI
 
 
 
-        // 锁定状态标签
-        private ToolStripStatusLabel _lockStatusLabel;
-
         /// <summary>
         /// 更新锁定状态显示
         /// </summary>
@@ -1548,12 +1545,12 @@ namespace RUINORERP.UI
         public void UpdateLockStatus(bool isLocked)
         {
             IsLocked = isLocked; // 更新系统级锁定状态
-            if (_lockStatusLabel != null && this.InvokeRequired)
+            if (this.InvokeRequired)
             {
                 this.Invoke(new Action(() =>
                 {
-                    _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
-                    _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+                    SystemOperatorState.Text = isLocked ? "锁定" : "正常";
+                    SystemOperatorState.ForeColor = isLocked ? Color.Red : Color.Green;
 
                     // 如果是解锁状态，检查是否有待处理的更新
                     if (!isLocked)
@@ -1562,10 +1559,10 @@ namespace RUINORERP.UI
                     }
                 }));
             }
-            else if (_lockStatusLabel != null)
+            else
             {
-                _lockStatusLabel.Text = isLocked ? "状态: 锁定" : "状态: 正常";
-                _lockStatusLabel.ForeColor = isLocked ? Color.Red : Color.Green;
+                SystemOperatorState.Text = isLocked ? "锁定" : "正常";
+                SystemOperatorState.ForeColor = isLocked ? Color.Red : Color.Green;
 
                 // 如果是解锁状态，检查是否有待处理的更新
                 if (!isLocked)
@@ -2027,6 +2024,27 @@ namespace RUINORERP.UI
                     }
 
                     await UIBizService.RequestCache(nameof(tb_RoleInfo));
+
+                    // 登录成功后自动订阅所有基础业务表,以便接收其他客户端的缓存变更推送
+                    try
+                    {
+                        var cacheClientService = Startup.GetFromFac<CacheClientService>();
+                        if (cacheClientService != null)
+                        {
+                            logger.LogInformation("登录成功,开始订阅所有基础业务表");
+                            await cacheClientService.SubscribeAllBaseTablesAsync();
+                            logger.LogInformation("登录成功,所有基础业务表订阅完成");
+                        }
+                        else
+                        {
+                            logger.LogWarning("CacheClientService未注册,无法自动订阅缓存表");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "登录后订阅基础业务表失败,但不影响登录流程");
+                        // 不抛出异常,允许登录继续
+                    }
 
                     if (loginForm.IsInitPassword)
                     {

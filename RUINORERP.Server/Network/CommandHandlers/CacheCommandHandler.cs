@@ -340,29 +340,58 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 // 获取订阅该表的会话列表
                 var subscribedSessions = _subscriptionManager.GetSubscribers(request.TableName);
-                if (subscribedSessions != null && subscribedSessions.Any())
+                if (subscribedSessions == null || !subscribedSessions.Any())
                 {
-                    // 排除发起变更的客户端
-                    var targetSessions = subscribedSessions.Where(s => s != excludeSessionId).ToList();
+                    return;
+                }
 
-                    var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, request)
-                        .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerRequest);
-                    var serializedData = JsonCompressionSerializationService.Serialize(package).ToArray();
+                // 排除发起变更的客户端
+                var targetSessionIds = subscribedSessions.Where(s => s != excludeSessionId).ToList();
+                if (!targetSessionIds.Any())
+                {
+                    return;
+                }
 
-                    var sessions = _sessionService.GetAllUserSessions(excludeSessionId);
-                    // 加密数据
-                    var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode },
-                        serializedData
-                    );
-                    var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
-                    // 广播给所有订阅的会话
-                    foreach (var sessionInfo in sessions)
+                // 构建推送数据包
+                var package = PacketModel.CreateFromRequest(CacheCommands.CacheSync, request)
+                    .WithDirection(PacketSpec.Enums.Core.PacketDirection.ServerRequest);
+
+                // 序列化数据包
+                var serializedData = JsonCompressionSerializationService.Serialize(package).ToArray();
+
+                // 加密数据
+                var originalData = new OriginalData(
+                    (byte)package.CommandId.Category,
+                    new byte[] { package.CommandId.OperationCode },
+                    serializedData
+                );
+                var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
+
+                // 获取目标会话并推送
+                var allSessions = _sessionService.GetAllUserSessions();
+                var targetSessions = allSessions.Where(s => targetSessionIds.Contains(s.SessionID)).ToList();
+
+                int successCount = 0;
+                int failCount = 0;
+
+                foreach (var sessionInfo in targetSessions)
+                {
+                    try
                     {
                         await sessionInfo.SendAsync(encryptedData.ToArray(), cancellationToken);
-                        //后面来具体实现 Todo 
-                        // await _sessionService.SendCommandToSession(sessionId, syncCommand, cancellationToken);
+                        successCount++;
                     }
+                    catch (Exception ex)
+                    {
+                        failCount++;
+                        LogError($"推送缓存更新到会话失败: {sessionInfo.SessionID}, 表: {request.TableName}, 错误: {ex.Message}");
+                    }
+                }
 
+                // 只在有失败时记录详细信息
+                if (failCount > 0)
+                {
+                    LogWarning($"广播缓存变更部分失败: 表={request.TableName}, 目标客户端数量={targetSessions.Count}, 成功={successCount}, 失败={failCount}");
                 }
             }
             catch (Exception ex)

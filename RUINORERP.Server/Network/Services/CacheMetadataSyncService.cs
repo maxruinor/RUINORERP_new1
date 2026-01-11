@@ -55,7 +55,6 @@ namespace RUINORERP.Server.Network.Services
 
                 if (serverSyncData == null || serverSyncData.Count == 0)
                 {
-                    _logger?.Debug("服务器缓存元数据为空，跳过同步操作");
                     return true; // 不视为错误
                 }
 
@@ -93,16 +92,12 @@ namespace RUINORERP.Server.Network.Services
             try
             {
                 var sessions = _sessionService.GetAllUserSessions();
-                if (sessions == null || sessions.Count() == 0)
+                if (sessions == null || !sessions.Any())
                 {
-                    _logger?.Debug("没有在线用户，跳过缓存元数据广播");
                     return 0;
                 }
 
-                int successCount = 0;
                 int totalCount = sessions.Count();
-
-                _logger?.Debug("开始向 {UserCount} 个在线用户广播缓存元数据更新", totalCount);
 
                 // 并行发送同步请求
                 var tasks = new Task<bool>[totalCount];
@@ -116,17 +111,13 @@ namespace RUINORERP.Server.Network.Services
                 var results = await Task.WhenAll(tasks);
 
                 // 统计成功数量
-                successCount = 0;
-                for (int i = 0; i < totalCount; i++)
-                {
-                    if (results[i])
-                    {
-                        successCount++;
-                    }
-                }
+                int successCount = results.Count(r => r);
 
-                _logger?.Debug("缓存元数据广播完成，成功 {SuccessCount}/{TotalCount} 个用户",
-                    successCount, totalCount);
+                // 只在有失败时记录详细信息
+                if (successCount < totalCount)
+                {
+                    _logger.LogWarning("缓存元数据广播完成，成功 {SuccessCount}/{TotalCount} 个用户", successCount, totalCount);
+                }
 
                 return successCount;
             }
@@ -152,12 +143,7 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
 
-                if (response.IsSuccess)
-                {
-                    _logger?.Debug("会话 {SessionId} 缓存元数据同步成功：更新 {UpdatedCount} 个表，跳过 {SkippedCount} 个表",
-                        sessionId, response.UpdatedCount, response.SkippedCount);
-                }
-                else
+                if (!response.IsSuccess)
                 {
                     _logger?.LogError("会话 {SessionId} 缓存元数据同步失败：{Error}",
                         sessionId, response.ErrorMessage);

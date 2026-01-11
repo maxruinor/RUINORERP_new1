@@ -1222,7 +1222,7 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 更新实体变更后的缓存同步元数据
+        /// 更新实体变更后的缓存同步元数据1
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="dataCount">可选的数据数量，如果为null则从缓存计算</param>

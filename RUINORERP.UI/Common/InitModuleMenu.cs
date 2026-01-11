@@ -315,7 +315,11 @@ namespace RUINORERP.UI.Common
                     }
                 }
 
-                // 处理子菜单的下级菜单项
+                // 处理子菜单的下级菜单项 - 批量模式
+                var menuAssemblyPairs = new List<(MenuAttrAssemblyInfo, tb_MenuInfo)>();
+                var newActionMenus = new List<tb_MenuInfo>();
+                
+                // 第一阶段：收集所有待添加的菜单项
                 foreach (var nextMenuInfo in existMenuInfoList)
                 {
                     var menulist = list.Where(it =>
@@ -324,8 +328,38 @@ namespace RUINORERP.UI.Common
 
                     foreach (var menuinfo in menulist)
                     {
-                        await AddMenuItemAsync(menuinfo, nextMenuInfo, mc);
+                        // 查找或创建菜单项
+                        var actionMenu = await CreateMenuItemIfNotExistsAsync(menuinfo, nextMenuInfo);
+                        if (actionMenu != null)
+                        {
+                            menuAssemblyPairs.Add((menuinfo, actionMenu));
+                            if (actionMenu.MenuID == 0)
+                            {
+                                newActionMenus.Add(actionMenu);
+                            }
+                        }
                     }
+                }
+                
+                // 第二阶段：批量插入新菜单项
+                if (newActionMenus.Any())
+                {
+                    var actionMenuIds = await MainForm.Instance.AppContext.Db
+                        .Insertable(newActionMenus)
+                        .ExecuteReturnSnowflakeIdListAsync();
+                    
+                    // 确保ID正确分配给实体
+                    for (int i = 0; i < newActionMenus.Count; i++)
+                    {
+                        newActionMenus[i].MenuID = actionMenuIds[i];
+                    }
+                }
+                
+                // 第三阶段：批量初始化按钮和字段信息
+                foreach (var (menuinfo, actionMenu) in menuAssemblyPairs)
+                {
+                    await InitToolStripItemAsync(menuinfo, actionMenu);
+                    await InitFieldInoAsync(menuinfo, actionMenu);
                 }
             }
             catch (Exception ex)
@@ -336,9 +370,12 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 添加菜单项及其相关的按钮和字段信息
+        /// 创建菜单项（如果不存在）
         /// </summary>
-        private async Task AddMenuItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo parentMenuInfo, tb_MenuInfoController<tb_MenuInfo> mc)
+        /// <param name="info">菜单组件信息</param>
+        /// <param name="parentMenuInfo">父菜单信息</param>
+        /// <returns>创建或找到的菜单项</returns>
+        private async Task<tb_MenuInfo> CreateMenuItemIfNotExistsAsync(MenuAttrAssemblyInfo info, tb_MenuInfo parentMenuInfo)
         {
             try
             {
@@ -376,18 +413,31 @@ namespace RUINORERP.UI.Common
 
                 if (menu.MenuID == 0)
                 {
-                    menu = mc.AddReEntity(menu); // 单个添加，因为可能有复杂业务逻辑
                     existMenuInfoList.Add(menu);
                 }
-
-                // 初始化菜单项的按钮和字段信息
-                await InitToolStripItemAsync(info, menu);
-                await InitFieldInoAsync(info, menu);
+                
+                return menu;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"添加菜单项 {info.Caption} 时发生错误");
-                MainForm.Instance.uclog.AddLog($"添加菜单项失败: {ex.Message}", UILogType.错误);
+                _logger.LogError(ex, $"创建菜单项 {info.Caption} 时发生错误");
+                MainForm.Instance.uclog.AddLog($"创建菜单项失败: {ex.Message}", UILogType.错误);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 添加菜单项及其相关的按钮和字段信息
+        /// 注意：此方法已被优化为批量处理模式，由InitNavMenuAsync调用
+        /// </summary>
+        private async Task AddMenuItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo parentMenuInfo, tb_MenuInfoController<tb_MenuInfo> mc)
+        {
+            // 保持兼容性，内部调用新的批量处理逻辑
+            var menu = await CreateMenuItemIfNotExistsAsync(info, parentMenuInfo);
+            if (menu != null)
+            {
+                await InitToolStripItemAsync(info, menu);
+                await InitFieldInoAsync(info, menu);
             }
         }
 

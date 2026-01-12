@@ -399,16 +399,12 @@ namespace RUINORERP.UI.Network
         /// <param name="isConnected">是否已连接</param>
         private void OnConnectionStateChangedForHeartbeat(bool isConnected)
         {
-            if (isConnected)
-            {
-                // 连接成功，启动心跳
-                StartHeartbeat();
-            }
-            else
+            if (!isConnected)
             {
                 // 连接断开，停止心跳
                 StopHeartbeat();
             }
+            // 连接成功时不再自动启动心跳，心跳将在登录成功后手动启动
         }
 
         /// <summary>
@@ -755,13 +751,6 @@ namespace RUINORERP.UI.Network
                     // 使用动态心跳间隔，使用ConfigureAwait(false)避免UI线程阻塞
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
-                    // 检查系统锁定状态，如果已锁定则停止心跳
-                    if (MainForm.Instance != null && MainForm.Instance.IsLocked)
-                    {
-                        _logger?.LogDebug("系统处于锁定状态，跳过本次心跳发送");
-                        continue; // 跳过本次心跳，不增加失败计数
-                    }
-
                     // 检查连接状态
                     bool initialConnected = _socketClient.IsConnected;
                     _logger?.LogTrace("心跳前连接状态检查: {Connected}", initialConnected);
@@ -862,17 +851,31 @@ namespace RUINORERP.UI.Network
                 }
                 else
                 {
-                    // 原子增加失败计数
-                    int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
-
-                    // 触发失败事件（异步执行）
-                    Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
-                    _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
-
-                    // 只有在连接确实断开时才触发重连
-                    if (!_socketClient.IsConnected)
+                    // 检查连接状态
+                    bool isConnected = _socketClient.IsConnected;
+                    
+                    // 只有在连接正常但心跳失败时才增加失败计数
+                    int currentFailures;
+                    if (isConnected)
                     {
-                        _logger?.LogWarning("心跳失败且连接已断开，触发重连机制");
+                        // 原子增加失败计数
+                        currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+                        
+                        // 触发失败事件（异步执行）
+                        Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
+                        _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
+                        
+                        _logger?.LogDebug("心跳失败但连接正常，等待下一次心跳");
+                    }
+                    else
+                    {
+                        // 网络已断开，重置失败计数，因为这是明确的连接问题
+                        Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                        currentFailures = 0;
+                        
+                        _logger?.LogWarning("心跳失败且连接已断开，重置失败计数并触发重连机制");
+                        
+                        // 触发重连
                         try
                         {
                             _connectionManager.StartAutoReconnect();
@@ -882,13 +885,9 @@ namespace RUINORERP.UI.Network
                             _logger?.LogError(ex, "启动自动重连时发生异常");
                         }
                     }
-                    else
-                    {
-                        _logger?.LogDebug("心跳失败但连接正常，等待下一次心跳");
-                    }
 
-                    // 检查是否达到心跳失败阈值
-                    if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
+                    // 检查是否达到心跳失败阈值（仅在连接正常时检查）
+                    if (isConnected && currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
                         _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
 
@@ -981,8 +980,8 @@ namespace RUINORERP.UI.Network
                                 response.ServerInfo.ContainsKey("RecommendedInterval") && 
                                 int.TryParse(response.ServerInfo["RecommendedInterval"]?.ToString(), out int recommendedInterval))
                             {
-                                // 使用服务器推荐的间隔，但不超过客户端设置的最大值
-                                _heartbeatIntervalMs = Math.Min(recommendedInterval, 120000);
+                                // 使用服务器推荐的间隔，并在客户端设置的范围内
+                                _heartbeatIntervalMs = Clamp(recommendedInterval, _minHeartbeatIntervalMs, _maxHeartbeatIntervalMs);
                             }
                             
                             //心跳响应
@@ -2125,18 +2124,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         }
 
         /// <summary>
-        /// 处理连接关闭事件
-        /// </summary>
-        private void OnClosed(EventArgs eventArgs)
-        {
-
-
-
-
-        }
-
-
-        /// <summary>
         /// 发送响应包（回复服务器的ServerRequest）
         /// </summary>
         /// <typeparam name="TResponse">响应数据类型</typeparam>
@@ -2390,10 +2377,10 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             {
                 // 清理命令队列
                 _logger?.Debug($"清理命令队列，当前队列大小: {_queuedCommands.Count}");
-                while (_queuedCommands.TryDequeue(out var queuedCommand))
+                while (_queuedCommands.TryDequeue(out var command))
                 {
-                    SafeCancelTaskCompletionSource(queuedCommand.CompletionSource, "命令队列");
-                    SafeCancelTaskCompletionSource(queuedCommand.ResponseCompletionSource, "响应队列");
+                    SafeCancelTaskCompletionSource(command.CompletionSource, "命令队列");
+                    SafeCancelTaskCompletionSource(command.ResponseCompletionSource, "响应队列");
                 }
 
                 // 清理待处理请求
@@ -2462,7 +2449,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         /// <typeparam name="TResponse">响应数据类型</typeparam>
         /// <param name="command">命令对象</param>
         /// <param name="ct">取消令牌</param>
-        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="timeoutMs">超时时间（毫秒），如果未指定则根据命令类型自动设置</param>
         /// <returns>包含指令信息的响应数据</returns>
         public async Task<TResponse> SendCommandWithResponseAsync<TResponse>(
             CommandId commandId,
@@ -2907,6 +2894,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
 
 
+        private static int Clamp(int value, int min, int max)
+        {
+            if (value < min) return min;
+            if (value > max) return max;
+            return value;
+        }
     }
 
 }

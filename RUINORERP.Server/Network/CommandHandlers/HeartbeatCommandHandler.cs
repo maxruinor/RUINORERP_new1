@@ -89,9 +89,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             // 创建心跳响应数据
                             var responseNotLogin = new HeartbeatResponse
                             {
-                                IsSuccess = true,
+                                IsSuccess = false,
                                 ErrorMessage = "用户不存在",
-                                Status = "OK",
+                                Status = "ERROR",
                                 ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                                 NextIntervalMs = 30000, // 默认30秒间隔
                                 ServerInfo = new Dictionary<string, object>
@@ -150,7 +150,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
                 LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
                 
-                var errorResponse = new HeartbeatResponse
+                // 直接返回HeartbeatResponse对象，而不是使用ResponseFactory
+                return new HeartbeatResponse
                 {
                     IsSuccess = false,
                     Status = "ERROR",
@@ -162,8 +163,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         ["ErrorCode"] = "HEARTBEAT_ERROR"
                     }
                 };
-
-                return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
 

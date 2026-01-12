@@ -930,10 +930,31 @@ namespace RUINORERP.UI.Network
 
                 var heartbeatRequest = new HeartbeatRequest();
 
-                // 可以根据需要添加系统信息
-                // 注意：获取系统信息可能耗时，谨慎使用
+                // 优化心跳请求：只发送必要字段，使用UserOperationInfo替代完整的UserInfo
+                heartbeatRequest.UserId = MainForm.Instance.AppContext.CurUserInfo.UserID;
+                heartbeatRequest.ClientId = _socketClient.ClientID;
+                heartbeatRequest.ClientTime = DateTime.Now;
+                heartbeatRequest.ClientStatus = "Normal";
 
-                heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurUserInfo;
+                // 创建并填充UserOperationInfo
+                heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
+                {
+                    用户名 = MainForm.Instance.AppContext.CurUserInfo.用户名,
+                    姓名 = MainForm.Instance.AppContext.CurUserInfo.姓名,
+                    当前模块 = MainForm.Instance.AppContext.CurUserInfo.当前模块,
+                    当前窗体 = MainForm.Instance.AppContext.CurUserInfo.当前窗体,
+                    登录时间 = MainForm.Instance.AppContext.CurUserInfo.登录时间,
+                    心跳数 = MainForm.Instance.AppContext.CurUserInfo.心跳数,
+                    客户端版本 = MainForm.Instance.AppContext.CurUserInfo.客户端版本,
+                    客户端IP = MainForm.Instance.AppContext.CurUserInfo.客户端IP,
+                    静止时间 = MainForm.Instance.AppContext.CurUserInfo.静止时间,
+                    超级用户 = MainForm.Instance.AppContext.CurUserInfo.超级用户,
+                    授权状态 = MainForm.Instance.AppContext.CurUserInfo.授权状态,
+                    操作系统 = MainForm.Instance.AppContext.CurUserInfo.操作系统,
+                    机器名 = MainForm.Instance.AppContext.CurUserInfo.机器名,
+                    CPU信息 = MainForm.Instance.AppContext.CurUserInfo.CPU信息,
+                    内存大小 = MainForm.Instance.AppContext.CurUserInfo.内存大小
+                };
 
                 // 增加心跳重试机制，最多重试2次
                 const int maxRetries = 2;
@@ -1990,8 +2011,14 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         throw new Exception($"发送请求失败: 没有合法授权令牌,指令：{commandId.ToString()}");
                     }
                 }
-                // 序列化和加密数据包
-                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                if (packet.CommandId == SystemCommands.Heartbeat)
+                {
+
+                }
+
+
+                    // 序列化和加密数据包
+                    var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
                 var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
 

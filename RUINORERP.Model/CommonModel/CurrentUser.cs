@@ -7,6 +7,88 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model
 {
+    /// <summary>
+    /// 用户操作界面信息实体类
+    /// 包含服务器端用户管理界面所需的简要信息
+    /// 通过心跳机制传输，用于服务器端用户管理系统显示
+    /// </summary>
+    public class UserOperationInfo
+    {
+        /// <summary>
+        /// 用户名
+        /// </summary>
+        public string 用户名 { get; set; }
+
+        /// <summary>
+        /// 姓名
+        /// </summary>
+        public string 姓名 { get; set; }
+
+        /// <summary>
+        /// 当前模块
+        /// </summary>
+        public string 当前模块 { get; set; }
+
+        /// <summary>
+        /// 当前窗体
+        /// </summary>
+        public string 当前窗体 { get; set; }
+
+        /// <summary>
+        /// 登录时间
+        /// </summary>
+        public DateTime 登录时间 { get; set; }
+
+        /// <summary>
+        /// 心跳数
+        /// </summary>
+        public int 心跳数 { get; set; }
+
+        /// <summary>
+        /// 客户端版本
+        /// </summary>
+        public string 客户端版本 { get; set; }
+
+        /// <summary>
+        /// 客户端IP
+        /// </summary>
+        public string 客户端IP { get; set; }
+
+        /// <summary>
+        /// 静止时间（秒）
+        /// </summary>
+        public long 静止时间 { get; set; }
+
+        /// <summary>
+        /// 是否超级用户
+        /// </summary>
+        public bool 超级用户 { get; set; }
+
+        /// <summary>
+        /// 授权状态
+        /// </summary>
+        public bool 授权状态 { get; set; }
+
+        /// <summary>
+        /// 操作系统
+        /// </summary>
+        public string 操作系统 { get; set; }
+
+        /// <summary>
+        /// 机器名
+        /// </summary>
+        public string 机器名 { get; set; }
+
+        /// <summary>
+        /// CPU信息
+        /// </summary>
+        public string CPU信息 { get; set; }
+
+        /// <summary>
+        /// 内存大小
+        /// </summary>
+        public string 内存大小 { get; set; }
+    }
 
     /// <summary>
     /// 内存中的业务级的用户信息
@@ -16,6 +98,7 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 获取员工姓名，值来自tb_Employee.Employee_Name
+        /// 打印系统中使用。暂时保留
         /// </summary>
         public string Name { get { return tb_Employee?.Employee_Name ?? string.Empty; } }
 

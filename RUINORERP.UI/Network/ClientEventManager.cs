@@ -53,6 +53,12 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action<bool> WelcomeCompleted;
 
+        /// <summary>
+        /// 当收到欢迎消息(包含公告)时触发的事件
+        /// 参数: 公告内容
+        /// </summary>
+        public event Action<string> AnnouncementReceived;
+
         // 专门用于服务器推送命令的事件
         public event Action<PacketModel, object> ServerPushCommandReceived;
 
@@ -259,6 +265,46 @@ namespace RUINORERP.UI.Network
             {
                 // 记录异常并触发错误事件
                 string errorMessage = $"处理欢迎流程完成事件时出错，状态: {success}";
+                LogException(ex, errorMessage);
+
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
+        /// 触发公告接收事件
+        /// </summary>
+        /// <param name="announcement">公告内容</param>
+        public void OnAnnouncementReceived(string announcement)
+        {
+            // 获取事件处理程序的快照
+            Action<string> handler;
+            lock (_lock)
+            {
+                handler = AnnouncementReceived;
+            }
+
+            if (handler == null)
+            {
+                _logger?.LogDebug("公告接收事件没有订阅者");
+                return;
+            }
+
+            try
+            {
+                // 触发事件
+                handler.Invoke(announcement);
+                _logger?.LogDebug("成功触发公告接收事件: {Content}", announcement);
+            }
+            catch (Exception ex)
+            {
+                // 记录异常并触发错误事件
+                string errorMessage = $"处理公告接收事件时出错，内容: {announcement}";
                 LogException(ex, errorMessage);
 
                 // 避免在错误处理中又触发异常导致无限循环

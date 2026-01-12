@@ -85,6 +85,13 @@ namespace RUINORERP.Model.ConfigModel
         [Description("日志级别(Debug/Info/Warning/Error)")]
         public string LogLevel { get; set; } = "Info";
         #endregion
-        
+
+        #region 公告配置
+        [JsonProperty("Announcement")]
+        [Category("公告配置")]
+        [Description("系统公告内容(一两句话即可)")]
+        public string Announcement { get; set; } = "欢迎使用RUINORERP系统！";
+        #endregion
+
     }
 }

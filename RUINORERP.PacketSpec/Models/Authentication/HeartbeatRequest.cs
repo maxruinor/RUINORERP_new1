@@ -1,4 +1,4 @@
-﻿using RUINORERP.Model;
+using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
@@ -24,9 +24,10 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public long UserId { get; set; }
 
         /// <summary>
-        /// 客户端进程运行时间（秒）
+        /// 用户操作界面信息
+        /// 包含服务器端用户管理界面所需的简要信息
         /// </summary>
-        public CurrentUserInfo UserInfo { get; set; }
+        public UserOperationInfo UserOperationInfo { get; set; }
 
         /// <summary>
         /// 客户端时间戳

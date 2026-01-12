@@ -155,21 +155,15 @@ namespace RUINORERP.Server.Network.SuperSocket
             // 网络监控：接收数据包
             if (IsNetworkMonitorEnabled && package?.Packet != null && ShouldMonitorCommand(package.Packet.CommandId))
             {
-                if (session is SessionInfo sessionInfo)
-                {
-                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
-                }
-                else
-                {
-                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
-                }
-
+                // 简化日志输出，移除重复的条件判断
+                frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
             }
 
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
                 _logger?.LogWarning($"[主动断开连接] 接收到空数据包，准备关闭连接: SessionId={session.SessionID}");
+                await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }
 
@@ -244,6 +238,7 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 // 更新会话的最后活动时间
                 sessionInfo.UpdateActivity(); // 使用专门的UpdateActivity方法更新活动时间
+                SessionService.UpdateSession(sessionInfo);
                 SessionService.UpdateSession(sessionInfo);
                 // 同时调用专门的UpdateSessionActivity方法确保活动时间被正确更新
                 SessionService.UpdateSessionActivity(session.SessionID);
@@ -457,47 +452,58 @@ namespace RUINORERP.Server.Network.SuperSocket
                         package.PacketId, package.CommandId);
                     return;
                 }
-                
                 package.SessionId = session.SessionID;
                 package.Direction = PacketDirection.ServerResponse;
                 var serializedData = JsonCompressionSerializationService.Serialize<PacketModel>(package);
 
                 // 加密数据
-                var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode }, serializedData);
+                var originalData = new OriginalData((byte)package.CommandId.Category, new byte[] { package.CommandId.OperationCode },
+                    serializedData
+                );
                 var encryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.EncryptServerDataToClient(originalData);
 
-                // 网络监控：发送响应
-                if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.CommandId))
+                // 发送数据并捕获可能的异常
+                try
                 {
-                    _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                        package.SessionId, package.CommandId.ToString(), package.PacketId);
+                    // 网络监控：发送响应
+                    if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.CommandId))
+                    {
+                        _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
+                            package.SessionId, package.CommandId.ToString(), package.PacketId);
 
-                    // 打印到主界面
-                    frmMainNew.Instance.PrintInfoLog($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}");
+                        // 打印到主界面
+                        frmMainNew.Instance.PrintInfoLog($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}");
+                    }
+
+                    await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);
                 }
-
-                // 简化发送逻辑，移除不必要的嵌套try-catch
-                await (session as SessionInfo).SendAsync(encryptedData.ToArray(), cancellationToken);
-            }
-            catch (TaskCanceledException ex) when (ex.InnerException is OperationCanceledException && cancellationToken.IsCancellationRequested)
-            {
-                // 处理任务被取消的特定异常
-                _logger?.LogWarning(ex, "发送响应被取消: SessionId={SessionId}, PacketId={PacketId}",
-                    package.SessionId, package.PacketId);
-                // 忽略此异常，因为可能是正常的超时或取消操作
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
-            {
-                // 处理管道写入器已完成的特定异常
-                _logger?.LogWarning(ex, "管道写入器已完成，无法发送响应: SessionId={SessionId}, PacketId={PacketId}",
-                    package.SessionId, package.PacketId);
-                // 忽略此异常，因为会话可能已经关闭
+                catch (TaskCanceledException ex) when (ex.InnerException is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                {
+                    // 处理任务被取消的特定异常
+                    _logger?.LogWarning(ex, "发送响应被取消: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 忽略此异常，因为可能是正常的超时或取消操作
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("Writing is not allowed after writer was completed"))
+                {
+                    // 处理管道写入器已完成的特定异常
+                    _logger?.LogWarning(ex, "管道写入器已完成，无法发送响应: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 忽略此异常，因为会话可能已经关闭
+                }
+                catch (Exception ex)
+                {
+                    // 记录其他发送异常
+                    _logger?.LogError(ex, "发送响应时发生异常: SessionId={SessionId}, PacketId={PacketId}",
+                        package.SessionId, package.PacketId);
+                    // 可以选择是否向上传播异常
+                    // throw;
+                }
             }
             catch (Exception ex)
             {
-                // 记录其他发送异常
-                _logger?.LogError(ex, "处理响应发送时发生异常: SessionId={SessionId}, PacketId={PacketId}",
-                    package.SessionId, package.PacketId);
+                // 捕获所有其他异常以确保方法不会失败
+                _logger?.LogError(ex, "处理响应发送时发生未预期的异常");
             }
         }
 

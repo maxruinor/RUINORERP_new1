@@ -80,37 +80,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
-                    // 确保 UserInfo 不为空
-                    if (heartbeatRequest.UserInfo != null)
+                    // 使用UserId进行会话验证，不再依赖完整的UserInfo
+                    sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
+                    if (heartbeatRequest.UserId == 0 || sessionInfo == null)
                     {
-                        sessionInfo = SessionService.GetSession(heartbeatRequest.UserInfo.UserID);
-                        if (heartbeatRequest.UserInfo.UserID == 0 || sessionInfo == null)
-                        {
-                            // 创建心跳响应数据
-                            var responseNotLogin = new HeartbeatResponse
-                            {
-                                IsSuccess = false,
-                                ErrorMessage = "用户不存在",
-                                Status = "ERROR",
-                                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                                NextIntervalMs = 30000, // 默认30秒间隔
-                                ServerInfo = new Dictionary<string, object>
-                                {
-                                    ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                                    ["ServerVersion"] = "1.0.0",
-                                }
-                            };
-
-                            return responseNotLogin;
-                        }
-
-                        sessionInfo.UserInfo = heartbeatRequest.UserInfo;
-                    }
-
-                    // 保存客户端系统信息到会话中
-                    if (heartbeatRequest.SystemInfo != null)
-                    {
-                        sessionInfo.ClientSystemInfo = heartbeatRequest.SystemInfo;
+                        // 创建心跳响应数据
+                        var responseNotLogin = HeartbeatResponse.Create(false, "用户不存在或会话已过期")
+                            .WithNextInterval(30000); // 默认30秒间隔
+                        return responseNotLogin;
                     }
 
                     // 动态计算下次心跳间隔
@@ -134,6 +111,28 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     // 更新会话最后活动时间
                     sessionInfo.LastActivityTime = DateTime.Now;
+
+                    // 如果心跳请求包含UserOperationInfo，则更新会话的用户信息
+                    if (heartbeatRequest.UserOperationInfo != null)
+                    {
+                        // 更新会话的用户信息
+                        sessionInfo.UserInfo.用户名 = heartbeatRequest.UserOperationInfo.用户名;
+                        sessionInfo.UserInfo.姓名 = heartbeatRequest.UserOperationInfo.姓名;
+                        sessionInfo.UserInfo.当前模块 = heartbeatRequest.UserOperationInfo.当前模块;
+                        sessionInfo.UserInfo.当前窗体 = heartbeatRequest.UserOperationInfo.当前窗体;
+                        sessionInfo.UserInfo.登录时间 = heartbeatRequest.UserOperationInfo.登录时间;
+                        sessionInfo.UserInfo.心跳数 = heartbeatRequest.UserOperationInfo.心跳数;
+                        sessionInfo.UserInfo.客户端版本 = heartbeatRequest.UserOperationInfo.客户端版本;
+                        sessionInfo.UserInfo.客户端IP = heartbeatRequest.UserOperationInfo.客户端IP;
+                        sessionInfo.UserInfo.静止时间 = heartbeatRequest.UserOperationInfo.静止时间;
+                        sessionInfo.UserInfo.超级用户 = heartbeatRequest.UserOperationInfo.超级用户;
+                        sessionInfo.UserInfo.授权状态 = heartbeatRequest.UserOperationInfo.授权状态;
+                        sessionInfo.UserInfo.操作系统 = heartbeatRequest.UserOperationInfo.操作系统;
+                        sessionInfo.UserInfo.机器名 = heartbeatRequest.UserOperationInfo.机器名;
+                        sessionInfo.UserInfo.CPU信息 = heartbeatRequest.UserOperationInfo.CPU信息;
+                        sessionInfo.UserInfo.内存大小 = heartbeatRequest.UserOperationInfo.内存大小;
+                    }
+
                     SessionService.UpdateSession(sessionInfo);
 
                     return response;
@@ -150,8 +149,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
                 LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
                 
-                // 直接返回HeartbeatResponse对象，而不是使用ResponseFactory
-                return new HeartbeatResponse
+                var errorResponse = new HeartbeatResponse
                 {
                     IsSuccess = false,
                     Status = "ERROR",
@@ -163,6 +161,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         ["ErrorCode"] = "HEARTBEAT_ERROR"
                     }
                 };
+
+                return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
 

@@ -46,10 +46,10 @@ namespace RUINORERP.UI
         /// </summary>
         private string _originalServerPort = string.Empty;
         private readonly CacheClientService _cacheClientService;
-         private readonly ConnectionManager connectionManager;
-         private readonly UserLoginService _userLoginService;
-         private readonly TokenManager _tokenManager;
-         private readonly ConfigSyncService _configSyncService;
+        private readonly ConnectionManager connectionManager;
+        private readonly UserLoginService _userLoginService;
+        private readonly TokenManager _tokenManager;
+        private readonly ConfigSyncService _configSyncService;
         private readonly ClientEventManager _eventManager;
 
         /// <summary>
@@ -61,6 +61,19 @@ namespace RUINORERP.UI
         /// 欢迎流程完成事件，用于在Load后通知可以显示登录界面
         /// </summary>
         private TaskCompletionSource<bool> _welcomeCompletionTcs = new TaskCompletionSource<bool>();
+
+        /// <summary>
+        /// 当前公告内容
+        /// </summary>
+        private string _currentAnnouncement = null;
+
+        /// <summary>
+        /// 用于显示公告的Label控件
+        /// </summary>
+        private System.Windows.Forms.Label _lblAnnouncement = null;
+        private System.Windows.Forms.Panel _panelAnnouncement = null;
+        private System.Windows.Forms.Button _btnCloseAnnouncement = null;
+
         public FrmLogin()
         {
             InitializeComponent();
@@ -75,7 +88,143 @@ namespace RUINORERP.UI
             if (_eventManager != null)
             {
                 _eventManager.WelcomeCompleted += OnWelcomeCompleted;
+                _eventManager.AnnouncementReceived += OnAnnouncementReceived;
             }
+
+            // 创建公告显示控件
+            CreateAnnouncementControls();
+        }
+
+        /// <summary>
+        /// 创建公告显示控件
+        /// </summary>
+        private void CreateAnnouncementControls()
+        {
+            // 创建公告面板
+            _panelAnnouncement = new System.Windows.Forms.Panel
+            {
+                BackColor = System.Drawing.Color.FromArgb(255, 255, 224),
+                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
+                Visible = false,
+                Location = new System.Drawing.Point(86, 50),
+                Size = new System.Drawing.Size(250, 80),
+                Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left
+            };
+
+            // 创建公告标题标签
+            var lblAnnouncementTitle = new System.Windows.Forms.Label
+            {
+                Text = "📢 系统公告",
+                Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold),
+                ForeColor = System.Drawing.Color.FromArgb(139, 69, 19),
+                Location = new System.Drawing.Point(8, 8),
+                AutoSize = true
+            };
+
+            // 创建公告内容标签
+            _lblAnnouncement = new System.Windows.Forms.Label
+            {
+                Font = new System.Drawing.Font("宋体", 8.5F),
+                ForeColor = System.Drawing.Color.FromArgb(60, 60, 60),
+                Location = new System.Drawing.Point(8, 30),
+                Size = new System.Drawing.Size(234, 30),
+                MaximumSize = new System.Drawing.Size(234, 50),
+                AutoSize = true
+            };
+
+            // 创建关闭公告按钮
+            _btnCloseAnnouncement = new System.Windows.Forms.Button
+            {
+                Text = "×",
+                Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold),
+                BackColor = System.Drawing.Color.Transparent,
+                ForeColor = System.Drawing.Color.FromArgb(139, 69, 19),
+                FlatStyle = System.Windows.Forms.FlatStyle.Flat,
+                FlatAppearance = { BorderSize = 0 },
+                Cursor = System.Windows.Forms.Cursors.Hand,
+                Size = new System.Drawing.Size(20, 20),
+                Location = new System.Drawing.Point(225, 2),
+                Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right
+            };
+
+            _btnCloseAnnouncement.Click += (s, e) =>
+            {
+                _panelAnnouncement.Visible = false;
+            };
+
+            // 添加控件到面板
+            _panelAnnouncement.Controls.Add(lblAnnouncementTitle);
+            _panelAnnouncement.Controls.Add(_lblAnnouncement);
+            _panelAnnouncement.Controls.Add(_btnCloseAnnouncement);
+
+            // 添加到窗体
+            this.Controls.Add(_panelAnnouncement);
+        }
+
+        /// <summary>
+        /// 显示公告信息
+        /// </summary>
+        /// <param name="content">公告内容</param>
+        private void DisplayAnnouncement(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+            {
+                if (_panelAnnouncement != null)
+                {
+                    _panelAnnouncement.Visible = false;
+                }
+                return;
+            }
+
+            // 调整登录界面位置，为公告留出空间
+            MoveLoginFormDown();
+
+            // 显示公告
+            if (_lblAnnouncement != null && _panelAnnouncement != null)
+            {
+                _lblAnnouncement.Text = content;
+                _lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
+                _panelAnnouncement.Visible = true;
+
+                MainForm.Instance?.logger?.LogInformation("显示系统公告: {Content}", content);
+            }
+        }
+
+        /// <summary>
+        /// 调整登录表单位置，为公告留出空间
+        /// </summary>
+        private void MoveLoginFormDown()
+        {
+            // 调整其他控件位置，向下移动80像素
+            int offset = 85;
+
+            foreach (System.Windows.Forms.Control ctrl in this.Controls)
+            {
+                // 跳过公告相关控件
+                if (ctrl == _panelAnnouncement)
+                    continue;
+
+                // 只调整特定控件
+                if (ctrl.Name == "lblID" || ctrl.Name == "txtUserName")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "lblpwd" || ctrl.Name == "txtPassWord")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "chksaveIDpwd")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "btnok" || ctrl.Name == "btncancel")
+                {
+                    ctrl.Top += offset;
+                }
+            }
+
+            // 调整窗体高度
+            this.ClientSize = new System.Drawing.Size(this.ClientSize.Width, this.ClientSize.Height + offset);
         }
 
         /// <summary>
@@ -87,6 +236,7 @@ namespace RUINORERP.UI
             if (_eventManager != null)
             {
                 _eventManager.WelcomeCompleted -= OnWelcomeCompleted;
+                _eventManager.AnnouncementReceived -= OnAnnouncementReceived;
             }
 
             base.OnFormClosing(e);
@@ -107,6 +257,35 @@ namespace RUINORERP.UI
 
             MainForm.Instance?.logger?.LogInformation("收到欢迎流程完成通知: {Status}", success ? "成功" : "失败");
         }
+
+        /// <summary>
+        /// 公告接收事件处理
+        /// </summary>
+        /// <param name="content">公告内容</param>
+        private void OnAnnouncementReceived(string content)
+        {
+            try
+            {
+                _currentAnnouncement = content;
+
+                MainForm.Instance?.logger?.LogInformation("收到服务器公告: {Content}", content);
+
+                // 在UI线程中显示公告
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => DisplayAnnouncement(content)));
+                }
+                else
+                {
+                    DisplayAnnouncement(content);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "显示公告时发生异常");
+            }
+        }
+
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
         {
@@ -321,11 +500,11 @@ namespace RUINORERP.UI
                     try
                     {
                         MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在取消重连并断开现有连接...");
-                        
+
                         // 使用新的方法取消重连并强制断开连接
                         await MainForm.Instance.communicationService.CancelReconnectAndForceDisconnectAsync();
                         isConnected = false;
-                        
+
                     }
                     catch (Exception ex)
                     {
@@ -627,17 +806,25 @@ namespace RUINORERP.UI
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void txtServerIP_TextChanged(object sender, EventArgs e)
+        private async void txtServerIP_TextChanged(object sender, EventArgs e)
         {
-            // 检测IP地址是否发生变更，仅设置标志位，不在输入过程中断开连接
+            // 检测IP地址是否发生变更
             string currentIP = txtServerIP.Text.Trim();
             string currentPort = txtPort.Text.Trim();
 
-            _ipAddressChanged = !string.Equals(currentIP, _originalServerIP, StringComparison.OrdinalIgnoreCase) ||
-                               !string.Equals(currentPort, _originalServerPort, StringComparison.OrdinalIgnoreCase);
+            bool ipChanged = !string.Equals(currentIP, _originalServerIP, StringComparison.OrdinalIgnoreCase) ||
+                              !string.Equals(currentPort, _originalServerPort, StringComparison.OrdinalIgnoreCase);
 
-            // 注意：连接断开逻辑已移至登录按钮点击事件中处理
-            // 这样可以避免用户输入过程中的频繁连接/断开操作
+            _ipAddressChanged = ipChanged;
+
+            // 如果IP或端口已发生变更，且连接状态有效，则触发重新连接和欢迎流程
+            if (ipChanged && connectionManager.IsConnected)
+            {
+                MainForm.Instance?.logger?.LogInformation($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
+
+                // 使用防抖机制，避免频繁触发
+                await DebouncedReconnectAsync();
+            }
         }
 
         /// <summary>
@@ -648,8 +835,74 @@ namespace RUINORERP.UI
         /// <param name="e"></param>
         private void txtPort_TextChanged(object sender, EventArgs e)
         {
-            // 端口变更检测逻辑与IP地址变更检测相同，仅设置标志位
+            // 端口变更检测逻辑与IP地址变更检测相同
             txtServerIP_TextChanged(sender, e);
+        }
+
+        /// <summary>
+        /// 防抖动的重新连接方法
+        /// 避免用户在输入过程中频繁触发重连
+        /// </summary>
+        private int _reconnectDebounceTimer = 0;
+        private const int DebounceDelayMs = 1500; // 1.5秒防抖
+
+        private async Task DebouncedReconnectAsync()
+        {
+            int timerId = System.Threading.Interlocked.Increment(ref _reconnectDebounceTimer);
+
+            await Task.Delay(DebounceDelayMs);
+
+            // 检查是否是最新的调用
+            if (timerId == _reconnectDebounceTimer)
+            {
+                await ReconnectAndWelcomeAsync();
+            }
+        }
+
+        /// <summary>
+        /// 重新连接并执行欢迎流程
+        /// </summary>
+        private async Task ReconnectAndWelcomeAsync()
+        {
+            try
+            {
+                MainForm.Instance?.logger?.LogInformation("开始重新连接并执行欢迎流程...");
+
+                // 验证服务器配置
+                if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort))
+                {
+                    MainForm.Instance?.logger?.LogWarning("服务器配置无效，跳过重新连接");
+                    return;
+                }
+
+                // 断开现有连接
+                if (connectionManager.IsConnected)
+                {
+                    await connectionManager.DisconnectAsync();
+                    await Task.Delay(500); // 等待断开完成
+                }
+
+                // 更新原始服务器信息
+                _originalServerIP = txtServerIP.Text.Trim();
+                _originalServerPort = txtPort.Text.Trim();
+
+                // 清除当前公告显示
+                if (_panelAnnouncement != null)
+                {
+                    _panelAnnouncement.Visible = false;
+                }
+
+                // 重置欢迎流程状态
+                _welcomeCompletionTcs = new TaskCompletionSource<bool>();
+                _welcomeCompleted = false;
+
+                // 执行连接和欢迎流程
+                await InitializeConnectionAndWelcomeFlowAsync();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "重新连接和欢迎流程时发生异常");
+            }
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -862,14 +1115,14 @@ namespace RUINORERP.UI
                         {
                             MainForm.Instance.PrintInfoLog("配置文件请求发送成功，等待服务器响应");
                         }
-                        
+
                     }
                 }
                 catch (Exception ex)
                 {
                     MainForm.Instance.logger?.LogError(ex, "请求最新配置文件时发生异常");
                 }
-                
+
 
                 // 获取锁状态列表
                 try
@@ -886,7 +1139,7 @@ namespace RUINORERP.UI
                         }
                         else
                         {
-                            MainForm.Instance.logger?.LogWarning("获取锁状态列表失败: {ErrorMessage}", 
+                            MainForm.Instance.logger?.LogWarning("获取锁状态列表失败: {ErrorMessage}",
                                 lockResponse?.Message ?? "未知错误");
                         }
                     }
@@ -908,7 +1161,7 @@ namespace RUINORERP.UI
 
                 // 完成登录
                 Program.AppContextData.IsOnline = true;
-                
+
                 // 启动心跳
                 MainForm.Instance.communicationService.StartHeartbeat();
 

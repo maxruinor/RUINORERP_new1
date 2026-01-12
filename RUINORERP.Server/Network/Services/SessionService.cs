@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Model;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
@@ -551,14 +552,25 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>异步任务</returns>
+        /// <summary>
+        /// 发送欢迎消息到客户端并等待响应
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>异步任务</returns>
         private async Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
         {
             try
             {
-                var welcomeRequest = WelcomeRequest.Create(
+                // 从依赖注入容器中获取服务器配置
+                var serverConfig = Startup.GetFromFac<ServerGlobalConfig>();
+
+                string announcement = serverConfig?.Announcement ?? "欢迎使用RUINORERP系统！";
+
+                var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
                     sessionInfo.SessionID,
                     GetServerVersion(),
-                    "欢迎连接到RUINORERP服务器");
+                    "欢迎连接到RUINORERP服务器",
+                    announcement);
 
                 sessionInfo.WelcomeSentTime = DateTime.Now;
 
@@ -887,7 +899,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 username = sessionInfo.UserName ?? "未知";
-                
+
                 // 添加主动断开连接警告日志
                 _logger.LogWarning($"[主动断开连接] 准备断开会话: SessionID={sessionId}, UserName={username}, 原因={reason}");
 
@@ -1514,19 +1526,19 @@ namespace RUINORERP.Server.Network.Services
                 {
                     // 使用更详细的日志，包含最后心跳时间
                     _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}, 最后心跳: {session.LastHeartbeat}");
-                    
+
                     // 更新会话状态为心跳异常
                     lock (session)
                     {
                         session.HeartbeatFailedCount++;
-                        
+
                         // 如果心跳失败次数过多，考虑标记会话为异常
                         if (session.HeartbeatFailedCount > 3)
                         {
                             _logger.LogWarning($"会话心跳连续失败超过3次: {session.SessionID}, 准备清理");
                         }
                     }
-                    
+
                     abnormalCount++;
                 }
 

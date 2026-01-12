@@ -98,6 +98,12 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         welcomeRequest.RequestId
                     );
 
+                    // 触发公告接收事件（如果服务器发送了公告）
+                    if (!string.IsNullOrEmpty(welcomeRequest.Announcement))
+                    {
+                        _eventManager?.OnAnnouncementReceived(welcomeRequest.Announcement);
+                    }
+
                     // 触发欢迎流程完成事件，通知等待的登录流程
                     if (rs)
                     {

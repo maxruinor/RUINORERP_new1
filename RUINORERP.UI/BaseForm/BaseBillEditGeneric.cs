@@ -138,6 +138,9 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="operationType">操作类型</param>
         private async Task ProcessBillStatusChangeWithLinkEngine(TodoUpdate update, string operationType)
         {
+            //先不处理吧
+            return;
+
             try
             {
                 // 创建消息数据

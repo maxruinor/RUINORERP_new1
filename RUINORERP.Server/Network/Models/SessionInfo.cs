@@ -337,6 +337,23 @@ namespace RUINORERP.Server.Network.Models
         public bool IsAuthenticated { get; set; }
 
         /// <summary>
+        /// 是否已验证（连接握手验证）
+        /// 客户端收到欢迎消息并回复确认后才为true
+        /// </summary>
+        public bool IsVerified { get; set; } = false;
+
+        /// <summary>
+        /// 欢迎消息发送时间
+        /// 用于超时检查
+        /// </summary>
+        public DateTime? WelcomeSentTime { get; set; }
+
+        /// <summary>
+        /// 是否收到欢迎确认消息
+        /// </summary>
+        public bool WelcomeAckReceived { get; set; } = false;
+
+        /// <summary>
         /// 会话超时时间（分钟）
         /// </summary>
         public int TimeoutMinutes { get; set; } = 30; // 默认30分钟超时

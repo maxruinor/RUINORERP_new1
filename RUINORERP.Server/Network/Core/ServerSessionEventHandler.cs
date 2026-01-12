@@ -5,7 +5,7 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 
-namespace RUINORERP.Server.SuperSocketServices
+namespace RUINORERP.Server.Network.Core
 {
     /// <summary>
     /// 服务器会话事件处理器接口

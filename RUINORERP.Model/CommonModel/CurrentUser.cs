@@ -15,6 +15,11 @@ namespace RUINORERP.Model
     {
 
         /// <summary>
+        /// 获取员工姓名，值来自tb_Employee.Employee_Name
+        /// </summary>
+        public string Name { get { return tb_Employee?.Employee_Name ?? string.Empty; } }
+
+        /// <summary>
         /// 当前登录用户ID
         /// </summary>
         public long EmpID { get; set; }

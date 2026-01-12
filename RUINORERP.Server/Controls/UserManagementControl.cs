@@ -219,6 +219,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
+                // 获取所有已验证的会话（包括未授权的）
                 var sessions = _sessionService.GetAllUserSessions().ToList();
                 int loadedCount = 0;
                 int skippedCount = 0;
@@ -227,9 +228,8 @@ namespace RUINORERP.Server.Controls
                 {
                     try
                     {
-                        // 检查会话是否已授权，未授权的会话不添加到表格中
-                        var userInfo = session.UserInfo ?? new CurrentUserInfo();
-                        if (!userInfo.授权状态)
+                        // 只添加已验证的会话（已完成握手验证）
+                        if (!session.IsVerified)
                         {
                             skippedCount++;
                             continue;
@@ -246,7 +246,7 @@ namespace RUINORERP.Server.Controls
                 }
 
                 // 记录加载结果
-                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个会话");
+                LogStatusChange(null, $"初始加载完成：加载 {loadedCount} 个会话，跳过 {skippedCount} 个未验证会话");
 
                 // 初始化统计信息
                 UpdateStatistics();
@@ -1130,11 +1130,10 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                // 检查会话是否已授权，未授权的新会话不添加到表格中
-                var userInfo = sessionInfo.UserInfo ?? new CurrentUserInfo();
-                if (!userInfo.授权状态 && !_sessionItemMap.ContainsKey(sessionInfo.SessionID))
+                // 只显示已验证的会话（已完成握手验证）
+                if (!sessionInfo.IsVerified)
                 {
-                    LogStatusChange(null, $"忽略未授权的新会话: {GetDisplayUserName(userInfo)} - {sessionInfo.ClientIp}");
+                    LogStatusChange(null, $"等待验证的新会话: {sessionInfo.ClientIp}");
                     return;
                 }
 
@@ -1142,7 +1141,7 @@ namespace RUINORERP.Server.Controls
                 AddOrUpdateSessionItem(sessionInfo);
 
                 // 记录新连接
-                string statusDescription = GetStatusDescription(sessionInfo.IsConnected, sessionInfo.IsAuthenticated);
+                string statusDescription = GetSessionStatusDescription(sessionInfo);
                 LogStatusChange(sessionInfo, $"新会话连接 - {statusDescription}");
 
                 // 立即更新统计信息
@@ -1352,7 +1351,24 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 获取状态描述字符串
+        /// 获取会话状态描述字符串
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>状态描述</returns>
+        private string GetSessionStatusDescription(SessionInfo sessionInfo)
+        {
+            if (!sessionInfo.IsConnected)
+                return "已断开";
+            else if (!sessionInfo.IsVerified)
+                return "未验证连接";
+            else if (sessionInfo.IsAuthenticated)
+                return "已连接且已授权";
+            else
+                return "已连接但未授权";
+        }
+
+        /// <summary>
+        /// 获取状态描述字符串（兼容旧版本）
         /// </summary>
         /// <param name="isConnected">是否连接</param>
         /// <param name="isAuthenticated">是否已认证</param>

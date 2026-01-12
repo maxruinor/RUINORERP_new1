@@ -32,6 +32,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// 系统管理：服务器推送版本更新
         /// </summary>
         public static readonly CommandId SystemManagement = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_SystemManagement & 0xFF));
+
+        /// <summary>
+        /// 欢迎响应 - 服务器向客户端发送的连接欢迎消息
+        /// 客户端需要回复此消息以完成连接验证
+        /// </summary>
+        public static readonly CommandId Welcome = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_Welcome & 0xFF));
+
+        /// <summary>
+        /// 欢迎响应确认 - 客户端对服务器欢迎消息的回复
+        /// 服务器收到此消息后将连接标记为已验证
+        /// </summary>
+        public static readonly CommandId WelcomeAck = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_WelcomeAck & 0xFF));
         #endregion
 
         /// <summary>

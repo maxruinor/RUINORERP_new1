@@ -322,6 +322,7 @@
     <Reference Include="Microsoft.IdentityModel.Tokens, Version=6.32.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.IdentityModel.Tokens.6.32.1\lib\net472\Microsoft.IdentityModel.Tokens.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Microsoft.Web.WebView2.Core, Version=1.0.3537.50, Culture=neutral, PublicKeyToken=2a8ab48044d2601e, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Web.WebView2.1.0.3537.50\lib\net462\Microsoft.Web.WebView2.Core.dll</HintPath>
     </Reference>
@@ -2318,6 +2319,7 @@
     <Compile Include="Network\ClientCommandHandlers\LockCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\MessageCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\TodoCommandHandler.cs" />
+    <Compile Include="Network\ClientCommandHandlers\WelcomeCommandHandler.cs" />
     <Compile Include="Network\ClientCommandHandlers\WorkflowCommandHandler.cs" />
     <!-- ClientCommandProcessor.cs 已整合到ClientCommunicationService.cs，不再单独编译 -->
     <!-- <Compile Include="Network\ClientCommandProcessor.cs" /> -->

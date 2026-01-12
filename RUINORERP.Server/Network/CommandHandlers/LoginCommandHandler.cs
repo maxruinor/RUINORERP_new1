@@ -284,6 +284,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 更新会话信息
                 UpdateSessionInfo(sessionInfo, userInfo);
+
+                // 设置会话授权状态
+                sessionInfo.IsAuthenticated = true;
+
                 SessionService.UpdateSession(sessionInfo);
 
                 // 生成Token

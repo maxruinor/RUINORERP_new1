@@ -87,6 +87,18 @@ namespace RUINORERP.PacketSpec.Commands
         /// 服务器集群配置同步 - 同步服务器集群配置
         /// </summary>
         public const ushort System_SyncClusterConfig = 0x000F;
+
+        /// <summary>
+        /// 欢迎响应 - 服务器向客户端发送的连接欢迎消息
+        /// 客户端需要回复此消息以完成连接验证
+        /// </summary>
+        public const ushort System_Welcome = 0x0010;
+
+        /// <summary>
+        /// 欢迎响应确认 - 客户端对服务器欢迎消息的回复
+        /// 服务器收到此消息后将连接标记为已验证
+        /// </summary>
+        public const ushort System_WelcomeAck = 0x0011;
         #endregion
 
         #region 认证命令 (0x01xx)

@@ -86,17 +86,6 @@
     <Compile Remove="SmartReminder\CachedRuleEngineCenter.cs" />
     <Compile Remove="SmartReminder\InvReminder\InventoryAlertWorkflow.cs" />
     <Compile Remove="Startup - 复制.cs" />
-    <Compile Remove="SuperSocketServices\Core\UnifiedArchitectureAdapter.cs" />
-    <Compile Remove="SuperSocketServices\Pipeline\BizPipelineFilter.cs" />
-    <Compile Remove="SuperSocketServices\Pipeline\MyPackageDecoder.cs" />
-    <Compile Remove="SuperSocketServices\Pipeline\UnifiedPipelineFilter.cs" />
-    <Compile Remove="SuperSocketServices\Services\ServiceforLander.cs" />
-    <Compile Remove="SuperSocketServices\Services\SessionforLander.cs" />
-    <Compile Remove="SuperSocketServices\Services\SessionManagerService.cs" />
-    <Compile Remove="SuperSocketServices\Services\StorageMaintenanceScheduler.cs" />
-    <Compile Remove="SuperSocketServices\Services\UserService.cs" />
-    <Compile Remove="SuperSocketServices\Services\WorkflowServiceReceiver.cs" />
-    <Compile Remove="SuperSocketServices\Services\WorkflowServiceSender.cs" />
     <Compile Remove="UpgradedStartupExample.cs" />
     <Compile Remove="Workflow\BillConverterFactory.cs" />
     <Compile Remove="Workflow\WFApproval\ActivityWorkflow.cs" />
@@ -235,9 +224,6 @@
     <Folder Include="Network\Core\Cache\" />
     <Folder Include="Network\Documentation\" />
     <Folder Include="Services\Cache\" />
-    <Folder Include="SuperSocketServices\Models\" />
-    <Folder Include="SuperSocketServices\Pipeline\" />
-    <Folder Include="SuperSocketServices\Services\" />
     <Folder Include="SysConfigFiles\" />
     <Folder Include="Workflow\WFOrder\" />
     <Folder Include="Workflow\WFProduce\" />

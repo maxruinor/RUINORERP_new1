@@ -1,3 +1,25 @@
+using Azure;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Cache;
+using RUINORERP.Business.CommService;
+using RUINORERP.Model;
+using RUINORERP.PacketSpec.Commands;
+using RUINORERP.PacketSpec.Enums.Core;
+using RUINORERP.PacketSpec.Models;
+using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.Core;
+using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.PacketSpec.Models.Responses;
+using RUINORERP.PacketSpec.Security;
+using RUINORERP.PacketSpec.Serialization;
+using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Network.Interfaces.Services;
+using RUINORERP.Server.Network.Models;
+using SuperSocket.Channel;
+using SuperSocket.Connection;
+using SuperSocket.Server;
+using SuperSocket.Server.Abstractions.Session;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -5,25 +27,6 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Model;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.Network.Models;
-using SuperSocket.Server.Abstractions.Session;
-using SuperSocket.Server;
-using SuperSocket.Channel;
-using SuperSocket.Connection;
-using RUINORERP.Business.CommService;
-using RUINORERP.Business.Cache;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.PacketSpec.Security;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -32,7 +35,7 @@ namespace RUINORERP.Server.Network.Services
     /// 提供完整的会话生命周期管理、事件机制、统计监控和SuperSocket集成
     /// 会话管理行为严格基于SuperSocket连接和断开事件实现
     /// </summary>
-    public class SessionService : ISessionService, IDisposable, RUINORERP.Server.SuperSocketServices.IServerSessionEventHandler
+    public class SessionService : ISessionService, IDisposable, IServerSessionEventHandler
     {
         #region 字段和属性
 
@@ -100,8 +103,10 @@ namespace RUINORERP.Server.Network.Services
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
             _subscriptionManager = subscriptionManager;
-            // 启动清理定时器，每5分钟清理一次超时会话并检查心跳
+
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+
+            _logger.LogInformation("SessionService初始化完成");
         }
 
         #endregion
@@ -228,7 +233,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 查找匹配用户ID的会话
                 var sessionInfo = _sessions.Values.FirstOrDefault(s => s.UserId.HasValue && s.UserId.Value == userId);
-                
+
                 if (sessionInfo != null)
                 {
                     // 更新最后访问时间
@@ -510,13 +515,86 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
-                // 可以在这里添加额外的连接后处理逻辑
-                // 例如记录连接信息、初始化会话状态等
-                _logger.LogTrace($"执行会话连接后的自定义处理逻辑: {sessionInfo.SessionID}");
+                if (sessionInfo.IsAuthenticated)
+                {
+                    _logger.LogInformation($"[连接建立-已授权] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
+                    return;
+                }
+
+                sessionInfo.IsVerified = false;
+                sessionInfo.WelcomeSentTime = DateTime.Now;
+                sessionInfo.WelcomeAckReceived = false;
+
+                _logger.LogInformation($"[连接建立] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
+
+                await SendWelcomeMessageAsync(sessionInfo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"执行会话连接自定义处理逻辑时出错: {sessionInfo.SessionID}");
+                _logger.LogError(ex, $"欢迎流程处理失败: {sessionInfo.SessionID}");
+            }
+        }
+
+        /// <summary>
+        /// 发送欢迎消息到客户端并等待响应
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>异步任务</returns>
+        private async Task SendWelcomeMessageAsync(SessionInfo sessionInfo)
+        {
+            try
+            {
+                var welcomeRequest = WelcomeRequest.Create(
+                    sessionInfo.SessionID,
+                    GetServerVersion(),
+                    "欢迎连接到RUINORERP服务器");
+
+                sessionInfo.WelcomeSentTime = DateTime.Now;
+
+                // 使用SendCommandAndWaitForResponseAsync等待客户端响应（30秒超时）
+                var responsePacket = await SendCommandAndWaitForResponseAsync<WelcomeRequest>(
+                   sessionInfo.SessionID,
+                   SystemCommands.Welcome,
+                   welcomeRequest,
+                   30000
+               );
+
+
+                if (responsePacket?.Response is WelcomeResponse welcomeResponse)
+                {
+
+                    sessionInfo.IsVerified = true;
+                    sessionInfo.WelcomeAckReceived = true;
+                }
+
+            }
+            catch (TimeoutException)
+            {
+                _logger.LogWarning($"[欢迎超时] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
+                await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"欢迎消息发送失败: {sessionInfo.SessionID}");
+                await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+            }
+        }
+
+        /// <summary>
+        /// 获取服务器版本号
+        /// </summary>
+        /// <returns>服务器版本号</returns>
+        private string GetServerVersion()
+        {
+            try
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var versionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(assembly.Location);
+                return versionInfo.FileVersion ?? "1.0.0.0";
+            }
+            catch
+            {
+                return "1.0.0.0";
             }
         }
 
@@ -1465,24 +1543,19 @@ namespace RUINORERP.Server.Network.Services
         {
             if (!_disposed)
             {
-                // 1. 首先释放定时器资源
                 _cleanupTimer?.Dispose();
 
-                // 2. 关闭并清理所有活动会话
                 var sessionIds = _sessions.Keys.ToList();
                 int totalSessions = sessionIds.Count;
                 int closedSessions = 0;
 
-                // 使用并行方式处理会话关闭，提高释放效率
                 Parallel.ForEach(sessionIds, new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, sessionId =>
                 {
                     if (_sessions.TryGetValue(sessionId, out var session))
                     {
                         try
                         {
-                            // 使用异步方式关闭会话，避免阻塞
                             var closeTask = session.CloseAsync(CloseReason.ServerShutdown);
-                            // 等待最多100毫秒，防止长时间阻塞
                             if (closeTask.AsTask().Wait(100))
                             {
                                 Interlocked.Increment(ref closedSessions);
@@ -1495,10 +1568,8 @@ namespace RUINORERP.Server.Network.Services
                     }
                 });
 
-                // 3. 清理会话字典
                 _sessions?.Clear();
 
-                // 4. 标记为已释放
                 _disposed = true;
                 _logger.LogInformation($"统一会话管理器资源已释放，共处理{totalSessions}个会话，成功关闭{closedSessions}个");
             }

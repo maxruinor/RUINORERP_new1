@@ -54,7 +54,6 @@ using Autofac.Core;
 using RUINORERP.Business.Security;
 using RUINORERP.Model.ConfigModel;
 using System.Configuration;
-using RUINORERP.Server.SuperSocketServices;
 using ZXing;
 using RUINORERP.Server.SmartReminder;
 using RUINORERP.Server.SmartReminder.ReminderRuleStrategy;

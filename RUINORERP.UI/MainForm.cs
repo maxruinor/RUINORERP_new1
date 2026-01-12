@@ -3436,6 +3436,10 @@ namespace RUINORERP.UI
         {
             try
             {
+                if (MainForm.Instance.AppContext.CurUserInfo==null)
+                {
+                    return;
+                }
                 MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
 
 

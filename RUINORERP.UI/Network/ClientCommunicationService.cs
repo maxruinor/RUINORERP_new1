@@ -2027,7 +2027,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, $"发送数据包时发生错误: CommandId={commandId}",
+                _logger?.LogError(ex, $"发送数据包时发生错误: CommandId={commandId}, {ex.Message}",
                     commandId.FullCode, commandId.Name);
 
                 // 如果是取消操作，则直接抛出

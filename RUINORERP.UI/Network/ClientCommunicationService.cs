@@ -91,7 +91,7 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 新增心跳相关字段
-        private readonly int _heartbeatIntervalMs = 5000; // 默认5秒心跳间隔
+        private readonly int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔（与服务器端保持一致）
         private CancellationTokenSource _heartbeatCancellationTokenSource;
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
@@ -159,8 +159,9 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 心跳失败阈值
         /// 连续心跳失败达到此阈值时触发客户端锁定
+        /// 调整为3次，避免过长的不确定状态
         /// </summary>
-        public const int HEARTBEAT_FAILURE_THRESHOLD = 5;
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 3;
 
         /// <summary>
         /// 心跳失败事件
@@ -715,46 +716,72 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 更新心跳状态（优化版）
+        /// 更新心跳状态（优化版 - 增强错误处理）
         /// 避免频繁的锁操作，减少资源竞争
         /// </summary>
         /// <param name="success">心跳是否成功</param>
         private void UpdateHeartbeatState(bool success)
         {
-            // 使用轻量级的状态管理，避免频繁锁操作
-            if (success)
+            try
             {
-                // 使用Interlocked操作确保原子性
-                int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                _lastHeartbeatTime = DateTime.Now;
-
-                // 如果之前有失败，触发恢复事件
-                if (previousFailures > 0)
+                // 使用轻量级的状态管理，避免频繁锁操作
+                if (success)
                 {
-                    // 使用Task.Run避免UI线程阻塞
-                    Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
-                    _logger?.LogDebug("心跳恢复");
+                    // 使用Interlocked操作确保原子性
+                    int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                    _lastHeartbeatTime = DateTime.Now;
+
+                    // 如果之前有失败，触发恢复事件
+                    if (previousFailures > 0)
+                    {
+                        // 使用Task.Run避免UI线程阻塞
+                        Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
+                        _logger?.LogDebug("心跳恢复");
+                    }
+                }
+                else
+                {
+                    // 原子增加失败计数
+                    int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+
+                    // 触发失败事件（异步执行）
+                    Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
+                    _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
+
+                    // 检查是否达到心跳失败阈值
+                    if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
+                    {
+                        _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
+
+                        // 停止重连机制以避免资源浪费
+                        try
+                        {
+                            _connectionManager.StopAutoReconnect();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "停止自动重连时发生异常");
+                        }
+
+                        // 停止心跳检测，因为系统已进入锁定状态
+                        StopHeartbeat();
+
+                        // 异步触发阈值事件，由MainForm的事件处理程序负责系统锁定
+                        Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // 原子增加失败计数
-                int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
-
-                // 触发失败事件（异步执行）
-                Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
-                _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
-
-                // 检查是否达到心跳失败阈值
-                if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
+                _logger?.LogError(ex, "更新心跳状态时发生异常");
+                // 异常情况下停止心跳，避免无限循环
+                try
                 {
-                    _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
-                    // 停止重连机制以避免资源浪费
-                    _connectionManager.StopAutoReconnect();
-                    // 停止心跳检测，因为系统已进入锁定状态
                     StopHeartbeat();
-                    // 异步触发阈值事件，由MainForm的事件处理程序负责系统锁定
-                    Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                }
+                catch
+                {
+                    // 忽略停止心跳时的异常
                 }
             }
         }

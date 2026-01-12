@@ -276,8 +276,9 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 重连循环（优化版）
+        /// 重连循环（优化版 - 修复退出逻辑）
         /// 避免资源竞争和重复重连，提高稳定性
+        /// 确保重连成功后正确退出循环
         /// </summary>
         private async Task ReconnectLoopAsync()
         {
@@ -293,8 +294,12 @@ namespace RUINORERP.UI.Network
                 // 快速检查连接状态，避免不必要的重连尝试
                 if (IsConnected)
                 {
-                    HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
-                    continue;
+                    // 修复：重连成功后立即退出循环，而不是continue
+                    if (reconnectAttempts > 0)
+                    {
+                        HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
+                    }
+                    break; // 退出循环
                 }
 
                 // 检查服务器信息完整性
@@ -313,17 +318,19 @@ namespace RUINORERP.UI.Network
 
                 // 执行重连尝试
                 bool reconnectResult = await AttemptReconnectAsync(reconnectAttempts);
-                
+
                 if (reconnectResult)
                 {
+                    // 重连成功，退出循环
                     HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
+                    break; // 立即退出，不继续循环
                 }
                 else
                 {
                     // 更新重连尝试计数
                     reconnectAttempts++;
                     _lastReconnectAttempt = DateTime.Now;
-                    
+
                     // 应用指数退避算法
                     currentBackoffInterval = CalculateNextBackoffInterval(reconnectAttempts, currentBackoffInterval);
                 }

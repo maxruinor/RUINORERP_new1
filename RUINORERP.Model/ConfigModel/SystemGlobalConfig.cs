@@ -110,9 +110,10 @@ namespace RUINORERP.Model.ConfigModel
         [Description("是否启用日志")]
         public bool EnableLogging { get; set; }
         
+        //
         [JsonProperty("LogLevel")]
         [Category("日志配置")]
-        [Description("日志级别")]
+        [Description("日志级别，可选值：Trace、Debug、Information、Warning、Error、Critical、None")]
         public string LogLevel { get; set; }
 
         [JsonProperty("EnableBillStatusMessage")]

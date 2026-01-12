@@ -228,6 +228,9 @@ namespace RUINORERP.UI.Network
 
             try
             {
+                // 添加主动断开连接警告日志
+                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接");
+                
                 bool result = await _socketClient.Disconnect();
                 _isConnected = false;
                 OnConnectionStateChanged(false);
@@ -239,6 +242,7 @@ namespace RUINORERP.UI.Network
                 _logger?.LogError(ex, "断开连接时发生异常");
                 _isConnected = false;
                 OnConnectionStateChanged(false);
+                _logger?.LogWarning("[主动断开连接] 断开连接时发生异常");
                 return false;
             }
         }
@@ -394,11 +398,11 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 检查网络可用性
-                if (!await CheckNetworkAvailabilityAsync())
+                // 检查网络可用性，但即使网络检查失败也尝试重连
+                bool isNetworkAvailable = await CheckNetworkAvailabilityAsync();
+                if (!isNetworkAvailable)
                 {
-                    _logger?.LogWarning("网络不可用，跳过此次重连尝试");
-                    return false;
+                    _logger?.LogWarning("网络检查显示不可用，但仍尝试重连到服务器");
                 }
 
                 // 执行重连
@@ -614,24 +618,65 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                // 简单的网络可用性检查
-                // 可以根据需要扩展为更详细的网络检测
+                // 1. 首先检查本地网络接口状态
+                if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
+                {
+                    _logger?.LogDebug("本地网络接口不可用");
+                    return false;
+                }
+
+                // 2. 检查本地回环地址，确认网络栈正常
                 using (var ping = new System.Net.NetworkInformation.Ping())
                 {
-                    var reply = await ping.SendPingAsync("8.8.8.8", 3000); // 谷歌DNS，3秒超时
-                    bool isNetworkAvailable = reply.Status == System.Net.NetworkInformation.IPStatus.Success;
-                    
-                    if (!isNetworkAvailable)
+                    var localReply = await ping.SendPingAsync("127.0.0.1", 1000); // 本地回环，1秒超时
+                    if (localReply.Status != System.Net.NetworkInformation.IPStatus.Success)
                     {
-                        _logger?.LogDebug("网络不可用：Ping失败，状态：{Status}", reply.Status);
+                        _logger?.LogDebug("本地回环地址Ping失败，网络栈异常：{Status}", localReply.Status);
+                        return false;
                     }
-                    
-                    return isNetworkAvailable;
                 }
+
+                // 3. 可选：尝试检查网关地址（如果能获取到）
+                try
+                {
+                    var networkInterfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+                        .Where(nic => nic.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up &&
+                                      nic.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback);
+
+                    foreach (var networkInterface in networkInterfaces)
+                    {
+                        var gatewayAddresses = networkInterface.GetIPProperties().GatewayAddresses;
+                        foreach (var gatewayAddress in gatewayAddresses)
+                        {
+                            if (gatewayAddress.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                            {
+                                using (var ping = new System.Net.NetworkInformation.Ping())
+                                {
+                                    var gatewayReply = await ping.SendPingAsync(gatewayAddress.Address, 2000); // 网关，2秒超时
+                                    if (gatewayReply.Status == System.Net.NetworkInformation.IPStatus.Success)
+                                    {
+                                        // 网关可达，网络基本可用
+                                        _logger?.LogDebug("网关可达，网络可用");
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogDebug(ex, "网关检查失败，继续进行其他检查");
+                    // 网关检查失败，继续进行其他检查
+                }
+
+                // 4. 网络接口可用，但无法访问网关，仍尝试重连
+                _logger?.LogDebug("网络接口可用，但网关不可达，仍尝试重连");
+                return true;
             }
             catch (Exception ex)
             {
-                _logger?.LogDebug(ex, "网络可用性检查失败，假设网络可用");
+                _logger?.LogDebug(ex, "网络可用性检查异常，假设网络可用");
                 // 如果网络检查失败，假设网络可用，避免阻塞重连
                 return true;
             }

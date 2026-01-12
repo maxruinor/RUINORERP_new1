@@ -50,6 +50,17 @@ namespace RUINORERP.UI
          private readonly UserLoginService _userLoginService;
          private readonly TokenManager _tokenManager;
          private readonly ConfigSyncService _configSyncService;
+        private readonly ClientEventManager _eventManager;
+
+        /// <summary>
+        /// 标记欢迎流程是否已完成
+        /// </summary>
+        private bool _welcomeCompleted = false;
+
+        /// <summary>
+        /// 欢迎流程完成事件，用于在Load后通知可以显示登录界面
+        /// </summary>
+        private TaskCompletionSource<bool> _welcomeCompletionTcs = new TaskCompletionSource<bool>();
         public FrmLogin()
         {
             InitializeComponent();
@@ -58,6 +69,43 @@ namespace RUINORERP.UI
             _userLoginService = Startup.GetFromFac<UserLoginService>();
             _tokenManager = Startup.GetFromFac<TokenManager>();
             _configSyncService = Startup.GetFromFac<ConfigSyncService>();
+            _eventManager = Startup.GetFromFac<ClientEventManager>();
+
+            // 订阅欢迎流程完成事件
+            if (_eventManager != null)
+            {
+                _eventManager.WelcomeCompleted += OnWelcomeCompleted;
+            }
+        }
+
+        /// <summary>
+        /// 窗体关闭时释放资源
+        /// </summary>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // 取消订阅欢迎流程完成事件
+            if (_eventManager != null)
+            {
+                _eventManager.WelcomeCompleted -= OnWelcomeCompleted;
+            }
+
+            base.OnFormClosing(e);
+        }
+
+        /// <summary>
+        /// 欢迎流程完成事件处理
+        /// </summary>
+        /// <param name="success">欢迎流程是否成功完成</param>
+        private void OnWelcomeCompleted(bool success)
+        {
+            _welcomeCompleted = success;
+
+            if (!_welcomeCompletionTcs.TrySetResult(success))
+            {
+                MainForm.Instance?.logger?.LogDebug("欢迎完成事件已触发，但TaskCompletionSource已完成");
+            }
+
+            MainForm.Instance?.logger?.LogInformation("收到欢迎流程完成通知: {Status}", success ? "成功" : "失败");
         }
         private bool m_showing = true;
         private void fadeTimer_Tick(object sender, EventArgs e)
@@ -96,12 +144,34 @@ namespace RUINORERP.UI
             }
         }
 
-        private void frmLogin_Load(object sender, EventArgs e)
+        /// <summary>
+        /// 窗体加载事件
+        /// 完成连接和欢迎验证后显示登录界面
+        /// </summary>
+        private async void frmLogin_Load(object sender, EventArgs e)
         {
             //Opacity = 0.0;
             //fadeTimer.Start();
 
+            System.Diagnostics.Debug.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
 
+            // 先加载保存的用户配置
+            LoadUserConfig();
+
+            // 初始化原始服务器信息，用于IP地址变更检测
+            _originalServerIP = txtServerIP.Text.Trim();
+            _originalServerPort = txtPort.Text.Trim();
+
+            // 在后台执行连接和欢迎验证流程
+            // 使用Task.Run避免阻塞UI线程
+            _ = Task.Run(async () => await InitializeConnectionAndWelcomeFlowAsync());
+        }
+
+        /// <summary>
+        /// 加载保存的用户配置
+        /// </summary>
+        private void LoadUserConfig()
+        {
             //已經讀出保存的用戶設置 ,並將保存的用戶名和密碼顯示在對話框中
             if (UserGlobalConfig.Instance.AutoSavePwd == true)
             {
@@ -122,8 +192,6 @@ namespace RUINORERP.UI
                 txtPassWord.Text = "";
             }
 
-
-
             if (UserGlobalConfig.Instance.AutoSavePwd)
             {
                 chksaveIDpwd.Checked = true;
@@ -132,15 +200,57 @@ namespace RUINORERP.UI
             {
                 chksaveIDpwd.Checked = false;
             }
+        }
 
-            System.Diagnostics.Debug.WriteLine($"UI: {Thread.CurrentThread.ManagedThreadId}");
+        /// <summary>
+        /// 初始化连接并等待欢迎流程完成
+        /// 在后台执行，确保登录界面正常显示
+        /// </summary>
+        private async Task InitializeConnectionAndWelcomeFlowAsync()
+        {
+            try
+            {
+                MainForm.Instance?.logger?.LogInformation("开始初始化连接和欢迎流程...");
 
-            // 初始化原始服务器信息，用于IP地址变更检测
-            _originalServerIP = txtServerIP.Text.Trim();
-            _originalServerPort = txtPort.Text.Trim();
+                // 验证服务器地址和端口
+                if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort) || serverPort <= 0)
+                {
+                    MainForm.Instance?.logger?.LogWarning("服务器配置不完整，等待用户输入");
+                    return;
+                }
 
-            txtUserName.Focus();
+                // 1. 连接服务器
+                bool connectResult = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                if (!connectResult)
+                {
+                    MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", txtServerIP.Text.Trim(), serverPort);
+                    // 连接失败，但不阻止登录界面显示，用户可以修改配置后重试
+                    return;
+                }
 
+                MainForm.Instance?.logger?.LogInformation("服务器连接成功，等待欢迎消息...");
+
+                // 2. 等待欢迎流程完成（等待最多10秒）
+                // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要等待确认
+                var welcomeTimeout = TimeSpan.FromSeconds(10);
+                var welcomeTask = _welcomeCompletionTcs.Task;
+                var completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
+
+                if (completedTask == welcomeTask && await welcomeTask)
+                {
+                    _welcomeCompleted = true;
+                    MainForm.Instance?.logger?.LogInformation("欢迎流程验证通过，服务器连接已就绪");
+                }
+                else
+                {
+                    MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时，但连接已建立");
+                    // 不阻止登录流程，服务器端有超时保护机制
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "初始化连接和欢迎流程时发生异常");
+            }
         }
 
         static CancellationTokenSource source = new CancellationTokenSource();

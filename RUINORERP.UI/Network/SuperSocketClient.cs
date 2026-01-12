@@ -97,8 +97,49 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 检查Socket实际状态，确保连接状态准确反映实际连接情况
-                    return _isConnected && _client?.Socket != null && _client.Socket.Connected;
+                    // 多维度检查连接状态，确保准确性
+                    
+                    // 1. 检查基本连接状态标志
+                    if (!_isConnected)
+                        return false;
+                    
+                    // 2. 检查客户端实例是否存在
+                    if (_client == null)
+                        return false;
+                    
+                    // 3. 检查Socket实例是否存在
+                    if (_client.Socket == null)
+                        return false;
+                    
+                    // 4. 检查Socket连接状态
+                    if (!_client.Socket.Connected)
+                        return false;
+                    
+                    // 5. 优化Socket可用性检测，避免误判
+                    // 移除可能导致误判的Poll检测，改用更可靠的方法
+                    // Poll检测在某些情况下会误判，特别是在心跳超时但连接仍正常的情况下
+                    try
+                    {
+                        // 只检查Socket是否可写，避免误判
+                        if (!_client.Socket.Poll(0, SelectMode.SelectWrite))
+                        {
+                            // 检查Socket是否有错误
+                            int errorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                            if (errorCode != 0)
+                            {
+                                _logger?.LogDebug("检测到Socket错误，错误码: {ErrorCode}", errorCode);
+                                return false;
+                            }
+                        }
+                    }
+                    catch (SocketException ex)
+                    {
+                        // Socket异常，认为连接已断开
+                        _logger?.LogError(ex, "Socket状态检查异常");
+                        return false;
+                    }
+                    // 所有检查通过，认为连接正常
+                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -272,17 +313,23 @@ namespace RUINORERP.UI.Network
         {
             try
             {
+                // 添加主动断开连接警告日志
+                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接");
+                
                 _isConnected = false;
                 _healthCheckService?.Stop();
                 _healthCheckService?.Dispose();
                 _healthCheckService = null;
                 var closeResult = await _client.Close();
                 _networkHealthWarningShown = false;
+                
+                _logger?.LogWarning("[主动断开连接] 已成功断开与服务器的连接");
                 return closeResult;
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "断开连接时发生异常");
+                _logger?.LogWarning("[主动断开连接] 断开连接时发生异常");
                 // 即使发生异常，也确保状态正确设置
                 _isConnected = false;
                 return false;

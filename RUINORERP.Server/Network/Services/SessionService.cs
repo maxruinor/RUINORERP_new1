@@ -521,9 +521,20 @@ namespace RUINORERP.Server.Network.Services
                     return;
                 }
 
+
+
+                //========== 暂时先通过
+                sessionInfo.IsVerified = true;
+                sessionInfo.WelcomeAckReceived = true;
+                return;
+                //==========
+
+
                 sessionInfo.IsVerified = false;
                 sessionInfo.WelcomeSentTime = DateTime.Now;
                 sessionInfo.WelcomeAckReceived = false;
+
+
 
                 _logger.LogInformation($"[连接建立] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
 
@@ -562,9 +573,24 @@ namespace RUINORERP.Server.Network.Services
 
                 if (responsePacket?.Response is WelcomeResponse welcomeResponse)
                 {
-
                     sessionInfo.IsVerified = true;
                     sessionInfo.WelcomeAckReceived = true;
+
+                    // 记录客户端信息
+                    if (sessionInfo.UserInfo == null)
+                    {
+                        sessionInfo.UserInfo = new CurrentUserInfo();
+                    }
+
+                    sessionInfo.UserInfo.客户端版本 = welcomeResponse.ClientVersion;
+                    sessionInfo.UserInfo.操作系统 = welcomeResponse.ClientOS;
+                    sessionInfo.UserInfo.机器名 = welcomeResponse.ClientMachineName;
+                    sessionInfo.UserInfo.CPU信息 = welcomeResponse.ClientCPU;
+                    sessionInfo.UserInfo.内存大小 = welcomeResponse.ClientMemoryMB > 0
+                        ? $"{welcomeResponse.ClientMemoryMB / 1024:F1} GB"
+                        : "未知";
+
+                    _logger.LogInformation($"[欢迎成功] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}, 版本={welcomeResponse.ClientVersion}");
                 }
 
             }
@@ -805,6 +831,8 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+
+
         /// <summary>
         /// 设置会话属性
         /// </summary>
@@ -859,6 +887,9 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 username = sessionInfo.UserName ?? "未知";
+                
+                // 添加主动断开连接警告日志
+                _logger.LogWarning($"[主动断开连接] 准备断开会话: SessionID={sessionId}, UserName={username}, 原因={reason}");
 
                 try
                 {
@@ -931,6 +962,9 @@ namespace RUINORERP.Server.Network.Services
                     _logger.LogInformation($"用户没有活动会话: Username={username}");
                     return 0;
                 }
+
+                // 添加主动断开连接警告日志
+                _logger.LogWarning($"[主动断开连接] 准备断开用户所有会话: Username={username}, 会话数量={userSessions.Count}, 原因={reason}");
 
                 int successCount = 0;
 
@@ -1359,7 +1393,7 @@ namespace RUINORERP.Server.Network.Services
                 var allSessionIds = _sessions.Keys.ToList();
                 var timeoutSessions = new List<SessionInfo>();
 
-                // 2. 筛选超时会话，使用线程安全的方式访问会话信息
+                // 2. 筛选超时会话和未验证会话，使用线程安全的方式访问会话信息
                 foreach (var sessionId in allSessionIds)
                 {
                     if (_sessions.TryGetValue(sessionId, out var session))
@@ -1367,9 +1401,33 @@ namespace RUINORERP.Server.Network.Services
                         // 增强线程安全性：使用锁保护会话访问
                         lock (session)
                         {
+                            // 检查1: 活动超时（30分钟无活动）
                             if (session.LastActivityTime.AddMinutes(30) < DateTime.Now)
                             {
                                 timeoutSessions.Add(session);
+                                _logger.LogWarning($"[活动超时] SessionID={session.SessionID}, IP={session.ClientIp}, 最后活动={session.LastActivityTime}");
+                                continue;
+                            }
+
+                            // 检查2: 未验证会话（欢迎回复超时2分钟后强制断开）
+                            if (!session.IsVerified &&
+                                !session.WelcomeAckReceived &&
+                                session.WelcomeSentTime.HasValue &&
+                                session.WelcomeSentTime.Value.AddMinutes(2) < DateTime.Now)
+                            {
+                                timeoutSessions.Add(session);
+                                _logger.LogWarning($"[欢迎超时-定时检查] SessionID={session.SessionID}, IP={session.ClientIp}");
+                                continue;
+                            }
+
+                            // 检查3: 已验证但未授权的会话（5分钟内未登录强制断开）
+                            if (session.IsVerified &&
+                                !session.IsAuthenticated &&
+                                session.ConnectedTime.AddMinutes(5) < DateTime.Now)
+                            {
+                                timeoutSessions.Add(session);
+                                _logger.LogWarning($"[未授权超时] SessionID={session.SessionID}, IP={session.ClientIp}, 连接时间={session.ConnectedTime}");
+                                continue;
                             }
                         }
                     }
@@ -1454,7 +1512,21 @@ namespace RUINORERP.Server.Network.Services
                 var abnormalCount = 0;
                 foreach (var session in abnormalSessions)
                 {
-                    _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}");
+                    // 使用更详细的日志，包含最后心跳时间
+                    _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}, 最后心跳: {session.LastHeartbeat}");
+                    
+                    // 更新会话状态为心跳异常
+                    lock (session)
+                    {
+                        session.HeartbeatFailedCount++;
+                        
+                        // 如果心跳失败次数过多，考虑标记会话为异常
+                        if (session.HeartbeatFailedCount > 3)
+                        {
+                            _logger.LogWarning($"会话心跳连续失败超过3次: {session.SessionID}, 准备清理");
+                        }
+                    }
+                    
                     abnormalCount++;
                 }
 

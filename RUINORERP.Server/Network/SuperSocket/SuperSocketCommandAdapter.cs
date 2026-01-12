@@ -169,6 +169,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (package == null)
             {
                 _logger?.LogWarning("接收到空的数据包");
+                _logger?.LogWarning($"[主动断开连接] 接收到空数据包，准备关闭连接: SessionId={session.SessionID}");
                 await SendErrorResponseAsync(session, package, UnifiedErrorCodes.System_InternalError, CancellationToken.None);
                 return;
             }

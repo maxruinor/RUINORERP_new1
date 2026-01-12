@@ -47,6 +47,12 @@ namespace RUINORERP.UI.Network
 
         public event Action<string, TimeSpan> RequestCompleted; // 新增：请求完成事件
 
+        /// <summary>
+        /// 当欢迎流程完成时触发的事件
+        /// 参数success表示欢迎流程是否成功完成
+        /// </summary>
+        public event Action<bool> WelcomeCompleted;
+
         // 专门用于服务器推送命令的事件
         public event Action<PacketModel, object> ServerPushCommandReceived;
 
@@ -225,6 +231,46 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
+        /// 触发欢迎流程完成事件
+        /// </summary>
+        /// <param name="success">欢迎流程是否成功完成</param>
+        public void OnWelcomeCompleted(bool success)
+        {
+            // 获取事件处理程序的快照
+            Action<bool> handler;
+            lock (_lock)
+            {
+                handler = WelcomeCompleted;
+            }
+
+            if (handler == null)
+            {
+                _logger?.LogDebug("欢迎流程完成事件没有订阅者");
+                return;
+            }
+
+            try
+            {
+                // 触发事件
+                handler.Invoke(success);
+                _logger?.LogDebug("成功触发欢迎流程完成事件: {Status}", success ? "成功" : "失败");
+            }
+            catch (Exception ex)
+            {
+                // 记录异常并触发错误事件
+                string errorMessage = $"处理欢迎流程完成事件时出错，状态: {success}";
+                LogException(ex, errorMessage);
+
+                // 避免在错误处理中又触发异常导致无限循环
+                try
+                {
+                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
+                }
+                catch { }
+            }
+        }
+
+        /// <summary>
         /// 触发错误事件
         /// </summary>
         /// <param name="ex">异常对象，包含错误的详细信息</param>
@@ -272,6 +318,9 @@ namespace RUINORERP.UI.Network
                 handler = ConnectionClosed;
             }
 
+            // 添加主动断开连接警告日志
+            _logger?.LogWarning("[主动断开连接] 连接已关闭");
+            
             if (handler == null)
                 return;
 

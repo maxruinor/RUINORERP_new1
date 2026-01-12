@@ -118,6 +118,10 @@ namespace RUINORERP.UI
         /// </summary>
         private const int MaxCacheSize = 100;
 
+        /// <summary>
+        /// 当前日志级别，用于动态调整日志输出
+        /// </summary>
+        public static LogLevel CurrentLogLevel = LogLevel.Information;
 
         /// <summary>
         /// 没使用用csla时使用
@@ -217,35 +221,33 @@ namespace RUINORERP.UI
             string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
 
             Program.InitAppcontextValue(Program.AppContextData);
+            
+            // 初始化当前日志级别
+            var configSection = Program.Configuration?.GetSection("SystemGlobalConfig");
+            var globalLogLevel = configSection?.GetValue<string>("LogLevel") ?? "Information";
+            if (Enum.TryParse(globalLogLevel, true, out LogLevel initialLogLevel))
+            {
+                CurrentLogLevel = initialLogLevel;
+            }
+            
             // by watson 2024-6-28
             services.AddLogging(logBuilder =>
             {
                 // 清除所有现有提供者，避免冲突
                 logBuilder.ClearProviders();
 
-                // 添加日志过滤规则
+                // 添加日志过滤规则，使用动态日志级别
                 logBuilder.AddFilter((category, logLevel) =>
                 {
-                    // 从系统配置中获取日志级别设置
-                    var configSection = Program.Configuration?.GetSection("SystemGlobalConfig");
-                    var globalLogLevel = configSection?.GetValue<string>("LogLevel") ?? "Information";
-                    LogLevel systemLogLevel;
-
-                    // 尝试解析日志级别
-                    if (!Enum.TryParse(globalLogLevel, true, out systemLogLevel))
-                    {
-                        systemLogLevel = LogLevel.Information; // 默认级别
-                    }
-
                     // 为WorkflowCore设置特殊的日志级别控制
                     if (category.StartsWith("WorkflowCore"))
                     {
                         // 可以在这里专门为WorkflowCore设置不同的级别，或者使用系统统一级别
-                        return logLevel >= systemLogLevel;
+                        return logLevel >= CurrentLogLevel;
                     }
 
-                    // 其他日志使用系统统一级别
-                    return logLevel >= systemLogLevel;
+                    // 其他日志使用动态调整的系统统一级别
+                    return logLevel >= CurrentLogLevel;
                 });
 
                 // 添加自定义的数据库日志提供者
@@ -884,6 +886,27 @@ namespace RUINORERP.UI
             catch (Exception ex)
             {
                 _logger.Error("初始化Autofac容器作用域失败", ex);
+            }
+            
+            // 添加IOptionsMonitor监听，用于动态更新日志级别
+            try
+            {
+                var optionsMonitor = hostBuilder.Services.GetService<IOptionsMonitor<SystemGlobalConfig>>();
+                if (optionsMonitor != null)
+                {
+                    optionsMonitor.OnChange(config =>
+                    {
+                        if (!string.IsNullOrEmpty(config.LogLevel) && Enum.TryParse(config.LogLevel, true, out LogLevel newLogLevel))
+                        {
+                            CurrentLogLevel = newLogLevel;
+                            Console.WriteLine($"日志级别已动态更新为: {newLogLevel}");
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("设置动态日志级别监听失败", ex);
             }
             
             return hostBuilder;

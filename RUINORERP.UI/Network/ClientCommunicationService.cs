@@ -91,13 +91,20 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 新增心跳相关字段
-        private readonly int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔（与服务器端保持一致）
+        private int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔（与服务器端保持一致）
+        private int _baseHeartbeatIntervalMs = 30000; // 基础心跳间隔
+        private int _minHeartbeatIntervalMs = 10000; // 最小心跳间隔10秒
+        private int _maxHeartbeatIntervalMs = 120000; // 最大心跳间隔2分钟
+        private int _networkQualityThresholdGood = 100; // 网络质量良好的阈值（毫秒）
+        private int _networkQualityThresholdPoor = 500; // 网络质量差的阈值（毫秒）
         private CancellationTokenSource _heartbeatCancellationTokenSource;
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
         private int _heartbeatFailedAttempts;
         private bool _isHeartbeatRunning;
+        private readonly Queue<double> _latencyHistory = new Queue<double>();
+        private readonly int _maxLatencyHistory = 10; // 延迟历史记录的最大数量
 
 
 
@@ -210,6 +217,65 @@ namespace RUINORERP.UI.Network
         /// 检查是否正在进行重连操作
         /// </summary>
         public bool IsReconnecting => _connectionManager.IsReconnecting;
+
+        #endregion
+
+        #region 网络质量评估方法
+
+        /// <summary>
+        /// 记录网络延迟
+        /// </summary>
+        /// <param name="latencyMs">延迟时间（毫秒）</param>
+        private void RecordLatency(double latencyMs)
+        {
+            _latencyHistory.Enqueue(latencyMs);
+            if (_latencyHistory.Count > _maxLatencyHistory)
+            {
+                _latencyHistory.Dequeue();
+            }
+        }
+
+        /// <summary>
+        /// 计算平均延迟
+        /// </summary>
+        /// <returns>平均延迟时间</returns>
+        private double GetAverageLatency()
+        {
+            if (_latencyHistory.Count == 0) return 0;
+            return _latencyHistory.Average();
+        }
+
+        /// <summary>
+        /// 根据网络质量动态调整心跳间隔
+        /// </summary>
+        private void AdjustHeartbeatInterval()
+        {
+            var avgLatency = GetAverageLatency();
+            
+            if (avgLatency == 0) return; // 没有延迟数据，不调整
+            
+            int newInterval;
+            if (avgLatency < _networkQualityThresholdGood) // 网络良好
+            {
+                newInterval = Math.Max(_baseHeartbeatIntervalMs / 2, _minHeartbeatIntervalMs); // 减少心跳间隔，但不低于最小值
+            }
+            else if (avgLatency < _networkQualityThresholdPoor) // 网络一般
+            {
+                newInterval = _baseHeartbeatIntervalMs; // 使用基础间隔
+            }
+            else // 网络较差
+            {
+                newInterval = Math.Min(_baseHeartbeatIntervalMs * 2, _maxHeartbeatIntervalMs); // 增加心跳间隔，但不超过最大值
+            }
+
+            // 如果心跳失败次数较多，适当增加间隔
+            if (_heartbeatFailedAttempts > 1)
+            {
+                newInterval = Math.Min(newInterval * (_heartbeatFailedAttempts + 1), _maxHeartbeatIntervalMs);
+            }
+
+            _heartbeatIntervalMs = newInterval;
+        }
 
         #endregion
 
@@ -534,7 +600,13 @@ namespace RUINORERP.UI.Network
                 
                 // 重连成功后，立即启动队列处理
                 _ = Task.Run(ProcessCommandQueueAsync);
-                
+                            
+                // 重置心跳失败次数
+                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                            
+                // 重置心跳间隔为基础值
+                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
+                            
                 // 重新启动心跳
                 StartHeartbeat();
             }
@@ -672,36 +744,68 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
-            _logger?.LogDebug("进入心跳循环（优化版）");
+            _logger?.LogDebug("进入心跳循环（优化版），心跳间隔：{IntervalMs}ms", _heartbeatIntervalMs);
 
             while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
             {
                 try
                 {
-                    // 使用ConfigureAwait(false)避免UI线程阻塞
+                    _logger?.LogTrace("心跳循环迭代开始");
+                    
+                    // 使用动态心跳间隔，使用ConfigureAwait(false)避免UI线程阻塞
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
                     // 检查系统锁定状态，如果已锁定则停止心跳
-                if (MainForm.Instance != null && MainForm.Instance.IsLocked)
-                {
-                    _logger?.LogDebug("系统处于锁定状态，跳过本次心跳发送");
-                    continue; // 跳过本次心跳，不增加失败计数
-                }
+                    if (MainForm.Instance != null && MainForm.Instance.IsLocked)
+                    {
+                        _logger?.LogDebug("系统处于锁定状态，跳过本次心跳发送");
+                        continue; // 跳过本次心跳，不增加失败计数
+                    }
 
-                // 检查连接状态
-                if (!_socketClient.IsConnected)
-                {
-                    continue;
-                }
+                    // 检查连接状态
+                    bool initialConnected = _socketClient.IsConnected;
+                    _logger?.LogTrace("心跳前连接状态检查: {Connected}", initialConnected);
+                    
+                    if (!initialConnected)
+                    {
+                        _logger?.LogDebug("连接已断开，跳过本次心跳发送");
+                        continue;
+                    }
 
-                // 发送心跳（异步执行，避免阻塞）
-                bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
+                    // 发送心跳（异步执行，避免阻塞）
+                    _logger?.LogTrace("开始发送心跳请求");
+                    bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
+                    _logger?.LogTrace("心跳请求发送完成，结果: {Success}", success);
 
-                // 使用轻量级同步机制处理状态更新
-                UpdateHeartbeatState(success);
+                    // 心跳失败时立即检查连接状态
+                    if (!success)
+                    {
+                        // 主动检查连接状态，确保与实际网络状态一致
+                        bool actualConnected = _socketClient.IsConnected;
+                        _logger?.LogTrace("心跳失败，实际连接状态: {ActualConnected}", actualConnected);
+                        
+                        if (!actualConnected)
+                        {
+                            _logger?.LogWarning("心跳失败，检测到实际连接已断开，更新连接状态");
+                            // 直接更新连接状态，触发重连
+                            OnConnectionStateChanged(false);
+                        }
+                        else
+                        {
+                            // 网络连接正常但心跳失败，可能是服务器繁忙或网络暂时波动
+                            // 不立即触发重连，让心跳机制继续运行
+                            _logger?.LogDebug("心跳失败但网络连接正常，等待下一次心跳");
+                        }
+                    }
+
+                    // 使用轻量级同步机制处理状态更新
+                    UpdateHeartbeatState(success);
+                    
+                    _logger?.LogTrace("心跳循环迭代结束");
                 }
                 catch (OperationCanceledException)
                 {
+                    _logger?.LogDebug("心跳循环被取消");
                     break;
                 }
                 catch (Exception ex)
@@ -737,6 +841,19 @@ namespace RUINORERP.UI.Network
                         // 使用Task.Run避免UI线程阻塞
                         Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
                         _logger?.LogDebug("心跳恢复，之前连续失败次数：{PreviousFailures}", previousFailures);
+                        
+                        // 恢复自动重连（如果已停止）
+                        try
+                        {
+                            _connectionManager.StartAutoReconnect();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "恢复自动重连时发生异常");
+                        }
+                        
+                        // 心跳恢复后，可以适当减小心跳间隔
+                        _heartbeatIntervalMs = Math.Max(_baseHeartbeatIntervalMs, _heartbeatIntervalMs / 2);
                     }
                     else
                     {
@@ -752,41 +869,46 @@ namespace RUINORERP.UI.Network
                     Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
                     _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
 
+                    // 只有在连接确实断开时才触发重连
+                    if (!_socketClient.IsConnected)
+                    {
+                        _logger?.LogWarning("心跳失败且连接已断开，触发重连机制");
+                        try
+                        {
+                            _connectionManager.StartAutoReconnect();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "启动自动重连时发生异常");
+                        }
+                    }
+                    else
+                    {
+                        _logger?.LogDebug("心跳失败但连接正常，等待下一次心跳");
+                    }
+
                     // 检查是否达到心跳失败阈值
                     if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
                         _logger?.LogError("心跳失败达到阈值({Threshold})，触发锁定事件", HEARTBEAT_FAILURE_THRESHOLD);
 
-                        // 停止重连机制以避免资源浪费
-                        try
-                        {
-                            _connectionManager.StopAutoReconnect();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "停止自动重连时发生异常");
-                        }
-
-                        // 停止心跳检测，因为系统已进入锁定状态
-                        StopHeartbeat();
-
                         // 异步触发阈值事件，由MainForm的事件处理程序负责系统锁定
                         Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                        
+                        // 注意：不再停止重连机制，而是让重连继续尝试恢复连接
+                        // 这样可以在网络恢复后自动重新连接
+                        _logger?.LogDebug("心跳失败达到阈值，但仍保持自动重连机制运行");
+                        
+                        // 不停止心跳检测，而是继续尝试恢复心跳
+                        _logger?.LogDebug("心跳失败达到阈值，但仍保持心跳检测运行");
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "更新心跳状态时发生异常");
-                // 异常情况下停止心跳，避免无限循环
-                try
-                {
-                    StopHeartbeat();
-                }
-                catch
-                {
-                    // 忽略停止心跳时的异常
-                }
+                // 异常情况下不停止心跳，而是记录日志并继续
+                // 避免因为单次异常导致整个心跳机制失效
             }
         }
 
@@ -828,21 +950,91 @@ namespace RUINORERP.UI.Network
 
                 heartbeatRequest.UserInfo = MainForm.Instance.AppContext.CurUserInfo;
 
-
-                var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
-                    SystemCommands.Heartbeat, heartbeatRequest, cancellationToken);
-
-                if (response != null && response.IsSuccess)
+                // 增加心跳重试机制，最多重试2次
+                const int maxRetries = 2;
+                bool isTimeoutOccurred = false;
+                for (int retry = 0; retry <= maxRetries; retry++)
                 {
+                    try
+                    {
+                        _logger?.LogDebug("发送心跳请求，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
+                        
+                        // 记录发送时间用于延迟计算
+                        var sendTime = DateTime.Now;
+                        
+                        // 为心跳请求设置更长的超时时间（60秒）
+                        var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
+                            SystemCommands.Heartbeat, heartbeatRequest, cancellationToken, 60000);
 
-                    //心跳响应
-                    MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
+                        if (response != null && response.IsSuccess)
+                        {
+                            // 计算网络延迟
+                            var roundTripTime = (DateTime.Now - sendTime).TotalMilliseconds;
+                            var estimatedLatency = roundTripTime / 2; // 单向延迟估计
+                            RecordLatency(estimatedLatency);
+                            
+                            // 动态调整心跳间隔
+                            AdjustHeartbeatInterval();
+                            
+                            // 检查服务器是否推荐了新的心跳间隔
+                            if (response.ServerInfo != null && 
+                                response.ServerInfo.ContainsKey("RecommendedInterval") && 
+                                int.TryParse(response.ServerInfo["RecommendedInterval"]?.ToString(), out int recommendedInterval))
+                            {
+                                // 使用服务器推荐的间隔，但不超过客户端设置的最大值
+                                _heartbeatIntervalMs = Math.Min(recommendedInterval, 120000);
+                            }
+                            
+                            //心跳响应
+                            MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
+                            return true;
+                        }
+                        
+                        if (retry < maxRetries)
+                        {
+                            // 等待一段时间后重试
+                            await Task.Delay(2000, cancellationToken);
+                            _logger?.LogDebug("心跳请求失败，将进行重试");
+                        }
+                    }
+                    catch (TimeoutException ex)
+                    {
+                        _logger?.LogWarning(ex, "心跳请求超时，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
+                        isTimeoutOccurred = true;
+                        
+                        // 心跳超时时主动检查连接状态
+                        if (!_socketClient.IsConnected)
+                        {
+                            _logger?.LogWarning("心跳超时，检测到连接已断开，立即触发重连");
+                            // 立即触发重连
+                            _connectionManager.StartAutoReconnect();
+                            return false;
+                        }
+                        
+                        if (retry < maxRetries)
+                        {
+                            // 等待一段时间后重试
+                            await Task.Delay(2000, cancellationToken);
+                            _logger?.LogDebug("心跳请求超时，将进行重试");
+                        }
+                    }
+                    catch (Exception ex) when (retry < maxRetries)
+                    {
+                        _logger?.LogWarning(ex, "发送心跳时发生异常，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
+                        
+                        // 等待一段时间后重试
+                        await Task.Delay(2000, cancellationToken);
+                        _logger?.LogDebug("发送心跳异常，将进行重试");
+                    }
                 }
-                return response != null && response.IsSuccess;
+                
+                // 所有重试都失败
+                _logger?.LogWarning("心跳请求失败，已达到最大重试次数");
+                return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogDebug(ex, "发送心跳时发生异常");
+                _logger?.LogError(ex, "发送心跳时发生未处理异常");
                 return false;
             }
         }
@@ -870,8 +1062,8 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         public async Task<bool> Disconnect()
         {
-            _logger?.LogDebug("断开服务器连接");
-
+            // 添加主动断开连接警告日志
+            _logger?.LogWarning("[主动断开连接] 开始断开服务器连接");
 
             // 停止心跳
             try
@@ -902,7 +1094,8 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger?.LogDebug("取消重连操作并强制断开连接（服务器切换）");
+                // 添加主动断开连接警告日志
+                _logger?.LogWarning("[主动断开连接] 取消重连操作并强制断开连接（服务器切换）");
 
                 // 停止心跳
                 StopHeartbeat();
@@ -1969,9 +2162,11 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 构建响应数据包
                 var packet = PacketBuilder.Create()
                     .WithDirection(PacketDirection.ClientResponse) // 设置为客户端响应方向
-                    .WithCommandId(commandId)
-                    .WithResponse(response)
+                    .WithCommand(commandId)
                     .Build();
+
+                // 设置响应数据
+                packet.Response = response;
 
                 // 设置ExecutionContext
                 if (packet.ExecutionContext == null)
@@ -1987,9 +2182,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 附加令牌（如果需要）
                 await AutoAttachTokenAsync(packet.ExecutionContext);
 
-                // 序列化并发送
-                var serialized = PacketSerializer.Serialize(packet);
-                await _socketClient.SendAsync(serialized);
+                // 序列化和加密数据包（使用与SendPacketCoreAsync相同的方式）
+                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
+                var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
+
+                await _socketClient.SendAsync(encrypted);
 
                 _logger.LogDebug("响应包发送成功: CommandId={CommandId}, RequestId={RequestId}", commandId, originalRequestId);
                 return true;
@@ -2000,8 +2198,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 return false;
             }
         }
-
-
 
 
         /// <summary>
@@ -2275,36 +2471,56 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             int timeoutMs = 30000)
             where TResponse : class, IResponse
         {
-            try
+            const int maxRetries = 2;
+            int retryCount = 0;
+            
+            while (true)
             {
-                var packet = await SendRequestAsync<IRequest, TResponse>(commandId, request, ct, timeoutMs);
-
-                if (packet == null)
+                try
                 {
-                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到服务器响应");
+                    var packet = await SendRequestAsync<IRequest, TResponse>(commandId, request, ct, timeoutMs);
+
+                    if (packet == null)
+                    {
+                        return ResponseFactory.CreateSpecificErrorResponse<TResponse>("未收到服务器响应");
+                    }
+
+                    var responseData = packet.Response;
+
+                    // 检查响应数据是否为空
+                    if (responseData == null)
+                    {
+                        _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}");
+                        return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
+                    }
+                    return responseData as TResponse;
                 }
-
-                var responseData = packet.Response;
-
-                // 检查响应数据是否为空
-                if (responseData == null)
+                catch (Exception ex)
                 {
-                    _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}");
-                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
-                }
-                return responseData as TResponse;
-            }
-            catch (Exception ex)
-            {
-                _clientEventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
-                // 如果是操作取消异常，重新抛出
-                if (ex is OperationCanceledException)
-                {
-                    throw;
-                }
+                    _clientEventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
+                    // 如果是操作取消异常，重新抛出
+                    if (ex is OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    
+                    // 检查是否是可重试异常并且还有重试次数
+                    if (IsRetryableException(ex) && retryCount < maxRetries)
+                    {
+                        retryCount++;
+                        _logger?.LogWarning(ex, "命令发送失败，将进行第 {RetryCount}/{MaxRetries} 次重试。命令ID: {CommandId}", retryCount, maxRetries, commandId);
+                        
+                        // 指数退避等待
+                        int backoffMs = (int)Math.Pow(2, retryCount) * 1000; // 1秒, 2秒, 4秒...
+                        await Task.Delay(backoffMs, ct);
+                        
+                        // 继续重试
+                        continue;
+                    }
 
-                // 返回错误响应
-                return ResponseFactory.CreateSpecificErrorResponse<TResponse>($"命令执行失败: {ex.Message}");
+                    // 返回错误响应
+                    return ResponseFactory.CreateSpecificErrorResponse<TResponse>($"命令执行失败: {ex.Message}");
+                }
             }
         }
 

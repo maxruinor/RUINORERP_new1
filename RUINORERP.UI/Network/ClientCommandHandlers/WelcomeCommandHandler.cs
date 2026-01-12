@@ -21,19 +21,23 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
     {
         private readonly ILogger<WelcomeCommandHandler> _logger;
         private readonly IClientCommunicationService _communicationService;
+        private readonly ClientEventManager _eventManager;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="logger">日志记录器</param>
         /// <param name="communicationService">通信服务</param>
+        /// <param name="eventManager">事件管理器</param>
         public WelcomeCommandHandler(
             ILogger<WelcomeCommandHandler> logger,
-            IClientCommunicationService communicationService)
+            IClientCommunicationService communicationService,
+            ClientEventManager eventManager)
             : base(logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _communicationService = communicationService ?? throw new ArgumentNullException(nameof(communicationService));
+            _eventManager = eventManager ?? throw new ArgumentNullException(nameof(eventManager));
 
             // 注册支持的命令
             SetSupportedCommands(SystemCommands.Welcome);
@@ -93,15 +97,29 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         welcomeResponse,
                         welcomeRequest.RequestId
                     );
+
+                    // 触发欢迎流程完成事件，通知等待的登录流程
+                    if (rs)
+                    {
+                        _eventManager?.OnWelcomeCompleted(true);
+                        _logger?.LogInformation("欢迎流程成功完成");
+                    }
+                    else
+                    {
+                        _eventManager?.OnWelcomeCompleted(false);
+                        _logger?.LogWarning("欢迎响应发送失败");
+                    }
                 }
                 else
                 {
                     _logger.LogWarning("服务器的欢迎请求数据格式不正确");
+                    _eventManager?.OnWelcomeCompleted(false);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理欢迎命令时发生异常");
+                _eventManager?.OnWelcomeCompleted(false);
             }
         }
 

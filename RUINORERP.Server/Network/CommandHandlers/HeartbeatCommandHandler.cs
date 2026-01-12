@@ -127,7 +127,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                             ["ServerVersion"] = "1.0.0",
-                            ["SessionId"] = sessionInfo.SessionID
+                            ["SessionId"] = sessionInfo.SessionID,
+                            ["RecommendedInterval"] = nextIntervalMs // 推荐的心跳间隔
                         }
                     };
 
@@ -147,6 +148,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 LogError($"处理心跳命令异常: {ex.Message}", ex);
+                LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
+                
                 var errorResponse = new HeartbeatResponse
                 {
                     IsSuccess = false,

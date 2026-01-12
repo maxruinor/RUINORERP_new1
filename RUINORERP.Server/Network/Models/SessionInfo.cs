@@ -183,6 +183,12 @@ namespace RUINORERP.Server.Network.Models
                 LastError = $"网络错误: {ex.Message}";
                 Status = SessionStatus.Disconnected;
                 IsConnected = false;
+                // 添加主动断开连接警告日志
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"[主动断开连接] 网络错误导致会话断开: SessionID={SessionID}, Error={ex.Message}");
+                }
+                catch {}
             }
             catch (Exception ex)
             {
@@ -315,6 +321,11 @@ namespace RUINORERP.Server.Network.Models
         /// 心跳检查计数器
         /// </summary>
         public int HeartbeatCheckCount { get; set; }
+
+        /// <summary>
+        /// 心跳失败计数器
+        /// </summary>
+        public int HeartbeatFailedCount { get; set; }
 
         /// <summary>
         /// 会话状态

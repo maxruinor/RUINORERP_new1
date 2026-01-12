@@ -2015,7 +2015,10 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
 
                 }
+                if (packet.CommandId == AuthenticationCommands.Login)
+                {
 
+                }
 
                 // 序列化和加密数据包
                 var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);

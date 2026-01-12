@@ -103,7 +103,7 @@ namespace RUINORERP.Server.Network.Core
                 Array.Copy(packageBytes, 0, Head, 0, HeaderLength);
                 // 解密数据
                 //var decryptedData = PacketSpec.Security.EncryptedProtocol.DecryptionClientPack(Head, HeaderLength, packageBytes);
-                var decryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.DecryptClientPacket(Head,  packageBytes);
+                var decryptedData = PacketSpec.Security.UnifiedEncryptionProtocol.DecryptClientPacket(Head, packageBytes);
                 // 反序列化数据包
                 PacketModel packet;
 
@@ -117,11 +117,15 @@ namespace RUINORERP.Server.Network.Core
                     {
 
                     }
+                    else if (packet.CommandId.Category == PacketSpec.Commands.CommandCategory.System && packet.CommandId.FullCode == SystemCommands.WelcomeAck)
+                    {
+
+
+                    }
                     else
                     {
 
                     }
-
                     // 如果没有请求ID，或者对应的任务已完成，则视为服务器主动推送的命令
                     if (!packet.Extensions.ContainsKey("RequestId"))
                     {

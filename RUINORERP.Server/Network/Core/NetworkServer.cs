@@ -308,6 +308,14 @@ namespace RUINORERP.Server.Network.Core
                           services.AddSingleton<ISessionService>(_sessionManager);
                           services.AddSingleton(_commandDispatcher);
 
+                          // 创建新的 ClientResponseHandler 实例
+                          var logger = globalServiceProvider?.GetService<ILogger<ClientResponseHandler>>();
+                          if (logger != null)
+                          {
+                              var clientResponseHandler = new ClientResponseHandler(logger);
+                              services.AddSingleton<IClientResponseHandler>(clientResponseHandler);
+                          }
+
                           //services.AddLogging(builder =>
                           //{
                           //    builder.AddConsole();
@@ -464,6 +472,13 @@ namespace RUINORERP.Server.Network.Core
                 // 注册核心服务为单例，确保使用与全局相同的实例
                 services.AddSingleton<ISessionService>(_sessionManager);
                 services.AddSingleton(_commandDispatcher);
+
+                // 注册客户端响应处理器
+                var clientResponseHandler = globalProvider.GetService<IClientResponseHandler>();
+                if (clientResponseHandler != null)
+                {
+                    services.AddSingleton<IClientResponseHandler>(clientResponseHandler);
+                }
 
                 // 注册全局服务提供者本身，以便在需要时可以访问所有全局服务
                 services.AddSingleton(globalProvider);

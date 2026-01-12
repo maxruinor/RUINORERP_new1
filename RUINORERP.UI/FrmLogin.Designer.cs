@@ -250,9 +250,10 @@ namespace RUINORERP.UI
             this.panelAnnouncement.Controls.Add(this.btnCloseAnnouncement);
             this.panelAnnouncement.Controls.Add(this.lblAnnouncement);
             this.panelAnnouncement.Controls.Add(this.lblAnnouncementTitle);
-            this.panelAnnouncement.Location = new System.Drawing.Point(43, 340);
+            this.panelAnnouncement.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panelAnnouncement.Location = new System.Drawing.Point(0, 351);
             this.panelAnnouncement.Name = "panelAnnouncement";
-            this.panelAnnouncement.Size = new System.Drawing.Size(316, 69);
+            this.panelAnnouncement.Size = new System.Drawing.Size(476, 54);
             this.panelAnnouncement.TabIndex = 26;
             this.panelAnnouncement.Visible = false;
             // 
@@ -264,7 +265,7 @@ namespace RUINORERP.UI
             this.btnCloseAnnouncement.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCloseAnnouncement.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCloseAnnouncement.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
-            this.btnCloseAnnouncement.Location = new System.Drawing.Point(291, 2);
+            this.btnCloseAnnouncement.Location = new System.Drawing.Point(451, 2);
             this.btnCloseAnnouncement.Name = "btnCloseAnnouncement";
             this.btnCloseAnnouncement.Size = new System.Drawing.Size(20, 20);
             this.btnCloseAnnouncement.TabIndex = 2;

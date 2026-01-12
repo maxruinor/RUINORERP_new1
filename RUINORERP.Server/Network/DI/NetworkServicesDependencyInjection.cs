@@ -52,6 +52,9 @@ namespace RUINORERP.Server.Network.DI
             services.AddSingleton<CacheSubscriptionManager>(provider =>
                 new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>()));
 
+            // 注册客户端响应处理器
+            services.AddSingleton<IClientResponseHandler, ClientResponseHandler>();
+
             // 注册诊断相关服务
             services.AddSingleton<DiagnosticsService>();
             services.AddSingleton<PerformanceMonitoringService>();
@@ -138,8 +141,13 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册缓存订阅管理器
             builder.Register(c => new CacheSubscriptionManager(c.Resolve<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>()
-               )) 
+               ))
                 .As<CacheSubscriptionManager>()
+                .SingleInstance();
+
+            // 注册客户端响应处理器
+            builder.RegisterType<ClientResponseHandler>()
+                .As<IClientResponseHandler>()
                 .SingleInstance();
 
             // 注册诊断相关服务

@@ -2064,15 +2064,6 @@ namespace RUINORERP.UI
                     }
 
 
-#warning TODO: 这里需要完善具体逻辑，当前仅为占位
-
-                    //ClientLockManagerCmd cmd = new ClientLockManagerCmd(CommandDirection.Send);
-                    //cmd.lockCmd = LockCmd.Broadcast;
-                    //MainForm.Instance.dispatcher.DispatchAsync(cmd, CancellationToken.None);
-                    //cmd.LockChanged += (sender, e) =>
-                    //{
-                    //    //使用事件模式来查询某一个单据被谁锁定
-                    //};
                 }
                 else
                 {
@@ -2117,8 +2108,7 @@ namespace RUINORERP.UI
             {
                 // 设置状态为登出中
                 CurrentLoginStatus = LoginStatus.LoggingOut;
-
-                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "开始登出服务器");
+               
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
@@ -2134,13 +2124,10 @@ namespace RUINORERP.UI
                 if (communicationService != null && communicationService.IsConnected)
                 {
                     var disconnectResult = await communicationService.Disconnect();
-                    logger?.LogInformation($"登出过程中断开连接结果: {disconnectResult}");
                 }
 
                 // 设置状态为未登录
                 CurrentLoginStatus = LoginStatus.None;
-
-                MainForm.Instance.AuditLogHelper.CreateAuditLog("登出", "成功登出服务器并断开连接");
 
             }
             catch (Exception ex)

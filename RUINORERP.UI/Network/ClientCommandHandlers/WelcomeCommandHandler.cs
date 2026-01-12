@@ -108,7 +108,6 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     if (rs)
                     {
                         _eventManager?.OnWelcomeCompleted(true);
-                        _logger?.LogInformation("欢迎流程成功完成");
                     }
                     else
                     {

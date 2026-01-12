@@ -56,6 +56,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         private readonly ILogger<SuperSocketCommandAdapter> _logger;
         private readonly ISessionService _sessionService;
         private readonly IServiceProvider _serviceProvider; // 添加服务提供者字段
+        private readonly IClientResponseHandler _clientResponseHandler; // 客户端响应处理器
 
         /// <summary>
         /// 会话服务
@@ -123,15 +124,19 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="sessionService">会话服务</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="clientResponseHandler">客户端响应处理器</param>
+        /// <param name="serviceProvider">服务提供者</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null,
+            IClientResponseHandler clientResponseHandler = null,
             IServiceProvider serviceProvider = null)
         {
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
             _logger = logger;
+            _clientResponseHandler = clientResponseHandler;
 
             // 优先使用注入的服务提供者，如果没有则使用全局服务提供者
             _serviceProvider = serviceProvider ?? Program.ServiceProvider;
@@ -158,7 +163,9 @@ namespace RUINORERP.Server.Network.SuperSocket
             if (IsNetworkMonitorEnabled && package?.Packet != null && ShouldMonitorCommand(package.Packet.CommandId))
             {
                 // 简化日志输出，移除重复的条件判断
-                frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
+                frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request?.RequestId}" +
+                    $"{package.Packet.Response?.RequestId}" +
+                    $" PacketId={package.Packet.PacketId}");
             }
 
             if (package == null)
@@ -179,7 +186,18 @@ namespace RUINORERP.Server.Network.SuperSocket
                     frmMainNew.Instance.PrintInfoLog($"[网络监控] 接收数据包的返回类型没有指定: SessionId={session.SessionID}, CommandId={package.Packet.CommandId.ToString()},RequestID={package.Packet.Request.RequestId} PacketId={package.Packet.PacketId}");
                 }
 
+                if (package.Packet.CommandId == LockCommands.Lock)
+                {
+
+                }
+
+                if (package.Packet.CommandId == SystemCommands.WelcomeAck)
+                {
+
+                }
+
                 // 检查是否是响应包（带有RequestId的响应包）
+                //一般是客户端响应服务器请求的数据包才使用，否则通过调度器处理（客户端主动请求服务器的命令）
                 if (IsResponsePacket(package.Packet))
                 {
                     // 处理响应包
@@ -200,16 +218,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                         // 序列化请求数据，计算大小
                         var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(package.Packet.Request);
                         var requestSize = System.Text.Encoding.UTF8.GetByteCount(requestJson);
-                        
+
                         // 设置合理的阈值，比如1MB
                         const long DATA_SIZE_THRESHOLD = 1024 * 1024; // 1MB
-                        
+
                         if (requestSize > DATA_SIZE_THRESHOLD)
                         {
                             // 在调试模式下显示提示给管理员
-                            _logger?.LogWarning("[数据过大] 会话 {SessionId} 的 {CommandId} 命令请求数据大小为 {Size} 字节，超过阈值 {Threshold} 字节", 
+                            _logger?.LogWarning("[数据过大] 会话 {SessionId} 的 {CommandId} 命令请求数据大小为 {Size} 字节，超过阈值 {Threshold} 字节",
                                 session.SessionID, package.Packet.CommandId.ToString(), requestSize, DATA_SIZE_THRESHOLD);
-                            
+
                             // 打印到主界面，方便管理员查看
                             frmMainNew.Instance.PrintInfoLog($"[调试提示] 会话 {session.SessionID} 的 {package.Packet.CommandId.ToString()} 命令请求数据过大: {requestSize} 字节 > {DATA_SIZE_THRESHOLD} 字节");
                         }
@@ -219,10 +237,6 @@ namespace RUINORERP.Server.Network.SuperSocket
                 {
                     // 捕获可能的异常，不影响正常处理
                     _logger?.LogDebug("[数据大小检查] 检查请求数据大小异常: {Exception}", ex.Message);
-                }
-                if (package.Packet.CommandId==LockCommands.Lock)
-                {
-
                 }
 
                 // 检查命令调度器初始化状态
@@ -354,13 +368,49 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             try
             {
-                // 如果SessionService是SessionService类型，则调用其HandleClientResponse方法
-                if (SessionService is SessionService sessionService)
+                var sessionId = packet?.ExecutionContext?.SessionId;
+                if (string.IsNullOrEmpty(sessionId))
                 {
-                    sessionService.HandleClientResponse(packet);
+                    _logger?.LogWarning("响应包缺少会话ID");
+                    return;
                 }
 
-                _logger?.LogDebug("处理响应包完成，请求ID: {RequestId}", packet?.ExecutionContext?.RequestId);
+                // 获取会话信息
+                var sessionInfo = SessionService.GetSession(sessionId);
+                if (sessionInfo == null)
+                {
+                    _logger?.LogWarning("响应包对应的会话不存在: {SessionId}", sessionId);
+                    return;
+                }
+
+                var requestId = packet?.ExecutionContext?.RequestId;
+
+                // 优先匹配待处理请求（SendCommandAndWaitForResponseAsync 模式）
+                if (!string.IsNullOrEmpty(requestId))
+                {
+                    if (SessionService is SessionService sessionServiceConcrete)
+                    {
+                        var matched = sessionServiceConcrete.TryRemovePendingRequest(requestId, out var tcs);
+                        if (matched && tcs != null)
+                        {
+                            tcs.TrySetResult(packet);
+                            _logger?.LogDebug("匹配到待处理请求，请求ID: {RequestId}", requestId);
+                            return;
+                        }
+                    }
+                }
+
+                // 使用 ClientResponseHandler 处理响应
+                if (_clientResponseHandler != null)
+                {
+                    var result = await _clientResponseHandler.HandleResponseAsync(packet, sessionInfo);
+                    if (!result.IsSuccess)
+                    {
+                        _logger?.LogWarning("客户端响应处理失败: {ErrorMessage}", result.ErrorMessage);
+                    }
+                }
+
+                _logger?.LogDebug("处理响应包完成，请求ID: {RequestId}", requestId);
             }
             catch (Exception ex)
             {
@@ -644,16 +694,16 @@ namespace RUINORERP.Server.Network.SuperSocket
 
                 // 添加元数据中的所有错误信息
                 if (result.Metadata != null && result.Metadata.Count > 0)
-            {
-                foreach (var metadata in result.Metadata)
                 {
-                    // 避免重复添加已经存在的键
-                    if (!errorResponse.Extensions.ContainsKey(metadata.Key))
+                    foreach (var metadata in result.Metadata)
                     {
-                        errorResponse.Extensions[metadata.Key] = JToken.FromObject(metadata.Value);
+                        // 避免重复添加已经存在的键
+                        if (!errorResponse.Extensions.ContainsKey(metadata.Key))
+                        {
+                            errorResponse.Extensions[metadata.Key] = JToken.FromObject(metadata.Value);
+                        }
                     }
                 }
-            }
             }
 
             // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
@@ -668,7 +718,7 @@ namespace RUINORERP.Server.Network.SuperSocket
                 result?.Metadata != null ? string.Join(", ", result.Metadata.Keys) : "none");
 
 
- 
+
 
             // 发送响应
             await SendResponseAsync(session, errorResponse, cancellationToken);
@@ -687,13 +737,15 @@ namespace RUINORERP.Server.Network.SuperSocket
         /// <param name="commandDispatcher">命令调度器</param>
         /// <param name="sessionService">会话服务</param>
         /// <param name="logger">日志记录器</param>
+        /// <param name="clientResponseHandler">客户端响应处理器</param>
         /// <param name="serviceProvider">服务提供者</param>
         public SuperSocketCommandAdapter(
             CommandDispatcher commandDispatcher,
             ISessionService sessionService,
             ILogger<SuperSocketCommandAdapter> logger = null,
+            IClientResponseHandler clientResponseHandler = null,
             IServiceProvider serviceProvider = null)
-            : base(commandDispatcher, sessionService, logger, serviceProvider)
+            : base(commandDispatcher, sessionService, logger, clientResponseHandler, serviceProvider)
         { }
     }
 }

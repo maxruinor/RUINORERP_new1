@@ -1,33 +1,33 @@
-using Azure;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Business.Cache;
-using RUINORERP.Business.CommService;
-using RUINORERP.Model;
-using RUINORERP.Model.ConfigModel;
-using RUINORERP.PacketSpec.Commands;
-using RUINORERP.PacketSpec.Enums.Core;
-using RUINORERP.PacketSpec.Models;
-using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.PacketSpec.Models.Core;
-using RUINORERP.PacketSpec.Models.Message;
-using RUINORERP.PacketSpec.Models.Requests;
-using RUINORERP.PacketSpec.Models.Responses;
-using RUINORERP.PacketSpec.Security;
-using RUINORERP.PacketSpec.Serialization;
-using RUINORERP.Server.Network.Core;
-using RUINORERP.Server.Network.Interfaces.Services;
-using RUINORERP.Server.Network.Models;
-using SuperSocket.Channel;
-using SuperSocket.Connection;
-using SuperSocket.Server;
-using SuperSocket.Server.Abstractions.Session;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
+    using Azure;
+    using Microsoft.Extensions.Logging;
+    using RUINORERP.Business.Cache;
+    using RUINORERP.Business.CommService;
+    using RUINORERP.Model;
+    using RUINORERP.Model.ConfigModel;
+    using RUINORERP.PacketSpec.Commands;
+    using RUINORERP.PacketSpec.Enums.Core;
+    using RUINORERP.PacketSpec.Models;
+    using RUINORERP.PacketSpec.Models.Common;
+    using RUINORERP.PacketSpec.Models.Core;
+    using RUINORERP.PacketSpec.Models.Message;
+    using RUINORERP.PacketSpec.Models.Requests;
+    using RUINORERP.PacketSpec.Models.Responses;
+    using RUINORERP.PacketSpec.Security;
+    using RUINORERP.PacketSpec.Serialization;
+    using RUINORERP.Server.Network.Core;
+    using RUINORERP.Server.Network.Interfaces.Services;
+    using RUINORERP.Server.Network.Models;
+    using SuperSocket.Channel;
+    using SuperSocket.Connection;
+    using SuperSocket.Server;
+    using SuperSocket.Server.Abstractions.Session;
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Net.Sockets;
+    using System.Threading;
+    using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Network.Services
 {
@@ -36,7 +36,7 @@ namespace RUINORERP.Server.Network.Services
     /// 提供完整的会话生命周期管理、事件机制、统计监控和SuperSocket集成
     /// 会话管理行为严格基于SuperSocket连接和断开事件实现
     /// </summary>
-    public class SessionService : ISessionService, IDisposable, IServerSessionEventHandler
+    public class SessionService : ISessionService, IDisposable
     {
         #region 字段和属性
 
@@ -53,39 +53,10 @@ namespace RUINORERP.Server.Network.Services
         private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests =
             new ConcurrentDictionary<string, TaskCompletionSource<PacketModel>>();
 
-        #endregion
-
-        #region 事件定义
-
         /// <summary>
-        /// 消息响应事件 - 当从客户端接收到响应时触发
+        /// 客户端响应处理器 - 统一管理所有客户端响应数据
         /// </summary>
-        public event EventHandler<MessageResponseEventArgs> MessageResponseReceived;
-
-        /// <summary>
-        /// 弹窗消息响应事件
-        /// </summary>
-        public event EventHandler<MessageResponseEventArgs> PopupMessageResponseReceived;
-
-        /// <summary>
-        /// 用户消息响应事件
-        /// </summary>
-        public event EventHandler<MessageResponseEventArgs> UserMessageResponseReceived;
-
-        /// <summary>
-        /// 部门消息响应事件
-        /// </summary>
-        public event EventHandler<MessageResponseEventArgs> DepartmentMessageResponseReceived;
-
-        /// <summary>
-        /// 广播消息响应事件
-        /// </summary>
-        public event EventHandler<MessageResponseEventArgs> BroadcastMessageResponseReceived;
-
-        /// <summary>
-        /// 系统通知响应事件
-        /// </summary>
-        public event EventHandler<MessageResponseEventArgs> SystemNotificationResponseReceived;
+        // private readonly IClientResponseHandler _clientResponseHandler; // 不需要直接依赖，避免循环依赖
 
         #endregion
 
@@ -97,13 +68,16 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="logger">日志记录器</param>
         /// <param name="subscriptionManager">订阅管理器</param>
         /// <param name="maxSessionCount">最大会话数量</param>
-        public SessionService(ILogger<SessionService> logger, CacheSubscriptionManager subscriptionManager, int maxSessionCount = 1000)
+        public SessionService(
+            ILogger<SessionService> logger,
+            CacheSubscriptionManager subscriptionManager,
+            int maxSessionCount = 1000)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
-            _subscriptionManager = subscriptionManager;
 
             _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
@@ -593,12 +567,14 @@ namespace RUINORERP.Server.Network.Services
             catch (TimeoutException)
             {
                 _logger.LogWarning($"[欢迎超时] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
-                await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+                // 移除超时关闭连接逻辑，允许后续登录请求
+                // 仅记录日志，不影响登录流程
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"欢迎消息发送失败: {sessionInfo.SessionID}");
-                await sessionInfo.CloseAsync(CloseReason.ServerShutdown);
+                // 移除异常关闭连接逻辑，允许后续登录请求
+                // 仅记录日志，不影响登录流程
             }
         }
 
@@ -1217,80 +1193,24 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 处理从客户端接收到的响应包
+        /// 已弃用：响应处理现在由SuperSocketCommandAdapter直接处理
         /// </summary>
         /// <param name="packet">响应数据包</param>
+        [Obsolete("响应处理现在由SuperSocketCommandAdapter直接处理")]
         public void HandleClientResponse(PacketModel packet)
         {
-            try
-            {
-                var requestId = packet?.ExecutionContext?.RequestId;
-                if (string.IsNullOrEmpty(requestId))
-                    return;
-
-                // 查找匹配的待处理请求
-                if (_pendingRequests.TryRemove(requestId, out var pendingRequest))
-                {
-                    // 完成任务
-                    pendingRequest.TrySetResult(packet);
-                    _logger?.LogDebug("处理客户端响应完成，请求ID: {RequestId}", requestId);
-                }
-                else
-                {
-                    // 如果没有等待任务，则触发事件
-                    TriggerResponseEvents(packet);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "处理客户端响应时发生错误");
-            }
+            // 此方法已不再使用
         }
 
         /// <summary>
-        /// 触发响应事件
+        /// 尝试移除待处理请求
         /// </summary>
-        /// <param name="packet">响应数据包</param>
-        private void TriggerResponseEvents(PacketModel packet)
+        /// <param name="requestId">请求ID</param>
+        /// <param name="taskCompletionSource">任务完成源</param>
+        /// <returns>是否成功移除</returns>
+        public bool TryRemovePendingRequest(string requestId, out TaskCompletionSource<PacketModel> taskCompletionSource)
         {
-            try
-            {
-                var eventArgs = new MessageResponseEventArgs
-                {
-                    SessionId = packet.ExecutionContext?.SessionId,
-                    CommandId = packet.CommandId,
-                    ResponseData = packet.Response,
-                    IsSuccess = packet.Response?.IsSuccess ?? false,
-                    ErrorMessage = packet.Response?.ErrorMessage,
-                    Timestamp = DateTime.Now
-                };
-
-                // 触发通用响应事件
-                MessageResponseReceived?.Invoke(this, eventArgs);
-
-                // 根据命令类型触发特定事件
-                switch (packet.CommandId.FullCode)
-                {
-                    case var code when code == PacketSpec.Commands.MessageCommands.SendPopupMessage.FullCode:
-                        PopupMessageResponseReceived?.Invoke(this, eventArgs);
-                        break;
-                    case var code when code == PacketSpec.Commands.MessageCommands.SendMessageToUser.FullCode:
-                        UserMessageResponseReceived?.Invoke(this, eventArgs);
-                        break;
-                    case var code when code == PacketSpec.Commands.MessageCommands.SendMessageToDepartment.FullCode:
-                        DepartmentMessageResponseReceived?.Invoke(this, eventArgs);
-                        break;
-                    case var code when code == PacketSpec.Commands.MessageCommands.BroadcastMessage.FullCode:
-                        BroadcastMessageResponseReceived?.Invoke(this, eventArgs);
-                        break;
-                    case var code when code == PacketSpec.Commands.MessageCommands.SendSystemNotification.FullCode:
-                        SystemNotificationResponseReceived?.Invoke(this, eventArgs);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "触发响应事件时发生错误");
-            }
+            return _pendingRequests.TryRemove(requestId, out taskCompletionSource);
         }
         #endregion
 

@@ -25,7 +25,6 @@ namespace RUINORERP.Server.Controls
             _currentUpdateInterval = _baseUpdateInterval;
             
             Text = $"会话性能详情 - {session.UserName ?? "未登录用户"} ({session.SessionID})";
-            _logger.LogInformation("打开会话性能详情窗体，会话ID: {SessionID}", session.SessionID);
 
             // 初始化性能计数器
             InitializePerformanceCounters();
@@ -68,7 +67,6 @@ namespace RUINORERP.Server.Controls
                 // 检查会话是否仍然有效
                 if (_session == null || _session.Status == SessionStatus.Disconnected)
                 {
-                    _logger.LogInformation("会话已断开，关闭性能详情窗体，会话ID: {SessionID}", _session?.SessionID);
                     Close();
                     return;
                 }

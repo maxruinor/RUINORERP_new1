@@ -153,10 +153,7 @@ namespace RUINORERP.UI
                 return;
             }
 
-            // 调整登录界面位置，为公告留出空间
-            MoveLoginFormDown();
-
-            // 显示公告
+            // 直接显示公告，不调整登录界面位置
             if (lblAnnouncement != null && panelAnnouncement != null)
             {
                 lblAnnouncement.Text = content;
@@ -164,45 +161,6 @@ namespace RUINORERP.UI
                 panelAnnouncement.Visible = true;
                 MainForm.Instance?.logger?.LogInformation("显示系统公告: {Content}", content);
             }
-        }
-
-
-
-        /// <summary>
-        /// 调整登录表单位置，为公告留出空间
-        /// </summary>
-        private void MoveLoginFormDown()
-        {
-            // 调整其他控件位置，向下移动80像素
-            int offset = 85;
-
-            foreach (System.Windows.Forms.Control ctrl in this.Controls)
-            {
-                // 跳过公告相关控件
-                if (ctrl == panelAnnouncement)
-                    continue;
-
-                // 只调整特定控件
-                if (ctrl.Name == "lblID" || ctrl.Name == "txtUserName")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "lblpwd" || ctrl.Name == "txtPassWord")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "chksaveIDpwd")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "btnok" || ctrl.Name == "btncancel")
-                {
-                    ctrl.Top += offset;
-                }
-            }
-
-            // 调整窗体高度
-            this.ClientSize = new System.Drawing.Size(this.ClientSize.Width, this.ClientSize.Height + offset);
         }
 
         /// <summary>

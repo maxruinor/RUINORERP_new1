@@ -184,8 +184,6 @@ namespace RUINORERP.Server.Network.Core
                 if (globalServiceProvider != null && _commandDispatcher is RUINORERP.PacketSpec.Commands.CommandDispatcher commandDispatcherImpl)
                 {
                     commandDispatcherImpl.ServiceProvider = globalServiceProvider;
-                    // 移除详细日志
-                    // _logger.LogInformation("已将全局服务提供者设置给命令调度器");
                 }
 
                 _host = MultipleServerHostBuilder.Create()
@@ -487,7 +485,6 @@ namespace RUINORERP.Server.Network.Core
                         services.AddSingleton(configuration);
                     }
 
-                    _logger.LogInformation("已将全局服务提供者集成到SuperSocket服务器");
                 }
                 catch (Exception ex)
                 {
@@ -992,9 +989,6 @@ namespace RUINORERP.Server.Network.Core
                     throw new InvalidOperationException($"系统注册已过期，到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd}");
                 }
 
-                // 机器码验证逻辑已整合到注册信息检查中，此处不再单独验证
-                _logger.LogInformation("机器码已通过注册信息检查");
-                _logger.LogInformation("注册信息验证成功，服务器可以启动，注册到期时间: {ExpirationDate}", registrationInfo.ExpirationDate);
             }
             catch (InvalidOperationException ex)
             {

@@ -169,9 +169,6 @@ namespace RUINORERP.Server.Network.Core
 
                 // 记录超时日志
                 await LogSessionEventAsync("Timeout", sessionInfo);
-
-                // 强制断开会话
-               // await _sessionManager.DisconnectSessionAsync(sessionInfo.SessionID, "会话超时");
             }
             catch (Exception ex)
             {
@@ -219,10 +216,6 @@ namespace RUINORERP.Server.Network.Core
                     logMessage += $", Info: {additionalInfo}";
                 }
 
-                _logger.LogInformation(logMessage);
-
-                // 这里可以调用业务层的日志记录服务
-                // await _auditLogService.LogSessionEventAsync(eventType, sessionInfo, additionalInfo);
             }
             catch (Exception ex)
             {

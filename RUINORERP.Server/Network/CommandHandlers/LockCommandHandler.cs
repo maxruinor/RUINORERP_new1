@@ -469,9 +469,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     Message = $"获取锁状态列表成功，共 {validLockInfos.Count} 条有效记录",
                     LockInfoList = validLockInfos
                 };
-
-                _logger.LogInformation("处理获取锁状态列表请求完成: 总数={TotalCount}, 有效={ValidCount}, 无效={InvalidCount}, 耗时={ElapsedMs}ms", 
-                    allLockedDocuments.Count, validLockInfos.Count, invalidCount, stopwatch.ElapsedMilliseconds);
+                 
 
                 return response;
             }

@@ -251,9 +251,9 @@ namespace RUINORERP.UI.Network
         private void AdjustHeartbeatInterval()
         {
             var avgLatency = GetAverageLatency();
-            
+
             if (avgLatency == 0) return; // 没有延迟数据，不调整
-            
+
             int newInterval;
             if (avgLatency < _networkQualityThresholdGood) // 网络良好
             {
@@ -348,10 +348,10 @@ namespace RUINORERP.UI.Network
             // 订阅重连相关事件
             _connectionManager.ReconnectFailed -= OnReconnectFailed;
             _connectionManager.ReconnectFailed += OnReconnectFailed;
-            
+
             _connectionManager.ReconnectAttempt -= OnReconnectAttempt;
             _connectionManager.ReconnectAttempt += OnReconnectAttempt;
-            
+
             _connectionManager.ReconnectSucceeded -= OnReconnectSucceeded;
             _connectionManager.ReconnectSucceeded += OnReconnectSucceeded;
 
@@ -415,12 +415,12 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogWarning("连接管理器报告重连失败，触发客户端事件管理器的重连失败事件");
-                
+
                 lock (_reconnectCoordinationLock)
                 {
                     _isReconnecting = false;
                 }
-                
+
                 // 显示重连失败信息到UI
                 try
                 {
@@ -433,7 +433,7 @@ namespace RUINORERP.UI.Network
                                 // 使用状态标签显示重连失败信息
                                 string statusText = "重连失败，请检查网络连接或手动重试";
                                 MainForm.Instance.ShowStatusText(statusText);
-                                
+
                                 // 同时添加到日志
                                 MainForm.Instance.PrintInfoLog("重连失败，已达到最大重试次数");
                             }));
@@ -443,7 +443,7 @@ namespace RUINORERP.UI.Network
                             // 使用状态标签显示重连失败信息
                             string statusText = "重连失败，请检查网络连接或手动重试";
                             MainForm.Instance.ShowStatusText(statusText);
-                            
+
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog("重连失败，已达到最大重试次数");
                         }
@@ -453,10 +453,10 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogWarning(uiEx, "更新重连失败UI时发生异常");
                 }
-                
+
                 // 清空队列中的待处理命令，避免长时间等待
                 ClearQueue("重连失败");
-                
+
                 // 触发客户端事件管理器的重连失败事件，添加容错处理
                 try
                 {
@@ -465,17 +465,17 @@ namespace RUINORERP.UI.Network
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "触发客户端事件管理器重连失败事件时发生异常");
-                    
+
                     // 如果事件管理器失败，直接触发本地事件作为备用方案
-                     try
-                     {
-                         _logger?.LogWarning("事件管理器失败，尝试触发本地备用重连失败事件");
-                         _fallbackReconnectFailed?.Invoke();
-                     }
-                     catch (Exception fallbackEx)
-                     {
-                         _logger?.LogError(fallbackEx, "备用重连失败事件触发也失败");
-                     }
+                    try
+                    {
+                        _logger?.LogWarning("事件管理器失败，尝试触发本地备用重连失败事件");
+                        _fallbackReconnectFailed?.Invoke();
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        _logger?.LogError(fallbackEx, "备用重连失败事件触发也失败");
+                    }
                 }
             }
             catch (Exception ex)
@@ -494,7 +494,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogDebug("重连尝试：第 {CurrentAttempt}/{MaxAttempts} 次", currentAttempt, maxAttempts);
-                
+
                 // 显示重连状态到UI
                 try
                 {
@@ -507,7 +507,7 @@ namespace RUINORERP.UI.Network
                                 // 使用状态标签显示重连信息
                                 string statusText = $"正在尝试重新连接服务器... ({currentAttempt}/{maxAttempts})";
                                 MainForm.Instance.ShowStatusText(statusText);
-                                
+
                                 // 同时添加到日志
                                 MainForm.Instance.PrintInfoLog($"重连尝试：第 {currentAttempt}/{maxAttempts} 次");
                             }));
@@ -517,7 +517,7 @@ namespace RUINORERP.UI.Network
                             // 使用状态标签显示重连信息
                             string statusText = $"正在尝试重新连接服务器... ({currentAttempt}/{maxAttempts})";
                             MainForm.Instance.ShowStatusText(statusText);
-                            
+
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog($"重连尝试：第 {currentAttempt}/{maxAttempts} 次");
                         }
@@ -542,12 +542,12 @@ namespace RUINORERP.UI.Network
             try
             {
                 _logger?.LogDebug("重连成功，开始处理排队的命令");
-                
+
                 lock (_reconnectCoordinationLock)
                 {
                     _isReconnecting = false;
                 }
-                
+
                 // 显示重连成功信息到UI
                 try
                 {
@@ -560,11 +560,11 @@ namespace RUINORERP.UI.Network
                                 // 使用状态标签显示重连成功信息
                                 string statusText = "已成功重新连接到服务器";
                                 MainForm.Instance.ShowStatusText(statusText);
-                                
+
                                 // 同时添加到日志
                                 MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
-                                
-                                
+
+
                             }));
                         }
                         else
@@ -572,10 +572,10 @@ namespace RUINORERP.UI.Network
                             // 使用状态标签显示重连成功信息
                             string statusText = "已成功重新连接到服务器";
                             MainForm.Instance.ShowStatusText(statusText);
-                            
+
                             // 同时添加到日志
                             MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
-                            
+
                             // 如果之前是锁定状态，现在应该解除锁定
                             if (MainForm.Instance.IsLocked)
                             {
@@ -588,16 +588,16 @@ namespace RUINORERP.UI.Network
                 {
                     _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
                 }
-                
+
                 // 重连成功后，立即启动队列处理
                 _ = Task.Run(ProcessCommandQueueAsync);
-                            
+
                 // 重置心跳失败次数
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                            
+
                 // 重置心跳间隔为基础值
                 _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
-                            
+
                 // 重新启动心跳
                 StartHeartbeat();
             }
@@ -628,9 +628,9 @@ namespace RUINORERP.UI.Network
                 _heartbeatCancellationTokenSource = new CancellationTokenSource();
 
                 // 使用ConfigureAwait(false)避免UI线程上下文捕获
-                _heartbeatTask = Task.Run(async () => 
+                _heartbeatTask = Task.Run(async () =>
                     await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token).ConfigureAwait(false));
-                
+
                 _logger?.LogDebug("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
             }
         }
@@ -652,7 +652,7 @@ namespace RUINORERP.UI.Network
                     return;
 
                 _isHeartbeatRunning = false;
-                
+
                 // 取消心跳任务
                 _heartbeatCancellationTokenSource?.Cancel();
 
@@ -679,7 +679,7 @@ namespace RUINORERP.UI.Network
                 {
                     // 使用短时间等待，避免长时间阻塞
                     bool completed = _heartbeatTask.Wait(TimeSpan.FromSeconds(2));
-                    
+
                     if (!completed)
                     {
                         _logger?.LogWarning("心跳任务未在指定时间内完成，强制清理资源");
@@ -716,7 +716,7 @@ namespace RUINORERP.UI.Network
             try
             {
                 _heartbeatTask = null;
-                
+
                 if (_heartbeatCancellationTokenSource != null)
                 {
                     _heartbeatCancellationTokenSource.Dispose();
@@ -742,14 +742,14 @@ namespace RUINORERP.UI.Network
                 try
                 {
                     _logger?.LogTrace("心跳循环迭代开始");
-                    
+
                     // 使用动态心跳间隔，使用ConfigureAwait(false)避免UI线程阻塞
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
                     // 检查连接状态
                     bool initialConnected = _socketClient.IsConnected;
                     _logger?.LogTrace("心跳前连接状态检查: {Connected}", initialConnected);
-                    
+
                     if (!initialConnected)
                     {
                         _logger?.LogDebug("连接已断开，跳过本次心跳发送");
@@ -767,7 +767,7 @@ namespace RUINORERP.UI.Network
                         // 主动检查连接状态，确保与实际网络状态一致
                         bool actualConnected = _socketClient.IsConnected;
                         _logger?.LogTrace("心跳失败，实际连接状态: {ActualConnected}", actualConnected);
-                        
+
                         if (!actualConnected)
                         {
                             _logger?.LogWarning("心跳失败，检测到实际连接已断开，更新连接状态");
@@ -784,7 +784,7 @@ namespace RUINORERP.UI.Network
 
                     // 使用轻量级同步机制处理状态更新
                     UpdateHeartbeatState(success);
-                    
+
                     _logger?.LogTrace("心跳循环迭代结束");
                 }
                 catch (OperationCanceledException)
@@ -825,7 +825,7 @@ namespace RUINORERP.UI.Network
                         // 使用Task.Run避免UI线程阻塞
                         Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
                         _logger?.LogDebug("心跳恢复，之前连续失败次数：{PreviousFailures}", previousFailures);
-                        
+
                         // 恢复自动重连（如果已停止）
                         try
                         {
@@ -835,7 +835,7 @@ namespace RUINORERP.UI.Network
                         {
                             _logger?.LogError(ex, "恢复自动重连时发生异常");
                         }
-                        
+
                         // 心跳恢复后，可以适当减小心跳间隔
                         _heartbeatIntervalMs = Math.Max(_baseHeartbeatIntervalMs, _heartbeatIntervalMs / 2);
                     }
@@ -848,18 +848,18 @@ namespace RUINORERP.UI.Network
                 {
                     // 检查连接状态
                     bool isConnected = _socketClient.IsConnected;
-                    
+
                     // 只有在连接正常但心跳失败时才增加失败计数
                     int currentFailures;
                     if (isConnected)
                     {
                         // 原子增加失败计数
                         currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
-                        
+
                         // 触发失败事件（异步执行）
                         Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
                         _logger?.LogWarning("心跳失败，连续失败次数：{FailedAttempts}", currentFailures);
-                        
+
                         _logger?.LogDebug("心跳失败但连接正常，等待下一次心跳");
                     }
                     else
@@ -867,9 +867,9 @@ namespace RUINORERP.UI.Network
                         // 网络已断开，重置失败计数，因为这是明确的连接问题
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
                         currentFailures = 0;
-                        
+
                         _logger?.LogWarning("心跳失败且连接已断开，重置失败计数并触发重连机制");
-                        
+
                         // 触发重连
                         try
                         {
@@ -888,11 +888,11 @@ namespace RUINORERP.UI.Network
 
                         // 异步触发阈值事件，由MainForm的事件处理程序负责系统锁定
                         Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
-                        
+
                         // 注意：不再停止重连机制，而是让重连继续尝试恢复连接
                         // 这样可以在网络恢复后自动重新连接
                         _logger?.LogDebug("心跳失败达到阈值，但仍保持自动重连机制运行");
-                        
+
                         // 不停止心跳检测，而是继续尝试恢复心跳
                         _logger?.LogDebug("心跳失败达到阈值，但仍保持心跳检测运行");
                     }
@@ -964,10 +964,10 @@ namespace RUINORERP.UI.Network
                     try
                     {
                         _logger?.LogDebug("发送心跳请求，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
-                        
+
                         // 记录发送时间用于延迟计算
                         var sendTime = DateTime.Now;
-                        
+
                         // 为心跳请求设置更长的超时时间（60秒）
                         var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
                             SystemCommands.Heartbeat, heartbeatRequest, cancellationToken, 60000);
@@ -978,24 +978,24 @@ namespace RUINORERP.UI.Network
                             var roundTripTime = (DateTime.Now - sendTime).TotalMilliseconds;
                             var estimatedLatency = roundTripTime / 2; // 单向延迟估计
                             RecordLatency(estimatedLatency);
-                            
+
                             // 动态调整心跳间隔
                             AdjustHeartbeatInterval();
-                            
+
                             // 检查服务器是否推荐了新的心跳间隔
-                            if (response.ServerInfo != null && 
-                                response.ServerInfo.ContainsKey("RecommendedInterval") && 
+                            if (response.ServerInfo != null &&
+                                response.ServerInfo.ContainsKey("RecommendedInterval") &&
                                 int.TryParse(response.ServerInfo["RecommendedInterval"]?.ToString(), out int recommendedInterval))
                             {
                                 // 使用服务器推荐的间隔，并在客户端设置的范围内
                                 _heartbeatIntervalMs = Clamp(recommendedInterval, _minHeartbeatIntervalMs, _maxHeartbeatIntervalMs);
                             }
-                            
+
                             //心跳响应
                             MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
                             return true;
                         }
-                        
+
                         if (retry < maxRetries)
                         {
                             // 等待一段时间后重试
@@ -1007,7 +1007,7 @@ namespace RUINORERP.UI.Network
                     {
                         _logger?.LogWarning(ex, "心跳请求超时，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
                         isTimeoutOccurred = true;
-                        
+
                         // 心跳超时时主动检查连接状态
                         if (!_socketClient.IsConnected)
                         {
@@ -1016,7 +1016,7 @@ namespace RUINORERP.UI.Network
                             _connectionManager.StartAutoReconnect();
                             return false;
                         }
-                        
+
                         if (retry < maxRetries)
                         {
                             // 等待一段时间后重试
@@ -1027,13 +1027,13 @@ namespace RUINORERP.UI.Network
                     catch (Exception ex) when (retry < maxRetries)
                     {
                         _logger?.LogWarning(ex, "发送心跳时发生异常，第 {Retry}/{MaxRetries} 次尝试", retry + 1, maxRetries + 1);
-                        
+
                         // 等待一段时间后重试
                         await Task.Delay(2000, cancellationToken);
                         _logger?.LogDebug("发送心跳异常，将进行重试");
                     }
                 }
-                
+
                 // 所有重试都失败
                 _logger?.LogWarning("心跳请求失败，已达到最大重试次数");
                 return false;
@@ -1186,13 +1186,13 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ReconnectFailed
         {
-            add 
-            { 
+            add
+            {
                 _clientEventManager.ReconnectFailed += value;
                 _fallbackReconnectFailed += value; // 同时订阅备用事件
             }
-            remove 
-            { 
+            remove
+            {
                 _clientEventManager.ReconnectFailed -= value;
                 _fallbackReconnectFailed -= value; // 同时取消订阅备用事件
             }
@@ -2017,8 +2017,8 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 }
 
 
-                    // 序列化和加密数据包
-                    var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
+                // 序列化和加密数据包
+                var payload = JsonCompressionSerializationService.Serialize<PacketModel>(packet);
                 var original = new OriginalData((byte)packet.CommandId.Category, new[] { packet.CommandId.OperationCode }, payload);
                 var encrypted = UnifiedEncryptionProtocol.EncryptClientDataToServer(original);
 
@@ -2347,7 +2347,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     // 异步断开连接，避免阻塞
                     var disconnectTask = Task.Run(async () => await _socketClient.Disconnect());
-                    
+
                     // 等待最多3秒
                     if (!disconnectTask.Wait(TimeSpan.FromSeconds(3)))
                     {
@@ -2453,7 +2453,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         {
             const int maxRetries = 2;
             int retryCount = 0;
-            
+
             while (true)
             {
                 try
@@ -2483,17 +2483,17 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     {
                         throw;
                     }
-                    
+
                     // 检查是否是可重试异常并且还有重试次数
                     if (IsRetryableException(ex) && retryCount < maxRetries)
                     {
                         retryCount++;
                         _logger?.LogWarning(ex, "命令发送失败，将进行第 {RetryCount}/{MaxRetries} 次重试。命令ID: {CommandId}", retryCount, maxRetries, commandId);
-                        
+
                         // 指数退避等待
                         int backoffMs = (int)Math.Pow(2, retryCount) * 1000; // 1秒, 2秒, 4秒...
                         await Task.Delay(backoffMs, ct);
-                        
+
                         // 继续重试
                         continue;
                     }
@@ -2587,7 +2587,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             try
             {
                 _logger?.LogDebug("命令处理时检测到连接断开，尝试重连");
-                
+
                 // 获取当前服务器地址和端口
                 string serverAddress = GetCurrentServerAddress();
                 int serverPort = GetCurrentServerPort();
@@ -2596,7 +2596,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     // 使用ConnectionManager的连接方法，它会处理自动重连逻辑
                     bool connected = await _connectionManager.ConnectAsync(serverAddress, serverPort, CancellationToken.None);
-                    
+
                     if (!connected)
                     {
                         _logger?.LogWarning("连接失败，将由ConnectionManager的自动重连机制处理");
@@ -2649,14 +2649,14 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             try
             {
                 _logger?.LogDebug("用户手动触发重连");
-                
+
                 // 使用ConnectionManager的手动重连方法
                 bool result = await _connectionManager.ManualReconnectAsync();
-                
+
                 if (result)
                 {
                     _logger?.LogDebug("手动重连成功");
-                    
+
                     // 重连成功后，立即启动队列处理
                     _ = Task.Run(ProcessCommandQueueAsync);
                 }
@@ -2664,7 +2664,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     _logger?.LogWarning("手动重连失败");
                 }
-                
+
                 return result;
             }
             catch (Exception ex)
@@ -2730,13 +2730,13 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         bool isConnectedNow = IsConnected;
                         if (!isConnectedNow)
                         {
-                        // 连接仍然断开，重新加入队列
-                        _queuedCommands.Enqueue(command);
-                        // 触发重连尝试（使用更智能的重连策略）
-                        if (!_isReconnecting)
-                        {
-                            _ = TryReconnectIfNeededAsync();
-                        }
+                            // 连接仍然断开，重新加入队列
+                            _queuedCommands.Enqueue(command);
+                            // 触发重连尝试（使用更智能的重连策略）
+                            if (!_isReconnecting)
+                            {
+                                _ = TryReconnectIfNeededAsync();
+                            }
                             continue;
                         }
 
@@ -2781,13 +2781,13 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         bool isConnectedNow = IsConnected;
                         if (!isConnectedNow)
                         {
-                        // 连接仍然断开，重新加入队列
-                        _queuedCommands.Enqueue(command);
-                        // 触发重连尝试（使用更智能的重连策略）
-                        if (!_isReconnecting)
-                        {
-                            _ = TryReconnectIfNeededAsync();
-                        }
+                            // 连接仍然断开，重新加入队列
+                            _queuedCommands.Enqueue(command);
+                            // 触发重连尝试（使用更智能的重连策略）
+                            if (!_isReconnecting)
+                            {
+                                _ = TryReconnectIfNeededAsync();
+                            }
                             continue;
                         }
 

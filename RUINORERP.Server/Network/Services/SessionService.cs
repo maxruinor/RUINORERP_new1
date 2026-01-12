@@ -479,8 +479,6 @@ namespace RUINORERP.Server.Network.Services
                     SessionConnected?.Invoke(sessionInfo);
                     // 调用IServerSessionEventHandler接口的会话连接方法
                     await OnSessionConnectedAsync(sessionInfo);
-
-                    _logger.LogInformation($"SuperSocket会话已连接: SessionID={session.SessionID}, RemoteIP={sessionInfo.RemoteEndPoint}");
                 }
                 else
                 {
@@ -518,6 +516,7 @@ namespace RUINORERP.Server.Network.Services
             {
                 if (sessionInfo.IsAuthenticated)
                 {
+
                     return;
                 }
 
@@ -588,8 +587,6 @@ namespace RUINORERP.Server.Network.Services
                     sessionInfo.UserInfo.内存大小 = welcomeResponse.ClientMemoryMB > 0
                         ? $"{welcomeResponse.ClientMemoryMB / 1024:F1} GB"
                         : "未知";
-
-                    _logger.LogInformation($"[欢迎成功] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}, 版本={welcomeResponse.ClientVersion}");
                 }
 
             }

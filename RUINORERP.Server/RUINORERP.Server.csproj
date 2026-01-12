@@ -70,6 +70,7 @@
     <Compile Remove="frmWorkFlowManage.Designer.cs" />
     <Compile Remove="log4netHelper.cs" />
     <Compile Remove="Network\CommandHandlers\ConfigurableBusinessProcessor.cs" />
+    <Compile Remove="Network\CommandHandlers\HeartbeatCommandHandler_New.cs" />
     <Compile Remove="Network\CommandHandlers\SimpleBusinessHandler.cs" />
     <Compile Remove="Network\Common\LockResponseFactory.cs" />
     <Compile Remove="Network\CoreServices\CacheService.cs" />

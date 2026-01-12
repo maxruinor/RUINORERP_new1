@@ -925,31 +925,22 @@ namespace RUINORERP.Business
 
             if (typeof(T).GetProperties().ContainsProperty(isdeleted))
             {
-
-
                 querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
                        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                        .WhereAdv(useLike, queryConditions, dto)
                        .WhereIF(whereLambda != null, whereLambda)
                        .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
-                if (UseAutoNavQuery)
-                {
-                    querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
-                    //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-                }
-
-
-
             }
             else
             {
-
                 querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>()
-           //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
-
-           .WhereIF(whereLambda != null, whereLambda)
-           .WhereAdv(useLike, queryConditions, dto);
+                       //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                       .WhereIF(whereLambda != null, whereLambda)
+                       .WhereAdv(useLike, queryConditions, dto);
             }
+
+            // 统一在查询条件构建完成后添加导航属性查询
+            // 修复：将 IncludesAllFirstLayer() 移到 if-else 之外，避免重复调用导致 DataReader 错误
             if (UseAutoNavQuery)
             {
                 querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();

@@ -508,12 +508,8 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 发送欢迎消息到客户端并等待响应
-        /// </summary>
-        /// <param name="sessionInfo">会话信息</param>
-        /// <returns>异步任务</returns>
-        /// <summary>
-        /// 发送欢迎消息到客户端并等待响应
+        /// 发送欢迎消息到客户端（不等待响应）
+        /// 修改为发送即完成模式，避免阻塞后续登录流程
         /// </summary>
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>异步任务</returns>
@@ -534,47 +530,27 @@ namespace RUINORERP.Server.Network.Services
 
                 sessionInfo.WelcomeSentTime = DateTime.Now;
 
-                // 使用SendCommandAndWaitForResponseAsync等待客户端响应（30秒超时）
-                var responsePacket = await SendCommandAndWaitForResponseAsync<WelcomeRequest>(
-                   sessionInfo.SessionID,
-                   SystemCommands.Welcome,
-                   welcomeRequest,
-                   30000
-               );
+                // 修改：使用SendPacketCoreAsync发送欢迎消息，不等待客户端响应
+                // 这样客户端收到后可以自行处理，不影响服务器后续的登录流程
+                await SendPacketCoreAsync(
+                    sessionInfo,
+                    SystemCommands.Welcome,
+                    welcomeRequest,
+                    5000,
+                    CancellationToken.None,
+                    PacketDirection.ServerRequest
+                );
 
+                // 标记欢迎消息已发送，但不需要等待响应
+                sessionInfo.IsVerified = true; // 临时标记为已验证，等待实际响应时更新
 
-                if (responsePacket?.Response is WelcomeResponse welcomeResponse)
-                {
-                    sessionInfo.IsVerified = true;
-                    sessionInfo.WelcomeAckReceived = true;
+                _logger.LogInformation($"[欢迎消息已发送] SessionID={sessionInfo.SessionID}, 不等待响应");
 
-                    // 记录客户端信息
-                    if (sessionInfo.UserInfo == null)
-                    {
-                        sessionInfo.UserInfo = new CurrentUserInfo();
-                    }
-
-                    sessionInfo.UserInfo.客户端版本 = welcomeResponse.ClientVersion;
-                    sessionInfo.UserInfo.操作系统 = welcomeResponse.ClientOS;
-                    sessionInfo.UserInfo.机器名 = welcomeResponse.ClientMachineName;
-                    sessionInfo.UserInfo.CPU信息 = welcomeResponse.ClientCPU;
-                    sessionInfo.UserInfo.内存大小 = welcomeResponse.ClientMemoryMB > 0
-                        ? $"{welcomeResponse.ClientMemoryMB / 1024:F1} GB"
-                        : "未知";
-                }
-
-            }
-            catch (TimeoutException)
-            {
-                _logger.LogWarning($"[欢迎超时] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
-                // 移除超时关闭连接逻辑，允许后续登录请求
-                // 仅记录日志，不影响登录流程
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"欢迎消息发送失败: {sessionInfo.SessionID}");
-                // 移除异常关闭连接逻辑，允许后续登录请求
-                // 仅记录日志，不影响登录流程
+                // 不关闭连接，允许后续登录请求继续
             }
         }
 

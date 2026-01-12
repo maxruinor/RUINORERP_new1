@@ -9,9 +9,11 @@ using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Errors;
+using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Lock;
+using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.PacketSpec.Models.Responses;
 using RUINORERP.PacketSpec.Serialization;
 using RUINORERP.Server; // 添加对Program类所在命名空间的引用
@@ -185,22 +187,38 @@ namespace RUINORERP.Server.Network.SuperSocket
                     return;
                 }
 
-                if (package.Packet.CommandId == AuthenticationCommands.Login)
-                {
-                    // 如果命令ID为登录命令，设置会话ID
-                    package.Packet.SessionId = session.SessionID;
-                    package.Packet.ExecutionContext.SessionId = session.SessionID;
-                }
-                if (package.Packet.CommandId == SystemCommands.Heartbeat)
-                {
-                    // 如果命令ID为登录命令，设置会话ID
-                    package.Packet.SessionId = session.SessionID;
-                    package.Packet.ExecutionContext.SessionId = session.SessionID;
+                // 会话ID设置：适用于所有命令
+                package.Packet.SessionId = session.SessionID;
+                package.Packet.ExecutionContext.SessionId = session.SessionID;
 
-                }
-                else
+                // 所有命令的数据大小检查：在调试模式下显示提示，不影响正常处理
+                try
                 {
-
+                    // 获取请求数据
+                    if (package.Packet.Request != null)
+                    {
+                        // 序列化请求数据，计算大小
+                        var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(package.Packet.Request);
+                        var requestSize = System.Text.Encoding.UTF8.GetByteCount(requestJson);
+                        
+                        // 设置合理的阈值，比如1MB
+                        const long DATA_SIZE_THRESHOLD = 1024 * 1024; // 1MB
+                        
+                        if (requestSize > DATA_SIZE_THRESHOLD)
+                        {
+                            // 在调试模式下显示提示给管理员
+                            _logger?.LogWarning("[数据过大] 会话 {SessionId} 的 {CommandId} 命令请求数据大小为 {Size} 字节，超过阈值 {Threshold} 字节", 
+                                session.SessionID, package.Packet.CommandId.ToString(), requestSize, DATA_SIZE_THRESHOLD);
+                            
+                            // 打印到主界面，方便管理员查看
+                            frmMainNew.Instance.PrintInfoLog($"[调试提示] 会话 {session.SessionID} 的 {package.Packet.CommandId.ToString()} 命令请求数据过大: {requestSize} 字节 > {DATA_SIZE_THRESHOLD} 字节");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 捕获可能的异常，不影响正常处理
+                    _logger?.LogDebug("[数据大小检查] 检查请求数据大小异常: {Exception}", ex.Message);
                 }
                 if (package.Packet.CommandId==LockCommands.Lock)
                 {

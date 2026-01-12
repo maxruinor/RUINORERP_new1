@@ -564,12 +564,7 @@ namespace RUINORERP.UI.Network
                                 // 同时添加到日志
                                 MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
                                 
-                                // 如果之前是锁定状态，现在应该解除锁定
-                                if (MainForm.Instance.IsLocked)
-                                {
-                                    // 更新系统级锁定状态
-                                    MainForm.Instance.UpdateLockStatus(false);
-                                }
+                                
                             }));
                         }
                         else
@@ -616,7 +611,7 @@ namespace RUINORERP.UI.Network
         /// 启动心跳检测（优化版）
         /// 使用更安全的启动机制，避免重复启动
         /// </summary>
-        private void StartHeartbeat()
+        public void StartHeartbeat()
         {
             // 使用轻量级检查，避免不必要的锁操作
             if (Volatile.Read(ref _isHeartbeatRunning))
@@ -933,15 +928,6 @@ namespace RUINORERP.UI.Network
                     return false;
                 }
 
-                // 检查MainForm是否处于锁定状态
-                if (MainForm.Instance != null && MainForm.Instance.IsLocked)
-                {
-                    _logger?.LogDebug("MainForm处于锁定状态，跳过心跳发送");
-                    // 锁定状态下跳过心跳，不返回false避免增加失败计数
-                    // 直接返回，由HeartbeatLoopAsync中的continue处理
-                    return true;
-                }
-
                 var heartbeatRequest = new HeartbeatRequest();
 
                 // 可以根据需要添加系统信息
@@ -1131,26 +1117,6 @@ namespace RUINORERP.UI.Network
                 else
                 {
                     _logger?.LogDebug("客户端与服务器断开连接");
-                    
-                    // 检查是否是由于锁定状态导致的断开
-                    if (MainForm.Instance != null && !MainForm.Instance.IsLocked)
-                    {
-                        // 停止心跳
-                        try
-                        {
-                            // 使用内部实现的StopHeartbeat方法
-                            StopHeartbeat();
-
-                            // 释放心跳取消令牌源
-                            _heartbeatCts?.Dispose();
-                            _heartbeatCts = null;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogWarning(ex, "停止心跳时发生异常");
-                        }
-                    }
-                    // 如果是由于锁定状态导致的断开，保持锁定状态
                 }
             }
             catch (Exception ex)

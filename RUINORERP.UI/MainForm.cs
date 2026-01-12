@@ -263,13 +263,12 @@ namespace RUINORERP.UI
         {
             try
             {
+                //但不操作锁定
                 logger?.LogWarning("心跳失败达到阈值，检查当前登录和锁定状态");
 
                 // 只有在已登录且未锁定状态下才进入锁定状态
                 if (CurrentLoginStatus == LoginStatus.LoggedIn && !IsLocked)
                 {
-                    logger?.LogWarning("当前为已登录且未锁定状态，自动进入注销锁定状态");
-
                     // 在UI线程上执行注销操作
                     if (InvokeRequired)
                     {
@@ -277,14 +276,12 @@ namespace RUINORERP.UI
                         {
                             // 更新锁定状态显示
                             UpdateLockStatus(true);
-                            LogLock();
                         }));
                     }
                     else
                     {
                         // 更新锁定状态显示
                         UpdateLockStatus(true);
-                        LogLock();
                     }
                 }
                 else

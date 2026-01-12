@@ -909,6 +909,9 @@ namespace RUINORERP.UI
                 // 完成登录
                 Program.AppContextData.IsOnline = true;
                 
+                // 启动心跳
+                MainForm.Instance.communicationService.StartHeartbeat();
+
                 // 在UI线程中完成登录
                 if (this.InvokeRequired)
                 {

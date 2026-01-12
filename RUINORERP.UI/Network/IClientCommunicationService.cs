@@ -56,6 +56,18 @@ namespace RUINORERP.UI.Network
         Task<bool> SendOneWayCommandAsync<TRequest>(CommandId commandId, TRequest request, CancellationToken cancellationToken = default) where TRequest : class, IRequest;
 
         /// <summary>
+        /// 发送响应包（回复服务器的ServerRequest）
+        /// 主动响应服务器请求时使用
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="response">响应数据</param>
+        /// <param name="originalRequestId">原始请求的RequestId（用于匹配）</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>发送是否成功</returns>
+        Task<bool> SendResponseAsync<TResponse>(CommandId commandId, TResponse response, string originalRequestId, CancellationToken cancellationToken = default) where TResponse : class, IResponse;
+
+        /// <summary>
         /// 发送命令并获取指定类型的响应
         /// </summary>
         /// <typeparam name="TResponse">响应数据类型</typeparam>

@@ -86,12 +86,13 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
 
                     // 设置响应的RequestId与请求一致，以便服务器匹配响应
                     welcomeResponse.RequestId = welcomeRequest.RequestId;
-                    11111
-                    // 单向发送响应，不等待服务器回复
-                    bool rs = await _communicationService.SendOneWayCommandAsync<WelcomeResponse>(
-                          SystemCommands.WelcomeAck,
-                          welcomeResponse
-                      );
+
+                    // 使用SendResponseAsync发送响应包，回复服务器的ServerRequest
+                    bool rs = await _communicationService.SendResponseAsync<WelcomeResponse>(
+                        SystemCommands.WelcomeAck,
+                        welcomeResponse,
+                        welcomeRequest.RequestId
+                    );
                 }
                 else
                 {

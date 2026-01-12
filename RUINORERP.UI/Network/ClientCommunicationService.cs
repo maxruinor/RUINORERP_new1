@@ -682,23 +682,23 @@ namespace RUINORERP.UI.Network
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
                     // 检查系统锁定状态，如果已锁定则停止心跳
-                    if (MainForm.Instance != null && MainForm.Instance.IsLocked)
-                    {
-                        _logger?.LogDebug("系统处于锁定状态，停止心跳循环");
-                        break;
-                    }
+                if (MainForm.Instance != null && MainForm.Instance.IsLocked)
+                {
+                    _logger?.LogDebug("系统处于锁定状态，跳过本次心跳发送");
+                    continue; // 跳过本次心跳，不增加失败计数
+                }
 
-                    // 检查连接状态
-                    if (!_socketClient.IsConnected)
-                    {
-                        continue;
-                    }
+                // 检查连接状态
+                if (!_socketClient.IsConnected)
+                {
+                    continue;
+                }
 
-                    // 发送心跳（异步执行，避免阻塞）
-                    bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
+                // 发送心跳（异步执行，避免阻塞）
+                bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
 
-                    // 使用轻量级同步机制处理状态更新
-                    UpdateHeartbeatState(success);
+                // 使用轻量级同步机制处理状态更新
+                UpdateHeartbeatState(success);
                 }
                 catch (OperationCanceledException)
                 {
@@ -736,7 +736,11 @@ namespace RUINORERP.UI.Network
                     {
                         // 使用Task.Run避免UI线程阻塞
                         Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
-                        _logger?.LogDebug("心跳恢复");
+                        _logger?.LogDebug("心跳恢复，之前连续失败次数：{PreviousFailures}", previousFailures);
+                    }
+                    else
+                    {
+                        _logger?.LogTrace("心跳成功");
                     }
                 }
                 else
@@ -811,8 +815,10 @@ namespace RUINORERP.UI.Network
                 // 检查MainForm是否处于锁定状态
                 if (MainForm.Instance != null && MainForm.Instance.IsLocked)
                 {
-                    _logger?.LogDebug("MainForm处于锁定状态，停止发送心跳请求");
-                    return false;
+                    _logger?.LogDebug("MainForm处于锁定状态，跳过心跳发送");
+                    // 锁定状态下跳过心跳，不返回false避免增加失败计数
+                    // 直接返回，由HeartbeatLoopAsync中的continue处理
+                    return true;
                 }
 
                 var heartbeatRequest = new HeartbeatRequest();
@@ -1277,7 +1283,25 @@ namespace RUINORERP.UI.Network
 
                 }
 
-                // 1. 首先尝试作为响应处理（请求-响应模式）
+                /*
+客户端发送请求（SendCommandWithResponseAsync）
+    ↓
+创建 PendingRequest 并添加到 _pendingRequests
+    ↓
+发送请求到服务器
+    ↓
+等待 TaskCompletionSource（通过 Task.WhenAny）
+    ↓
+[并发] 服务器返回响应
+    ↓
+[并发] HandleResponsePacket 匹配 RequestId
+    ↓
+[并发] 从 _pendingRequests 移除并设置 Tcs 结果
+    ↓
+SendCommandWithResponseAsync 恢复执行并返回响应
+
+                 */
+                // 1. 首先尝试作为响应处理（请求-响应模式） 响应
                 if (IsResponsePacket(packet))
                 {
                     if (HandleResponsePacket(packet))
@@ -1330,6 +1354,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 处理响应数据包
+        /// 
         /// </summary>
         /// <param name="packet">数据包</param>
         /// <returns>是否成功处理</returns>
@@ -1915,6 +1940,65 @@ namespace RUINORERP.UI.Network
 
 
 
+        }
+
+
+        /// <summary>
+        /// 发送响应包（回复服务器的ServerRequest）
+        /// </summary>
+        /// <typeparam name="TResponse">响应数据类型</typeparam>
+        /// <param name="commandId">命令标识符</param>
+        /// <param name="response">响应数据</param>
+        /// <param name="originalRequestId">原始请求的RequestId（用于匹配）</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>发送是否成功</returns>
+        public async Task<bool> SendResponseAsync<TResponse>(CommandId commandId, TResponse response, string originalRequestId, CancellationToken ct = default)
+            where TResponse : class, IResponse
+        {
+            try
+            {
+                ct.ThrowIfCancellationRequested();
+
+                // 检查连接状态
+                if (!IsConnected)
+                {
+                    _logger.LogWarning("尝试发送响应但连接已断开，命令ID: {CommandId}", commandId);
+                    return false;
+                }
+
+                // 构建响应数据包
+                var packet = PacketBuilder.Create()
+                    .WithDirection(PacketDirection.ClientResponse) // 设置为客户端响应方向
+                    .WithCommandId(commandId)
+                    .WithResponse(response)
+                    .Build();
+
+                // 设置ExecutionContext
+                if (packet.ExecutionContext == null)
+                {
+                    packet.ExecutionContext = new CommandContext();
+                }
+
+                // 关键：设置RequestId为原始请求的RequestId，以便服务器匹配响应
+                packet.ExecutionContext.RequestId = originalRequestId;
+                packet.ExecutionContext.SessionId = _applicationContext.SessionId;
+                packet.ExecutionContext.UserId = _applicationContext.CurUserInfo?.UserID ?? 0;
+
+                // 附加令牌（如果需要）
+                await AutoAttachTokenAsync(packet.ExecutionContext);
+
+                // 序列化并发送
+                var serialized = PacketSerializer.Serialize(packet);
+                await _socketClient.SendAsync(serialized);
+
+                _logger.LogDebug("响应包发送成功: CommandId={CommandId}, RequestId={RequestId}", commandId, originalRequestId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "发送响应包失败: CommandId={CommandId}, RequestId={RequestId}", commandId, originalRequestId);
+                return false;
+            }
         }
 
 

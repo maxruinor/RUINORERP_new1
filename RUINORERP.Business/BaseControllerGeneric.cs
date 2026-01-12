@@ -939,13 +939,7 @@ namespace RUINORERP.Business
                        .WhereAdv(useLike, queryConditions, dto);
             }
 
-            // 统一在查询条件构建完成后添加导航属性查询
-            // 修复：将 IncludesAllFirstLayer() 移到 if-else 之外，避免重复调用导致 DataReader 错误
-            if (UseAutoNavQuery)
-            {
-                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
-                //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
-            }
+            // 先添加所有查询条件，包括子查询
             foreach (var SqlItem in sqlList)
             {
                 if (!string.IsNullOrEmpty(SqlItem))
@@ -954,6 +948,15 @@ namespace RUINORERP.Business
                     querySqlQueryable = querySqlQueryable.Where(SqlItem);
                 }
             }
+
+            // 所有查询条件构建完成后，再添加导航属性查询
+            // 修复：确保 IncludesAllFirstLayer() 在所有 Where 条件之后调用
+            if (UseAutoNavQuery)
+            {
+                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
+                //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+            }
+
             return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
         }
 

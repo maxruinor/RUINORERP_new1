@@ -17,7 +17,7 @@ namespace RUINORERP.Common.Helper
     #region 表达式转SQL
 
     /// <summary>
-    /// 表达式转SQL  需要修正 来源来网络源码
+    /// 表达式转SQL  需要修正 来源来网络源码3
     /// </summary>
     public class ExpressionToSql
     {

@@ -16,6 +16,9 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Business
 {
+    /// <summary>
+    /// 2
+    /// </summary>
     public static class ISugarQueryableExt
     {
 

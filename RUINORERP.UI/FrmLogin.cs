@@ -62,17 +62,9 @@ namespace RUINORERP.UI
         /// </summary>
         private TaskCompletionSource<bool> _welcomeCompletionTcs = new TaskCompletionSource<bool>();
 
-        /// <summary>
-        /// 当前公告内容
-        /// </summary>
-        private string _currentAnnouncement = null;
 
-        /// <summary>
-        /// 用于显示公告的Label控件
-        /// </summary>
-        private System.Windows.Forms.Label _lblAnnouncement = null;
-        private System.Windows.Forms.Panel _panelAnnouncement = null;
-        private System.Windows.Forms.Button _btnCloseAnnouncement = null;
+
+
 
         public FrmLogin()
         {
@@ -90,141 +82,6 @@ namespace RUINORERP.UI
                 _eventManager.WelcomeCompleted += OnWelcomeCompleted;
                 _eventManager.AnnouncementReceived += OnAnnouncementReceived;
             }
-
-            // 创建公告显示控件
-            CreateAnnouncementControls();
-        }
-
-        /// <summary>
-        /// 创建公告显示控件
-        /// </summary>
-        private void CreateAnnouncementControls()
-        {
-            // 创建公告面板
-            _panelAnnouncement = new System.Windows.Forms.Panel
-            {
-                BackColor = System.Drawing.Color.FromArgb(255, 255, 224),
-                BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle,
-                Visible = false,
-                Location = new System.Drawing.Point(86, 50),
-                Size = new System.Drawing.Size(250, 80),
-                Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left
-            };
-
-            // 创建公告标题标签
-            var lblAnnouncementTitle = new System.Windows.Forms.Label
-            {
-                Text = "📢 系统公告",
-                Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold),
-                ForeColor = System.Drawing.Color.FromArgb(139, 69, 19),
-                Location = new System.Drawing.Point(8, 8),
-                AutoSize = true
-            };
-
-            // 创建公告内容标签
-            _lblAnnouncement = new System.Windows.Forms.Label
-            {
-                Font = new System.Drawing.Font("宋体", 8.5F),
-                ForeColor = System.Drawing.Color.FromArgb(60, 60, 60),
-                Location = new System.Drawing.Point(8, 30),
-                Size = new System.Drawing.Size(234, 30),
-                MaximumSize = new System.Drawing.Size(234, 50),
-                AutoSize = true
-            };
-
-            // 创建关闭公告按钮
-            _btnCloseAnnouncement = new System.Windows.Forms.Button
-            {
-                Text = "×",
-                Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold),
-                BackColor = System.Drawing.Color.Transparent,
-                ForeColor = System.Drawing.Color.FromArgb(139, 69, 19),
-                FlatStyle = System.Windows.Forms.FlatStyle.Flat,
-                FlatAppearance = { BorderSize = 0 },
-                Cursor = System.Windows.Forms.Cursors.Hand,
-                Size = new System.Drawing.Size(20, 20),
-                Location = new System.Drawing.Point(225, 2),
-                Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right
-            };
-
-            _btnCloseAnnouncement.Click += (s, e) =>
-            {
-                _panelAnnouncement.Visible = false;
-            };
-
-            // 添加控件到面板
-            _panelAnnouncement.Controls.Add(lblAnnouncementTitle);
-            _panelAnnouncement.Controls.Add(_lblAnnouncement);
-            _panelAnnouncement.Controls.Add(_btnCloseAnnouncement);
-
-            // 添加到窗体
-            this.Controls.Add(_panelAnnouncement);
-        }
-
-        /// <summary>
-        /// 显示公告信息
-        /// </summary>
-        /// <param name="content">公告内容</param>
-        private void DisplayAnnouncement(string content)
-        {
-            if (string.IsNullOrEmpty(content))
-            {
-                if (_panelAnnouncement != null)
-                {
-                    _panelAnnouncement.Visible = false;
-                }
-                return;
-            }
-
-            // 调整登录界面位置，为公告留出空间
-            MoveLoginFormDown();
-
-            // 显示公告
-            if (_lblAnnouncement != null && _panelAnnouncement != null)
-            {
-                _lblAnnouncement.Text = content;
-                _lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
-                _panelAnnouncement.Visible = true;
-
-                MainForm.Instance?.logger?.LogInformation("显示系统公告: {Content}", content);
-            }
-        }
-
-        /// <summary>
-        /// 调整登录表单位置，为公告留出空间
-        /// </summary>
-        private void MoveLoginFormDown()
-        {
-            // 调整其他控件位置，向下移动80像素
-            int offset = 85;
-
-            foreach (System.Windows.Forms.Control ctrl in this.Controls)
-            {
-                // 跳过公告相关控件
-                if (ctrl == _panelAnnouncement)
-                    continue;
-
-                // 只调整特定控件
-                if (ctrl.Name == "lblID" || ctrl.Name == "txtUserName")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "lblpwd" || ctrl.Name == "txtPassWord")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "chksaveIDpwd")
-                {
-                    ctrl.Top += offset;
-                }
-                else if (ctrl.Name == "btnok" || ctrl.Name == "btncancel")
-                {
-                    ctrl.Top += offset;
-                }
-            }
-
-            // 调整窗体高度
-            this.ClientSize = new System.Drawing.Size(this.ClientSize.Width, this.ClientSize.Height + offset);
         }
 
         /// <summary>
@@ -266,8 +123,6 @@ namespace RUINORERP.UI
         {
             try
             {
-                _currentAnnouncement = content;
-
                 MainForm.Instance?.logger?.LogInformation("收到服务器公告: {Content}", content);
 
                 // 在UI线程中显示公告
@@ -284,6 +139,80 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance?.logger?.LogError(ex, "显示公告时发生异常");
             }
+        }
+
+        /// <summary>
+        /// 显示公告信息
+        /// </summary>
+        /// <param name="content">公告内容</param>
+        private void DisplayAnnouncement(string content)
+        {
+            if (string.IsNullOrEmpty(content))
+            {
+                panelAnnouncement.Visible = false;
+                return;
+            }
+
+            // 调整登录界面位置，为公告留出空间
+            MoveLoginFormDown();
+
+            // 显示公告
+            if (lblAnnouncement != null && panelAnnouncement != null)
+            {
+                lblAnnouncement.Text = content;
+                lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
+                panelAnnouncement.Visible = true;
+                MainForm.Instance?.logger?.LogInformation("显示系统公告: {Content}", content);
+            }
+        }
+
+
+
+        /// <summary>
+        /// 调整登录表单位置，为公告留出空间
+        /// </summary>
+        private void MoveLoginFormDown()
+        {
+            // 调整其他控件位置，向下移动80像素
+            int offset = 85;
+
+            foreach (System.Windows.Forms.Control ctrl in this.Controls)
+            {
+                // 跳过公告相关控件
+                if (ctrl == panelAnnouncement)
+                    continue;
+
+                // 只调整特定控件
+                if (ctrl.Name == "lblID" || ctrl.Name == "txtUserName")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "lblpwd" || ctrl.Name == "txtPassWord")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "chksaveIDpwd")
+                {
+                    ctrl.Top += offset;
+                }
+                else if (ctrl.Name == "btnok" || ctrl.Name == "btncancel")
+                {
+                    ctrl.Top += offset;
+                }
+            }
+
+            // 调整窗体高度
+            this.ClientSize = new System.Drawing.Size(this.ClientSize.Width, this.ClientSize.Height + offset);
+        }
+
+        /// <summary>
+        /// 关闭公告按钮点击事件处理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnCloseAnnouncement_Click(object sender, EventArgs e)
+        {
+            panelAnnouncement.Visible = false;
         }
 
         private bool m_showing = true;
@@ -887,9 +816,9 @@ namespace RUINORERP.UI
                 _originalServerPort = txtPort.Text.Trim();
 
                 // 清除当前公告显示
-                if (_panelAnnouncement != null)
+                if (panelAnnouncement != null)
                 {
-                    _panelAnnouncement.Visible = false;
+                    panelAnnouncement.Visible = false;
                 }
 
                 // 重置欢迎流程状态

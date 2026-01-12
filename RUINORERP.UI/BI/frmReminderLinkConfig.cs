@@ -41,39 +41,61 @@ namespace RUINORERP.UI.BI
         public frmReminderLinkConfig()
         {
             InitializeComponent();
-            _linkController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkController<tb_ReminderObjectLink>>();
-            LoadLinkList();
+            
+            // 延迟加载数据，避免构造函数中的异步调用问题
+            this.Load += async (sender, e) => await LoadLinkListAsync();
         }
 
         /// <summary>
-        /// 加载链路列表
+        /// 加载链路列表（异步）
         /// </summary>
-        private async void LoadLinkList()
+        private async Task LoadLinkListAsync()
         {
             try
             {
+                // 确保MainForm.Instance和AppContext不为空
+                if (MainForm.Instance == null || MainForm.Instance.AppContext == null)
+                {
+                    MessageBox.Show("应用上下文未初始化，无法加载链路数据", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                
+                // 获取链路控制器
+                _linkController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkController<tb_ReminderObjectLink>>();
+                if (_linkController == null)
+                {
+                    MessageBox.Show("无法获取链路控制器服务", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+                
                 // 加载链路数据
                 _linkList = await _linkController.QueryAsync();
+                
+                // 绑定数据源
                 dgvLinkList.DataSource = _linkList;
                 
-                // 设置列标题
-                dgvLinkList.Columns["LinkId"].HeaderText = "链路ID";
-                dgvLinkList.Columns["LinkName"].HeaderText = "链路名称";
-                dgvLinkList.Columns["Description"].HeaderText = "链路描述";
-                dgvLinkList.Columns["SourceType"].HeaderText = "提醒源类型";
-                dgvLinkList.Columns["BizType"].HeaderText = "单据类型";
-                dgvLinkList.Columns["ActionType"].HeaderText = "操作类型";
-                dgvLinkList.Columns["TargetType"].HeaderText = "提醒目标类型";
-                dgvLinkList.Columns["IsEnabled"].HeaderText = "是否启用";
-                
-                // 隐藏不必要的列
-                dgvLinkList.Columns["SourceValue"].Visible = false;
-                dgvLinkList.Columns["TargetValue"].Visible = false;
-                dgvLinkList.Columns["BillStatus"].Visible = false;
-                dgvLinkList.Columns["CreateTime"].Visible = false;
-                dgvLinkList.Columns["CreateUserId"].Visible = false;
-                dgvLinkList.Columns["UpdateTime"].Visible = false;
-                dgvLinkList.Columns["UpdateUserId"].Visible = false;
+                // 确保Columns集合已初始化
+                if (dgvLinkList.Columns.Count > 0)
+                {
+                    // 设置列标题
+                    if (dgvLinkList.Columns.Contains("LinkId")) dgvLinkList.Columns["LinkId"].HeaderText = "链路ID";
+                    if (dgvLinkList.Columns.Contains("LinkName")) dgvLinkList.Columns["LinkName"].HeaderText = "链路名称";
+                    if (dgvLinkList.Columns.Contains("Description")) dgvLinkList.Columns["Description"].HeaderText = "链路描述";
+                    if (dgvLinkList.Columns.Contains("SourceType")) dgvLinkList.Columns["SourceType"].HeaderText = "提醒源类型";
+                    if (dgvLinkList.Columns.Contains("BizType")) dgvLinkList.Columns["BizType"].HeaderText = "单据类型";
+                    if (dgvLinkList.Columns.Contains("ActionType")) dgvLinkList.Columns["ActionType"].HeaderText = "操作类型";
+                    if (dgvLinkList.Columns.Contains("TargetType")) dgvLinkList.Columns["TargetType"].HeaderText = "提醒目标类型";
+                    if (dgvLinkList.Columns.Contains("IsEnabled")) dgvLinkList.Columns["IsEnabled"].HeaderText = "是否启用";
+                    
+                    // 隐藏不必要的列
+                    if (dgvLinkList.Columns.Contains("SourceValue")) dgvLinkList.Columns["SourceValue"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("TargetValue")) dgvLinkList.Columns["TargetValue"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("BillStatus")) dgvLinkList.Columns["BillStatus"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("CreateTime")) dgvLinkList.Columns["CreateTime"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("CreateUserId")) dgvLinkList.Columns["CreateUserId"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("UpdateTime")) dgvLinkList.Columns["UpdateTime"].Visible = false;
+                    if (dgvLinkList.Columns.Contains("UpdateUserId")) dgvLinkList.Columns["UpdateUserId"].Visible = false;
+                }
             }
             catch (Exception ex)
             {

@@ -188,6 +188,16 @@ namespace RUINORERP.UI.Network.DI
                 // 创建MessageService实例，传入Lazy依赖以避免循环引用
                 return new MessageService(lazyCommunicationService, logger);
             }).AsSelf().SingleInstance();
+
+            // 注册MessageNotificationService，为业务层提供消息通知接口
+            builder.Register(c =>
+            {
+                var messageService = c.Resolve<MessageService>();
+                var logger = c.Resolve<ILogger<MessageNotificationService>>();
+                return new MessageNotificationService(messageService, logger);
+            }).As<Business.CommService.IMessageNotificationService>()
+                .SingleInstance();
+
             builder.RegisterType<EnhancedMessageManager>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SystemManagementService>().AsSelf().InstancePerDependency();
            // builder.RegisterType<BusinessNotificationService>().AsSelf().InstancePerLifetimeScope();

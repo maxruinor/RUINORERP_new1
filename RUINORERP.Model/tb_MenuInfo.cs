@@ -154,10 +154,10 @@ namespace RUINORERP.Model
         /// <summary>
         /// 业务类型
         /// </summary>
-        [AdvQueryAttribute(ColName = "BizType",ColDesc = "业务类型")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BizType" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "业务类型" )]
+        [AdvQueryAttribute(ColName = "BizType",ColDesc = "业务类型")]
+        [SugarColumn(IsNullable = true, ColumnName = "BizType", ColumnDescription = "业务类型")]
         public int? BizType
-        { 
+        {
             get{return _BizType;}
             set{
             SetProperty(ref _BizType, value);

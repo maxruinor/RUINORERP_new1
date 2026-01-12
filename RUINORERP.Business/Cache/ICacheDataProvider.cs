@@ -1,4 +1,4 @@
-using System;using System.Collections.Generic;
+using System;using System.Collections.Generic;using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Cache
 {
@@ -25,6 +25,21 @@ namespace RUINORERP.Business.Cache
         /// <returns>实体对象</returns>
         T GetEntityFromSource<T>(string tableName, object idValue) where T : class;
 
-        
+        /// <summary>
+        /// 异步获取实体列表数据
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表</returns>
+        Task<List<T>> GetEntityListFromSourceAsync<T>(string tableName) where T : class;
+
+        /// <summary>
+        /// 异步根据ID获取实体数据
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <param name="idValue">主键值</param>
+        /// <returns>实体对象</returns>
+        Task<T> GetEntityFromSourceAsync<T>(string tableName, object idValue) where T : class;
     }
 }

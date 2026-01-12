@@ -107,7 +107,7 @@ namespace RUINORERP.UI.BI
             #endregion
 
             #region 系统功能配置
-        
+
             try
             {
                 functionConfiguration = JsonConvert.DeserializeObject<FunctionConfiguration>(SystemConfig.FunctionConfiguration);
@@ -143,19 +143,17 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
+            //这里不能用上面的SystemConfig，丢失？ 引用没传到值？
+            // 更新JSON数据
+            var fmjsonData = JsonConvert.SerializeObject(fMConfiguration);
+            var funjsonData = JsonConvert.SerializeObject(functionConfiguration);
+            if (bindingSourceEdit.Current is tb_SystemConfig sysconfig)
+            {
+                sysconfig.FMConfig = fmjsonData;
+                sysconfig.FunctionConfiguration = funjsonData;
+            }
             if (base.Validator())
             {
-
-                //这里不能用上面的SystemConfig，丢失？ 引用没传到值？
-                // 更新JSON数据
-                var fmjsonData = JsonConvert.SerializeObject(fMConfiguration);
-                var funjsonData = JsonConvert.SerializeObject(functionConfiguration);
-                if (bindingSourceEdit.Current is tb_SystemConfig sysconfig)
-                {
-                    sysconfig.FMConfig = fmjsonData;
-                    sysconfig.FunctionConfiguration = funjsonData;
-                }
-
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;
                 this.Close();

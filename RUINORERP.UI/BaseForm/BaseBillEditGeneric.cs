@@ -24,6 +24,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.LogicaService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common;
@@ -47,6 +48,7 @@ using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.SecurityTool;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
@@ -155,14 +157,18 @@ namespace RUINORERP.UI.BaseForm
                 };
 
                 // 获取提醒对象链路引擎
-                var linkEngine = new RUINORERP.Business.LogicaService.ReminderObjectLinkEngine();
+                var messageNotificationService = MainForm.Instance.AppContext?.GetRequiredService<IMessageNotificationService>();
+                var linkEngine = new ReminderObjectLinkEngine(
+                    messageNotificationService,
+                    MainForm.Instance.AppContext,
+                    MainForm.Instance.AppContext?.GetRequiredService<IUnitOfWorkManage>());
 
                 // 处理单据状态变化，匹配规则并发送提醒
                 await linkEngine.ProcessBillStatusChangeAsync(
                     (int)update.BusinessType,
                     (int)update.UpdateType,
                     0,
-                    update.InitiatorUserId.ToLong(),
+                    MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID,
                     messageData);
             }
             catch (Exception ex)

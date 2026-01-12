@@ -71,22 +71,22 @@ namespace RUINORERP.Business.Cache
                 int successCount = 0;
                 int failedCount = 0;
 
-                // 逐个初始化表缓存，简单直接
+                // 使用异步方法初始化表缓存，提高性能
                 foreach (var tableName in tableNames)
                 {
                     try
                     {
-                        // 直接使用同步方法初始化，避免复杂的异步嵌套
-                        InitializeCacheForTable(tableName);
+                        // 使用异步方法初始化，提高性能
+                        await InitializeCacheForTableAsync(tableName);
                         successCount++;
-                        _logger.Debug($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
+                        _logger.Debug($"表 {tableName} 异步缓存初始化成功 ({successCount}/{tableNames.Count})");
                         // 短暂延迟，减少数据库压力
                         await Task.Delay(123);
                     }
                     catch (Exception ex)
                     {
                         failedCount++;
-                        _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
+                        _logger.LogError(ex, $"表 {tableName} 异步缓存初始化失败 ({failedCount}个表失败)");
                         // 继续处理下一个表
                     }
                 }
@@ -291,10 +291,47 @@ namespace RUINORERP.Business.Cache
      
                 
                 
+                
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"初始化表 {tableName} 的缓存时发生错误");
+
+                // 使用统一的空缓存创建方法，不再重新抛出异常，确保状态一致性
+                CreateEmptyCacheForTable(tableName);
+            }
+        }
+
+        /// <summary>
+        /// 异步初始化指定表的缓存
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        public async Task InitializeCacheForTableAsync(string tableName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(tableName))
+                {
+                    _logger.LogWarning("表名为空，跳过异步初始化");
+                    return;
+                }
+
+                _logger.LogDebug($"开始异步初始化表 {tableName} 的缓存");
+                            
+                // 获取实体类型
+                var entityType = _cacheManager.GetEntityType(tableName);
+                if (entityType == null)
+                {
+                    _logger.LogWarning($"未找到表 {tableName} 对应的实体类型");
+                    return;
+                }
+
+                // 异步加载数据并更新缓存
+                await LoadDataAndUpdateCacheAsync(entityType, tableName, _queryHelper);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"异步初始化表 {tableName} 的缓存时发生错误");
 
                 // 使用统一的空缓存创建方法，不再重新抛出异常，确保状态一致性
                 CreateEmptyCacheForTable(tableName);
@@ -341,6 +378,61 @@ namespace RUINORERP.Business.Cache
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"从数据库加载 {tableName} 数据并更新缓存时发生错误");
+                // 使用统一的空缓存创建方法，不再重新抛出异常，确保状态一致性
+                CreateEmptyCacheForTable(tableName);
+            }
+        }
+
+        /// <summary>
+        /// 异步从数据库加载数据并更新缓存
+        /// </summary>
+        private async Task LoadDataAndUpdateCacheAsync(Type entityType, string tableName, DynamicQueryHelper _queryHelper)
+        {
+            if (entityType == null || string.IsNullOrEmpty(tableName))
+            {
+                _logger.LogWarning($"实体类型或表名为空: entityType={entityType}, tableName={tableName}");
+                return;
+            }
+
+            try
+            {
+                // 获取表结构信息，特别是需要缓存的字段
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo == null)
+                {
+                    _logger.LogWarning($"未找到表 {tableName} 的结构信息");
+                    // 创建正确类型的List
+                    var nullCaseListType = typeof(List<>).MakeGenericType(entityType);
+                    var nullCaseTypedList = Activator.CreateInstance(nullCaseListType);
+                    _cacheManager.UpdateEntityList(tableName, nullCaseTypedList);
+                    return;
+                }
+
+                // 使用反射调用EntityCacheManager的异步方法
+                var getEntityListAsyncMethod = typeof(EntityCacheManager)
+                    .GetMethod("GetEntityListAsync", new[] { typeof(string) })
+                    .MakeGenericMethod(entityType);
+
+                if (getEntityListAsyncMethod != null)
+                {
+                    // 调用异步方法加载数据
+                    var task = (Task)getEntityListAsyncMethod.Invoke(_cacheManager, new object[] { tableName });
+                    if (task != null)
+                    {
+                        await task;
+                        _logger.LogDebug($"表 {tableName} 异步缓存更新完成");
+                    }
+                }
+            }
+            catch (SqlException sqlEx)
+            {
+                _logger.LogError(sqlEx, $"异步从数据库加载 {tableName} 数据时发生SQL错误");
+                // 使用统一的空缓存创建方法，不再重新抛出异常，确保状态一致性
+                CreateEmptyCacheForTable(tableName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"异步从数据库加载 {tableName} 数据并更新缓存时发生错误");
                 // 使用统一的空缓存创建方法，不再重新抛出异常，确保状态一致性
                 CreateEmptyCacheForTable(tableName);
             }

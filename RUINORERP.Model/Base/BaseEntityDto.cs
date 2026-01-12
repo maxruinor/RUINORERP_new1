@@ -1,4 +1,4 @@
-﻿
+
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
@@ -19,7 +19,7 @@ namespace RUINORERP.Model.Base
     /// <summary>
     /// 用于查询传参数条件的实体基类
     /// </summary>
-    public class BaseEntityDto : DynamicEntityDto,INotifyPropertyChanged, IDataErrorInfo
+    public class BaseEntityDto : DynamicEntityDto,INotifyPropertyChanged//, IDataErrorInfo - 移除IDataErrorInfo接口，避免SqlSugar绑定索引器失败
     {
        
 
@@ -129,59 +129,11 @@ namespace RUINORERP.Model.Base
 
  
 
-        // 用于保存验证错误信息。key 保存所验证的字段名称；value 保存对应的字段的验证错误信息列表
-        private Dictionary<String, List<String>> errors = new Dictionary<string, List<string>>();
-
-        private const string NAME_ERROR = "name 不能包含空格";
-        private const string ID_ERROR = "id 不能小于 10";
-
-
-
-        public void AddError(string propertyName, string error)
-        {
-            if (!errors.ContainsKey(propertyName))
-                errors[propertyName] = new List<string>();
-
-            if (!errors[propertyName].Contains(error))
-                errors[propertyName].Add(error);
-        }
-
-        public void RemoveError(string propertyName, string error)
-        {
-            if (errors.ContainsKey(propertyName) && errors[propertyName].Contains(error))
-            {
-                errors[propertyName].Remove(error);
-
-                if (errors[propertyName].Count == 1)
-                    errors.Remove(propertyName);
-            }
-        }
-
-        [SugarColumn(IsIgnore = true)]
-        public string Error
-        {
-            get { return errors.Count > 0 ? "有验证错误" : ""; }
-        }
-
-
         [SugarColumn(IsIgnore = true)]
         public string Querymsg { get => querymsg; set => querymsg = value; }
 
-
-
-
-        [SugarColumn(IsIgnore = true)]
-        public string this[string propertyName]
-        {
-            get
-            {
-                if (errors.ContainsKey(propertyName))
-                    return string.Join(Environment.NewLine, errors[propertyName]);
-                else
-                    return null;
-            }
-        }
-
+        // IDataErrorInfo相关代码已移除，避免SqlSugar绑定索引器失败
+        // 如果需要验证功能，可以使用其他方式实现，如数据注解或自定义验证方法
 
         public bool IsIdValid(decimal? value)
         {
@@ -189,12 +141,12 @@ namespace RUINORERP.Model.Base
 
             if (value < 0)
             {
-                AddError("TotalAmount", ID_ERROR);
+                // IDataErrorInfo相关代码已移除
                 isValid = false;
             }
             else
             {
-                RemoveError("TotalAmount", ID_ERROR);
+                // IDataErrorInfo相关代码已移除
             }
 
             return isValid;

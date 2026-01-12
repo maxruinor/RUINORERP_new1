@@ -163,6 +163,12 @@ namespace RUINORERP.Server.SmartReminder
                                 await strategy.CheckAsync(irule, reminderContext);
                             }
                         }
+                        else if (reminderBiz == ReminderBizType.单据提交审批提醒)
+                        {
+                            // 单据提交审批提醒主要通过客户端的ReminderObjectLinkEngine处理
+                            // 服务器端主要用于持久化消息和跨客户端同步
+                            _logger.LogDebug("处理单据提交审批提醒规则: {RuleId}", irule.RuleId);
+                        }
                     }
                     catch (Exception ex)
                     {

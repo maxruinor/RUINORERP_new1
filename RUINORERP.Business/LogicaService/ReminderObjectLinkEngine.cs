@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Business.CommService;
 using Microsoft.Extensions.Logging;
+using RUINORERP.IServices;
+using RUINORERP.Model.Context;
+using RUINORERP.Repository.UnitOfWorks;
 
 namespace RUINORERP.Business.LogicaService
 {
@@ -19,13 +22,29 @@ namespace RUINORERP.Business.LogicaService
     public class ReminderObjectLinkEngine
     {
         private readonly ILogger<ReminderObjectLinkEngine> _logger;
+        private readonly ApplicationContext _appContext;
+        private readonly IUnitOfWorkManage _unitOfWorkManage;
+        private readonly IMessageNotificationService _messageNotificationService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        public ReminderObjectLinkEngine()
+        public ReminderObjectLinkEngine(ApplicationContext appContext = null, IUnitOfWorkManage unitOfWorkManage = null)
         {
-            // 暂时使用null代替，实际使用时需要通过依赖注入获取
+            _appContext = appContext;
+            _unitOfWorkManage = unitOfWorkManage;
+            _logger = null;
+            _messageNotificationService = null;
+        }
+
+        /// <summary>
+        /// 构造函数（带消息通知服务）
+        /// </summary>
+        public ReminderObjectLinkEngine(IMessageNotificationService messageNotificationService, ApplicationContext appContext = null, IUnitOfWorkManage unitOfWorkManage = null)
+        {
+            _appContext = appContext;
+            _unitOfWorkManage = unitOfWorkManage;
+            _messageNotificationService = messageNotificationService;
             _logger = null;
         }
 
@@ -41,9 +60,30 @@ namespace RUINORERP.Business.LogicaService
         {
             try
             {
-                // 暂时返回空列表，实际实现时需要通过依赖注入获取服务
                 _logger?.LogDebug($"匹配链路规则: 业务类型={bizType}, 操作类型={actionType}, 单据状态={billStatus}, 源ID={sourceId}");
-                return new List<tb_ReminderObjectLink>();
+
+                if (_unitOfWorkManage == null)
+                {
+                    _logger?.LogWarning("UnitOfWorkManage未初始化，无法查询规则");
+                    return new List<tb_ReminderObjectLink>();
+                }
+
+                var db = _unitOfWorkManage.GetDbClient();
+
+                // 查询匹配的链路规则
+                var matchedLinks = await db.Queryable<tb_ReminderObjectLink>()
+                    .Where(link => link.BizType.Value == (int)bizType
+                        && link.IsEnabled == true
+                        && (link.ActionType == 0 || link.ActionType == actionType)
+                        && (link.BillStatus == 0 || link.BillStatus == billStatus))
+                    .Includes(link => link.tb_ReminderLinkRuleRelations)
+                    .ToListAsync();
+
+                // 进一步过滤源匹配
+                var filteredLinks = matchedLinks.Where(link => IsSourceMatch(link, sourceId)).ToList();
+
+                _logger?.LogDebug($"匹配到 {filteredLinks.Count} 条链路规则");
+                return filteredLinks;
             }
             catch (Exception ex)
             {
@@ -84,9 +124,22 @@ namespace RUINORERP.Business.LogicaService
         /// <returns>是否具有该角色</returns>
         private bool IsUserInRole(long userId, long roleId)
         {
-            // 实现角色匹配逻辑
-            // 这里需要根据实际系统设计来实现，例如查询用户角色关联表
-            return true;
+            try
+            {
+                if (_unitOfWorkManage == null) return false;
+
+                var db = _unitOfWorkManage.GetDbClient();
+                var hasRole = db.Queryable<tb_User_Role>()
+                    .Where(ru => ru.User_ID == userId && ru.RoleID == roleId)
+                    .Any();
+
+                return hasRole;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查用户角色时发生错误");
+                return false;
+            }
         }
 
         /// <summary>
@@ -97,9 +150,22 @@ namespace RUINORERP.Business.LogicaService
         /// <returns>是否属于该部门</returns>
         private bool IsUserInDepartment(long userId, long departmentId)
         {
-            // 实现部门匹配逻辑
-            // 这里需要根据实际系统设计来实现，例如查询用户部门关联表
-            return true;
+            try
+            {
+                if (_unitOfWorkManage == null) return false;
+
+                var db = _unitOfWorkManage.GetDbClient();
+                var inDept = db.Queryable<tb_Employee>()
+                    .Where(e => e.Employee_ID == userId && e.DepartmentID == departmentId)
+                    .Any();
+
+                return inDept;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查用户部门时发生错误");
+                return false;
+            }
         }
 
         /// <summary>
@@ -119,17 +185,26 @@ namespace RUINORERP.Business.LogicaService
                     {
                         case SourceTargetType.人员:
                             // 直接添加人员ID
-                            targetIds.Add(linkRule.TargetValue.Value);
+                            if (linkRule.TargetValue.HasValue)
+                            {
+                                targetIds.Add(linkRule.TargetValue.Value);
+                            }
                             break;
                         case SourceTargetType.角色:
                             // 添加该角色下的所有用户ID
-                            var roleUsers = GetUsersByRole(linkRule.TargetValue.Value);
-                            targetIds.AddRange(roleUsers);
+                            if (linkRule.TargetValue.HasValue)
+                            {
+                                var roleUsers = GetUsersByRole(linkRule.TargetValue.Value);
+                                targetIds.AddRange(roleUsers);
+                            }
                             break;
                         case SourceTargetType.部门:
                             // 添加该部门下的所有用户ID
-                            var deptUsers = GetUsersByDepartment(linkRule.TargetValue.Value);
-                            targetIds.AddRange(deptUsers);
+                            if (linkRule.TargetValue.HasValue)
+                            {
+                                var deptUsers = GetUsersByDepartment(linkRule.TargetValue.Value);
+                                targetIds.AddRange(deptUsers);
+                            }
                             break;
                     }
                 }
@@ -139,7 +214,7 @@ namespace RUINORERP.Business.LogicaService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取通知目标时发生错误");
+                _logger?.LogError(ex, "获取通知目标时发生错误");
                 return new List<long>();
             }
         }
@@ -151,9 +226,23 @@ namespace RUINORERP.Business.LogicaService
         /// <returns>用户ID列表</returns>
         private List<long> GetUsersByRole(long roleId)
         {
-            // 实现根据角色获取用户的逻辑
-            // 这里需要根据实际系统设计来实现，例如查询用户角色关联表
-            return new List<long>();
+            try
+            {
+                if (_unitOfWorkManage == null) return new List<long>();
+
+                var db = _unitOfWorkManage.GetDbClient();
+                var userIds = db.Queryable<tb_User_Role>()
+                    .Where(ru => ru.RoleID == roleId)
+                    .Select(ru => ru.User_ID)
+                    .ToList();
+
+                return userIds;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "根据角色获取用户列表时发生错误");
+                return new List<long>();
+            }
         }
 
         /// <summary>
@@ -163,9 +252,23 @@ namespace RUINORERP.Business.LogicaService
         /// <returns>用户ID列表</returns>
         private List<long> GetUsersByDepartment(long departmentId)
         {
-            // 实现根据部门获取用户的逻辑
-            // 这里需要根据实际系统设计来实现，例如查询用户部门关联表
-            return new List<long>();
+            try
+            {
+                if (_unitOfWorkManage == null) return new List<long>();
+
+                var db = _unitOfWorkManage.GetDbClient();
+                var userIds = db.Queryable<tb_Employee>()
+                    .Where(e => e.DepartmentID == departmentId)
+                    .Select(e => e.Employee_ID)
+                    .ToList();
+
+                return userIds;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "根据部门获取用户列表时发生错误");
+                return new List<long>();
+            }
         }
 
         /// <summary>
@@ -181,16 +284,36 @@ namespace RUINORERP.Business.LogicaService
                 var targetIds = GetNotificationTargets(linkRules);
                 if (targetIds.Count == 0)
                 {
-                    _logger.LogDebug("没有匹配到通知目标，跳过提醒发送");
+                    _logger?.LogDebug("没有匹配到通知目标，跳过提醒发送");
                     return;
                 }
 
-                // 暂时不发送提醒，实际实现时需要通过依赖注入获取提醒服务
-                _logger.LogDebug($"匹配到 {targetIds.Count} 个通知目标，准备发送提醒");
+                _logger?.LogDebug($"匹配到 {targetIds.Count} 个通知目标，准备发送提醒");
+
+                // 通过消息通知服务发送提醒
+                if (_messageNotificationService != null)
+                {
+                    foreach (var targetId in targetIds)
+                    {
+                        // 为每个目标用户发送消息
+                        await _messageNotificationService.SendMessageToUserAsync(
+                            targetId,
+                            messageData.Title,
+                            messageData.Content,
+                            messageData.MessageType);
+                    }
+                }
+                else if (_appContext != null)
+                {
+                    // 降级方案：通过AppContext获取服务（向后兼容）
+                    _logger?.LogDebug("消息通知服务未注入，使用降级方案");
+                    // 注意：这里不直接使用MessageService，因为业务层不能依赖UI层
+                    // 实际使用时应该注入IMessageNotificationService的实现
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "发送提醒时发生错误");
+                _logger?.LogError(ex, "发送提醒时发生错误");
             }
         }
 
@@ -261,7 +384,7 @@ namespace RUINORERP.Business.LogicaService
 
                 // 暂时简化实现，移除错误的属性使用
                 _logger.LogDebug("准备发送安全库存提醒 - 库存ID: {InventoryId}", inventory.Inventory_ID);
-                
+
                 // 实际实现时需要创建正确的MessageData对象并发送
             }
             catch (Exception ex)

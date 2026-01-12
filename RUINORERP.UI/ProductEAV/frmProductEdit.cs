@@ -881,12 +881,10 @@ namespace RUINORERP.UI.ProductEAV
             {
                 _EditEntity.DataStatus = (int)RUINORERP.Global.DataStatus.草稿;
                 _EditEntity.ActionStatus = ActionStatus.新增;
-                long maxid = await mcProdBase.GetMaxID();
-
+                //long maxid = await mcProdBase.GetMaxID();
                 //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
                 //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
-
                 _EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
 
                 _EditEntity.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();

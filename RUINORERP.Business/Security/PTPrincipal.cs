@@ -242,11 +242,7 @@ namespace RUINORERP.Business.Security
                 user.tb_employee = new tb_Employee();
                 user.tb_employee.Employee_Name = user.UserName;
 
-                var modlist = appcontext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
-                             .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
-                             .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
-                             .ToList();
-                appcontext.CurUserInfo.UserModList = modlist;
+    
 
             }
             // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser

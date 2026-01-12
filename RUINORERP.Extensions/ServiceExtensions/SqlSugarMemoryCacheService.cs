@@ -75,17 +75,33 @@ namespace RUINORERP.Extensions
         // 扩展版本，支持批量获取键
         public IEnumerable<string> GetAllKeyWithBatchSize<V>(int batchSize)
         {
-            // 直接返回主动跟踪的键集合（移除分区前缀）
-            return _cacheKeys.Keys
-                .Where(k => k.StartsWith(CachePrefix))
-                .Select(k => k.Substring(CachePrefix.Length))
-                .Take(batchSize)
-                .ToList();
+            // 优化：预先计算结果，减少枚举器的创建和LINQ操作
+            var result = new List<string>();
+            int count = 0;
+            
+            // 直接枚举键，避免Where操作
+            foreach (var fullKey in _cacheKeys.Keys)
+            {
+                // 检查是否达到批量大小
+                if (count >= batchSize)
+                    break;
+                
+                // 检查是否是SqlSugar缓存键
+                if (fullKey.StartsWith(CachePrefix))
+                {
+                    // 移除前缀并添加到结果
+                    string keyWithoutPrefix = fullKey.Substring(CachePrefix.Length);
+                    result.Add(keyWithoutPrefix);
+                    count++;
+                }
+            }
+            
+            return result;
         }
 
 
         /// <summary>
-        /// 缓存创建
+        /// 缓存创建1
         /// </summary>
         /// <typeparam name="V"></typeparam>
         /// <param name="cacheKey"></param>
@@ -98,15 +114,20 @@ namespace RUINORERP.Extensions
 
             return _memoryCache.GetOrCreate(fullKey, entry =>
             {
-                _cacheKeys[fullKey] = 0;
-
+                // 设置过期时间和回调
                 if (cacheDurationInSeconds < int.MaxValue)
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
                 }
                 entry.RegisterPostEvictionCallback(RemoveCallback);
 
-                return create();
+                // 先执行create函数，再添加到键跟踪，确保只有成功创建缓存项才会跟踪键
+                V value = create();
+                
+                // 只有当create函数成功执行后，才将键添加到跟踪列表
+                _cacheKeys[fullKey] = 0;
+                
+                return value;
             });
         }
 
@@ -119,5 +140,53 @@ namespace RUINORERP.Extensions
 
         //添加缓存统计接口
         public int CachedItemsCount => _cacheKeys.Count;
+        
+        /// <summary>
+        /// 清理_cacheKeys中的无效键
+        /// </summary>
+        public void CleanupStaleKeys()
+        {
+            var keysToRemove = new List<string>();
+            
+            // 查找所有不在实际缓存中的键
+            foreach (var fullKey in _cacheKeys.Keys)
+            {
+                if (!_memoryCache.TryGetValue(fullKey, out _))
+                {
+                    keysToRemove.Add(fullKey);
+                }
+            }
+            
+            // 批量移除无效键
+            foreach (var key in keysToRemove)
+            {
+                _cacheKeys.TryRemove(key, out _);
+            }
+        }
+        
+        /// <summary>
+        /// 清理指定类型的缓存
+        /// </summary>
+        /// <typeparam name="V">缓存值类型</typeparam>
+        public void CleanupCacheByType<V>()
+        {
+            var keysToRemove = new List<string>();
+            
+            // 查找所有SqlSugar缓存键
+            foreach (var fullKey in _cacheKeys.Keys)
+            {
+                if (fullKey.StartsWith(CachePrefix))
+                {
+                    keysToRemove.Add(fullKey);
+                }
+            }
+            
+            // 批量移除指定类型的缓存
+            foreach (var key in keysToRemove)
+            {
+                _memoryCache.Remove(key);
+                _cacheKeys.TryRemove(key, out _);
+            }
+        }
     }
 }

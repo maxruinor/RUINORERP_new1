@@ -1,3 +1,14 @@
+using Krypton.Navigator;
+using Krypton.Toolkit;
+using Krypton.Workspace;
+using LiveChartsCore.Geo;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
+using RUINORERP.Common.Helper;
+using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BusinessService.SmartMenuService;
+using RUINORERP.UI.UserCenter;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -5,16 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Common.Helper;
-using RUINORERP.Model;
-using RUINORERP.UI.BaseForm;
-using Krypton.Navigator;
-using Krypton.Toolkit;
-using Krypton.Workspace;
-using RUINORERP.UI.UserCenter;
-using RUINORERP.Business;
-using RUINORERP.UI.BusinessService.SmartMenuService;
 
 namespace RUINORERP.UI.Common
 {
@@ -85,6 +86,14 @@ namespace RUINORERP.UI.Common
             //两套逻辑 要区分处理
             if (appContext.CurUserInfo.UserInfo.UserName == "超级管理员")
             {
+                if (appContext.CurUserInfo.UserModList.Count == 0)
+                {
+                    var modlist = appContext.Db.CopyNew().Queryable<tb_ModuleDefinition>()
+                 .Includes(a => a.tb_MenuInfos, b => b.tb_ButtonInfos)
+                 .Includes(a => a.tb_MenuInfos, b => b.tb_FieldInfos)
+                 .ToList();
+                    appContext.CurUserInfo.UserModList = modlist;
+                }
                 // 没有配置时按默认的加载
                 foreach (var item in appContext.CurUserInfo.UserModList)
                 {

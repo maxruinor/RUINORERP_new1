@@ -69,7 +69,7 @@ namespace RUINORERP.Extensions
 
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
-            
+
             SqlSugarScope sqlSugar = new SqlSugarScope(
                 new ConnectionConfig
                 {

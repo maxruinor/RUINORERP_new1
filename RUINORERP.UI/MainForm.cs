@@ -1129,12 +1129,27 @@ namespace RUINORERP.UI
                     //解密
                     //AppContext.RegistrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(AppContext.RegistrationInfo.FunctionModule, "FunctionModule");
                     //将,号隔开的枚举名称字符串变成List<GlobalFunctionModule>
-                    List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
-                    string[] enumNameArray = AppContext.RegistrationInfo.FunctionModule.Split(',');
-                    foreach (var item in enumNameArray)
+
+                    try
                     {
-                        MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                        List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
+                        string[] enumNameArray = AppContext.RegistrationInfo.FunctionModule.Split(',');
+                        foreach (var item in enumNameArray)
+                        {
+                            MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                        }
                     }
+                    catch (Exception)
+                    {
+                        AppContext.RegistrationInfo.FunctionModule = EncryptionHelper.AesDecryptByHashKey(AppContext.RegistrationInfo.FunctionModule, "FunctionModule");
+                        List<GlobalFunctionModule> selectedModules = new List<GlobalFunctionModule>();
+                        string[] enumNameArray = AppContext.RegistrationInfo.FunctionModule.Split(',');
+                        foreach (var item in enumNameArray)
+                        {
+                            MainForm.Instance.AppContext.CanUsefunctionModules.Add((GlobalFunctionModule)Enum.Parse(typeof(GlobalFunctionModule), item));
+                        }
+                    }
+
                 }
             }
 

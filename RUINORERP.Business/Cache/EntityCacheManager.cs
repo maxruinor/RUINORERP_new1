@@ -638,6 +638,199 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
+        /// 异步获取指定类型的实体列表
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <returns>实体列表</returns>
+        public async Task<List<T>> GetEntityListAsync<T>() where T : class
+        {
+            var tableName = typeof(T).Name;
+            return await GetEntityListAsync<T>(tableName);
+        }
+
+        /// <summary>
+        /// 异步根据表名获取指定类型的实体列表
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <returns>实体列表</returns>
+        public async Task<List<T>> GetEntityListAsync<T>(string tableName) where T : class
+        {
+            try
+            {
+                var cacheKey = GenerateCacheKey(CacheKeyType.List, tableName);
+                var cachedList = _cacheManager.Get(cacheKey);
+
+                // 检查缓存是否过期，如果过期则强制从数据源获取
+                bool isCacheExpired = _cacheSyncMetadata?.IsTableExpired(tableName) ?? false;
+                if (isCacheExpired)
+                {
+                    _logger?.LogDebug($"表 {tableName} 的缓存已过期，将异步从数据源获取最新数据");
+                    cachedList = null; // 强制从数据源获取
+                }
+
+                // 更新缓存访问统计
+                UpdateCacheAccessStatistics(cacheKey, cachedList != null, "List", tableName, cachedList);
+
+                // 检查是否存在缓存丢失情况
+                bool isCacheMissing = false;
+                if (cachedList is List<T> listObj && listObj.Count == 0)
+                {
+                    try
+                    {
+                        // 使用缓存同步元数据验证缓存完整性
+                        if (_cacheSyncMetadata != null)
+                        {
+                            // 验证表缓存数据的完整性
+                            bool isCacheValid = _cacheSyncMetadata.ValidateTableCacheIntegrity(tableName);
+                            if (!isCacheValid)
+                            {
+                                _logger?.LogWarning($"检测到表 {tableName} 缓存不完整，将异步从数据源重新获取数据。");
+                                isCacheMissing = true;
+                            }
+                            else
+                            {
+                                _logger?.LogDebug($"表 {tableName} 缓存验证通过，确认是空表（缓存有效）。");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogDebug(ex, "验证缓存完整性时发生错误");
+                    }
+                }
+
+                // 如果缓存为空、已过期或检测到缓存丢失，尝试从数据源获取
+                if (cachedList == null || isCacheMissing)
+                {
+                    if (_cacheDataProvider != null)
+                    {
+                        try
+                        {
+                            List<T> list = null;
+
+                            // 处理当T是Object类型的情况
+                            if (typeof(T) == typeof(object))
+                            {
+                                // 从TableSchemaManager获取正确的实体类型
+                                var entityType = _tableSchemaManager.GetEntityType(tableName);
+                                if (entityType != null)
+                                {
+                                    _logger?.LogDebug($"检测到T是Object类型，从表名 {tableName} 获取实体类型: {entityType.Name}");
+
+                                    // 使用反射创建并调用正确类型的GetEntityListFromSourceAsync方法
+                                    var getListMethod = typeof(ICacheDataProvider).GetMethod("GetEntityListFromSourceAsync");
+                                    if (getListMethod != null)
+                                    {
+                                        var genericMethod = getListMethod.MakeGenericMethod(entityType);
+                                        var task = genericMethod.Invoke(_cacheDataProvider, new object[] { tableName }) as Task<IEnumerable>;
+                                        if (task != null)
+                                        {
+                                            var stronglyTypedList = await task;
+                                            if (stronglyTypedList != null)
+                                            {
+                                                // 转换为List<object>返回
+                                                list = stronglyTypedList.Cast<T>().ToList();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // 正常情况：直接使用T类型异步查询
+                                list = await _cacheDataProvider.GetEntityListFromSourceAsync<T>(tableName);
+                            }
+
+                            // 即使列表为空也要缓存，避免空表频繁查询数据库
+                            if (list != null)
+                            {
+                                // 将获取到的数据（包括空列表）更新到缓存
+                                PutToCache(cacheKey, list, "List", tableName);
+
+                                // 直接更新缓存同步元数据
+                                UpdateCacheSyncMetadataAfterEntityChange(tableName, list.Count);
+
+                                return list;
+                            }
+                        }
+                        catch (Exception dataEx)
+                        {
+                            _logger?.LogError(dataEx, $"异步从数据源获取表 {tableName} 的实体列表时发生错误");
+                        }
+                    }
+                    return new List<T>();
+                }
+
+                // 同步处理缓存数据，与GetEntityList方法逻辑相同
+                if (cachedList != null && cachedList.GetType().FullName == "Newtonsoft.Json.Linq.JArray")
+                {
+                    try
+                    {
+                        var jArray = cachedList as Newtonsoft.Json.Linq.JArray;
+                        return jArray?.ToObject<List<T>>() ?? new List<T>();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, $"转换JArray到类型 {typeof(T).Name} 时发生错误");
+                        return new List<T>();
+                    }
+                }
+
+                if (cachedList is List<System.Dynamic.ExpandoObject> expandoList)
+                {
+                    var result = new List<T>();
+                    foreach (var item in expandoList)
+                    {
+                        try
+                        {
+                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(item);
+                            var typedItem = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                            result.Add(typedItem);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, $"转换ExpandoObject到类型 {typeof(T).Name} 时发生错误");
+                        }
+                    }
+                    return result;
+                }
+
+                if (cachedList is List<T> typedList)
+                {
+                    return typedList;
+                }
+
+                if (cachedList != null && cachedList.GetType().IsGenericType && 
+                    cachedList.GetType().GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    try
+                    {
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedList);
+                        var convertedList = Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(json);
+                        return convertedList ?? new List<T>();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, $"转换缓存列表类型时发生错误");
+                    }
+                }
+
+                if (cachedList is List<object> objectList)
+                {
+                    return objectList.OfType<T>().ToList();
+                }
+
+                return new List<T>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"异步获取表 {tableName} 的实体列表缓存时发生错误");
+                return new List<T>();
+            }
+        }
+
+        /// <summary>
         /// 根据ID从列表缓存中获取实体
         /// 注意：现在只从列表缓存中查找，不再使用单个实体缓存
         /// </summary>

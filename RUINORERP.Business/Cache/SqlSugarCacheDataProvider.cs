@@ -39,7 +39,7 @@ namespace RUINORERP.Business.Cache
         /// 使用SqlSugar自带的缓存机制避免重复查询相同的实体列表
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
-        /// <param name="tableName">表名</param>
+        /// <param name="tableName">表名(仅用于日志记录,实际查询使用实体类的表配置)</param>
         /// <returns>实体列表</returns>
         public List<T> GetEntityListFromSource<T>(string tableName) where T : class
         {
@@ -47,13 +47,15 @@ namespace RUINORERP.Business.Cache
             {
                 // 生成查询缓存键，包含泛型类型信息
                 string queryCacheKey = $"SqlSugarCache:GetEntityList_{typeof(T).Name}_{tableName}";
-                
+
                 _logger?.LogDebug($"尝试从缓存获取实体列表：表 {tableName}");
-                
+
                 // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
                 // 使用SqlSugar自带的缓存机制，缓存30秒
-                return db.Queryable<T>(tableName)
+                // 注意：直接使用Queryable<T>()而不是Queryable<T>(tableName)
+                // 这样SqlSugar会使用实体类的SugarColumn配置进行字段映射
+                return db.Queryable<T>()
                     .WithCache(queryCacheKey, 30)
                     .ToList();
             }
@@ -99,7 +101,7 @@ namespace RUINORERP.Business.Cache
                 // 获取数据库客户端
                 var db = _unitOfWorkManage.GetDbClient();
                 // 使用SqlSugar自带的缓存机制，缓存60秒
-                return db.Queryable<T>(tableName)
+                return db.Queryable<T>()
                     .Where($"{schemaInfo.PrimaryKeyField} = @id", new { id = longIdValue })
                     .WithCache(queryCacheKey, 60)
                     .First();
@@ -188,6 +190,83 @@ namespace RUINORERP.Business.Cache
             return false;
         }
 
-    
+        /// <summary>
+        /// 异步从数据源获取实体列表
+        /// 使用SqlSugar自带的缓存机制避免重复查询相同的实体列表
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名(仅用于日志记录,实际查询使用实体类的表配置)</param>
+        /// <returns>实体列表</returns>
+        public async Task<List<T>> GetEntityListFromSourceAsync<T>(string tableName) where T : class
+        {
+            try
+            {
+                // 生成查询缓存键，包含泛型类型信息
+                string queryCacheKey = $"SqlSugarCache:GetEntityList_{typeof(T).Name}_{tableName}";
+
+                _logger?.LogDebug($"尝试异步从缓存获取实体列表：表 {tableName}");
+
+                // 获取数据库客户端
+                var db = _unitOfWorkManage.GetDbClient();
+                // 使用SqlSugar自带的缓存机制，缓存30秒
+                // 注意：直接使用Queryable<T>()而不是Queryable<T>(tableName)
+                // 这样SqlSugar会使用实体类的SugarColumn配置进行字段映射
+                return await db.Queryable<T>()
+                    .WithCache(queryCacheKey, 30)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"异步从数据库加载表 {tableName} 的实体列表数据时发生错误");
+                return new List<T>();
+            }
+        }
+
+        /// <summary>
+        /// 异步从数据源根据ID获取实体
+        /// 使用SqlSugar自带的缓存机制避免重复查询相同的实体
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="tableName">表名</param>
+        /// <param name="idValue">主键值</param>
+        /// <returns>实体对象</returns>
+        public async Task<T> GetEntityFromSourceAsync<T>(string tableName, object idValue) where T : class
+        {
+            try
+            {
+                // 首先验证主键值：必须大于0且可以转换为long类型
+                long longIdValue;
+                if (!ValidatePrimaryKeyValue(idValue, out longIdValue))
+                {
+                    return null;
+                }
+
+                // 生成查询缓存键，包含泛型类型信息
+                string queryCacheKey = $"SqlSugarCache:GetEntity_{typeof(T).Name}_{tableName}_{longIdValue}";
+                
+                _logger?.LogDebug($"尝试异步从缓存获取实体：表 {tableName} ID为 {longIdValue}");
+                
+                // 获取表的主键字段信息
+                var schemaInfo = _tableSchemaManager.GetSchemaInfo(tableName);
+                if (schemaInfo == null)
+                {
+                    _logger?.LogWarning($"未找到表 {tableName} 的结构信息");
+                    return null;
+                }
+
+                // 获取数据库客户端
+                var db = _unitOfWorkManage.GetDbClient();
+                // 使用SqlSugar自带的缓存机制，缓存60秒
+                return await db.Queryable<T>()
+                    .Where($"{schemaInfo.PrimaryKeyField} = @id", new { id = longIdValue })
+                    .WithCache(queryCacheKey, 60)
+                    .FirstAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"异步从数据库加载表 {tableName} ID为 {idValue} 的实体数据时发生错误");
+                return null;
+            }
+        }
     }
 }

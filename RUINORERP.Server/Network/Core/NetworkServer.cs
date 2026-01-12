@@ -168,8 +168,6 @@ namespace RUINORERP.Server.Network.Core
 
                 // 添加日志记录，检查注册的处理器数量
                 var handlerCount = _commandDispatcher.HandlerCount;  // 直接使用具体类型属性
-                                                                     // 移除详细日志
-                                                                     // _logger.LogInformation($"命令处理器注册完成，当前已注册处理器数量: {handlerCount}");
 
                 // 减少日志输出，仅在调试模式下显示已注册的处理器信息
 #if DEBUG
@@ -197,8 +195,6 @@ namespace RUINORERP.Server.Network.Core
                     config.SetBasePath(Directory.GetCurrentDirectory());
                     config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                     config.AddEnvironmentVariables();
-                    // 移除详细日志
-                    // _logger.LogInformation("已配置主机配置，加载appsettings.json文件");
                 })
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
@@ -206,8 +202,6 @@ namespace RUINORERP.Server.Network.Core
                     config.SetBasePath(Directory.GetCurrentDirectory());
                     config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                     config.AddEnvironmentVariables();
-                    // 移除详细日志
-                    // _logger.LogInformation("已配置应用程序配置，加载appsettings.json文件");
                 })
                 .AddServer<SuperSocketService<ServerPackageInfo>, ServerPackageInfo, PacketPipelineFilter>(builder =>
                 {

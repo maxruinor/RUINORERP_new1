@@ -518,26 +518,13 @@ namespace RUINORERP.Server.Network.Services
             {
                 if (sessionInfo.IsAuthenticated)
                 {
-                    _logger.LogInformation($"[连接建立-已授权] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
                     return;
                 }
-
-
-
-                //========== 暂时先通过
-                sessionInfo.IsVerified = true;
-                sessionInfo.WelcomeAckReceived = true;
-                return;
-                //==========
-
 
                 sessionInfo.IsVerified = false;
                 sessionInfo.WelcomeSentTime = DateTime.Now;
                 sessionInfo.WelcomeAckReceived = false;
 
-
-
-                _logger.LogInformation($"[连接建立] SessionID={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
 
                 await SendWelcomeMessageAsync(sessionInfo);
             }

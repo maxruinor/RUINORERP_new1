@@ -66,7 +66,6 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                _logger.LogInformation($"会话连接事件: SessionId={sessionInfo.SessionID}, IP={sessionInfo.ClientIp}");
 
                 // 记录连接日志
                 await LogSessionEventAsync("Connected", sessionInfo);
@@ -91,7 +90,6 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                _logger.LogInformation($"会话断开事件: SessionId={sessionInfo.SessionID}, 原因={reason}");
 
                 // 记录断开日志
                 await LogSessionEventAsync("Disconnected", sessionInfo, reason);
@@ -118,8 +116,6 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                _logger.LogInformation($"用户认证成功: UserId={sessionInfo.UserId}, SessionId={sessionInfo.SessionID}");
-
                 // 记录认证成功日志
                 await LogSessionEventAsync("Authenticated", sessionInfo);
 
@@ -303,7 +299,6 @@ namespace RUINORERP.Server.Network.Core
         {
             try
             {
-                _logger.LogInformation($"用户下线: UserId={userId}, 原因={reason}");
                 // 这里可以更新用户状态到数据库
                 await UpdateUserOnlineStatusAsync(userId, false);
             }
@@ -325,7 +320,6 @@ namespace RUINORERP.Server.Network.Core
 
                 //if (activeSessions > 1)
                 //{
-                //    _logger.LogInformation($"检测到重复登录: UserId={sessionInfo.UserId}, 活跃会话数={activeSessions}");
                     
                 //    // 根据业务规则处理重复登录
                 //    // 可以选择断开之前的会话或者拒绝新登录

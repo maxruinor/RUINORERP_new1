@@ -112,7 +112,6 @@ namespace RUINORERP.Business.RowLevelAuthService
                         .ToList();
 
                     _isAllPoliciesLoaded = true;
-                    _logger.LogInformation("已加载所有默认策略：共 {Count} 条记录", _allDefaultPolicies.Count);
                 }
                 catch (Exception ex)
                 {

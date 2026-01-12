@@ -228,7 +228,6 @@ namespace RUINORERP.Server.Controls
                 }
 
                 LoadSelections(selectedModules);
-                _logger.LogInformation("成功加载功能模块，共加载 {ModuleCount} 个模块", selectedModules.Count);
             }
             catch (Exception ex)
             {
@@ -393,7 +392,6 @@ namespace RUINORERP.Server.Controls
 
                 // 无论是否处于调试模式，功能模块都使用明码保存
                 _currentRegistrationInfo.FunctionModule = moduleString;
-                _logger.LogInformation("功能模块已使用明码保存");
 
                 _currentRegistrationInfo.IsRegistered = true;
 
@@ -413,7 +411,6 @@ namespace RUINORERP.Server.Controls
 
                     // 记录到日志
                     frmMainNew.Instance.SafeLogOperation($"系统{operationType}成功，已保存最新的注册信息", Color.Green);
-                    _logger.LogInformation($"系统{operationType}成功，公司名称: {_currentRegistrationInfo.CompanyName}");
 
                     // 更新主窗体的注册信息
                     UpdateMainFormRegistrationInfo();
@@ -827,7 +824,6 @@ namespace RUINORERP.Server.Controls
 
                 // 记录到日志
                 frmMainNew.Instance.SafeLogOperation("请将机器码发送给软件服务商获取注册码", Color.Blue);
-                _logger.LogInformation("成功生成机器码，公司名称: {CompanyName}", _currentRegistrationInfo.CompanyName);
             }
             catch (Exception ex)
             {

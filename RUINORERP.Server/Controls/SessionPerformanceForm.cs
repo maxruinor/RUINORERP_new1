@@ -223,7 +223,6 @@ namespace RUINORERP.Server.Controls
             _cpuCounter?.Dispose();
             _memoryCounter?.Dispose();
             
-            _logger.LogInformation("关闭会话性能详情窗体，会话ID: {SessionID}", _session?.SessionID);
         }
     }
 }

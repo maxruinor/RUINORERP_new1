@@ -608,7 +608,6 @@ namespace RUINORERP.Server.Controls
                 };
 
                 var request = new MessageRequest(MessageType.Business, messageData);
-                _logger.LogInformation("正在向会话 {SessionID} 发送消息", _session.SessionID);
                 bool success = await _sessionService.SendCommandAsync(
                     _session.SessionID,
                     MessageCommands.SendMessageToUser,
@@ -619,7 +618,6 @@ namespace RUINORERP.Server.Controls
                     // 添加到消息历史
                     AddMessageToHistory($"管理员: {txtMessage.Text}", Color.Blue);
                     txtMessage.Clear();
-                    _logger.LogInformation("消息发送成功，会话 {SessionID}", _session.SessionID);
                 }
                 else
                 {
@@ -641,7 +639,6 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                _logger.LogInformation("正在向会话 {SessionID} 发送强制同步缓存命令", _session.SessionID);
                 var messageData = new MessageData
                 {
                     MessageType = MessageType.System,
@@ -658,7 +655,6 @@ namespace RUINORERP.Server.Controls
 
                 if (success)
                 {
-                    _logger.LogInformation("强制同步缓存命令发送成功，会话 {SessionID}", _session.SessionID);
                     MessageBox.Show("强制同步命令已发送", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     AddMessageToHistory("系统: 强制同步缓存命令已发送", Color.Green);
                 }
@@ -682,7 +678,6 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                _logger.LogInformation("正在向会话 {SessionID} 发送清理缓存命令", _session.SessionID);
                 var messageData = new MessageData
                 {
                     MessageType = MessageType.System,
@@ -698,7 +693,6 @@ namespace RUINORERP.Server.Controls
                     MessageCommands.SendMessageToUser,
                     request);
 
-                _logger.LogInformation("清理缓存命令发送成功，会话 {SessionID}", _session.SessionID);
                 AddMessageToHistory("[清除缓存] 已发送缓存清除命令", Color.YellowGreen);
             }
             catch (Exception ex)
@@ -723,7 +717,6 @@ namespace RUINORERP.Server.Controls
             {
                 try
                 {
-                    _logger.LogInformation("正在向会话 {SessionID} 发送重启客户端命令", _session.SessionID);
                     var messageData = new MessageData
                     {
                         MessageType = MessageType.System,
@@ -741,7 +734,6 @@ namespace RUINORERP.Server.Controls
 
                     if (success)
                     {
-                        _logger.LogInformation("重启客户端命令发送成功，会话 {SessionID}", _session.SessionID);
                         MessageBox.Show("重启命令已发送", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         AddMessageToHistory("系统: 客户端重启命令已发送", Color.Orange);
                     }
@@ -774,7 +766,6 @@ namespace RUINORERP.Server.Controls
             {
                 try
                 {
-                    _logger.LogInformation("正在向会话 {SessionID} 发送关闭客户端命令", _session.SessionID);
                     var messageData = new MessageData
                     {
                         MessageType = MessageType.System,
@@ -791,7 +782,6 @@ namespace RUINORERP.Server.Controls
                         MessageCommands.SendMessageToUser,
                         request);
 
-                    _logger.LogInformation("关闭客户端命令发送成功，会话 {SessionID}", _session.SessionID);
                     AddMessageToHistory("[关机] 已发送客户端关机命令", Color.Yellow);
                 }
                 catch (Exception ex)

@@ -48,11 +48,10 @@ namespace RUINORERP.UI
             this.lblIP = new System.Windows.Forms.Label();
             this.lblPort = new System.Windows.Forms.Label();
             this.gbIPPort = new System.Windows.Forms.GroupBox();
-            // 初始化panelAnnouncement及其子控件
             this.panelAnnouncement = new System.Windows.Forms.Panel();
-            this.lblAnnouncementTitle = new System.Windows.Forms.Label();
-            this.lblAnnouncement = new System.Windows.Forms.Label();
             this.btnCloseAnnouncement = new System.Windows.Forms.Button();
+            this.lblAnnouncement = new System.Windows.Forms.Label();
+            this.lblAnnouncementTitle = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
@@ -243,66 +242,66 @@ namespace RUINORERP.UI
             this.gbIPPort.TabStop = false;
             this.gbIPPort.Text = "服务器信息";
             this.gbIPPort.Visible = false;
-            //
+            // 
             // panelAnnouncement
-            //
+            // 
             this.panelAnnouncement.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(224)))));
             this.panelAnnouncement.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelAnnouncement.Controls.Add(this.btnCloseAnnouncement);
             this.panelAnnouncement.Controls.Add(this.lblAnnouncement);
             this.panelAnnouncement.Controls.Add(this.lblAnnouncementTitle);
-            this.panelAnnouncement.Location = new System.Drawing.Point(86, 50);
+            this.panelAnnouncement.Location = new System.Drawing.Point(43, 340);
             this.panelAnnouncement.Name = "panelAnnouncement";
-            this.panelAnnouncement.Size = new System.Drawing.Size(250, 80);
+            this.panelAnnouncement.Size = new System.Drawing.Size(316, 69);
             this.panelAnnouncement.TabIndex = 26;
             this.panelAnnouncement.Visible = false;
-            //
-            // lblAnnouncementTitle
-            //
-            this.lblAnnouncementTitle.AutoSize = true;
-            this.lblAnnouncementTitle.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblAnnouncementTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
-            this.lblAnnouncementTitle.Location = new System.Drawing.Point(8, 8);
-            this.lblAnnouncementTitle.Name = "lblAnnouncementTitle";
-            this.lblAnnouncementTitle.Size = new System.Drawing.Size(60, 12);
-            this.lblAnnouncementTitle.TabIndex = 0;
-            this.lblAnnouncementTitle.Text = "📢 系统公告";
-            //
-            // lblAnnouncement
-            //
-            this.lblAnnouncement.AutoSize = true;
-            this.lblAnnouncement.Font = new System.Drawing.Font("宋体", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.lblAnnouncement.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
-            this.lblAnnouncement.Location = new System.Drawing.Point(8, 30);
-            this.lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
-            this.lblAnnouncement.Name = "lblAnnouncement";
-            this.lblAnnouncement.Size = new System.Drawing.Size(40, 12);
-            this.lblAnnouncement.TabIndex = 1;
-            this.lblAnnouncement.Text = "欢迎使用RUINORERP系统！";
-            //
+            // 
             // btnCloseAnnouncement
-            //
-            this.btnCloseAnnouncement.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right))));
+            // 
+            this.btnCloseAnnouncement.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCloseAnnouncement.BackColor = System.Drawing.Color.Transparent;
             this.btnCloseAnnouncement.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnCloseAnnouncement.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCloseAnnouncement.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCloseAnnouncement.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
-            this.btnCloseAnnouncement.Location = new System.Drawing.Point(225, 2);
+            this.btnCloseAnnouncement.Location = new System.Drawing.Point(291, 2);
             this.btnCloseAnnouncement.Name = "btnCloseAnnouncement";
             this.btnCloseAnnouncement.Size = new System.Drawing.Size(20, 20);
             this.btnCloseAnnouncement.TabIndex = 2;
             this.btnCloseAnnouncement.Text = "×";
             this.btnCloseAnnouncement.UseVisualStyleBackColor = false;
             this.btnCloseAnnouncement.Click += new System.EventHandler(this.btnCloseAnnouncement_Click);
-            //
+            // 
+            // lblAnnouncement
+            // 
+            this.lblAnnouncement.AutoSize = true;
+            this.lblAnnouncement.Font = new System.Drawing.Font("宋体", 8.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblAnnouncement.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.lblAnnouncement.Location = new System.Drawing.Point(8, 30);
+            this.lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
+            this.lblAnnouncement.Name = "lblAnnouncement";
+            this.lblAnnouncement.Size = new System.Drawing.Size(143, 12);
+            this.lblAnnouncement.TabIndex = 1;
+            this.lblAnnouncement.Text = "欢迎使用RUINORERP系统！";
+            // 
+            // lblAnnouncementTitle
+            // 
+            this.lblAnnouncementTitle.AutoSize = true;
+            this.lblAnnouncementTitle.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.lblAnnouncementTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
+            this.lblAnnouncementTitle.Location = new System.Drawing.Point(8, 8);
+            this.lblAnnouncementTitle.Name = "lblAnnouncementTitle";
+            this.lblAnnouncementTitle.Size = new System.Drawing.Size(77, 12);
+            this.lblAnnouncementTitle.TabIndex = 0;
+            this.lblAnnouncementTitle.Text = "📢 系统公告";
+            // 
             // FrmLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.CancelButton = this.btncancel;
-            this.ClientSize = new System.Drawing.Size(461, 348);
+            this.ClientSize = new System.Drawing.Size(476, 405);
             this.ControlBox = false;
             this.Controls.Add(this.panelAnnouncement);
             this.Controls.Add(this.gbIPPort);

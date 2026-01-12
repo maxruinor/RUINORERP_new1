@@ -848,7 +848,6 @@ namespace RUINORERP.Business
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = statement;
 
-                _logger.LogInformation($"对账单【{statement.StatementNo}】红蓝单对冲核销成功");
 
                 return rmrs;
             }

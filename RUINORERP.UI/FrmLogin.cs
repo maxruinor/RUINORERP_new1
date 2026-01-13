@@ -728,7 +728,7 @@ namespace RUINORERP.UI
                 if (_loginCancellationTokenSource != null && !_loginCancellationTokenSource.IsCancellationRequested)
                 {
                     _loginCancellationTokenSource.Cancel();
-                    _loginCancellationTokenSource.Dispose();
+                    _loginCancellationTokenSource?.Dispose();
                     _loginCancellationTokenSource = null;
 
                     MainForm.Instance?.PrintInfoLog("正在取消登录操作...");

@@ -35,12 +35,9 @@
             this.txtTypeName = new Krypton.Toolkit.KryptonTextBox();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtDesc = new Krypton.Toolkit.KryptonTextBox();
-            this.cmbCustomerVendorType = new Krypton.Toolkit.KryptonComboBox();
-            this.lblDepartmentID = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendorType)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -63,8 +60,6 @@
             // 
             // kryptonPanel1
             // 
-            this.kryptonPanel1.Controls.Add(this.cmbCustomerVendorType);
-            this.kryptonPanel1.Controls.Add(this.lblDepartmentID);
             this.kryptonPanel1.Controls.Add(this.lblTypeName);
             this.kryptonPanel1.Controls.Add(this.txtTypeName);
             this.kryptonPanel1.Controls.Add(this.lblDesc);
@@ -79,7 +74,7 @@
             // 
             // lblTypeName
             // 
-            this.lblTypeName.Location = new System.Drawing.Point(17, 63);
+            this.lblTypeName.Location = new System.Drawing.Point(13, 37);
             this.lblTypeName.Name = "lblTypeName";
             this.lblTypeName.Size = new System.Drawing.Size(88, 20);
             this.lblTypeName.TabIndex = 4;
@@ -87,14 +82,14 @@
             // 
             // txtTypeName
             // 
-            this.txtTypeName.Location = new System.Drawing.Point(111, 61);
+            this.txtTypeName.Location = new System.Drawing.Point(112, 34);
             this.txtTypeName.Name = "txtTypeName";
             this.txtTypeName.Size = new System.Drawing.Size(246, 23);
             this.txtTypeName.TabIndex = 5;
             // 
             // lblDesc
             // 
-            this.lblDesc.Location = new System.Drawing.Point(54, 99);
+            this.lblDesc.Location = new System.Drawing.Point(55, 72);
             this.lblDesc.Name = "lblDesc";
             this.lblDesc.Size = new System.Drawing.Size(36, 20);
             this.lblDesc.TabIndex = 6;
@@ -102,28 +97,11 @@
             // 
             // txtDesc
             // 
-            this.txtDesc.Location = new System.Drawing.Point(111, 99);
+            this.txtDesc.Location = new System.Drawing.Point(112, 72);
             this.txtDesc.Multiline = true;
             this.txtDesc.Name = "txtDesc";
             this.txtDesc.Size = new System.Drawing.Size(246, 125);
             this.txtDesc.TabIndex = 7;
-            // 
-            // cmbCustomerVendorType
-            // 
-            this.cmbCustomerVendorType.DropDownWidth = 100;
-            this.cmbCustomerVendorType.IntegralHeight = false;
-            this.cmbCustomerVendorType.Location = new System.Drawing.Point(111, 22);
-            this.cmbCustomerVendorType.Name = "cmbCustomerVendorType";
-            this.cmbCustomerVendorType.Size = new System.Drawing.Size(246, 21);
-            this.cmbCustomerVendorType.TabIndex = 73;
-            // 
-            // lblDepartmentID
-            // 
-            this.lblDepartmentID.Location = new System.Drawing.Point(12, 23);
-            this.lblDepartmentID.Name = "lblDepartmentID";
-            this.lblDepartmentID.Size = new System.Drawing.Size(88, 20);
-            this.lblDepartmentID.TabIndex = 72;
-            this.lblDepartmentID.Values.Text = "往来单位类型";
             // 
             // UCCustomerVendorTypeEdit
             // 
@@ -136,7 +114,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbCustomerVendorType)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -150,7 +127,5 @@
         private Krypton.Toolkit.KryptonTextBox txtTypeName;
         private Krypton.Toolkit.KryptonLabel lblDesc;
         private Krypton.Toolkit.KryptonTextBox txtDesc;
-        private Krypton.Toolkit.KryptonComboBox cmbCustomerVendorType;
-        private Krypton.Toolkit.KryptonLabel lblDepartmentID;
     }
 }

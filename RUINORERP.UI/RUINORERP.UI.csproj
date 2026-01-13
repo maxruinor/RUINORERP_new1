@@ -5161,7 +5161,6 @@
     <Content Include="SqlScript\copySQL\销售报表.sql" />
     <Content Include="SqlScript\工作台.sql" />
     <Content Include="SqlScript\库存跟综纵向.sql" />
-    <Content Include="SqlScript\库存跟踪横向.sql" />
     <Content Include="SqlScript\日常SQL积累.sql" />
     <Content Include="SqlScript\死锁维护.sql" />
     <Content Include="SqlScript\维护.sql" />

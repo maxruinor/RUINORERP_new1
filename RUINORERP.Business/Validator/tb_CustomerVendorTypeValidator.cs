@@ -39,8 +39,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.Desc).MaximumMixedLength(100).WithMessage("描述:不能超过最大长度,100.");
 
-//***** 
- RuleFor(tb_CustomerVendorType =>tb_CustomerVendorType.BusinessPartnerType).NotNull().WithMessage(":不能为空。");
 
            	        Initialize();
      }

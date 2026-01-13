@@ -380,19 +380,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool? _PrePay;
-        /// <summary>
-        /// 预付款
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrePay",ColDesc = "预付款")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "PrePay" ,IsNullable = true,ColumnDescription = "预付款" )]
-        public bool? PrePay
-        { 
-            get{return _PrePay;}
-            set{
-            SetProperty(ref _PrePay, value);
-                        }
-        }
+       
 
         private bool _IsCustomizedOrder= false;
         /// <summary>

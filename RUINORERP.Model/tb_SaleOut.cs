@@ -420,19 +420,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _CollectedMoney= ((0));
-        /// <summary>
-        /// 实收金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "CollectedMoney",ColDesc = "实收金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "CollectedMoney" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "实收金额" )]
-        public decimal? CollectedMoney
-        { 
-            get{return _CollectedMoney;}
-            set{
-            SetProperty(ref _CollectedMoney, value);
-                        }
-        }
 
         private bool _isdeleted= false;
         /// <summary>
@@ -603,19 +590,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ForeignDeposit= ((0));
-        /// <summary>
-        /// 订金外币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ForeignDeposit",ColDesc = "订金外币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ForeignDeposit" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "订金外币" )]
-        public decimal ForeignDeposit
-        { 
-            get{return _ForeignDeposit;}
-            set{
-            SetProperty(ref _ForeignDeposit, value);
-                        }
-        }
+ 
 
         private decimal? _Deposit;
         /// <summary>
@@ -715,19 +690,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _TaxRate;
-        /// <summary>
-        /// 税率
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TaxRate",ColDesc = "税率")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "TaxRate" , DecimalDigits = 3,IsNullable = true,ColumnDescription = "税率" )]
-        public decimal? TaxRate
-        { 
-            get{return _TaxRate;}
-            set{
-            SetProperty(ref _TaxRate, value);
-                        }
-        }
+ 
 
         private decimal _TotalTaxAmount;
         /// <summary>
@@ -743,19 +706,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _TotalUntaxedAmount;
-        /// <summary>
-        /// 未税本位币
-        /// </summary>
-        [AdvQueryAttribute(ColName = "TotalUntaxedAmount",ColDesc = "未税本位币")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "TotalUntaxedAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "未税本位币" )]
-        public decimal? TotalUntaxedAmount
-        { 
-            get{return _TotalUntaxedAmount;}
-            set{
-            SetProperty(ref _TotalUntaxedAmount, value);
-                        }
-        }
+        
 
         private bool? _GenerateVouchers;
         /// <summary>
@@ -771,33 +722,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal? _DiscountAmount;
-        /// <summary>
-        /// 优惠金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "DiscountAmount",ColDesc = "优惠金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "DiscountAmount" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "优惠金额" )]
-        public decimal? DiscountAmount
-        { 
-            get{return _DiscountAmount;}
-            set{
-            SetProperty(ref _DiscountAmount, value);
-                        }
-        }
-
-        private decimal? _PrePayMoney;
-        /// <summary>
-        /// 预收款
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PrePayMoney",ColDesc = "预收款")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "PrePayMoney" , DecimalDigits = 4,IsNullable = true,ColumnDescription = "预收款" )]
-        public decimal? PrePayMoney
-        { 
-            get{return _PrePayMoney;}
-            set{
-            SetProperty(ref _PrePayMoney, value);
-                        }
-        }
+        
 
         private bool _ReplaceOut= false;
         /// <summary>

@@ -294,7 +294,7 @@ namespace RUINORERP.UI
             this.lblAnnouncementTitle.Name = "lblAnnouncementTitle";
             this.lblAnnouncementTitle.Size = new System.Drawing.Size(77, 12);
             this.lblAnnouncementTitle.TabIndex = 0;
-            this.lblAnnouncementTitle.Text = "📢 系统公告";
+            this.lblAnnouncementTitle.Text = "📢 ";
             // 
             // FrmLogin
             // 

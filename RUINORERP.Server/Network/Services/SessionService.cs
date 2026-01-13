@@ -79,7 +79,8 @@ namespace RUINORERP.Server.Network.Services
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
 
-            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+            // 优化:将清理定时器改为每1分钟执行一次,确保超时断开及时
+            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
             _logger.LogInformation("SessionService初始化完成");
         }
@@ -525,7 +526,6 @@ namespace RUINORERP.Server.Network.Services
                 var welcomeRequest = WelcomeRequest.CreateWithAnnouncement(
                     sessionInfo.SessionID,
                     GetServerVersion(),
-                    "欢迎连接到RUINORERP服务器",
                     announcement);
 
                 sessionInfo.WelcomeSentTime = DateTime.Now;
@@ -542,9 +542,7 @@ namespace RUINORERP.Server.Network.Services
                 );
 
                 // 标记欢迎消息已发送，但不需要等待响应
-                sessionInfo.IsVerified = true; // 临时标记为已验证，等待实际响应时更新
-
-                _logger.LogInformation($"[欢迎消息已发送] SessionID={sessionInfo.SessionID}, 不等待响应");
+                //sessionInfo.IsVerified = true; // 临时标记为已验证，等待实际响应时更新
 
             }
             catch (Exception ex)

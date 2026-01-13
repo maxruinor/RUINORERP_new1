@@ -49,15 +49,10 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 当欢迎流程完成时触发的事件
-        /// 参数success表示欢迎流程是否成功完成
+        /// 参数1: success表示欢迎流程是否成功完成
+        /// 参数2: announcement表示公告内容
         /// </summary>
-        public event Action<bool> WelcomeCompleted;
-
-        /// <summary>
-        /// 当收到欢迎消息(包含公告)时触发的事件
-        /// 参数: 公告内容
-        /// </summary>
-        public event Action<string> AnnouncementReceived;
+        public event Action<bool, string> WelcomeCompleted;
 
         // 专门用于服务器推送命令的事件
         public event Action<PacketModel, object> ServerPushCommandReceived;
@@ -240,10 +235,11 @@ namespace RUINORERP.UI.Network
         /// 触发欢迎流程完成事件
         /// </summary>
         /// <param name="success">欢迎流程是否成功完成</param>
-        public void OnWelcomeCompleted(bool success)
+        /// <param name="announcement">公告内容</param>
+        public void OnWelcomeCompleted(bool success, string announcement)
         {
             // 获取事件处理程序的快照
-            Action<bool> handler;
+            Action<bool, string> handler;
             lock (_lock)
             {
                 handler = WelcomeCompleted;
@@ -258,53 +254,15 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 触发事件
-                handler.Invoke(success);
-                _logger?.LogDebug("成功触发欢迎流程完成事件: {Status}", success ? "成功" : "失败");
+                handler.Invoke(success, announcement);
+                _logger?.LogDebug("成功触发欢迎流程完成事件: {Status}, 公告: {Announcement}",
+                    success ? "成功" : "失败",
+                    string.IsNullOrEmpty(announcement) ? "无" : announcement);
             }
             catch (Exception ex)
             {
                 // 记录异常并触发错误事件
                 string errorMessage = $"处理欢迎流程完成事件时出错，状态: {success}";
-                LogException(ex, errorMessage);
-
-                // 避免在错误处理中又触发异常导致无限循环
-                try
-                {
-                    OnErrorOccurred(new Exception($"{errorMessage}: {ex.Message}", ex));
-                }
-                catch { }
-            }
-        }
-
-        /// <summary>
-        /// 触发公告接收事件
-        /// </summary>
-        /// <param name="announcement">公告内容</param>
-        public void OnAnnouncementReceived(string announcement)
-        {
-            // 获取事件处理程序的快照
-            Action<string> handler;
-            lock (_lock)
-            {
-                handler = AnnouncementReceived;
-            }
-
-            if (handler == null)
-            {
-                _logger?.LogDebug("公告接收事件没有订阅者");
-                return;
-            }
-
-            try
-            {
-                // 触发事件
-                handler.Invoke(announcement);
-                _logger?.LogDebug("成功触发公告接收事件: {Content}", announcement);
-            }
-            catch (Exception ex)
-            {
-                // 记录异常并触发错误事件
-                string errorMessage = $"处理公告接收事件时出错，内容: {announcement}";
                 LogException(ex, errorMessage);
 
                 // 避免在错误处理中又触发异常导致无限循环

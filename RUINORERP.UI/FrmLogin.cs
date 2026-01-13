@@ -58,9 +58,16 @@ namespace RUINORERP.UI
         private bool _welcomeCompleted = false;
 
         /// <summary>
-        /// 欢迎流程完成事件，用于在Load后通知可以显示登录界面
+        /// 欢迎信息，用于存储服务器发送的公告等内容
         /// </summary>
-        private TaskCompletionSource<bool> _welcomeCompletionTcs = new TaskCompletionSource<bool>();
+        private string _welcomeAnnouncement = string.Empty;
+
+        /// <summary>
+        /// 欢迎流程完成事件，用于在Load后通知可以显示登录界面
+        /// 传递参数: (是否成功, 公告内容)
+        /// </summary>
+        private TaskCompletionSource<(bool success, string announcement)> _welcomeCompletionTcs =
+            new TaskCompletionSource<(bool, string)>();
 
 
 
@@ -80,7 +87,6 @@ namespace RUINORERP.UI
             if (_eventManager != null)
             {
                 _eventManager.WelcomeCompleted += OnWelcomeCompleted;
-                _eventManager.AnnouncementReceived += OnAnnouncementReceived;
             }
         }
 
@@ -93,7 +99,6 @@ namespace RUINORERP.UI
             if (_eventManager != null)
             {
                 _eventManager.WelcomeCompleted -= OnWelcomeCompleted;
-                _eventManager.AnnouncementReceived -= OnAnnouncementReceived;
             }
 
             base.OnFormClosing(e);
@@ -103,42 +108,20 @@ namespace RUINORERP.UI
         /// 欢迎流程完成事件处理
         /// </summary>
         /// <param name="success">欢迎流程是否成功完成</param>
-        private void OnWelcomeCompleted(bool success)
+        /// <param name="announcement">公告内容</param>
+        private void OnWelcomeCompleted(bool success, string announcement)
         {
             _welcomeCompleted = success;
+            _welcomeAnnouncement = announcement;
 
-            if (!_welcomeCompletionTcs.TrySetResult(success))
+            if (!_welcomeCompletionTcs.TrySetResult((success, announcement)))
             {
                 MainForm.Instance?.logger?.LogDebug("欢迎完成事件已触发，但TaskCompletionSource已完成");
             }
 
-            MainForm.Instance?.logger?.LogInformation("收到欢迎流程完成通知: {Status}", success ? "成功" : "失败");
-        }
-
-        /// <summary>
-        /// 公告接收事件处理
-        /// </summary>
-        /// <param name="content">公告内容</param>
-        private void OnAnnouncementReceived(string content)
-        {
-            try
-            {
-                MainForm.Instance?.logger?.LogInformation("收到服务器公告: {Content}", content);
-
-                // 在UI线程中显示公告
-                if (this.InvokeRequired)
-                {
-                    this.Invoke(new Action(() => DisplayAnnouncement(content)));
-                }
-                else
-                {
-                    DisplayAnnouncement(content);
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance?.logger?.LogError(ex, "显示公告时发生异常");
-            }
+            MainForm.Instance?.logger?.LogInformation("收到欢迎流程完成通知: {Status}, 公告: {Announcement}",
+                success ? "成功" : "失败",
+                string.IsNullOrEmpty(announcement) ? "无" : announcement);
         }
 
         /// <summary>
@@ -294,7 +277,7 @@ namespace RUINORERP.UI
                     return;
                 }
 
-                MainForm.Instance?.logger?.LogInformation("服务器连接成功，等待欢迎消息...");
+                MainForm.Instance.PrintInfoLog("服务器连接成功，等待欢迎消息...");
 
                 // 2. 等待欢迎流程完成（等待最多10秒）
                 // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要等待确认
@@ -302,14 +285,28 @@ namespace RUINORERP.UI
                 var welcomeTask = _welcomeCompletionTcs.Task;
                 var completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
 
-                if (completedTask == welcomeTask && await welcomeTask)
+                if (completedTask == welcomeTask)
                 {
-                    _welcomeCompleted = true;
+                    var (success, announcement) = await welcomeTask;
+                    _welcomeCompleted = success;
+
+                    // 显示公告内容（如果有）
+                    if (!string.IsNullOrEmpty(announcement))
+                    {
+                        DisplayAnnouncement(announcement);
+                        MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText("服务器连接成功，欢迎消息验证通过");
+                    }
+
                     MainForm.Instance?.logger?.LogInformation("欢迎流程验证通过，服务器连接已就绪");
                 }
                 else
                 {
                     MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时，但连接已建立");
+                    MainForm.Instance.ShowStatusText("服务器连接成功，欢迎验证超时");
                     // 不阻止登录流程，服务器端有超时保护机制
                 }
             }
@@ -780,8 +777,9 @@ namespace RUINORERP.UI
                 }
 
                 // 重置欢迎流程状态
-                _welcomeCompletionTcs = new TaskCompletionSource<bool>();
+                _welcomeCompletionTcs = new TaskCompletionSource<(bool, string)>();
                 _welcomeCompleted = false;
+                _welcomeAnnouncement = string.Empty;
 
                 // 执行连接和欢迎流程
                 await InitializeConnectionAndWelcomeFlowAsync();

@@ -98,33 +98,28 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                         welcomeRequest.RequestId
                     );
 
-                    // 触发公告接收事件（如果服务器发送了公告）
-                    if (!string.IsNullOrEmpty(welcomeRequest.Announcement))
-                    {
-                        _eventManager?.OnAnnouncementReceived(welcomeRequest.Announcement);
-                    }
-
-                    // 触发欢迎流程完成事件，通知等待的登录流程
+                    // 触发欢迎流程完成事件，传递公告内容
+                    string announcement = welcomeRequest.Announcement ?? string.Empty;
                     if (rs)
                     {
-                        _eventManager?.OnWelcomeCompleted(true);
+                        _eventManager?.OnWelcomeCompleted(true, announcement);
                     }
                     else
                     {
-                        _eventManager?.OnWelcomeCompleted(false);
+                        _eventManager?.OnWelcomeCompleted(false, announcement);
                         _logger?.LogWarning("欢迎响应发送失败");
                     }
                 }
                 else
                 {
                     _logger.LogWarning("服务器的欢迎请求数据格式不正确");
-                    _eventManager?.OnWelcomeCompleted(false);
+                    _eventManager?.OnWelcomeCompleted(false, string.Empty);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理欢迎命令时发生异常");
-                _eventManager?.OnWelcomeCompleted(false);
+                _eventManager?.OnWelcomeCompleted(false, string.Empty);
             }
         }
 

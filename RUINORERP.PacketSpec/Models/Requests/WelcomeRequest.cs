@@ -39,35 +39,10 @@ namespace RUINORERP.PacketSpec.Models.Requests
         public int MaxIdleTime { get; set; } = 300;
 
         /// <summary>
-        /// 服务器欢迎消息
-        /// </summary>
-        public string WelcomeMessage { get; set; }
-
-        /// <summary>
         /// 系统公告内容
         /// </summary>
         public string Announcement { get; set; }
 
-        /// <summary>
-        /// 创建欢迎请求
-        /// </summary>
-        /// <param name="sessionId">会话ID</param>
-        /// <param name="serverVersion">服务器版本</param>
-        /// <param name="welcomeMessage">欢迎消息</param>
-        /// <returns>欢迎请求</returns>
-        public static WelcomeRequest Create(string sessionId, string serverVersion = "1.0.0", string welcomeMessage = "欢迎连接到RUINORERP服务器")
-        {
-            return new WelcomeRequest
-            {
-                RequestId = IdGenerator.GenerateRequestId(SystemCommands.Welcome),
-                ServerVersion = serverVersion,
-                ServerTime = DateTime.Now,
-                SessionId = sessionId,
-                HeartbeatInterval = 30,
-                MaxIdleTime = 300,
-                WelcomeMessage = welcomeMessage
-            };
-        }
 
         /// <summary>
         /// 创建欢迎请求(带公告信息)
@@ -79,8 +54,7 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// <returns>欢迎请求</returns>
         public static WelcomeRequest CreateWithAnnouncement(
             string sessionId,
-            string serverVersion = "1.0.0",
-            string welcomeMessage = "欢迎连接到RUINORERP服务器",
+            string serverVersion = "2.0.0",
             string announcement = null)
         {
             return new WelcomeRequest
@@ -91,7 +65,6 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 SessionId = sessionId,
                 HeartbeatInterval = 30,
                 MaxIdleTime = 300,
-                WelcomeMessage = welcomeMessage,
                 Announcement = announcement
             };
         }

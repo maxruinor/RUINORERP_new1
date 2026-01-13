@@ -487,6 +487,7 @@ namespace RUINORERP.UI.SysConfig
             btn_del.Enabled = p_YesNo && tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo;
             btn_cancel.Enabled = !p_YesNo;
             this.btn_Refresh.Enabled = p_YesNo;
+            this.btn_ReinitMenu.Enabled = p_YesNo; // 重新初始化菜单按钮只在非编辑状态下可用
         }
 
 
@@ -747,7 +748,15 @@ namespace RUINORERP.UI.SysConfig
 
         private void tree_MainMenu_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-
+            // 检查点击的节点是否包含菜单信息
+            if (e.Node.Tag is tb_MenuInfo menuInfo)
+            {
+                // 只有导航菜单类型的节点才显示"添加子菜单"选项
+                toolStripMenuItemAddSubMenu.Visible = menuInfo.MenuType == "导航菜单";
+                
+                // 将当前选中节点设置为点击的节点
+                tree_MainMenu.SelectedNode = e.Node;
+            }
         }
 
         private void btnLoad_Click(object sender, EventArgs e)
@@ -989,6 +998,112 @@ namespace RUINORERP.UI.SysConfig
         private void txtMenuName_KeyPress(object sender, KeyPressEventArgs e)
         {
 
+        }
+        
+        /// <summary>
+        /// 添加子菜单菜单项的点击事件处理方法
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void toolStripMenuItemAddSubMenu_Click(object sender, EventArgs e)
+        {
+            // 检查当前选中节点是否包含菜单信息
+            if (tree_MainMenu.SelectedNode != null && tree_MainMenu.SelectedNode.Tag is tb_MenuInfo parentMenu)
+            {
+                AddSubMenu(parentMenu);
+            }
+        }
+        
+        /// <summary>
+        /// 添加子菜单方法
+        /// </summary>
+        /// <param name="parentMenu">父菜单信息</param>
+        private void AddSubMenu(tb_MenuInfo parentMenu)
+        {
+            // 创建新的子菜单
+            tb_MenuInfo subMenu = new tb_MenuInfo
+            {
+                ModuleID = parentMenu.ModuleID,
+                MenuName = "新建子菜单",
+                IsVisble = true,
+                IsEnabled = true,
+                CaptionCN = "新建子菜单",
+                MenuType = "导航菜单",
+                Parent_id = parentMenu.MenuID,
+                Created_at = System.DateTime.Now
+            };
+            
+            // 绑定数据到表单
+            BindData(subMenu);
+            
+            // 添加新子菜单到当前选中节点
+            TreeNode newNode = new TreeNode();
+            newNode.Name = subMenu.MenuID.ToString(); // 初始为0，保存后会更新
+            newNode.Text = subMenu.MenuName;
+            newNode.Tag = subMenu;
+            
+            // 将新节点添加到当前选中节点下
+            tree_MainMenu.SelectedNode.Nodes.Add(newNode);
+            
+            // 展开当前选中节点，显示新添加的子菜单
+            tree_MainMenu.SelectedNode.Expand();
+            
+            // 选中新添加的节点
+            tree_MainMenu.SelectedNode = newNode;
+            
+            // 禁用命令按钮，进入编辑状态
+            CmdEnable(false);
+            w_EidtFlag = false;
+        }
+        
+        /// <summary>
+        /// 重新初始化菜单按钮的点击事件处理方法
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private async void btn_ReinitMenu_Click(object sender, EventArgs e)
+        {
+            // 显示确认对话框
+            if (MessageBox.Show("确定要重新初始化菜单吗？这将根据系统配置重新生成菜单结构，但不会删除现有菜单。", 
+                "确认重新初始化", 
+                MessageBoxButtons.OKCancel, 
+                MessageBoxIcon.Question) == DialogResult.OK)
+            {
+                try
+                {
+                    // 调用重新初始化菜单方法
+                    await ReinitMenuAsync();
+                    
+                    // 刷新菜单树和数据
+                    MenuRefreshByCom(this.comboBoxTreeView1.TreeView);
+                    MenuRefresh(this.tree_MainMenu);
+                    LoadEnevt();
+                    
+                    MessageBox.Show("菜单重新初始化完成！", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"菜单重新初始化失败：{ex.Message}", "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 重新初始化菜单方法
+        /// </summary>
+        private async Task ReinitMenuAsync()
+        {
+            // 获取菜单初始化服务实例
+            InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
+            if (init != null)
+            {
+                // 调用初始化方法重新初始化菜单
+                await init.InitModuleAndMenuAsync();
+            }
+            else
+            {
+                throw new InvalidOperationException("无法获取InitModuleMenu服务实例");
+            }
         }
     }
 }

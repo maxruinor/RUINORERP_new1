@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.UI.UControls;
 
 namespace RUINORERP.UI.SysConfig
@@ -186,6 +186,16 @@ namespace RUINORERP.UI.SysConfig
             this.btn_cancel.Text = "取消(&C)";
             this.btn_cancel.UseVisualStyleBackColor = true;
             this.btn_cancel.Click += new System.EventHandler(this.btn_cancel_Click);
+            // 
+            // btn_ReinitMenu
+            // 
+            this.btn_ReinitMenu.Location = new System.Drawing.Point(785, 16);
+            this.btn_ReinitMenu.Name = "btn_ReinitMenu";
+            this.btn_ReinitMenu.Size = new System.Drawing.Size(100, 23);
+            this.btn_ReinitMenu.TabIndex = 25;
+            this.btn_ReinitMenu.Text = "重新初始化菜单";
+            this.btn_ReinitMenu.UseVisualStyleBackColor = true;
+            this.btn_ReinitMenu.Click += new System.EventHandler(this.btn_ReinitMenu_Click);
             // 
             // lblName
             // 
@@ -710,6 +720,29 @@ namespace RUINORERP.UI.SysConfig
             this.toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelQuery)).EndInit();
             this.kryptonPanelQuery.ResumeLayout(false);
+            // 
+            // contextMenuStripMenu
+            // 
+            this.contextMenuStripMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItemAddSubMenu = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStripMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemAddSubMenu});
+            this.contextMenuStripMenu.Name = "contextMenuStripMenu";
+            this.contextMenuStripMenu.Size = new System.Drawing.Size(137, 26);
+            // 
+            // toolStripMenuItemAddSubMenu
+            // 
+            this.toolStripMenuItemAddSubMenu.Name = "toolStripMenuItemAddSubMenu";
+            this.toolStripMenuItemAddSubMenu.Size = new System.Drawing.Size(136, 22);
+            this.toolStripMenuItemAddSubMenu.Text = "添加子菜单";
+            this.toolStripMenuItemAddSubMenu.Click += new System.EventHandler(this.toolStripMenuItemAddSubMenu_Click);
+            // 
+            // tree_MainMenu
+            // 
+            this.tree_MainMenu.ContextMenuStrip = this.contextMenuStripMenu;
+            // 
+            // UCMenuEdit
+            // 
             this.ResumeLayout(false);
 
         }
@@ -769,5 +802,8 @@ namespace RUINORERP.UI.SysConfig
         private System.Windows.Forms.Label label10;
         private Krypton.Toolkit.KryptonTextBox txtUIPropertyIdentifier;
         private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripMenu;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemAddSubMenu;
+        private System.Windows.Forms.Button btn_ReinitMenu;
     }
 }

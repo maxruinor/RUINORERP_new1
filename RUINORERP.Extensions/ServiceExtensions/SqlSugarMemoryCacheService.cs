@@ -101,7 +101,7 @@ namespace RUINORERP.Extensions
 
 
         /// <summary>
-        /// 缓存创建1
+        /// 缓存创建2
         /// </summary>
         /// <typeparam name="V"></typeparam>
         /// <param name="cacheKey"></param>

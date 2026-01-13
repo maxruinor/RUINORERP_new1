@@ -413,12 +413,29 @@ namespace RUINORERP.UI.Common
                     .Where(c => c.Parent_id == parentMenuInfo.MenuID)
                     .ToList();
 
-                // 查找或创建菜单项
+                // 1. 首先在内存中检查是否已存在相同菜单（菜单名称 + 父级ID 组合唯一）
                 var menu = existMenuInfoList.FirstOrDefault(e => e.MenuName == info.Caption && e.Parent_id == parentMenuInfo.MenuID);
                 
                 if (menu == null)
                 {
-                    // 创建新菜单项，先不设置tb_moduledefinition，避免自动添加到集合
+                    // 2. 然后在数据库中检查是否已存在相同菜单
+                    // 使用菜单名称 + 父级ID + 模块ID 组合确保唯一性
+                    var dbMenu = await MainForm.Instance.AppContext.Db.CopyNew()
+                        .Queryable<tb_MenuInfo>()
+                        .Where(m => m.MenuName == info.Caption 
+                                 && m.Parent_id == parentMenuInfo.MenuID 
+                                 && m.ModuleID == parentMenuInfo.ModuleID)
+                        .FirstAsync();
+                    
+                    if (dbMenu != null)
+                    {
+                        // 如果数据库中已存在，则将其添加到内存列表中
+                        parentMenuInfo.tb_moduledefinition.tb_MenuInfos.Add(dbMenu);
+                        existMenuInfoList.Add(dbMenu);
+                        return dbMenu;
+                    }
+                    
+                    // 3. 如果内存和数据库中都不存在，则创建新菜单项
                     menu = new tb_MenuInfo
                     {
                         MenuName = info.Caption,
@@ -430,7 +447,7 @@ namespace RUINORERP.UI.Common
                         FormName = info.ClassName,
                         Parent_id = parentMenuInfo.MenuID,
                         BIBaseForm = info.BIBaseForm,
-                        BIBizBaseForm = info.BIBizBaseForm,
+                        BIBizBaseForm = info.BIBaseForm,
                         BizInterface = info.BizInterface,
                         BizType = info.MenuBizType.HasValue ? (int)info.MenuBizType : 0,
                         MenuType = "行为菜单",

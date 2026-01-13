@@ -613,14 +613,14 @@ namespace RUINORERP.UI
                 };
 
 
-                btn.Click += (s, e) =>
+                btn.Click += async (s, e) =>
                 {
                     if (s is ToolStripButton item && item.Tag is tb_MenuInfo menuInfo)
                     {
                         //按钮事件
                         try
                         {
-                            menuPowerHelper.ExecuteEvents(menuInfo, null);
+                            await menuPowerHelper.ExecuteEvents(menuInfo, null);
                         }
                         catch (Exception ex)
                         {
@@ -1167,11 +1167,10 @@ namespace RUINORERP.UI
                 await UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
                 await UIBizService.RequestCache(typeof(tb_ProductType), useBackground: true);
                 await UIBizService.RequestCache(typeof(View_ProdDetail), useBackground: true);
-                tb_MenuInfoController<tb_MenuInfo> menuInfoController = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
-                List<tb_MenuInfo> menuList = await menuInfoController.QueryAsync();
+            
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
-                    MainForm.Instance.AppContext.UserMenuList = menuList;
+                    // MainForm.Instance.AppContext.UserMenuList = menuList;
 
                     //这里做一个事件。缓存中的变化了。这里也变化一下。todo:
                     try
@@ -1739,7 +1738,6 @@ namespace RUINORERP.UI
             //如果没有初始始化menu
             using (StatusBusy busy = new StatusBusy("系统正在加载数据... 请稍候"))
             {
-                //InitEditObjectValue();
                 LoadMenuOfTop();
                 LoadMenuPagesByLeft();
             }
@@ -1853,13 +1851,13 @@ namespace RUINORERP.UI
             }
         }
 
-        private void TreeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        private async void TreeView1_NodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             if (e.Node != null)
             {
                 if (e.Node.Tag is tb_MenuInfo menuInfo)
                 {
-                    menuPowerHelper.ExecuteEvents(menuInfo, null);
+                  await  menuPowerHelper.ExecuteEvents(menuInfo, null);
                 }
             }
         }
@@ -2108,7 +2106,7 @@ namespace RUINORERP.UI
             {
                 // 设置状态为登出中
                 CurrentLoginStatus = LoginStatus.LoggingOut;
-               
+
                 if (MainForm.Instance.AppContext.CurUserInfo != null && MainForm.Instance.AppContext.CurUserInfo.UserInfo != null)
                 {
                     MainForm.Instance.AppContext.CurUserInfo.UserInfo.Lastlogout_at = System.DateTime.Now;
@@ -2537,7 +2535,7 @@ namespace RUINORERP.UI
 
 
         /// <summary>
-        /// 只执行一次,初始化菜单
+        /// 只执行一次,初始化菜单1
         /// </summary>
         private async Task InitMenu(bool SystemInitialized)
         {
@@ -2570,67 +2568,66 @@ namespace RUINORERP.UI
         }
 
 
+        /*
+         tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
 
-        tb_MenuInfoController<tb_MenuInfo> mc = Startup.GetFromFac<tb_MenuInfoController<tb_MenuInfo>>();
+         private void CreateMenu(List<MenuAttrAssemblyInfo> list, int i, long parent_id)
+         {
 
+             var arrs = list.GroupBy(x => x.MenuPath.Split('|')[i]);
+             //输出
+             foreach (var a in arrs)
+             {
+                 tb_MenuInfo menuInfoparent = new tb_MenuInfo();
+                 // menuInfoparent.MenuID = IdHelper.GetLongId(); //会自动生成ID 第一次这样运行出错，可能没有初始化暂时不管
+                 menuInfoparent.MenuName = a.Key;
+                 menuInfoparent.IsVisble = true;
+                 menuInfoparent.IsEnabled = true;
+                 menuInfoparent.CaptionCN = a.Key;
+                 menuInfoparent.MenuType = "导航菜单";
+                 menuInfoparent.Parent_id = parent_id;
+                 menuInfoparent.Created_at = System.DateTime.Now;
+                 mc.AddMenuInfo(menuInfoparent);
+                 Console.Write(a.Key + ":" + "\r\n");
+                 foreach (var it in a)
+                 {
+                     //如果最后为空则是行为菜单了
+                     if (it.MenuPath.Split('|').Last<string>() == "")
+                     {
+                         Model.tb_MenuInfo menu = new tb_MenuInfo();
+                         // menu.MenuID = IdHelper.GetLongId();
+                         menu.MenuName = it.Caption;
+                         menu.IsVisble = true;
+                         menu.IsEnabled = true;
+                         menu.CaptionCN = it.Caption;
+                         menu.ClassPath = it.ClassPath;
+                         menu.FormName = it.ClassName;
+                         menu.Parent_id = menuInfoparent.MenuID;
+                         menu.BIBaseForm = it.BIBaseForm;
+                         menu.BIBizBaseForm = it.BIBizBaseForm;
+                         menu.BizInterface = it.BizInterface;
+                         menu.UIPropertyIdentifier = it.UIPropertyIdentifier;
+                         if (it.MenuBizType.HasValue)
+                         {
+                             menu.BizType = (int)it.MenuBizType.Value;
+                         }
 
-        private void CreateMenu(List<MenuAttrAssemblyInfo> list, int i, long parent_id)
-        {
-
-            var arrs = list.GroupBy(x => x.MenuPath.Split('|')[i]);
-            //输出
-            foreach (var a in arrs)
-            {
-                tb_MenuInfo menuInfoparent = new tb_MenuInfo();
-                // menuInfoparent.MenuID = IdHelper.GetLongId(); //会自动生成ID 第一次这样运行出错，可能没有初始化暂时不管
-                menuInfoparent.MenuName = a.Key;
-                menuInfoparent.IsVisble = true;
-                menuInfoparent.IsEnabled = true;
-                menuInfoparent.CaptionCN = a.Key;
-                menuInfoparent.MenuType = "导航菜单";
-                menuInfoparent.Parent_id = parent_id;
-                menuInfoparent.Created_at = System.DateTime.Now;
-                mc.AddMenuInfo(menuInfoparent);
-                Console.Write(a.Key + ":" + "\r\n");
-                foreach (var it in a)
-                {
-                    //如果最后为空则是行为菜单了
-                    if (it.MenuPath.Split('|').Last<string>() == "")
-                    {
-                        Model.tb_MenuInfo menu = new tb_MenuInfo();
-                        // menu.MenuID = IdHelper.GetLongId();
-                        menu.MenuName = it.Caption;
-                        menu.IsVisble = true;
-                        menu.IsEnabled = true;
-                        menu.CaptionCN = it.Caption;
-                        menu.ClassPath = it.ClassPath;
-                        menu.FormName = it.ClassName;
-                        menu.Parent_id = menuInfoparent.MenuID;
-                        menu.BIBaseForm = it.BIBaseForm;
-                        menu.BIBizBaseForm = it.BIBizBaseForm;
-                        menu.BizInterface = it.BizInterface;
-                        menu.UIPropertyIdentifier = it.UIPropertyIdentifier;
-                        if (it.MenuBizType.HasValue)
-                        {
-                            menu.BizType = (int)it.MenuBizType.Value;
-                        }
-
-                        menu.MenuType = "行为菜单";
-                        menu.EntityName = it.EntityName;
-                        menu.Created_at = System.DateTime.Now;
-                        mc.AddMenuInfo(menu);
-                    }
-                    else
-                    {
-                        //再次分组 //排除前面不适合的？
-                        var newlist = list.Where(w => w.MenuPath.Split('|').Last<string>() != "").ToList();
-                        CreateMenu(newlist, i + 1, menuInfoparent.MenuID);
-                    }
-                    Console.Write(it + " " + "\r\n");
-                }
-            }
-        }
-
+                         menu.MenuType = "行为菜单";
+                         menu.EntityName = it.EntityName;
+                         menu.Created_at = System.DateTime.Now;
+                         mc.AddMenuInfo(menu);
+                     }
+                     else
+                     {
+                         //再次分组 //排除前面不适合的？
+                         var newlist = list.Where(w => w.MenuPath.Split('|').Last<string>() != "").ToList();
+                         CreateMenu(newlist, i + 1, menuInfoparent.MenuID);
+                     }
+                     Console.Write(it + " " + "\r\n");
+                 }
+             }
+         }
+         */
 
 
         /// <summary>
@@ -2650,7 +2647,7 @@ namespace RUINORERP.UI
                 this.menuStripMain.Items.Clear();
                 MenuPowerHelper p = Startup.GetFromFac<MenuPowerHelper>();
                 MenuList = p.AddMenu(this.menuStripMain);
-
+                MainForm.Instance.AppContext.UserMenuList = MenuList;
                 // 添加"我的工具"菜单
                 AddMyToolsMenu();
 
@@ -3420,7 +3417,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                if (MainForm.Instance.AppContext.CurUserInfo==null)
+                if (MainForm.Instance.AppContext.CurUserInfo == null)
                 {
                     return;
                 }

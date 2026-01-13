@@ -6454,7 +6454,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode)
                 {
                     //自动保存的时间秒数  30秒
-                    if (MainForm.Instance.AppContext.CurUserInfo.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
+                    if (MainForm.Instance.AppContext.CurUserInfo?.静止时间 > 30 && MainForm.Instance.AppContext.IsOnline)
                     {
                         bool result = await AutoSaveDataAsync();
                         if (!result)

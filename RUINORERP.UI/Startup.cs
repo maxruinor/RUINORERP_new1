@@ -283,6 +283,36 @@ namespace RUINORERP.UI
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
 
+            // 注册SystemGlobalConfig单例实例，支持配置变更通知
+            services.AddSingleton<SystemGlobalConfig>(provider =>
+            {
+                var monitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
+                var systemConfig = monitor.CurrentValue;
+
+                // 订阅配置变更事件，实时更新单例实例
+                monitor.OnChange(newConfig =>
+                {
+                    systemConfig = newConfig;
+                });
+
+                return systemConfig;
+            });
+
+            // 注册GlobalValidatorConfig单例实例，支持配置变更通知
+            services.AddSingleton<GlobalValidatorConfig>(provider =>
+            {
+                var monitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
+                var validatorConfig = monitor.CurrentValue;
+
+                // 订阅配置变更事件，实时更新单例实例
+                monitor.OnChange(newConfig =>
+                {
+                    validatorConfig = newConfig;
+                });
+
+                return validatorConfig;
+            });
+
             // 使用扩展方法注册配置管理相关服务
             services.AddConfigManagementServices();
 

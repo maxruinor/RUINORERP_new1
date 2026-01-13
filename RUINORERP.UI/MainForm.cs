@@ -3501,6 +3501,7 @@ namespace RUINORERP.UI
         {
             statusTimer.Stop();
             this.lblStatusGlobal.Visible = false;
+            GetAutoUpdateConfig();
         }
 
         private async void btntsbRefresh_Click(object sender, EventArgs e)

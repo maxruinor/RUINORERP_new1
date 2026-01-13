@@ -57,6 +57,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.ProjectGroup_ID);
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.RepairStartDate, AdvQueryProcessType.datetimeRange, false);
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.Created_at);
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.PrintStatus, QueryFieldType.CmbEnum, typeof(PrintStatus));
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.ApprovalStatus, QueryFieldType.CmbEnum, typeof(ApprovalStatus));
             queryFilter.SetQueryField<tb_AS_RepairOrder>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));

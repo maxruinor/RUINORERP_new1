@@ -56,6 +56,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.ApplyDate, AdvQueryProcessType.datetimeRange, false);
             //queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.PreDeliveryDate, AdvQueryProcessType.datetimeRange, false);
             queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.Employee_ID);
+            queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.Created_at);
             queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.ASProcessStatus, QueryFieldType.CmbEnum, typeof(ASProcessStatus));
             queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.ExpenseBearerType, QueryFieldType.CmbEnum, typeof(ExpenseBearerType));
             queryFilter.SetQueryField<tb_AS_AfterSaleApply>(c => c.ExpenseAllocationMode, QueryFieldType.CmbEnum, typeof(ExpenseAllocationMode));

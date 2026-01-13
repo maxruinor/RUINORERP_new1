@@ -625,12 +625,6 @@ namespace RUINORERP.Server
             InitializeServerInfoTimer();
 
             Globalconfig = config;
-            // 监听配置变更
-            Globalconfig.OnChange(updatedConfig =>
-            {
-                System.Diagnostics.Debug.WriteLine($"Configuration has changed: {updatedConfig.SomeSetting}");
-            });
-
             // 初始化导航按钮事件
             InitializeNavigationButtons();
 

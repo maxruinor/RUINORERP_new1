@@ -424,11 +424,12 @@ namespace RUINORERP.Server
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerGlobalConfig>(builder.GetSection(nameof(ServerGlobalConfig)));
 
-            // 注册ServerConfig单例实例，使用IOptionsMonitor<T>支持动态更新
+            // 注册ServerConfig单例实例，使用IOptionsMonitor<T>支持动态更新和配置变更通知
             services.AddSingleton<ServerGlobalConfig>(provider =>
             {
                 // 获取IOptionsMonitor实例，用于监听配置变更
                 var monitor = provider.GetRequiredService<IOptionsMonitor<ServerGlobalConfig>>();
+                // 创建一个可变的配置对象，用于存储最新配置
                 var serverConfig = monitor.CurrentValue;
 
                 // 解析路径中的环境变量，确保路径正确
@@ -437,21 +438,49 @@ namespace RUINORERP.Server
                     serverConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(serverConfig.FileStoragePath);
                 }
 
+                // 订阅配置变更事件，实时更新单例实例
+                monitor.OnChange(newConfig =>
+                {
+                    // 解析新配置的环境变量
+                    if (!string.IsNullOrEmpty(newConfig.FileStoragePath))
+                    {
+                        newConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(newConfig.FileStoragePath);
+                    }
+                    // 直接替换引用，实现配置更新
+                    serverConfig = newConfig;
+                });
+
                 return serverConfig;
             });
             
-            // 注册SystemGlobalConfig单例实例
+            // 注册SystemGlobalConfig单例实例，支持配置变更通知
             services.AddSingleton<SystemGlobalConfig>(provider =>
             {
                 var monitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
-                return monitor.CurrentValue;
+                var systemConfig = monitor.CurrentValue;
+
+                // 订阅配置变更事件，实时更新单例实例
+                monitor.OnChange(newConfig =>
+                {
+                    systemConfig = newConfig;
+                });
+
+                return systemConfig;
             });
             
-            // 注册GlobalValidatorConfig单例实例
+            // 注册GlobalValidatorConfig单例实例，支持配置变更通知
             services.AddSingleton<GlobalValidatorConfig>(provider =>
             {
                 var monitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
-                return monitor.CurrentValue;
+                var validatorConfig = monitor.CurrentValue;
+
+                // 订阅配置变更事件，实时更新单例实例
+                monitor.OnChange(newConfig =>
+                {
+                    validatorConfig = newConfig;
+                });
+
+                return validatorConfig;
             });
 
             // 确保ConfigManagerService正确注册，使用新的构造函数

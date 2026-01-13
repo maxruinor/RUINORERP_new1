@@ -42,6 +42,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_BoxRules>(c => c.CartonID);
             queryFilter.SetQueryField<tb_BoxRules>(c => c.BoxRuleName);
             queryFilter.SetQueryField<tb_BoxRules>(c => c.Pack_ID);
+            queryFilter.SetQueryField<tb_BoxRules>(c => c.Created_at);
             return queryFilter;
         }
 

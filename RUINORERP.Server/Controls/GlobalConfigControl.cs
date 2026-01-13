@@ -247,7 +247,7 @@ namespace RUINORERP.Server.Controls
         /// 保存配置
         /// 使用新的配置管理服务统一处理配置保存
         /// </summary>
-        private void SaveConfig()
+        private async void SaveConfig()
         {
             try
             {
@@ -298,7 +298,6 @@ namespace RUINORERP.Server.Controls
                 string versionDescription = $"{description} - 由{Environment.UserName}修改";
                 _versionService.CreateVersion(_currentConfig, _currentConfigFileName, versionDescription);
 
-
                 // 记录保存操作到历史（简化版本）
                 var historyEntry = new ConfigHistoryEntry(_currentConfig, description)
                 {
@@ -312,8 +311,19 @@ namespace RUINORERP.Server.Controls
                     FileStorageHelper.InitializeStoragePath(serverConfig);
                 }
 
+                // 广播配置变更给所有客户端
+                bool broadcastResult = await BroadcastConfigChange(_currentConfig);
+                if (broadcastResult)
+                {
+                    _logger?.LogInformation("配置变更已成功广播给所有客户端");
+                }
+
                 // 更新UI状态
                 UpdateButtonStates();
+
+                // 获取主窗体实例并打印信息日志
+                var mainForm = Application.OpenForms.OfType<frmMainNew>().FirstOrDefault();
+                mainForm?.PrintInfoLog($"配置保存成功: {description}");
 
             }
             catch (Exception ex)

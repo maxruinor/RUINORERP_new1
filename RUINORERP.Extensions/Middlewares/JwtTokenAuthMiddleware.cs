@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using RUINORERP.AuthHelper.OverWrite;
+using RUINORERP.UI.Common;
 using Microsoft.AspNetCore.Http;
 
 namespace RUINORERP.Extensions.Middlewares
@@ -76,7 +77,7 @@ namespace RUINORERP.Extensions.Middlewares
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{DateTime.Now} middleware wrong:{e.Message}");
+                DebugHelper.WriteLine($"{DateTime.Now} middleware wrong:{e.Message}");
             }
 
 

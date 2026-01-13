@@ -122,7 +122,7 @@ namespace RUINORERP.Business.Security
 
                 // 开始计时查询
                 queryStopwatch.Start();
-                // 使用直接数据库查询并添加缓存，而不是通过控制器方法1
+                // 使用直接数据库查询并添加缓存，而不是通过控制器方法
                 users = appcontext.Db.CopyNew().Queryable<tb_UserInfo>()
                             .Where(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)

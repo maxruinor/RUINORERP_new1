@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -88,7 +89,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 // 如果读取或反序列化失败，返回空列表
-                Console.WriteLine($"加载消息数据失败: {ex.Message}");
+                DebugHelper.WriteLine($"加载消息数据失败: {ex.Message}");
                 return new List<MessageData>();
             }
         }
@@ -125,7 +126,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 // 如果保存失败，记录错误
-                Console.WriteLine($"保存消息数据失败: {ex.Message}");
+                DebugHelper.WriteLine($"保存消息数据失败: {ex.Message}");
             }
         }
 
@@ -238,12 +239,12 @@ namespace RUINORERP.UI.IM
                 };
                 string jsonContent = JsonConvert.SerializeObject(persistenceData, Formatting.Indented, jsonSettings);
                 File.WriteAllText(_dataPath, jsonContent);
-                
-                Console.WriteLine("已成功清除所有消息");
+
+                DebugHelper.WriteLine("已成功清除所有消息");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"清除所有消息时发生错误: {ex.Message}");
+                DebugHelper.WriteLine($"清除所有消息时发生错误: {ex.Message}");
                 throw new Exception($"清除所有消息失败: {ex.Message}", ex);
             }
         }

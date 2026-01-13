@@ -441,12 +441,12 @@ namespace RUINORERP.UI
                 
                 if (isSpeechSupported)
                 {
-                    Console.WriteLine("系统支持语音合成，使用System.Speech实现");
+                    DebugHelper.WriteLine("系统支持语音合成，使用System.Speech实现");
                     return new SystemSpeechVoiceReminder();
                 }
                 else
                 {
-                    Console.WriteLine("系统不支持语音合成，使用空实现");
+                    DebugHelper.WriteLine("系统不支持语音合成，使用空实现");
                     return new NullVoiceReminder();
                 }
             });
@@ -945,7 +945,7 @@ namespace RUINORERP.UI
                         if (!string.IsNullOrEmpty(config.LogLevel) && Enum.TryParse(config.LogLevel, true, out LogLevel newLogLevel))
                         {
                             CurrentLogLevel = newLogLevel;
-                            Console.WriteLine($"日志级别已动态更新为: {newLogLevel}");
+                            DebugHelper.WriteLine($"日志级别已动态更新为: {newLogLevel}");
                         }
                     });
                 }

@@ -919,6 +919,7 @@
     <Compile Include="Common\ColumnComparer.cs" />
     <Compile Include="Common\ControlBindingHelper.cs" />
     <Compile Include="Common\ControlExtensions.cs" />
+    <Compile Include="Common\DebugHelper.cs" />
     <Compile Include="Common\ExpressionSafeHelper.cs" />
     <Compile Include="Common\HardwareHelper.cs" />
     <Compile Include="Common\IVoiceReminder.cs" />

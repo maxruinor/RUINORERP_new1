@@ -1413,6 +1413,12 @@ namespace RUINORERP.UI
             Match match = Regex.Match(errorMsg, @"重复键值为 \((?<value>.*?)\)");
             return match.Success ? match.Groups["value"].Value : "";
         }
+
+        /// <summary>
+        /// 输出到控制台
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <returns></returns>
         private bool HandleUniqueConstraintException(SqlSugarException ex)
         {
             bool handled = false;
@@ -2820,7 +2826,7 @@ namespace RUINORERP.UI
 
         {
 
-            ConnectionString = "server=192.168.1.250;uid=sa;pwd=sa ;database=erp",
+            ConnectionString = "server=192.168.1.250;uid=sa;pwd=sa ;database=erpnew",
 
             DbType = DbType.SqlServer,//设置数据库类型
 
@@ -2853,7 +2859,7 @@ namespace RUINORERP.UI
 
         {
 
-            ConnectionString = "server=192.168.0.250;uid=sa;pwd=sa;database=erp",
+            ConnectionString = "server=192.168.0.250;uid=sa;pwd=sa;database=erpnew",
 
             DbType = DbType.SqlServer,//设置数据库类型
 

@@ -22,7 +22,7 @@ using SqlSugar;
 namespace RUINORERP.Extensions
 {
     /// <summary>
-    /// SqlSugar ORM 配置扩展类1
+    /// SqlSugar ORM 配置扩展类，使用中
     /// 提供数据库连接和AOP配置的静态方法
     /// </summary>
     public static class SqlsugarSetup

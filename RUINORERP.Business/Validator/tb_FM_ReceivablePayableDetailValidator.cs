@@ -55,8 +55,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.CustomerPartNo).MaximumMixedLength(100).WithMessage("往来单位料号:不能超过最大长度,100.");
 
- RuleFor(tb_FM_ReceivablePayableDetail =>tb_FM_ReceivablePayableDetail.Description).MaximumMixedLength(300).WithMessage("描述:不能超过最大长度,300.");
-
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
 
  RuleFor(x => x.TaxLocalAmount).PrecisionScale(19,4,true).WithMessage("税额:小数位不能超过4。");

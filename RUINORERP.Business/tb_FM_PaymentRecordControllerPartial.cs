@@ -1048,6 +1048,7 @@ namespace RUINORERP.Business
                                 {
                                     // 更新原始记录 指向[负数]冲销记录
                                     oldPayment.ReversedByPaymentId = entity.PaymentId;
+                                    oldPayment.ReversedByPaymentNo = entity.PaymentNo;
                                     oldPaymentUpdateList.Add(oldPayment);
                                     // 指向原始记录
                                     entity.ReversedOriginalId = oldPayment.PaymentId;
@@ -2619,7 +2620,7 @@ namespace RUINORERP.Business
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
             paymentRecord.TotalForeignPayableAmount = paymentRecordDetail.ForeignPayableAmount;
             paymentRecord.TotalLocalPayableAmount = paymentRecordDetail.LocalPayableAmount;
-
+            paymentRecord.LocalPamountInWords = paymentRecord.TotalLocalAmount.ToUpperAmount();
 
             paymentRecord.PaymentDate = entity.DocumentDate;
 
@@ -2717,7 +2718,7 @@ namespace RUINORERP.Business
             paymentRecord.TotalForeignAmount = paymentRecordDetail.ForeignAmount;
             paymentRecord.TotalForeignPayableAmount = paymentRecordDetail.ForeignPayableAmount;
             paymentRecord.TotalLocalPayableAmount = paymentRecordDetail.LocalPayableAmount;
-
+            paymentRecord.LocalPamountInWords = paymentRecord.TotalLocalAmount.ToUpperAmount();
             paymentRecord.PaymentDate = entity.DocumentDate;
 
             //paymentRecord.CustomerVendor_ID = entity.cus;
@@ -2830,8 +2831,7 @@ namespace RUINORERP.Business
 
             paymentRecord.TotalLocalAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.LocalAmount);
             paymentRecord.TotalForeignAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.ForeignAmount);
-            paymentRecord.TotalLocalPayableAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.LocalPayableAmount);
-
+            paymentRecord.TotalLocalPayableAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.LocalPayableAmount); paymentRecord.LocalPamountInWords = paymentRecord.TotalLocalAmount.ToUpperAmount();
             paymentRecord.PaymentDate = System.DateTime.Now;
             paymentRecord.Currency_ID = entities[0].Currency_ID;
             paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
@@ -2912,10 +2912,10 @@ namespace RUINORERP.Business
                 if (OriginalPaymentRecord != null)
                 {
                     paymentRecord.ReversedOriginalId = OriginalPaymentRecord.PaymentId;
-                    //paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
+                    paymentRecord.ReversedOriginalNo = OriginalPaymentRecord.PaymentNo;
                 }
             }
-
+            paymentRecord.LocalPamountInWords = paymentRecord.TotalLocalAmount.ToUpperAmount();
             //默认给第一个
             paymentRecord.PayeeInfoID = entities[0].PayeeInfoID;
             paymentRecord.CustomerVendor_ID = entities[0].CustomerVendor_ID;
@@ -3161,6 +3161,7 @@ namespace RUINORERP.Business
             paymentRecord.TotalForeignAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.ForeignAmount);
             paymentRecord.TotalLocalAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.LocalAmount);
             paymentRecord.TotalLocalPayableAmount = paymentRecord.tb_FM_PaymentRecordDetails.Sum(c => c.LocalPayableAmount);
+            paymentRecord.LocalPamountInWords = paymentRecord.TotalLocalAmount.ToUpperAmount();
         }
 
         /// <summary>

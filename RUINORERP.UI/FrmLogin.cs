@@ -249,25 +249,46 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 初始化连接并等待欢迎流程完成
-        /// 在后台执行，确保登录界面正常显示
+        /// 在后台执行,确保登录界面正常显示
         /// </summary>
         private async Task InitializeConnectionAndWelcomeFlowAsync()
         {
+            string serverIP = string.Empty;
+            int serverPort = 0;
+
             try
             {
+                // 在UI线程中读取服务器配置
+                await Task.Run(() =>
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() =>
+                        {
+                            serverIP = txtServerIP.Text.Trim();
+                            int.TryParse(txtPort.Text.Trim(), out serverPort);
+                        }));
+                    }
+                    else
+                    {
+                        serverIP = txtServerIP.Text.Trim();
+                        int.TryParse(txtPort.Text.Trim(), out serverPort);
+                    }
+                });
+
                 MainForm.Instance?.PrintInfoLog("开始初始化连接和欢迎流程...");
 
                 // 验证服务器地址和端口
-                if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort) || serverPort <= 0)
+                if (string.IsNullOrWhiteSpace(serverIP) || serverPort <= 0)
                 {
-                    MainForm.Instance?.logger?.LogWarning("服务器配置不完整，等待用户输入");
+                    MainForm.Instance?.logger?.LogWarning("服务器配置不完整,等待用户输入");
                     return;
                 }
 
-                // 1. 连接服务器（添加5秒超时）
-                MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
+                // 1. 连接服务器(添加5秒超时)
+                MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {serverIP}:{serverPort}...");
 
-                var connectTask = connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
                 var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(5)));
 
                 bool connectResult = false;
@@ -277,22 +298,22 @@ namespace RUINORERP.UI
                 }
                 else
                 {
-                    MainForm.Instance?.logger?.LogWarning($"连接服务器 {txtServerIP.Text.Trim()}:{serverPort} 超时");
-                    // 连接超时，不阻止登录界面显示
+                    MainForm.Instance?.logger?.LogWarning($"连接服务器 {serverIP}:{serverPort} 超时");
+                    // 连接超时,不阻止登录界面显示
                     return;
                 }
 
                 if (!connectResult)
                 {
-                    MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", txtServerIP.Text.Trim(), serverPort);
-                    // 连接失败，但不阻止登录界面显示，用户可以修改配置后重试
+                    MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
+                    // 连接失败,但不阻止登录界面显示,用户可以修改配置后重试
                     return;
                 }
 
-                MainForm.Instance.PrintInfoLog("服务器连接成功，等待欢迎消息...");
+                MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
 
-                // 2. 等待欢迎流程完成（等待最多10秒）
-                // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要等待确认
+                // 2. 等待欢迎流程完成(等待最多10秒)
+                // 欢迎流程由WelcomeCommandHandler自动处理,我们只需要等待确认
                 var welcomeTimeout = TimeSpan.FromSeconds(10);
                 var welcomeTask = _welcomeCompletionTcs.Task;
                 completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
@@ -302,24 +323,35 @@ namespace RUINORERP.UI
                     var (success, announcement) = await welcomeTask;
                     _welcomeCompleted = success;
 
-                    // 显示公告内容（如果有）
+                    // 显示公告内容(如果有) - 在UI线程中执行
                     if (!string.IsNullOrEmpty(announcement))
                     {
-                        DisplayAnnouncement(announcement);
+                        await Task.Run(() =>
+                        {
+                            if (this.InvokeRequired)
+                            {
+                                this.Invoke(new Action(() => DisplayAnnouncement(announcement)));
+                            }
+                            else
+                            {
+                                DisplayAnnouncement(announcement);
+                            }
+                        });
+
                         MainForm.Instance.ShowStatusText($"服务器连接成功 | 公告: {announcement}");
                     }
                     else
                     {
-                        MainForm.Instance.ShowStatusText("服务器连接成功，欢迎消息验证通过");
+                        MainForm.Instance.ShowStatusText("服务器连接成功,欢迎消息验证通过");
                     }
 
-                    MainForm.Instance?.PrintInfoLog("欢迎流程验证通过，服务器连接已就绪");
+                    MainForm.Instance?.PrintInfoLog("欢迎流程验证通过,服务器连接已就绪");
                 }
                 else
                 {
-                    MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时，但连接已建立");
-                    MainForm.Instance.ShowStatusText("服务器连接成功，欢迎验证超时");
-                    // 不阻止登录流程，服务器端有超时保护机制
+                    MainForm.Instance?.logger?.LogWarning("欢迎流程验证超时,但连接已建立");
+                    MainForm.Instance.ShowStatusText("服务器连接成功,欢迎验证超时");
+                    // 不阻止登录流程,服务器端有超时保护机制
                 }
             }
             catch (Exception ex)

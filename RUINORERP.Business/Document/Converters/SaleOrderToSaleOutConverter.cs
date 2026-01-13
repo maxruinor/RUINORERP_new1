@@ -2,26 +2,26 @@
 // 销售订单到销售出库单转换器
 // 实现销售订单向销售出库单的转换逻辑
 // **********************************************************************
-using RUINORERP.Model;
-using RUINORERP.Business.Document;
+using AutoMapper;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.Document;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
-using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System;
-using System.Linq;
-using RUINORERP.Model.Context;
 using RUINORERP.IServices;
-using System.Threading;
-using RUINORERP.Business.Cache;
+using RUINORERP.Model;
+using RUINORERP.Model.Context;
 using RUINORERP.Model.Context;
 using RUINORERP.Repository.UnitOfWorks; // 确保引入IUnitOfWorkManage所在的命名空间
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -80,7 +80,7 @@ namespace RUINORERP.Business.Document.Converters
             // 直接调用经过长期验证的 SaleOrderToSaleOut 方法
             return await _saleOrderController.SaleOrderToSaleOut(source);
         }
-        
+
         /// <summary>
         /// 执行具体的转换逻辑 - 重写后不再使用基类的 target 参数模式
         /// </summary>
@@ -128,6 +128,13 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
+                if (source.DataStatus != (int)DataStatus.确认)
+                {
+                    result.CanConvert = false;
+                    result.ErrorMessage = $"当前销售订单{source.SOrderNo}：状态为【{(DataStatus)source.DataStatus}】，无法生成销售出库单";
+                    return result;
+                }
+
                 // 检查当前销售订单是否已生成过销售出库单
                 int existingCount = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
                     .Where(c => c.SOrder_ID == source.SOrder_ID)
@@ -154,7 +161,7 @@ namespace RUINORERP.Business.Document.Converters
 
             return result;
         }
-        
+
         /// <summary>
         /// 验证明细数量的业务逻辑
         /// </summary>
@@ -168,57 +175,57 @@ namespace RUINORERP.Business.Document.Converters
                 int deliverableDetails = 0;
                 int nonDeliverableDetails = 0;
                 decimal totalDeliverableQty = 0;
-                
+
                 // 遍历所有订单明细，检查可出库数量
                 foreach (var detail in source.tb_SaleOrderDetails)
                 {
                     // 计算可出库数量 = 订单数量 - 已出库数量
                     decimal deliverableQty = detail.Quantity - detail.TotalDeliveredQty;
-                    
+
                     if (deliverableQty > 0)
                     {
                         deliverableDetails++;
                         totalDeliverableQty += deliverableQty;
-                        
+
                         // 如果可出库数量小于原订单数量，添加部分出库提示
                         if (deliverableQty < detail.Quantity)
                         {
                             var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
                             string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
-                            
+
                             result.AddWarning($"产品【{prodName}】已出库数量为{detail.TotalDeliveredQty}，可出库数量为{deliverableQty}，小于原订单数量{detail.Quantity}");
                         }
                     }
                     else
                     {
                         nonDeliverableDetails++;
-                        
+
                         // 添加完全出库提示
                         var prodInfo = _cacheManager.GetEntity<View_ProdInfo>(detail.ProdDetailID);
                         string prodName = prodInfo?.CNName ?? $"产品ID:{detail.ProdDetailID}";
-                        
+
                         result.AddWarning($"产品【{prodName}】已全部出库，可出库数量为0，将忽略此明细");
                     }
                 }
-                
+
                 // 添加汇总提示信息
                 if (nonDeliverableDetails > 0)
                 {
                     result.AddInfo($"共有{nonDeliverableDetails}项产品已全部出库，将在转换时忽略");
                 }
-                
+
                 if (deliverableDetails > 0)
                 {
                     result.AddInfo($"共有{deliverableDetails}项产品可出库，总可出库数量为{totalDeliverableQty}");
                 }
-                
+
                 // 如果所有明细都已出库，设置错误但仍允许转换（让用户知道）
                 if (deliverableDetails == 0)
                 {
                     result.CanConvert = false;
                     result.ErrorMessage = "销售订单所有明细已全部出库，无法再次生成出库单";
                 }
-                
+
                 await Task.CompletedTask; // 满足异步方法签名要求
             }
             catch (Exception ex)

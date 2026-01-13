@@ -57,9 +57,10 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             base.RelatedBillEditCol = (c => c.SOrderNo);
-            
+
             // 在Load事件中启用帮助功能，确保控件已完全初始化
-            this.Load += (sender, e) => {
+            this.Load += (sender, e) =>
+            {
                 // 为工具栏按钮设置帮助键
                 if (HelpManager.Config.IsHelpSystemEnabled)
                 {
@@ -67,7 +68,7 @@ namespace RUINORERP.UI.PSI.SAL
                 }
             };
         }
-        
+
         /// <summary>
         /// 处理键盘事件以支持F1帮助
         /// </summary>
@@ -93,26 +94,26 @@ namespace RUINORERP.UI.PSI.SAL
                 e.Handled = true;
             }
         }
-        
+
         /// <summary>
         /// 显示当前焦点控件的帮助
         /// </summary>
         private void ShowFocusedControlHelp()
         {
             if (!HelpManager.Config.IsHelpSystemEnabled) return;
-            
+
             try
             {
                 // 获取当前焦点控件
                 Control focusedControl = this.ActiveControl;
-                
+
                 // 如果焦点控件有帮助键，则显示对应的帮助
                 if (focusedControl?.Tag is string helpKey && !string.IsNullOrEmpty(helpKey))
                 {
                     HelpManager.ShowHelpByKey(helpKey);
                     return;
                 }
-                
+
                 // 否则显示窗体级别的帮助
                 HelpManager.ShowHelpByType(this.GetType());
             }
@@ -121,7 +122,7 @@ namespace RUINORERP.UI.PSI.SAL
                 MessageBox.Show($"显示帮助时出错: {ex.Message}", "帮助系统", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 为工具栏按钮设置帮助键
         /// </summary>
@@ -163,7 +164,7 @@ namespace RUINORERP.UI.PSI.SAL
                         }
                     }
                 }
-                
+
                 // 为右键菜单项设置帮助键
                 SetContextMenuHelpKeys();
             }
@@ -173,7 +174,7 @@ namespace RUINORERP.UI.PSI.SAL
                 System.Diagnostics.Debug.WriteLine($"设置工具栏按钮帮助键时出错: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 为右键菜单项设置帮助键
         /// </summary>
@@ -216,7 +217,7 @@ namespace RUINORERP.UI.PSI.SAL
                 System.Diagnostics.Debug.WriteLine($"设置右键菜单帮助键时出错: {ex.Message}");
             }
         }
-        
+
         /// <summary>
         /// 查找主窗体
         /// </summary>
@@ -230,17 +231,17 @@ namespace RUINORERP.UI.PSI.SAL
                     return form;
                 parent = parent.Parent;
             }
-            
+
             // 如果通过Parent找不到，尝试通过Application.OpenForms查找
             foreach (Form form in Application.OpenForms)
             {
                 if (form is RUINORERP.UI.MainForm)
                     return form;
             }
-            
+
             return null;
         }
-        
+
         public override List<ContextMenuController> AddContextMenu()
         {
             List<EventHandler> ContextClickList = new List<EventHandler>();
@@ -374,11 +375,11 @@ namespace RUINORERP.UI.PSI.SAL
             }
         }
 
- 
+
 
         public async Task<List<RuleResultWithFilter>> ExecuteRulesWithFilter(RulesEngine.RulesEngine re, tb_UserInfo user, tb_MenuInfo menu)
         {
-            var results =await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
+            var results = await re.ExecuteAllRulesAsync("QueryFilterRules", user, menu);
             return results.Select(r => new RuleResultWithFilter
             {
                 IsSuccess = r.IsSuccess,
@@ -461,7 +462,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     if (item.tb_SaleOuts != null && item.tb_SaleOuts.Count > 0)
                     {
-                        if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成过出库单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                        if (MessageBox.Show($"当前订单{item.SOrderNo}：已经生成过出库单，\r\n确定再次生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.Yes)
                         {
 
                         }
@@ -473,13 +474,13 @@ namespace RUINORERP.UI.PSI.SAL
 
                     tb_SaleOrderController<tb_SaleOrder> ctr = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                     //tb_SaleOut saleOut = SaleOrderToSaleOut(item);
-                    tb_SaleOut saleOut =await ctr.SaleOrderToSaleOut(item);
+                    tb_SaleOut saleOut = await ctr.SaleOrderToSaleOut(item);
                     MenuPowerHelper menuPowerHelper;
                     menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                     tb_MenuInfo RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble && m.EntityName == nameof(tb_SaleOut) && m.BIBaseForm == "BaseBillEditGeneric`2").FirstOrDefault();
                     if (RelatedMenuInfo != null)
                     {
-                     await   menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
+                        await menuPowerHelper.ExecuteEvents(RelatedMenuInfo, saleOut);
                     }
                     return;
                 }
@@ -488,12 +489,18 @@ namespace RUINORERP.UI.PSI.SAL
                     if (item.DataStatus == (int)DataStatus.完结)
                     {
                         // 弹出提示窗口：没有审核的销售订单，无源转为出库单
-                        MessageBox.Show($"当前订单{item.SOrderNo}：已结案，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前订单{item.SOrderNo}：已结案，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                     else if (item.DataStatus == (int)DataStatus.草稿 || item.DataStatus == (int)DataStatus.新建)
                     {
                         // 弹出提示窗口：没有审核的销售订单，无源转为出库单
-                        MessageBox.Show($"当前订单{item.SOrderNo}：未审核，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前订单{item.SOrderNo}：未审核，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                    }
+                    else
+                    {
+                        // 弹出提示窗口：其它情况 订单，无源转为出库单
+                        MessageBox.Show($"当前订单{item.SOrderNo}：状态为【{(DataStatus)item.DataStatus}】，无法生成出库单", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                     }
 
@@ -538,7 +545,7 @@ namespace RUINORERP.UI.PSI.SAL
                         MaxChineseChars = 50   // 例如只让最多 50 个汉字
                     };
 
-                    
+
                     using (var inputForm = new frmInputObject(CancelReasonRule))
                     {
                         inputForm.DefaultTitle = "请输入订单【取消作废】的原因";
@@ -587,7 +594,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
-    
+
         /// <summary>
         /// 可以通过  注册 数字要"引号" 转换不然会失败
         /// </summary>
@@ -718,7 +725,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                     tb_SaleOrderController<tb_SaleOrder> ctrOrder = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
-                    tb_SaleOut saleOut =await ctrOrder.SaleOrderToSaleOut(item);
+                    tb_SaleOut saleOut = await ctrOrder.SaleOrderToSaleOut(item);
 
                     ReturnMainSubResults<tb_SaleOut> rsrs = await ctr.BaseSaveOrUpdateWithChild<tb_SaleOut>(saleOut);
                     if (rsrs.Succeeded)
@@ -740,9 +747,9 @@ namespace RUINORERP.UI.PSI.SAL
             MainForm.Instance.uclog.AddLog("转换完成,成功订单数量:" + conter);
         }
 
-    
 
-  
+
+
 
         public async override Task<bool> CloseCase(List<tb_SaleOrder> EditEntitys)
         {

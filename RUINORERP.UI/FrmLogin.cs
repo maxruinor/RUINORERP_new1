@@ -118,10 +118,6 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance?.logger?.LogDebug("欢迎完成事件已触发，但TaskCompletionSource已完成");
             }
-
-            MainForm.Instance?.logger?.LogInformation("收到欢迎流程完成通知: {Status}, 公告: {Announcement}",
-                success ? "成功" : "失败",
-                string.IsNullOrEmpty(announcement) ? "无" : announcement);
         }
 
         /// <summary>
@@ -142,7 +138,7 @@ namespace RUINORERP.UI
                 lblAnnouncement.Text = content;
                 lblAnnouncement.MaximumSize = new System.Drawing.Size(234, 50);
                 panelAnnouncement.Visible = true;
-                MainForm.Instance?.logger?.LogInformation("显示系统公告: {Content}", content);
+                MainForm.Instance?.PrintInfoLog($"显示系统公告: {content}");
             }
         }
 
@@ -259,7 +255,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance?.logger?.LogInformation("开始初始化连接和欢迎流程...");
+                MainForm.Instance?.PrintInfoLog("开始初始化连接和欢迎流程...");
 
                 // 验证服务器地址和端口
                 if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort) || serverPort <= 0)
@@ -268,8 +264,24 @@ namespace RUINORERP.UI
                     return;
                 }
 
-                // 1. 连接服务器
-                bool connectResult = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                // 1. 连接服务器（添加5秒超时）
+                MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
+
+                var connectTask = connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(5)));
+
+                bool connectResult = false;
+                if (completedTask == connectTask)
+                {
+                    connectResult = await connectTask;
+                }
+                else
+                {
+                    MainForm.Instance?.logger?.LogWarning($"连接服务器 {txtServerIP.Text.Trim()}:{serverPort} 超时");
+                    // 连接超时，不阻止登录界面显示
+                    return;
+                }
+
                 if (!connectResult)
                 {
                     MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", txtServerIP.Text.Trim(), serverPort);
@@ -283,7 +295,7 @@ namespace RUINORERP.UI
                 // 欢迎流程由WelcomeCommandHandler自动处理，我们只需要等待确认
                 var welcomeTimeout = TimeSpan.FromSeconds(10);
                 var welcomeTask = _welcomeCompletionTcs.Task;
-                var completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
+                completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
 
                 if (completedTask == welcomeTask)
                 {
@@ -301,7 +313,7 @@ namespace RUINORERP.UI
                         MainForm.Instance.ShowStatusText("服务器连接成功，欢迎消息验证通过");
                     }
 
-                    MainForm.Instance?.logger?.LogInformation("欢迎流程验证通过，服务器连接已就绪");
+                    MainForm.Instance?.PrintInfoLog("欢迎流程验证通过，服务器连接已就绪");
                 }
                 else
                 {
@@ -316,13 +328,22 @@ namespace RUINORERP.UI
             }
         }
 
-        static CancellationTokenSource source = new CancellationTokenSource();
-
+        /// <summary>
+        /// 取消令牌源，用于取消异步操作
+        /// </summary>
+        private CancellationTokenSource _loginCancellationTokenSource;
 
         public bool IsInitPassword { get; set; } = false;
 
         private async void btnok_Click(object sender, EventArgs e)
         {
+            // 初始化取消令牌源
+            _loginCancellationTokenSource = new CancellationTokenSource();
+
+            // 禁用登录按钮，防止重复点击
+            btnok.Enabled = false;
+            btncancel.Text = "取消";
+
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
             {
                 // 确保在UI线程中显示消息框
@@ -331,12 +352,16 @@ namespace RUINORERP.UI
                     this.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
                     }));
                     return;
                 }
                 else
                 {
                     MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
                     return;
                 }
             }
@@ -350,6 +375,8 @@ namespace RUINORERP.UI
                     {
                         errorProvider1.SetError(txtUserName, "用户名不能为空");
                         txtUserName.Focus();
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
                         return;
                     }));
                     return;
@@ -358,6 +385,8 @@ namespace RUINORERP.UI
                 {
                     errorProvider1.SetError(txtUserName, "用户名不能为空");
                     txtUserName.Focus();
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
                     return;
                 }
             }
@@ -466,12 +495,16 @@ namespace RUINORERP.UI
                             this.BeginInvoke(new Action(() =>
                             {
                                 MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                btnok.Enabled = true;
+                                btncancel.Text = "取消";
                             }));
                             return;
                         }
                         else
                         {
                             MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
                             return;
                         }
                     }
@@ -489,6 +522,8 @@ namespace RUINORERP.UI
                                 errorProvider1.SetError(txtUserName, "账号密码有误");
                                 txtUserName.Focus();
                                 txtUserName.SelectAll();
+                                btnok.Enabled = true;
+                                btncancel.Text = "取消";
                                 return;
                             }));
                             return;
@@ -498,6 +533,8 @@ namespace RUINORERP.UI
                             errorProvider1.SetError(txtUserName, "账号密码有误");
                             txtUserName.Focus();
                             txtUserName.SelectAll();
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
                             return;
                         }
                     }
@@ -511,6 +548,25 @@ namespace RUINORERP.UI
 
                     // 使用新的登录流程服务处理登录
                     await ExecuteNewLoginFlow(isInitPwd, serverPort);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                MainForm.Instance.PrintInfoLog("登录操作已取消");
+
+                // 确保在UI线程中处理
+                if (this.InvokeRequired)
+                {
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
+                    }));
+                }
+                else
+                {
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
                 }
             }
             catch (Exception ex)
@@ -534,11 +590,24 @@ namespace RUINORERP.UI
                     this.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
                     }));
                 }
                 else
                 {
                     MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
+                }
+            }
+            finally
+            {
+                // 清理取消令牌源
+                if (_loginCancellationTokenSource != null)
+                {
+                    _loginCancellationTokenSource.Dispose();
+                    _loginCancellationTokenSource = null;
                 }
             }
         }
@@ -575,11 +644,15 @@ namespace RUINORERP.UI
         {
             try
             {
-                // 创建局部的取消令牌源，避免静态实例导致的问题
-                using (var localSource = new CancellationTokenSource())
+                // 如果正在登录，取消异步操作
+                if (_loginCancellationTokenSource != null && !_loginCancellationTokenSource.IsCancellationRequested)
                 {
-                    // 立即取消
-                    localSource.Cancel();
+                    _loginCancellationTokenSource.Cancel();
+                    _loginCancellationTokenSource.Dispose();
+                    _loginCancellationTokenSource = null;
+
+                    MainForm.Instance?.PrintInfoLog("正在取消登录操作...");
+                    return;
                 }
 
                 // 取消登录时，如果已连接则断开连接
@@ -704,7 +777,7 @@ namespace RUINORERP.UI
             // 如果IP或端口已发生变更，且连接状态有效，则触发重新连接和欢迎流程
             if (ipChanged && connectionManager.IsConnected)
             {
-                MainForm.Instance?.logger?.LogInformation($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
+                MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
 
                 // 使用防抖机制，避免频繁触发
                 await DebouncedReconnectAsync();
@@ -750,7 +823,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                MainForm.Instance?.logger?.LogInformation("开始重新连接并执行欢迎流程...");
+                MainForm.Instance?.PrintInfoLog("开始重新连接并执行欢迎流程...");
 
                 // 验证服务器配置
                 if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort))
@@ -872,9 +945,11 @@ namespace RUINORERP.UI
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.LoggingIn;
                 }
 
-                // 创建取消令牌，仅用于网络请求阶段的超时控制
-                using var networkCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
+                // 创建组合取消令牌：包含用户取消和超时取消
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10)); // 10秒超时
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutCts.Token,
+                    _loginCancellationTokenSource?.Token ?? CancellationToken.None);
 
                 // 1. 连接服务器
                 // 无论是否已连接，都尝试连接以确保使用最新的IP和端口
@@ -882,7 +957,17 @@ namespace RUINORERP.UI
                 if (!connectionManager.IsConnected)
                 {
                     MainForm.Instance.PrintInfoLog($"正在连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
-                    var connected = await connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+
+                    // 为连接操作添加超时
+                    var connectTask = connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
+
+                    if (completedTask != connectTask)
+                    {
+                        throw new TimeoutException($"连接服务器 {txtServerIP.Text.Trim()}:{serverPort} 超时");
+                    }
+
+                    var connected = await connectTask;
                     if (!connected)
                     {
                         throw new Exception($"无法连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}");
@@ -895,12 +980,10 @@ namespace RUINORERP.UI
                 }
 
                 // 2. 执行登录验证
-
-
                 var loginResponse = await _userLoginService.LoginAsync(
                     txtUserName.Text,
                     txtPassWord.Text,
-                       networkCts.Token);
+                    linkedCts.Token);
 
                 // 网络请求阶段完成后，处理登录结果和用户交互（无超时限制）
                 if (loginResponse != null && loginResponse.IsSuccess)
@@ -916,11 +999,15 @@ namespace RUINORERP.UI
                         this.BeginInvoke(new Action(() =>
                         {
                             MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
                         }));
                     }
                     else
                     {
                         MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
                     }
                 }
             }
@@ -932,11 +1019,15 @@ namespace RUINORERP.UI
                     this.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
                     }));
                 }
                 else
                 {
                     MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
                 }
             }
             finally
@@ -945,6 +1036,13 @@ namespace RUINORERP.UI
                 if (MainForm.Instance != null)
                 {
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
+                }
+
+                // 清理取消令牌源
+                if (_loginCancellationTokenSource != null)
+                {
+                    _loginCancellationTokenSource.Dispose();
+                    _loginCancellationTokenSource = null;
                 }
             }
         }

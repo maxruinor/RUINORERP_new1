@@ -90,7 +90,7 @@ namespace RUINORERP.Model.ConfigModel
         [JsonProperty("Announcement")]
         [Category("公告配置")]
         [Description("系统公告内容(一两句话即可)")]
-        public string Announcement { get; set; } = "欢迎使用RUINORERP系统！";
+        public string Announcement { get; set; } = "欢迎使用智能企业数字化管理系统！";
         #endregion
 
     }

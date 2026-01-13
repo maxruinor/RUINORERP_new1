@@ -248,7 +248,6 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_FM_Subject>(entity as tb_FM_Subject)
                         .Include(m => m.tb_FM_OtherExpenseDetails)
-                    .Include(m => m.tb_FM_Accounts)
                     .Include(m => m.tb_FM_ExpenseClaimDetails)
                     .Include(m => m.tb_FM_GeneralLedgers)
                     .Include(m => m.tb_FM_ExpenseTypes)
@@ -258,7 +257,6 @@ namespace RUINORERP.Business
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_FM_Subject>(entity as tb_FM_Subject)
                 .Include(m => m.tb_FM_OtherExpenseDetails)
-                .Include(m => m.tb_FM_Accounts)
                 .Include(m => m.tb_FM_ExpenseClaimDetails)
                 .Include(m => m.tb_FM_GeneralLedgers)
                 .Include(m => m.tb_FM_ExpenseTypes)
@@ -296,7 +294,6 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>()
                                 .Includes(m => m.tb_FM_OtherExpenseDetails)
-                        .Includes(m => m.tb_FM_Accounts)
                         .Includes(m => m.tb_FM_ExpenseClaimDetails)
                         .Includes(m => m.tb_FM_GeneralLedgers)
                         .Includes(m => m.tb_FM_ExpenseTypes)
@@ -310,7 +307,6 @@ namespace RUINORERP.Business
             tb_FM_Subject entity = model as tb_FM_Subject;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_FM_Subject>(m => m.Subject_id== entity.Subject_id)
                                 .Include(m => m.tb_FM_OtherExpenseDetails)
-                        .Include(m => m.tb_FM_Accounts)
                         .Include(m => m.tb_FM_ExpenseClaimDetails)
                         .Include(m => m.tb_FM_GeneralLedgers)
                         .Include(m => m.tb_FM_ExpenseTypes)
@@ -484,7 +480,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_Subject> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>()
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_FM_GeneralLedgers )
                                 .Includes(t => t.tb_FM_ExpenseTypes )
@@ -509,7 +504,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_Subject> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>().Where(exp)
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                .Includes(t => t.tb_FM_Accounts )
                                 .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                 .Includes(t => t.tb_FM_GeneralLedgers )
                                 .Includes(t => t.tb_FM_ExpenseTypes )
@@ -534,7 +528,6 @@ namespace RUINORERP.Business
         {
             List<tb_FM_Subject> list = _unitOfWorkManage.GetDbClient().Queryable<tb_FM_Subject>().Where(exp)
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
-                            .Includes(t => t.tb_FM_Accounts )
                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                             .Includes(t => t.tb_FM_GeneralLedgers )
                             .Includes(t => t.tb_FM_ExpenseTypes )
@@ -578,7 +571,6 @@ namespace RUINORERP.Business
                          
 
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
-                                            .Includes(t => t.tb_FM_Accounts )
                                             .Includes(t => t.tb_FM_ExpenseClaimDetails )
                                             .Includes(t => t.tb_FM_GeneralLedgers )
                                             .Includes(t => t.tb_FM_ExpenseTypes )

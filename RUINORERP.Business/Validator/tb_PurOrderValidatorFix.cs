@@ -86,7 +86,7 @@ namespace RUINORERP.Business
            });
 
 
-            //RuleFor(tb_PurOrder => tb_PurOrder.cu).NotNull().WithMessage("付款状态:不能为空。");
+            RuleFor(tb_PurOrder => tb_PurOrder.PayStatus).NotNull().WithMessage("付款状态:不能为空,必须选择有效值。");
             RuleFor(x => x.PayStatus).GreaterThan(0).WithMessage("付款状态:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).WithMessage("付款方式:不能为空。");
             RuleFor(x => x.Paytype_ID).GreaterThan(0).When(c => c.PayStatus != (int)PayStatus.未付款).WithMessage("付款方式:有付款的情况下，付款方式不能为空。");

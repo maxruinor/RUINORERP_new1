@@ -1,4 +1,4 @@
-﻿﻿﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -194,10 +194,10 @@ namespace RUINORERP.UI.PSI.PUR
                                 .And(t => t.Is_enabled == true)
                                 .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
                                 .ToExpression();//注意 这一句 不能少
-                                
+
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                    
+
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
@@ -356,10 +356,10 @@ namespace RUINORERP.UI.PSI.PUR
                                 .And(t => t.Is_enabled == true)
                                 .And(t => t.CustomerVendor_ID == entity.CustomerVendor_ID)
                                 .ToExpression();//注意 这一句 不能少
-                                
+
                     BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
                     QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
-                    
+
                     queryFilterPayeeInfo.FilterLimitExpressions.Add(lambdaPayeeInfo);
 
                     DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
@@ -430,7 +430,7 @@ namespace RUINORERP.UI.PSI.PUR
                         if (entity.PayeeInfoID > 0)
                         {
                             tb_FM_PayeeInfo payeeInfo = null;
-                            var obj =_cacheManager.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
+                            var obj = _cacheManager.GetEntity<tb_FM_PayeeInfo>(entity.PayeeInfoID);
                             if (obj != null && obj.ToString() != "System.Object")
                             {
                                 if (obj is tb_FM_PayeeInfo cv)
@@ -546,7 +546,7 @@ namespace RUINORERP.UI.PSI.PUR
                         }
                     }
                 }
-              
+
 
                 //如果客户有变化，带出对应有业务员
                 if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_PurOrder>(c => c.CustomerVendor_ID))
@@ -658,7 +658,7 @@ namespace RUINORERP.UI.PSI.PUR
         private void UCStockIn_Load(object sender, EventArgs e)
         {
             InitDataTocmbbox();
-            
+
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -702,7 +702,7 @@ namespace RUINORERP.UI.PSI.PUR
 
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
-             
+
 
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_PurOrderDetail).Name + "Processor");
@@ -724,9 +724,9 @@ namespace RUINORERP.UI.PSI.PUR
 
 
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.UnitPrice == 0, (a, b) => a.SubtotalAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
-            
+
             listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.TaxRate == 0, (a, b) => a.SubtotalUntaxedAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
-            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.TaxRate != 0, (a, b) => a.UntaxedUnitPrice*(1 + b.TaxRate), c => c.UnitPrice);//-->成交价是结果列
+            listCols.SetCol_FormulaReverse<tb_PurOrderDetail>(d => d.TaxRate != 0, (a, b) => a.UntaxedUnitPrice * (1 + b.TaxRate), c => c.UnitPrice);//-->成交价是结果列
 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_PurOrderDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
@@ -1113,7 +1113,7 @@ namespace RUINORERP.UI.PSI.PUR
 
 
 
- 
+
 
         tb_PurOrderController<tb_PurOrder> ctr = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
 
@@ -1147,7 +1147,7 @@ namespace RUINORERP.UI.PSI.PUR
             long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
             ApprovalEntity ae = new ApprovalEntity();
             ae.BillID = pkid;
-            
+
             CommBillData cbd = EntityMappingHelper.GetBillData<tb_PurOrder>(EditEntity);
             ae.BillNo = cbd.BillNo;
             ae.bizType = cbd.BizType;

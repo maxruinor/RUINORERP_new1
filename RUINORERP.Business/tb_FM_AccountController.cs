@@ -502,7 +502,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_company )
-                               .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_FM_Statements )
                                 .Includes(t => t.tb_FM_PaymentRecords )
@@ -535,7 +534,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_department )
                                .Includes(t => t.tb_currency )
                                .Includes(t => t.tb_company )
-                               .Includes(t => t.tb_fm_subject )
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )
                                 .Includes(t => t.tb_FM_Statements )
                                 .Includes(t => t.tb_FM_PaymentRecords )
@@ -568,7 +566,6 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_department )
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_company )
-                            .Includes(t => t.tb_fm_subject )
                                         .Includes(t => t.tb_FM_OtherExpenseDetails )
                             .Includes(t => t.tb_FM_Statements )
                             .Includes(t => t.tb_FM_PaymentRecords )
@@ -618,7 +615,6 @@ namespace RUINORERP.Business
                              .Includes(t => t.tb_department )
                             .Includes(t => t.tb_currency )
                             .Includes(t => t.tb_company )
-                            .Includes(t => t.tb_fm_subject )
                         
 
                                             .Includes(t => t.tb_FM_OtherExpenseDetails )

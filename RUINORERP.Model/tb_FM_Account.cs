@@ -66,21 +66,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _Subject_id;
-        /// <summary>
-        /// 会计科目
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Subject_id",ColDesc = "会计科目")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Subject_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "会计科目" )]
-        [FKRelationAttribute("tb_FM_Subject","Subject_id")]
-        public long? Subject_id
-        { 
-            get{return _Subject_id;}
-            set{
-            SetProperty(ref _Subject_id, value);
-                        }
-        }
-
+        
         private long? _ID;
         /// <summary>
         /// 所属公司
@@ -213,11 +199,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_Company tb_company { get; set; }
 
-        [SugarColumn(IsIgnore = true)]
-        //[Browsable(false)] 打印报表时的数据源会不显示
-        [Navigate(NavigateType.OneToOne, nameof(Subject_id))]
-        public virtual tb_FM_Subject tb_fm_subject { get; set; }
-
+ 
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

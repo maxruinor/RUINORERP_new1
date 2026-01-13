@@ -37,9 +37,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Account =>tb_FM_Account.DepartmentID).Must(CheckForeignKeyValueCanNull).WithMessage("部门:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.DepartmentID).NotEmpty().When(x => x.DepartmentID.HasValue);
 
- RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).Must(CheckForeignKeyValueCanNull).WithMessage("会计科目:下拉选择值不正确。");
- RuleFor(tb_FM_Account =>tb_FM_Account.Subject_id).NotEmpty().When(x => x.Subject_id.HasValue);
-
+ 
  RuleFor(tb_FM_Account =>tb_FM_Account.ID).Must(CheckForeignKeyValueCanNull).WithMessage("所属公司:下拉选择值不正确。");
  RuleFor(tb_FM_Account =>tb_FM_Account.ID).NotEmpty().When(x => x.ID.HasValue);
 

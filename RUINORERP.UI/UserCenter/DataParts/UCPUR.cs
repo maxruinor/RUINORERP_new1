@@ -107,7 +107,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                   .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
                    .Where(c => c.DataStatus == (int)DataStatus.确认).OrderBy(c => c.PurDate)
-                   .WithCache(60) // 缓存60秒
+                   //.WithCache(60) // 缓存60秒
                   .ToListAsync();
                 }
                 kryptonTreeGridView1.ReadOnly = true;

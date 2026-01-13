@@ -41,6 +41,7 @@ namespace RUINORERP.UI.BI
             this.btnAddRule = new Krypton.Toolkit.KryptonButton();
             this.btnRemoveRule = new Krypton.Toolkit.KryptonButton();
             this.dgvLinkedRules = new Krypton.Toolkit.KryptonDataGridView();
+            this.lblLinkedRules = new Krypton.Toolkit.KryptonLabel();
             this.kryptonPageSourceConfig = new Krypton.Navigator.KryptonPage();
             this.panelSourceValue = new Krypton.Toolkit.KryptonPanel();
             this.cmbSourceType = new Krypton.Toolkit.KryptonComboBox();

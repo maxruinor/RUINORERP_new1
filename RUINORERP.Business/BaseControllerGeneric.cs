@@ -1263,13 +1263,33 @@ namespace RUINORERP.Business
             // 添加DTO属性值
             if (dto != null)
             {
-                var properties = dto.GetType().GetProperties();
+                var properties = dto.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 foreach (var prop in properties.OrderBy(p => p.Name))
                 {
-                    var value = prop.GetValue(dto);
-                    if (value != null)
+                    // 跳过索引器属性
+                    if (prop.GetIndexParameters().Length > 0)
                     {
-                        conditionsString.Append($"{prop.Name}:{value},");
+                        continue;
+                    }
+                    
+                    // 检查是否有公共getter
+                    if (!prop.CanRead)
+                    {
+                        continue;
+                    }
+                    
+                    try
+                    {
+                        var value = prop.GetValue(dto);
+                        if (value != null)
+                        {
+                            conditionsString.Append($"{prop.Name}:{value},");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 单个属性获取失败不影响整个方法
+                        _logger.LogDebug(ex, $"获取属性值失败: {prop.Name}");
                     }
                 }
             }

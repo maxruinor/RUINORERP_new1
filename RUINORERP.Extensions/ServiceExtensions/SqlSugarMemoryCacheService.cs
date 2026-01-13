@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Memory;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Diagnostics;
 
 namespace RUINORERP.Extensions
 {
@@ -16,9 +19,18 @@ namespace RUINORERP.Extensions
 
         // 使用并发字典主动跟踪所有缓存键
         private readonly ConcurrentDictionary<string, byte> _cacheKeys = new();
+        
+        // 用于细粒度锁的并发字典
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _locks = new();
 
         // 缓存分区前缀（避免与其他缓存冲突）
         private const string CachePrefix = "SqlSugarDataCache.";
+        
+        // 缓存统计字段
+        private long _totalRequests = 0;
+        private long _cacheHits = 0;
+        private long _cacheMisses = 0;
+        private long _totalCreateTimeMs = 0;
 
         public SqlSugarMemoryCacheService(IMemoryCache memoryCache)
         {
@@ -110,25 +122,150 @@ namespace RUINORERP.Extensions
         /// <returns></returns>
         public V GetOrCreate<V>(string cacheKey, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
         {
+            Interlocked.Increment(ref _totalRequests);
             var fullKey = CachePrefix + cacheKey;
 
-            return _memoryCache.GetOrCreate(fullKey, entry =>
+            // 尝试从缓存获取
+            if (_memoryCache.TryGetValue(fullKey, out V value))
             {
-                // 设置过期时间和回调
+                Interlocked.Increment(ref _cacheHits);
+                return value;
+            }
+
+            Interlocked.Increment(ref _cacheMisses);
+            
+            // 记录开始时间
+            var stopwatch = Stopwatch.StartNew();
+
+            // 执行create函数
+            value = create();
+            
+            // 计算执行时间
+            stopwatch.Stop();
+            Interlocked.Add(ref _totalCreateTimeMs, (long)stopwatch.ElapsedMilliseconds);
+
+            // 设置缓存
+            var options = new MemoryCacheEntryOptions();
+            if (cacheDurationInSeconds < int.MaxValue)
+            {
+                options.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
+            }
+            options.RegisterPostEvictionCallback(RemoveCallback);
+            
+            _memoryCache.Set(fullKey, value, options);
+            _cacheKeys[fullKey] = 0;
+            
+            return value;
+        }
+        
+        /// <summary>
+        /// 异步版本的GetOrCreate方法
+        /// </summary>
+        /// <typeparam name="V">缓存值类型</typeparam>
+        /// <param name="cacheKey">缓存键</param>
+        /// <param name="createAsync">异步创建缓存值的委托</param>
+        /// <param name="cacheDurationInSeconds">缓存过期时间（秒）</param>
+        /// <returns>缓存值</returns>
+        public async Task<V> GetOrCreateAsync<V>(string cacheKey, Func<Task<V>> createAsync, int cacheDurationInSeconds = int.MaxValue)
+        {
+            Interlocked.Increment(ref _totalRequests);
+            var fullKey = CachePrefix + cacheKey;
+
+            // 尝试从缓存获取
+            if (_memoryCache.TryGetValue(fullKey, out V value))
+            {
+                Interlocked.Increment(ref _cacheHits);
+                return value;
+            }
+
+            Interlocked.Increment(ref _cacheMisses);
+            
+            // 记录开始时间
+            var stopwatch = Stopwatch.StartNew();
+
+            // 异步执行create函数
+            value = await createAsync();
+            
+            // 计算执行时间
+            stopwatch.Stop();
+            Interlocked.Add(ref _totalCreateTimeMs, (long)stopwatch.ElapsedMilliseconds);
+
+            // 设置缓存
+            var options = new MemoryCacheEntryOptions();
+            if (cacheDurationInSeconds < int.MaxValue)
+            {
+                options.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
+            }
+            options.RegisterPostEvictionCallback(RemoveCallback);
+            
+            _memoryCache.Set(fullKey, value, options);
+            _cacheKeys[fullKey] = 0;
+            
+            return value;
+        }
+        
+        /// <summary>
+        /// 带细粒度锁的异步GetOrCreate方法
+        /// </summary>
+        /// <typeparam name="V">缓存值类型</typeparam>
+        /// <param name="cacheKey">缓存键</param>
+        /// <param name="createAsync">异步创建缓存值的委托</param>
+        /// <param name="cacheDurationInSeconds">缓存过期时间（秒）</param>
+        /// <returns>缓存值</returns>
+        public async Task<V> GetOrCreateWithFineLockAsync<V>(string cacheKey, Func<Task<V>> createAsync, int cacheDurationInSeconds = int.MaxValue)
+        {
+            Interlocked.Increment(ref _totalRequests);
+            var fullKey = CachePrefix + cacheKey;
+
+            // 尝试从缓存获取
+            if (_memoryCache.TryGetValue(fullKey, out V value))
+            {
+                Interlocked.Increment(ref _cacheHits);
+                return value;
+            }
+
+            Interlocked.Increment(ref _cacheMisses);
+            
+            // 获取或创建细粒度锁
+            var semaphore = _locks.GetOrAdd(fullKey, _ => new SemaphoreSlim(1, 1));
+            try
+            {
+                await semaphore.WaitAsync();
+
+                // 双重检查，避免锁等待期间缓存已被其他线程创建
+                if (_memoryCache.TryGetValue(fullKey, out value))
+                {
+                    Interlocked.Increment(ref _cacheHits);
+                    return value;
+                }
+
+                // 记录开始时间
+                var stopwatch = Stopwatch.StartNew();
+
+                // 异步执行create函数
+                value = await createAsync();
+                
+                // 计算执行时间
+                stopwatch.Stop();
+                Interlocked.Add(ref _totalCreateTimeMs, (long)stopwatch.ElapsedMilliseconds);
+
+                // 设置缓存
+                var options = new MemoryCacheEntryOptions();
                 if (cacheDurationInSeconds < int.MaxValue)
                 {
-                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
+                    options.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(cacheDurationInSeconds);
                 }
-                entry.RegisterPostEvictionCallback(RemoveCallback);
-
-                // 先执行create函数，再添加到键跟踪，确保只有成功创建缓存项才会跟踪键
-                V value = create();
+                options.RegisterPostEvictionCallback(RemoveCallback);
                 
-                // 只有当create函数成功执行后，才将键添加到跟踪列表
+                _memoryCache.Set(fullKey, value, options);
                 _cacheKeys[fullKey] = 0;
-                
+
                 return value;
-            });
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         public void Remove<V>(string key)
@@ -140,6 +277,36 @@ namespace RUINORERP.Extensions
 
         //添加缓存统计接口
         public int CachedItemsCount => _cacheKeys.Count;
+        
+        /// <summary>
+        /// 缓存命中率
+        /// </summary>
+        public double CacheHitRatio => _totalRequests > 0 ? (double)_cacheHits / _totalRequests : 0;
+        
+        /// <summary>
+        /// 平均创建时间（毫秒）
+        /// </summary>
+        public long AverageCreateTimeMs => _cacheMisses > 0 ? _totalCreateTimeMs / _cacheMisses : 0;
+        
+        /// <summary>
+        /// 总请求数
+        /// </summary>
+        public long TotalRequests => _totalRequests;
+        
+        /// <summary>
+        /// 缓存命中数
+        /// </summary>
+        public long CacheHits => _cacheHits;
+        
+        /// <summary>
+        /// 缓存未命中数
+        /// </summary>
+        public long CacheMisses => _cacheMisses;
+        
+        /// <summary>
+        /// 总创建时间（毫秒）
+        /// </summary>
+        public long TotalCreateTimeMs => _totalCreateTimeMs;
         
         /// <summary>
         /// 清理_cacheKeys中的无效键

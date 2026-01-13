@@ -1167,7 +1167,7 @@ namespace RUINORERP.UI
                 await UIBizService.RequestCache(typeof(tb_RoleInfo), useBackground: true);
                 await UIBizService.RequestCache(typeof(tb_ProductType), useBackground: true);
                 await UIBizService.RequestCache(typeof(View_ProdDetail), useBackground: true);
-            
+
                 using (StatusBusy busy = new StatusBusy("系统正在【初始化】 请稍候"))
                 {
                     // MainForm.Instance.AppContext.UserMenuList = menuList;
@@ -1857,7 +1857,7 @@ namespace RUINORERP.UI
             {
                 if (e.Node.Tag is tb_MenuInfo menuInfo)
                 {
-                  await  menuPowerHelper.ExecuteEvents(menuInfo, null);
+                    await menuPowerHelper.ExecuteEvents(menuInfo, null);
                 }
             }
         }
@@ -3453,6 +3453,11 @@ namespace RUINORERP.UI
         /// </summary>
         private void GetAutoUpdateConfig()
         {
+            if (MainForm.Instance.AppContext.CurUserInfo == null)
+            {
+                return;
+            }
+
             try
             {
                 //读取更新版本的文件配置情况。通过心跳回到服务器上去 

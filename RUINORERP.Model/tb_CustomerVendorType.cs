@@ -83,8 +83,8 @@ namespace RUINORERP.Model
         /// <summary>
         /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "BusinessPartnerType",ColDesc = "")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BusinessPartnerType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "" )]
+        [AdvQueryAttribute(ColName = "BusinessPartnerType",ColDesc = "往来单位类型")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "BusinessPartnerType" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "往来单位类型")]
         public int BusinessPartnerType
         { 
             get{return _BusinessPartnerType;}

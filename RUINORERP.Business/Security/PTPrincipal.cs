@@ -37,11 +37,12 @@ namespace RUINORERP.Business.Security
             }
         }
 
-        public static bool Login(string username, string password, ApplicationContext appcontext, ref bool IsInitPwd)
+        public static async Task<(bool loginSucceed, bool isInitPwd)> Login(string username, string password, ApplicationContext appcontext)
         {
             // 开发环境下的性能监控
             System.Diagnostics.Stopwatch queryStopwatch = new System.Diagnostics.Stopwatch();
             bool loginSucceed = false;
+            bool isInitPwd = false;
             appcontext.CurUserInfo = null;
             //超级密码，为了第一次进系统
             if (!appcontext.RegistrationInfo.SystemInitialized && (username == "admin" && password == "amwtjhwxf"))
@@ -121,7 +122,7 @@ namespace RUINORERP.Business.Security
 
                 // 开始计时查询
                 queryStopwatch.Start();
-                // 使用直接数据库查询并添加缓存，而不是通过控制器方法
+                // 使用直接数据库查询并添加缓存，而不是通过控制器方法1
                 users = appcontext.Db.CopyNew().Queryable<tb_UserInfo>()
                             .Where(u => u.UserName == username && u.Password == EnPassword && u.is_available && u.is_enabled)
                             .Includes(t => t.tb_employee, e => e.tb_department, d => d.tb_company)
@@ -158,25 +159,26 @@ namespace RUINORERP.Business.Security
                 if (users == null || users.Count == 0)
                 {
                     loginSucceed = false;
-                    return loginSucceed;
+                    return (loginSucceed, isInitPwd);
                 }
 
                 //密码如果为初始123456，则每次登录会提示修改
                 string enPwd = EncryptionHelper.AesEncryptByHashKey("123456", username);
                 if (EnPassword == enPwd)
                 {
-                    IsInitPwd = true;
+                    isInitPwd = true;
                 }
                 else
                 {
-                    IsInitPwd = false;
+                    isInitPwd = false;
                 }
 
 
                 tb_UserInfo user = users[0];
                 if (user != null)
                 {
-                    if (SetCurrentUserInfo(appcontext, user))
+                    bool rs = await SetCurrentUserInfo(appcontext, user);
+                    if (rs)
                     {
                         var claims = new Claim[]
                    {
@@ -212,8 +214,7 @@ namespace RUINORERP.Business.Security
             }
 
 
-
-            return loginSucceed;
+            return (loginSucceed, isInitPwd);
         }
 
 
@@ -225,7 +226,7 @@ namespace RUINORERP.Business.Security
         /// <param name="CurrentRole">正常登录时传空，换角色时指定</param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public static bool SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
+        public static async Task<bool> SetCurrentUserInfo(ApplicationContext appcontext, tb_UserInfo user, tb_RoleInfo CurrentRole = null)
         {
             bool loginSucceed = false;
             if (appcontext.CurUserInfo == null)
@@ -242,7 +243,7 @@ namespace RUINORERP.Business.Security
                 user.tb_employee = new tb_Employee();
                 user.tb_employee.Employee_Name = user.UserName;
 
-    
+
 
             }
             // 将tb_UserInfo相关属性赋值到ApplicationContext.CurrentUser
@@ -318,10 +319,12 @@ namespace RUINORERP.Business.Security
                 if (appcontext.CurrentUser_Role_Personalized == null)
                 {
                     appcontext.CurrentUser_Role_Personalized = new tb_UserPersonalized();
+                    appcontext.CurrentUser_Role_Personalized.IMConfig = string.Empty;
+                    appcontext.CurrentUser_Role_Personalized.PrimaryKeyID = 0;
                     appcontext.CurrentUser_Role_Personalized.ID = appcontext.CurrentUser_Role.ID;
                     appcontext.CurrentUser_Role.tb_UserPersonalizeds.Add(appcontext.CurrentUser_Role_Personalized);
                     RUINORERP.Business.BusinessHelper.Instance.InitEntity(appcontext.CurrentUser_Role_Personalized);
-                    appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
+                    var s = await appcontext.Db.Insertable(appcontext.CurrentUser_Role_Personalized).ExecuteReturnSnowflakeIdAsync();
                 }
 
                 //获取工作台配置 - 使用同步加载方法

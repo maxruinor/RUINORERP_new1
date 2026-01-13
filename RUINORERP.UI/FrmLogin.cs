@@ -591,10 +591,9 @@ namespace RUINORERP.UI
                     }
 
                     // 执行本地权限验证
-                    bool isInitPwd = false;
-                    var localAuthSuccess = PTPrincipal.Login(txtUserName.Text, txtPassWord.Text, Program.AppContextData, ref isInitPwd);
+                    var (loginSucceed, isInitPwd) = await PTPrincipal.Login(txtUserName.Text, txtPassWord.Text, Program.AppContextData);
 
-                    if (!localAuthSuccess)
+                    if (!loginSucceed)
                     {
                         if (this.InvokeRequired)
                         {

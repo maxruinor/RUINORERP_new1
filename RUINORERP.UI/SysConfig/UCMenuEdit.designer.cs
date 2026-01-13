@@ -83,6 +83,7 @@ namespace RUINORERP.UI.SysConfig
             this.chkOnlyNew = new System.Windows.Forms.CheckBox();
             this.txtEntityName = new Krypton.Toolkit.KryptonTextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.btn_ReinitMenu = new System.Windows.Forms.Button();
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
             this.txtUIPropertyIdentifier = new Krypton.Toolkit.KryptonTextBox();

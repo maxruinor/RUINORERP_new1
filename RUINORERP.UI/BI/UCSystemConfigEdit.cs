@@ -35,6 +35,14 @@ namespace RUINORERP.UI.BI
         public override void BindData(BaseEntity entity)
         {
             tb_SystemConfig SystemConfig = entity as tb_SystemConfig;
+
+            if (SystemConfig != null && SystemConfig.ID == 0)
+            {
+                SystemConfig.IMConfig = string.Empty;
+                SystemConfig.FMConfig = string.Empty;
+                SystemConfig.FunctionConfiguration = string.Empty;
+            }
+
             DataBindingHelper.BindData4CmbByEnum<tb_SystemConfig>(SystemConfig, k => k.CostCalculationMethod, typeof(库存成本计算方式), cmbCostCalculationMethod, false);
             DataBindingHelper.BindData4CmbByEnum<tb_SystemConfig>(SystemConfig, k => k.FreightAllocationRules, typeof(FreightAllocationRules), cmbFreightAllocationRules, false);
 
@@ -121,7 +129,7 @@ namespace RUINORERP.UI.BI
             {
                 functionConfiguration = new FunctionConfiguration();
             }
-        
+
             DataBindingHelper.BindData4CheckBox<FunctionConfiguration>(functionConfiguration, t => t.EnableRowLevelAuth, chkEnableRowLevelAuth, false);
 
             #endregion

@@ -259,12 +259,22 @@ namespace RUINORERP.Server.Network.SuperSocket
                         _commandDispatcher.HandlerCount);
                 }
 
-                // 获取现有会话信息
+                // 获取现有会话信息,服务器的会话与客户端请求的id不匹配则断开了连接
                 var sessionInfo = SessionService.GetSession(session.SessionID);
                 if (sessionInfo == null)
                 {
                     // 如果会话不存在，可能是连接已断开或会话已过期
                     await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, CancellationToken.None);
+                    return;
+                }
+
+                // 检查会话是否已验证（适用于非WelcomeAck和非Login命令）
+                if (!sessionInfo.IsVerified && 
+                    package.Packet.CommandId != SystemCommands.WelcomeAck && 
+                    package.Packet.CommandId != AuthenticationCommands.Login)
+                {
+                    // 会话存在但未验证，返回相应错误
+                    await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_ValidationFailed, CancellationToken.None);
                     return;
                 }
 
@@ -646,6 +656,9 @@ namespace RUINORERP.Server.Network.SuperSocket
             ErrorCode errorCode,
             CancellationToken cancellationToken)
         {
+            // 获取原始请求的RequestId
+            string originalRequestId = requestPackage.Packet?.Request?.RequestId;
+            
             // 创建错误响应包
             var errorResponse = new PacketModel
             {
@@ -653,11 +666,17 @@ namespace RUINORERP.Server.Network.SuperSocket
                 Direction = PacketDirection.ServerResponse,
                 SessionId = requestPackage.Packet?.SessionId,
                 Status = PacketStatus.Error,
+                // 确保ExecutionContext被正确初始化
+                ExecutionContext = new CommandContext
+                {
+                    RequestId = originalRequestId ?? string.Empty
+                },
                 Extensions = new JObject
                 {
                     ["ErrorCode"] = errorCode.Code,
                     ["ErrorMessage"] = errorCode.Message,
-                    ["Success"] = false
+                    ["Success"] = false,
+                    ["RequestId"] = originalRequestId ?? string.Empty
                 }
             };
 
@@ -667,19 +686,12 @@ namespace RUINORERP.Server.Network.SuperSocket
                 requestPackage.Packet.ExecutionContext.RequestId = requestPackage.Packet.Request.RequestId;
             }
 
-
             // 如果提供了result参数，则添加增强的错误信息
             if (result != null)
             {
                 // 添加原始错误信息
                 errorResponse.Extensions["OriginalErrorMessage"] = result.ErrorMessage ?? "无错误消息";
                 errorResponse.Extensions["OriginalMessage"] = result.Message ?? "无消息";
-
-                // 设置请求ID
-                if (requestPackage.Packet != null && requestPackage.Packet.Request != null)
-                {
-                    errorResponse.ExecutionContext.RequestId = requestPackage.Packet.Request.RequestId;
-                }
 
                 // 设置响应对象 - 使用CreateCommandSpecificResponse确保返回正确类型的响应
                 // 这样客户端在使用as TResponse转换时才能成功
@@ -706,10 +718,16 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
             }
 
-            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
-            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestId) == true)
+            // 确保请求ID在响应中正确传递
+            if (!string.IsNullOrEmpty(originalRequestId))
             {
-                errorResponse.Extensions["RequestId"] = JToken.FromObject(requestId);
+                errorResponse.Extensions["RequestId"] = originalRequestId;
+            }
+            
+            // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
+            if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestIdFromExtensions) == true)
+            {
+                errorResponse.Extensions["RequestIdFromExtensions"] = JToken.FromObject(requestIdFromExtensions);
             }
 
             // 记录详细的错误信息用于调试

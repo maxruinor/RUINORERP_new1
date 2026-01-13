@@ -37,8 +37,16 @@ namespace RUINORERP.UI.SysConfig
         public UCProjectGroupAssigneeEmployees()
         {
             InitializeComponent();
+            if (!DesignMode)
+            {
+                DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_ProjectGroupEmployees));
+                DisplayTextResolver.Initialize(dataGridView1);
+                this.dataGridView1.CellFormatting -= new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
+            }
         }
 
+
+        public GridViewDisplayTextResolver DisplayTextResolver;
         tb_ProjectGroupController<tb_ProjectGroup> ctrGroup = Startup.GetFromFac<tb_ProjectGroupController<tb_ProjectGroup>>();
         tb_EmployeeController<tb_Employee> ctrEmp = Startup.GetFromFac<tb_EmployeeController<tb_Employee>>();
         tb_ProjectGroupEmployeesController<tb_ProjectGroupEmployees> ctr = Startup.GetFromFac<tb_ProjectGroupEmployeesController<tb_ProjectGroupEmployees>>();

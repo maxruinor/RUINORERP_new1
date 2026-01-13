@@ -438,7 +438,7 @@ namespace RUINORERP.Server
                     serverConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(serverConfig.FileStoragePath);
                 }
 
-                // 订阅配置变更事件，实时更新单例实例
+                // 订阅配置变更事件，实时更新单例实例属性
                 monitor.OnChange(newConfig =>
                 {
                     // 解析新配置的环境变量
@@ -446,8 +446,16 @@ namespace RUINORERP.Server
                     {
                         newConfig.FileStoragePath = Environment.ExpandEnvironmentVariables(newConfig.FileStoragePath);
                     }
-                    // 直接替换引用，实现配置更新
-                    serverConfig = newConfig;
+                    
+                    // 使用反射更新实例属性而非替换引用
+                    foreach (var property in typeof(ServerGlobalConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        if (property.CanWrite)
+                        {
+                            var newValue = property.GetValue(newConfig);
+                            property.SetValue(serverConfig, newValue);
+                        }
+                    }
                 });
 
                 return serverConfig;
@@ -459,10 +467,18 @@ namespace RUINORERP.Server
                 var monitor = provider.GetRequiredService<IOptionsMonitor<SystemGlobalConfig>>();
                 var systemConfig = monitor.CurrentValue;
 
-                // 订阅配置变更事件，实时更新单例实例
+                // 订阅配置变更事件，实时更新单例实例属性
                 monitor.OnChange(newConfig =>
                 {
-                    systemConfig = newConfig;
+                    // 使用反射更新实例属性而非替换引用
+                    foreach (var property in typeof(SystemGlobalConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        if (property.CanWrite)
+                        {
+                            var newValue = property.GetValue(newConfig);
+                            property.SetValue(systemConfig, newValue);
+                        }
+                    }
                 });
 
                 return systemConfig;
@@ -474,10 +490,18 @@ namespace RUINORERP.Server
                 var monitor = provider.GetRequiredService<IOptionsMonitor<GlobalValidatorConfig>>();
                 var validatorConfig = monitor.CurrentValue;
 
-                // 订阅配置变更事件，实时更新单例实例
+                // 订阅配置变更事件，实时更新单例实例属性
                 monitor.OnChange(newConfig =>
                 {
-                    validatorConfig = newConfig;
+                    // 使用反射更新实例属性而非替换引用
+                    foreach (var property in typeof(GlobalValidatorConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        if (property.CanWrite)
+                        {
+                            var newValue = property.GetValue(newConfig);
+                            property.SetValue(validatorConfig, newValue);
+                        }
+                    }
                 });
 
                 return validatorConfig;

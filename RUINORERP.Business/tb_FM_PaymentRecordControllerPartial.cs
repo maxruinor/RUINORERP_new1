@@ -2596,7 +2596,7 @@ namespace RUINORERP.Business
             paymentRecord.ApprovalOpinions = "";
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
-
+            paymentRecord.IsFromPlatform = false;
             paymentRecord.ReceivePaymentType = (int)ReceivePaymentType.付款;
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             paymentRecord.PaymentNo = await bizCodeService.GenerateBizBillNoAsync(BizType.费用报销单);
@@ -2669,6 +2669,7 @@ namespace RUINORERP.Business
             paymentRecord.ApprovalOpinions = "";
             paymentRecord.Modified_at = null;
             paymentRecord.Modified_by = null;
+            paymentRecord.IsFromPlatform = false;
             //0  支出  1为收入
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entity.EXPOrINC == true)
@@ -2769,6 +2770,7 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
             paymentRecord.Employee_ID = entities[0].Employee_ID;
+            paymentRecord.IsFromPlatform = entities[0].IsFromPlatform;
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
             if (entities[0].ReceivePaymentType == (int)ReceivePaymentType.收款)
             {
@@ -2871,7 +2873,8 @@ namespace RUINORERP.Business
             paymentRecord.Modified_by = null;
             paymentRecord.ReceivePaymentType = entities[0].ReceivePaymentType;
             paymentRecord.IsForCommission = entities[0].IsForCommission;
-
+            paymentRecord.IsFromPlatform = entities[0].IsFromPlatform;
+            
             List<tb_FM_PaymentRecordDetail> details = mapper.Map<List<tb_FM_PaymentRecordDetail>>(entities);
             List<tb_FM_PaymentRecordDetail> NewDetails = new List<tb_FM_PaymentRecordDetail>();
 
@@ -3094,6 +3097,8 @@ namespace RUINORERP.Business
 
             #region 设置基本信息
             paymentRecord.IsForCommission = false;
+            //对账单过来的无法确定是否为平台单 默认否
+            paymentRecord.IsFromPlatform = false;
             paymentRecord.PayeeInfoID = firstStatement.PayeeInfoID;
             paymentRecord.CustomerVendor_ID = firstStatement.CustomerVendor_ID;
             paymentRecord.Employee_ID = firstStatement.Employee_ID;

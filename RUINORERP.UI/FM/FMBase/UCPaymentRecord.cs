@@ -196,6 +196,10 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
+                if (!entity.IsFromPlatform.HasValue)
+                {
+                    entity.IsFromPlatform = false;
+                }
                 entity.PaymentStatus = (int)PaymentStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PaymentNo))
                 {
@@ -203,13 +207,13 @@ namespace RUINORERP.UI.FM
                     {
                         entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.付款单);
                         chkIsForCommission.Visible = true;
-                        chkIsFromPlatform.Visible = false;
+
                     }
                     else
                     {
                         entity.PaymentNo = ClientBizCodeService.GetBizBillNo(BizType.收款单);
                         chkIsForCommission.Visible = false;
-                        chkIsFromPlatform.Visible = true;
+
                     }
                 }
 

@@ -46,21 +46,21 @@ namespace RUINORERP.UI.UserCenter.DataParts
     public partial class UCTodoList : UserControl
     {
         // 依赖注入的服务
-        private  MenuPowerHelper _menuPowerHelper;
+        private MenuPowerHelper _menuPowerHelper;
         private readonly IEntityMappingService _mapper;
         private readonly EntityLoader _loader;
         private readonly ILogger<UCTodoList> _logger;
         private Guid _syncSubscriberKey;
-        private  ConditionBuilderFactory _conditionBuilderFactory;
+        private ConditionBuilderFactory _conditionBuilderFactory;
 
-        
+
         public UCTodoList(IEntityMappingService mapper, EntityLoader loader, ILogger<UCTodoList> logger)
         {
             InitializeComponent();
             _logger = logger;
             _mapper = mapper;
             _loader = loader;
-            
+
             // 初始化通用组件
             InitializeCommonComponents();
         }
@@ -70,11 +70,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             InitializeComponent();
             // 通过依赖注入获取服务实例
             _mapper = Startup.GetFromFac<IEntityMappingService>();
-            
+
             // 初始化通用组件
             InitializeCommonComponents();
         }
-        
+
         /// <summary>
         /// 初始化通用组件和服务
         /// </summary>
@@ -83,11 +83,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 获取通用服务
             _menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
             _conditionBuilderFactory = new ConditionBuilderFactory();
-            
+
             // 初始化TodoListManager
             InitializeTodoListManager();
         }
-        
+
         /// <summary>
         /// 初始化TodoListManager
         /// </summary>
@@ -219,7 +219,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 批量处理所有更新，提高性能
             TodoListManager.Instance.ProcessUpdates(updates);
         }
-        
+
         /// <summary>
         /// 刷新数据节点 - 批量处理任务状态更新
         /// 高效处理多个单据的状态同步到工作台
@@ -230,34 +230,34 @@ namespace RUINORERP.UI.UserCenter.DataParts
             // 空检查
             if (updates == null || updates.Count == 0)
                 return;
-                
+
             // 确保在UI线程中更新
             if (this.InvokeRequired)
             {
                 this.BeginInvoke(new Action<List<TodoUpdate>>(RefreshDataNodes), updates);
                 return;
             }
-            
+
             // 记录日志
             _logger?.LogTrace($"开始批量刷新{updates.Count}个数据节点");
-            
+
             // 按业务类型分组处理，减少重复查找
             var updatesByBizType = updates.GroupBy(u => u.BusinessType);
-            
+
             // 标记是否需要展开树视图
             bool needsExpand = false;
-            
+
             foreach (var group in updatesByBizType)
             {
                 BizType bizType = group.Key;
                 var bizTypeNode = FindBizTypeNode(bizType);
-                
+
                 if (bizTypeNode == null)
                 {
                     //_logger?.LogWarning($"未找到业务类型节点: {bizType}"); 系统加载时按权限加载的节点中不存在要更新的类型则找不到。但不需要提示。权限设置问题
                     continue;
                 }
-                
+
                 // 处理同一业务类型的所有更新
                 foreach (var update in group)
                 {
@@ -267,23 +267,23 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         bizTypeNode.Expand();
                         needsExpand = true;
                     }
-                    
+
                     UpdateTreeNodeForTask(update);
                 }
-                
+
                 // 更新业务类型节点文本
                 UpdateBizTypeNodeText(bizTypeNode);
             }
-            
+
             // 仅在有节点被展开时记录日志
             if (needsExpand)
             {
                 _logger?.LogTrace($"树视图已展开以显示更新的节点");
             }
-            
+
             _logger?.LogTrace($"批量刷新数据节点完成");
         }
-        
+
 
         /// <summary>
         /// 更新任务对应的树节点
@@ -295,10 +295,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             if (kryptonTreeViewJobList.Nodes.Count == 0)
                 return;
-        
+
             // 使用BillId字段
             long billId = update.BillId;
-        
+
             // 查找业务类型节点
             var bizTypeNode = FindBizTypeNode(update.BusinessType);
             if (bizTypeNode == null)
@@ -306,7 +306,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 _logger?.LogWarning($"未找到符合的业务类型节点: {update.BusinessType}");
                 return;
             }
-        
+
             // 已在UI线程中，无需再次Invoke
             try
             {
@@ -315,16 +315,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     case TodoUpdateType.Created:
                         HandleBillCreated(bizTypeNode, update);
                         break;
-        
+
                     case TodoUpdateType.Deleted:
                         HandleBillDeleted(bizTypeNode, billId);
                         break;
-        
+
                     case TodoUpdateType.StatusChanged:
                         HandleBillStatusChanged(bizTypeNode, update);
                         break;
                 }
-        
+
                 // 更新业务类型节点的文本显示
                 UpdateBizTypeNodeText(bizTypeNode);
             }
@@ -333,7 +333,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 _logger?.LogError(ex, "更新任务节点执行失败");
             }
         }
-        
+
         /// <summary>
         /// 处理单据创建操作
         /// </summary>
@@ -357,13 +357,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         parameter.BillIds.Add(update.BillId);
                         parameter.IncludeBillIds = true;
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                       break;
+                        break;
                         //_logger?.LogDebug($"单据{update.BillId}添加到节点: {statusNode.Text}");
                     }
                 }
             }
         }
-        
+
         /// <summary>
         /// 处理单据删除操作
         /// </summary>
@@ -377,7 +377,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     parameter.BillIds.Remove(billId);
                     parameter.IncludeBillIds = parameter.BillIds.Any();
-                            
+
                     // 如果节点中没有单据了，也需要移除该节点
                     if (parameter.BillIds.Count == 0)
                     {
@@ -387,12 +387,12 @@ namespace RUINORERP.UI.UserCenter.DataParts
                     else
                     {
                         UpdateNodeText(statusNode, parameter.BillIds.Count);
-                       break;
+                        break;
                     }
                 }
             }
         }
-        
+
         /// <summary>
         /// 处理单据状态变化操作
         /// 核心逻辑: 先从所有节点中删除，然后根据新状态重新添加
@@ -410,7 +410,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 if (parameter?.BillIds != null && parameter.BillIds.Contains(billId))
                 {
                     parameter.BillIds.Remove(billId);
-                    
+
                     // 如果节点中没有单据了，移除该节点
                     if (parameter.BillIds.Count == 0)
                     {
@@ -473,26 +473,26 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 验证输入参数
                 if (updateData == null || _logger == null)
                     return;
-                
+
                 _logger.Info($"刷新数据节点，业务类型：{updateData.BusinessType}，单据ID：{updateData.BillId}");
-                
+
                 // 确保在UI线程执行
                 if (InvokeRequired)
                 {
                     BeginInvoke(new Action<TodoUpdate>(RefreshDataNodes), updateData);
                     return;
                 }
-                
+
                 // 调用UpdateTreeNodeForTask方法处理更新
                 UpdateTreeNodeForTask(updateData);
-                
+
             }
             catch (Exception ex)
             {
                 _logger.Error($"刷新数据节点时发生错误，业务类型：{updateData?.BusinessType}，单据ID：{updateData?.BillId}", ex);
             }
         }
-        
+
 
         /// <summary>
         /// 更新节点文本，显示最新的单据数量
@@ -515,7 +515,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 // 如果没有找到括号，直接添加数量
                 node.Text = $"{nodeText}【{count}】";
             }
-            
+
             // 记录调试信息
             if (count == 0)
             {
@@ -577,7 +577,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             {
                 // 获取所有可能的状态条件组
                 var conditionGroups = GetConditionGroupsForBizType(update.BusinessType);
-                
+
                 if (conditionGroups == null || !conditionGroups.Any())
                     return;
 
@@ -629,7 +629,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private void CleanEmptyNodes(TreeNode bizTypeNode)
         {
             var emptyNodes = bizTypeNode.Nodes.Cast<TreeNode>()
-                .Where(node => 
+                .Where(node =>
                 {
                     var parameter = node.Tag as QueryParameter;
                     return parameter?.BillIds == null || parameter.BillIds.Count == 0;
@@ -1050,7 +1050,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //TreeNode rootNode = new TreeNode("待办事项") { ImageIndex = 0 };
 
             var bizTypes = GetConfiguredBizTypes();
-           
+
             var tasks = new List<Task<TreeNode>>();
 
             // 并行处理每个业务类型
@@ -1095,14 +1095,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             var bizEntity = Activator.CreateInstance(tableType);
             TreeNode parentNode = new TreeNode(bizType.ToString());
             parentNode.Name = bizType.ToString();
-            
+
             // 使用缓存获取组合数据
             string cacheKey = $"TodoList_CombinedData_{bizType}_{DateTime.Now.ToString("yyyyMMdd")}";
             var queryResult = await DataCacheManager.Instance.GetOrSetAsync(cacheKey, async () =>
             {
                 return await GetCombinedDataAsync(tableType, bizType, bizEntity);
-            }, 60); // 缓存60分钟
-            
+            }, 1); // 缓存1分钟
+
             if (queryResult.Data == null) return null;
 
             // 内存中处理状态分组
@@ -1219,13 +1219,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
             if (conditionGroups.Count == 0) return (null, null);
 
             var conModels = BuildConditionalModels(conditionGroups);
- 
-     
+
+
 
             //查找主键列各
             string SelectFieldName = "t.*";
             List<string> fields = new List<string>();
-            
+
             foreach (var Conditional in conModels.Cast<ConditionalCollections>().ToList())
             {
                 foreach (var item in Conditional.ConditionalList)
@@ -1688,13 +1688,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 {
                     parentNode.Nodes.Add(subNode);
                 }
-                
+
             }
             return queryList.Rows.Count;
         }
 
 
-    
+
 
     }
 

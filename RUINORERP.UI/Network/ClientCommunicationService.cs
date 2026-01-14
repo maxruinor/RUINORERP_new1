@@ -1132,7 +1132,7 @@ namespace RUINORERP.UI.Network
                     return false;
                 }
 
-                _logger?.LogInformation("🔄 [{Timestamp:HH:mm:ss.fff}] 开始发送心跳 #{AttemptNumber}, " +
+                _logger?.LogDebug("🔄 [{Timestamp:HH:mm:ss.fff}] 开始发送心跳 #{AttemptNumber}, " +
                     "会话: {SessionId}, 用户: {UserId}, IP: {ClientIP}, 当前间隔: {Interval}ms", 
                     logContext.Timestamp, logContext.AttemptNumber, logContext.SessionId, 
                     logContext.UserId, logContext.ClientIP, logContext.CurrentInterval);
@@ -1210,7 +1210,7 @@ namespace RUINORERP.UI.Network
                             var lastSuccessTime = _lastHeartbeatTime;
                             _lastHeartbeatTime = DateTime.Now;
 
-                            _logger?.LogInformation("✅ [{Now:HH:mm:ss.fff}] 心跳成功 #{AttemptNumber}, " +
+                            _logger?.Debug("✅ [{Now:HH:mm:ss.fff}] 心跳成功 #{AttemptNumber}, " +
                                 "耗时: {Duration}ms, 延迟: {Latency}ms, " +
                                 "服务器时间: {ServerTime}, 建议间隔: {Interval}ms, " +
                                 "距离上次成功: {TimeSinceLast:ss\\.fff}s, " +

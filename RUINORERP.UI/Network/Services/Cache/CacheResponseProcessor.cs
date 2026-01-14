@@ -238,7 +238,7 @@ namespace RUINORERP.UI.Network.Services.Cache
         {
             try
             {
-                _log?.LogInformation("缓存同步成功: {0}, 表名={1}, 操作={2}, 时间={3}",
+                _log?.LogDebug("缓存同步成功: {0}, 表名={1}, 操作={2}, 时间={3}",
                     message, response.TableName, response.Operation, DateTime.Now);
             }
             catch
@@ -360,7 +360,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                 {
                     // 删除整个表缓存
                     CleanCacheSafely(response.TableName);
-                    _log?.LogInformation("清理整个表缓存，表名={0}", response.TableName);
+                    _log?.LogDebug("清理整个表缓存，表名={0}", response.TableName);
                 }
             }
             catch (Exception ex)
@@ -461,7 +461,7 @@ namespace RUINORERP.UI.Network.Services.Cache
                 }
             }
 
-            _log?.LogInformation("批量删除完成，表名={0}，成功={1}，失败={2}", tableName, successCount, failCount);
+            _log?.LogDebug("批量删除完成，表名={0}，成功={1}，失败={2}", tableName, successCount, failCount);
         }
 
         /// <summary>

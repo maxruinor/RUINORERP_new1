@@ -1,32 +1,33 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RUINORERP.Global;
+using Castle.Components.DictionaryAdapter.Xml;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
+using RUINORERP.Common;
 using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Common.SnowflakeIdHelper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
-using static RUINORERP.Model.ModuleMenuDefine;
-using RUINORERP.Business;
-using System.Reflection;
-using SqlSugar;
-using System.Collections.Concurrent;
-using RUINORERP.Common.Helper;
-using System.Windows.Forms;
-using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
-using RUINORERP.Common;
-using RUINORERP.Common.SnowflakeIdHelper;
-using RUINORERP.UI.AdvancedUIModule;
-using Castle.Components.DictionaryAdapter.Xml;
-using System.Web.WebSockets;
-using SourceGrid2.Win32;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Global.EnumExt;
-using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Dto;
-using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.SS;
+using SourceGrid2.Win32;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web.WebSockets;
+using System.Windows.Forms;
+using static RUINORERP.Model.ModuleMenuDefine;
+using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.UI.Common
 {
@@ -221,7 +222,7 @@ namespace RUINORERP.UI.Common
             try
             {
                 var menulist = menuAssemblyList.Where(it => it.MenuPath.Split('|')[0] == modelName).ToList();
-                
+
                 if (!Enum.TryParse<模块定义>(modelName, out var module))
                 {
                     _logger.LogWarning($"未处理的模块类型: {modelName}");
@@ -231,7 +232,7 @@ namespace RUINORERP.UI.Common
                 // 通过反射查找ModuleMenuDefine中对应的嵌套枚举类型
                 var moduleMenuDefineType = typeof(ModuleMenuDefine);
                 var nestedType = moduleMenuDefineType.GetNestedType(modelName);
-                
+
                 if (nestedType == null)
                 {
                     _logger.LogWarning($"未找到模块类型: {modelName}，请在ModuleMenuDefine中定义对应的枚举类型");
@@ -242,7 +243,7 @@ namespace RUINORERP.UI.Common
                 var initNavMenuMethod = typeof(InitModuleMenu).GetMethod(
                     nameof(InitNavMenuAsync),
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                
+
                 if (initNavMenuMethod == null)
                 {
                     _logger.LogError($"找不到方法: {nameof(InitNavMenuAsync)}");
@@ -458,6 +459,7 @@ namespace RUINORERP.UI.Common
                         BIBaseForm = info.BIBaseForm,
                         BIBizBaseForm = info.BIBaseForm,
                         BizInterface = info.BizInterface,
+                        UIPropertyIdentifier = info.UIPropertyIdentifier,
                         BizType = info.MenuBizType.HasValue ? (int)info.MenuBizType : 0,
                         MenuType = "行为菜单",
                         EntityName = info.EntityName,

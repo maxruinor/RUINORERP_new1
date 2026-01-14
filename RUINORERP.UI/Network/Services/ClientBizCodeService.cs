@@ -107,19 +107,16 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogInformation("开始本地生成基础信息编号 - 类型: {BaseInfoType}, 参数: {ParaConst}", baseInfoType.ToString(), paraConst);
 
                 // 使用BNR架构的轻量级工厂来生成序号
                 LightweightBNRFactory bnrFactory = new LightweightBNRFactory();
 
                 // 根据不同的基础信息类型，使用不同的生成规则
                 string rule = GetBNRRuleByBaseInfoType(baseInfoType);
-                _logger?.LogInformation("使用BNR规则生成编号 - 规则: {Rule}", rule);
 
                 // 生成编号
                 string generatedCode = bnrFactory.Create(rule);
 
-                _logger?.LogInformation("本地生成基础信息编号成功 - 结果: {GeneratedCode}", generatedCode);
                 return generatedCode;
             }
             catch (Exception ex)

@@ -35,7 +35,6 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 await menuPowerHelper.ExecuteEvents(menuInfo);
 
-                logger?.LogInformation($"成功打开菜单：{menuInfo.MenuName} (ID: {menuId})");
             }
             catch (Exception ex)
             {
@@ -82,7 +81,6 @@ namespace RUINORERP.UI.WorkFlowDesigner
                 var menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
                 await menuPowerHelper.ExecuteEvents(menuInfo);
 
-                logger?.LogInformation($"成功打开菜单：{menuInfo.MenuName} (ID: {menuInfo.MenuID})");
             }
             catch (Exception ex)
             {

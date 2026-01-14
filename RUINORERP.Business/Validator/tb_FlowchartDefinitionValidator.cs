@@ -43,7 +43,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).MaximumMixedLength(20).WithMessage("流程图名称:不能超过最大长度,20.");
  RuleFor(tb_FlowchartDefinition =>tb_FlowchartDefinition.FlowchartName).NotEmpty().WithMessage("流程图名称:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

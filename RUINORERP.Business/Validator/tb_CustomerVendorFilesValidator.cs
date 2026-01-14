@@ -40,7 +40,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CustomerVendorFiles =>tb_CustomerVendorFiles.FileType).MaximumMixedLength(50).WithMessage("文件类型:不能超过最大长度,50.");
 
-           	        Initialize();
+           	  
      }
 
 

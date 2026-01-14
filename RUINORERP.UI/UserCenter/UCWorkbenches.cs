@@ -134,7 +134,6 @@ namespace RUINORERP.UI.UserCenter
             {
                 // 获取所有工作单元页面
                 var workCellPages = Kpages.ToList();
-                MainForm.Instance.logger?.LogInformation("开始加载 {Count} 个工作单元数据", workCellPages.Count);
 
                 int successCount = 0;
                 int failCount = 0;
@@ -161,9 +160,7 @@ namespace RUINORERP.UI.UserCenter
                     }
                 }
 
-                MainForm.Instance.logger?.LogInformation(
-                    "工作单元数据加载完成，成功: {Success}，失败: {Fail}",
-                    successCount, failCount);
+     
             }
             catch (Exception ex)
             {

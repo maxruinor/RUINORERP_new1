@@ -82,7 +82,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_PaymentSettlement =>tb_FM_PaymentSettlement.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

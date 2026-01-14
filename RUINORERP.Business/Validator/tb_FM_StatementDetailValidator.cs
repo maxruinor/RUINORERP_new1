@@ -67,7 +67,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_StatementDetail =>tb_FM_StatementDetail.Summary).MaximumMixedLength(300).WithMessage("摘要:不能超过最大长度,300.");
 
-           	        Initialize();
+           	  
      }
 
 

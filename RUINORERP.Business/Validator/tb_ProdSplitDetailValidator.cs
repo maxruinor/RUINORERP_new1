@@ -48,7 +48,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdSplitDetail =>tb_ProdSplitDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
-           	        Initialize();
      }
 
 

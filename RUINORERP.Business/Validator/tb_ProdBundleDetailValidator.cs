@@ -60,7 +60,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdBundleDetail =>tb_ProdBundleDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
      }
 
 

@@ -39,7 +39,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BillMarking =>tb_BillMarking.Desc).MaximumMixedLength(100).WithMessage("描述:不能超过最大长度,100.");
 
-           	        Initialize();
+ 
      }
 
 

@@ -51,7 +51,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetailSecondary =>tb_BOM_SDetailSecondary.Remarks).MaximumMixedLength(200).WithMessage("备注说明:不能超过最大长度,200.");
 
-           	        Initialize();
+           	  
      }
 
 

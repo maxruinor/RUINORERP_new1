@@ -46,7 +46,6 @@ namespace RUINORERP.Business
  RuleFor(tb_Prod_Attr_Relation =>tb_Prod_Attr_Relation.ProdBaseID).NotEmpty().When(x => x.ProdBaseID.HasValue);
 
 
-           	        Initialize();
      }
 
 

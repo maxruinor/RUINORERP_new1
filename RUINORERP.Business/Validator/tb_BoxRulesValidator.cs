@@ -68,7 +68,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BoxRules =>tb_BoxRules.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

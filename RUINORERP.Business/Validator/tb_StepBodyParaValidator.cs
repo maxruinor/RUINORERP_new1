@@ -45,7 +45,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StepBodyPara =>tb_StepBodyPara.StepBodyParaType).MaximumMixedLength(50).WithMessage("参数类型:不能超过最大长度,50.");
 
-           	        Initialize();
      }
 
 

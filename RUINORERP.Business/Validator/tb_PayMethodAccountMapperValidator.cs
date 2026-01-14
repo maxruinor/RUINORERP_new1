@@ -42,7 +42,7 @@ namespace RUINORERP.Business
 
 
 
-           	        Initialize();
+           	  
      }
 
 

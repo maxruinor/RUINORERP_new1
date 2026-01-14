@@ -55,8 +55,7 @@ namespace RUINORERP.Business
 
 
  RuleFor(tb_AuditLogs =>tb_AuditLogs.Notes).MaximumMixedLength(8000).WithMessage("备注说明:不能超过最大长度,8000.");
-
-           	        Initialize();
+ 
      }
 
 

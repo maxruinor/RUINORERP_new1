@@ -80,7 +80,6 @@ namespace RUINORERP.Business
  RuleFor(tb_SystemConfig =>tb_SystemConfig.FMConfig).NotEmpty().WithMessage("财务模块配置:不能为空。");
 
 
-           	        Initialize();
      }
 
 

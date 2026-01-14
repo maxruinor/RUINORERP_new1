@@ -64,7 +64,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PO_ContractDetail =>tb_PO_ContractDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

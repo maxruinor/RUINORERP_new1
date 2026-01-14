@@ -48,7 +48,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOMConfigHistory =>tb_BOMConfigHistory.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

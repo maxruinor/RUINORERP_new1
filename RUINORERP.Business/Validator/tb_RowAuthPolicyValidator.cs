@@ -70,7 +70,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_RowAuthPolicy =>tb_RowAuthPolicy.DefaultRuleEnum).NotEmpty().When(x => x.DefaultRuleEnum.HasValue);
 
-           	        Initialize();
      }
 
 

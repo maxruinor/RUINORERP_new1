@@ -73,7 +73,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProductionDemandTargetDetail =>tb_ProductionDemandTargetDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
-           	        Initialize();
      }
 
 

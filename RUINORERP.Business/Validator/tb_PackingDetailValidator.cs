@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PackingDetail =>tb_PackingDetail.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

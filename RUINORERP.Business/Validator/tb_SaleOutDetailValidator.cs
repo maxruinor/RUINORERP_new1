@@ -92,7 +92,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOutDetail =>tb_SaleOutDetail.FreightAllocationRules).NotEmpty().When(x => x.FreightAllocationRules.HasValue);
 
-           	        Initialize();
      }
 
 

@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Inv_Alert_Attribute =>tb_Inv_Alert_Attribute.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

@@ -56,7 +56,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FieldInfo =>tb_FieldInfo.ChildEntityName).MaximumMixedLength(100).WithMessage("子表名称:不能超过最大长度,100.");
 
 
-           	        Initialize();
+           	  
      }
 
 

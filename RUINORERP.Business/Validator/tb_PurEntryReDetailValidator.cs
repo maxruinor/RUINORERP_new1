@@ -76,7 +76,6 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
-           	        Initialize();
      }
 
 

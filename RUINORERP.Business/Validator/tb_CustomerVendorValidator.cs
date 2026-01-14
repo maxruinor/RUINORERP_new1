@@ -97,7 +97,7 @@ namespace RUINORERP.Business
 //有默认值
 
 
-           	        Initialize();
+           	  
      }
 
 

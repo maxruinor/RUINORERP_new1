@@ -41,7 +41,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BizType =>tb_BizType.Module).MaximumMixedLength(50).WithMessage("所属模块:不能超过最大长度,50.");
 
-           	        Initialize();
+           	  
      }
 
 

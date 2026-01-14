@@ -68,7 +68,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_OrderPacking =>tb_OrderPacking.PackingMethod).MaximumMixedLength(100).WithMessage("打包方式:不能超过最大长度,100.");
 
-           	        Initialize();
+           	  
      }
 
 

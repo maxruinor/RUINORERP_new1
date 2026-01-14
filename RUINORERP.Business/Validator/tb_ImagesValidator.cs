@@ -38,7 +38,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Images =>tb_Images.Images_Path).MaximumMixedLength(500).WithMessage(":不能超过最大长度,500.");
 
-           	        Initialize();
+           	  
      }
 
 

@@ -57,7 +57,7 @@ namespace RUINORERP.Business
 
  RuleFor(LogDetails =>LogDetails.UserIP).MaximumLength(22).WithMessage(":不能超过最大长度,22.");
 
-           	        Initialize();
+           	  
      }
 
 

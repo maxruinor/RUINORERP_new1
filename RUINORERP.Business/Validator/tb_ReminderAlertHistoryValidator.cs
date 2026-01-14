@@ -50,7 +50,6 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_ReminderAlertHistory =>tb_ReminderAlertHistory.ReminderBizType).NotNull().WithMessage(":不能为空。");
 
-           	        Initialize();
      }
 
 

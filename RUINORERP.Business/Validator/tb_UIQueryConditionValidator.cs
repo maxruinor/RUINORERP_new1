@@ -70,7 +70,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_UIQueryCondition =>tb_UIQueryCondition.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
      }
 
 

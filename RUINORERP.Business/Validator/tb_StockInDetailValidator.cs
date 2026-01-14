@@ -59,7 +59,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StockInDetail =>tb_StockInDetail.property).MaximumMixedLength(255).WithMessage("属性:不能超过最大长度,255.");
 
-           	        Initialize();
      }
 
 

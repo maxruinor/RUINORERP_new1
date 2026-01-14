@@ -43,7 +43,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Provinces =>tb_Provinces.ProvinceENName).MaximumMixedLength(80).WithMessage("省份英文名:不能超过最大长度,80.");
 
-           	        Initialize();
      }
 
 

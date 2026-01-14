@@ -55,7 +55,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Favorite =>tb_Favorite.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

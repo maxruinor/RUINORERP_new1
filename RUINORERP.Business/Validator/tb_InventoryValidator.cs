@@ -91,7 +91,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Inventory =>tb_Inventory.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

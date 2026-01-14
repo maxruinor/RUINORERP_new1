@@ -75,7 +75,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_OtherExpenseDetail =>tb_FM_OtherExpenseDetail.EvidenceImagePath).MaximumMixedLength(300).WithMessage("凭证图:不能超过最大长度,300.");
 
-           	        Initialize();
+           	  
      }
 
 

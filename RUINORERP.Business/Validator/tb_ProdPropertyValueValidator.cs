@@ -53,7 +53,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdPropertyValue =>tb_ProdPropertyValue.DataStatus).NotEmpty().When(x => x.DataStatus.HasValue);
 
-           	        Initialize();
      }
 
 

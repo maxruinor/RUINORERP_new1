@@ -44,7 +44,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ReminderAlert =>tb_ReminderAlert.Message).MaximumLength(100).WithMessage(":不能超过最大长度,100.");
 
-           	        Initialize();
      }
 
 

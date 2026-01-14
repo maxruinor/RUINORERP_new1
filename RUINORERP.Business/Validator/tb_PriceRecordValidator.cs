@@ -44,7 +44,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SalePrice).PrecisionScale(19,4,true).WithMessage("销售价:小数位不能超过4。");
 
-           	        Initialize();
+           	  
      }
 
 

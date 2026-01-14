@@ -40,7 +40,7 @@ namespace RUINORERP.Business
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).MaximumMixedLength(50).WithMessage("下节点名称:不能超过最大长度,50.");
  RuleFor(tb_NextNodes =>tb_NextNodes.NexNodeName).NotEmpty().WithMessage("下节点名称:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

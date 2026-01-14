@@ -37,7 +37,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.amount).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
 
-           	        Initialize();
      }
 
 

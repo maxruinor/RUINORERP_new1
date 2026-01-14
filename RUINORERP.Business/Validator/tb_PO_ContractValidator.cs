@@ -72,7 +72,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PO_Contract =>tb_PO_Contract.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
 
-           	        Initialize();
+           	  
      }
 
 

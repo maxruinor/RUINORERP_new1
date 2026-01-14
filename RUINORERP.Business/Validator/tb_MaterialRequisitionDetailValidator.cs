@@ -70,7 +70,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_MaterialRequisitionDetail =>tb_MaterialRequisitionDetail.ManufacturingOrderDetailRowID).NotNull().WithMessage(":不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

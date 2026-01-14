@@ -42,7 +42,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FlowchartItem =>tb_FlowchartItem.PointToString).MaximumMixedLength(100).WithMessage("位置:不能超过最大长度,100.");
 
-           	        Initialize();
+           	  
      }
 
 

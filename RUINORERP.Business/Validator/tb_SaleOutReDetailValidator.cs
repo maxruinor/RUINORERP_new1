@@ -78,7 +78,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOutReDetail =>tb_SaleOutReDetail.SaleOutDetail_ID).NotEmpty().When(x => x.SaleOutDetail_ID.HasValue);
 
-           	        Initialize();
      }
 
 

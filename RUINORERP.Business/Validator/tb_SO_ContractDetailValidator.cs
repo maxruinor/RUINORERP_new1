@@ -58,7 +58,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SO_ContractDetail =>tb_SO_ContractDetail.Remarks).MaximumMixedLength(500).WithMessage("备注:不能超过最大长度,500.");
 
-           	        Initialize();
      }
 
 

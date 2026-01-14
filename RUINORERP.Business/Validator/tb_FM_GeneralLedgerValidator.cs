@@ -77,7 +77,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_GeneralLedger =>tb_FM_GeneralLedger.TransactionDirection).NotNull().WithMessage("交易方向:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

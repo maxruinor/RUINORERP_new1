@@ -54,7 +54,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_gl_Comment =>tb_gl_Comment.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

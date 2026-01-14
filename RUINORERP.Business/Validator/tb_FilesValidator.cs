@@ -38,7 +38,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Files =>tb_Files.FileName).MaximumMixedLength(100).WithMessage(":不能超过最大长度,100.");
 
-           	        Initialize();
+           	  
      }
 
 

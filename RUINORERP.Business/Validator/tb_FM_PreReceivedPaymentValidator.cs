@@ -124,7 +124,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_FM_PreReceivedPayment =>tb_FM_PreReceivedPayment.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

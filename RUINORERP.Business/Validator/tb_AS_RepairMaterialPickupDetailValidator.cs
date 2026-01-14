@@ -64,7 +64,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairMaterialPickupDetail =>tb_AS_RepairMaterialPickupDetail.ManufacturingOrderDetailRowID).NotEmpty().When(x => x.ManufacturingOrderDetailRowID.HasValue);
 
-           	        Initialize();
+           	      
      }
 
 

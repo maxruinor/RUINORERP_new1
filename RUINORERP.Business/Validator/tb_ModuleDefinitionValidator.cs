@@ -44,7 +44,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ModuleDefinition =>tb_ModuleDefinition.IconFile_Path).MaximumMixedLength(100).WithMessage("图标路径:不能超过最大长度,100.");
 
-           	        Initialize();
+           	  
      }
 
 

@@ -39,7 +39,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdPropertyType =>tb_ProdPropertyType.PropertyTypeDesc).MaximumMixedLength(100).WithMessage("属性类型描述:不能超过最大长度,100.");
 
-           	        Initialize();
      }
 
 

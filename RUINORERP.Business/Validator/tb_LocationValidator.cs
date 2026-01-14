@@ -55,7 +55,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_Location =>tb_Location.Sort).NotNull().WithMessage("排序:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

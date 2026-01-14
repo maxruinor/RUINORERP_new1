@@ -48,8 +48,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.sale_price).PrecisionScale(10,2,true).WithMessage(":小数位不能超过2。");
 
  RuleFor(tb_BatchNumber =>tb_BatchNumber.quantity).NotEmpty().When(x => x.quantity.HasValue);
-
-           	        Initialize();
+ 
      }
 
 

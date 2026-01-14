@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(SequenceNumbers =>SequenceNumbers.BusinessType).MaximumMixedLength(100).WithMessage("业务类型:不能超过最大长度,100.");
 
-           	        Initialize();
+           
      }
 
 

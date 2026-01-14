@@ -34,7 +34,7 @@ namespace RUINORERP.Business
             // 通用配置设置验证
             RuleFor(x => x.SomeSetting).MaximumLength(200).WithMessage("通用配置设置长度不能超过200个字符");
 
-            Initialize();
+          
         }
     }
 }

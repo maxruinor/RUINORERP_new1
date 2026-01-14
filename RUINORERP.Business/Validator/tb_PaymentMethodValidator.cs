@@ -42,7 +42,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PaymentMethod =>tb_PaymentMethod.Sort).NotNull().WithMessage("现金:不能为空。");
 
 
-           	        Initialize();
+           	  
      }
 
 

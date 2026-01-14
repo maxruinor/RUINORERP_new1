@@ -47,7 +47,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Unit_Conversion =>tb_Unit_Conversion.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
-           	        Initialize();
      }
 
 

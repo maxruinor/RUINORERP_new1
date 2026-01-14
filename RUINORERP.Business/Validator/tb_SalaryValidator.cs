@@ -43,7 +43,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.ActualSalary).PrecisionScale(19,4,true).WithMessage(":小数位不能超过4。");
 
-           	        Initialize();
      }
 
 

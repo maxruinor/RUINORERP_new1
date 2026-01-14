@@ -62,7 +62,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_InventoryTransaction =>tb_InventoryTransaction.Notes).MaximumMixedLength(250).WithMessage("备注说明:不能超过最大长度,250.");
 
-           	        Initialize();
+           	  
      }
 
 

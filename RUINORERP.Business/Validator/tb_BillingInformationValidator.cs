@@ -59,9 +59,7 @@ namespace RUINORERP.Business
  RuleFor(tb_BillingInformation =>tb_BillingInformation.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-//有默认值
-
-           	        Initialize();
+ 
      }
 
 

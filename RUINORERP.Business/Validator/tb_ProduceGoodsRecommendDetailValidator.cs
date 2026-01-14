@@ -75,7 +75,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProduceGoodsRecommendDetail =>tb_ProduceGoodsRecommendDetail.RefBillID).NotEmpty().When(x => x.RefBillID.HasValue);
 
-           	        Initialize();
      }
 
 

@@ -78,7 +78,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_BOM_SDetailSubstituteMaterial =>tb_BOM_SDetailSubstituteMaterial.Summary).MaximumMixedLength(200).WithMessage("摘要:不能超过最大长度,200.");
 
-           	        Initialize();
+           	  
      }
 
 

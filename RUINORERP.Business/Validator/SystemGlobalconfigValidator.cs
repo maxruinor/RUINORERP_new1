@@ -67,8 +67,7 @@ namespace RUINORERP.Business
             // 日志配置验证 - EnableLogging是布尔值，无需额外验证
             RuleFor(x => x.LogLevel).Must(BeValidLogLevel).When(x => !string.IsNullOrEmpty(x.LogLevel))
                 .WithMessage("不支持的日志级别");
-
-            Initialize();
+ 
         }
 
         // 数据库类型验证

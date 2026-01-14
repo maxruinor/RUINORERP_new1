@@ -39,7 +39,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_QualityInspection =>tb_QualityInspection.ProductID).NotEmpty().When(x => x.ProductID.HasValue);
 
-           	        Initialize();
      }
 
 

@@ -54,7 +54,6 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.SubtotalTransferPirceAmount).PrecisionScale(19,4,true).WithMessage("调拨小计:小数位不能超过4。");
 
-           	        Initialize();
      }
 
 

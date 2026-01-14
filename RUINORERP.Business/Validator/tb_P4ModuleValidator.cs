@@ -48,7 +48,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_P4Module =>tb_P4Module.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

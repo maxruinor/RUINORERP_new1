@@ -62,7 +62,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FM_Subject =>tb_FM_Subject.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

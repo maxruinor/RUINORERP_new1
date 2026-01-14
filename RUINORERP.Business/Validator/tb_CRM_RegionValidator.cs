@@ -46,7 +46,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_CRM_Region =>tb_CRM_Region.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
-           	        Initialize();
+           	  
      }
 
 

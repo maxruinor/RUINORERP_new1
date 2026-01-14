@@ -57,7 +57,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_UserInfo =>tb_UserInfo.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
      }
 
 

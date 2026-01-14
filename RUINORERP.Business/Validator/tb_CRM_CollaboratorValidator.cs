@@ -48,7 +48,7 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_Collaborator =>tb_CRM_Collaborator.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

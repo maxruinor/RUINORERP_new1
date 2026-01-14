@@ -81,7 +81,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_EOP_WaterStorage =>tb_EOP_WaterStorage.PrintStatus).NotNull().WithMessage("打印状态:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

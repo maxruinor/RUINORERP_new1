@@ -53,7 +53,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PrintTemplate =>tb_PrintTemplate.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

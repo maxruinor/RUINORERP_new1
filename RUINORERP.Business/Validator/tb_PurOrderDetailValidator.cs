@@ -81,7 +81,7 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_PurOrderDetail =>tb_PurOrderDetail.UndeliveredQty).NotNull().WithMessage("未交数量:不能为空。");
 
-           	        Initialize();
+           	  
      }
 
 

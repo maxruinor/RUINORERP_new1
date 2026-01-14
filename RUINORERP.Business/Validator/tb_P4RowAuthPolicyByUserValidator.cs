@@ -48,7 +48,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_P4RowAuthPolicyByUser =>tb_P4RowAuthPolicyByUser.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

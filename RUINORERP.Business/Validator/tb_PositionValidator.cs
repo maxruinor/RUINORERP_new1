@@ -43,7 +43,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Position =>tb_Position.Top).MaximumMixedLength(50).WithMessage("上边距:不能超过最大长度,50.");
 
-           	        Initialize();
+           	  
      }
 
 

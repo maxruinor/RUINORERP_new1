@@ -54,7 +54,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairInStockDetail =>tb_AS_RepairInStockDetail.RepairOrderDetailID).NotEmpty().When(x => x.RepairOrderDetailID.HasValue);
 
-           	        Initialize();
+           	   
      }
 
 

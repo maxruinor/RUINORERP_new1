@@ -47,7 +47,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_WorkCenterConfig =>tb_WorkCenterConfig.DataOverview).MaximumMixedLength(500).WithMessage("数据概览:不能超过最大长度,500.");
 
-           	        Initialize();
      }
 
 

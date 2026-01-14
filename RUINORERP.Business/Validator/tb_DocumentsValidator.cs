@@ -36,7 +36,7 @@ namespace RUINORERP.Business
      
  RuleFor(tb_Documents =>tb_Documents.Files_Path).MaximumMixedLength(500).WithMessage(":不能超过最大长度,500.");
 
-           	        Initialize();
+           	  
      }
 
 

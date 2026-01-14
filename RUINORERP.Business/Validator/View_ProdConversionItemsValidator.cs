@@ -63,7 +63,6 @@ namespace RUINORERP.Business
 
 
 
-           	        Initialize();
      }
 
 

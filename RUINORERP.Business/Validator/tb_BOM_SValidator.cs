@@ -129,7 +129,7 @@ namespace RUINORERP.Business
                     // 验证明细中的数据不能包含主表中母件
               
                 
-                Initialize();
+          
      }
 
 

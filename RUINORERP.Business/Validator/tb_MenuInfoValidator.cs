@@ -87,7 +87,7 @@ namespace RUINORERP.Business
  RuleFor(tb_MenuInfo =>tb_MenuInfo.HotKey).MaximumMixedLength(50).WithMessage("热键:不能超过最大长度,50.");
 
 
-           	        Initialize();
+           	  
      }
 
 

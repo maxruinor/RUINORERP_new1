@@ -79,7 +79,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Employee =>tb_Employee.PhoneNumber).MaximumMixedLength(50).WithMessage("手机号:不能超过最大长度,50.");
 
-           	        Initialize();
+           	  
      }
 
 

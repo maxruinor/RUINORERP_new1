@@ -56,8 +56,7 @@ namespace RUINORERP.Business
  RuleFor(Logs =>Logs.MachineName).MaximumMixedLength(50).WithMessage("电脑名:不能超过最大长度,50.");
 
  RuleFor(Logs =>Logs.User_ID).NotEmpty().When(x => x.User_ID.HasValue);
-
-           	        Initialize();
+             
      }
 
 

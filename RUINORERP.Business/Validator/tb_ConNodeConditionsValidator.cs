@@ -41,7 +41,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ConNodeConditions =>tb_ConNodeConditions.Value).MaximumMixedLength(50).WithMessage("表达式值:不能超过最大长度,50.");
 
-           	        Initialize();
+           	  
      }
 
 

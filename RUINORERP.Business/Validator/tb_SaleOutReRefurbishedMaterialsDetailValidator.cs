@@ -67,7 +67,6 @@ namespace RUINORERP.Business
  RuleFor(x => x.SubtotalUntaxedAmount).PrecisionScale(19,4,true).WithMessage("未税本位币:小数位不能超过4。");
 
 
-           	        Initialize();
      }
 
 

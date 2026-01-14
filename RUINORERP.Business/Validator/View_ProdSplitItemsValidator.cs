@@ -51,7 +51,6 @@ namespace RUINORERP.Business
 
 
 
-           	        Initialize();
      }
 
 

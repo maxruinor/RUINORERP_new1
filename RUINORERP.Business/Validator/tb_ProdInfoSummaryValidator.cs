@@ -40,7 +40,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdInfoSummary =>tb_ProdInfoSummary.库存总量).NotEmpty().When(x => x.库存总量.HasValue);
 
-           	        Initialize();
      }
 
 

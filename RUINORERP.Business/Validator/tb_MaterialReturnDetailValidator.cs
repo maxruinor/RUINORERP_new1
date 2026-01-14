@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MaterialReturnDetail =>tb_MaterialReturnDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
 
-           	        Initialize();
+           	  
      }
 
 

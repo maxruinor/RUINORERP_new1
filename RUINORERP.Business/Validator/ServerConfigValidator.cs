@@ -70,7 +70,7 @@ namespace RUINORERP.Business
             //RuleFor(x => x.BOMManualPath).Must(BeValidRelativePath).WithMessage("BOM配方手册路径必须是有效的相对路径");
             //RuleFor(x => x.BOMManualPath).Must(NotContainInvalidPathChars).WithMessage("BOM配方手册路径包含无效字符");
 
-            Initialize();
+     
         }
 
         // 数据库类型验证

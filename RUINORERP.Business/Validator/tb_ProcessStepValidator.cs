@@ -55,8 +55,6 @@ namespace RUINORERP.Business
  RuleFor(tb_ProcessStep =>tb_ProcessStep.Description).MaximumMixedLength(255).WithMessage("描述:不能超过最大长度,255.");
 
  RuleFor(tb_ProcessStep =>tb_ProcessStep.Notes).MaximumMixedLength(255).WithMessage("备注:不能超过最大长度,255.");
-
-           	        Initialize();
      }
 
 

@@ -68,7 +68,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_PurGoodsRecommendDetail =>tb_PurGoodsRecommendDetail.PDCID_RowID).NotEmpty().When(x => x.PDCID_RowID.HasValue);
 
-           	        Initialize();
      }
 
 

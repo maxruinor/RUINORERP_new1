@@ -50,7 +50,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_P4Menu =>tb_P4Menu.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

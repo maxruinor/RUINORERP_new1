@@ -70,7 +70,6 @@ namespace RUINORERP.Business
 
 
 
-           	        Initialize();
      }
 
 

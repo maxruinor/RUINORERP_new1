@@ -45,7 +45,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_StepBody =>tb_StepBody.AssemblyFullName).MaximumMixedLength(50).WithMessage("标题:不能超过最大长度,50.");
 
-           	        Initialize();
      }
 
 

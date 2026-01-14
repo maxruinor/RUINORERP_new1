@@ -45,7 +45,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_ExpenseType =>tb_FM_ExpenseType.Notes).MaximumMixedLength(30).WithMessage("备注:不能超过最大长度,30.");
 
-           	        Initialize();
+           	  
      }
 
 

@@ -58,7 +58,7 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_FollowUpPlans =>tb_CRM_FollowUpPlans.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

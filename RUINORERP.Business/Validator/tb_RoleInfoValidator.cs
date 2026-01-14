@@ -42,7 +42,6 @@ namespace RUINORERP.Business
  RuleFor(tb_RoleInfo =>tb_RoleInfo.RolePropertyID).Must(CheckForeignKeyValueCanNull).WithMessage(":下拉选择值不正确。");
  RuleFor(tb_RoleInfo =>tb_RoleInfo.RolePropertyID).NotEmpty().When(x => x.RolePropertyID.HasValue);
 
-           	        Initialize();
      }
 
 

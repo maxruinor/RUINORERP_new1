@@ -60,7 +60,6 @@ namespace RUINORERP.Business
  RuleFor(tb_ProductionPlanDetail =>tb_ProductionPlanDetail.AnalyzedQuantity).NotNull().WithMessage("已分析数量:不能为空。");
 
 
-           	        Initialize();
      }
 
 

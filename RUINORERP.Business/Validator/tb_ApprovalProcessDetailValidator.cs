@@ -40,7 +40,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ApprovalProcessDetail =>tb_ApprovalProcessDetail.ApprovalOrder).NotEmpty().When(x => x.ApprovalOrder.HasValue);
 
-           	        Initialize();
+          
      }
 
 

@@ -59,7 +59,7 @@ namespace RUINORERP.Business
  RuleFor(tb_CRM_Contact =>tb_CRM_Contact.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

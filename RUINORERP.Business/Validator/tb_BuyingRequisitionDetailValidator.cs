@@ -55,7 +55,7 @@ namespace RUINORERP.Business
  RuleFor(tb_BuyingRequisitionDetail =>tb_BuyingRequisitionDetail.Notes).MaximumMixedLength(1000).WithMessage("备注:不能超过最大长度,1000.");
 
 
-           	        Initialize();
+           	  
      }
 
 

@@ -53,7 +53,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_AfterSaleDeliveryDetail =>tb_AS_AfterSaleDeliveryDetail.ASApplyDetailID).NotEmpty().When(x => x.ASApplyDetailID.HasValue);
 
-           	        Initialize();
+           	        
      }
 
 

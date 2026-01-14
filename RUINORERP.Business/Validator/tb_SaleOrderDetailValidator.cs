@@ -83,7 +83,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_SaleOrderDetail =>tb_SaleOrderDetail.SaleFlagCode).MaximumMixedLength(200).WithMessage("标识代码:不能超过最大长度,200.");
 
-           	        Initialize();
      }
 
 

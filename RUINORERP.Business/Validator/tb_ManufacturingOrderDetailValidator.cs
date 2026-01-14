@@ -79,7 +79,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ManufacturingOrderDetail =>tb_ManufacturingOrderDetail.Prelevel_BOM_ID).NotEmpty().When(x => x.Prelevel_BOM_ID.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

@@ -41,7 +41,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_Cities =>tb_Cities.CityENName).MaximumMixedLength(80).WithMessage("城市英文名:不能超过最大长度,80.");
 
-           	        Initialize();
+           	  
      }
 
 

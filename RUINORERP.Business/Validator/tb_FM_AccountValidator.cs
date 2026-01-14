@@ -56,7 +56,7 @@ namespace RUINORERP.Business
 
  RuleFor(x => x.CurrentBalance).PrecisionScale(19,4,true).WithMessage("当前余额:小数位不能超过4。");
 
-           	        Initialize();
+           	  
      }
 
 

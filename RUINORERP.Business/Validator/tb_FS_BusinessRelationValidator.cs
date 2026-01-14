@@ -57,7 +57,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	        Initialize();
+           	  
      }
 
 

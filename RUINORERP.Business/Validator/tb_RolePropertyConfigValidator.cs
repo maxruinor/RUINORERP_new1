@@ -61,7 +61,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_RolePropertyConfig =>tb_RolePropertyConfig.DataBoardUnits).MaximumMixedLength(500).WithMessage(":不能超过最大长度,500.");
 
-           	        Initialize();
      }
 
 

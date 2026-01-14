@@ -49,7 +49,6 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ProdCategories =>tb_ProdCategories.Notes).MaximumMixedLength(200).WithMessage("备注:不能超过最大长度,200.");
 
-           	        Initialize();
      }
 
 

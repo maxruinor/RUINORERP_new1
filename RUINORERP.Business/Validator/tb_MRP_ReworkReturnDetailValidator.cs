@@ -60,7 +60,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_MRP_ReworkReturnDetail =>tb_MRP_ReworkReturnDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
-           	        Initialize();
+           	  
      }
 
 

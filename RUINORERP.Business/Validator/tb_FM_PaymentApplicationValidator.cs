@@ -93,7 +93,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_FM_PaymentApplication =>tb_FM_PaymentApplication.CloseCaseOpinions).MaximumMixedLength(200).WithMessage("结案意见:不能超过最大长度,200.");
 
-           	        Initialize();
+           	  
      }
 
 

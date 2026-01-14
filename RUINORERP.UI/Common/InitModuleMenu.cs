@@ -193,7 +193,9 @@ namespace RUINORERP.UI.Common
                 }
 
                 // 处理顶级菜单的子菜单
+                // 只处理指定模块的顶级菜单
                 var topMenus = existModuleList
+                    .Where(m => modules != null && modules.Length > 0 && modules.Contains(m.ModuleName))
                     .SelectMany(m => m.tb_MenuInfos)
                     .Where(m => m.Parent_id == 0)
                     .ToList();
@@ -212,47 +214,44 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 初始化指定模块的导航菜单
+        /// 自动通过反射匹配模块定义类型,无需手动维护映射关系 代替： await InitNavMenuAsync<基础资料>(menuInfoparent, menulist);
         /// </summary>
         private async Task StartInitNavMenuAsync(tb_MenuInfo menuInfoparent, List<MenuAttrAssemblyInfo> menuAssemblyList, string modelName)
         {
             try
             {
                 var menulist = menuAssemblyList.Where(it => it.MenuPath.Split('|')[0] == modelName).ToList();
-                模块定义 module = (模块定义)Enum.Parse(typeof(模块定义), modelName);
-
-                switch (module)
+                
+                if (!Enum.TryParse<模块定义>(modelName, out var module))
                 {
-                    case 模块定义.生产管理:
-                        await InitNavMenuAsync<生产管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.进销存管理:
-                        await InitNavMenuAsync<进销存管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.售后管理:
-                        await InitNavMenuAsync<售后管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.客户关系:
-                        await InitNavMenuAsync<客户关系>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.财务管理:
-                        await InitNavMenuAsync<财务管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.行政管理:
-                        await InitNavMenuAsync<行政管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.报表管理:
-                        await InitNavMenuAsync<报表管理>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.基础资料:
-                        await InitNavMenuAsync<基础资料>(menuInfoparent, menulist);
-                        break;
-                    case 模块定义.系统设置:
-                        await InitNavMenuAsync<系统设置>(menuInfoparent, menulist);
-                        break;
-                    default:
-                        _logger.LogWarning($"未处理的模块类型: {modelName}");
-                        break;
+                    _logger.LogWarning($"未处理的模块类型: {modelName}");
+                    return;
                 }
+
+                // 通过反射查找ModuleMenuDefine中对应的嵌套枚举类型
+                var moduleMenuDefineType = typeof(ModuleMenuDefine);
+                var nestedType = moduleMenuDefineType.GetNestedType(modelName);
+                
+                if (nestedType == null)
+                {
+                    _logger.LogWarning($"未找到模块类型: {modelName}，请在ModuleMenuDefine中定义对应的枚举类型");
+                    return;
+                }
+
+                // 通过反射调用泛型方法 InitNavMenuAsync<T>
+                var initNavMenuMethod = typeof(InitModuleMenu).GetMethod(
+                    nameof(InitNavMenuAsync),
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                
+                if (initNavMenuMethod == null)
+                {
+                    _logger.LogError($"找不到方法: {nameof(InitNavMenuAsync)}");
+                    return;
+                }
+
+                // 构造泛型方法并调用
+                var genericMethod = initNavMenuMethod.MakeGenericMethod(nestedType);
+                await (Task)genericMethod.Invoke(this, new object[] { menuInfoparent, menulist });
             }
             catch (Exception ex)
             {
@@ -717,7 +716,6 @@ namespace RUINORERP.UI.Common
             {
                 if (_modelTypes == null || _modelTypes.Length == 0)
                 {
-                    _logger.LogWarning("模型类型集合为空，无法初始化字段信息");
                     return;
                 }
 

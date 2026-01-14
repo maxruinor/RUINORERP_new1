@@ -74,7 +74,6 @@ namespace RUINORERP.Business
  RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("优惠金额:小数位不能超过4。");
 
 
-           	        Initialize();
      }
 
 

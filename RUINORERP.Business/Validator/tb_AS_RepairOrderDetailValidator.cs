@@ -52,7 +52,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_AS_RepairOrderDetail =>tb_AS_RepairOrderDetail.Summary).MaximumMixedLength(1000).WithMessage("摘要:不能超过最大长度,1000.");
 
-           	        Initialize();
+          
      }
 
 

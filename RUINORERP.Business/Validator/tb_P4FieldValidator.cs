@@ -49,7 +49,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_P4Field =>tb_P4Field.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
-           	        Initialize();
+           	  
      }
 
 

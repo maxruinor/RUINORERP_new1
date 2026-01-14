@@ -18,6 +18,8 @@ using SHControls.DataGrid;
 using SqlSugar;
 using System.Linq.Dynamic.Core;
 using System.Collections.Concurrent;
+using System.Threading;
+using System.Reflection;
 
 
 
@@ -130,9 +132,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (OnSelectDataRow != null && bindingSource.Current != null)
                 {
-                    OnSelectDataRow(bindingSource.Current);
+                    TriggerOnSelectDataRowWithDebounce(bindingSource.Current);
                 }
-
             }
         }
 
@@ -147,12 +148,123 @@ namespace RUINORERP.UI.BaseForm
             newSumDataGridViewMaster.SumColumns = SummaryCols.ToArray();
         }
 
+        /// <summary>
+        /// 带防抖机制的触发OnSelectDataRow事件
+        /// 避免短时间内多次触发导致重复加载数据
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void TriggerOnSelectDataRowWithDebounce(object entity)
+        {
+            if (entity == null)
+            {
+                return;
+            }
+
+            // 获取实体的唯一标识
+            var entityHash = GetEntityHash(entity);
+
+            // 使用锁确保线程安全
+            lock (_onSelectDataRowLock)
+            {
+                // 如果与上次选中的实体相同，直接返回
+                if (entityHash != null && entityHash.Equals(_lastSelectedEntityHash))
+                {
+                    return;
+                }
+
+                // 更新上次选中的实体标识
+                _lastSelectedEntityHash = entityHash;
+
+                // 取消之前的防抖任务（如果有）
+                _onSelectDataRowDebounceTokenSource?.Cancel();
+                _onSelectDataRowDebounceTokenSource = new CancellationTokenSource();
+            }
+
+            // 异步执行防抖逻辑
+            Task.Run(async () =>
+            {
+                try
+                {
+                    // 防抖延迟50毫秒，避免短时间内多次触发
+                    await Task.Delay(50, _onSelectDataRowDebounceTokenSource.Token);
+
+                    // 在UI线程中触发事件
+                    if (!_onSelectDataRowDebounceTokenSource.Token.IsCancellationRequested && OnSelectDataRow != null)
+                    {
+                        if (newSumDataGridViewMaster.InvokeRequired)
+                        {
+                            newSumDataGridViewMaster.Invoke(new Action(() => OnSelectDataRow(entity)));
+                        }
+                        else
+                        {
+                            OnSelectDataRow(entity);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // 任务被取消，正常情况，不处理
+                }
+                catch (Exception ex)
+                {
+                    // 记录异常，但不影响主流程
+                    System.Diagnostics.Debug.WriteLine($"触发OnSelectDataRow事件时发生异常: {ex.Message}");
+                }
+            });
+        }
+
+        /// <summary>
+        /// 获取实体的唯一哈希值，用于判断是否切换了数据行
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>实体哈希值</returns>
+        private object GetEntityHash(object entity)
+        {
+            if (entity == null)
+            {
+                return null;
+            }
+
+            // 尝试获取主键属性的值作为唯一标识
+            var pkProperty = entity.GetType().GetProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<System.ComponentModel.DataAnnotations.KeyAttribute>() != null ||
+                                   p.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+                                   p.Name.Equals(entity.GetType().Name + "ID", StringComparison.OrdinalIgnoreCase));
+
+            if (pkProperty != null)
+            {
+                var pkValue = pkProperty.GetValue(entity);
+                return pkValue;
+            }
+
+            // 如果没有找到主键属性，返回实体的HashCode
+            return entity.GetHashCode();
+        }
+
 
 
         public delegate void SelectDataRowHandler(object entity, object bizKey = null);
 
+        /// <summary>
+        /// 双击将数据载入到明细外部事件
+        /// </summary>
         [Browsable(true), Description("双击将数据载入到明细外部事件")]
         public event SelectDataRowHandler OnSelectDataRow;
+
+        /// <summary>
+        /// 防抖用的CancellationTokenSource，用于避免短时间内多次触发数据加载
+        /// </summary>
+        private CancellationTokenSource _onSelectDataRowDebounceTokenSource;
+
+        /// <summary>
+        /// 上次选中的实体标识，用于判断是否真的切换了数据行
+        /// </summary>
+        private object _lastSelectedEntityHash;
+
+        /// <summary>
+        /// 用于同步的锁对象
+        /// </summary>
+        private readonly object _onSelectDataRowLock = new object();
 
         private void bindingSourceMaster_PositionChanged(object sender, EventArgs e)
         {
@@ -164,9 +276,9 @@ namespace RUINORERP.UI.BaseForm
 
         private void newSumDataGridViewMaster_DataSourceChanged(object sender, EventArgs e)
         {
-            if (OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
+            if (OnSelectDataRow != null && bindingSourceMaster.Current != null)
             {
-                OnSelectDataRow(bindingSourceMaster.Current);
+                TriggerOnSelectDataRowWithDebounce(bindingSourceMaster.Current);
             }
         }
 
@@ -194,10 +306,9 @@ namespace RUINORERP.UI.BaseForm
 
             }
             //如果结果就一条。就同时显示到子表。因为多行切换才触发位置改变 这行不能去掉
-            if (newSumDataGridViewMaster.RowCount == 1 && OnSelectDataRow != null && newSumDataGridViewMaster.CurrentRow != null)
+            if (newSumDataGridViewMaster.RowCount == 1 && OnSelectDataRow != null && bindingSourceMaster.Current != null)
             {
-                OnSelectDataRow(bindingSourceMaster.Current);
-
+                TriggerOnSelectDataRowWithDebounce(bindingSourceMaster.Current);
                 return;
             }
         }

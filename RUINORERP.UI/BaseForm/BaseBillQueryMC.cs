@@ -101,6 +101,16 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public QueryFilter QueryConditionFilter { get => _QueryConditionFilter; set => _QueryConditionFilter = value; }
 
+        /// <summary>
+        /// 防抖用的CancellationTokenSource，用于避免短时间内多次触发数据加载
+        /// </summary>
+        private CancellationTokenSource _selectDataDebounceTokenSource;
+
+        /// <summary>
+        /// 上次选择的实体标识，用于判断是否真的切换了数据行
+        /// </summary>
+        private object _lastSelectedEntityHash;
+
 
         /// <summary>
         /// 传入的是M,即主表类型的实体数据 
@@ -2974,84 +2984,218 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        /// <summary>
+        /// 主表选择数据行事件处理（带防抖机制）
+        /// </summary>
+        /// <param name="entity">选中的实体对象</param>
+        /// <param name="bizKey">业务键</param>
         private async void _UCBillMasterQuery_OnSelectDataRow(object entity, object bizKey)
         {
-            if (_UCBillChildQuery == null)
+            // 参数验证
+            if (_UCBillChildQuery == null || entity == null)
             {
                 return;
             }
 
+            // 获取实体的唯一标识（使用属性值组合作为哈希）
+            var entityHash = GetEntityHash(entity);
+
+            // 如果与上次选中的实体相同，直接返回，避免重复加载
+            if (entityHash.Equals(_lastSelectedEntityHash))
+            {
+                return;
+            }
+
+            // 更新上次选中的实体标识
+            _lastSelectedEntityHash = entityHash;
+
+            // 取消之前的防抖任务（如果有）
+            _selectDataDebounceTokenSource?.Cancel();
+            _selectDataDebounceTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                // 防抖延迟100毫秒，避免短时间内多次触发
+                await Task.Delay(100, _selectDataDebounceTokenSource.Token);
+
+                // 执行实际的数据加载逻辑
+                await LoadChildDataAsync(entity);
+            }
+            catch (OperationCanceledException)
+            {
+                // 任务被取消，正常情况，不处理
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "加载子表数据时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 获取实体的唯一哈希值，用于判断是否切换了数据行
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>实体哈希值</returns>
+        private object GetEntityHash(object entity)
+        {
             if (entity == null)
             {
+                return null;
+            }
+
+            // 尝试获取主键属性的值作为唯一标识
+            var pkProperty = entity.GetType().GetProperties()
+                .FirstOrDefault(p => p.GetCustomAttribute<System.ComponentModel.DataAnnotations.KeyAttribute>() != null ||
+                                   p.Name.Equals("ID", StringComparison.OrdinalIgnoreCase) ||
+                                   p.Name.Equals(entity.GetType().Name + "ID", StringComparison.OrdinalIgnoreCase));
+
+            if (pkProperty != null)
+            {
+                return pkProperty.GetValue(entity);
+            }
+
+            // 如果没有找到主键属性，返回实体的HashCode
+            return entity.GetHashCode();
+        }
+
+        /// <summary>
+        /// 异步加载子表数据
+        /// </summary>
+        /// <param name="entity">主表实体对象</param>
+        private async Task LoadChildDataAsync(object entity)
+        {
+            var obj = entity as M;
+            if (obj == null)
+            {
                 return;
             }
-            var obj = (entity as M);
+
+            // 尝试从主表实体中直接获取子表集合
             List<C> list = RUINORERP.Common.Helper.ReflectionHelper.GetPropertyValue(obj, typeof(C).Name + "s") as List<C>;
+
             if (list == null)
             {
-                //M主为视图C子为表时
+                // 主表为视图，子表为表的情况 - 需要查询数据库
                 if (typeof(M).Name.Contains("View"))
                 {
-                    string ChildFKColName = string.Empty;
-                    string MasterPKColName = string.Empty;
-                    foreach (var field in typeof(C).GetProperties())
-                    {
-                        //获取指定类型的自定义特性
-                        object[] attrs = field.GetCustomAttributes(false);
-                        foreach (var attr in attrs)
-                        {
-                            if (attr is FKRelationAttribute)
-                            {
-                                FKRelationAttribute fkrattr = attr as FKRelationAttribute;
-                                if (fkrattr.FKTableName == typeof(C).Name.Replace("Detail", ""))
-                                {
-                                    ChildFKColName = field.Name;
-                                    MasterPKColName = fkrattr.FK_IDColName;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    string pkid = obj.GetType().GetProperty(MasterPKColName).GetValue(obj).ToString();
-
-                    //设置动态表达式
-                    StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
-
-                    //子表都是通过主表的主键关联的。与单号无关
-                    BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
-
-                    var conModels = new List<IConditionalModel>();
-                    conModels.Add(new ConditionalModel
-                    {
-                        FieldName = ChildFKColName,
-                        ConditionalType = ConditionalType.Equal,
-                        FieldValue = pkid
-                    });
-
-                    var queryable = ctrDetail.BaseGetQueryable();
-                    var listDeatails = await queryable.Where(conModels).ToListAsync();
-                    if (listDeatails != null)
-                    {
-                        _UCBillChildQuery.bindingSourceChild.DataSource = listDeatails;
-                        _UCBillChildQuery.newSumDataGridViewChild.DataSource = listDeatails;
-                        ShowChildSum();
-                    }
+                    await LoadChildDataFromDatabaseAsync(obj);
                 }
             }
             else
             {
-                _UCBillChildQuery.bindingSourceChild.DataSource = list.ToBindingSortCollection();
-                _UCBillChildQuery.newSumDataGridViewChild.DataSource = list.ToBindingSortCollection();
-                ShowChildSum();
+                // 直接使用主表实体中的子表集合
+                await LoadChildDataFromMemoryAsync(list);
             }
 
-            //相关引用单据明细
+            // 触发相关引用单据明细查询（已注释，保留原逻辑）
             //if (OnQueryRelatedChild != null)
             //{
             //    OnQueryRelatedChild(entity, _UCBillChildQuery_Related.bindingSourceChild);
             //}
-
         }
+
+        /// <summary>
+        /// 从内存中加载子表数据（主表实体已包含子表集合）
+        /// </summary>
+        /// <param name="list">子表数据集合</param>
+        private Task LoadChildDataFromMemoryAsync(List<C> list)
+        {
+            if (list == null)
+            {
+                return Task.CompletedTask;
+            }
+
+            _UCBillChildQuery.bindingSourceChild.DataSource = list.ToBindingSortCollection();
+            _UCBillChildQuery.newSumDataGridViewChild.DataSource = list.ToBindingSortCollection();
+            ShowChildSum();
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 从数据库加载子表数据（主表为视图，子表为表）
+        /// </summary>
+        /// <param name="masterEntity">主表实体对象</param>
+        private async Task LoadChildDataFromDatabaseAsync(M masterEntity)
+        {
+            string ChildFKColName = string.Empty;
+            string MasterPKColName = string.Empty;
+
+            // 通过反射查找外键关系
+            foreach (var field in typeof(C).GetProperties())
+            {
+                object[] attrs = field.GetCustomAttributes(false);
+                foreach (var attr in attrs)
+                {
+                    if (attr is FKRelationAttribute fkrattr)
+                    {
+                        if (fkrattr.FKTableName == typeof(C).Name.Replace("Detail", ""))
+                        {
+                            ChildFKColName = field.Name;
+                            MasterPKColName = fkrattr.FK_IDColName;
+                            break;
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(ChildFKColName))
+                {
+                    break;
+                }
+            }
+
+            // 获取主表主键值
+            object pkid = masterEntity.GetType().GetProperty(MasterPKColName)?.GetValue(masterEntity);
+            if (pkid == null)
+            {
+                MainForm.Instance?.logger?.LogWarning("主表主键 {MasterPKColName} 的值为空，无法查询子表数据", MasterPKColName);
+                return;
+            }
+
+            // 设置动态表达式
+            StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
+
+            // 获取子表控制器
+            BaseController<C> ctrDetail = Startup.GetFromFacByName<BaseController<C>>(typeof(C).Name + "Controller");
+
+            // 构建查询条件
+            var conModels = new List<IConditionalModel>
+            {
+                new ConditionalModel
+                {
+                    FieldName = ChildFKColName,
+                    ConditionalType = ConditionalType.Equal,
+                    FieldValue = pkid.ToString()
+                }
+            };
+
+            // 使用CopyNew()创建新的数据库连接，避免连接复用问题
+            List<C> listDetails = null;
+            try
+            {
+                listDetails = await MainForm.Instance.AppContext.Db
+                    .CopyNew()
+                    .Queryable<C>()
+                    .Where(conModels)
+                    .WithCache(10)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "查询子表数据时发生错误，字段: {FieldName}, 值: {FieldValue}", ChildFKColName, pkid);
+                throw;
+            }
+
+            // 绑定子表数据
+            if (listDetails != null && listDetails.Count > 0)
+            {
+                _UCBillChildQuery.bindingSourceChild.DataSource = listDetails;
+                _UCBillChildQuery.newSumDataGridViewChild.DataSource = listDetails;
+                ShowChildSum();
+            }
+        }
+
+        
 
         public void ShowChildSum()
         {

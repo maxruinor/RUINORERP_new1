@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.UI;
 using System.Windows.Forms;
 using Winista.Text.HtmlParser.Lex;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
@@ -66,7 +67,7 @@ namespace RUINORERP.UI.BI
                 chk创建角色属性.Checked = true;
                 //如果添加了就不能删除
                 chk创建角色属性.Enabled = false;
-                //BindDataForProperty(roleinfo.tb_rolepropertyconfig);
+                BindDataForProperty(roleinfo.tb_rolepropertyconfig);
             }
             else
             {
@@ -103,6 +104,15 @@ namespace RUINORERP.UI.BI
                     roleinfo.tb_rolepropertyconfig = null;
                     roleinfo.RolePropertyID = null;
                 }
+
+                if (roleinfo.tb_rolepropertyconfig != null)
+                {
+                    if (roleinfo.tb_rolepropertyconfig.RolePropertyID == 0)
+                    {
+                        //roleinfo.RolePropertyID=
+                    }
+                }
+
                 bindingSourceEdit.EndEdit();
                 this.DialogResult = DialogResult.OK;
                 this.Close();
@@ -142,6 +152,7 @@ namespace RUINORERP.UI.BI
             //DataBindingHelper.InitDataToCmbChkWithCondition<tb_RolePropertyConfig>(propertyConfig, t => t.DataBoardUnits, chkDataBoardUnits, BindDataType4TextBox.Text, false);
             #region chkDataBoardUnits 绑定
             chkDataBoardUnits.Items.Clear();
+            chkDataBoardUnits.DataBindings.Clear();
             Array enumValues = Enum.GetValues(typeof(DataBoardUnit));
             IEnumerator e = enumValues.GetEnumerator();
             e.Reset();
@@ -164,6 +175,7 @@ namespace RUINORERP.UI.BI
             {
                 args.Value = args.Value == null ? new List<object>() : args.Value;
             };
+ 
             chkDataBoardUnits.DataBindings.Add(depa);
             #endregion
 
@@ -180,7 +192,7 @@ namespace RUINORERP.UI.BI
 
         }
 
-    
+
     }
 }
 

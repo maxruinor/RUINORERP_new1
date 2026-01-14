@@ -56,7 +56,6 @@ namespace RUINORERP.Business.Processor
              .ToExpression();//注意 这一句 不能少
             queryFilter.SetQueryField<View_MaterialReturnItems, tb_CustomerVendor>(c => c.CustomerVendor_ID, lambdacv);
             queryFilter.SetQueryField<View_MaterialReturnItems>(c => c.Employee_ID, typeof(tb_Employee));
-            queryFilter.SetQueryField<View_MaterialReturnItems>(c => c.Location_ID, typeof(tb_Location));
             queryFilter.SetQueryField<View_MaterialReturnItems>(c => c.ProdDetailID, typeof(View_ProdDetail));
             queryFilter.SetQueryField<View_MaterialReturnItems>(c => c.property);
             queryFilter.SetQueryField<View_MaterialReturnItems>(c => c.CNName);

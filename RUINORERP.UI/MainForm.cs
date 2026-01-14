@@ -546,8 +546,12 @@ namespace RUINORERP.UI
             }
             if (kryptonDockableWorkspace1.ActivePage != null && kryptonDockableWorkspace1.ActivePage.UniqueName == e.UniqueName)
             {
-                var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
-                tabCloseHandler.ProcessControlOnClose(control);
+                if (kryptonDockableWorkspace1.ActivePage.Controls.Count > 0)
+                {
+                    var control = kryptonDockableWorkspace1.ActivePage.Controls[0];
+                    tabCloseHandler.ProcessControlOnClose(control);
+                }
+
                 return;
 
 

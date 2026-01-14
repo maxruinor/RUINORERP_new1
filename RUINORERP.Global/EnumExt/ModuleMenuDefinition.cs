@@ -51,7 +51,6 @@ namespace RUINORERP.Model
         {
             售后流程,
             维修中心,
-            资产处置,
             提前交付,
         }
 
@@ -85,7 +84,7 @@ namespace RUINORERP.Model
             费用报销,
             固定资产,
             发票管理,
-            账务处理 ///如凭证、总账、结账等）
+            账务处理 ///如凭证、总账、结账，资产处理 等）
         }
 
         public enum 行政管理

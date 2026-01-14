@@ -65,20 +65,7 @@ namespace RUINORERP.Model
             get{return _BillType;}            set{                SetProperty(ref _BillType, value);                }
         }
 
-        private long? _Location_ID;
-        
-        
-        /// <summary>
-        /// 库位
-        /// </summary>
-
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "库位")]
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" ,IsNullable = true,ColumnDescription = "库位" )]
-        [Display(Name = "库位")]
-        public long? Location_ID 
-        { 
-            get{return _Location_ID;}            set{                SetProperty(ref _Location_ID, value);                }
-        }
+  
 
         private long? _Employee_ID;
         

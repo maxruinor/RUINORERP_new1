@@ -92,20 +92,7 @@ namespace RUINORERP.Model
             SetProperty(ref _DeliveryDate, value);
                         }
         }
-
-        private long? _Location_ID;
-        /// <summary>
-        /// 经办人
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Location_ID",ColDesc = "经办人")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Location_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "经办人" )]
-        public long? Location_ID
-        { 
-            get{return _Location_ID;}
-            set{
-            SetProperty(ref _Location_ID, value);
-                        }
-        }
+ 
 
         private long _Employee_ID;
         /// <summary>

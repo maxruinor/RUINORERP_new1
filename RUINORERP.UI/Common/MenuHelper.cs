@@ -513,6 +513,12 @@ namespace RUINORERP.UI.Common
                             cell.Pages.Add(page);
                         }
 
+                        if (page.Controls.Count == 0)
+                        {
+                            MainForm.Instance.ShowStatusText($"{pr.CaptionCN}无访问权限，请联系管理员!");
+                            MainForm.Instance.logger.LogError($"{pr.CaptionCN}是公共菜单，请管理设置！");
+                            return;
+                        }
 
                         //传实体进去,具体在窗体那边判断    单据实体数据传入加载用
                         if (page.Controls[0] is BaseBillEdit billEdit)
@@ -745,11 +751,12 @@ namespace RUINORERP.UI.Common
             p.TextTitle = name;
             //  p.TextDescription = name + _count.ToString();
             //  p.ImageSmall = imageListSmall.Images[image];
-
-            // Add the control for display inside the page
-            content.Dock = DockStyle.Fill;
-            p.Controls.Add(content);
-
+            if (content != null)
+            {
+                // Add the control for display inside the page
+                content.Dock = DockStyle.Fill;
+                p.Controls.Add(content);
+            }
             //  _count++;
             return p;
         }

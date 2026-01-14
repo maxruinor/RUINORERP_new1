@@ -41,7 +41,6 @@ namespace RUINORERP.Business
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.MONO).NotEmpty().WithMessage("制令单号:不能为空。");
 
 
- RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
 
  RuleFor(tb_MaterialRequisition =>tb_MaterialRequisition.Employee_ID).Must(CheckForeignKeyValue).WithMessage("经办人:下拉选择值不正确。");
 

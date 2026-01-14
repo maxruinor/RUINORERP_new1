@@ -2036,7 +2036,7 @@ namespace RUINORERP.UI.BaseForm
 
         string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
         /// <summary>
-        /// 控制功能按钮
+        /// 控制功能按钮1
         /// </summary>
         /// <param name="p_Text"></param>
         protected async override void DoButtonClick(MenuItemEnums menuItem)

@@ -20,7 +20,7 @@ using RUINORERP.Business;
 namespace RUINORERP.UI.BI
 {
 
-    [MenuAttrAssemblyInfo("属性管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.仓库资料)]
+    [MenuAttrAssemblyInfo("属性管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCPropertyList : BaseForm.BaseListGeneric<tb_ProdProperty>
     {
         public UCPropertyList()

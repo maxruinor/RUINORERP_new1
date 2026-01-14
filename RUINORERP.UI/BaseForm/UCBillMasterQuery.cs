@@ -163,6 +163,9 @@ namespace RUINORERP.UI.BaseForm
             // 获取实体的唯一标识
             var entityHash = GetEntityHash(entity);
 
+            var currentTime = DateTime.Now;
+            var shouldTrigger = false;
+
             // 使用锁确保线程安全
             lock (_onSelectDataRowLock)
             {
@@ -172,45 +175,26 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 更新上次选中的实体标识
-                _lastSelectedEntityHash = entityHash;
+                // 检查时间间隔，实现防抖
+                var timeSinceLastTrigger = (currentTime - _lastTriggerTime).TotalMilliseconds;
+                if (timeSinceLastTrigger < DEBOUNCE_INTERVAL_MS)
+                {
+                    // 时间间隔不够，更新时间但暂不触发
+                    _lastTriggerTime = currentTime;
+                    return;
+                }
 
-                // 取消之前的防抖任务（如果有）
-                _onSelectDataRowDebounceTokenSource?.Cancel();
-                _onSelectDataRowDebounceTokenSource = new CancellationTokenSource();
+                // 更新上次选中的实体标识和触发时间
+                _lastSelectedEntityHash = entityHash;
+                _lastTriggerTime = currentTime;
+                shouldTrigger = true;
             }
 
-            // 异步执行防抖逻辑
-            Task.Run(async () =>
+            // 触发事件（在锁外执行，避免死锁）
+            if (shouldTrigger && OnSelectDataRow != null)
             {
-                try
-                {
-                    // 防抖延迟50毫秒，避免短时间内多次触发
-                    await Task.Delay(50, _onSelectDataRowDebounceTokenSource.Token);
-
-                    // 在UI线程中触发事件
-                    if (!_onSelectDataRowDebounceTokenSource.Token.IsCancellationRequested && OnSelectDataRow != null)
-                    {
-                        if (newSumDataGridViewMaster.InvokeRequired)
-                        {
-                            newSumDataGridViewMaster.Invoke(new Action(() => OnSelectDataRow(entity)));
-                        }
-                        else
-                        {
-                            OnSelectDataRow(entity);
-                        }
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                    // 任务被取消，正常情况，不处理
-                }
-                catch (Exception ex)
-                {
-                    // 记录异常，但不影响主流程
-                    System.Diagnostics.Debug.WriteLine($"触发OnSelectDataRow事件时发生异常: {ex.Message}");
-                }
-            });
+                OnSelectDataRow(entity);
+            }
         }
 
         /// <summary>
@@ -252,9 +236,9 @@ namespace RUINORERP.UI.BaseForm
         public event SelectDataRowHandler OnSelectDataRow;
 
         /// <summary>
-        /// 防抖用的CancellationTokenSource，用于避免短时间内多次触发数据加载
+        /// 上次触发时间，用于防抖判断
         /// </summary>
-        private CancellationTokenSource _onSelectDataRowDebounceTokenSource;
+        private DateTime _lastTriggerTime = DateTime.MinValue;
 
         /// <summary>
         /// 上次选中的实体标识，用于判断是否真的切换了数据行
@@ -265,6 +249,11 @@ namespace RUINORERP.UI.BaseForm
         /// 用于同步的锁对象
         /// </summary>
         private readonly object _onSelectDataRowLock = new object();
+
+        /// <summary>
+        /// 防抖时间间隔（毫秒）
+        /// </summary>
+        private const int DEBOUNCE_INTERVAL_MS = 100;
 
         private void bindingSourceMaster_PositionChanged(object sender, EventArgs e)
         {

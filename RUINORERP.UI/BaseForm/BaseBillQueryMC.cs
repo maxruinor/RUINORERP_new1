@@ -25,6 +25,7 @@ using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BusinessService;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FormProperty;
 using RUINORERP.UI.HelpSystem;
@@ -72,6 +73,50 @@ namespace RUINORERP.UI.BaseForm
         /// 工作台任务列表管理器
         /// </summary>
         protected TodoListManager TodoListManager { get; set; }
+
+        /// <summary>
+        /// 防重复操作服务实例
+        /// </summary>
+        private RepeatOperationGuardService _guardService;
+
+        #region 防抖机制相关字段
+
+        /// <summary>
+        /// 用于同步的锁对象
+        /// </summary>
+        private readonly object _buttonDebounceLock = new object();
+
+        /// <summary>
+        /// 按钮防抖缓存字典，记录每个按钮最后触发时间和禁用状态
+        /// </summary>
+        private readonly Dictionary<string, DateTime> _buttonDebounceCache = new Dictionary<string, DateTime>();
+
+        /// <summary>
+        /// 按钮禁用状态字典，记录操作执行期间禁用的按钮
+        /// </summary>
+        private readonly Dictionary<string, bool> _buttonDisabledState = new Dictionary<string, bool>();
+
+        /// <summary>
+        /// 上次触发的操作类型，用于判断是否为重复操作
+        /// </summary>
+        private MenuItemEnums? _lastTriggeredAction = null;
+
+        /// <summary>
+        /// 上次操作触发的实体ID，用于判断是否为同一实体的重复操作
+        /// </summary>
+        private long? _lastOperationEntityId = null;
+
+        /// <summary>
+        /// 上次操作触发时间
+        /// </summary>
+        private DateTime _lastOperationTime = DateTime.MinValue;
+
+        /// <summary>
+        /// 按钮防抖时间间隔（毫秒）
+        /// </summary>
+        private const int BUTTON_DEBOUNCE_INTERVAL_MS = 500;
+
+        #endregion
 
         public virtual List<ContextMenuController> AddContextMenu()
         {
@@ -362,30 +407,140 @@ namespace RUINORERP.UI.BaseForm
             MainForm.Instance.AppContext.log.ActionName = sender.ToString();
             await DoButtonClick(RUINORERP.Common.Helper.EnumHelper.GetEnumByString<MenuItemEnums>(sender.ToString()));
         }
+
+
+        /// <summary>
+        /// 禁用指定按钮（操作执行期间）
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <param name="showStatusText">是否在状态栏显示提示</param>
+        private void DisableButtonForOperation(string buttonName, bool showStatusText = true)
+        {
+            lock (_buttonDebounceLock)
+            {
+                var button = FindToolStripButtonByName(buttonName);
+                if (button != null)
+                {
+                    button.Enabled = false;
+                    _buttonDisabledState[buttonName] = true;
+
+                    if (showStatusText)
+                    {
+                        MainForm.Instance?.ShowStatusText($"正在执行操作：{buttonName}，请稍候...");
+                    }
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// 启用指定按钮（操作完成后）
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <param name="updateByState">是否根据状态管理系统更新按钮状态</param>
+        private void EnableButtonAfterOperation(string buttonName, bool updateByState = true)
+        {
+            lock (_buttonDebounceLock)
+            {
+                var button = FindToolStripButtonByName(buttonName);
+                if (button != null)
+                {
+                    // 对于查询基类，直接恢复按钮为启用状态
+                    if (_buttonDisabledState.ContainsKey(buttonName))
+                    {
+                        _buttonDisabledState[buttonName] = false;
+                    }
+
+                    button.Enabled = true;
+
+                    MainForm.Instance?.ShowStatusText(string.Empty);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 启用所有按钮（操作完成后）
+        /// </summary>
+        /// <param name="updateByState">是否根据状态管理系统更新按钮状态</param>
+        private void EnableAllButtonsAfterOperation(bool updateByState = true)
+        {
+            lock (_buttonDebounceLock)
+            {
+                foreach (var buttonName in _buttonDisabledState.Keys.ToList())
+                {
+                    EnableButtonAfterOperation(buttonName, updateByState);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清除按钮防抖缓存
+        /// </summary>
+        private void ClearButtonDebounceCache()
+        {
+            lock (_buttonDebounceLock)
+            {
+                _buttonDebounceCache.Clear();
+                _buttonDisabledState.Clear();
+                _lastTriggeredAction = null;
+                _lastOperationEntityId = null;
+                _lastOperationTime = DateTime.MinValue;
+            }
+        }
+
+        /// <summary>
+        /// 根据按钮名称查找ToolStrip按钮
+        /// </summary>
+        /// <param name="buttonName">按钮名称</param>
+        /// <returns>找到的按钮，未找到返回null</returns>
+        private ToolStripItem FindToolStripButtonByName(string buttonName)
+        {
+            if (string.IsNullOrEmpty(buttonName) || BaseToolStrip?.Items == null)
+                return null;
+
+            foreach (ToolStripItem item in BaseToolStrip.Items)
+            {
+                if (string.Equals(item.Text, buttonName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(item.Name, buttonName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
         protected virtual async Task DoButtonClick(MenuItemEnums menuItem)
         {
+            // 初始化防重复操作服务（延迟初始化，避免设计时错误）
+            if (_guardService == null)
+            {
+                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
+            }
+
+            string pkCol = BaseUIHelper.GetEntityPrimaryKey<M>();
+            // 防重复操作检查 - 使用当前类名作为操作源
+            // 获取当前选中的实体ID
+            var selectedEntities = GetSelectResult();
+            long currentEntityId = selectedEntities?.FirstOrDefault()?.GetPropertyValue(pkCol).ToLong() ?? 0;
+            if (_guardService.ShouldBlockOperation(menuItem, this.GetType().Name, currentEntityId, showStatusMessage: true))
+            {
+                return;
+            }
+
+            // 记录操作
+            _guardService.RecordOperation(menuItem, this.GetType().Name, currentEntityId);
+
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
-                /*
-                tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.Where(c => c.MenuType == "行为菜单").Where(c => c.FormName == this.Name).FirstOrDefault();
-                if (menuInfo == null)
-                {
-                    MessageBox.Show($"没有使用【{menuInfo.MenuName}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                List<tb_ButtonInfo> btnList = MainForm.Instance.AppContext.CurUserInfo.UserButtonList.Where(c => c.MenuID == menuInfo.MenuID).ToList();
-                if (!btnList.Where(b => b.BtnText == menuItem.ToString()).Any())
-                {
-                    MessageBox.Show($"没有使用【{menuItem.ToString()}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }*/
+
             }
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
@@ -394,8 +549,16 @@ namespace RUINORERP.UI.BaseForm
             {
 
                 case MenuItemEnums.查询:
-                    Query(QueryDtoProxy);
-                    toolStripSplitButtonPrint.Enabled = true;
+                    DisableButtonForOperation("查询");
+                    try
+                    {
+                        Query(QueryDtoProxy);
+                        toolStripSplitButtonPrint.Enabled = true;
+                    }
+                    finally
+                    {
+                        EnableButtonAfterOperation("查询");
+                    }
                     break;
                 case MenuItemEnums.复制性新增:
                     if (selectlist.Count == 0)
@@ -408,9 +571,17 @@ namespace RUINORERP.UI.BaseForm
                     await Exit(this);
                     break;
                 case MenuItemEnums.提交:
-                    Submit();
-                    // 添加同步代码
-                    await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
+                    DisableButtonForOperation("提交");
+                    try
+                    {
+                        Submit();
+                        // 添加同步代码
+                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
+                    }
+                    finally
+                    {
+                        EnableButtonAfterOperation("提交");
+                    }
                     break;
                 case MenuItemEnums.属性:
                     Property();
@@ -419,31 +590,55 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        ApprovalEntity ae = await Review(selectlist);
-                        // 添加同步代码
-                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
+                        DisableButtonForOperation("审核");
+                        try
+                        {
+                            ApprovalEntity ae = await Review(selectlist);
+                            // 添加同步代码
+                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
+                        }
+                        finally
+                        {
+                            EnableButtonAfterOperation("审核");
+                        }
                     }
 
                     break;
                 case MenuItemEnums.反审:
                     if (selectlist.Count > 0)
                     {
-                        //只操作批一行
-                        ApprovalEntity ae = await ReReview(selectlist[0]);
-                        // 添加同步代码
-                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已反审");
+                        DisableButtonForOperation("反审");
+                        try
+                        {
+                            //只操作批一行
+                            ApprovalEntity ae = await ReReview(selectlist[0]);
+                            // 添加同步代码
+                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已反审");
+                        }
+                        finally
+                        {
+                            EnableButtonAfterOperation("反审");
+                        }
                     }
                     break;
                 case MenuItemEnums.结案:
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        bool rs = await CloseCase(selectlist);
-                        if (rs)
+                        DisableButtonForOperation("结案");
+                        try
                         {
-                            // 添加同步代码
-                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已结案");
-                            await MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
+                            bool rs = await CloseCase(selectlist);
+                            if (rs)
+                            {
+                                // 添加同步代码
+                                await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已结案");
+                                await MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("结案", selectlist[0], $"结案意见:{rs}");
+                            }
+                        }
+                        finally
+                        {
+                            EnableButtonAfterOperation("结案");
                         }
                     }
                     break;
@@ -478,9 +673,17 @@ namespace RUINORERP.UI.BaseForm
                     await Print(RptMode.DESIGN);
                     break;
                 case MenuItemEnums.删除:
-                    Delete(selectlist);
-                    // 添加同步代码
-                    await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.Deleted, "单据已删除");
+                    DisableButtonForOperation("删除");
+                    try
+                    {
+                        Delete(selectlist);
+                        // 添加同步代码
+                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.Deleted, "单据已删除");
+                    }
+                    finally
+                    {
+                        EnableButtonAfterOperation("删除");
+                    }
                     break;
                 case MenuItemEnums.导出:
                     UIExcelHelper.ExportExcel(_UCBillMasterQuery.newSumDataGridViewMaster);
@@ -3215,7 +3418,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        
+
 
         public void ShowChildSum()
         {

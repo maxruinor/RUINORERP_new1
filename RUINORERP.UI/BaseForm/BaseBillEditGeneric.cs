@@ -3529,7 +3529,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        private Business.BizMapperService.IEntityMappingService _entityInfoService;
+        private IEntityMappingService _entityInfoService;
 
 
         /// <summary>
@@ -3592,7 +3592,7 @@ namespace RUINORERP.UI.BaseForm
             var statusType = EditEntity.StateManager.GetStatusType(EditEntity);
             if (statusType == typeof(DataStatus))
             {
-                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
+                BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>();
                 if (entityInfo != null)
                 {
                     ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();
@@ -3603,7 +3603,7 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
-                Business.BizMapperService.BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
+               BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
                 if (entityInfo != null)
                 {
                     ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();

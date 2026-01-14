@@ -892,6 +892,7 @@
     <Compile Include="BusinessService\CalculationService\PurEntryCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SaleOutCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SourceGridCoordinator.cs" />
+    <Compile Include="BusinessService\RepeatOperationGuardService.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuTracker.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuUseInfo.cs" />
     <Compile Include="BusinessService\UniqueCodeChecker.cs" />

@@ -48,6 +48,7 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
             GridRelated = new GridViewRelated();
+            DisplayTextResolver = new GridViewDisplayTextResolver(entityType);
         }
 
 

@@ -63,6 +63,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.Business.Cache;
 using System.Web.Caching;
 using RUINORERP.Business.RowLevelAuthService;
+using RUINORERP.UI.BusinessService;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -691,14 +692,33 @@ namespace RUINORERP.UI.BaseForm
         //public tb_MenuInfo CurMenuInfo { get; set; }
 
 
+        // 防重复操作服务实例
+        private RepeatOperationGuardService _guardService;
+
         /// <summary>
         /// 控制功能按钮
         /// </summary>
         /// <param name="p_Text"></param>
         protected virtual async Task DoButtonClick(MenuItemEnums menuItem)
         {
+            // 初始化防重复操作服务（延迟初始化，避免设计时错误）
+            if (_guardService == null)
+            {
+                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
+            }
+
+            // 防重复操作检查 - 使用当前类名作为操作源
+            if (_guardService.ShouldBlockOperation(menuItem, this.GetType().Name, showStatusMessage: true))
+            {
+                return;
+            }
+
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
+            
+            // 记录操作
+            _guardService.RecordOperation(menuItem, this.GetType().Name);
+            
             switch (menuItem)
             {
                 case MenuItemEnums.新增:
@@ -727,10 +747,7 @@ namespace RUINORERP.UI.BaseForm
                     Modify();
                     break;
                 case MenuItemEnums.查询:
-
                     QueryAsync();
-
-
                     break;
                 case MenuItemEnums.保存:
                     //操作前将数据收集

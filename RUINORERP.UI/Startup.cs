@@ -86,6 +86,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using RUINORERP.Business.EntityLoadService;
 using RUINORERP.PacketSpec.Models.Message;
+using RUINORERP.UI.BusinessService;
 namespace RUINORERP.UI
 {
     public class Startup
@@ -504,6 +505,9 @@ namespace RUINORERP.UI
 
             // 注册插件管理器
             services.AddSingleton(typeof(RUINORERP.Plugin.PluginManager));
+            
+            // 注册防重复操作服务
+            services.AddSingleton<RepeatOperationGuardService>();
         }
 
 

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RUINOR.Core;
 using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.LogicaService;
 using RUINORERP.Business.Processor;
@@ -167,7 +168,7 @@ namespace RUINORERP.UI.BI
                     #region  恢复单据
 
                     BizType bizType = (BizType)item.ObjectType.Value;
-                    Type objType = Business.BizMapperService.EntityMappingHelper.GetEntityType(bizType);
+                    Type objType = EntityMappingHelper.GetEntityType(bizType);
                     if (!string.IsNullOrEmpty(item.DataContent))
                     {
                         if (MessageBox.Show($"当前单据{item.ObjectNo}：将重新生成，请谨慎操作\r\n确定生成吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)

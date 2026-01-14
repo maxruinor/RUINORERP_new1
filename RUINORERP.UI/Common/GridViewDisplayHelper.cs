@@ -147,7 +147,10 @@ namespace RUINORERP.UI.Common
         /// <param name="_type"></param>
         public void InitializeFixedDictionaryMappings(Type _type)
         {
-            
+            if (_type==null)
+            {
+                return;
+            }
             // 动态检查类型是否包含指定的属性
             foreach (var prop in _type.GetProperties())
             {
@@ -319,6 +322,10 @@ namespace RUINORERP.UI.Common
 
         public void InitializeReferenceKeyMapping(Type _type)
         {
+            if (_type==null)
+            {
+                return;
+            }
             string tableName = _type.Name;
             if (!ReferenceTableList.ContainsKey(tableName))
             {

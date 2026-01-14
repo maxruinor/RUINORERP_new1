@@ -373,10 +373,10 @@ namespace RUINORERP.Model
 
         private decimal _InitInvCost = ((0));
         /// <summary>
-        /// 期初成本
+        /// 期初单位成本
         /// </summary>
-        [AdvQueryAttribute(ColName = "InitInvCost", ColDesc = "期初成本")]
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "InitInvCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "期初成本")]
+        [AdvQueryAttribute(ColName = "InitInvCost", ColDesc = "期初单位成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "InitInvCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "期初单位成本")]
         public decimal InitInvCost
         {
             get { return _InitInvCost; }

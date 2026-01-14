@@ -66,7 +66,6 @@ namespace RUINORERP.Business
 //***** 
  RuleFor(tb_SaleOutRe =>tb_SaleOutRe.TotalQty).NotNull().WithMessage("退回总数量:不能为空。");
 
- RuleFor(x => x.ActualRefundAmount).PrecisionScale(19,4,true).WithMessage("实际退款金额:小数位不能超过4。");
 
  RuleFor(x => x.TotalAmount).PrecisionScale(19,4,true).WithMessage("退款金额合计:小数位不能超过4。");
 

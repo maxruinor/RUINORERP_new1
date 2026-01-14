@@ -238,19 +238,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _ActualRefundAmount= ((0));
-        /// <summary>
-        /// 实际退款金额
-        /// </summary>
-        [AdvQueryAttribute(ColName = "ActualRefundAmount",ColDesc = "实际退款金额")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "ActualRefundAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "实际退款金额" )]
-        public decimal ActualRefundAmount
-        { 
-            get{return _ActualRefundAmount;}
-            set{
-            SetProperty(ref _ActualRefundAmount, value);
-                        }
-        }
+ 
 
         private decimal _TotalAmount= ((0));
         /// <summary>

@@ -255,7 +255,7 @@ namespace RUINORERP.Business
                 if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                 {
                     // 非平台来源且没有收款信息时，返回错误
-                    if (!entity.PayeeInfoID.HasValue && !entity.IsFromPlatform.Value)
+                    if (!entity.PayeeInfoID.HasValue)
                     {
                         var configManagerService = _appContext.GetRequiredService<IConfigManagerService>();
                         var _validatorConfig = configManagerService.GetConfig<GlobalValidatorConfig>();

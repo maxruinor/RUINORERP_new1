@@ -191,7 +191,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private bool _IsFromPlatform;
+        private bool _IsFromPlatform=false;
         /// <summary>
         /// 平台单
         /// </summary>

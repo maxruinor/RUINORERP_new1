@@ -3028,6 +3028,10 @@ namespace RUINORERP.UI.BaseForm
                         FieldValue = pkid
                     });
 
+                    
+
+
+                    //
                     var listDeatails = await ctrDetail.BaseGetQueryableAsync()
                      .Where(conModels).ToListAsync();
                     if (listDeatails != null)

@@ -196,10 +196,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
-                if (!entity.IsFromPlatform.HasValue)
-                {
-                    entity.IsFromPlatform = false;
-                }
+             
                 entity.PaymentStatus = (int)PaymentStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PaymentNo))
                 {

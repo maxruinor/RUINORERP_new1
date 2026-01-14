@@ -1295,6 +1295,7 @@ namespace RUINORERP.UI.MRP.BOM
                 txtProdDetailID.ToolTipValues.Heading = "请选择物料编码，不能手动输入SKU码";
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
+            
                 if (string.IsNullOrEmpty(entity.BOM_No))
                 {
                     entity.BOM_No = ClientBizCodeService.GetBizBillNo(BizType.BOM物料清单);
@@ -1311,7 +1312,7 @@ namespace RUINORERP.UI.MRP.BOM
                 //EditEntity.Doc_ID = 0;
                 EditEntity.BOM_Name = string.Empty;
                 EditEntity.TotalMaterialQty = 0;
-
+                BusinessHelper.Instance.InitEntity(EditEntity);
                 EditEntity.property = string.Empty;
                 if (EditEntity.tb_BOM_SDetails != null && EditEntity.tb_BOM_SDetails.Count > 0)
                 {

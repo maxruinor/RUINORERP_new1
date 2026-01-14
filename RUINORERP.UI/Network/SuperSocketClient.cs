@@ -313,8 +313,8 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                // 添加主动断开连接警告日志
-                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接");
+                // 添加主动断开连接警告日志1
+                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接 - 服务器: {ServerIp}:{Port}", _serverIp, _port);
                 
                 _isConnected = false;
                 _healthCheckService?.Stop();
@@ -323,13 +323,13 @@ namespace RUINORERP.UI.Network
                 var closeResult = await _client.Close();
                 _networkHealthWarningShown = false;
                 
-                _logger?.LogWarning("[主动断开连接] 已成功断开与服务器的连接");
+                _logger?.LogWarning("[主动断开连接] 已成功断开与服务器的连接 - 服务器: {ServerIp}:{Port}", _serverIp, _port);
                 return closeResult;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "断开连接时发生异常");
-                _logger?.LogWarning("[主动断开连接] 断开连接时发生异常");
+                _logger?.LogError(ex, "断开连接时发生异常 - 服务器: {ServerIp}:{Port}", _serverIp, _port);
+                _logger?.LogWarning("[主动断开连接] 断开连接时发生异常 - 服务器: {ServerIp}:{Port}", _serverIp, _port);
                 // 即使发生异常，也确保状态正确设置
                 _isConnected = false;
                 return false;

@@ -228,21 +228,21 @@ namespace RUINORERP.UI.Network
 
             try
             {
-                // 添加主动断开连接警告日志
-                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接");
+                // 添加主动断开连接警告日志，包含服务器地址和端口
+                _logger?.LogWarning("[主动断开连接] 开始断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
                 
                 bool result = await _socketClient.Disconnect();
                 _isConnected = false;
                 OnConnectionStateChanged(false);
-                _logger?.LogDebug("已断开与服务器的连接");
+                _logger?.LogDebug("已成功断开与服务器的连接: {ServerAddress}:{ServerPort}", _serverAddress, _serverPort);
                 return result;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "断开连接时发生异常");
+                _logger?.LogError(ex, "断开与服务器 {ServerAddress}:{ServerPort} 的连接时发生异常", _serverAddress, _serverPort);
                 _isConnected = false;
                 OnConnectionStateChanged(false);
-                _logger?.LogWarning("[主动断开连接] 断开连接时发生异常");
+                _logger?.LogWarning("[主动断开连接] 断开与服务器 {ServerAddress}:{ServerPort} 的连接时发生异常", _serverAddress, _serverPort);
                 return false;
             }
         }

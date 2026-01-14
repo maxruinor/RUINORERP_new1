@@ -972,13 +972,20 @@ namespace RUINORERP.Server.Controls
                     currentSessions = new List<SessionInfo>();
                 }
 
-                var currentSessionIds = new HashSet<string>(currentSessions.Select(s => s.SessionID));
+                // 创建当前会话ID集合时，过滤掉无效会话（SessionID为null或空）
+                var currentSessionIds = new HashSet<string>(currentSessions.Where(s => IsSessionValid(s)).Select(s => s.SessionID));
 
                 // 添加新会话或更新现有会话
                 foreach (var sessionInfo in currentSessions)
                 {
                     try
                     {
+                        // 检查会话是否有效，避免null SessionID导致Dictionary错误
+                        if (!IsSessionValid(sessionInfo))
+                        {
+                            continue;
+                        }
+                        
                         if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                         {
                             // 更新现有会话
@@ -1009,7 +1016,8 @@ namespace RUINORERP.Server.Controls
                     catch (Exception updateEx)
                     {
                         // 记录单个会话更新错误，但继续处理其他会话
-                        LogError($"更新会话 {sessionInfo.SessionID} 时出错: {updateEx.Message}", updateEx);
+                        string sessionId = sessionInfo?.SessionID ?? "null";
+                        LogError($"更新会话 {sessionId} 时出错: {updateEx.Message}", updateEx);
                     }
                 }
 

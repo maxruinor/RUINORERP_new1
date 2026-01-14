@@ -295,14 +295,6 @@ namespace RUINORERP.Model
             return rs;
         }
 
-
-
-
-
-
-
-
-
         public override object Clone()
         {
             tb_FM_ReceivablePayableDetail loctype = (tb_FM_ReceivablePayableDetail)this.MemberwiseClone(); //创建当前对象的浅拷贝。

@@ -2673,8 +2673,14 @@ namespace RUINORERP.Business
                     details[i].TaxRate = olditem.TaxRate;
                     details[i].TaxLocalAmount = olditem.TaxAmount;
                     details[i].Quantity = olditem.Quantity;
+                    if (isRefund)
+                    {
+                        details[i].Quantity = -details[i].Quantity;
+                    }
+                    //应付要以包含税的金额来算。成本才按未税的金额来算，定制成本不包含成本计算内。只为计算利润
                     details[i].UnitPrice = olditem.UnitPrice;
-                    details[i].LocalPayableAmount = olditem.UnitPrice * olditem.Quantity;
+                    //含税
+                    details[i].LocalPayableAmount = (olditem.UnitPrice + olditem.CustomizedCost) * olditem.Quantity;
                     //下面有专门的一行运费。这里加上去不明了，会导致误会。如果生成对账单的话。
                     //details[i].LocalPayableAmount+= olditem.AllocatedFreightIncome;
                 }
@@ -2685,20 +2691,23 @@ namespace RUINORERP.Business
 
             payable.tb_FM_ReceivablePayableDetails = details;
             //如果是外币时，则由外币算出本币
-            if (isRefund)
-            {
-                //为负数
-                entity.ForeignTotalAmount = -entity.ForeignTotalAmount;
-                entity.TotalAmount = -entity.TotalAmount;
-            }
+            //if (isRefund)
+            //{
+            //    //为负数
+            //    entity.ForeignTotalAmount = -entity.ForeignTotalAmount;
+            //    entity.TotalAmount = -entity.TotalAmount;
+            //}
+
             //外币时
             //这里要重点思考 是本币一定有。！！！！！！！！！！！！！！！！！ TODO by watson
             //外币时  只是换算。本币不能少。
             if (entity.Currency_ID.HasValue && _appContext.BaseCurrency.Currency_ID != entity.Currency_ID.Value)
             {
+                //实际是0，因为暂时不支持外币
+                payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
                 payable.ForeignBalanceAmount = entity.ForeignTotalAmount;
                 payable.ForeignPaidAmount = 0;
-                payable.TotalForeignPayableAmount = entity.ForeignTotalAmount;
+
             }
             #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。
             // 添加运费行（关键部分）
@@ -2707,10 +2716,14 @@ namespace RUINORERP.Business
                 payable.ShippingFee = entity.ShipCost;
             }
             #endregion
+
+
+            payable.TotalLocalPayableAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.LocalPayableAmount);
+
             //本币时 一定会有值。
-            payable.LocalBalanceAmount = entity.TotalAmount;
+            //生成时余额就是总金额
+            payable.LocalBalanceAmount = payable.TotalLocalPayableAmount;
             payable.LocalPaidAmount = 0;
-            payable.TotalLocalPayableAmount = entity.TotalAmount;
             if (entity.tb_purorder != null && !payable.PayeeInfoID.HasValue)
             {
                 //通过订单添加付款信息

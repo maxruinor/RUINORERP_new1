@@ -52,9 +52,7 @@ namespace RUINORERP.Business
  RuleFor(x => x.UnitPrice).PrecisionScale(19,4,true).WithMessage("单价:小数位不能超过4。");
 
  RuleFor(x => x.CustomizedCost).PrecisionScale(19,4,true).WithMessage("定制成本:小数位不能超过4。");
-
- RuleFor(x => x.Discount).PrecisionScale(8,2,true).WithMessage("折扣:小数位不能超过2。");
-
+ 
 
  RuleFor(x => x.TaxRate).PrecisionScale(5,2,true).WithMessage("税率:小数位不能超过2。");
 
@@ -69,9 +67,7 @@ namespace RUINORERP.Business
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.CustomertModel).MaximumMixedLength(50).WithMessage("客户型号:不能超过最大长度,50.");
 
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.Summary).MaximumMixedLength(255).WithMessage("摘要:不能超过最大长度,255.");
-
- RuleFor(x => x.DiscountAmount).PrecisionScale(19,4,true).WithMessage("优惠金额:小数位不能超过4。");
-
+ 
 
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("货架:下拉选择值不正确。");
  RuleFor(tb_PurEntryReDetail =>tb_PurEntryReDetail.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);

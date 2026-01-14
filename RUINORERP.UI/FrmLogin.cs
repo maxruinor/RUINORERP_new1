@@ -904,6 +904,8 @@ namespace RUINORERP.UI
         /// </summary>
         private async Task ReconnectAndWelcomeAsync()
         {
+            bool needsReconnect = false;
+            
             try
             {
                 MainForm.Instance?.PrintInfoLog("开始重新连接并执行欢迎流程...");
@@ -916,8 +918,23 @@ namespace RUINORERP.UI
                     return;
                 }
 
-                // 断开现有连接
+                // 检查是否需要重连
                 if (connectionManager.IsConnected)
+                {
+                    string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
+                    string newServerIP = txtServerIP.Text.Trim();
+                    int currentPort = connectionManager.CurrentServerPort;
+                    
+                    needsReconnect = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
+                                   currentPort != serverPort;
+                }
+                else
+                {
+                    needsReconnect = true;
+                }
+
+                // 断开现有连接（仅在需要重连时执行）
+                if (needsReconnect && connectionManager.IsConnected)
                 {
                     UpdateConnectionStatus(ConnectionStatus.Disconnected, "正在断开现有连接...");
                     await connectionManager.DisconnectAsync();
@@ -1038,62 +1055,85 @@ namespace RUINORERP.UI
                     _loginCancellationTokenSource?.Token ?? CancellationToken.None);
 
                 // 1. 连接服务器
-                // 如果未连接到服务器，则尝试连接
-                // 如果已连接，且IP/端口未变更，则跳过连接步骤
-                if (!connectionManager.IsConnected)
+                // 检查是否需要重连：只有未连接或服务器地址变更时才重连
+                bool needsReconnect = !connectionManager.IsConnected;
+                
+                if (!needsReconnect)
                 {
-                    string serverIP = txtServerIP.Text.Trim();
-                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
-
-                    // 为连接操作添加超时
-                    var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
-
-                    if (completedTask != connectTask)
-                    {
-                        throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
-                    }
-
-                    var connected = await connectTask;
-                    if (!connected)
-                    {
-                        throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
-                    }
-                    MainForm.Instance.PrintInfoLog("服务器连接成功");
-                }
-                else
-                {
-                    // 已连接到服务器，检查是否为同一服务器
+                    // 已连接，检查服务器地址是否变更
                     string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
                     string newServerIP = txtServerIP.Text.Trim();
-                    if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) && 
-                        connectionManager.CurrentServerPort == serverPort)
+                    needsReconnect = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
+                                   connectionManager.CurrentServerPort != serverPort;
+                }
+
+                // 只有在需要重连时才执行连接操作
+                if (needsReconnect)
+                {
+                    // 在UI线程中禁用按钮
+                    if (this.InvokeRequired)
                     {
-                        MainForm.Instance.logger?.LogDebug("已连接到同一服务器，跳过连接步骤");
+                        this.Invoke(new Action(() =>
+                        {
+                            btnok.Enabled = false;
+                            btncancel.Text = "取消";
+                        }));
                     }
                     else
                     {
-                        // 已连接到不同服务器，先断开再连接
-                        MainForm.Instance.logger?.LogDebug($"已连接到不同服务器，从 {currentServerIP}:{connectionManager.CurrentServerPort} 切换到 {newServerIP}:{serverPort}");
-                        await connectionManager.DisconnectAsync();
-                        
-                        // 重新连接到新服务器
-                        MainForm.Instance.PrintInfoLog($"正在连接到服务器 {newServerIP}:{serverPort}...");
-                        var connectTask = connectionManager.ConnectAsync(newServerIP, serverPort);
+                        btnok.Enabled = false;
+                        btncancel.Text = "取消";
+                    }
+
+                    try
+                    {
+                        string serverIP = txtServerIP.Text.Trim();
+                        MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
+
+                        // 先断开现有连接（如果已连接）
+                        if (connectionManager.IsConnected)
+                        {
+                            await connectionManager.DisconnectAsync();
+                            await Task.Delay(200); // 短暂等待断开完成
+                        }
+
+                        // 连接到服务器
+                        var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
                         var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
-                        
+
                         if (completedTask != connectTask)
                         {
-                            throw new TimeoutException($"连接服务器 {newServerIP}:{serverPort} 超时");
+                            throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
                         }
-                        
+
                         var connected = await connectTask;
                         if (!connected)
                         {
-                            throw new Exception($"无法连接到服务器 {newServerIP}:{serverPort}");
+                            throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
                         }
                         MainForm.Instance.PrintInfoLog("服务器连接成功");
                     }
+                    finally
+                    {
+                        // 恢复按钮状态
+                        if (this.InvokeRequired)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                btnok.Enabled = true;
+                                btncancel.Text = "取消";
+                            }));
+                        }
+                        else
+                        {
+                            btnok.Enabled = true;
+                            btncancel.Text = "取消";
+                        }
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.logger?.LogDebug("已连接到同一服务器，跳过连接步骤");
                 }
 
                 // 2. 执行登录验证

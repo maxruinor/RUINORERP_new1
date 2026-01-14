@@ -80,19 +80,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private bool _EXPOrINC= true;
-        /// <summary>
-        /// 收支标识
-        /// </summary>
-        [AdvQueryAttribute(ColName = "EXPOrINC",ColDesc = "收支标识")] 
-        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "EXPOrINC" ,IsNullable = false,ColumnDescription = "收支标识" )]
-        public bool EXPOrINC
-        { 
-            get{return _EXPOrINC;}
-            set{
-            SetProperty(ref _EXPOrINC, value);
-                        }
-        }
+ 
 
         private int _ReceivePaymentType;
         /// <summary>

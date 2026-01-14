@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 菜单程序集信息表
+    /// 菜单程序集信息表1
     /// </summary>
     [Serializable()]
     [Description("菜单程序集信息表")]

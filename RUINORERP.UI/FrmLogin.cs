@@ -480,7 +480,7 @@ namespace RUINORERP.UI
             bool ipOrPortChanged = false;
             if (isConnected)
             {
-                string currentServerIP = connectionManager.CurrentServerAddress ?? "";
+                string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
                 string currentServerPort = connectionManager.CurrentServerPort.ToString();
                 string newServerIP = txtServerIP.Text.Trim();
                 string newServerPort = txtPort.Text.Trim();
@@ -510,7 +510,8 @@ namespace RUINORERP.UI
 
             // 如果已连接且有Token，且IP和端口未发生变化，尝试快捷登录验证
             if (isConnected && !string.IsNullOrEmpty(currentToken) && !ipOrPortChanged
-                && connectionManager.CurrentServerAddress == txtServerIP.Text && connectionManager.CurrentServerPort.ToString() == txtPort.Text
+                && string.Equals(connectionManager.CurrentServerAddress?.Trim(), txtServerIP.Text.Trim(), StringComparison.OrdinalIgnoreCase) 
+                && connectionManager.CurrentServerPort.ToString() == txtPort.Text.Trim()
                 && txtUserName.Text == UserGlobalConfig.Instance.UseName
                 && txtPassWord.Text == UserGlobalConfig.Instance.PassWord
                 )
@@ -1037,31 +1038,62 @@ namespace RUINORERP.UI
                     _loginCancellationTokenSource?.Token ?? CancellationToken.None);
 
                 // 1. 连接服务器
-                // 无论是否已连接，都尝试连接以确保使用最新的IP和端口
-                // 如果已连接但IP/端口已变更，上面的逻辑已经断开了连接
+                // 如果未连接到服务器，则尝试连接
+                // 如果已连接，且IP/端口未变更，则跳过连接步骤
                 if (!connectionManager.IsConnected)
                 {
-                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}...");
+                    string serverIP = txtServerIP.Text.Trim();
+                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
 
                     // 为连接操作添加超时
-                    var connectTask = connectionManager.ConnectAsync(txtServerIP.Text.Trim(), serverPort);
+                    var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
                     var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
 
                     if (completedTask != connectTask)
                     {
-                        throw new TimeoutException($"连接服务器 {txtServerIP.Text.Trim()}:{serverPort} 超时");
+                        throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
                     }
 
                     var connected = await connectTask;
                     if (!connected)
                     {
-                        throw new Exception($"无法连接到服务器 {txtServerIP.Text.Trim()}:{serverPort}");
+                        throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
                     }
                     MainForm.Instance.PrintInfoLog("服务器连接成功");
                 }
                 else
                 {
-                    MainForm.Instance.logger?.LogDebug("已连接到服务器，跳过连接步骤");
+                    // 已连接到服务器，检查是否为同一服务器
+                    string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
+                    string newServerIP = txtServerIP.Text.Trim();
+                    if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) && 
+                        connectionManager.CurrentServerPort == serverPort)
+                    {
+                        MainForm.Instance.logger?.LogDebug("已连接到同一服务器，跳过连接步骤");
+                    }
+                    else
+                    {
+                        // 已连接到不同服务器，先断开再连接
+                        MainForm.Instance.logger?.LogDebug($"已连接到不同服务器，从 {currentServerIP}:{connectionManager.CurrentServerPort} 切换到 {newServerIP}:{serverPort}");
+                        await connectionManager.DisconnectAsync();
+                        
+                        // 重新连接到新服务器
+                        MainForm.Instance.PrintInfoLog($"正在连接到服务器 {newServerIP}:{serverPort}...");
+                        var connectTask = connectionManager.ConnectAsync(newServerIP, serverPort);
+                        var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
+                        
+                        if (completedTask != connectTask)
+                        {
+                            throw new TimeoutException($"连接服务器 {newServerIP}:{serverPort} 超时");
+                        }
+                        
+                        var connected = await connectTask;
+                        if (!connected)
+                        {
+                            throw new Exception($"无法连接到服务器 {newServerIP}:{serverPort}");
+                        }
+                        MainForm.Instance.PrintInfoLog("服务器连接成功");
+                    }
                 }
 
                 // 2. 执行登录验证

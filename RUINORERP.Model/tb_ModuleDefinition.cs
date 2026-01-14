@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 功能模块定义（仅限部分已经硬码并体现于菜单表中）
+    /// 功能模块定义（仅限部分已经硬码并体现于菜单表中）1
     /// </summary>
     [Serializable()]
     [Description("功能模块定义")]

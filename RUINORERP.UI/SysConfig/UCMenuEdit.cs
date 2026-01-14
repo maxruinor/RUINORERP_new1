@@ -1014,46 +1014,102 @@ namespace RUINORERP.UI.SysConfig
             }
         }
         
+
+       
         /// <summary>
         /// 添加子菜单方法
+        /// 根据父菜单名称判断所属模块，只初始化该模块的菜单结构
         /// </summary>
         /// <param name="parentMenu">父菜单信息</param>
-        private void AddSubMenu(tb_MenuInfo parentMenu)
+        private async Task AddSubMenu(tb_MenuInfo parentMenu)
         {
-            // 创建新的子菜单
-            tb_MenuInfo subMenu = new tb_MenuInfo
+            try
             {
-                ModuleID = parentMenu.ModuleID,
-                MenuName = "新建子菜单",
-                IsVisble = true,
-                IsEnabled = true,
-                CaptionCN = "新建子菜单",
-                MenuType = "导航菜单",
-                Parent_id = parentMenu.MenuID,
-                Created_at = System.DateTime.Now
-            };
-            
-            // 绑定数据到表单
-            BindData(subMenu);
-            
-            // 添加新子菜单到当前选中节点
-            TreeNode newNode = new TreeNode();
-            newNode.Name = subMenu.MenuID.ToString(); // 初始为0，保存后会更新
-            newNode.Text = subMenu.MenuName;
-            newNode.Tag = subMenu;
-            
-            // 将新节点添加到当前选中节点下
-            tree_MainMenu.SelectedNode.Nodes.Add(newNode);
-            
-            // 展开当前选中节点，显示新添加的子菜单
-            tree_MainMenu.SelectedNode.Expand();
-            
-            // 选中新添加的节点
-            tree_MainMenu.SelectedNode = newNode;
-            
-            // 禁用命令按钮，进入编辑状态
-            CmdEnable(false);
-            w_EidtFlag = false;
+                // 获取菜单初始化服务实例
+                InitModuleMenu init = Startup.GetFromFac<InitModuleMenu>();
+                if (init == null)
+                {
+                    throw new InvalidOperationException("无法获取InitModuleMenu服务实例");
+                }
+
+                // 获取所有模块定义
+                var moduleController = Startup.GetFromFac<tb_ModuleDefinitionController<tb_ModuleDefinition>>();
+                var allModules = await MainForm.Instance.AppContext.Db
+                    .Queryable<tb_ModuleDefinition>()
+                    .ToListAsync();
+
+                // 获取所有模块的顶级菜单（Parent_id == 0 且 MenuName == ModuleName）
+                var topLevelMenus = await MainForm.Instance.AppContext.Db
+                    .Queryable<tb_MenuInfo>()
+                    .Where(m => m.Parent_id == 0)
+                    .ToListAsync();
+
+                // 规则：顶级菜单的 MenuName 与模块的 ModuleName 相同
+                // 通过父菜单向上查找，找到顶级菜单，然后找到对应的模块
+                string moduleName = null;
+
+                if (parentMenu.Parent_id == 0)
+                {
+                    // 如果父菜单本身就是顶级菜单，直接使用其名称作为模块名
+                    moduleName = parentMenu.MenuName;
+                }
+                else
+                {
+                    // 如果是子菜单，需要向上查找顶级菜单
+                    // 先从当前已加载的数据中查找
+                    var currentMenu = parentMenu;
+                    var maxLevels = 10; // 防止无限循环
+                    var levelCount = 0;
+
+                    while (currentMenu != null && currentMenu.Parent_id != 0 && levelCount < maxLevels)
+                    {
+                        var foundMenu = topLevelMenus.FirstOrDefault(m => m.MenuID == currentMenu.Parent_id);
+                        if (foundMenu != null)
+                        {
+                            currentMenu = foundMenu;
+                            levelCount++;
+                        }
+                        else
+                        {
+                            // 如果在内存中找不到，从数据库查询
+                            var dbMenu = await MainForm.Instance.AppContext.Db
+                                .Queryable<tb_MenuInfo>()
+                                .InSingleAsync(currentMenu.Parent_id);
+                            
+                            if (dbMenu == null || dbMenu.Parent_id == 0)
+                            {
+                                currentMenu = dbMenu;
+                                levelCount++;
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (currentMenu != null && currentMenu.Parent_id == 0)
+                    {
+                        moduleName = currentMenu.MenuName;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(moduleName))
+                {
+                    throw new InvalidOperationException($"无法找到菜单 '{parentMenu.MenuName}' 所属的模块");
+                }
+
+                // 根据模块名称初始化该模块的菜单
+                await init.InitModuleAndMenuAsync(moduleName);
+
+                MessageBox.Show($"已为模块 '{moduleName}' 添加菜单项，请刷新查看", 
+                    "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加子菜单失败：{ex.Message}", 
+                    "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         /// <summary>

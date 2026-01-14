@@ -4454,7 +4454,7 @@ namespace RUINORERP.UI.BaseForm
                 string billNoColName = cbd.BillNoColName;
 
                 ReflectionHelper.SetPropertyValue(NewEditEntity, billNoColName, string.Empty);
-
+                NewEditEntity.PrimaryKeyID = 0;
                 // 重置主实体的主键
                 ResetPrimaryKey(NewEditEntity, PKCol);
 

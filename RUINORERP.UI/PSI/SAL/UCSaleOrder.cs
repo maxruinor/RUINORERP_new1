@@ -75,12 +75,12 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 AddPublicEntityObject(typeof(ProductSharePart));
             }
-            
+
         }
 
 
 
- 
+
 
 
 
@@ -1258,7 +1258,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                
+
                 if (EditEntity.SOrderNo.Trim().Length == 0)
                 {
                     MessageBox.Show("订单编号由系统自动生成，如果不小心清除，请重新生成单据的订单编号。");
@@ -1498,17 +1498,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                //var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                //if (aa.Count > 1)
-                //{
-                //    System.Windows.Forms.MessageBox.Show("明细中，相同的产品不能多行录入,如有需要,请另建单据保存!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //    return;
-                //}
-                //为什么这么做呢？
-                //foreach (var item in details)
-                //{
-                //    item.tb_saleorder = EditEntity;
-                //}
+              
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
@@ -1522,7 +1512,8 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (NeedValidated && !MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
                 {
-                    list = await dc.BaseGetQueryableAsync().ToListAsync();
+                    var queryable = dc.BaseGetQueryable();
+                    list = await queryable.ToListAsync();
 
                     StringBuilder NegativeInventorymsg = new StringBuilder();
                     foreach (var item in details)
@@ -1951,7 +1942,7 @@ namespace RUINORERP.UI.PSI.SAL
             return result;
         }
 
- 
+
 
         /// <summary>
         /// 检查是否需要定制订单确认
@@ -1965,7 +1956,7 @@ namespace RUINORERP.UI.PSI.SAL
 
             // 检查备注中是否包含"定制"二字
             bool hasCustomizedInNotes = !string.IsNullOrEmpty(entity.Notes) && entity.Notes.Contains("定制");
-            
+
             // 检查是否未标记为定制单
             bool notMarkedAsCustomized = !entity.IsCustomizedOrder;
 

@@ -1584,7 +1584,10 @@ namespace RUINORERP.UI.UControls
                     }
                     else
                     {
-                        Columns[cdc.ColName].ReadOnly = true;
+                        if (Columns[cdc.ColName] != null)
+                        {
+                            Columns[cdc.ColName].ReadOnly = true;
+                        }
                     }
                 }
                 else
@@ -3889,7 +3892,7 @@ namespace RUINORERP.UI.UControls
                 // 提取字段名
                 System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                
+
                 // 从FieldNameList中获取列的显示信息
                 KeyValuePair<string, bool> columnInfo;
                 if (FieldNameList.TryGetValue(columnName, out columnInfo))
@@ -3897,7 +3900,7 @@ namespace RUINORERP.UI.UControls
                     // 更新为隐藏状态
                     KeyValuePair<string, bool> newColumnInfo = new KeyValuePair<string, bool>(columnInfo.Key, false);
                     FieldNameList.AddOrUpdate(columnName, newColumnInfo, (key, oldValue) => newColumnInfo);
-                    
+
                     // 如果列已经存在，直接隐藏
                     if (this.Columns.Contains(columnName))
                     {
@@ -3913,7 +3916,7 @@ namespace RUINORERP.UI.UControls
                         BizInvisibleCols = new HashSet<string>();
                     }
                     BizInvisibleCols.Add(columnName);
-                    
+
                     // 如果列已经存在，直接隐藏
                     if (this.Columns.Contains(columnName))
                     {
@@ -3944,7 +3947,7 @@ namespace RUINORERP.UI.UControls
                 // 提取字段名
                 System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                
+
                 // 从FieldNameList中获取列的显示信息
                 KeyValuePair<string, bool> columnInfo;
                 if (FieldNameList.TryGetValue(columnName, out columnInfo))
@@ -3952,7 +3955,7 @@ namespace RUINORERP.UI.UControls
                     // 更新为显示状态
                     KeyValuePair<string, bool> newColumnInfo = new KeyValuePair<string, bool>(columnInfo.Key, true);
                     FieldNameList.AddOrUpdate(columnName, newColumnInfo, (key, oldValue) => newColumnInfo);
-                    
+
                     // 如果列已经存在，直接显示
                     if (this.Columns.Contains(columnName))
                     {
@@ -3966,7 +3969,7 @@ namespace RUINORERP.UI.UControls
                     {
                         BizInvisibleCols.Remove(columnName);
                     }
-                    
+
                     // 如果列已经存在，直接显示
                     if (this.Columns.Contains(columnName))
                     {
@@ -4003,13 +4006,13 @@ namespace RUINORERP.UI.UControls
                 // 提取字段名
                 System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                
+
                 // 检查列是否存在
                 if (!this.Columns.Contains(columnName))
                 {
                     return false;
                 }
-                
+
                 // 检查列是否可见
                 return this.Columns[columnName].Visible;
             }
@@ -4037,14 +4040,14 @@ namespace RUINORERP.UI.UControls
                 // 提取字段名
                 System.Reflection.MemberInfo memberInfo = exp.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                
+
                 // 从FieldNameList中获取列的显示信息
                 KeyValuePair<string, bool> columnInfo;
                 if (FieldNameList.TryGetValue(columnName, out columnInfo))
                 {
                     return columnInfo;
                 }
-                
+
                 return null;
             }
             catch (Exception ex)

@@ -1536,7 +1536,7 @@ namespace RUINORERP.UI.MRP.BOM
             EditEntity.ProdDetailID = 0;
             EditEntity.SKU = null;
             EditEntity.BOM_No = ClientBizCodeService.GetBizBillNo(BizType.BOM物料清单);
-
+            EditEntity.PrimaryKeyID = 0;
             BusinessHelper.Instance.InitEntity(EditEntity);
             foreach (var item in EditEntity.tb_BOM_SDetails)
             {

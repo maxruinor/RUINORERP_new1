@@ -2711,7 +2711,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        
+
                         Query(QueryDtoProxy);
                         toolStripSplitButtonPrint.Enabled = true;
                         break;
@@ -3028,12 +3028,8 @@ namespace RUINORERP.UI.BaseForm
                         FieldValue = pkid
                     });
 
-                    
-
-
-                    //
-                    var listDeatails = await ctrDetail.BaseGetQueryableAsync()
-                     .Where(conModels).ToListAsync();
+                    var queryable = ctrDetail.BaseGetQueryable();
+                    var listDeatails = await queryable.Where(conModels).ToListAsync();
                     if (listDeatails != null)
                     {
                         _UCBillChildQuery.bindingSourceChild.DataSource = listDeatails;
@@ -3416,7 +3412,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return childControl;
                 }
-                
+
                 if (childControl.ContainsFocus)
                 {
                     Control result = GetFocusedControlRecursive(childControl);
@@ -3437,47 +3433,47 @@ namespace RUINORERP.UI.BaseForm
         private bool IsSpecialInputControl(Control control)
         {
             if (control == null) return false;
-            
+
             // 检查是否为下拉框控件
             if (control is ComboBox || control.GetType().Name.Contains("ComboBox"))
             {
                 return true;
             }
-            
+
             // 检查是否为Krypton下拉框控件
-            if (control.GetType().Name.Contains("KryptonComboBox") || 
+            if (control.GetType().Name.Contains("KryptonComboBox") ||
                 control.GetType().Name.Contains("KryptonDomainUpDown") ||
                 control.GetType().Name.Contains("KryptonNumericUpDown"))
             {
                 return true;
             }
-            
+
             // 检查是否为列表类控件
             if (control is System.Windows.Forms.ListBox || control.GetType().Name.Contains("ListBox"))
             {
                 return true;
             }
-            
+
             // 检查是否为树形控件
             if (control.GetType().Name.Contains("TreeView"))
             {
                 return true;
             }
-            
+
             // 检查是否为DataGrid类控件
-            if (control.GetType().Name.Contains("DataGridView") || 
+            if (control.GetType().Name.Contains("DataGridView") ||
                 control.GetType().Name.Contains("NewSumDataGridView"))
             {
                 return true;
             }
-            
+
             // 检查是否为自定义的下拉控件
             if (control.GetType().Name.Contains("ComBoBoxEx") ||
                 control.GetType().Name.Contains("CodeTextBox"))
             {
                 return true;
             }
-            
+
             return false;
         }
     }

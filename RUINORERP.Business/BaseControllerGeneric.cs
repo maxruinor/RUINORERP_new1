@@ -449,7 +449,7 @@ namespace RUINORERP.Business
             //return null;
         }
 
-        public virtual ISugarQueryable<T> BaseGetQueryableAsync()
+        public virtual ISugarQueryable<T> BaseGetQueryable()
         {
             return _unitOfWorkManage.GetDbClient().Queryable<T>().With(SqlWith.NoLock);
 

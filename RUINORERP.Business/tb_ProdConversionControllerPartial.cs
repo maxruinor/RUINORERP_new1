@@ -102,7 +102,7 @@ namespace RUINORERP.Business
                         invTo.Quantity = 0;
                         invTo.Inv_Cost = child.TargetInitCost;
                         invForm.Notes = $"由转换单{entity.ConversionNo}初始化";
-                        invTo.InitInventory = (int)invTo.Quantity;
+                        invTo.InitInventory =0;
                         BusinessHelper.Instance.InitEntity(invTo);
                     }
                     else
@@ -301,7 +301,7 @@ namespace RUINORERP.Business
                         invForm.ProdDetailID = child.ProdDetailID_from;
                         invForm.Location_ID = entity.Location_ID;
                         invForm.Quantity = 0;
-                        invForm.InitInventory += (int)invForm.Quantity;
+                        invForm.InitInventory=0;
                         BusinessHelper.Instance.InitEntity(invForm);
                     }
                     else
@@ -337,7 +337,7 @@ namespace RUINORERP.Business
                         invTo.ProdDetailID = child.ProdDetailID_to;
                         invTo.Location_ID = entity.Location_ID;
                         invTo.Quantity = 0;
-                        invTo.InitInventory -= (int)invTo.Quantity;
+                        invTo.InitInventory=0;
                         BusinessHelper.Instance.InitEntity(invTo);
                     }
                     else

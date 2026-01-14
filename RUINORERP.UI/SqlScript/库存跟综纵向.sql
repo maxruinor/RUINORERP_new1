@@ -91,6 +91,6 @@ union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'返工入库' as 业务类型, ReworkEntryNo as 单据编号 , sc.Location_ID as 库位,  sc.Quantity as 数量 ,EntryDate as 日期 from  tb_MRP_ReworkEntry sm LEFT JOIN tb_MRP_ReworkEntryDetail sc on sm.ReworkEntryID=sc.ReworkEntryID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
  WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
-SELECT '最后结余' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'期末库存' as 业务类型,'' as 单据编号 , a.Location_ID as 库位,  a.Quantity as 数量 ,GETDATE() as 日期 from tb_Inventory a LEFT JOIN tb_OpeningInventory b on a.Inventory_ID=b.Inventory_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=a.ProdDetailID and vp.Location_ID=a.Location_ID 
+SELECT '最后结余' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'期末库存' as 业务类型,'' as 单据编号 , a.Location_ID as 库位,  a.Quantity as 数量 ,GETDATE() as 日期 from tb_Inventory a  INNER JOIN View_ProdDetail vp on vp.ProdDetailID=a.ProdDetailID and vp.Location_ID=a.Location_ID 
 WHERE a.Location_ID=@Location_ID  and a.ProdDetailID=@ProdDetailID) as AA
 end

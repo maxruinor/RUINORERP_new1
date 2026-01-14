@@ -49,7 +49,7 @@ namespace RUINORERP.Business
             {
                 // 提前开启事务，确保所有数据库操作都在事务内执行
                 _unitOfWorkManage.BeginTran();
-                
+
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
@@ -57,7 +57,7 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.RollbackTran();
                     return rmrs;
                 }
-    
+
                 //!!!child.DiffQty 是否有正负数？如果有正数
                 CheckMode cm = (CheckMode)entity.CheckMode;
                 //将盘点到的数据，根据处理调整类型去修改库存表，期初还需要保存到期初表中
@@ -90,7 +90,7 @@ namespace RUINORERP.Business
                         if (child.UntaxedCost == 0)
                         {
                             View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>().Where(c => c.ProdDetailID == child.ProdDetailID && c.Location_ID == entity.Location_ID).FirstAsync();
-                               _unitOfWorkManage.RollbackTran();
+                            _unitOfWorkManage.RollbackTran();
                             rmrs.ErrorMsg = $"{view_Prod.SKU}=> {view_Prod.CNName}\r\n【期初盘点】时，必须输入正确的未税成本价格。";
                             return rmrs;
                         }
@@ -103,10 +103,11 @@ namespace RUINORERP.Business
                         }
                         inv.Location_ID = entity.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
-                        inv.InitInventory = (int)inv.Quantity;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                        BusinessHelper.Instance.InitEntity(inv);
+                        inv.InitInventory = 0;
+                        inv.InitInvCost = 0;
 
+                        inv.Notes = "期初盘点";
+                        BusinessHelper.Instance.InitEntity(inv);
                     }
                     else
                     {
@@ -114,13 +115,19 @@ namespace RUINORERP.Business
                         BusinessHelper.Instance.EditEntity(inv);
                     }
 
-               
-
                     //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                     //并且其实盘点时只有数量大于0时才计算成本
                     if (CheckMode.期初盘点 == cm && child.DiffQty > 0)
                     {
-                        CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
+                        //设置期初数量和成本
+                        inv.InitInventory = child.DiffQty;
+                        inv.InitInvCost = child.UntaxedCost;
+                        inv.Inv_Cost = child.UntaxedCost;
+                        inv.Inv_AdvCost = child.UntaxedCost;
+                        inv.CostMovingWA = child.UntaxedCost;
+                        inv.CostFIFO = child.UntaxedCost;
+                        //既然是期初始录入成本。那就直接用期初成本作为库存成本
+                        //CommService.CostCalculations.CostCalculation(_appContext, inv, child.DiffQty, child.UntaxedCost);
                     }
                     //更新库存
                     if (entity.Adjust_Type == (int)Adjust_Type.全部)
@@ -190,7 +197,7 @@ namespace RUINORERP.Business
                     {
                         #region 生成费用单
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss =await ctrpayable.BuildProfitLoss(entity);
+                        tb_FM_ProfitLoss profitLoss = await ctrpayable.BuildProfitLoss(entity);
                         ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         if (rmr.Succeeded)
                         {
@@ -263,7 +270,7 @@ namespace RUINORERP.Business
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
-      
+
                 CheckMode cm = (CheckMode)entity.CheckMode;
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StocktakeDetails)
@@ -298,7 +305,7 @@ namespace RUINORERP.Business
                         inv = new tb_Inventory();
                         inv.Location_ID = entity.Location_ID;
                         inv.Quantity = child.DiffQty;
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory = 0;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }
@@ -362,7 +369,7 @@ namespace RUINORERP.Business
                 {
                     _logger.Debug($"{entity.CheckNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
-        
+
                 //盘点模式 三个含义是:期初时可以录入成本,另两个不可以,由库存表中带出来.
                 if (CheckMode.期初盘点 == cm)
                 {
@@ -376,7 +383,7 @@ namespace RUINORERP.Business
                     {
                         #region 生成费用单
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss = await  ctrpayable.BuildProfitLoss(entity);
+                        tb_FM_ProfitLoss profitLoss = await ctrpayable.BuildProfitLoss(entity);
                         ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         if (rmr.Succeeded)
                         {

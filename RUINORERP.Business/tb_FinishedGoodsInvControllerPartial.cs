@@ -103,7 +103,7 @@ namespace RUINORERP.Business
                     if (inv == null)
                     {
                         inv = new tb_Inventory();
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory =0;
                         inv.Notes = "由缴库时自动生成";//后面修改数据库是不需要？
                         inv.Inv_Cost = child.UnitCost;
                         inv.Inv_AdvCost = child.UnitCost;

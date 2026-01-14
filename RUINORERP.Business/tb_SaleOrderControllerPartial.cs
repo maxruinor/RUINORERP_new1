@@ -482,11 +482,9 @@ namespace RUINORERP.Business
                                 inv.Location_ID = child.Location_ID;
 
                                 inv.Quantity = 0;
-
-
-                                inv.InitInventory = (int)inv.Quantity;
-                                inv.Notes = "";//后面修改数据库是不需要？
-                                               //inv.LatestStorageTime = System.DateTime.Now;
+                                inv.InitInventory = 0;
+                                inv.InitInvCost = 0;
+                                inv.Notes = "销售订单初始化";
                                 BusinessHelper.Instance.InitEntity(inv);
                             }
                             //更新在途库存
@@ -515,8 +513,6 @@ namespace RUINORERP.Business
                                             .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
                                             .ExecuteCommandHasChangeAsync();
                     }
-
-
                     #endregion
 
                 }
@@ -588,7 +584,7 @@ namespace RUINORERP.Business
                                 inv.ProdDetailID = entitys[m].tb_SaleOrderDetails[c].ProdDetailID;
                                 inv.Location_ID = entitys[m].tb_SaleOrderDetails[c].Location_ID;
                                 inv.Quantity = 0;
-                                inv.InitInventory = (int)inv.Quantity;
+                                inv.InitInventory = 0;
                                 inv.Notes = "";//后面修改数据库是不需要？
                                                //inv.LatestStorageTime = System.DateTime.Now;
                                 BusinessHelper.Instance.InitEntity(inv);
@@ -796,7 +792,7 @@ namespace RUINORERP.Business
                                 inv.ProdDetailID = entitys[m].tb_SaleOrderDetails[c].ProdDetailID;
                                 inv.Location_ID = entitys[m].tb_SaleOrderDetails[c].Location_ID;
                                 inv.Quantity = 0;
-                                inv.InitInventory = (int)inv.Quantity;
+                                inv.InitInventory = 0;
                                 inv.Notes = "";//后面修改数据库是不需要？
                                                //inv.LatestStorageTime = System.DateTime.Now;
                                 BusinessHelper.Instance.InitEntity(inv);
@@ -1687,7 +1683,7 @@ namespace RUINORERP.Business
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
                         inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory = 0;
                         inv.Notes = "";//后面修改数据库是不需要？
                         //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);

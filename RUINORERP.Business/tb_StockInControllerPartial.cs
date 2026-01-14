@@ -71,7 +71,7 @@ namespace RUINORERP.Business
                     {
                         inv = new tb_Inventory();
                         inv.Quantity = inv.Quantity + child.Qty;
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory = 0;
                         inv.Location_ID = child.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Notes = "其他入库初始化";

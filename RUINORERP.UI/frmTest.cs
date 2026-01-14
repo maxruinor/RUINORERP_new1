@@ -285,7 +285,6 @@ namespace RUINORERP.UI
                 gdc.ColPropertyInfo = item.Value as PropertyInfo;
                 listCols.Add(gdc);
             }
-            //SourceGridHelper<tb_ProdDetail, tb_OpeningInventory> sgh = new SourceGridHelper<tb_ProdDetail, tb_OpeningInventory>();
             SourceGridHelper sgh = new SourceGridHelper();
             SourceGridDefine sgd = new SourceGridDefine(grid2, listCols, true);
             // sgh.InitGrid(grid2, sgd, "frmtest");

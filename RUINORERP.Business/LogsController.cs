@@ -191,7 +191,7 @@ namespace RUINORERP.Business
             if (rs)
             {
                 ////生成时暂时只考虑了一个主键的情况
-                _eventDrivenCacheManager.DeleteEntity<Logs>(entity.PrimaryKeyID);
+                _eventDrivenCacheManager.DeleteEntity<Logs>(entity.ID);
             }
             return rs;
         }

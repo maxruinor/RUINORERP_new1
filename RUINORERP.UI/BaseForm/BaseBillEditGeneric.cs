@@ -637,8 +637,8 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (entity == null)
                     return null;
-
-                long billId = entity.PrimaryKeyID;
+                string pkName = entity.GetPrimaryKeyColName();
+                long billId = entity.GetPropertyValue(pkName).ToLong();
                 if (billId <= 0)
                     return null;
                 // 获取业务类型
@@ -779,6 +779,8 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
+         
+
                 // 如果当前没有编辑实体或没有有效的单据ID，则不订阅
                 if (EditEntity == null || EditEntity.PrimaryKeyID <= 0 || _lockStatusNotificationService == null)
                     return;
@@ -1450,7 +1452,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 使用V4状态管理系统的按钮控制
                     UpdateAllUIStates(entity);
-                    if (entity.PrimaryKeyID > 0)
+                    if (pkid > 0)
                     {
                         baseEntity.AcceptChanges();
                     }
@@ -2201,7 +2203,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         saveButton.Enabled = false;
                     }
-                    
+
                     try
                     {
                         var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
@@ -2257,6 +2259,10 @@ namespace RUINORERP.UI.BaseForm
                                     EditEntity.AcceptChanges();
                                 }
                             }
+                            else
+                            {
+                                MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
+                            }
 
                         }
                         else
@@ -2306,12 +2312,12 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                                    
+
                             // 调用提交成功后的处理逻辑（虚方法，子类可重写）
                             await AfterSubmitAsync();
                             //提交后别人可以审核 
                             UNLock();
-                    
+
                         }
                     }
                     catch (Exception ex)

@@ -114,21 +114,7 @@ namespace RUINORERP.Model
                 SetProperty(ref _Quantity, value);
             }
         }
-
-        private int _InitInventory = ((0));
-        /// <summary>
-        /// 期初数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "InitInventory", ColDesc = "期初数量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "InitInventory", DecimalDigits = 0, IsNullable = false, ColumnDescription = "期初数量")]
-        public int InitInventory
-        {
-            get { return _InitInventory; }
-            set
-            {
-                SetProperty(ref _InitInventory, value);
-            }
-        }
+ 
 
         private int _Alert_Use = ((0));
         /// <summary>
@@ -370,6 +356,37 @@ namespace RUINORERP.Model
             }
         }
 
+        private int _InitInventory = ((0));
+        /// <summary>
+        /// 期初数量
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InitInventory", ColDesc = "期初数量")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "InitInventory", DecimalDigits = 0, IsNullable = false, ColumnDescription = "期初数量")]
+        public int InitInventory
+        {
+            get { return _InitInventory; }
+            set
+            {
+                SetProperty(ref _InitInventory, value);
+            }
+        }
+
+        private decimal _InitInvCost = ((0));
+        /// <summary>
+        /// 期初成本
+        /// </summary>
+        [AdvQueryAttribute(ColName = "InitInvCost", ColDesc = "期初成本")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "InitInvCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "期初成本")]
+        public decimal InitInvCost
+        {
+            get { return _InitInvCost; }
+            set
+            {
+                SetProperty(ref _InitInvCost, value);
+            }
+        }
+
+
         private string _Notes;
         /// <summary>
         /// 备注说明
@@ -472,13 +489,7 @@ namespace RUINORERP.Model
         //Inventory_ID.FK_TB_INV_A_REFERENCE_TB_INVEN)
         //tb_Inventory.Inventory_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_OpeningInventory.Inventory_ID))]
-        public virtual List<tb_OpeningInventory> tb_OpeningInventories { get; set; }
-        //tb_OpeningInventory.Inventory_ID)
-        //Inventory_ID.FK_TB_OPENI_REFERENCE_TB_INVEN)
-        //tb_Inventory.Inventory_ID)
+       
 
 
         #endregion

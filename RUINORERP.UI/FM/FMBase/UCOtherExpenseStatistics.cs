@@ -23,7 +23,7 @@ using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.FM.FMBase
 {
-   // [MenuAttrAssemblyInfo("其他费用统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用统计)]
+    [MenuAttrAssemblyInfo("其他费用统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.其他费用统计)]
     public partial class UCOtherExpenseStatistics : BaseNavigatorGeneric<View_FM_OtherExpenseItems, View_FM_OtherExpenseItems>
     {
         public UCOtherExpenseStatistics()

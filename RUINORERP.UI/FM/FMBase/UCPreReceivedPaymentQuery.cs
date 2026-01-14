@@ -304,6 +304,7 @@ namespace RUINORERP.UI.FM
         }
 
         //暂时认为一笔预收付就是一笔收付款。不拆分。要拆 拆订单订金  不然太复杂了。
+
         private async void NewSumDataGridView_转为收付款单(object sender, EventArgs e)
         {
 

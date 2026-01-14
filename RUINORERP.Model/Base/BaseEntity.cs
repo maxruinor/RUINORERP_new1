@@ -733,7 +733,7 @@ namespace RUINORERP.Model
 
         [SugarColumn(IsIgnore = true)]
         /// <summary>
-        /// 主键值
+        /// 主键值 通过生成的框架查询时赋值的。新增加保存的逻辑不应该使用他。要注意
         /// </summary>
         [Browsable(false)]
         public long PrimaryKeyID { get; set; }

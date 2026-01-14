@@ -193,7 +193,7 @@ namespace RUINORERP.Business
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
                         inv.Quantity = 0;
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory =0;
                         inv.Notes = "";//后面修改数据库是不需要？
                                        //inv.LatestStorageTime = System.DateTime.Now;
                         BusinessHelper.Instance.InitEntity(inv);

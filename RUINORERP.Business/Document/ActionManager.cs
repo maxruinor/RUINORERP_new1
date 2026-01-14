@@ -135,11 +135,13 @@ namespace RUINORERP.Business.Document
         /// <param name="document">单据对象</param>
         private async Task SaveDocumentAsync<T>(T document) where T : BaseEntity, new()
         {
-            if (document.PrimaryKeyID > 0)
+            string pkName = document.GetPrimaryKeyColName();
+            long keyid = document.GetPropertyValue(pkName).ToLong();
+            if (keyid > 0)
             {
                 // 更新操作
                 await _db.Updateable(document).ExecuteCommandAsync();
-                _logger.LogDebug($"已更新单据: {typeof(T).Name}, ID: {document.PrimaryKeyID}");
+                _logger.LogDebug($"已更新单据: {typeof(T).Name}, ID: {keyid}");
             }
             else
             {
@@ -176,7 +178,7 @@ namespace RUINORERP.Business.Document
             {
                 // 这里可以添加基于单据状态的过滤逻辑
                 // 例如：已审核的单据不能再次转换等
-                _logger.LogDebug($"根据单据状态过滤可用操作，源单据类型: {typeof(TSource).Name}, ID: {source.PrimaryKeyID}");
+              //  _logger.LogDebug($"根据单据状态过滤可用操作，源单据类型: {typeof(TSource).Name}, ID: {source.PrimaryKeyID}");
 
                 // 添加基于状态的过滤逻辑
                 // 只有已审核的单据才能进行转换操作

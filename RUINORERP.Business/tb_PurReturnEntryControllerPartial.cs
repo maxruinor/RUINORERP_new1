@@ -372,7 +372,7 @@ namespace RUINORERP.Business
                     {
                         inv = new tb_Inventory();
                         inv.Quantity = inv.Quantity - child.Quantity;
-                        inv.InitInventory = (int)inv.Quantity;
+                        inv.InitInventory =0;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
                     }

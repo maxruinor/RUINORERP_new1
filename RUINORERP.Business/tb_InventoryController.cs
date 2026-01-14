@@ -248,14 +248,12 @@ namespace RUINORERP.Business
             
                              rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_Inventory>(entity as tb_Inventory)
                         .Include(m => m.tb_Inv_Alert_Attributes)
-                    .Include(m => m.tb_OpeningInventories)
                     .ExecuteCommandAsync();
                  }
         else    
         {
                         rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_Inventory>(entity as tb_Inventory)
                 .Include(m => m.tb_Inv_Alert_Attributes)
-                .Include(m => m.tb_OpeningInventories)
          
                 .ExecuteCommandAsync();
                                           
@@ -290,7 +288,6 @@ namespace RUINORERP.Business
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Inventory>()
                                 .Includes(m => m.tb_Inv_Alert_Attributes)
-                        .Includes(m => m.tb_OpeningInventories)
                                         .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
         }
@@ -301,7 +298,6 @@ namespace RUINORERP.Business
             tb_Inventory entity = model as tb_Inventory;
              bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_Inventory>(m => m.Inventory_ID== entity.Inventory_ID)
                                 .Include(m => m.tb_Inv_Alert_Attributes)
-                        .Include(m => m.tb_OpeningInventories)
                                         .ExecuteCommandAsync();
             if (rs)
             {
@@ -475,7 +471,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_Inv_Alert_Attributes )
-                                .Includes(t => t.tb_OpeningInventories )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -500,7 +495,6 @@ namespace RUINORERP.Business
                                .Includes(t => t.tb_proddetail )
                                .Includes(t => t.tb_location )
                                             .Includes(t => t.tb_Inv_Alert_Attributes )
-                                .Includes(t => t.tb_OpeningInventories )
                         .ToListAsync();
             
             foreach (var item in list)
@@ -525,7 +519,6 @@ namespace RUINORERP.Business
                             .Includes(t => t.tb_proddetail )
                             .Includes(t => t.tb_location )
                                         .Includes(t => t.tb_Inv_Alert_Attributes )
-                            .Includes(t => t.tb_OpeningInventories )
                         .ToList();
             
             foreach (var item in list)
@@ -569,7 +562,6 @@ namespace RUINORERP.Business
                         
 
                                             .Includes(t => t.tb_Inv_Alert_Attributes )
-                                            .Includes(t => t.tb_OpeningInventories )
                                 .FirstAsync();
             if(entity!=null)
             {

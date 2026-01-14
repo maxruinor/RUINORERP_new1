@@ -16,7 +16,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.FM
 {
 
-    [MenuAttrAssemblyInfo("收款统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用管理, BizType.收款统计)]
+    [MenuAttrAssemblyInfo("收款统计", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款统计)]
     public partial class UCFMReceivedRecordStatistics : UCPaymentRecordStatistics, ISharedIdentification
     {
         public UCFMReceivedRecordStatistics()

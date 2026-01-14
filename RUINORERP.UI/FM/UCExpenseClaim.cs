@@ -466,7 +466,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
 
             listCols.SetCol_DataFilter<tb_FM_ExpenseClaimDetail, tb_FM_ExpenseType>(c => c.ExpenseType_id,
-                 DataFilter<tb_FM_ExpenseType>.Where(p => p.EXPOrINC == true)
+                 DataFilter<tb_FM_ExpenseType>.Where(p => p.ReceivePaymentType == (int)ReceivePaymentType.付款)
                  );
 
             sgd = new SourceGridDefine(grid1, listCols, true);

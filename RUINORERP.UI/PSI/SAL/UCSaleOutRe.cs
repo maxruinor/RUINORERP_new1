@@ -1050,13 +1050,18 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (NeedValidated)
                 {
-                    RefundStatus oldRefundStatus = (RefundStatus)EditEntity.GetOriginalValue(nameof(EditEntity.RefundStatus));
-                    RefundStatus newRefundStatus = (RefundStatus)EditEntity.RefundStatus;
-                    if (!GlobalStateRulesManager.Instance.IsValidTransition<RefundStatus>(oldRefundStatus, newRefundStatus))
+                    if (EditEntity.RefundStatus.HasValue && EditEntity.GetOriginalValue(nameof(EditEntity.RefundStatus)) != null)
                     {
-                        System.Windows.Forms.MessageBox.Show("退回状态转换错误", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return false;
+                        RefundStatus oldRefundStatus = (RefundStatus)EditEntity.GetOriginalValue(nameof(EditEntity.RefundStatus));
+                        RefundStatus newRefundStatus = (RefundStatus)EditEntity.RefundStatus;
+                        if (!GlobalStateRulesManager.Instance.IsValidTransition<RefundStatus>(oldRefundStatus, newRefundStatus))
+                        {
+                            System.Windows.Forms.MessageBox.Show("退回状态转换错误", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return false;
+                        }
                     }
+
+
 
                 }
 

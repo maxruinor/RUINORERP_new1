@@ -269,8 +269,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                 }
 
                 // 检查会话是否已验证（适用于非WelcomeAck和非Login命令）
-                if (!sessionInfo.IsVerified && 
-                    package.Packet.CommandId != SystemCommands.WelcomeAck && 
+                if (!sessionInfo.IsVerified &&
+                    package.Packet.CommandId != SystemCommands.WelcomeAck &&
                     package.Packet.CommandId != AuthenticationCommands.Login)
                 {
                     // 会话存在但未验证，返回相应错误
@@ -546,8 +546,8 @@ namespace RUINORERP.Server.Network.SuperSocket
                     // 网络监控：发送响应
                     if (IsNetworkMonitorEnabled && ShouldMonitorCommand(package.CommandId))
                     {
-                        _logger?.LogDebug("[网络监控] 发送响应: SessionId={SessionId}, CommandId={CommandId}, PacketId={PacketId}",
-                            package.SessionId, package.CommandId.ToString(), package.PacketId);
+                        _logger?.LogDebug($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}"
+                            );
 
                         // 打印到主界面
                         frmMainNew.Instance.PrintInfoLog($"[网络监控] 发送响应: SessionId={package.SessionId}, CommandId={package.CommandId.ToString()}, PacketId={package.PacketId}");
@@ -658,7 +658,7 @@ namespace RUINORERP.Server.Network.SuperSocket
         {
             // 获取原始请求的RequestId
             string originalRequestId = requestPackage.Packet?.Request?.RequestId;
-            
+
             // 创建错误响应包
             var errorResponse = new PacketModel
             {
@@ -723,7 +723,7 @@ namespace RUINORERP.Server.Network.SuperSocket
             {
                 errorResponse.Extensions["RequestId"] = originalRequestId;
             }
-            
+
             // 如果请求包中包含RequestId，则在响应包中保留它，以便客户端匹配请求和响应
             if (requestPackage.Packet?.Extensions?.TryGetValue("RequestId", out var requestIdFromExtensions) == true)
             {

@@ -75,7 +75,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private async Task<IResponse> HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
         {
             var startTime = DateTime.Now;
-            
+
             try
             {
                 SessionInfo sessionInfo = new SessionInfo();
@@ -84,7 +84,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 {
                     // 使用UserId进行会话验证，不再依赖完整的UserInfo
                     sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
-                    
+
                     if (heartbeatRequest.UserId == 0 || sessionInfo == null)
                     {
                         var responseNotLogin = HeartbeatResponse.Create(false, "用户不存在或会话已过期")
@@ -144,7 +144,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             }
                             catch (Exception ex)
                             {
-                                LogError(ex, "异步更新会话信息失败");
+                                LogError("异步更新会话信息失败", ex);
                             }
                         }, cancellationToken);
                     }
@@ -155,7 +155,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
 
                     var processingDuration = (DateTime.Now - startTime).TotalMilliseconds;
-                    
+
                     if (response.ServerInfo != null)
                     {
                         response.ServerInfo["ProcessingDurationMs"] = processingDuration;
@@ -172,9 +172,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             catch (Exception ex)
             {
                 var processingDuration = (DateTime.Now - startTime).TotalMilliseconds;
-                LogError(ex, "处理心跳命令异常，耗时: {Duration}ms", processingDuration);
+                LogError($"处理心跳命令异常，耗时: {processingDuration}ms", ex);
                 LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
-                
+
                 var errorResponse = new HeartbeatResponse
                 {
                     IsSuccess = false,

@@ -237,6 +237,51 @@ namespace RUINORERP.Model
                         }
         }
 
+        private int? _RelatedBizType;
+        /// <summary>
+        /// 关联单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedBizType", ColDesc = "关联单据")]
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "RelatedBizType", DecimalDigits = 0, IsNullable = true, ColumnDescription = "关联单据")]
+        public int? RelatedBizType
+        {
+            get { return _RelatedBizType; }
+            set
+            {
+                SetProperty(ref _RelatedBizType, value);
+            }
+        }
+
+        private long? _RelatedId;
+        /// <summary>
+        /// 关联单据
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedId", ColDesc = "关联单据")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "RelatedId", DecimalDigits = 0, IsNullable = true, ColumnDescription = "关联单据")]
+        public long? RelatedId
+        {
+            get { return _RelatedId; }
+            set
+            {
+                SetProperty(ref _RelatedId, value);
+            }
+        }
+
+        private string _RelatedNo;
+        /// <summary>
+        /// 关联单据编号
+        /// </summary>
+        [AdvQueryAttribute(ColName = "RelatedNo", ColDesc = "关联单据编号")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "RelatedNo", Length = 30, IsNullable = true, ColumnDescription = "关联单据编号")]
+        public string RelatedNo
+        {
+            get { return _RelatedNo; }
+            set
+            {
+                SetProperty(ref _RelatedNo, value);
+            }
+        }
+
         private string _Summary;
         /// <summary>
         /// 摘要

@@ -1,4 +1,8 @@
 ﻿ 
+ --先清空财务数据
+TRUNCATE TABLE tb_SaleOrderDetail;
+
+
 -- 执行 TRUNCATE 语句
 TRUNCATE TABLE tb_SaleOrderDetail;
 TRUNCATE TABLE tb_PurOrderDetail;

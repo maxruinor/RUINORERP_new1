@@ -629,6 +629,8 @@ namespace RUINORERP.UI.PSI.PUR
                     e => e.PrintStatus,
                     e => e.ShipCost,
                     e => e.ForeignShipCost,
+                    e => e.Paytype_ID,
+                    e => e.PayStatus,
                     e => e.Deposit,
                     e => e.ForeignDeposit)
                 // 明细表忽略的属性

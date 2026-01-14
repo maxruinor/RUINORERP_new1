@@ -921,6 +921,8 @@ namespace RUINORERP.UI.PSI.SAL
                     e => e.PrintStatus,
                     e => e.TotalCommissionAmount,
                     e => e.Deposit,
+                    e => e.Paytype_ID,
+                    e => e.PayStatus,
                     e => e.ForeignDeposit)
                 // 明细表忽略的属性
                 .Ignore<tb_SaleOrderDetail>(
@@ -1498,7 +1500,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-              
+
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

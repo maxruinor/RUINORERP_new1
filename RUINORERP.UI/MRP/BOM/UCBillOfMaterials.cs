@@ -1,56 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RUINORERP.Common;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.UI.UCSourceGrid;
-using System.Reflection;
-using System.Collections.Concurrent;
-using RUINORERP.Common.CollectionExtension;
-using static RUINORERP.UI.Common.DataBindingHelper;
-using static RUINORERP.UI.Common.GUIUtils;
-using RUINORERP.Model.Dto;
+﻿using AutoMapper;
 using DevAge.Windows.Forms;
-using RUINORERP.Common.Helper;
-using RUINORERP.Global.CustomAttribute;
-using RUINORERP.Global;
-using RUINORERP.UI.Report;
-using RUINORERP.UI.BaseForm;
+using HLH.Lib.List;
+using Krypton.Toolkit.Suite.Extended.TreeGridView;
+using log4net.Core;
 using Microsoft.Extensions.Logging;
-using RUINORERP.UI.Network.Services;
-using SqlSugar;
-using SourceGrid;
-using System.Linq.Expressions;
-using RUINORERP.Common.Extensions;
-
-using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
+using Mysqlx.Crud;
+using Netron.GraphLib;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using RUINOR.Core;
+using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
-using AutoMapper;
+using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
-using OfficeOpenXml;
-using Krypton.Toolkit.Suite.Extended.TreeGridView;
-using HLH.Lib.List;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
-using System.IO;
-using OfficeOpenXml.Style;
-using log4net.Core;
-using Netron.GraphLib;
-using FileInfo = System.IO.FileInfo;
-using System.Windows.Documents;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
-using System.Diagnostics;
+using RUINORERP.Model;
+using RUINORERP.Model.Dto;
 using RUINORERP.UI.AdvancedUIModule;
-using Mysqlx.Crud;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.Report;
+using RUINORERP.UI.UCSourceGrid;
+using SourceGrid;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Documents;
+using System.Windows.Forms;
+using static RUINORERP.UI.Common.DataBindingHelper;
+using static RUINORERP.UI.Common.GUIUtils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
+using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
+using FileInfo = System.IO.FileInfo;
 
 
 
@@ -111,6 +111,27 @@ namespace RUINORERP.UI.MRP.BOM
 
         #endregion
 
+        // 忽略属性配置
+        // 重写忽略属性配置
+        protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            return base.ConfigureIgnoreProperties()
+                // 主表忽略的属性
+                .Ignore<tb_BOM_S>(
+                    e => e.BOM_ID,
+                    e => e.PrimaryKeyID,
+                    e => e.DataStatus,
+                    e => e.ApprovalStatus,
+                    e => e.ApprovalResults,
+                    e => e.Approver_by,
+                    e => e.Approver_at
+
+              )
+                // 明细表忽略的属性
+                .Ignore<tb_BOM_SDetail>(
+                    e => e.SubID,
+                    e => e.Substitute);
+        }
 
         private void ExportExcel_Click(object sender, EventArgs e)
         {
@@ -1295,7 +1316,7 @@ namespace RUINORERP.UI.MRP.BOM
                 txtProdDetailID.ToolTipValues.Heading = "请选择物料编码，不能手动输入SKU码";
                 EditEntity.DataStatus = (int)DataStatus.草稿;
                 EditEntity.ActionStatus = ActionStatus.新增;
-            
+
                 if (string.IsNullOrEmpty(entity.BOM_No))
                 {
                     entity.BOM_No = ClientBizCodeService.GetBizBillNo(BizType.BOM物料清单);
@@ -1480,7 +1501,7 @@ namespace RUINORERP.UI.MRP.BOM
                 EditEntity.OutProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalOutManuCost + EditEntity.OutApportionedCost;
                 EditEntity.SelfProductionAllCosts = EditEntity.TotalMaterialCost + EditEntity.TotalSelfManuCost + EditEntity.SelfApportionedCost;
 
-      
+
             };
             if (EditEntity.tb_BOM_SDetails == null)
             {
@@ -1677,7 +1698,7 @@ namespace RUINORERP.UI.MRP.BOM
             //DevAge.ComponentModel.IBoundList bd = list.ToBindingSortCollection<View_ProdDetail>()  ;//new DevAge.ComponentModel.BoundDataView(mView);
             // grid1.DataSource = list.ToBindingSortCollection<View_ProdDetail>() as DevAge.ComponentModel.IBoundList;// new DevAge.ComponentModel.BoundDataView(list.ToDataTable().DefaultView); 
             InitDataTocmbbox();
-            
+
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -1825,7 +1846,7 @@ namespace RUINORERP.UI.MRP.BOM
         private void LoadgridSubstituteMaterial()
         {
             InitDataTocmbbox();
-            
+
             gridSubstituteMaterial.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             gridSubstituteMaterial.Selection.EnableMultiSelection = false;
 
@@ -2114,7 +2135,7 @@ namespace RUINORERP.UI.MRP.BOM
                     SaveResult = await ctr.SaveOrUpdateWithChild<tb_BOM_S>(EditEntity); //await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
-                         
+
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.BOM_No}。");
                     }
                     else

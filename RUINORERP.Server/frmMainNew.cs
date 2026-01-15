@@ -185,9 +185,14 @@ namespace RUINORERP.Server
         private Dictionary<ushort, ToolStripMenuItem> _commandFilterMenuItems = new Dictionary<ushort, ToolStripMenuItem>();
 
         /// <summary>
+        /// 用于保护日志级别变量的线程安全锁
+        /// </summary>
+        private static readonly object _logLevelLock = new object();
+        
+        /// <summary>
         /// 全局日志级别控制器
         /// </summary>
-        private static LogLevel _currentLogLevel = LogLevel.Error;
+        private static LogLevel _currentLogLevel = LogLevel.Information; // 初始值设置为Information，允许更多日志被记录
 
         /// <summary>
         /// 日志级别菜单项列表
@@ -1046,12 +1051,42 @@ namespace RUINORERP.Server
         /// <param name="logLevel">日志级别</param>
         public static void SetGlobalLogLevel(LogLevel logLevel)
         {
-            _currentLogLevel = logLevel;
-            // 记录日志级别变更
+            // 验证日志级别有效性
+            if (!Enum.IsDefined(typeof(LogLevel), logLevel))
+            {
+                System.Diagnostics.Debug.WriteLine($"警告: 尝试设置非法日志级别: {logLevel}");
+                return;
+            }
+            
+            LogLevel oldLevel;
+            
+            // 使用锁保护日志级别变更，确保线程安全
+            lock (_logLevelLock)
+            {
+                oldLevel = _currentLogLevel;
+                if (oldLevel == logLevel)
+                {
+                    // 级别未变化，无需处理
+                    return;
+                }
+                
+                _currentLogLevel = logLevel;
+            }
+            
+            // 记录日志级别变更历史
             var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger<frmMainNew>();
-
-
+            
+            if (logger != null)
+            {
+                // 使用新的日志级别记录变更
+                logger.LogInformation($"全局日志级别已从 {oldLevel} 变更为 {logLevel}");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"全局日志级别已从 {oldLevel} 变更为 {logLevel}");
+            }
+            
             // 更新菜单项选中状态
             Instance?.UpdateLogLevelMenuCheckState();
         }
@@ -1096,7 +1131,11 @@ namespace RUINORERP.Server
         /// <returns>当前日志级别</returns>
         public static LogLevel GetGlobalLogLevel()
         {
-            return _currentLogLevel;
+            // 使用锁保护日志级别读取，确保线程安全
+            lock (_logLevelLock)
+            {
+                return _currentLogLevel;
+            }
         }
 
         /// <summary>
@@ -3190,7 +3229,7 @@ namespace RUINORERP.Server
         /// <param name="e">事件参数</param>
         private async void toolStripButtonStartServer_Click(object sender, EventArgs e)
         {
-            _logger?.LogInformation($"[StartServerAsync]");
+            _logger?.Error($"[StartServerAsync]");
             await StartServerAsync();
         }
 
@@ -3214,6 +3253,7 @@ namespace RUINORERP.Server
             var logger = Startup.GetFromFac<ILogger<frmMainNew>>();
             logger.LogInformation("刷新数据3");
             logger.Info("刷新数据4");
+            logger.LogError("test error");
             RefreshCurrentTab();
         }
 

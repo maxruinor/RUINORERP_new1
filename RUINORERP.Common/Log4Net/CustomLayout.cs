@@ -47,14 +47,36 @@ namespace RUINORERP.Common.Log4Net {
             {
                 if (Option != null)
                 {
-                    // 尝试从ThreadContext.Properties中获取属性值
+                    // 尝试从多种来源获取属性值
                     object propertyValue = null;
+                    
+                    // 1. 首先尝试从Properties中获取（新版方式）
                     if (loggingEvent.Properties.Contains(Option))
                     {
                         propertyValue = loggingEvent.Properties[Option];
                     }
+                    
+                    // 2. 如果未找到，尝试从MDC中获取（旧版方式，兼容当前代码）
+                    if (propertyValue == null)
+                    {
+                        // 使用反射获取MDC值，确保兼容性
+                        try
+                        {
+                            // 尝试直接从MDC获取值
+                            var mdcType = typeof(log4net.MDC);
+                            var getMethod = mdcType.GetMethod("Get", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+                            if (getMethod != null)
+                            {
+                                propertyValue = getMethod.Invoke(null, new object[] { Option });
+                            }
+                        }
+                        catch (Exception mdcEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"从MDC获取属性 {Option} 失败: {mdcEx.Message}");
+                        }
+                    }
 
-                    // 如果未找到，尝试使用基类的方式查找
+                    // 3. 如果仍未找到，尝试使用基类的方式查找
                     if (propertyValue == null)
                     {
                         // 使用LookupProperty方法尝试获取属性值

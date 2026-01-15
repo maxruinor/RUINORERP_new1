@@ -256,27 +256,31 @@ namespace RUINORERP.Server
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
-
+                    // 开发环境设置较低的日志级别，便于调试
+                    // 生产环境可以根据需要调整为更高的日志级别
+                    // 允许更多日志通过，确保调试日志能够正常记录
                     // RUINORERP命名空间使用动态日志级别
                     if (category.StartsWith("RUINORERP"))
                     {
-                        return logLevel >= RUINORERP.Server.frmMainNew.GetGlobalLogLevel();
+                        // 使用动态日志级别，从frmMainNew获取当前全局日志级别
+                        return logLevel >= frmMainNew.GetGlobalLogLevel();
                     }
                     if (category.StartsWith("WorkflowCore"))
                     {
-                        return logLevel >= LogLevel.Error;
+                        // WorkflowCore也使用动态日志级别
+                        return logLevel >= frmMainNew.GetGlobalLogLevel();
                     }
 
-                    // 保留原有其他过滤规则
+                    // 保留原有其他过滤规则，但降低日志级别
                     else if (category == "Microsoft.Hosting.Lifetime" ||
                              category.StartsWith("Microsoft") ||
                              category.StartsWith("System.Net.Http.HttpClient"))
                     {
-                        return logLevel >= LogLevel.Error;
+                        // 降低Microsoft相关日志级别，允许更多日志通过
+                        return logLevel >= LogLevel.Warning;
                     }
-                    // 其他日志正常记录  
-                    // 修改为记录Information级别及以上的日志，与客户端保持一致
-                    return logLevel >= LogLevel.Error;
+                    // 其他日志使用动态日志级别  
+                    return logLevel >= frmMainNew.GetGlobalLogLevel();
                 });
             });
 

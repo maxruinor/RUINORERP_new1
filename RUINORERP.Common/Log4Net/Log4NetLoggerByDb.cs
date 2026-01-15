@@ -90,26 +90,32 @@ namespace RUINORERP.Common.Log4Net
         /// <param name="state"></param>
         /// <param name="exception"></param>
         /// <param name="formatter"></param>
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <typeparam name="TState">日志状态类型</typeparam>
+        /// <param name="logLevel">日志级别</param>
+        /// <param name="eventId">事件ID</param>
+        /// <param name="state">日志状态对象，支持字符串类型直接传入</param>
+        /// <param name="exception">异常对象，可为null</param>
+        /// <param name="formatter">日志格式化委托，可为null</param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
             System.Exception exception, Func<TState, System.Exception, string> formatter)
         {
-            if (formatter == null)
-            {
-                return;
-            }
             try
             {
-
-               
-
                 if (!IsEnabled(logLevel))
                 {
                     return;
                 }
                 
-                // 每次创建新实例，避免共享状态
+                // 处理日志消息，支持多种情况：
+                // 1. 有格式化器时使用格式化器生成消息
+                // 2. 无格式化器但state为字符串时直接使用
+                // 3. 无格式化器且state非字符串时调用ToString()
                 string message = null;
-                if (null != formatter)
+                
+                if (formatter != null)
                 {
                     try
                     {
@@ -118,51 +124,84 @@ namespace RUINORERP.Common.Log4Net
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine("格式化日志消息失败: " + ex.Message);
-                        message = "无法格式化日志消息: " + state?.ToString();
+                        // 格式化失败时，尝试直接使用state
+                        message = GetLogMessageFromState(state, exception, ex);
                     }
                 }
+                else
+                {
+                    // 无格式化器时，直接从state获取消息
+                    message = GetLogMessageFromState(state, exception, null);
+                }
                 
-                // 确保应用程序上下文和当前用户不为空
+                // 确保应用程序上下文不为空
                 if (_appcontext == null)
                 {
                     System.Diagnostics.Debug.WriteLine("警告: 应用程序上下文为空");
                     return;
                 }
                 
-                if (_appcontext.CurUserInfo == null)
+                // 确保日志对象不为空
+                if (_appcontext.log == null)
                 {
-                    System.Diagnostics.Debug.WriteLine("警告: 当前用户上下文为空");
-                    return;
+                    _appcontext.log = new Logs();
+                    // 设置默认日志属性
+                    _appcontext.log.IP = "server";
+                    _appcontext.log.MachineName = System.Environment.MachineName + "-" + System.Environment.UserName;
                 }
 
-                // 使用MappedDiagnosticsContext确保线程安全
+                // 使用ThreadContext.Properties代替MDC，确保与log4net新版本兼容
+                // 同时设置MDC以保持向后兼容
                 if (_appcontext.log.User_ID!=null)
                 {
+                    log4net.ThreadContext.Properties["User_ID"] = _appcontext.log.User_ID.ToString();
                     log4net.MDC.Set("User_ID", _appcontext.log.User_ID.ToString());
                 }
                 else
                 {
-                    log4net.MDC.Set("User_ID", "0"); // 使用0代替空字符串，避免格式转换异常
+                    log4net.ThreadContext.Properties["User_ID"] = "0"; // 使用0代替空字符串，避免格式转换异常
+                    log4net.MDC.Set("User_ID", "0");
                 }
              
-                log4net.MDC.Set("ModName", _appcontext.log.ModName);
-                log4net.MDC.Set("ActionName", _appcontext.log.ActionName);
-                log4net.MDC.Set("IP", _appcontext.log.IP);
-                log4net.MDC.Set("Path", _appcontext.log.Path);
-                log4net.MDC.Set("MAC", _appcontext.log.MAC);
-                log4net.MDC.Set("MachineName", _appcontext.log.MachineName);
-                log4net.MDC.Set("Operator", _appcontext.CurUserInfo.客户端版本 ?? "未登录用户");
+                log4net.ThreadContext.Properties["ModName"] = _appcontext.log.ModName ?? "";
+                log4net.MDC.Set("ModName", _appcontext.log.ModName ?? "");
+                
+                log4net.ThreadContext.Properties["ActionName"] = _appcontext.log.ActionName ?? "";
+                log4net.MDC.Set("ActionName", _appcontext.log.ActionName ?? "");
+                
+                log4net.ThreadContext.Properties["IP"] = _appcontext.log.IP ?? "";
+                log4net.MDC.Set("IP", _appcontext.log.IP ?? "");
+                
+                log4net.ThreadContext.Properties["Path"] = _appcontext.log.Path ?? "";
+                log4net.MDC.Set("Path", _appcontext.log.Path ?? "");
+                
+                log4net.ThreadContext.Properties["MAC"] = _appcontext.log.MAC ?? "";
+                log4net.MDC.Set("MAC", _appcontext.log.MAC ?? "");
+                
+                log4net.ThreadContext.Properties["MachineName"] = _appcontext.log.MachineName ?? "";
+                log4net.MDC.Set("MachineName", _appcontext.log.MachineName ?? "");
+                
+                // 当CurUserInfo为空时，使用默认值
+                if (_appcontext.CurUserInfo == null)
+                {
+                    log4net.ThreadContext.Properties["Operator"] = "系统服务";
+                    log4net.MDC.Set("Operator", "系统服务");
+                }
+                else
+                {
+                    log4net.ThreadContext.Properties["Operator"] = _appcontext.CurUserInfo.客户端版本 ?? "未登录用户";
+                    log4net.MDC.Set("Operator", _appcontext.CurUserInfo.客户端版本 ?? "未登录用户");
+                }
+                
+                log4net.ThreadContext.Properties["Message"] = message ?? "";
                 log4net.MDC.Set("Message", message ?? "");
+                
+                log4net.ThreadContext.Properties["Exception"] = exception?.StackTrace ?? "";
                 log4net.MDC.Set("Exception", exception?.StackTrace ?? "");
                 
-                // 简化日志记录过程，直接使用消息和异常对象
-
-                //log = _appcontext.log;//公共部分一次给过去
-
-                #region 如果这里异常可能会卡死所有db,因为使用了DB存日志 所以加上try
+                // 通过反射取出异常值 - 注意：这里只更新上下文属性，不重复记录日志
                 try
                 {
-                    // 通过反射取出异常值 - 注意：这里只更新上下文属性，不重复记录日志
                     if (state != null)
                     {
                         FieldInfo[] fieldsInfo = state.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -217,8 +256,7 @@ namespace RUINORERP.Common.Log4Net
                     System.Diagnostics.Debug.WriteLine("处理日志状态对象失败: " + ex.Message);
                 }
                 
-                #endregion
-                
+                // 确保至少有消息或异常时才记录日志
                 if (!string.IsNullOrEmpty(message) || exception != null)
                 {
                     switch (logLevel)
@@ -258,8 +296,52 @@ namespace RUINORERP.Common.Log4Net
             {
                 System.Diagnostics.Debug.WriteLine($"日志处理异常: {exx.Message}\n{exx.StackTrace}");
             }
-
-
+        }
+        
+        /// <summary>
+        /// 从日志状态对象中获取日志消息
+        /// </summary>
+        /// <typeparam name="TState">日志状态类型</typeparam>
+        /// <param name="state">日志状态对象</param>
+        /// <param name="exception">异常对象</param>
+        /// <param name="formatException">格式化异常，可为null</param>
+        /// <returns>日志消息字符串</returns>
+        private string GetLogMessageFromState<TState>(TState state, System.Exception exception, Exception formatException)
+        {
+            string message = string.Empty;
+            
+            // 优先处理字符串类型的state
+            if (state is string strState)
+            {
+                message = strState;
+            }
+            // 非字符串类型调用ToString()
+            else if (state != null)
+            {
+                try
+                {
+                    message = state.ToString();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("调用state.ToString()失败: " + ex.Message);
+                    message = "无法获取日志消息: 调用ToString()失败";
+                }
+            }
+            
+            // 处理格式化异常信息
+            if (formatException != null)
+            {
+                message += $" (格式化异常: {formatException.Message})";
+            }
+            
+            // 如果没有获取到消息，但有异常，使用异常消息
+            if (string.IsNullOrEmpty(message) && exception != null)
+            {
+                message = exception.Message;
+            }
+            
+            return message;
         }
 
 

@@ -1,35 +1,36 @@
+using HLH.Lib.List;
+using Krypton.Toolkit;
+using Krypton.Toolkit.Suite.Extended.TreeGridView;
+using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
+using RUINORERP.Business;
+using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
 using RUINORERP.Model;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.UserCenter.DataParts;
 using SqlSugar;
+using SuperSocket.ClientEngine;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls.WebParts;
 using System.Windows.Forms;
-using RUINORERP.Common.CollectionExtension;
-using HLH.Lib.List;
-using System.Linq.Expressions;
-using Krypton.Toolkit.Suite.Extended.TreeGridView;
-using RUINORERP.UI.Common;
-using RUINORERP.Business;
-using Microsoft.Extensions.Logging;
-using RUINORERP.Common.Extensions;
-using System.Collections.Concurrent;
-using RUINORERP.Global;
-using RUINORERP.Business.CommService;
 using System.Windows.Navigation;
-using Netron.GraphLib;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Common.Helper;
-using Krypton.Toolkit;
-using SuperSocket.ClientEngine;
-using System.Diagnostics;
-using RUINORERP.UI.UserCenter.DataParts;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -92,8 +93,19 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async void kryptonCommandRefresh_Execute(object sender, EventArgs e)
         {
-            int PURListCount = await uCMRP.QueryMRPDataStatus();
-            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
+            await base._guardService.ExecuteWithGuardAsync(
+               nameof(kryptonCommandRefresh_Execute),
+               this.GetType().Name,
+               async () =>
+               {
+                   #region 加载工作台数据
+
+                   int PURListCount = await uCMRP.QueryMRPDataStatus();
+                   kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + PURListCount.ToString() + "】计划生产中";
+                   #endregion
+               },
+               showStatusMessage: true
+           );
         }
 
         private void buttonSpecHeaderGroup2_Click(object sender, EventArgs e)

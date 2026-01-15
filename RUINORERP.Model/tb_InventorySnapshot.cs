@@ -99,20 +99,7 @@ namespace RUINORERP.Model
             }
         }
 
-        private int _InitInventory = ((0));
-        /// <summary>
-        /// 期初数量
-        /// </summary>
-        [AdvQueryAttribute(ColName = "InitInventory", ColDesc = "期初数量")]
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType = "Int32", ColumnName = "InitInventory", DecimalDigits = 0, IsNullable = false, ColumnDescription = "期初数量")]
-        public int InitInventory
-        {
-            get { return _InitInventory; }
-            set
-            {
-                SetProperty(ref _InitInventory, value);
-            }
-        }
+
 
         private long? _Rack_ID;
         /// <summary>

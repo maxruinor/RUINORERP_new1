@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.UI.BusinessService;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Extensions.Logging;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -19,8 +21,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public UCBaseCell()
         {
             InitializeComponent();
+            // 初始化防重复操作服务（延迟初始化，避免设计时错误）
+            if (_guardService == null)
+            {
+                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
+            }
         }
-
+        /// <summary>
+        /// 防重复操作服务实例
+        /// </summary>
+        public RepeatOperationGuardService _guardService;
         /// <summary>
         /// 数据加载方法，子类应重写此方法实现数据加载逻辑
         /// </summary>

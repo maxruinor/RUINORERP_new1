@@ -62,8 +62,59 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 当前连接状态
+        /// 增强版：更全面的连接状态判断
         /// </summary>
-        public bool IsConnected => _isConnected && _socketClient.IsConnected;
+        public bool IsConnected
+        {
+            get
+            {
+                try
+                {
+                    // 1. 检查本地连接状态标志
+                    if (!_isConnected)
+                    {
+                        _logger?.LogTrace("连接状态检查：本地连接状态标志为false");
+                        return false;
+                    }
+                    
+                    // 2. 检查Socket客户端连接状态
+                    if (!_socketClient.IsConnected)
+                    {
+                        _logger?.LogTrace("连接状态检查：Socket客户端未连接");
+                        return false;
+                    }
+                    
+                    // 3. 检查服务器信息是否完整
+                    if (string.IsNullOrEmpty(_serverAddress) || _serverPort <= 0)
+                    {
+                        _logger?.LogTrace("连接状态检查：服务器信息不完整");
+                        return false;
+                    }
+                    
+                    // 4. 检查是否正在进行重连操作
+                    if (_isReconnecting)
+                    {
+                        _logger?.LogTrace("连接状态检查：正在进行重连操作");
+                        return false;
+                    }
+                    
+                    // 5. 检查资源是否已释放
+                    if (_disposed)
+                    {
+                        _logger?.LogTrace("连接状态检查：资源已释放");
+                        return false;
+                    }
+                    
+                    _logger?.LogTrace("连接状态检查：所有检查通过，连接正常");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "检查连接状态时发生异常");
+                    return false;
+                }
+            }
+        }
 
         /// <summary>
         /// 当前服务器地址

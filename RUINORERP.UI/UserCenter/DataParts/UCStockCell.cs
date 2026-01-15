@@ -55,7 +55,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         }
 
 
-        private  void QueryStockInfo()
+        private void QueryStockInfo()
         {
             try
             {
@@ -82,7 +82,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
                 var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                              //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
-                var SaleOutList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
+                var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
                     , Employees, sqloutput);//返回List
                 kryptonTreeGridView1.ReadOnly = true;
 
@@ -171,7 +171,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             //if (MainForm.GetLastInputTime() > 10000 && kryptonTreeGridView1.Rows.Count > 0)
             //{
-            
+
             //    QueryStockOtherIn();
             //    QueryStockOtherOut();
             //}
@@ -200,13 +200,24 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private void kryptonCommand1_Execute(object sender, EventArgs e)
         {
+            base._guardService.ExecuteWithGuard(
+                    nameof(kryptonCommand1_Execute),
+                 this.GetType().Name,
+                  () =>
+                 {
+                     #region 加载工作台数据
 
-            QueryStockOtherIn();
-            QueryStockOtherOut();
+                     QueryStockOtherIn();
+                     QueryStockOtherOut();
+                     #endregion
+                 },
+                 showStatusMessage: true
+              );
+
         }
 
 
-        private  void QueryStockOtherIn()
+        private void QueryStockOtherIn()
         {
             try
             {
@@ -287,7 +298,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 MainForm.Instance.logger.Error(ex);
             }
         }
-        private  void QueryStockOtherOut()
+        private void QueryStockOtherOut()
         {
             try
             {
@@ -315,7 +326,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
 
 
-                var OtherOutList =  MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterOther>("Proc_WorkCenterOtherOut"
+                var OtherOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterOther>("Proc_WorkCenterOtherOut"
                     , Employees, sqloutput);//返回List
                 kryptonTreeGridViewOtherOut.ReadOnly = true;
                 List<Expression<Func<Proc_WorkCenterOther, object>>> expColumns = new List<Expression<Func<Proc_WorkCenterOther, object>>>();

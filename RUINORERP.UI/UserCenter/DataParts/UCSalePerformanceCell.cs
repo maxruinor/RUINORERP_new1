@@ -81,8 +81,8 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 var Employees = new SugarParameter("@Employees ", strEmployees == string.Empty ? null : strEmployees);
                 var sqloutput = new SugarParameter("@sqlOutput", null, true);//设置为output
                                                                              //var list = db.Ado.UseStoredProcedure().SqlQuery<Class1>("sp_school", nameP, ageP);//返回List
-                //var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
-                //    , Employees, sqloutput);//返回List
+                                                                             //var SaleOutList = MainForm.Instance.AppContext.Db.Ado.UseStoredProcedure().SqlQuery<Proc_WorkCenterSale>("Proc_WorkCenterSale"
+                                                                             //    , Employees, sqloutput);//返回List
 
                 string sqlquery = string.Empty;
                 string WhereClause = " and 1=1 ";
@@ -229,9 +229,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
             //}
         }
 
-        private void kryptonCommand1_Execute(object sender, EventArgs e)
+        private async void kryptonCommand1_Execute(object sender, EventArgs e)
         {
-            QuerySaleOrderStatus();
+            await base._guardService.ExecuteWithGuardAsync(
+        nameof(kryptonCommand1_Execute),
+        this.GetType().Name,
+        async () =>
+        {
+            #region 加载工作台数据
+
+            await QuerySaleOrderStatus();
+            #endregion
+        },
+        showStatusMessage: true
+     );
+
+
         }
     }
 }

@@ -157,7 +157,7 @@ namespace RUINORERP.UI.PSI.INV
                         worksheet.Cells[row, col++].Value = item.ProdDetailID;
                         worksheet.Cells[row, col++].Value = item.Location_ID;
                         worksheet.Cells[row, col++].Value = item.Quantity;
-                        worksheet.Cells[row, col++].Value = item.InitInventory;
+                        //worksheet.Cells[row, col++].Value = item.InitInventory;
                         worksheet.Cells[row, col++].Value = item.On_the_way_Qty;
                         worksheet.Cells[row, col++].Value = item.Sale_Qty;
                         worksheet.Cells[row, col++].Value = item.MakingQty;
@@ -206,7 +206,7 @@ namespace RUINORERP.UI.PSI.INV
         public override void BuildSummaryCols()
         {
             SummaryCols.Add(c => c.Quantity);
-            SummaryCols.Add(c => c.InitInventory);
+            //SummaryCols.Add(c => c.InitInventory);
             SummaryCols.Add(c => c.On_the_way_Qty);
             SummaryCols.Add(c => c.Sale_Qty);
             SummaryCols.Add(c => c.MakingQty);

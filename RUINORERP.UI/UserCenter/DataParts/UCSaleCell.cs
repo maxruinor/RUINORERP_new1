@@ -93,8 +93,21 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async void kryptonCommandRefresh_Execute(object sender, EventArgs e)
         {
-            int ListCount = await uCSale.QueryData();
-            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】销售出库中";
+            await base._guardService.ExecuteWithGuardAsync(
+           nameof(kryptonCommandRefresh_Execute),
+           this.GetType().Name,
+           async () =>
+           {
+               #region 加载工作台数据
+
+               int ListCount = await uCSale.QueryData();
+               kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】销售出库中";
+               #endregion
+           },
+           showStatusMessage: true
+        );
+
+       
         }
 
         private void buttonSpecHeaderGroup2_Click(object sender, EventArgs e)

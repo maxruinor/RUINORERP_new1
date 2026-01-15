@@ -7,6 +7,7 @@ using Netron.GraphLib.Entitology;
 using NPOI.SS.Formula.Functions;
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
+using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
@@ -16,10 +17,13 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base.StatusManager;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models.Common;
-using RUINORERP.UI.UserCenter.DataParts; // 添加对TodoListManager和TodoUpdate的引用
+using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.BusinessService;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.FM;
+using RUINORERP.UI.UserCenter.DataParts; // 添加对TodoListManager和TodoUpdate的引用
 using RulesEngine.Models;
 using SqlSugar;
 using System;
@@ -30,12 +34,9 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using RUINORERP.UI.BaseForm;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Forms;
-using RUINORERP.Business.EntityLoadService;
-using RUINORERP.PacketSpec.Models.Message;
 
 namespace RUINORERP.UI.UserCenter.DataParts
 {
@@ -52,7 +53,10 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private readonly ILogger<UCTodoList> _logger;
         private Guid _syncSubscriberKey;
         private ConditionBuilderFactory _conditionBuilderFactory;
-
+        /// <summary>
+        /// 防重复操作服务实例
+        /// </summary>
+        private RepeatOperationGuardService _guardService;
 
         public UCTodoList(IEntityMappingService mapper, EntityLoader loader, ILogger<UCTodoList> logger)
         {
@@ -143,7 +147,11 @@ namespace RUINORERP.UI.UserCenter.DataParts
         private async void UCTodoList_Load(object sender, EventArgs e)
         {
             if (this.DesignMode) return;
-
+            // 初始化防重复操作服务（延迟初始化，避免设计时错误）
+            if (_guardService == null)
+            {
+                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
+            }
             // 获取当前用户和角色信息
             tb_RoleInfo currentRole = MainForm.Instance.AppContext.CurrentRole;
             tb_UserInfo currentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
@@ -1046,30 +1054,43 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async Task BuilderToDoListTreeView()
         {
-            kryptonTreeViewJobList.Nodes.Clear();
-            //TreeNode rootNode = new TreeNode("待办事项") { ImageIndex = 0 };
+            await _guardService.ExecuteWithGuardAsync(
+      nameof(BuilderToDoListTreeView),
+      this.GetType().Name,
+      async () =>
+      {
+          #region 加载工作台数据
 
-            var bizTypes = GetConfiguredBizTypes();
+          kryptonTreeViewJobList.Nodes.Clear();
+          //TreeNode rootNode = new TreeNode("待办事项") { ImageIndex = 0 };
 
-            var tasks = new List<Task<TreeNode>>();
+          var bizTypes = GetConfiguredBizTypes();
 
-            // 并行处理每个业务类型
-            foreach (var bizType in bizTypes)
-            {
-                tasks.Add(ProcessBizTypeNodeAsync(bizType));
-            }
+          var tasks = new List<Task<TreeNode>>();
 
-            // 过滤掉可能的null任务，防止ArgumentException异常
-            var validTasks = tasks.Where(t => t != null).ToList();
-            var nodes = validTasks.Any() ? await Task.WhenAll(validTasks) : Array.Empty<TreeNode>();
-            List<TreeNode> treeNodes = new List<TreeNode>();
-            foreach (var node in nodes.Where(n => n != null))
-            {
-                treeNodes.Add(node);
-            }
+          // 并行处理每个业务类型
+          foreach (var bizType in bizTypes)
+          {
+              tasks.Add(ProcessBizTypeNodeAsync(bizType));
+          }
 
-            kryptonTreeViewJobList.Nodes.AddRange(treeNodes.ToArray());
-            kryptonTreeViewJobList.ExpandAll();
+          // 过滤掉可能的null任务，防止ArgumentException异常
+          var validTasks = tasks.Where(t => t != null).ToList();
+          var nodes = validTasks.Any() ? await Task.WhenAll(validTasks) : Array.Empty<TreeNode>();
+          List<TreeNode> treeNodes = new List<TreeNode>();
+          foreach (var node in nodes.Where(n => n != null))
+          {
+              treeNodes.Add(node);
+          }
+
+          kryptonTreeViewJobList.Nodes.AddRange(treeNodes.ToArray());
+          kryptonTreeViewJobList.ExpandAll();
+          #endregion
+      },
+      showStatusMessage: true
+  );
+
+
         }
 
 

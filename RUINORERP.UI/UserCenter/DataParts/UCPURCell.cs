@@ -57,16 +57,16 @@ namespace RUINORERP.UI.UserCenter.DataParts
             try
             {
                 Stopwatch stopwatch = Stopwatch.StartNew();
-                
+
                 // 移除长时间延迟，改用更合理的加载策略
                 int ListCount = await uCPUR.QueryData();
-                
+
                 // 在UI线程更新界面
                 this.Invoke((MethodInvoker)(() =>
                 {
                     kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】采购入库中";
                 }));
-                
+
                 stopwatch.Stop();
                 MainForm.Instance.uclog.AddLog($"初始化UCPUR 执行时间：{stopwatch.ElapsedMilliseconds} 毫秒");
             }
@@ -75,7 +75,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 MainForm.Instance.logger?.LogError(ex, "UCPURCell.LoadData 加载数据失败");
             }
         }
-        
+
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
 
@@ -83,11 +83,22 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         private async void kryptonCommandRefresh_Execute(object sender, EventArgs e)
         {
-            int ListCount = await uCPUR.QueryData();
-            kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】采购入库中";
+            await base._guardService.ExecuteWithGuardAsync(
+                nameof(kryptonCommandRefresh_Execute),
+                this.GetType().Name,
+                async () =>
+                {
+                    #region 加载工作台数据
+
+                    int ListCount = await uCPUR.QueryData();
+                    kryptonHeaderGroup1.ValuesPrimary.Heading = "【" + ListCount.ToString() + "】采购入库中";
+                    #endregion
+                },
+                showStatusMessage: true
+            );
         }
 
-        private void buttonSpecHeaderGroup2_Click(object sender, EventArgs e)
+        private async void buttonSpecHeaderGroup2_Click(object sender, EventArgs e)
         {
             tb_MenuInfo menuinfo = MainForm.Instance.MenuList.FirstOrDefault(t => t.ClassPath == "RUINORERP.UI.PUR.UCPURWorkbench".ToString());
             if (menuinfo == null)
@@ -95,7 +106,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 MainForm.Instance.PrintInfoLog("菜单关联类型为空,或您没有执行此菜单的权限，或配置菜时参数不正确。请联系管理员。");
                 return;
             }
-            menuPowerHelper.ExecuteEvents(menuinfo, null,  null, uCPUR.OrderList);
+            await menuPowerHelper.ExecuteEvents(menuinfo, null, null, uCPUR.OrderList);
         }
     }
 }

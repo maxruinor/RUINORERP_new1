@@ -64,7 +64,7 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.Quantity);
 
             // 期初数量 - 支持范围查询
-            queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.InitInventory);
+            //queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.InitInventory);
 
             // 在途库存 - 支持范围查询
             queryFilter.SetQueryField<tb_InventorySnapshot>(c => c.On_the_way_Qty);

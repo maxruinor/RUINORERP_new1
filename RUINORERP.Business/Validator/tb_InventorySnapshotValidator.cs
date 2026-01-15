@@ -44,7 +44,7 @@ namespace RUINORERP.Business
  RuleFor(tb_InventorySnapshot =>tb_InventorySnapshot.Quantity).NotNull().WithMessage("实际库存:不能为空。");
 
 //***** 
- RuleFor(tb_InventorySnapshot =>tb_InventorySnapshot.InitInventory).NotNull().WithMessage("期初数量:不能为空。");
+ //RuleFor(tb_InventorySnapshot =>tb_InventorySnapshot.InitInventory).NotNull().WithMessage("期初数量:不能为空。");
 
  RuleFor(tb_InventorySnapshot =>tb_InventorySnapshot.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 

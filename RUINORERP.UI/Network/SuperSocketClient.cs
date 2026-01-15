@@ -90,6 +90,7 @@ namespace RUINORERP.UI.Network
         public string SessionID { get; set; }
         /// <summary>
         /// 获取客户端是否已连接到服务器
+        /// 增强版：更全面的连接状态检测
         /// </summary>
         public bool IsConnected
         {
@@ -97,48 +98,55 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 多维度检查连接状态，确保准确性
-                    
-                    // 1. 检查基本连接状态标志
-                    if (!_isConnected)
+                    // 1. 快速检查基本状态标志
+                    if (!_isConnected || _client == null)
+                    {
+                        _logger?.LogTrace("连接状态检查：基本状态标志为false");
                         return false;
+                    }
                     
-                    // 2. 检查客户端实例是否存在
-                    if (_client == null)
+                    // 2. 检查Socket实例是否存在且已连接
+                    if (_client.Socket == null || !_client.Socket.Connected)
+                    {
+                        _logger?.LogTrace("连接状态检查：Socket不存在或未连接");
                         return false;
+                    }
                     
-                    // 3. 检查Socket实例是否存在
-                    if (_client.Socket == null)
-                        return false;
-                    
-                    // 4. 检查Socket连接状态
-                    if (!_client.Socket.Connected)
-                        return false;
-                    
-                    // 5. 优化Socket可用性检测，避免误判
-                    // 移除可能导致误判的Poll检测，改用更可靠的方法
-                    // Poll检测在某些情况下会误判，特别是在心跳超时但连接仍正常的情况下
+                    // 3. 检查Socket是否可用 - 更可靠的检测方法
                     try
                     {
-                        // 只检查Socket是否可写，避免误判
+                        // 检查Socket是否有挂起的错误
+                        int errorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                        if (errorCode != 0)
+                        {
+                            _logger?.LogDebug("连接状态检查：检测到Socket错误，错误码: {ErrorCode}", errorCode);
+                            return false;
+                        }
+                        
+                        // 检查Socket是否可写（不发送数据，只检查状态）
                         if (!_client.Socket.Poll(0, SelectMode.SelectWrite))
                         {
-                            // 检查Socket是否有错误
-                            int errorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-                            if (errorCode != 0)
+                            // 检查是否可读，如果可读但没有数据，则连接可能已关闭
+                            if (_client.Socket.Poll(0, SelectMode.SelectRead))
                             {
-                                _logger?.LogDebug("检测到Socket错误，错误码: {ErrorCode}", errorCode);
-                                return false;
+                                byte[] buffer = new byte[1];
+                                if (_client.Socket.Receive(buffer, SocketFlags.Peek) == 0)
+                                {
+                                    _logger?.LogDebug("连接状态检查：检测到Socket已关闭（远程主机已关闭连接）");
+                                    return false;
+                                }
                             }
                         }
                     }
                     catch (SocketException ex)
                     {
                         // Socket异常，认为连接已断开
-                        _logger?.LogError(ex, "Socket状态检查异常");
+                        _logger?.LogDebug("连接状态检查：Socket状态检查异常: {ExceptionMessage}", ex.Message);
                         return false;
                     }
+                    
                     // 所有检查通过，认为连接正常
+                    _logger?.LogTrace("连接状态检查：所有检查通过，连接正常");
                     return true;
                 }
                 catch (Exception ex)
@@ -348,7 +356,7 @@ namespace RUINORERP.UI.Network
             // 发送前检查网络健康状态
             if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
             {
-                _logger?.LogWarning("网络健康检查失败，延迟发送数据尝试");
+                _logger?.LogDebug("网络健康检查失败，延迟发送数据尝试");
 
                 // 尝试进行一次即时网络检查
                 var immediateCheck = await _healthCheckService.CheckOnceAsync();

@@ -19,8 +19,7 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
             
-            // 启用F1帮助功能
-            this.EnableF1Help();
+           
         }
 
         /// <summary>
@@ -44,15 +43,15 @@ namespace RUINORERP.UI.BaseForm
                     case Keys.F1:
                         // 显示帮助 - 优先显示当前焦点控件的帮助
                         var focusedControl = this.ActiveControl;
-                        HelpManager.ShowHelpForControl(this, focusedControl);
+                        //HelpManager.ShowHelpForControl(this, focusedControl);
                         return true;
                     case Keys.F2:
                         // 显示帮助系统主窗体
-                        if (HelpManager.Config.IsHelpSystemEnabled)
-                        {
-                            this.ShowHelpSystemForm();
-                            return true;
-                        }
+                        //if (HelpManager.Config.IsHelpSystemEnabled)
+                        //{
+                        //    this.ShowHelpSystemForm();
+                        //    return true;
+                        //}
                         break;
                 }
 

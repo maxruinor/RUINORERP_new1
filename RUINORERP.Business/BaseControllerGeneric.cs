@@ -341,7 +341,12 @@ namespace RUINORERP.Business
         public virtual T IsExistEntity(Expression<Func<T, bool>> whereExp)
         {
             // return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).Single();
-            return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).First();
+            var existEntity = _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).First();
+            if (existEntity != null && existEntity is BaseEntity baseEntity)
+            {
+                baseEntity.AcceptChanges();
+            }
+            return existEntity;
         }
 
         /// <summary>
@@ -353,7 +358,13 @@ namespace RUINORERP.Business
         public async virtual Task<T> IsExistEntityAsync(Expression<Func<T, bool>> whereExp)
         {
             // return _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).Single();
-            return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).FirstAsync();
+            var existEntity = await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(whereExp).FirstAsync();
+            //因为我们的更新机制中是根据变化的值来更新的
+            if (existEntity != null && existEntity is BaseEntity baseEntity)
+            {
+                baseEntity.AcceptChanges();
+            }
+            return existEntity;
         }
 
 
@@ -1271,13 +1282,13 @@ namespace RUINORERP.Business
                     {
                         continue;
                     }
-                    
+
                     // 检查是否有公共getter
                     if (!prop.CanRead)
                     {
                         continue;
                     }
-                    
+
                     try
                     {
                         var value = prop.GetValue(dto);

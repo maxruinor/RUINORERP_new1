@@ -892,7 +892,7 @@ namespace RUINORERP.Model
         }
 
         /// <summary>
-        ///SetProperty(ref _TypeName, value);
+        ///SetProperty(ref _TypeName, value);设置值
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="storage"></param>

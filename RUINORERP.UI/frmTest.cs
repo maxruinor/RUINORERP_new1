@@ -30,10 +30,6 @@ namespace RUINORERP.UI
         public frmTest()
         {
             InitializeComponent();
-            // 启用F1帮助功能
-            this.EnableF1Help();
-            // 为窗体设置帮助页面
-            this.SetHelpPage("forms/test_form.html", "测试窗体帮助");
             
             // 为控件设置帮助键
             InitializeControlHelp();
@@ -44,18 +40,7 @@ namespace RUINORERP.UI
         /// </summary>
         private void InitializeControlHelp()
         {
-            // 为按钮控件设置帮助键
-            if (btnNew != null) btnNew.SetControlHelpKey("button_new");
-            if (btnRedo != null) btnRedo.SetControlHelpKey("button_redo");
-            if (btnUndo != null) btnUndo.SetControlHelpKey("button_undo");
-            if (kryptonButton1 != null) kryptonButton1.SetControlHelpKey("button_krypton1");
-            if (kryptonButton2 != null) kryptonButton2.SetControlHelpKey("button_krypton2");
-            if (btnUseSqlsugar != null) btnUseSqlsugar.SetControlHelpKey("button_sqlsugar");
-            if (button1 != null) button1.SetControlHelpKey("button_grid");
-            if (btnGridTest != null) btnGridTest.SetControlHelpKey("button_grid_test");
-            if (btnCslaQuery != null) btnCslaQuery.SetControlHelpKey("button_csla");
-            if (btnBIndTest != null) btnBIndTest.SetControlHelpKey("button_bind_test");
-            if (btnDefaultAddElseUpdateTest != null) btnDefaultAddElseUpdateTest.SetControlHelpKey("button_save_test");
+            
         }
 
         private void btnNew_Click(object sender, EventArgs e)

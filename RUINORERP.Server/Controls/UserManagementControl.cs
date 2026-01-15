@@ -985,7 +985,7 @@ namespace RUINORERP.Server.Controls
                         {
                             continue;
                         }
-                        
+
                         if (_sessionItemMap.TryGetValue(sessionInfo.SessionID, out var existingItem))
                         {
                             // 更新现有会话
@@ -1170,17 +1170,25 @@ namespace RUINORERP.Server.Controls
         /// <param name="sessionInfo">会话信息</param>
         private void OnSessionDisconnected(SessionInfo sessionInfo)
         {
-            if (InvokeRequired)
+            try
             {
-                Invoke(new Action<SessionInfo>(OnSessionDisconnected), sessionInfo);
-                return;
+                if (InvokeRequired)
+                {
+                    Invoke(new Action<SessionInfo>(OnSessionDisconnected), sessionInfo);
+                    return;
+                }
+
+                if (sessionInfo == null)
+                {
+                    LogError("接收到空的会话断开事件");
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError("会话断开事件处理出错", ex);
             }
 
-            if (sessionInfo == null)
-            {
-                LogError("接收到空的会话断开事件");
-                return;
-            }
 
             try
             {

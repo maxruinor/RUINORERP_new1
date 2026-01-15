@@ -1,4 +1,4 @@
-﻿﻿
+﻿﻿﻿﻿
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -53,8 +53,10 @@ namespace RUINORERP.Business
                 {
                     return rmsr;
                 }
-                List<tb_Inventory> invUpdateListFrom = new List<tb_Inventory>();
-                List<tb_Inventory> invUpdateListTo = new List<tb_Inventory>();
+                // 创建库存更新列表（合并调出和调入）
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                // 创建库存插入列表（仅用于新增库存）
+                List<tb_Inventory> invInsertList = new List<tb_Inventory>();
                 // 创建库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
                 
@@ -81,6 +83,8 @@ namespace RUINORERP.Business
                         invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
                         invFrom.LatestOutboundTime = System.DateTime.Now;
                         BusinessHelper.Instance.EditEntity(invFrom);
+                        // 添加到批量更新列表
+                        invUpdateList.Add(invFrom);
                     }
                     else
                     {
@@ -89,7 +93,6 @@ namespace RUINORERP.Business
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
-                    invUpdateListFrom.Add(invFrom);
                     
                     // 实时获取调出仓库的当前库存成本
                     decimal realtimeCost = invFrom.Inv_Cost;
@@ -123,6 +126,8 @@ namespace RUINORERP.Business
                         invTo.LatestStorageTime = System.DateTime.Now;
                         invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
                         BusinessHelper.Instance.EditEntity(invTo);
+                        // 添加到批量更新列表
+                        invUpdateList.Add(invTo);
                     }
                     else
                     {
@@ -140,8 +145,9 @@ namespace RUINORERP.Business
                         invTo.LatestStorageTime = System.DateTime.Now;
                         invTo.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(invTo);
+                        // 添加到插入列表
+                        invInsertList.Add(invTo);
                     }
-                    invUpdateListTo.Add(invTo);
                     
                     // 创建调入仓库的库存流水记录
                     tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
@@ -165,34 +171,30 @@ namespace RUINORERP.Business
                 await tranController.BatchRecordTransactions(transactionList);
 
                  
-
-                int InvUpdateCounterFrom = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateListFrom)
-                    .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestOutboundTime })
-                    .ExecuteCommandAsync();
-                if (InvUpdateCounterFrom == 0)
+                // 批量更新所有库存
+                if (invUpdateList.Any())
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("来源库存更新失败！");
-                }
-
-                List<tb_Inventory> invInsertList = invUpdateListTo.Where(c => c.Inventory_ID == 0).ToList();
-                if (invInsertList.Any())
-                {
-                    var InvInsertCounterTo = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
-                    if (InvInsertCounterTo.Count == 0)
+                    int updateCount = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList)
+                        .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestOutboundTime, it.LatestStorageTime })
+                        .ExecuteCommandAsync();
+                    if (updateCount == 0)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        throw new Exception("目标库存保存失败！");
+                        rmsr.ErrorMsg = "库存更新失败。";
+                        throw new Exception("库存更新失败！");
                     }
                 }
-               
-                List<tb_Inventory> invUpdateList = invUpdateListTo.Where(c => c.Inventory_ID > 0).ToList();
-                int InvUpdateCounterTo = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList)
-                    .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestStorageTime }).ExecuteCommandAsync();
-                if (InvUpdateCounterTo == 0)
+
+                // 批量插入新增库存
+                if (invInsertList.Any())
                 {
-                    _unitOfWorkManage.RollbackTran();
-                    throw new Exception("目标库存更新失败！");
+                    var insertResult = await _unitOfWorkManage.GetDbClient().Insertable(invInsertList).ExecuteReturnSnowflakeIdListAsync();
+                    if (insertResult.Count == 0)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rmsr.ErrorMsg = "库存插入失败。";
+                        throw new Exception("库存插入失败！");
+                    }
                 }
 
                 //这部分是否能提出到上一级公共部分？
@@ -222,7 +224,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 反审核
+        /// 反审核1
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
@@ -236,6 +238,9 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
+                // 创建批量更新列表
+                List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+                
                 // 创建反向库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
                 
@@ -254,18 +259,9 @@ namespace RUINORERP.Business
                         invFrom.LatestStorageTime = System.DateTime.Now;
                         invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
                         BusinessHelper.Instance.EditEntity(invFrom);
-                    }
-                    else
-                    {
-                        rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
-                        _unitOfWorkManage.RollbackTran();
-                        rmsr.Succeeded = false;
-                        return rmsr;
-                    }
-                    ReturnResults<tb_Inventory> rrfrom = await ctrinv.SaveOrUpdate(invFrom);
-                    
-                    if (rrfrom.Succeeded)
-                    {
+                        // 添加到批量更新列表
+                        invUpdateList.Add(invFrom);
+                        
                         // 实时获取当前库存成本
                         decimal realtimeCost = invFrom.Inv_Cost;
                         
@@ -283,6 +279,13 @@ namespace RUINORERP.Business
                         transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
                         transactionFrom.Notes = $"调拨单反审核：{entity.StockTransferNo}，调出仓库反向调整：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
                         transactionList.Add(transactionFrom);
+                    }
+                    else
+                    {
+                        rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
+                        _unitOfWorkManage.RollbackTran();
+                        rmsr.Succeeded = false;
+                        return rmsr;
                     }
 
                     #endregion
@@ -306,19 +309,9 @@ namespace RUINORERP.Business
                         invTo.LatestOutboundTime = System.DateTime.Now;
                         invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
                         BusinessHelper.Instance.EditEntity(invTo);
-                    }
-                    else
-                    {
-                        //正常逻辑不会执行到这里
-                        _unitOfWorkManage.RollbackTran();
-                        throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
-                    }
-
-                    #endregion
-                    ReturnResults<tb_Inventory> rr = await ctrinv.SaveOrUpdate(invTo);
-                    
-                    if (rr.Succeeded)
-                    {
+                        // 添加到批量更新列表
+                        invUpdateList.Add(invTo);
+                        
                         // 实时获取当前库存成本
                         decimal realtimeCost = invTo.Inv_Cost;
                         
@@ -337,6 +330,23 @@ namespace RUINORERP.Business
                         transactionTo.Notes = $"调拨单反审核：{entity.StockTransferNo}，调入仓库反向调整：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
                         transactionList.Add(transactionTo);
                     }
+                    else
+                    {
+                        //正常逻辑不会执行到这里
+                        _unitOfWorkManage.RollbackTran();
+                        throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
+                    }
+                    #endregion
+                }
+                
+                // 批量更新所有库存
+                int updateCount = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList)
+                    .UpdateColumns(it => new { it.Quantity, it.Inv_SubtotalCostMoney, it.LatestOutboundTime, it.LatestStorageTime })
+                    .ExecuteCommandAsync();
+                if (updateCount == 0)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    throw new Exception("库存更新失败！");
                 }
                 
                 // 记录反向库存流水

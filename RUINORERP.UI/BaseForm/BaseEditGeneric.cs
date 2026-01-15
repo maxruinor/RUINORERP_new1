@@ -16,6 +16,8 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Properties;
+using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.HelpSystem.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -54,6 +56,9 @@ namespace RUINORERP.UI.BaseForm
                 {
                     _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
                 }
+
+                // 初始化帮助系统
+                InitializeHelpSystem();
             }
         }
 
@@ -62,12 +67,12 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="cacheManager">实体缓存管理器</param>
         public BaseEditGeneric(IEntityCacheManager cacheManager = null)
-        {       
-            
+        {
+
             InitializeComponent();
             // 使用LicenseManager.UsageMode检测设计模式，在构造函数中更可靠
             bool isDesignMode = LicenseManager.UsageMode == LicenseUsageMode.Designtime;
-            
+
             if (!isDesignMode)
             {
                 if (cacheManager == null)
@@ -75,12 +80,54 @@ namespace RUINORERP.UI.BaseForm
                     cacheManager = Startup.GetFromFac<IEntityCacheManager>();
                 }
                 _cacheManager = cacheManager;
+
+                // 初始化帮助系统
+                InitializeHelpSystem();
             }
-            
-  
+
+
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
         }
+
+        #region 帮助系统集成
+
+        /// <summary>
+        /// 是否启用智能帮助
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("是否启用智能帮助功能")]
+        public bool EnableSmartHelp { get; set; } = true;
+
+        /// <summary>
+        /// 窗体帮助键
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("窗体帮助键,留空则使用窗体类型名称")]
+        public string FormHelpKey { get; set; }
+
+        /// <summary>
+        /// 初始化帮助系统
+        /// </summary>
+        protected virtual void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 启用F1帮助
+                this.EnableF1Help();
+
+                // 启用智能提示
+                HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 关联的菜单信息 实际是可以从点击时传入

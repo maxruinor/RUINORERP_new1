@@ -814,9 +814,12 @@ namespace RUINORERP.UI
             /// <summary>
             /// 通用注册放在前面，确保特殊注册可以覆盖它们
             /// 注意：TableSchemaManager的特殊注册在ConfigureContainer方法中处理，这里不重复注册
+            /// 注意：HelpManager使用单例模式，不通过Autofac注册
             /// </summary>
             builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) && type != typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 排除TableSchemaManager，避免重复注册
+                .Where(type => !typeof(IExcludeFromRegistration).IsAssignableFrom(type) &&
+                               type != typeof(RUINORERP.Business.Cache.TableSchemaManager) &&
+                               type != typeof(RUINORERP.UI.HelpSystem.Core.HelpManager)) // 排除TableSchemaManager和HelpManager，避免重复注册
                 .AsImplementedInterfaces()
                 .AsSelf();
 

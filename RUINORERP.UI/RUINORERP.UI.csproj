@@ -940,32 +940,19 @@
     <Compile Include="Forms\DuplicateLoginDialog.Designer.cs">
       <DependentUpon>DuplicateLoginDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="HelpSystem\ControlHelpDemoForm.cs">
+    <Compile Include="HelpSystem\Components\HelpPanel.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HelpSystem\ControlHelpDemoForm.Designer.cs">
-      <DependentUpon>ControlHelpDemoForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="HelpSystem\HelpExtensions.cs" />
-    <Compile Include="HelpSystem\HelpHistoryManager.cs" />
-    <Compile Include="HelpSystem\HelpManager.cs" />
-    <Compile Include="HelpSystem\HelpMappingAttribute.cs" />
-    <Compile Include="HelpSystem\HelpRecommendationManager.cs" />
-    <Compile Include="HelpSystem\HelpSearchManager.cs" />
-    <Compile Include="HelpSystem\HelpSystemConfig.cs" />
-    <Compile Include="HelpSystem\HelpSystemDemoForm.cs">
+    <Compile Include="HelpSystem\Components\HelpTooltip.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="HelpSystem\HelpSystemDemoForm.Designer.cs">
-      <DependentUpon>HelpSystemDemoForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="HelpSystem\HelpSystemForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="HelpSystem\HelpSystemForm.Designer.cs">
-      <DependentUpon>HelpSystemForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="HelpSystem\IHelpProvider.cs" />
+    <Compile Include="HelpSystem\Core\HelpContext.cs" />
+    <Compile Include="HelpSystem\Core\HelpLevel.cs" />
+    <Compile Include="HelpSystem\Core\HelpManager.cs" />
+    <Compile Include="HelpSystem\Core\HelpSearchResult.cs" />
+    <Compile Include="HelpSystem\Core\IHelpProvider.cs" />
+    <Compile Include="HelpSystem\Core\LocalHelpProvider.cs" />
+    <Compile Include="HelpSystem\Extensions\HelpExtensions.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
     <Compile Include="Common\ProgressHelper.cs" />
@@ -2134,12 +2121,6 @@
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
-    <Compile Include="HelpSystem\TestControlHelpForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="HelpSystem\TestControlHelpForm.Designer.cs">
-      <DependentUpon>TestControlHelpForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="IM\BaseMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4309,9 +4290,6 @@
     <EmbeddedResource Include="frmTest.resx">
       <DependentUpon>frmTest.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="HelpSystem\HelpSystemForm.resx">
-      <DependentUpon>HelpSystemForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="IM\frmIMSetting.resx">
       <DependentUpon>frmIMSetting.cs</DependentUpon>
     </EmbeddedResource>
@@ -5374,4 +5352,12 @@
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets" Condition="Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" />
   <Import Project="..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets')" />
+
+  <!-- 帮助系统资源文件配置 -->
+  <ItemGroup>
+    <!-- 将HelpContent目录下的所有文件作为嵌入式资源 -->
+    <EmbeddedResource Include="HelpContent\**\*.*">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>

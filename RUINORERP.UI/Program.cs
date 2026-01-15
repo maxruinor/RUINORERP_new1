@@ -890,15 +890,15 @@ namespace RUINORERP.UI
                     }
                 }
 
-                // 如果找到了帮助文件，则初始化帮助系统
-                if (File.Exists(helpFilePath))
-                {
-                    RUINORERP.UI.HelpSystem.HelpManager.Initialize(helpFilePath);
-                }
-                else
-                {
-                    Debug.WriteLine("帮助文件未找到: " + helpFilePath);
-                }
+                //// 如果找到了帮助文件，则初始化帮助系统
+                //if (File.Exists(helpFilePath))
+                //{
+                //    RUINORERP.UI.HelpSystem.HelpManager.Initialize(helpFilePath);
+                //}
+                //else
+                //{
+                //    Debug.WriteLine("帮助文件未找到: " + helpFilePath);
+                //}
             }
             catch (Exception ex)
             {

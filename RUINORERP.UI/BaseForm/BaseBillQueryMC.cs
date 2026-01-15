@@ -2844,32 +2844,11 @@ namespace RUINORERP.UI.BaseForm
                         break;
                     case Keys.F1:
                         // 显示帮助 - 优先显示当前焦点控件的帮助
-                        if (HelpManager.Config.IsHelpSystemEnabled)
-                        {
-                            // 对于UserControl，我们需要找到主窗体来显示帮助
-                            Form mainForm = this.FindForm();
-                            if (mainForm != null)
-                            {
-                                var focusedControl = mainForm.ActiveControl;
-                                HelpManager.ShowHelpForControl(mainForm, focusedControl);
-                            }
-                            else
-                            {
-                                // 如果找不到主窗体，显示基于类型的帮助
-                                HelpManager.ShowHelpByType(this.GetType());
-                            }
-                        }
+                        
                         return true;
                     case Keys.F2:
                         // 显示帮助系统主窗体
-                        if (HelpManager.Config.IsHelpSystemEnabled)
-                        {
-                            Form mainForm = this.FindForm();
-                            if (mainForm != null)
-                            {
-                                mainForm.ShowHelpSystemForm();
-                            }
-                        }
+                        
                         return true;
                     case Keys.Enter:
                         // 检查当前焦点控件是否为下拉控件或其他特殊控件，避免重复触发查询

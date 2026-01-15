@@ -73,6 +73,16 @@ namespace RUINORERP.UI.PSI.SAL
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
             if (!this.DesignMode)
             {
+                // ✅ 关键配置: 设置窗体帮助键
+                // 这个键将用于定位帮助文件: HelpContent/Forms/UCSaleOrder.md
+                //FormHelpKey = "UCSaleOrder";
+
+
+                //// ✅ 关键配置: 启用智能帮助
+                //// BaseBillEditGeneric已自动集成帮助系统
+                //EnableSmartHelp = true;
+
+    
                 AddPublicEntityObject(typeof(ProductSharePart));
             }
 

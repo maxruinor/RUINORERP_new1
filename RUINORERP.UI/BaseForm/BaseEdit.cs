@@ -21,6 +21,9 @@ using System.Text.RegularExpressions;
 using RUINORERP.Global.CustomAttribute;
 using Krypton.Workspace;
 using Krypton.Navigator;
+using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.HelpSystem.Extensions;
+using RUINORERP.UI.HelpSystem.Components;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -34,6 +37,9 @@ namespace RUINORERP.UI.BaseForm
             InitializeComponent();
             //this.KeyPreview = true;
             //this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BaseEdit_KeyPress);
+            
+            // 初始化帮助系统
+            InitializeHelpSystem();
         }
 
 
@@ -100,16 +106,9 @@ namespace RUINORERP.UI.BaseForm
                         CloseTheForm(this);
                         break;
                     case Keys.F1:
-                        if (toolTipBase.Active)
-                        {
-                            //if (OnShowHelp != null)
-                            //{
-
-                            //OnShowHelp();
-                            ProcessHelpInfo(false, null);
-                            //}
-                        }
-                        break;
+                        // 使用新的帮助管理器
+                        ShowContextHelp();
+                        return true;
                 }
 
             }
@@ -260,7 +259,18 @@ namespace RUINORERP.UI.BaseForm
 
         private void Bsa_Click(object sender, EventArgs e)
         {
-            ProcessHelpInfo(true, sender);
+            // 如果启用了智能帮助系统,使用新系统
+            if (EnableSmartHelp)
+            {
+                ButtonSpecAny bsa = sender as ButtonSpecAny;
+                KryptonTextBox ktb = bsa.Owner as KryptonTextBox;
+                ShowControlHelp(ktb);
+            }
+            else
+            {
+                // 否则使用原有的帮助系统
+                ProcessHelpInfo(true, sender);
+            }
         }
 
 
@@ -518,6 +528,150 @@ namespace RUINORERP.UI.BaseForm
         {
 
         }
+
+        #region 帮助系统集成 - 新增功能
+
+        /// <summary>
+        /// 帮助管理器实例
+        /// </summary>
+        protected HelpManager HelpManager => HelpManager.Instance;
+
+        /// <summary>
+        /// 是否启用智能帮助
+        /// </summary>
+        [Category("帮助系统")]
+        [DefaultValue(true)]
+        [Description("是否启用智能帮助功能")]
+        public bool EnableSmartHelp { get; set; } = true;
+
+        /// <summary>
+        /// 窗体帮助键(可选,覆盖默认值)
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("窗体帮助键,留空则使用窗体类型名称")]
+        public string FormHelpKey { get; set; }
+
+        /// <summary>
+        /// 初始化帮助系统
+        /// 在窗体构造函数中调用
+        /// </summary>
+        protected virtual void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 启用F1帮助
+                this.EnableF1Help();
+
+                // 启用智能提示(避免设计模式时报错)
+                if (!this.DesignMode && System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+                {
+                    // 为所有控件启用智能提示
+                    HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey);
+
+                    // 初始化字段帮助按钮
+                    InitFieldHelpButtons();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 显示当前窗体的帮助
+        /// </summary>
+        public virtual void ShowFormHelp()
+        {
+            HelpManager.Instance.ShowFormHelp(this);
+        }
+
+        /// <summary>
+        /// 显示指定控件的帮助
+        /// </summary>
+        /// <param name="control">控件</param>
+        public virtual void ShowControlHelp(Control control)
+        {
+            HelpManager.Instance.ShowControlHelp(control);
+        }
+
+        /// <summary>
+        /// 显示字段帮助
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <param name="fieldName">字段名称</param>
+        public virtual void ShowFieldHelp(Type entityType, string fieldName)
+        {
+            HelpManager.Instance.ShowFieldHelp(entityType, fieldName);
+        }
+
+        /// <summary>
+        /// 显示上下文帮助
+        /// 根据当前焦点控件显示相应的帮助
+        /// </summary>
+        private void ShowContextHelp()
+        {
+            // 获取当前焦点控件
+            Control focusedControl = GetFocusedControl(this);
+
+            if (focusedControl != null)
+            {
+                // 显示控件帮助
+                ShowControlHelp(focusedControl);
+            }
+            else
+            {
+                // 显示窗体帮助
+                ShowFormHelp();
+            }
+        }
+
+        /// <summary>
+        /// 获取焦点控件
+        /// </summary>
+        /// <param name="parent">父控件</param>
+        /// <returns>焦点控件</returns>
+        private Control GetFocusedControl(Control parent)
+        {
+            if (parent.Focused)
+            {
+                return parent;
+            }
+
+            foreach (Control child in parent.Controls)
+            {
+                Control focused = GetFocusedControl(child);
+                if (focused != null)
+                {
+                    return focused;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 初始化字段帮助按钮
+        /// 为绑定的字段添加帮助按钮
+        /// </summary>
+        protected virtual void InitFieldHelpButtons()
+        {
+            try
+            {
+                // 调用原有的帮助信息初始化方法
+                InitHelpInfoToControl(this.Controls);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化字段帮助按钮失败: {ex.Message}");
+            }
+        }
+
+
+
+        #endregion
 
 
     }

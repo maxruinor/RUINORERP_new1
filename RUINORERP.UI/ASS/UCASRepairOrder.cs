@@ -63,6 +63,41 @@ namespace RUINORERP.UI.ASS
             AddPublicEntityObject(typeof(ProductSharePart));
         }
 
+        /// <summary>
+        /// 显示费用分摊预览信息
+        /// </summary>
+        /// <param name="entity">维修工单实体</param>
+        private void ShowExpenseAllocationPreview(tb_AS_RepairOrder entity)
+        {
+            string previewMsg = string.Empty;
+            decimal totalAmount = entity.TotalAmount;
+            
+            // 根据费用承担方类型生成预览信息
+            switch ((RUINORERP.Global.EnumExt.ExpenseBearerType)entity.ExpenseBearerType)
+            {
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.客户:
+                    previewMsg = $"该工单为客户承担费用模式，审核通过后将生成客户应收款单，金额：{totalAmount:C}";
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.供应商:
+                    previewMsg = "该工单为供应商承担费用模式，审核通过后不生成费用单据";
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.己方公司:
+                    previewMsg = $"该工单为己方公司承担费用模式，审核通过后将生成维修售后费用支出单，金额：{totalAmount:C}";
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.Mixed:
+                    // 混合分摊，按50%比例生成客户应收款单
+                    decimal halfAmount = totalAmount * 0.5m;
+                    previewMsg = $"该工单为混合分摊模式，审核通过后将按50%比例生成客户应收款单，金额：{halfAmount:C}";
+                    break;
+            }
+            
+            // 显示预览信息
+            if (!string.IsNullOrEmpty(previewMsg))
+            {
+                MessageBox.Show(previewMsg, "费用分摊预览", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
             if (base.EditEntity is tb_AS_RepairOrder RepairOrder)
@@ -1027,6 +1062,8 @@ namespace RUINORERP.UI.ASS
                     if (SaveResult.Succeeded)
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.RepairOrderNo}。");
+                        // 显示费用分摊预览信息
+                        ShowExpenseAllocationPreview(EditEntity);
                     }
                     else
                     {

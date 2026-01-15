@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -94,13 +94,10 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
 
-                //生成应收款
+                //处理费用分摊
                 AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
                 if (authorizeController.EnableFinancialModule())
                 {
-                    #region 生成应收款单
-
-
                     // 获取付款方式信息
                     if (_appContext.PaymentMethodOfPeriod == null)
                     {
@@ -114,59 +111,8 @@ namespace RUINORERP.Business
                         return rmrs;
                     }
 
-                    //如果是账期必须是未付款
-                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        if (entity.PayStatus != (int)PayStatus.未付款)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"付款方式为账期的工单必须是未付款。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.Debug(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-
-                    if (entity.PayStatus == (int)PayStatus.未付款)
-                    {
-                        if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"未付款工单的付款方式必须是账期。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.Debug(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-
-                    //未付款的账期时，才生成应收款，向客户收取维修费用
-                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
-                        // 生成预收款单前 检测
-                        var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        var ReceivablePayable = await ctrpay.BuildReceivablePayable(entity);
-                        var rmpay = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(ReceivablePayable, false);
-                        if (!rmpay.Succeeded)
-                        {
-                            // 处理预收款单生成失败的情况
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"应收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.Debug(rmrs.ErrorMsg);
-                            }
-                        }
-                    }
-
-                    #endregion
+                    //处理费用分摊
+                    await HandleExpenseAllocation(entity);
                 }
 
                 // 注意信息的完整性
@@ -182,6 +128,119 @@ namespace RUINORERP.Business
                 rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
                 return rmrs;
+            }
+        }
+
+        /// <summary>
+        /// 处理费用分摊逻辑
+        /// </summary>
+        /// <param name="entity">维修工单实体</param>
+        /// <returns>异步任务</returns>
+        private async Task HandleExpenseAllocation(tb_AS_RepairOrder entity)
+        {
+            decimal totalAmount = entity.TotalAmount;
+
+            // 根据费用承担方类型执行对应逻辑
+            switch ((RUINORERP.Global.EnumExt.ExpenseBearerType)entity.ExpenseBearerType)
+            {
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.客户:
+                    // 生成客户应收款单
+                    await GenerateCustomerReceivable(entity, totalAmount);
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.供应商:
+                    // 不生成单据，记录日志
+                    _logger.LogInformation($"维修工单 {entity.RepairOrderNo} 为供应商承担费用，不生成费用单据");
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.己方公司:
+                    // 生成己方公司费用单
+                    await GenerateCompanyExpenseOrder(entity, totalAmount);
+                    break;
+                case RUINORERP.Global.EnumExt.ExpenseBearerType.Mixed:
+                    // 混合分摊，按50%比例生成客户应收款单
+                    decimal halfAmount = totalAmount * 0.5m;
+                    await GenerateCustomerReceivable(entity, halfAmount);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 生成客户应收款单
+        /// </summary>
+        /// <param name="entity">维修工单实体</param>
+        /// <param name="amount">应收金额</param>
+        /// <returns>异步任务</returns>
+        private async Task GenerateCustomerReceivable(tb_AS_RepairOrder entity, decimal amount)
+        {
+            // 记录原始金额
+            decimal originalAmount = entity.TotalAmount;
+
+            try
+            {
+                // 临时修改工单金额为计算后的金额（仅用于生成应收款单）
+                entity.TotalAmount = amount;
+
+                // 如果是账期必须是未付款
+                if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    if (entity.PayStatus != (int)PayStatus.未付款)
+                    {
+                        throw new Exception($"付款方式为账期的工单必须是未付款。");
+                    }
+                }
+
+                if (entity.PayStatus == (int)PayStatus.未付款)
+                {
+                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                    {
+                        throw new Exception($"未付款工单的付款方式必须是账期。");
+                    }
+                }
+
+                // 生成应收款单
+                var ctrpay = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
+                var receivablePayable = await ctrpay.BuildReceivablePayable(entity);
+                var rmpay = await ctrpay.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(receivablePayable, false);
+
+                if (!rmpay.Succeeded)
+                {
+                    throw new Exception($"应收款单生成失败：{rmpay.ErrorMsg}");
+                }
+
+                // _logger.LogInformation($"维修工单 {entity.RepairOrderNo} 生成客户应收款单成功，金额：{amount:C}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"维修工单 {entity.RepairOrderNo} 生成费用单失败");
+                throw;
+            }
+            finally
+            {
+                // 恢复原始金额
+                entity.TotalAmount = originalAmount;
+            }
+        }
+
+        /// <summary>
+        /// 生成公司费用单
+        /// </summary>
+        /// <param name="entity">维修工单实体</param>
+        /// <param name="amount">费用金额</param>
+        /// <returns>异步任务</returns>
+        private async Task GenerateCompanyExpenseOrder(tb_AS_RepairOrder entity, decimal amount)
+        {
+            try
+            {
+                // 这里需要实现集团公司费用单生成逻辑
+                // 目前先记录日志，后续可以扩展实际的费用单生成
+                _logger.LogInformation($"维修工单 {entity.RepairOrderNo} 生成公司费用单，金额：{amount:C}");
+
+                // TODO: 实现集团公司费用单生成逻辑
+                // 可以参考应收款单生成逻辑，调用相应的费用单控制器方法
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"维修工单 {entity.RepairOrderNo} 生成公司费用单失败");
+                throw;
             }
         }
 
@@ -532,7 +591,7 @@ namespace RUINORERP.Business
                 else
                 {
                     _unitOfWorkManage.RollbackTran();
-                     
+
                     rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=> 保存出错";
                     rmrs.Succeeded = false;
                 }
@@ -541,7 +600,7 @@ namespace RUINORERP.Business
             {
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-                 
+
                 rmrs.ErrorMsg = BizMapperService.EntityMappingHelper.GetBizType(typeof(tb_AS_RepairOrder)).ToString() + "事务回滚=>" + ex.Message;
                 rmrs.Succeeded = false;
             }

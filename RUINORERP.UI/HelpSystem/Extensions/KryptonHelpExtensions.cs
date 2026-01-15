@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Krypton.Toolkit;
-using ComponentFactory.Krypton.Toolkit;
 
 namespace RUINORERP.UI.HelpSystem.Extensions
 {
@@ -204,6 +203,8 @@ namespace RUINORERP.UI.HelpSystem.Extensions
             if (kryptonControl == null)
                 yield break;
 
+            var internalControls = new List<Control>();
+
             try
             {
                 var controlType = kryptonControl.GetType();
@@ -217,7 +218,7 @@ namespace RUINORERP.UI.HelpSystem.Extensions
                         var control = field.GetValue(kryptonControl) as Control;
                         if (control != null)
                         {
-                            yield return control;
+                            internalControls.Add(control);
                         }
                     }
                     else if (typeof(IEnumerable<Control>).IsAssignableFrom(field.FieldType))
@@ -225,18 +226,21 @@ namespace RUINORERP.UI.HelpSystem.Extensions
                         var controls = field.GetValue(kryptonControl) as IEnumerable<Control>;
                         if (controls != null)
                         {
-                            foreach (var control in controls)
-                            {
-                                yield return control;
-                            }
+                            internalControls.AddRange(controls);
                         }
                     }
                 }
             }
             catch (Exception)
             {
-                // If reflection fails, return empty
-                yield break;
+                // If reflection fails, return empty list
+                internalControls.Clear();
+            }
+
+            // Yield return all controls after the try-catch block
+            foreach (var control in internalControls)
+            {
+                yield return control;
             }
         }
 

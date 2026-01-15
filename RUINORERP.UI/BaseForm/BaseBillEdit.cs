@@ -998,11 +998,11 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// esc退出窗体
+        /// 处理命令键，包括F1帮助和Esc退出
         /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="keyData"></param>
-        /// <returns></returns>
+        /// <param name="msg">消息对象</param>
+        /// <param name="keyData">按键数据</param>
+        /// <returns>是否处理了命令键</returns>
         protected override bool ProcessCmdKey(ref System.Windows.Forms.Message msg, System.Windows.Forms.Keys keyData) //激活回车键
         {
             int WM_KEYDOWN = 256;
@@ -1015,15 +1015,21 @@ namespace RUINORERP.UI.BaseForm
                     case Keys.Escape:
                         Exit(this);
                         //this.Close();//csc关闭窗体
-                        break;
+                        return true;
                     case Keys.F1:
-                        // 新的帮助系统已经在 InitializeHelpSystem 中注册了
-                        // 让事件冒泡到扩展方法处理
+                        // 使用新的帮助系统显示当前控件的帮助
+                        // 获取当前焦点控件，支持Krypton控件
+                        Control focusedControl = RUINORERP.UI.HelpSystem.Extensions.KryptonHelpExtensions.GetActualFocusedControl(this);
+                        if (focusedControl != null)
+                        {
+                            HelpManager.Instance.ShowControlHelp(focusedControl);
+                            return true;
+                        }
                         break;
                 }
 
             }
-            return false;
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         #region 帮助信息提示

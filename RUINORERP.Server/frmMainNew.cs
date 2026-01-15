@@ -3190,6 +3190,7 @@ namespace RUINORERP.Server
         /// <param name="e">事件参数</param>
         private async void toolStripButtonStartServer_Click(object sender, EventArgs e)
         {
+            _logger?.LogInformation($"[StartServerAsync]");
             await StartServerAsync();
         }
 

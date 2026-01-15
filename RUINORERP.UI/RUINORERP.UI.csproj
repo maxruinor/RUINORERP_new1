@@ -2131,6 +2131,7 @@
     </Compile>
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
+    <Compile Include="HelpSystem\Extensions\KryptonHelpExtensions.cs" />
     <Compile Include="IM\BaseMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>

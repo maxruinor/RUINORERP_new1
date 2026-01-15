@@ -677,8 +677,9 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// </summary>
         /// <param name="parent">父控件</param>
         /// <param name="helpKeyPrefix">帮助键前缀(可选)</param>
+        /// <param name="entityType">实体类型(用于字段级帮助)</param>
         /// <param name="menuInfo">菜单信息(用于智能解析)</param>
-        public void EnableSmartTooltipForAll(Control parent, string helpKeyPrefix = null, object menuInfo = null)
+        public void EnableSmartTooltipForAll(Control parent, string helpKeyPrefix = null, Type entityType = null, object menuInfo = null)
         {
             if (parent == null)
             {
@@ -714,6 +715,29 @@ namespace RUINORERP.UI.HelpSystem.Core
                     if (control.Tag is Dictionary<string, object> tagDict)
                     {
                         tagDict["MenuInfo"] = menuInfo;
+                    }
+                }
+
+                // 如果提供了实体类型，保存到控件Tag供智能解析使用
+                if (entityType != null)
+                {
+                    if (control.Tag == null)
+                    {
+                        control.Tag = new Dictionary<string, object>();
+                    }
+                    else if (control.Tag is string)
+                    {
+                        // 如果Tag是字符串(可能是HelpKey)，转换为字典
+                        var existingTag = control.Tag as string;
+                        control.Tag = new Dictionary<string, object>
+                        {
+                            { "HelpKey", existingTag }
+                        };
+                    }
+
+                    if (control.Tag is Dictionary<string, object> tagDict)
+                    {
+                        tagDict["EntityType"] = entityType;
                     }
                 }
 

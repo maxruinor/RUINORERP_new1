@@ -121,7 +121,39 @@ namespace RUINORERP.UI.BaseForm
     // ==============================================================================
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
+        #region 帮助系统集成
 
+        /// <summary>
+        /// 重写实体类型，传递给帮助系统
+        /// </summary>
+        public new Type EntityType => typeof(T);
+
+        /// <summary>
+        /// 重写帮助系统初始化，传递泛型实体类型
+        /// </summary>
+        protected override void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 启用F1帮助
+                this.EnableF1Help();
+
+                // 启用智能提示，传递实体类型以支持字段级帮助
+                HelpManager.Instance.EnableSmartTooltipForAll(
+                    this,
+                    FormHelpKey,
+                    typeof(T)  // 传递泛型实体类型
+                );
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        #endregion
 
 
         public virtual List<UControls.ContextMenuController> AddContextMenu()

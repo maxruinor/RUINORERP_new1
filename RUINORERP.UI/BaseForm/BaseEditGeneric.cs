@@ -118,8 +118,12 @@ namespace RUINORERP.UI.BaseForm
                 // 启用F1帮助
                 this.EnableF1Help();
 
-                // 启用智能提示
-                HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey);
+                // 启用智能提示，传递实体类型以支持字段级帮助
+                HelpManager.Instance.EnableSmartTooltipForAll(
+                    this, 
+                    FormHelpKey,
+                    typeof(T)  // 传递泛型实体类型
+                );
             }
             catch (Exception ex)
             {
@@ -208,16 +212,9 @@ namespace RUINORERP.UI.BaseForm
                         this.Close();//csc关闭窗体
                         break;
                     case Keys.F1:
-                        if (toolTipBase.Active)
-                        {
-                            //if (OnShowHelp != null)
-                            //{
-
-                            //OnShowHelp();
-                            ProcessHelpInfo(false, null);
-                            //}
-                        }
-                        break;
+                    // 新的帮助系统已经在 EnableF1Help() 中注册了 KeyDown 事件处理
+                    // 不需要在这里额外处理，让事件冒泡到扩展方法
+                    break;
                 }
 
             }
@@ -376,7 +373,22 @@ namespace RUINORERP.UI.BaseForm
 
         private void Bsa_Click(object sender, EventArgs e)
         {
-            ProcessHelpInfo(true, sender);
+            try
+            {
+                ButtonSpecAny bsa = sender as ButtonSpecAny;
+                if (bsa == null) return;
+
+                Control targetControl = bsa.Owner as Control;
+                if (targetControl == null) return;
+
+                // 使用新的帮助系统
+                var context = HelpContext.FromControl(targetControl);
+                HelpManager.Instance.ShowHelp(context);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示控件帮助失败: {ex.Message}");
+            }
         }
 
 

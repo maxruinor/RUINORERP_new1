@@ -880,8 +880,9 @@ namespace RUINORERP.UI.ASS
 
 
         List<tb_AS_RepairOrderDetail> details = new List<tb_AS_RepairOrderDetail>();
+
         /// <summary>
-        /// 查询结果 选中行的变化事件
+        /// 保存
         /// </summary>
         /// <param name="entity"></param>
 

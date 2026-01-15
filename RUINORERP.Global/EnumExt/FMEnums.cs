@@ -44,33 +44,232 @@ namespace RUINORERP.Global.EnumExt
     }
 
     /// <summary>
-    /// 损益类型
+    /// 财务科目代码属性
+    /// 用于关联枚举值与科目表
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public class SubjectCodeAttribute : Attribute
+    {
+        public string Code { get; }
+        
+        /// <summary>
+        /// 初始化科目代码属性
+        /// </summary>
+        /// <param name="code">科目代码</param>
+        public SubjectCodeAttribute(string code)
+        {
+            Code = code;
+        }
+    }
+    
+    /// <summary>
+    /// 损益类型（财务报表专用）
     /// </summary>
     public enum ProfitLossType
     {
-        //（视同销售）
-        [Description("样品赠出")] 样品赠出 = 1,
+        #region 支出类（1-49）
+        
+        /// <summary>
+        /// 样品赠送支出
+        /// </summary>
+        [Description("样品赠送支出")]
+        [SubjectCode("660101")]
+        样品赠送支出 = 1,
 
-        //（进项税转出）
-        [Description("库存盘亏")] 库存盘亏 = 2,
-        [Description("折旧损失")] 折旧损失 = 3,
-        [Description("报废损耗")] 报废损耗 = 4,
-        [Description("工艺报废")] 工艺报废 = 5,
-        [Description("研发试制损失")] 研发试制损失 = 6,
-        [Description("设备故障损失")] 设备故障损失 = 7,
-        [Description("物流损毁")] 物流损毁 = 8,
-        [Description("汇率损失")] 汇率损失 = 9,
-        [Description("坏账损失")] 坏账损失 = 10,
-        [Description("平台费用")] 平台费用 = 11,
-        [Description("其他经营损失")] 其他经营损失 = 12,
-        //------------------------------------------------------------可以以值为分隔下拉选择时
-        [Description("库存盘盈")] 库存盘盈 = 20,
-        [Description("供应商赠品")] 供应商赠品 = 21,
-        [Description("客户退货溢余")] 客户退货溢余 = 22,
-        [Description("生产溢余")] 生产溢余 = 23,
-        [Description("采购溢余")] 采购溢余 = 24,
-        [Description("汇率收益")] 汇率收益 = 25,
-        [Description("其他经营溢余")] 其他经营溢余 = 26
+        /// <summary>
+        /// 存货盘亏损失
+        /// </summary>
+        [Description("存货盘亏损失")]
+        [SubjectCode("671101")]
+        存货盘亏损失 = 2,
+        
+        /// <summary>
+        /// 固定资产折旧
+        /// </summary>
+        [Description("固定资产折旧")]
+        [SubjectCode("160201")]
+        固定资产折旧 = 3,
+        
+        /// <summary>
+        /// 资产报废损失
+        /// </summary>
+        [Description("资产报废损失")]
+        [SubjectCode("671102")]
+        资产报废损失 = 4,
+        
+        /// <summary>
+        /// 生产工艺损耗
+        /// </summary>
+        [Description("生产工艺损耗")]
+        [SubjectCode("500101")]
+        生产工艺损耗 = 5,
+        
+        /// <summary>
+        /// 研发支出
+        /// </summary>
+        [Description("研发支出")]
+        [SubjectCode("530101")]
+        研发支出 = 6,
+        
+        /// <summary>
+        /// 设备维修损失
+        /// </summary>
+        [Description("设备维修损失")]
+        [SubjectCode("660201")]
+        设备维修损失 = 7,
+        
+        /// <summary>
+        /// 运输途中损耗
+        /// </summary>
+        [Description("运输途中损耗")]
+        [SubjectCode("660102")]
+        运输途中损耗 = 8,
+        
+        /// <summary>
+        /// 汇兑损失
+        /// </summary>
+        [Description("汇兑损失")]
+        [SubjectCode("660301")]
+        汇兑损失 = 9,
+        
+        /// <summary>
+        /// 坏账准备
+        /// </summary>
+        [Description("坏账准备")]
+        [SubjectCode("123101")]
+        坏账准备 = 10,
+        
+        /// <summary>
+        /// 第三方平台服务费
+        /// </summary>
+        [Description("第三方平台服务费")]
+        [SubjectCode("660103")]
+        第三方平台服务费 = 11,
+        
+        /// <summary>
+        /// 售后维修支出
+        /// </summary>
+        [Description("售后维修支出")]
+        [SubjectCode("660104")]
+        售后维修支出 = 12,
+        
+        /// <summary>
+        /// 其他营业外支出
+        /// </summary>
+        [Description("其他营业外支出")]
+        [SubjectCode("671199")]
+        其他营业外支出 = 13,
+        
+        /// <summary>
+        /// 资产减值损失
+        /// </summary>
+        [Description("资产减值损失")]
+        [SubjectCode("670101")]
+        资产减值损失 = 14,
+        
+        /// <summary>
+        /// 债务重组损失
+        /// </summary>
+        [Description("债务重组损失")]
+        [SubjectCode("671103")]
+        债务重组损失 = 15,
+        
+        /// <summary>
+        /// 税收滞纳金
+        /// </summary>
+        [Description("税收滞纳金")]
+        [SubjectCode("671104")]
+        税收滞纳金 = 16,
+        
+        /// <summary>
+        /// 捐赠支出
+        /// </summary>
+        [Description("捐赠支出")]
+        [SubjectCode("671105")]
+        捐赠支出 = 17,
+        
+        /// <summary>
+        /// 非常损失
+        /// </summary>
+        [Description("非常损失")]
+        [SubjectCode("671106")]
+        非常损失 = 18,
+        
+        #endregion
+        
+        #region 收入类（20-99）
+        
+        /// <summary>
+        /// 存货盘盈收益
+        /// </summary>
+        [Description("存货盘盈收益")]
+        [SubjectCode("630101")]
+        存货盘盈收益 = 20,
+        
+        /// <summary>
+        /// 接受捐赠收入
+        /// </summary>
+        [Description("接受捐赠收入")]
+        [SubjectCode("630102")]
+        接受捐赠收入 = 21,
+        
+        /// <summary>
+        /// 销售退回溢余
+        /// </summary>
+        [Description("销售退回溢余")]
+        [SubjectCode("600101")]
+        销售退回溢余 = 22,
+        
+        /// <summary>
+        /// 生产过程溢余
+        /// </summary>
+        [Description("生产过程溢余")]
+        [SubjectCode("500102")]
+        生产过程溢余 = 23,
+        
+        /// <summary>
+        /// 采购过程溢余
+        /// </summary>
+        [Description("采购过程溢余")]
+        [SubjectCode("140301")]
+        采购过程溢余 = 24,
+        
+        /// <summary>
+        /// 汇兑收益
+        /// </summary>
+        [Description("汇兑收益")]
+        [SubjectCode("606101")]
+        汇兑收益 = 25,
+        
+        /// <summary>
+        /// 其他营业外收入
+        /// </summary>
+        [Description("其他营业外收入")]
+        [SubjectCode("630199")]
+        其他营业外收入 = 26,
+        
+        /// <summary>
+        /// 公允价值变动收益
+        /// </summary>
+        [Description("公允价值变动收益")]
+        [SubjectCode("610101")]
+        公允价值变动收益 = 27,
+        
+        /// <summary>
+        /// 政府补助收入
+        /// </summary>
+        [Description("政府补助收入")]
+        [SubjectCode("611701")]
+        政府补助收入 = 28,
+        
+        /// <summary>
+        /// 债务重组收益
+        /// </summary>
+        [Description("债务重组收益")]
+        [SubjectCode("630103")]
+        债务重组收益 = 29,
+        
+        #endregion
     }
 
 

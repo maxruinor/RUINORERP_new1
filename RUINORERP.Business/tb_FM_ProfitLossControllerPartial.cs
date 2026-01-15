@@ -342,7 +342,7 @@ namespace RUINORERP.Business
                 {
                     details[i].SubtotalAmont = olditem.LocalPayableAmount;
                 }
-                details[i].ProfitLossType = (int)ProfitLossType.坏账损失;
+                details[i].ProfitLossType = (int)ProfitLossType.坏账准备;
             }
 
             profitLoss.tb_FM_ProfitLossDetails = details;
@@ -398,12 +398,12 @@ namespace RUINORERP.Business
                 }
                 if (details[i].SubtotalAmont > 0)
                 {
-                    details[i].ProfitLossType = (int)ProfitLossType.库存盘盈;
+                    details[i].ProfitLossType = (int)ProfitLossType.存货盘盈收益;
                     details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
                 if (details[i].SubtotalAmont < 0 && olditem.DiffQty < 0)
                 {
-                    details[i].ProfitLossType = (int)ProfitLossType.库存盘亏;
+                    details[i].ProfitLossType = (int)ProfitLossType.存货盘亏损失;
                     details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
                 details[i].ActionStatus = ActionStatus.新增;
@@ -414,12 +414,12 @@ namespace RUINORERP.Business
             if (entity.Adjust_Type == (int)Adjust_Type.减少)
             {
                 profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
-                    .Where(c => c.ProfitLossType == (int)ProfitLossType.库存盘亏).ToList();
+                    .Where(c => c.ProfitLossType == (int)ProfitLossType.存货盘亏损失).ToList();
             }
             if (entity.Adjust_Type == (int)Adjust_Type.增加)
             {
                 profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
-                  .Where(c => c.ProfitLossType == (int)ProfitLossType.库存盘盈).ToList();
+                  .Where(c => c.ProfitLossType == (int)ProfitLossType.存货盘盈收益).ToList();
             }
 
             profitLoss.TotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.SubtotalAmont);
@@ -492,7 +492,7 @@ namespace RUINORERP.Business
                 }
                 details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 details[i].ActionStatus = ActionStatus.新增;
-                details[i].ProfitLossType = (int)ProfitLossType.样品赠出;
+                details[i].ProfitLossType = (int)ProfitLossType.样品赠送支出;
             }
 
             profitLoss.tb_FM_ProfitLossDetails = details;

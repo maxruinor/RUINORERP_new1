@@ -9,8 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.HelpSystem;
 using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.HelpSystem.Extensions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -20,8 +20,57 @@ namespace RUINORERP.UI.BaseForm
         {
             InitializeComponent();
 
-
+            // 初始化帮助系统
+            InitializeHelpSystem();
         }
+
+        #region 帮助系统集成
+
+        /// <summary>
+        /// 是否启用智能帮助
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("是否启用智能帮助功能")]
+        public bool EnableSmartHelp { get; set; } = true;
+
+        /// <summary>
+        /// 窗体帮助键
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("窗体帮助键,留空则使用窗体类型名称")]
+        public string FormHelpKey { get; set; }
+
+        /// <summary>
+        /// 初始化帮助系统
+        /// </summary>
+        protected virtual void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 为控件启用智能提示
+                HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey);
+
+                // 启用F1帮助
+                this.EnableF1Help();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 显示窗体帮助
+        /// </summary>
+        public void ShowFormHelp()
+        {
+            if (!EnableSmartHelp) return;
+            HelpManager.Instance.ShowControlHelp(this);
+        }
+
+        #endregion
 
         /// <summary>
         /// esc退出窗体

@@ -873,31 +873,7 @@ namespace RUINORERP.Business
                 QueryConditionFilter.FilterLimitExpressions.Clear();
                 QueryConditionFilter.FilterLimitExpressions.Add(expression);
 
-                /*
-                bool isContainIsDeleted = QueryConditionFilter.FilterLimitExpressions[0].Body.ExpContainsCondition(isdeleted, false);
-                if (isContainIsDeleted)
-                {
-                    // 创建一个新的参数表达式
-                    var parameter = Expression.Parameter(typeof(T), "t");
-
-                    // 创建一个新的二元表达式，只包含 isdeleted == False 条件
-                    var newBody = Expression.MakeBinary(
-                        ExpressionType.Equal,
-                        Expression.Property(parameter, isdeleted),
-                        Expression.Constant(false)
-                    );
-
-                    // 创建一个新的 Lambda 表达式
-                    var newLambda = Expression.Lambda<Func<T, bool>>(
-                        newBody,
-                        parameter
-                    );
-
-                    // 将新的 Lambda 表达式添加到 FilterLimitExpressions 列表中
-                    QueryConditionFilter.FilterLimitExpressions.Clear();//清除之前的,
-                    QueryConditionFilter.FilterLimitExpressions.Add(newLambda);
-                }
-                */
+              
             }
 
 

@@ -94,7 +94,7 @@ namespace RUINORERP.UI.BaseForm
         public void ShowFormHelp()
         {
             if (!EnableSmartHelp) return;
-            HelpManager.Instance.ShowHelpForFocusedControl(this);
+            HelpManager.Instance.ShowControlHelp(this);
         }
 
         #endregion

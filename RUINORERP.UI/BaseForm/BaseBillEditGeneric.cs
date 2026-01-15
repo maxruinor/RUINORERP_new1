@@ -68,6 +68,8 @@ using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
 using RUINORERP.UI.BusinessService;
+using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.HelpSystem.Extensions;
 using SourceGrid;
 using SourceGrid.Cells.Models;
 using SqlSugar;

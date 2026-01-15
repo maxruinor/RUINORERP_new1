@@ -110,7 +110,7 @@ namespace RUINORERP.UI.BaseForm
                 if (!this.DesignMode && System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
                 {
                     // 为所有控件启用智能提示
-                    HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey, CurMenuInfo);
+                    HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey);
                 }
             }
             catch (Exception ex)

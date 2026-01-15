@@ -10,6 +10,8 @@ using System.Windows.Forms;
 using Krypton.Navigator;
 using RUINORERP.Global.CustomAttribute;
 using System.Linq.Expressions;
+using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.HelpSystem.Extensions;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -18,9 +20,67 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     public partial class BaseBillQuery : UserControl
     {
+        #region 帮助系统集成
+
+        /// <summary>
+        /// 是否启用智能帮助
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("是否启用智能帮助功能")]
+        public bool EnableSmartHelp { get; set; } = true;
+
+        /// <summary>
+        /// 窗体帮助键
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("窗体帮助键,留空则使用控件类型名称")]
+        public string FormHelpKey { get; set; }
+
+        /// <summary>
+        /// 实体类型
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("关联的实体类型,用于字段级帮助")]
+        public Type EntityType { get; private set; }
+
+        /// <summary>
+        /// 初始化帮助系统
+        /// </summary>
+        protected virtual void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 为控件启用智能提示
+                HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey, EntityType);
+
+                // 启用F1帮助
+                this.EnableF1Help();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 显示窗体帮助
+        /// </summary>
+        public void ShowFormHelp()
+        {
+            if (!EnableSmartHelp) return;
+            HelpManager.Instance.ShowControlHelp(this);
+        }
+
+        #endregion
+
         public BaseBillQuery()
         {
             InitializeComponent();
+
+            // 初始化帮助系统
+            InitializeHelpSystem();
         }
 
         private void buttonTopArrow_Click(object sender, EventArgs e)

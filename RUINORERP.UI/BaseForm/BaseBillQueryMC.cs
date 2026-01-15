@@ -80,42 +80,7 @@ namespace RUINORERP.UI.BaseForm
         private RepeatOperationGuardService _guardService;
 
         #region 防抖机制相关字段
-
-        /// <summary>
-        /// 用于同步的锁对象
-        /// </summary>
-        private readonly object _buttonDebounceLock = new object();
-
-        /// <summary>
-        /// 按钮防抖缓存字典，记录每个按钮最后触发时间和禁用状态
-        /// </summary>
-        private readonly Dictionary<string, DateTime> _buttonDebounceCache = new Dictionary<string, DateTime>();
-
-        /// <summary>
-        /// 按钮禁用状态字典，记录操作执行期间禁用的按钮
-        /// </summary>
-        private readonly Dictionary<string, bool> _buttonDisabledState = new Dictionary<string, bool>();
-
-        /// <summary>
-        /// 上次触发的操作类型，用于判断是否为重复操作
-        /// </summary>
-        private MenuItemEnums? _lastTriggeredAction = null;
-
-        /// <summary>
-        /// 上次操作触发的实体ID，用于判断是否为同一实体的重复操作
-        /// </summary>
-        private long? _lastOperationEntityId = null;
-
-        /// <summary>
-        /// 上次操作触发时间
-        /// </summary>
-        private DateTime _lastOperationTime = DateTime.MinValue;
-
-        /// <summary>
-        /// 按钮防抖时间间隔（毫秒）
-        /// </summary>
-        private const int BUTTON_DEBOUNCE_INTERVAL_MS = 500;
-
+        // 已迁移到 RepeatOperationGuardService
         #endregion
 
         public virtual List<ContextMenuController> AddContextMenu()
@@ -414,79 +379,13 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         /// <param name="buttonName">按钮名称</param>
         /// <param name="showStatusText">是否在状态栏显示提示</param>
-        private void DisableButtonForOperation(string buttonName, bool showStatusText = true)
-        {
-            lock (_buttonDebounceLock)
-            {
-                var button = FindToolStripButtonByName(buttonName);
-                if (button != null)
-                {
-                    button.Enabled = false;
-                    _buttonDisabledState[buttonName] = true;
+        // 已移除：DisableButtonForOperation 方法已迁移到直接在调用处实现
 
-                    if (showStatusText)
-                    {
-                        MainForm.Instance?.ShowStatusText($"正在执行操作：{buttonName}，请稍候...");
-                    }
+        // 已移除：EnableButtonAfterOperation 方法已迁移到直接在调用处实现
 
-                }
-            }
-        }
+        // 已移除：EnableAllButtonsAfterOperation 方法已迁移到直接在调用处实现
 
-        /// <summary>
-        /// 启用指定按钮（操作完成后）
-        /// </summary>
-        /// <param name="buttonName">按钮名称</param>
-        /// <param name="updateByState">是否根据状态管理系统更新按钮状态</param>
-        private void EnableButtonAfterOperation(string buttonName, bool updateByState = true)
-        {
-            lock (_buttonDebounceLock)
-            {
-                var button = FindToolStripButtonByName(buttonName);
-                if (button != null)
-                {
-                    // 对于查询基类，直接恢复按钮为启用状态
-                    if (_buttonDisabledState.ContainsKey(buttonName))
-                    {
-                        _buttonDisabledState[buttonName] = false;
-                    }
-
-                    button.Enabled = true;
-
-                    MainForm.Instance?.ShowStatusText(string.Empty);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 启用所有按钮（操作完成后）
-        /// </summary>
-        /// <param name="updateByState">是否根据状态管理系统更新按钮状态</param>
-        private void EnableAllButtonsAfterOperation(bool updateByState = true)
-        {
-            lock (_buttonDebounceLock)
-            {
-                foreach (var buttonName in _buttonDisabledState.Keys.ToList())
-                {
-                    EnableButtonAfterOperation(buttonName, updateByState);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 清除按钮防抖缓存
-        /// </summary>
-        private void ClearButtonDebounceCache()
-        {
-            lock (_buttonDebounceLock)
-            {
-                _buttonDebounceCache.Clear();
-                _buttonDisabledState.Clear();
-                _lastTriggeredAction = null;
-                _lastOperationEntityId = null;
-                _lastOperationTime = DateTime.MinValue;
-            }
-        }
+        // 已移除：ClearButtonDebounceCache 方法已迁移到 RepeatOperationGuardService
 
         /// <summary>
         /// 根据按钮名称查找ToolStrip按钮
@@ -549,7 +448,12 @@ namespace RUINORERP.UI.BaseForm
             {
 
                 case MenuItemEnums.查询:
-                    DisableButtonForOperation("查询");
+                    var btnQuery = FindToolStripButtonByName("查询");
+                    if (btnQuery != null)
+                    {
+                        btnQuery.Enabled = false;
+                        MainForm.Instance?.ShowStatusText("正在执行查询操作，请稍候...");
+                    }
                     try
                     {
                         Query(QueryDtoProxy);
@@ -557,7 +461,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        EnableButtonAfterOperation("查询");
+                        if (btnQuery != null)
+                        {
+                            btnQuery.Enabled = true;
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.复制性新增:
@@ -571,7 +479,12 @@ namespace RUINORERP.UI.BaseForm
                     await Exit(this);
                     break;
                 case MenuItemEnums.提交:
-                    DisableButtonForOperation("提交");
+                    var btnSubmit = FindToolStripButtonByName("提交");
+                    if (btnSubmit != null)
+                    {
+                        btnSubmit.Enabled = false;
+                        MainForm.Instance?.ShowStatusText("正在执行提交操作，请稍候...");
+                    }
                     try
                     {
                         Submit();
@@ -580,7 +493,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        EnableButtonAfterOperation("提交");
+                        if (btnSubmit != null)
+                        {
+                            btnSubmit.Enabled = true;
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.属性:
@@ -590,7 +507,12 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        DisableButtonForOperation("审核");
+                        var btnReview = FindToolStripButtonByName("审核");
+                        if (btnReview != null)
+                        {
+                            btnReview.Enabled = false;
+                            MainForm.Instance?.ShowStatusText("正在执行审核操作，请稍候...");
+                        }
                         try
                         {
                             ApprovalEntity ae = await Review(selectlist);
@@ -599,7 +521,11 @@ namespace RUINORERP.UI.BaseForm
                         }
                         finally
                         {
-                            EnableButtonAfterOperation("审核");
+                            if (btnReview != null)
+                            {
+                                btnReview.Enabled = true;
+                                MainForm.Instance?.ShowStatusText(string.Empty);
+                            }
                         }
                     }
 
@@ -607,7 +533,12 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.反审:
                     if (selectlist.Count > 0)
                     {
-                        DisableButtonForOperation("反审");
+                        var btnReverseReview = FindToolStripButtonByName("反审");
+                        if (btnReverseReview != null)
+                        {
+                            btnReverseReview.Enabled = false;
+                            MainForm.Instance?.ShowStatusText("正在执行反审操作，请稍候...");
+                        }
                         try
                         {
                             //只操作批一行
@@ -617,7 +548,11 @@ namespace RUINORERP.UI.BaseForm
                         }
                         finally
                         {
-                            EnableButtonAfterOperation("反审");
+                            if (btnReverseReview != null)
+                            {
+                                btnReverseReview.Enabled = true;
+                                MainForm.Instance?.ShowStatusText(string.Empty);
+                            }
                         }
                     }
                     break;
@@ -625,7 +560,12 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
-                        DisableButtonForOperation("结案");
+                        var btnCloseCase = FindToolStripButtonByName("结案");
+                        if (btnCloseCase != null)
+                        {
+                            btnCloseCase.Enabled = false;
+                            MainForm.Instance?.ShowStatusText("正在执行结案操作，请稍候...");
+                        }
                         try
                         {
                             bool rs = await CloseCase(selectlist);
@@ -638,7 +578,11 @@ namespace RUINORERP.UI.BaseForm
                         }
                         finally
                         {
-                            EnableButtonAfterOperation("结案");
+                            if (btnCloseCase != null)
+                            {
+                                btnCloseCase.Enabled = true;
+                                MainForm.Instance?.ShowStatusText(string.Empty);
+                            }
                         }
                     }
                     break;
@@ -673,7 +617,12 @@ namespace RUINORERP.UI.BaseForm
                     await Print(RptMode.DESIGN);
                     break;
                 case MenuItemEnums.删除:
-                    DisableButtonForOperation("删除");
+                    var btnDelete = FindToolStripButtonByName("删除");
+                    if (btnDelete != null)
+                    {
+                        btnDelete.Enabled = false;
+                        MainForm.Instance?.ShowStatusText("正在执行删除操作，请稍候...");
+                    }
                     try
                     {
                         Delete(selectlist);
@@ -682,7 +631,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        EnableButtonAfterOperation("删除");
+                        if (btnDelete != null)
+                        {
+                            btnDelete.Enabled = true;
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.导出:

@@ -67,6 +67,7 @@ using RUINORERP.UI.SS;
 using RUINORERP.UI.UCSourceGrid;
 using RUINORERP.UI.UserCenter.DataParts;
 using RUINORERP.UI.WorkFlowDesigner.Entities;
+using RUINORERP.UI.BusinessService;
 using SourceGrid;
 using SourceGrid.Cells.Models;
 using SqlSugar;
@@ -190,6 +191,11 @@ namespace RUINORERP.UI.BaseForm
         private Task _lockRefreshTask;
 
         /// <summary>
+        /// 防重复操作服务实例
+        /// </summary>
+        private RepeatOperationGuardService _guardService;
+
+        /// <summary>
         /// 锁状态通知服务 v2.1.0
         /// 用于订阅锁状态变化，实现实时UI更新
         /// </summary>
@@ -214,7 +220,7 @@ namespace RUINORERP.UI.BaseForm
         private object _currentBusinessStatus = null; // 当前业务状态
         private bool _isEntityLocked = false; // 实体是否被锁定
 
-        #region 防重复点击机制
+        #region 防重复点击机制 - 已迁移到 RepeatOperationGuardService
 
         /// <summary>
         /// 按钮防抖缓存字典，记录每个按钮最后触发时间和禁用状态
@@ -2306,25 +2312,23 @@ namespace RUINORERP.UI.BaseForm
         {
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
             
-            // 防重复点击检查
-            string buttonName = GetButtonNameByAction(menuItem);
-            if (!string.IsNullOrEmpty(buttonName))
+            // 初始化防重复操作服务（延迟初始化，避免设计时错误）
+            if (_guardService == null)
             {
-                if (ShouldBlockButtonClick(menuItem, buttonName))
-                {
-                    MainForm.Instance?.ShowStatusText($"操作过快，请稍候...");
-                    return;
-                }
-
-                // 记录按钮点击
-                RecordButtonClick(menuItem, buttonName);
-
-                // 如果是关键操作，禁用按钮
-                if (IsCriticalOperation(menuItem))
-                {
-                    DisableButtonForOperation(buttonName);
-                }
+                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
             }
+            
+            // 防重复点击检查
+            long currentEntityId = EditEntity?.PrimaryKeyID ?? 0;
+            if (_guardService.ShouldBlockOperation(menuItem, this.GetType().Name, currentEntityId, showStatusMessage: true))
+            {
+                return;
+            }
+
+            // 记录操作
+            _guardService.RecordOperation(menuItem, this.GetType().Name, currentEntityId);
+            
+            string buttonName = ConvertActionToButtonName(menuItem);
 
             //操作前是不是锁定。自己排除
             long pkid = 0;
@@ -2441,7 +2445,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripbtnDelete", updateByState: true);
+                        var btnDelete = FindToolStripButtonByName("toolStripbtnDelete");
+                        if (btnDelete != null)
+                        {
+                            btnDelete.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnDelete");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.修改:
@@ -2472,7 +2481,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripbtnModify", updateByState: true);
+                        var btnModify = FindToolStripButtonByName("toolStripbtnModify");
+                        if (btnModify != null)
+                        {
+                            btnModify.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnModify");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.查询:
@@ -2487,8 +2501,13 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        // 恢复查询按钮可用（内部已清空状态文本）
-                        EnableButtonAfterOperation("toolStripbtnQuery", updateByState: false);
+                        // 恢复查询按钮可用
+                        var btnQuery = FindToolStripButtonByName("toolStripbtnQuery");
+                        if (btnQuery != null)
+                        {
+                            btnQuery.Enabled = true;
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.保存:
@@ -2565,7 +2584,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripButtonSave", updateByState: true);
+                        var btnSave = FindToolStripButtonByName("toolStripButtonSave");
+                        if (btnSave != null)
+                        {
+                            btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.提交:
@@ -2612,7 +2636,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripbtnSubmit", updateByState: true);
+                        var btnSubmit = FindToolStripButtonByName("toolStripbtnSubmit");
+                        if (btnSubmit != null)
+                        {
+                            btnSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnSubmit");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.关闭:
@@ -2630,8 +2659,13 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        // 恢复刷新按钮可用（内部已清空状态文本）
-                        EnableButtonAfterOperation("toolStripbtnRefresh", updateByState: false);
+                        // 恢复刷新按钮可用
+                        var btnRefresh = FindToolStripButtonByName("toolStripbtnRefresh");
+                        if (btnRefresh != null)
+                        {
+                            btnRefresh.Enabled = true;
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.属性:
@@ -2664,7 +2698,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripbtnReview", updateByState: true);
+                        var btnReview = FindToolStripButtonByName("toolStripbtnReview");
+                        if (btnReview != null)
+                        {
+                            btnReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnReview");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.反审:
@@ -2694,7 +2733,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripBtnReverseReview", updateByState: true);
+                        var btnReverseReview = FindToolStripButtonByName("toolStripBtnReverseReview");
+                        if (btnReverseReview != null)
+                        {
+                            btnReverseReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseReview");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -2714,7 +2758,12 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据状态管理系统恢复按钮状态
-                        EnableButtonAfterOperation("toolStripButtonCaseClosed", updateByState: true);
+                        var btnCaseClosed = FindToolStripButtonByName("toolStripButtonCaseClosed");
+                        if (btnCaseClosed != null)
+                        {
+                            btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
+                            MainForm.Instance?.ShowStatusText(string.Empty);
+                        }
                     }
                     break;
                 case MenuItemEnums.反结案:

@@ -940,19 +940,28 @@
     <Compile Include="Forms\DuplicateLoginDialog.Designer.cs">
       <DependentUpon>DuplicateLoginDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="HelpSystem\Components\DefaultHelpContentGenerator.cs" />
+    <Compile Include="HelpSystem\Components\FieldNameRecognizer.cs" />
     <Compile Include="HelpSystem\Components\HelpPanel.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="HelpSystem\Components\HelpTooltip.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="HelpSystem\Components\MarkdownRenderer.cs" />
+    <Compile Include="HelpSystem\Components\WebView2HelpPanel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HelpSystem\Core\HelpContentMonitor.cs" />
     <Compile Include="HelpSystem\Core\HelpContext.cs" />
     <Compile Include="HelpSystem\Core\HelpLevel.cs" />
     <Compile Include="HelpSystem\Core\HelpManager.cs" />
     <Compile Include="HelpSystem\Core\HelpSearchResult.cs" />
+    <Compile Include="HelpSystem\Core\HelpUrlRouter.cs" />
     <Compile Include="HelpSystem\Core\IHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\LocalHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\SmartHelpResolver.cs" />
+    <Compile Include="HelpSystem\Core\SmartHelpResolverEnhanced.cs" />
     <Compile Include="HelpSystem\Extensions\HelpExtensions.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />

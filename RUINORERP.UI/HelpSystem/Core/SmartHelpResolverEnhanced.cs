@@ -167,11 +167,11 @@ namespace RUINORERP.UI.HelpSystem.Core
             }
 
             // 优先从菜单配置中获取实体类型
-            if (menuInfo != null && !string.IsNullOrEmpty(menuInfo.EntityType))
+            if (menuInfo != null && !string.IsNullOrEmpty(menuInfo.EntityName))
             {
                 try
                 {
-                    Type entityType = Type.GetType($"RUINORERP.Model.{menuInfo.EntityType}");
+                    Type entityType = Type.GetType($"RUINORERP.Model.{menuInfo.EntityName}");
                     if (entityType != null)
                     {
                         return entityType;
@@ -429,9 +429,9 @@ namespace RUINORERP.UI.HelpSystem.Core
             try
             {
                 // 方法1: 从菜单配置的EntityType属性获取
-                if (!string.IsNullOrEmpty(menuInfo.EntityType))
+                if (!string.IsNullOrEmpty(menuInfo.EntityName))
                 {
-                    Type entityType = Type.GetType($"RUINORERP.Model.{menuInfo.EntityType}");
+                    Type entityType = Type.GetType($"RUINORERP.Model.{menuInfo.EntityName}");
                     if (entityType != null)
                     {
                         return entityType;

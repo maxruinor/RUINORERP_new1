@@ -39,7 +39,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// <summary>
         /// 当前显示的帮助面板
         /// </summary>
-        private HelpPanel _activeHelpPanel;
+        private Form _activeHelpPanel;
 
         /// <summary>
         /// 智能提示气泡组件
@@ -47,8 +47,27 @@ namespace RUINORERP.UI.HelpSystem.Core
         private HelpTooltip _helpTooltip;
 
         /// <summary>
+        ///// 帮助内容监控器
+        ///// </summary>
+        //private HelpContentMonitor _helpContentMonitor;
+
+        /// <summary>
+        /// URL 路由管理器
+        /// </summary>
+        private HelpUrlRouter _urlRouter;
+
+        /// <summary>
+        /// 是否启用 WebView2
+        /// </summary>
+        private bool _useWebView2 = true;
+
+        /// <summary>
+        /// 已释放标志
+        /// </summary>
+        private bool _disposed = false;
+
+        /// <summary>
         /// 帮助内容缓存
-        /// 键: 帮助键, 值: 帮助内容
         /// </summary>
         private Dictionary<string, string> _helpCache;
 
@@ -56,11 +75,6 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// 缓存锁对象
         /// </summary>
         private readonly object _cacheLock = new object();
-
-        /// <summary>
-        /// 已释放标志
-        /// </summary>
-        private bool _disposed = false;
 
         #endregion
 
@@ -112,6 +126,45 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// </summary>
         public int CacheMaxSize { get; set; } = 100;
 
+        /// <summary>
+        /// 是否启用 WebView2
+        /// </summary>
+        public bool UseWebView2
+        {
+            get => _useWebView2;
+            set => _useWebView2 = value;
+        }
+
+        /// <summary>
+        /// 是否启用远程帮助
+        /// </summary>
+        public bool EnableRemoteHelp
+        {
+            get => _urlRouter?.EnableRemoteHelp ?? false;
+            set
+            {
+                if (_urlRouter != null)
+                {
+                    _urlRouter.EnableRemoteHelp = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 远程帮助服务器 URL
+        /// </summary>
+        public string RemoteHelpUrl
+        {
+            get => _urlRouter?.RemoteHelpUrl;
+            set
+            {
+                if (_urlRouter != null)
+                {
+                    _urlRouter.RemoteHelpUrl = value;
+                }
+            }
+        }
+
         #endregion
 
         #region 构造函数
@@ -152,6 +205,12 @@ namespace RUINORERP.UI.HelpSystem.Core
                 // 创建帮助提供者(默认使用本地帮助提供者)
                 _helpProvider = new LocalHelpProvider(HelpContentRootPath);
 
+                // 创建 URL 路由管理器
+                _urlRouter = new HelpUrlRouter(HelpContentRootPath);
+
+                // 创建帮助内容监控器
+                //_helpContentMonitor = new HelpContentMonitor();
+
                 // 创建智能提示组件
                 _helpTooltip = new HelpTooltip();
                 _helpTooltip.Timeout = TooltipDelay;
@@ -163,6 +222,7 @@ namespace RUINORERP.UI.HelpSystem.Core
                 System.Diagnostics.Debug.WriteLine("HelpManager 初始化成功");
                 System.Diagnostics.Debug.WriteLine($"帮助内容路径: {HelpContentRootPath}");
                 System.Diagnostics.Debug.WriteLine($"帮助数量: {_helpProvider.HelpCount}");
+                System.Diagnostics.Debug.WriteLine($"WebView2 启用: {_useWebView2}");
             }
             catch (Exception ex)
             {
@@ -284,6 +344,89 @@ namespace RUINORERP.UI.HelpSystem.Core
 
             var context = HelpContext.FromModule(moduleName);
             ShowHelp(context);
+        }
+
+        /// <summary>
+        /// 显示 URL 帮助
+        /// </summary>
+        /// <param name="url">帮助 URL</param>
+        public async System.Threading.Tasks.Task ShowUrlHelpAsync(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return;
+            }
+
+            try
+            {
+                // 解析 URL
+                var result = _urlRouter.ResolveUrl(url);
+
+                if (!result.IsSuccess)
+                {
+                    MessageBox.Show(
+                        $"无法解析帮助 URL: {result.ErrorMessage}",
+                        "错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 根据结果类型处理
+                if (result.Type == HelpUrlType.LocalFile)
+                {
+                    // 加载本地文件
+                    string content = File.ReadAllText(result.ResolvedPath);
+                    var context = HelpContext.FromUrl(url);
+                    ShowHelpPanel(content, context);
+                }
+                else if (result.Type == HelpUrlType.RemotePage || result.Type == HelpUrlType.RemoteApi)
+                {
+                    // 加载远程 URL（需要使用 WebView2）
+                    if (_activeHelpPanel != null && !_activeHelpPanel.IsDisposed)
+                    {
+                        _activeHelpPanel.Close();
+                    }
+
+                    if (_useWebView2)
+                    {
+                        var webView2Panel = new WebView2HelpPanel("", HelpContext.FromUrl(url));
+                        _activeHelpPanel = webView2Panel;
+                        await webView2Panel.LoadUrlAsync(result.ResolvedPath);
+                        _activeHelpPanel.Show();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "远程帮助需要启用 WebView2。\n" +
+                            "请在应用程序设置中启用 WebView2。",
+                            "提示",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示 URL 帮助失败: {ex.Message}");
+                MessageBox.Show(
+                    $"显示 URL 帮助失败: {ex.Message}",
+                    "错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 构建帮助 URL
+        /// </summary>
+        /// <param name="helpKey">帮助键</param>
+        /// <param name="level">帮助级别</param>
+        /// <param name="useRemote">是否使用远程帮助</param>
+        /// <returns>帮助 URL</returns>
+        public string BuildHelpUrl(string helpKey, HelpLevel level, bool useRemote = false)
+        {
+            return _urlRouter.BuildHelpUrl(helpKey, level, useRemote);
         }
 
         /// <summary>
@@ -682,8 +825,31 @@ namespace RUINORERP.UI.HelpSystem.Core
                     _activeHelpPanel.Close();
                 }
 
-                // 创建新的帮助面板
-                _activeHelpPanel = new HelpPanel(content, context);
+                // 根据设置选择使用 WebView2 还是传统 WebBrowser
+                Form helpPanel;
+                
+                if (_useWebView2)
+                {
+                    try
+                    {
+                        // 尝试使用 WebView2 帮助面板
+                        helpPanel = new WebView2HelpPanel(content, context);
+                        System.Diagnostics.Debug.WriteLine("使用 WebView2 帮助面板");
+                    }
+                    catch (Exception ex)
+                    {
+                        // WebView2 初始化失败,降级到传统方式
+                        System.Diagnostics.Debug.WriteLine($"WebView2 初始化失败,降级到传统方式: {ex.Message}");
+                        helpPanel = new HelpPanel(content, context);
+                    }
+                }
+                else
+                {
+                    // 使用传统 WebBrowser
+                    helpPanel = new HelpPanel(content, context);
+                }
+
+                _activeHelpPanel = helpPanel;
                 _activeHelpPanel.Show();
             }
             catch (Exception ex)
@@ -700,26 +866,75 @@ namespace RUINORERP.UI.HelpSystem.Core
         {
             try
             {
-                string message = $"未找到相关帮助信息。\n\n" +
-                               $"类型: {context.Level}\n" +
-                               $"键: {context.HelpKey}";
+                // 记录缺失的帮助内容
+                HelpContentMonitor.LogMissingHelp(
+                    context.HelpKey,
+                    context.Level,
+                    context.ControlName,
+                    context.EntityType);
+
+                // 使用默认帮助内容生成器生成帮助内容
+                string defaultHelp = GenerateDefaultHelpContent(context);
 
                 if (EnableSmartTooltip && context.TargetControl != null)
                 {
-                    _helpTooltip.Show(message, context.TargetControl);
+                    // 对于控件级别帮助,使用Tooltip显示
+                    _helpTooltip.Show(defaultHelp, context.TargetControl);
                 }
                 else
                 {
-                    MessageBox.Show(
-                        message, 
-                        "提示", 
-                        MessageBoxButtons.OK, 
-                        MessageBoxIcon.Information);
+                    // 对于窗体级别或没有智能提示的情况,使用HelpPanel显示
+                    DisplayHelp(defaultHelp, context);
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"显示未找到帮助提示失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 生成默认帮助内容
+        /// </summary>
+        /// <param name="context">帮助上下文</param>
+        /// <returns>默认帮助内容</returns>
+        private string GenerateDefaultHelpContent(HelpContext context)
+        {
+            try
+            {
+                switch (context.Level)
+                {
+                    case HelpLevel.Control:
+                        // 控件级别帮助
+                        return DefaultHelpContentGenerator.GenerateDefaultControlHelp(
+                            context.TargetControl,
+                            context.EntityType);
+
+                    case HelpLevel.Form:
+                        // 窗体级别帮助
+                        return DefaultHelpContentGenerator.GenerateDefaultFormHelp(
+                            context.FormType?.GetType(),
+                            context.EntityType);
+
+                    case HelpLevel.Module:
+                        // 实体级别帮助
+                        if (context.EntityType != null)
+                        {
+                            return DefaultHelpContentGenerator.GenerateDefaultFormHelp(
+                                null,
+                                context.EntityType);
+                        }
+                        return DefaultHelpContentGenerator.GenerateGlobalHelp();
+
+                    default:
+                        // 默认返回全局帮助
+                        return DefaultHelpContentGenerator.GenerateGlobalHelp();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"生成默认帮助内容失败: {ex.Message}");
+                return DefaultHelpContentGenerator.GenerateMissingHelpPlaceholder(context.HelpKey);
             }
         }
 

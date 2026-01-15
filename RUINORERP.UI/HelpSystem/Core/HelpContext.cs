@@ -259,6 +259,52 @@ namespace RUINORERP.UI.HelpSystem.Core
             };
         }
 
+        /// <summary>
+        /// 从 URL 创建帮助上下文
+        /// 用于生成 URL 帮助请求
+        /// </summary>
+        /// <param name="url">帮助 URL</param>
+        /// <returns>帮助上下文对象</returns>
+        public static HelpContext FromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
+
+            var context = new HelpContext
+            {
+                Level = HelpLevel.Control,
+                HelpKey = url
+            };
+
+            // 从 URL 中提取帮助键
+            string helpKey = HelpUrlRouter.ExtractHelpKey(url);
+            if (!string.IsNullOrEmpty(helpKey))
+            {
+                context.HelpKey = helpKey;
+            }
+
+            // 保存原始 URL
+            context.SetAdditionalInfo("OriginalUrl", url);
+
+            // 判断 URL 类型
+            if (HelpUrlRouter.IsLocalHelpUrl(url))
+            {
+                context.SetAdditionalInfo("UrlType", "Local");
+            }
+            else if (HelpUrlRouter.IsRemoteHelpUrl(url))
+            {
+                context.SetAdditionalInfo("UrlType", "Remote");
+            }
+            else if (HelpUrlRouter.IsHttpUrl(url))
+            {
+                context.SetAdditionalInfo("UrlType", "Http");
+            }
+
+            return context;
+        }
+
         #endregion
 
         #region 公共方法

@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.UI.HelpSystem;
+using RUINORERP.UI.HelpSystem.Core;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -18,8 +19,8 @@ namespace RUINORERP.UI.BaseForm
         public frmBase()
         {
             InitializeComponent();
-            
-           
+
+
         }
 
         /// <summary>
@@ -43,7 +44,7 @@ namespace RUINORERP.UI.BaseForm
                     case Keys.F1:
                         // 显示帮助 - 优先显示当前焦点控件的帮助
                         var focusedControl = this.ActiveControl;
-                        //HelpManager.ShowHelpForControl(this, focusedControl);
+                        HelpManager.Instance.ShowControlHelp(focusedControl);
                         return true;
                     case Keys.F2:
                         // 显示帮助系统主窗体

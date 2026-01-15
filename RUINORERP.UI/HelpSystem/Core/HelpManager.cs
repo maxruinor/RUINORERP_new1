@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using RUINORERP.UI.HelpSystem.Components;
+using RUINORERP.UI.HelpSystem.Extensions;
 
 namespace RUINORERP.UI.HelpSystem.Core
 {
@@ -518,7 +519,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         }
 
         /// <summary>
-        /// 获取当前焦点控件
+        /// 获取当前焦点控件，支持 Krypton 控件
         /// </summary>
         /// <param name="form">目标窗体</param>
         /// <returns>焦点控件</returns>
@@ -526,6 +527,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         {
             if (form.ActiveControl != null)
             {
+                // 返回活动控件
                 return form.ActiveControl;
             }
 
@@ -534,7 +536,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         }
 
         /// <summary>
-        /// 递归查找焦点控件
+        /// 递归查找焦点控件，支持 Krypton 控件的嵌套结构
         /// </summary>
         /// <param name="control">起始控件</param>
         /// <returns>焦点控件</returns>
@@ -545,6 +547,17 @@ namespace RUINORERP.UI.HelpSystem.Core
                 return control;
             }
 
+            // 获取控件的所有子控件
+            var allControls = GetAllControls(control);
+            foreach (Control child in allControls)
+            {
+                if (child.Focused)
+                {
+                    return child;
+                }
+            }
+
+            // 如果没有找到直接焦点，递归检查子控件
             foreach (Control child in control.Controls)
             {
                 Control focused = FindFocusedControl(child);
@@ -1047,11 +1060,11 @@ namespace RUINORERP.UI.HelpSystem.Core
                     case HelpLevel.Form:
                         // 窗体级别帮助
                         return DefaultHelpContentGenerator.GenerateDefaultFormHelp(
-                            context.FormType?.GetType(),
+                            context.FormType,
                             context.EntityType);
 
                     case HelpLevel.Module:
-                        // 实体级别帮助
+                        // 模块级别帮助
                         if (context.EntityType != null)
                         {
                             return DefaultHelpContentGenerator.GenerateDefaultFormHelp(
@@ -1059,6 +1072,12 @@ namespace RUINORERP.UI.HelpSystem.Core
                                 context.EntityType);
                         }
                         return DefaultHelpContentGenerator.GenerateGlobalHelp();
+
+                    case HelpLevel.Field:
+                        // 字段级别帮助
+                        return DefaultHelpContentGenerator.GenerateDefaultControlHelp(
+                            null,
+                            context.EntityType);
 
                     default:
                         // 默认返回全局帮助

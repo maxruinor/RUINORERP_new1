@@ -1,3 +1,4 @@
+using RUINORERP.Model;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -90,74 +91,107 @@ namespace RUINORERP.UI.HelpSystem.Core
 
         #region 静态工厂方法
 
-        /// <summary>
-        /// 从控件创建帮助上下文
-        /// 自动识别控件所属的窗体、绑定的实体和字段信息
-        /// </summary>
-        /// <param name="control">目标控件</param>
-        /// <returns>帮助上下文对象</returns>
-        public static HelpContext FromControl(Control control)
+    /// <summary>
+    /// 从控件创建帮助上下文
+    /// 自动识别控件所属的窗体、绑定的实体和字段信息
+    /// 使用智能帮助解析器自动匹配实体和字段
+    /// </summary>
+    /// <param name="control">目标控件</param>
+    /// <returns>帮助上下文对象</returns>
+    public static HelpContext FromControl(Control control)
+    {
+        if (control == null)
         {
-            if (control == null)
-            {
-                return null;
-            }
-
-            var context = new HelpContext
-            {
-                Level = HelpLevel.Control,
-                TargetControl = control,
-                ControlName = control.Name
-            };
-
-            // 尝试获取窗体类型
-            var form = control.FindForm();
-            if (form != null)
-            {
-                context.FormType = form.GetType();
-            }
-
-            // 尝试从DataBindings获取实体和字段信息
-            if (control.DataBindings != null && control.DataBindings.Count > 0)
-            {
-                var binding = control.DataBindings[0];
-                context.FieldName = binding.BindingMemberInfo.BindingField;
-
-                try
-                {
-                    if (binding.BindingManagerBase?.Current != null)
-                    {
-                        // 从当前绑定的对象获取实体类型
-                        var typeName = binding.BindingManagerBase.Current.GetType().Name;
-                        // 构造完整的实体类型名称
-                        context.EntityType = Type.GetType($"RUINORERP.Model.{typeName}");
-                    }
-                }
-                catch
-                {
-                    // 忽略异常,继续其他处理
-                }
-            }
-
-            // 尝试从Tag获取帮助键
-            if (control.Tag != null)
-            {
-                try
-                {
-                    // 支持多种Tag格式
-                    if (control.Tag is string tagString && tagString.StartsWith("HelpKey:"))
-                    {
-                        context.HelpKey = tagString.Substring("HelpKey:".Length);
-                    }
-                }
-                catch
-                {
-                    // 忽略异常
-                }
-            }
-
-            return context;
+            return null;
         }
+
+        var context = new HelpContext
+        {
+            Level = HelpLevel.Control,
+            TargetControl = control,
+            ControlName = control.Name
+        };
+
+        // 尝试获取窗体类型
+        var form = control.FindForm();
+        if (form != null)
+        {
+            context.FormType = form.GetType();
+        }
+
+        // 使用智能帮助解析器
+        var resolver = new SmartHelpResolver();
+        
+        // 解析实体类型（从泛型参数）
+        context.EntityType = resolver.ResolveEntityType(context.FormType);
+
+        // 从控件名提取字段名
+        if (!string.IsNullOrEmpty(control.Name))
+        {
+            string fieldName = resolver.ExtractFieldNameFromControlName(control.Name);
+            if (!string.IsNullOrEmpty(fieldName))
+            {
+                context.FieldName = fieldName;
+            }
+        }
+
+        // 从DataBindings获取实体和字段信息（优先于控件名解析）
+        if (control.DataBindings != null && control.DataBindings.Count > 0)
+        {
+            var binding = control.DataBindings[0];
+            context.FieldName = binding.BindingMemberInfo.BindingField;
+
+            try
+            {
+                if (binding.BindingManagerBase?.Current != null)
+                {
+                    // 从当前绑定的对象获取实体类型
+                    var boundType = binding.BindingManagerBase.Current.GetType();
+                    if (typeof(BaseEntity).IsAssignableFrom(boundType))
+                    {
+                        context.EntityType = boundType;
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略异常,继续其他处理
+            }
+        }
+
+        // 尝试从Tag获取帮助键（最高优先级）
+        if (control.Tag != null)
+        {
+            try
+            {
+                if (control.Tag is string tagString && tagString.StartsWith("HelpKey:"))
+                {
+                    context.HelpKey = tagString.Substring("HelpKey:".Length);
+                }
+            }
+            catch
+            {
+                // 忽略异常
+            }
+        }
+
+        // 如果没有手动指定HelpKey，则生成智能帮助键
+        if (string.IsNullOrEmpty(context.HelpKey))
+        {
+            // 优先级1: 字段级帮助（Fields.实体名.字段名）
+            if (context.EntityType != null && !string.IsNullOrEmpty(context.FieldName))
+            {
+                context.HelpKey = $"Fields.{context.EntityType.Name}.{context.FieldName}";
+            }
+            // 优先级2: 控件级帮助（Controls.窗体名.控件名）
+            else if (context.FormType != null)
+            {
+                context.HelpKey = $"Controls.{context.FormType.Name}.{control.Name}";
+            }
+        }
+
+        return context;
+    }
 
         /// <summary>
         /// 从窗体创建帮助上下文

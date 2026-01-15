@@ -95,6 +95,32 @@ namespace RUINORERP.UI.HelpSystem.Extensions
 
         #endregion
 
+        #region 扩展方法 - F1帮助
+
+        /// <summary>
+        /// 为控件启用F1帮助
+        /// </summary>
+        /// <param name="control">目标控件</param>
+        public static void EnableF1Help(this Control control)
+        {
+            if (control == null) return;
+
+            control.KeyDown += Control_KeyDown;
+        }
+
+        /// <summary>
+        /// 为控件禁用F1帮助
+        /// </summary>
+        /// <param name="control">目标控件</param>
+        public static void DisableF1Help(this Control control)
+        {
+            if (control == null) return;
+
+            control.KeyDown -= Control_KeyDown;
+        }
+
+        #endregion
+
         #region 扩展方法 - 帮助显示
 
         /// <summary>
@@ -208,6 +234,50 @@ namespace RUINORERP.UI.HelpSystem.Extensions
             {
                 System.Diagnostics.Debug.WriteLine($"控件鼠标离开事件处理失败: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 控件KeyDown事件处理
+        /// </summary>
+        private static void Control_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.F1)
+            {
+                if (sender is Control control)
+                {
+                    e.Handled = true;
+                    // 获取当前焦点的控件
+                    Control focusedControl = GetFocusedControl(control);
+                    if (focusedControl != null)
+                    {
+                        HelpManager.Instance.ShowControlHelp(focusedControl);
+                    }
+                    else
+                    {
+                        // 如果没有焦点控件,显示控件本身的帮助
+                        HelpManager.Instance.ShowControlHelp(control);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取当前焦点的控件
+        /// </summary>
+        private static Control GetFocusedControl(Control control)
+        {
+            if (control is Form form)
+            {
+                return form.ActiveControl;
+            }
+
+            // 对于UserControl,递归查找焦点控件
+            if (control is ContainerControl container && container.ActiveControl != null)
+            {
+                return container.ActiveControl;
+            }
+
+            return null;
         }
 
         #endregion

@@ -952,6 +952,7 @@
     <Compile Include="HelpSystem\Core\HelpSearchResult.cs" />
     <Compile Include="HelpSystem\Core\IHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\LocalHelpProvider.cs" />
+    <Compile Include="HelpSystem\Core\SmartHelpResolver.cs" />
     <Compile Include="HelpSystem\Extensions\HelpExtensions.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
@@ -5352,7 +5353,6 @@
   <Import Project="..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets" Condition="Exists('..\packages\SkiaSharp.NativeAssets.Win32.2.88.9\build\net462\SkiaSharp.NativeAssets.Win32.targets')" />
   <Import Project="..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets" Condition="Exists('..\packages\MessagePackAnalyzer.3.1.4\build\MessagePackAnalyzer.targets')" />
   <Import Project="..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets" Condition="Exists('..\packages\Microsoft.Web.WebView2.1.0.3537.50\build\Microsoft.Web.WebView2.targets')" />
-
   <!-- 帮助系统资源文件配置 -->
   <ItemGroup>
     <!-- 将HelpContent目录下的所有文件作为嵌入式资源 -->

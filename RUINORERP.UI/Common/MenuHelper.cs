@@ -426,10 +426,18 @@ namespace RUINORERP.UI.Common
                                 {
                                     //var ss = Startup.GetFromFac<RUINORERP.UI.PSI.INV.UCStocktake>();
                                     var menu = Startup.GetFromFacByName<BaseBillEdit>(pr.FormName);
-                                    if (menu is BaseBillEdit bbe)
+                                    // BaseBillEditGeneric<T, C> 的 CurMenuInfo 是从基类继承的
+                                    try
                                     {
-                                        menu.CurMenuInfo = pr;
-
+                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        {
+                                            curMenuInfoProperty.SetValue(menu, pr);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
                                     }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
@@ -438,15 +446,38 @@ namespace RUINORERP.UI.Common
                                 if (pr.BIBaseForm.Contains("BaseEditGeneric"))
                                 {
                                     var menu = Startup.GetFromFacByName<Krypton.Toolkit.KryptonForm>(pr.FormName);
+                                    // BaseEditGeneric<T> 的 CurMenuInfo 是从基类继承的
+                                    // 使用反射设置 CurMenuInfo 属性
+                                    try
+                                    {
+                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        {
+                                            curMenuInfoProperty.SetValue(menu, pr);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                    }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else
                                 if (pr.BIBaseForm.Contains("BaseListGeneric"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseUControl>(pr.FormName);
-                                    if (menu is BaseUControl baseListGeneric)
+                                    // BaseListGeneric<T> 的 CurMenuInfo 是从基类继承的
+                                    try
                                     {
-                                        menu.CurMenuInfo = pr;
+                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        {
+                                            curMenuInfoProperty.SetValue(menu, pr);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
                                     }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
@@ -464,6 +495,19 @@ namespace RUINORERP.UI.Common
                                 if (pr.BIBaseForm.Contains("BaseBillQueryMC"))
                                 {
                                     var menu = Startup.GetFromFacByName<BaseQuery>(pr.FormName);
+                                    // BaseBillQueryMC<M, C> 的 CurMenuInfo 是从基类继承的
+                                    try
+                                    {
+                                        var curMenuInfoProperty = menu.GetType().GetProperty("CurMenuInfo");
+                                        if (curMenuInfoProperty != null && curMenuInfoProperty.CanWrite)
+                                        {
+                                            curMenuInfoProperty.SetValue(menu, pr);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"设置CurMenuInfo失败: {ex.Message}");
+                                    }
                                     page = NewPage(pr.CaptionCN, 1, menu);
                                 }
                                 else

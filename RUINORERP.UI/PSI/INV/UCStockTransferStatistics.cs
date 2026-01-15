@@ -103,48 +103,6 @@ namespace RUINORERP.UI.PSI.INV
             base.MasterInvisibleCols.Add(c => c.PrimaryKeyID);
         }
 
-        /*
-        //根据客户生成对账单 数据模式是 客户信息为主，明细为子表
-
-        public override async Task Print(RptMode rptMode)
-        {
-            //构建对账单的数据
-            PurEntryStatementByCV statementByCV = new PurEntryStatementByCV();
-
-
-            List<View_StockTransferItems> selectlist = GetSelectResult();
-            if (selectlist.Count == 0)
-            {
-                MessageBox.Show("没有需要打印的数据，请将客户作为查询条件查询出结果后再打印。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-            //配置还是当前类，菜单这块定义的
-            if (_PrintConfig == null || _PrintConfig.tb_PrintTemplates == null)
-            {
-                _PrintConfig = PrintHelper<View_StockTransferItems>.GetPrintConfig<View_StockTransferItems>();
-            }
-
-
-            tb_CustomerVendor customerVendor = new tb_CustomerVendor();
-            var dto = QueryDto as View_StockTransferItems;
-            if (!dto.CustomerVendor_ID.HasValue)
-            {
-                MessageBox.Show("缺少客户信息，请将客户作为查询统计的条件。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-            else
-            {
-                customerVendor = await Startup.GetFromFac<tb_CustomerVendorController<tb_CustomerVendor>>().BaseQueryByIdAsync(dto.CustomerVendor_ID.Value);
-                statementByCV.CustomerVendor = customerVendor;
-                statementByCV.PurEntryItems = selectlist;
-            }
-            bool rs = PrintHelper<View_StockTransferItems>.PrintCustomData<PurEntryStatementByCV>(statementByCV, rptMode, _PrintConfig);
-            if (rs)
-            {
-                toolStripSplitButtonPrint.Enabled = false;
-            }
-        }
-
-        */
+     
     }
 }

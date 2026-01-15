@@ -28,6 +28,7 @@ using AutoMapper;
 using RUINORERP.Model.Base;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.HelpSystem.Extensions;
 using RUINORERP.Business.Processor;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
@@ -64,6 +65,7 @@ using RUINORERP.Business.Cache;
 using System.Web.Caching;
 using RUINORERP.Business.RowLevelAuthService;
 using RUINORERP.UI.BusinessService;
+using RUINORERP.UI.HelpSystem.Core;
 
 
 namespace RUINORERP.UI.BaseForm
@@ -75,6 +77,62 @@ namespace RUINORERP.UI.BaseForm
     [PreCheckMustOverrideBaseClass]
     public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class
     {
+        #region 帮助系统集成
+
+        /// <summary>
+        /// 是否启用智能帮助系统
+        /// </summary>
+        [Browsable(true)]
+        [Category("帮助系统")]
+        [Description("是否启用智能帮助系统")]
+        public bool EnableSmartHelp { get; set; } = true;
+
+        /// <summary>
+        /// 窗体帮助键(可选,覆盖默认值)
+        /// </summary>
+        [Category("帮助系统")]
+        [Description("窗体帮助键,留空则使用窗体类型名称")]
+        public string FormHelpKey { get; set; }
+
+        /// <summary>
+        /// 初始化帮助系统
+        /// </summary>
+        protected virtual void InitializeHelpSystem()
+        {
+            if (!EnableSmartHelp) return;
+
+            try
+            {
+                // 启用F1帮助
+                this.EnableF1Help();
+
+                // 启用智能提示(避免设计模式时报错)
+                if (!this.DesignMode && System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+                {
+                    // 为所有控件启用智能提示
+                    HelpManager.Instance.EnableSmartTooltipForAll(this, FormHelpKey, CurMenuInfo);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 显示控件帮助
+        /// </summary>
+        /// <param name="control">目标控件</param>
+        protected void ShowControlHelp(Control control)
+        {
+            if (EnableSmartHelp)
+            {
+                HelpManager.Instance.ShowControlHelp(control);
+            }
+        }
+
+        #endregion
+
         #region 如果窗体，有些按钮不用出现在这个业务窗体时。这里手动排除。集合有值才行
 
         List<MenuItemEnums> _excludeMenuList = new List<MenuItemEnums>();
@@ -284,6 +342,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 if (!this.DesignMode)
                 {
+                    // 初始化帮助系统
+                    InitializeHelpSystem();
+
                     frm = new frmFormProperty();
                     GridRelated = new GridViewRelated();
                     ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");

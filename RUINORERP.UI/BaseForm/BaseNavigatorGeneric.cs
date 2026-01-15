@@ -337,19 +337,7 @@ namespace RUINORERP.UI.BaseForm
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             if (!MainForm.Instance.AppContext.IsSuperUser)
             {
-                /*
-                tb_MenuInfo menuInfo = MainForm.Instance.AppContext.CurUserInfo.UserMenuList.Where(c => c.MenuType == "行为菜单").Where(c => c.FormName == this.Name).FirstOrDefault();
-                if (menuInfo == null)
-                {
-                    MessageBox.Show($"没有使用【{menuInfo.MenuName}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                List<tb_ButtonInfo> btnList = MainForm.Instance.AppContext.CurUserInfo.UserButtonList.Where(c => c.MenuID == menuInfo.MenuID).ToList();
-                if (!btnList.Where(b => b.BtnText == menuItem.ToString()).Any())
-                {
-                    MessageBox.Show($"没有使用【{menuItem.ToString()}】的权限。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }*/
+                 
             }
 
             switch (menuItem)

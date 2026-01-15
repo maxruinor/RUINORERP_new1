@@ -212,6 +212,7 @@ namespace RUINORERP.UI.HelpSystem.Core
 
         /// <summary>
         /// 显示控件级别的帮助
+        /// 支持智能解析，使用智能帮助解析器自动匹配实体和字段
         /// </summary>
         /// <param name="control">要显示帮助的控件</param>
         public void ShowControlHelp(Control control)
@@ -221,8 +222,37 @@ namespace RUINORERP.UI.HelpSystem.Core
                 return;
             }
 
-            var context = HelpContext.FromControl(control);
-            ShowHelp(context);
+            // 使用智能帮助解析器获取多个候选帮助键
+            var resolver = new SmartHelpResolver();
+            List<string> helpKeys = resolver.ResolveHelpKeys(control);
+
+            if (helpKeys.Count == 0)
+            {
+                return;
+            }
+
+            // 按优先级尝试获取帮助内容，找到第一个存在的就使用
+            foreach (string helpKey in helpKeys)
+            {
+                var context = new HelpContext
+                {
+                    Level = HelpLevel.Control,
+                    TargetControl = control,
+                    ControlName = control.Name,
+                    HelpKey = helpKey
+                };
+
+                string helpContent = GetHelpContent(context);
+                if (!string.IsNullOrEmpty(helpContent))
+                {
+                    DisplayHelp(helpContent, context);
+                    return; // 找到帮助，直接返回
+                }
+            }
+
+            // 所有候选键都没找到帮助，显示未找到提示
+            var contextNotFound = HelpContext.FromControl(control);
+            ShowHelpNotFound(contextNotFound);
         }
 
         /// <summary>
@@ -357,7 +387,8 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// </summary>
         /// <param name="parent">父控件</param>
         /// <param name="helpKeyPrefix">帮助键前缀(可选)</param>
-        public void EnableSmartTooltipForAll(Control parent, string helpKeyPrefix = null)
+        /// <param name="menuInfo">菜单信息(用于智能解析)</param>
+        public void EnableSmartTooltipForAll(Control parent, string helpKeyPrefix = null, object menuInfo = null)
         {
             if (parent == null)
             {
@@ -371,6 +402,29 @@ namespace RUINORERP.UI.HelpSystem.Core
                 if (!string.IsNullOrEmpty(helpKeyPrefix))
                 {
                     helpKey = $"{helpKeyPrefix}.{control.Name}";
+                }
+
+                // 如果提供了菜单信息，保存到控件Tag供智能解析使用
+                if (menuInfo != null)
+                {
+                    if (control.Tag == null)
+                    {
+                        control.Tag = new Dictionary<string, object>();
+                    }
+                    else if (control.Tag is string)
+                    {
+                        // 如果Tag是字符串(可能是HelpKey)，转换为字典
+                        var existingTag = control.Tag as string;
+                        control.Tag = new Dictionary<string, object>
+                        {
+                            { "HelpKey", existingTag }
+                        };
+                    }
+
+                    if (control.Tag is Dictionary<string, object> tagDict)
+                    {
+                        tagDict["MenuInfo"] = menuInfo;
+                    }
                 }
 
                 EnableSmartTooltipForControl(control, helpKey);
@@ -421,6 +475,26 @@ namespace RUINORERP.UI.HelpSystem.Core
                 // 生成帮助键
                 string helpKey = GenerateHelpKey(context);
 
+                // 调用重载方法
+                return GetHelpContent(helpKey, context);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取帮助内容失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取帮助内容（重载方法，直接使用helpKey）
+        /// </summary>
+        /// <param name="helpKey">帮助键</param>
+        /// <param name="context">帮助上下文</param>
+        /// <returns>帮助内容</returns>
+        private string GetHelpContent(string helpKey, HelpContext context)
+        {
+            try
+            {
                 // 如果启用缓存,尝试从缓存获取
                 if (EnableCache)
                 {
@@ -430,8 +504,22 @@ namespace RUINORERP.UI.HelpSystem.Core
                     }
                 }
 
+                // 创建新的上下文，使用指定的helpKey
+                var helpContext = new HelpContext
+                {
+                    Level = context?.Level ?? HelpLevel.Control,
+                    TargetControl = context?.TargetControl,
+                    FormType = context?.FormType,
+                    EntityType = context?.EntityType,
+                    FieldName = context?.FieldName,
+                    ControlName = context?.ControlName,
+                    ModuleName = context?.ModuleName,
+                    HelpKey = helpKey,
+                    AdditionalInfo = context?.AdditionalInfo
+                };
+
                 // 从提供者获取
-                string content = _helpProvider.GetHelpContent(context);
+                string content = _helpProvider.GetHelpContent(helpContext);
 
                 // 如果启用缓存且内容有效,缓存内容
                 if (EnableCache && !string.IsNullOrEmpty(content))

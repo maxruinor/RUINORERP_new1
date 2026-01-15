@@ -27,7 +27,7 @@ namespace RUINORERP.UI.HelpSystem.Components
         /// <summary>
         /// 默认超时时间(毫秒)
         /// </summary>
-        private const int DEFAULT_TIMEOUT = 5000;
+        private const int DEFAULT_TIMEOUT = 10000;
 
         /// <summary>
         /// 已释放标志

@@ -47,11 +47,6 @@ namespace RUINORERP.UI.HelpSystem.Core
         private HelpTooltip _helpTooltip;
 
         /// <summary>
-        ///// 帮助内容监控器
-        ///// </summary>
-        //private HelpContentMonitor _helpContentMonitor;
-
-        /// <summary>
         /// URL 路由管理器
         /// </summary>
         private HelpUrlRouter _urlRouter;
@@ -109,7 +104,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// <summary>
         /// 是否启用智能提示
         /// </summary>
-        public bool EnableSmartTooltip { get; set; } = true;
+        public bool EnableSmartTooltip { get; set; } = false;
 
         /// <summary>
         /// 智能提示延迟时间(毫秒)
@@ -208,8 +203,8 @@ namespace RUINORERP.UI.HelpSystem.Core
                 // 创建 URL 路由管理器
                 _urlRouter = new HelpUrlRouter(HelpContentRootPath);
 
-                // 创建帮助内容监控器
-                //_helpContentMonitor = new HelpContentMonitor();
+                // 初始化帮助内容监控器（静态类，无需实例化）
+                HelpContentMonitor.LoadMonitoringData();
 
                 // 创建智能提示组件
                 _helpTooltip = new HelpTooltip();
@@ -443,6 +438,9 @@ namespace RUINORERP.UI.HelpSystem.Core
 
             try
             {
+                // 确保上下文包含当前焦点控件
+                EnsureContextHasFocusControl(context);
+
                 // 获取帮助内容
                 string helpContent = GetHelpContent(context);
 
@@ -459,8 +457,8 @@ namespace RUINORERP.UI.HelpSystem.Core
                 }
                 else
                 {
-                    // 显示未找到帮助的提示
-                    ShowHelpNotFound(context);
+                    // 显示总帮助而不是未找到提示
+                    ShowMainHelp(context);
                 }
             }
             catch (Exception ex)
@@ -485,6 +483,142 @@ namespace RUINORERP.UI.HelpSystem.Core
                     MessageBoxButtons.OK, 
                     MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 确保帮助上下文包含当前焦点控件
+        /// </summary>
+        /// <param name="context">帮助上下文</param>
+        private void EnsureContextHasFocusControl(HelpContext context)
+        {
+            if (context == null) return;
+
+            // 如果上下文已有目标控件,则不需要处理
+            if (context.TargetControl != null)
+            {
+                return;
+            }
+
+            // 尝试获取当前活动窗口
+            Form activeForm = Form.ActiveForm;
+            if (activeForm == null)
+            {
+                return;
+            }
+
+            // 获取当前焦点控件
+            Control focusedControl = GetFocusedControl(activeForm);
+            if (focusedControl != null)
+            {
+                context.TargetControl = focusedControl;
+                context.ControlName = focusedControl.Name;
+                context.FormType = activeForm.GetType();
+                context.Level = HelpLevel.Control;
+            }
+        }
+
+        /// <summary>
+        /// 获取当前焦点控件
+        /// </summary>
+        /// <param name="form">目标窗体</param>
+        /// <returns>焦点控件</returns>
+        private Control GetFocusedControl(Form form)
+        {
+            if (form.ActiveControl != null)
+            {
+                return form.ActiveControl;
+            }
+
+            // 如果没有活动控件,尝试遍历查找
+            return FindFocusedControl(form);
+        }
+
+        /// <summary>
+        /// 递归查找焦点控件
+        /// </summary>
+        /// <param name="control">起始控件</param>
+        /// <returns>焦点控件</returns>
+        private Control FindFocusedControl(Control control)
+        {
+            if (control.Focused)
+            {
+                return control;
+            }
+
+            foreach (Control child in control.Controls)
+            {
+                Control focused = FindFocusedControl(child);
+                if (focused != null)
+                {
+                    return focused;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 显示总帮助
+        /// </summary>
+        /// <param name="context">帮助上下文</param>
+        private void ShowMainHelp(HelpContext context)
+        {
+            try
+            {
+                // 创建总帮助上下文
+                var mainHelpContext = new HelpContext
+                {
+                    Level = HelpLevel.Module,
+                    ModuleName = "MainHelp",
+                    TargetControl = context.TargetControl,
+                    FormType = context.FormType
+                };
+
+                // 获取总帮助内容
+                string mainHelpContent = GetHelpContent(mainHelpContext);
+
+                if (string.IsNullOrEmpty(mainHelpContent))
+                {
+                    // 如果没有找到总帮助,生成默认总帮助
+                    mainHelpContent = GenerateDefaultMainHelp();
+                }
+
+                // 显示总帮助
+                DisplayHelp(mainHelpContent, mainHelpContext);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示总帮助失败: {ex.Message}");
+                // 如果总帮助也显示失败,显示帮助未找到提示
+                ShowHelpNotFound(context);
+            }
+        }
+
+        /// <summary>
+        /// 生成默认总帮助内容
+        /// </summary>
+        /// <returns>默认总帮助内容</returns>
+        private string GenerateDefaultMainHelp()
+        {
+            return "# 总帮助\n\n" +
+                   "## 欢迎使用销售订单系统\n\n" +
+                   "本系统用于管理销售订单的录入、审核、执行和查询。\n\n" +
+                   "### 主要功能\n\n" +
+                   "- 销售订单录入\n" +
+                   "- 订单审核流程\n" +
+                   "- 订单执行跟踪\n" +
+                   "- 订单查询和统计\n\n" +
+                   "### 使用指南\n\n" +
+                   "1. 在订单录入界面填写相关信息\n" +
+                   "2. 保存订单并提交审核\n" +
+                   "3. 审核通过后执行订单\n" +
+                   "4. 执行完成后关闭订单\n\n" +
+                   "### 快捷键\n\n" +
+                   "- F1: 显示当前控件帮助\n" +
+                   "- Ctrl+S: 保存订单\n" +
+                   "- Ctrl+N: 新建订单\n\n" +
+                   "### 联系我们\n\n" +
+                   "如有任何问题，请联系系统管理员。";
         }
 
         #endregion

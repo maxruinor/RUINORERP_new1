@@ -69,6 +69,11 @@ namespace RUINORERP.UI.HelpSystem.Components
         private ToolStripButton _btnZoomIn;
 
         /// <summary>
+        /// 总帮助按钮
+        /// </summary>
+        private ToolStripButton _btnMainHelp;
+
+        /// <summary>
         /// 帮助上下文
         /// </summary>
         private Core.HelpContext _helpContext;
@@ -189,6 +194,10 @@ namespace RUINORERP.UI.HelpSystem.Components
             _btnOpenCHM.DisplayStyle = ToolStripItemDisplayStyle.Text;
             _btnOpenCHM.Click += BtnOpenCHM_Click;
 
+            _btnMainHelp = new ToolStripButton("总帮助");
+            _btnMainHelp.DisplayStyle = ToolStripItemDisplayStyle.Text;
+            _btnMainHelp.Click += BtnMainHelp_Click;
+
             // 添加按钮到工具栏
             _toolStrip.Items.AddRange(new ToolStripItem[] 
             { 
@@ -202,7 +211,9 @@ namespace RUINORERP.UI.HelpSystem.Components
                 _btnZoomIn,
                 new ToolStripSeparator(),
                 _btnPrint, 
-                _btnOpenCHM 
+                _btnOpenCHM,
+                new ToolStripSeparator(),
+                _btnMainHelp 
             });
 
             // 创建 WebView2 控件
@@ -936,6 +947,38 @@ namespace RUINORERP.UI.HelpSystem.Components
             {
                 MessageBox.Show(
                     $"打开CHM文件失败: {ex.Message}",
+                    "错误",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 总帮助按钮点击事件
+        /// </summary>
+        private void BtnMainHelp_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 创建总帮助上下文
+                var mainHelpContext = new Core.HelpContext
+                {
+                    Level = Core.HelpLevel.Module,
+                    ModuleName = "MainHelp",
+                    TargetControl = _helpContext?.TargetControl,
+                    FormType = _helpContext?.FormType
+                };
+
+                // 关闭当前帮助面板
+                this.Close();
+
+                // 显示总帮助
+                Core.HelpManager.Instance.ShowHelp(mainHelpContext);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"显示总帮助失败: {ex.Message}",
                     "错误",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);

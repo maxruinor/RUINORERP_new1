@@ -222,6 +222,7 @@ namespace RUINORERP.UI.HelpSystem.Core
         /// <summary>
         /// 从控件名提取字段名
         /// 去除控件前缀后得到字段名
+        /// 支持特殊映射，如txtOrderNo → SOrderNo
         /// </summary>
         /// <param name="controlName">控件名称</param>
         /// <returns>字段名，无法提取则返回null</returns>
@@ -234,6 +235,13 @@ namespace RUINORERP.UI.HelpSystem.Core
             if (string.IsNullOrEmpty(controlName))
             {
                 return null;
+            }
+
+            // 处理特殊映射
+            switch (controlName)
+            {
+                case "txtOrderNo":
+                    return "SOrderNo"; // 销售订单编号特殊映射
             }
 
             foreach (string prefix in ControlPrefixes)

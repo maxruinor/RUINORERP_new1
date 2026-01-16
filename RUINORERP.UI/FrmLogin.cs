@@ -321,12 +321,12 @@ namespace RUINORERP.UI
                     return;
                 }
 
-                // 1. 连接服务器(添加5秒超时)
+                // 1. 连接服务器(添加10秒超时)
                 UpdateConnectionStatus(ConnectionStatus.Connecting, $"正在连接到服务器 {serverIP}:{serverPort}...");
                 MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {serverIP}:{serverPort}...");
 
                 var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(5)));
+                var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10)));
 
                 bool connectResult = false;
                 if (completedTask == connectTask)
@@ -352,9 +352,9 @@ namespace RUINORERP.UI
                 UpdateConnectionStatus(ConnectionStatus.Connected, $"服务器 {serverIP}:{serverPort} 连接成功");
                 MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
 
-                // 2. 等待欢迎流程完成(等待最多10秒)
+                // 2. 等待欢迎流程完成(等待最多15秒)
                 // 欢迎流程由WelcomeCommandHandler自动处理,我们只需要等待确认
-                var welcomeTimeout = TimeSpan.FromSeconds(10);
+                var welcomeTimeout = TimeSpan.FromSeconds(15);
                 var welcomeTask = _welcomeCompletionTcs.Task;
                 completedTask = await Task.WhenAny(welcomeTask, Task.Delay(welcomeTimeout));
 
@@ -427,133 +427,57 @@ namespace RUINORERP.UI
 
             if (txtServerIP.Text.Trim().Length == 0 || txtPort.Text.Trim().Length == 0)
             {
-                // 确保在UI线程中显示消息框
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                    }));
-                    return;
-                }
-                else
-                {
-                    MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                    return;
-                }
+                MessageBox.Show("请输入服务器IP和端口。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                btnok.Enabled = true;
+                btncancel.Text = "取消";
+                return;
             }
 
             // 验证基本输入
             if (txtUserName.Text.Trim() == "")
             {
-                if (this.InvokeRequired)
+                errorProvider1.SetError(txtUserName, "用户名不能为空");
+                txtUserName.Focus();
+                btnok.Enabled = true;
+                btncancel.Text = "取消";
+                return;
+            }
+
+            // 判断是否需要重连：检查IP/端口是否变化
+            bool needsReconnect = true;
+            if (connectionManager.IsConnected)
+            {
+                string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
+                string newServerIP = txtServerIP.Text.Trim();
+                int currentPort = connectionManager.CurrentServerPort;
+                int.TryParse(txtPort.Text.Trim(), out int newServerPort);
+
+                // 如果IP和端口都没变，不需要重连
+                if (string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) &&
+                    currentPort == newServerPort)
                 {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        errorProvider1.SetError(txtUserName, "用户名不能为空");
-                        txtUserName.Focus();
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                        return;
-                    }));
-                    return;
+                    needsReconnect = false;
+                    MainForm.Instance.logger?.LogDebug("服务器地址未变更，使用现有连接");
                 }
                 else
                 {
-                    errorProvider1.SetError(txtUserName, "用户名不能为空");
-                    txtUserName.Focus();
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                    return;
+                    MainForm.Instance.PrintInfoLog($"服务器地址已变更: {currentServerIP}:{currentPort} -> {newServerIP}:{newServerPort}，准备重新连接");
                 }
             }
 
-            // 检查IP地址不变时逻辑，快捷认证登录
-            bool isConnected = MainForm.Instance?.communicationService?.IsConnected ?? false;
-            string currentToken = await _userLoginService.GetCurrentAccessToken();
-
-            // 检查IP和端口是否发生变化
-            bool ipOrPortChanged = false;
-            if (isConnected)
-            {
-                string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
-                string currentServerPort = connectionManager.CurrentServerPort.ToString();
-                string newServerIP = txtServerIP.Text.Trim();
-                string newServerPort = txtPort.Text.Trim();
-
-                ipOrPortChanged = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
-                                 !string.Equals(currentServerPort, newServerPort, StringComparison.OrdinalIgnoreCase);
-
-                // 如果IP或端口发生变化，先断开现有连接
-                if (ipOrPortChanged)
-                {
-                    try
-                    {
-                        MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，从 {currentServerIP}:{currentServerPort} 变更为 {newServerIP}:{newServerPort}，正在取消重连并断开现有连接...");
-
-                        // 使用新的方法取消重连并强制断开连接
-                        await MainForm.Instance.communicationService.CancelReconnectAndForceDisconnectAsync();
-                        isConnected = false;
-
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger?.LogError(ex, "切换服务器时断开连接失败");
-                        // 即使断开连接失败，也继续尝试新连接
-                    }
-                }
-            }
-
-            // 如果已连接且有Token，且IP和端口未发生变化，尝试快捷登录验证
-            if (isConnected && !string.IsNullOrEmpty(currentToken) && !ipOrPortChanged
-                && string.Equals(connectionManager.CurrentServerAddress?.Trim(), txtServerIP.Text.Trim(), StringComparison.OrdinalIgnoreCase) 
-                && connectionManager.CurrentServerPort.ToString() == txtPort.Text.Trim()
-                && txtUserName.Text == UserGlobalConfig.Instance.UseName
-                && txtPassWord.Text == UserGlobalConfig.Instance.PassWord
-                )
+            // 如果需要重连，先断开现有连接
+            if (needsReconnect && connectionManager.IsConnected)
             {
                 try
                 {
-                    var quickLoginResult = await QuickValidateLoginAsync(currentToken, isConnected);
-                    if (quickLoginResult != null && quickLoginResult.IsSuccess)
-                    {
-                        // 快捷登录验证成功，直接设置在线状态并完成登录
-                        MainForm.Instance.AppContext.CurUserInfo.在线状态 = true;
-
-                        // 保存用户配置
-                        try
-                        {
-                            UserGlobalConfig.Instance.AutoSavePwd = chksaveIDpwd.Checked;
-                            UserGlobalConfig.Instance.IsSupperUser = Program.AppContextData.IsSuperUser;
-                            UserGlobalConfig.Instance.AutoRminderUpdate = chkAutoReminderUpdate.Checked;
-                            UserGlobalConfig.Instance.Serialize();
-                            MainForm.Instance.logger?.LogDebug("成功保存用户配置");
-                        }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance.logger?.LogError(ex, "保存用户配置失败，但不影响登录流程");
-                            // 只记录错误，不中断登录流程
-                        }
-
-                        Program.AppContextData.IsOnline = true;
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
-                        return;
-                    }
-                    else
-                    {
-                        MainForm.Instance.logger?.LogWarning($"快捷登录验证失败: {quickLoginResult?.ErrorMessage}，将继续使用常规登录流程");
-                    }
+                    MainForm.Instance.PrintInfoLog("正在断开现有连接...");
+                    await connectionManager.DisconnectAsync();
+                    await Task.Delay(200); // 等待断开完成
                 }
                 catch (Exception ex)
                 {
-                    // 捕获快捷登录验证过程中的异常
-                    MainForm.Instance.logger?.LogError(ex, "执行快捷登录验证时发生异常，将继续使用常规登录流程");
-                    // 不向用户显示错误，而是静默继续常规登录流程
+                    MainForm.Instance.logger?.LogError(ex, "断开连接失败");
+                    // 继续尝试新连接
                 }
             }
 
@@ -562,33 +486,13 @@ namespace RUINORERP.UI
             {
                 using (StatusBusy busy = new StatusBusy("正在登录..."))
                 {
-                    // 保存用户配置
-                    UserGlobalConfig.Instance.UseName = txtUserName.Text;
-                    UserGlobalConfig.Instance.PassWord = txtPassWord.Text;
-                    UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
-                    UserGlobalConfig.Instance.ServerPort = txtPort.Text;
-
                     // 验证服务器端口
                     if (!int.TryParse(txtPort.Text.Trim(), out var serverPort))
                     {
-                        // 确保在UI线程中显示消息框
-                        if (this.InvokeRequired)
-                        {
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                btnok.Enabled = true;
-                                btncancel.Text = "取消";
-                            }));
-                            return;
-                        }
-                        else
-                        {
-                            MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            return;
-                        }
+                        MessageBox.Show("端口号格式不正确，请检查服务器配置。", "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
+                        return;
                     }
 
                     // 执行本地权限验证
@@ -596,28 +500,12 @@ namespace RUINORERP.UI
 
                     if (!loginSucceed)
                     {
-                        if (this.InvokeRequired)
-                        {
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                errorProvider1.SetError(txtUserName, "账号密码有误");
-                                txtUserName.Focus();
-                                txtUserName.SelectAll();
-                                btnok.Enabled = true;
-                                btncancel.Text = "取消";
-                                return;
-                            }));
-                            return;
-                        }
-                        else
-                        {
-                            errorProvider1.SetError(txtUserName, "账号密码有误");
-                            txtUserName.Focus();
-                            txtUserName.SelectAll();
-                            btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                            return;
-                        }
+                        errorProvider1.SetError(txtUserName, "账号密码有误");
+                        txtUserName.Focus();
+                        txtUserName.SelectAll();
+                        btnok.Enabled = true;
+                        btncancel.Text = "取消";
+                        return;
                     }
 
                     // 如果是超级管理员且为admin用户，直接完成登录
@@ -627,28 +515,21 @@ namespace RUINORERP.UI
                         return;
                     }
 
-                    // 使用新的登录流程服务处理登录
-                    await ExecuteNewLoginFlow(isInitPwd, serverPort);
+                    // 保存用户配置（在登录前保存服务器地址）
+                    UserGlobalConfig.Instance.UseName = txtUserName.Text;
+                    UserGlobalConfig.Instance.PassWord = txtPassWord.Text;
+                    UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
+                    UserGlobalConfig.Instance.ServerPort = txtPort.Text;
+
+                    // 执行新的登录流程
+                    await ExecuteNewLoginFlow(isInitPwd, serverPort, needsReconnect);
                 }
             }
             catch (OperationCanceledException)
             {
                 MainForm.Instance.PrintInfoLog("登录操作已取消");
-
-                // 确保在UI线程中处理
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                    }));
-                }
-                else
-                {
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                }
+                btnok.Enabled = true;
+                btncancel.Text = "取消";
             }
             catch (Exception ex)
             {
@@ -665,22 +546,9 @@ namespace RUINORERP.UI
                     ? "网络连接超时，请检查服务器地址是否正确或网络连接是否正常。"
                     : $"登录失败: {ex.Message}";
 
-                // 确保在UI线程中显示消息框
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                    }));
-                }
-                else
-                {
-                    MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                }
+                MessageBox.Show(errorMessage, "登录错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                btnok.Enabled = true;
+                btncancel.Text = "取消";
             }
             finally
             {
@@ -1038,7 +906,10 @@ namespace RUINORERP.UI
         /// <summary>
         /// 执行新的登录流程
         /// </summary>
-        private async Task ExecuteNewLoginFlow(bool isInitPwd, int serverPort)
+        /// <param name="isInitPwd">是否为初始密码</param>
+        /// <param name="serverPort">服务器端口</param>
+        /// <param name="needsReconnect">是否需要重新连接</param>
+        private async Task ExecuteNewLoginFlow(bool isInitPwd, int serverPort, bool needsReconnect)
         {
             try
             {
@@ -1049,91 +920,32 @@ namespace RUINORERP.UI
                 }
 
                 // 创建组合取消令牌：包含用户取消和超时取消
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10)); // 10秒超时
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15)); // 15秒超时
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
                     timeoutCts.Token,
                     _loginCancellationTokenSource?.Token ?? CancellationToken.None);
 
-                // 1. 连接服务器
-                // 检查是否需要重连：只有未连接或服务器地址变更时才重连
-                bool needsReconnect = !connectionManager.IsConnected;
-                
-                if (!needsReconnect)
-                {
-                    // 已连接，检查服务器地址是否变更
-                    string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
-                    string newServerIP = txtServerIP.Text.Trim();
-                    needsReconnect = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
-                                   connectionManager.CurrentServerPort != serverPort;
-                }
-
-                // 只有在需要重连时才执行连接操作
+                // 1. 连接服务器（仅在需要时连接）
                 if (needsReconnect)
                 {
-                    // 在UI线程中禁用按钮
-                    if (this.InvokeRequired)
+                    string serverIP = txtServerIP.Text.Trim();
+                    MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
+
+                    // 连接到服务器
+                    var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
+                    var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(15), linkedCts.Token));
+
+                    if (completedTask != connectTask)
                     {
-                        this.Invoke(new Action(() =>
-                        {
-                            btnok.Enabled = false;
-                            btncancel.Text = "取消";
-                        }));
-                    }
-                    else
-                    {
-                        btnok.Enabled = false;
-                        btncancel.Text = "取消";
+                        throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
                     }
 
-                    try
+                    var connected = await connectTask;
+                    if (!connected)
                     {
-                        string serverIP = txtServerIP.Text.Trim();
-                        MainForm.Instance.PrintInfoLog($"正在连接到服务器 {serverIP}:{serverPort}...");
-
-                        // 先断开现有连接（如果已连接）
-                        if (connectionManager.IsConnected)
-                        {
-                            await connectionManager.DisconnectAsync();
-                            await Task.Delay(200); // 短暂等待断开完成
-                        }
-
-                        // 连接到服务器
-                        var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
-                        var completedTask = await Task.WhenAny(connectTask, Task.Delay(TimeSpan.FromSeconds(10), linkedCts.Token));
-
-                        if (completedTask != connectTask)
-                        {
-                            throw new TimeoutException($"连接服务器 {serverIP}:{serverPort} 超时");
-                        }
-
-                        var connected = await connectTask;
-                        if (!connected)
-                        {
-                            throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
-                        }
-                        MainForm.Instance.PrintInfoLog("服务器连接成功");
+                        throw new Exception($"无法连接到服务器 {serverIP}:{serverPort}");
                     }
-                    finally
-                    {
-                        // 恢复按钮状态
-                        if (this.InvokeRequired)
-                        {
-                            this.Invoke(new Action(() =>
-                            {
-                                btnok.Enabled = true;
-                                btncancel.Text = "取消";
-                            }));
-                        }
-                        else
-                        {
-                            btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                        }
-                    }
-                }
-                else
-                {
-                    MainForm.Instance.logger?.LogDebug("已连接到同一服务器，跳过连接步骤");
+                    MainForm.Instance.PrintInfoLog("服务器连接成功");
                 }
 
                 // 2. 执行登录验证
@@ -1150,42 +962,16 @@ namespace RUINORERP.UI
                 else
                 {
                     var errorMsg = loginResponse?.ErrorMessage ?? "登录失败，请检查用户名和密码";
-                    // 确保在UI线程中显示消息框
-                    if (this.InvokeRequired)
-                    {
-                        this.BeginInvoke(new Action(() =>
-                        {
-                            MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            btnok.Enabled = true;
-                            btncancel.Text = "取消";
-                        }));
-                    }
-                    else
-                    {
-                        MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                    }
+                    MessageBox.Show(errorMsg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    btnok.Enabled = true;
+                    btncancel.Text = "取消";
                 }
             }
             catch (OperationCanceledException)
             {
-                // 确保在UI线程中显示消息框
-                if (this.InvokeRequired)
-                {
-                    this.BeginInvoke(new Action(() =>
-                    {
-                        MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        btnok.Enabled = true;
-                        btncancel.Text = "取消";
-                    }));
-                }
-                else
-                {
-                    MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    btnok.Enabled = true;
-                    btncancel.Text = "取消";
-                }
+                MessageBox.Show("登录操作已超时或被取消，请重试。", "登录超时", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                btnok.Enabled = true;
+                btncancel.Text = "取消";
             }
             finally
             {
@@ -1193,13 +979,6 @@ namespace RUINORERP.UI
                 if (MainForm.Instance != null)
                 {
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
-                }
-
-                // 清理取消令牌源
-                if (_loginCancellationTokenSource != null)
-                {
-                    _loginCancellationTokenSource.Dispose();
-                    _loginCancellationTokenSource = null;
                 }
             }
         }

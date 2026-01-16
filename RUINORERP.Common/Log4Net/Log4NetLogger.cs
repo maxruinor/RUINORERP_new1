@@ -117,8 +117,8 @@ namespace RUINORERP.Common.Log4Net
                 // 获取应用程序上下文
                 var appContext = ApplicationContext.Current;
 
-                // 确保所有 ThreadContext 属性都有默认值
-                long userId = 0;
+                // 设置默认值
+                long? userId = null;
                 string modName = string.Empty;
                 string actionName = string.Empty;
                 string path = string.Empty;
@@ -127,9 +127,10 @@ namespace RUINORERP.Common.Log4Net
                 string machineName = Environment.MachineName ?? string.Empty;
                 string operatorName = "系统服务";
 
+                // 从应用上下文获取值
                 if (appContext?.log != null)
                 {
-                    userId = appContext.log.User_ID ?? 0;
+                    userId = appContext.log.User_ID;
                     modName = appContext.log.ModName ?? string.Empty;
                     actionName = appContext.log.ActionName ?? string.Empty;
                     path = appContext.log.Path ?? string.Empty;
@@ -143,8 +144,9 @@ namespace RUINORERP.Common.Log4Net
                     operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
 
-                // 设置所有属性，User_ID 为 0 时设为 null 避免外键约束冲突
-                ThreadContext.Properties["User_ID"] = userId > 0 ? (object)userId : null;
+                // 设置所有属性
+                // 对于 User_ID，直接使用 DBNull.Value 而不是 null，避免类型转换错误
+                ThreadContext.Properties["User_ID"] = userId.HasValue ? (object)userId.Value : DBNull.Value;
                 ThreadContext.Properties["ModName"] = modName;
                 ThreadContext.Properties["ActionName"] = actionName;
                 ThreadContext.Properties["Path"] = path;
@@ -157,18 +159,16 @@ namespace RUINORERP.Common.Log4Net
                 string message = state?.ToString() ?? string.Empty;
                 ThreadContext.Properties["Message"] = message;
 
-                // 如果有异常,递归处理 InnerException
+                // 如果有异常，递归处理 InnerException
                 if (exception != null)
                 {
-                    string fullException = GetFullException(exception);
-                    ThreadContext.Properties["Exception"] = fullException;
+                    ThreadContext.Properties["Exception"] = GetFullException(exception);
                 }
                 else
                 {
                     ThreadContext.Properties["Exception"] = string.Empty;
                 }
-
-
+                ThreadContext.Properties["User_ID"] = null;
             }
             catch (Exception ex)
             {

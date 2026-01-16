@@ -63,6 +63,7 @@ namespace RUINORERP.Common.Log4Net
         {
             if (!IsEnabled(logLevel))
             {
+                System.Diagnostics.Debug.WriteLine($"日志级别未启用: {logLevel}");
                 return;
             }
 
@@ -73,6 +74,8 @@ namespace RUINORERP.Common.Log4Net
 
                 // 格式化日志消息
                 string message = formatter?.Invoke(state, exception) ?? string.Empty;
+
+                System.Diagnostics.Debug.WriteLine($"开始记录日志: [{logLevel}] {message}");
 
                 // 根据日志级别记录
                 switch (logLevel)
@@ -97,6 +100,8 @@ namespace RUINORERP.Common.Log4Net
                         _log.Warn($"未知的日志级别: {logLevel}, 消息: {message}", exception);
                         break;
                 }
+
+                System.Diagnostics.Debug.WriteLine($"日志记录完成: [{logLevel}] {message}");
             }
             catch (Exception ex)
             {
@@ -148,8 +153,8 @@ namespace RUINORERP.Common.Log4Net
                     operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
 
-                // 设置所有属性
-                ThreadContext.Properties["User_ID"] = userId;
+                // 设置所有属性，User_ID 使用 null 避免外键约束冲突
+                ThreadContext.Properties["User_ID"] = userId > 0 ? userId : (object)DBNull.Value;
                 ThreadContext.Properties["ModName"] = modName;
                 ThreadContext.Properties["ActionName"] = actionName;
                 ThreadContext.Properties["Path"] = path;

@@ -174,38 +174,18 @@ namespace RUINORERP.Server
             services.AddLogging(logBuilder =>
             {
                 logBuilder.ClearProviders();
-                // 使用新的简化版日志提供者
-                logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProvider());
-
-                // 设置日志级别过滤规则
+                
+                // 添加日志过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
-                    // 开发环境设置较低的日志级别，便于调试
-                    // 生产环境可以根据需要调整为更高的日志级别
-                    // 允许更多日志通过，确保调试日志能够正常记录
-                    // RUINORERP命名空间使用动态日志级别
-                    if (category.StartsWith("RUINORERP"))
-                    {
-                        // 使用动态日志级别，从frmMainNew获取当前全局日志级别
-                        return logLevel >= frmMainNew.GetGlobalLogLevel();
-                    }
-                    if (category.StartsWith("WorkflowCore"))
-                    {
-                        // WorkflowCore也使用动态日志级别
-                        return logLevel >= frmMainNew.GetGlobalLogLevel();
-                    }
-
-                    // 保留原有其他过滤规则，但降低日志级别
-                    else if (category == "Microsoft.Hosting.Lifetime" ||
-                             category.StartsWith("Microsoft") ||
-                             category.StartsWith("System.Net.Http.HttpClient"))
-                    {
-                        // 降低Microsoft相关日志级别，允许更多日志通过
-                        return logLevel >= LogLevel.Warning;
-                    }
-                    // 其他日志使用动态日志级别  
-                    return logLevel >= frmMainNew.GetGlobalLogLevel();
+                    System.Diagnostics.Debug.WriteLine($"日志过滤器检查: category={category}, level={logLevel}");
+                    
+                    // 临时禁用所有过滤，让所有日志通过
+                    return true;
                 });
+
+                // 添加自定义的数据库日志提供者
+                logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProvider());
             });
 
             /// <summary>

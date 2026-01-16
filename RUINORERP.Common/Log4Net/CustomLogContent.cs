@@ -47,13 +47,18 @@ namespace RUINORERP.Common.Log4Net
 
         private object LookupProperty(string property, log4net.Core.LoggingEvent loggingEvent)
         {
-            object propertyValue = string.Empty;
-
             // 优先从 ThreadContext.Properties 获取值（推荐方式）
             var properties = loggingEvent.GetProperties();
             if (properties != null && properties.Contains(property))
             {
-                propertyValue = properties[property];
+                object propertyValue = properties[property];
+
+                // User_ID 为 null 时返回 DBNull.Value
+                if (property == "User_ID" && propertyValue == null)
+                {
+                    return DBNull.Value;
+                }
+
                 return propertyValue ?? string.Empty;
             }
 
@@ -63,11 +68,17 @@ namespace RUINORERP.Common.Log4Net
                 PropertyInfo propertyInfo = loggingEvent.MessageObject.GetType().GetProperty(property);
                 if (propertyInfo != null)
                 {
-                    propertyValue = propertyInfo.GetValue(loggingEvent.MessageObject, null);
+                    return propertyInfo.GetValue(loggingEvent.MessageObject, null);
                 }
             }
 
-            return propertyValue ?? string.Empty;
+            // 默认返回 DBNull.Value 用于可空字段
+            if (property == "User_ID")
+            {
+                return DBNull.Value;
+            }
+
+            return string.Empty;
         }
 
         //private object LookupProperty(string property, LoggingEvent loggingEvent)

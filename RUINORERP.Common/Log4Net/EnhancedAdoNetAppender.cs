@@ -30,24 +30,14 @@ namespace RUINORERP.Common.Log4Net
                 {
                     System.Diagnostics.Debug.WriteLine("警告：连接字符串包含未替换的占位符或加密标识");
                 }
-
-                // 验证表结构
-                if (!string.IsNullOrEmpty(CommandText))
-                {
-                    System.Diagnostics.Debug.WriteLine($"SQL命令: {CommandText}");
-                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"激活 AdoNetAppender 失败: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"堆栈: {ex.StackTrace}");
                 throw;
             }
 
-            // 先调用基类方法初始化
             base.ActivateOptions();
-
-            
         }
 
         /// <summary>
@@ -68,11 +58,7 @@ namespace RUINORERP.Common.Log4Net
                 System.Diagnostics.Debug.WriteLine($"EnhancedAdoNetAppender 写入日志失败: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"日志内容: {loggingEvent.RenderedMessage}");
                 System.Diagnostics.Debug.WriteLine($"堆栈: {ex.StackTrace}");
-
-                if (ex.InnerException != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"内部异常: {ex.InnerException.Message}");
-                }
+                throw;
             }
         }
 
@@ -100,6 +86,6 @@ namespace RUINORERP.Common.Log4Net
                 throw;
             }
         }
- 
+
     }
 }

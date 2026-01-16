@@ -63,7 +63,6 @@ namespace RUINORERP.Common.Log4Net
         {
             if (!IsEnabled(logLevel))
             {
-                System.Diagnostics.Debug.WriteLine($"日志级别未启用: {logLevel}");
                 return;
             }
 
@@ -74,8 +73,6 @@ namespace RUINORERP.Common.Log4Net
 
                 // 格式化日志消息
                 string message = formatter?.Invoke(state, exception) ?? string.Empty;
-
-                System.Diagnostics.Debug.WriteLine($"开始记录日志: [{logLevel}] {message}");
 
                 // 根据日志级别记录
                 switch (logLevel)
@@ -100,18 +97,11 @@ namespace RUINORERP.Common.Log4Net
                         _log.Warn($"未知的日志级别: {logLevel}, 消息: {message}", exception);
                         break;
                 }
-
-                System.Diagnostics.Debug.WriteLine($"日志记录完成: [{logLevel}] {message}");
             }
             catch (Exception ex)
             {
                 // 记录日志失败时输出到调试窗口
                 System.Diagnostics.Debug.WriteLine($"记录日志失败 [{logLevel}]: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"消息: {formatter?.Invoke(state, exception) ?? "N/A"}");
-                if (exception != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"异常: {exception.Message}");
-                }
             }
         }
 
@@ -153,8 +143,8 @@ namespace RUINORERP.Common.Log4Net
                     operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
 
-                // 设置所有属性，User_ID 使用 null 避免外键约束冲突
-                ThreadContext.Properties["User_ID"] = userId > 0 ? userId : (object)DBNull.Value;
+                // 设置所有属性，User_ID 为 0 时设为 null 避免外键约束冲突
+                ThreadContext.Properties["User_ID"] = userId > 0 ? (object)userId : null;
                 ThreadContext.Properties["ModName"] = modName;
                 ThreadContext.Properties["ActionName"] = actionName;
                 ThreadContext.Properties["Path"] = path;
@@ -178,8 +168,7 @@ namespace RUINORERP.Common.Log4Net
                     ThreadContext.Properties["Exception"] = string.Empty;
                 }
 
-                // 调试输出
-                System.Diagnostics.Debug.WriteLine($"设置日志属性: User_ID={userId}, Operator={operatorName}, ModName={modName}");
+
             }
             catch (Exception ex)
             {

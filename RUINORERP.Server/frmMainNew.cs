@@ -1057,9 +1057,9 @@ namespace RUINORERP.Server
                 System.Diagnostics.Debug.WriteLine($"警告: 尝试设置非法日志级别: {logLevel}");
                 return;
             }
-            
+
             LogLevel oldLevel;
-            
+
             // 使用锁保护日志级别变更，确保线程安全
             lock (_logLevelLock)
             {
@@ -1069,14 +1069,17 @@ namespace RUINORERP.Server
                     // 级别未变化，无需处理
                     return;
                 }
-                
+
                 _currentLogLevel = logLevel;
+
+                // 更新 log4net 仓库的日志级别
+                UpdateLog4NetLogLevel(logLevel);
             }
-            
+
             // 记录日志级别变更历史
             var loggerFactory = Program.ServiceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger<frmMainNew>();
-            
+
             if (logger != null)
             {
                 // 使用新的日志级别记录变更
@@ -1086,9 +1089,77 @@ namespace RUINORERP.Server
             {
                 System.Diagnostics.Debug.WriteLine($"全局日志级别已从 {oldLevel} 变更为 {logLevel}");
             }
-            
+
             // 更新菜单项选中状态
             Instance?.UpdateLogLevelMenuCheckState();
+        }
+
+        /// <summary>
+        /// 更新 Log4Net 仓库的日志级别
+        /// </summary>
+        /// <param name="logLevel">Microsoft.Extensions.Logging.LogLevel</param>
+        private static void UpdateLog4NetLogLevel(LogLevel logLevel)
+        {
+            try
+            {
+                // 获取日志仓库
+                var loggerRepository = log4net.LogManager.GetRepository(Log4NetConfiguration.SHARED_REPOSITORY_NAME);
+                if (loggerRepository == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"警告: 无法获取日志仓库 {Log4NetConfiguration.SHARED_REPOSITORY_NAME}");
+                    return;
+                }
+
+                // 转换为 log4net 日志级别
+                log4net.Core.Level log4Level = ConvertToLog4NetLevel(logLevel);
+
+                // 设置根日志记录器的级别
+                if (loggerRepository is log4net.Repository.Hierarchy.Hierarchy hierarchy)
+                {
+                    var root = hierarchy.Root;
+                    if (root != null)
+                    {
+                        root.Level = log4Level;
+                        hierarchy.Configured = true;
+                        System.Diagnostics.Debug.WriteLine($"Log4Net 根日志级别已更新为: {log4Level}");
+                    }
+
+                    // 更新所有 appenders 的阈值
+                    var appenders = hierarchy.GetAppenders();
+                    foreach (var appender in appenders)
+                    {
+                        if (appender is log4net.Appender.AppenderSkeleton skeletonAppender)
+                        {
+                            skeletonAppender.Threshold = log4Level;
+                            System.Diagnostics.Debug.WriteLine($"Appender '{appender.Name}' 的阈值已更新为: {log4Level}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新 Log4Net 日志级别时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 将 Microsoft.Extensions.Logging.LogLevel 转换为 log4net.Core.Level
+        /// </summary>
+        /// <param name="msLogLevel">Microsoft.Extensions.Logging.LogLevel</param>
+        /// <returns>log4net.Core.Level</returns>
+        private static log4net.Core.Level ConvertToLog4NetLevel(LogLevel msLogLevel)
+        {
+            return msLogLevel switch
+            {
+                LogLevel.Trace => log4net.Core.Level.Trace,
+                LogLevel.Debug => log4net.Core.Level.Debug,
+                LogLevel.Information => log4net.Core.Level.Info,
+                LogLevel.Warning => log4net.Core.Level.Warn,
+                LogLevel.Error => log4net.Core.Level.Error,
+                LogLevel.Critical => log4net.Core.Level.Fatal,
+                LogLevel.None => log4net.Core.Level.Off,
+                _ => log4net.Core.Level.Info
+            };
         }
 
         /// <summary>

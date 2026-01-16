@@ -254,8 +254,19 @@ namespace RUINORERP.UI
                 // 添加自定义的数据库日志提供者
                 if (!string.IsNullOrEmpty(newconn))
                 {
-                    //引用的long4net.dll要版本一样。
-                    logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProviderByCustomeDb("log4net.config", newconn, Program.AppContextData));
+                    // 初始化 log4net 配置
+                    try
+                    {
+                        RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");
+                        System.Diagnostics.Debug.WriteLine("Log4Net 配置初始化成功");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Log4Net 配置初始化失败: {ex.Message}");
+                    }
+
+                    // 使用新的简化版日志提供者
+                    logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProvider());
                 }
                 else
                 {

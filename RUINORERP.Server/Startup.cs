@@ -216,10 +216,6 @@ namespace RUINORERP.Server
             // 这里可以根据需要设置初始值，或者从配置文件中读取
             DatabaseSequenceService.SetBatchUpdateThreshold(5);
 
-            // 初始化frmMainNew的BufferSize值
-            // 这里设置Log4Net的BufferSize初始值
-            RUINORERP.Server.frmMainNew.SetLogBufferSize(10);
-
             // 注册缓存管理器 - 为BNRFactory提供依赖
             // 添加CacheManager缓存服务
             services.AddSingleton<ICacheManager<object>>(provider =>
@@ -243,15 +239,24 @@ namespace RUINORERP.Server
             builder.RegisterType<ProductSKUCodeGenerator>().AsSelf().InstancePerLifetimeScope(); // 注册ProductSKUCodeGenerator服务
 
 
+            // 初始化 log4net 配置
+            try
+            {
+                RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");
+                System.Diagnostics.Debug.WriteLine("Log4Net 配置初始化成功");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Log4Net 配置初始化失败: {ex.Message}");
+                throw;
+            }
+
             // 配置日志服务
             services.AddLogging(logBuilder =>
             {
                 logBuilder.ClearProviders();
-                //引用的long4net.dll要版本一样。
-                string key = "ruinor1234567890";
-                string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-
-                logBuilder.AddProvider(new Log4NetProviderByCustomeDb("Log4net_db.config", newconn, Program.AppContextData));
+                // 使用新的简化版日志提供者
+                logBuilder.AddProvider(new RUINORERP.Common.Log4Net.Log4NetProvider());
 
                 // 设置日志级别过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>

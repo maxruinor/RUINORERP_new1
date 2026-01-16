@@ -64,7 +64,7 @@ namespace RUINORERP.Extensions
             if (appContextData == null) throw new ArgumentNullException(nameof(appContextData));
             if (string.IsNullOrEmpty(connectString)) throw new ArgumentNullException(nameof(connectString));
 
-            var logProvider = new Log4NetProviderByCustomeDb("Log4net_db.config", connectString, appContextData);
+            var logProvider = new Log4NetProvider();
             var logger = logProvider.CreateLogger(typeof(SqlsugarSetup).FullName);
 
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);

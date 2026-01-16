@@ -503,8 +503,32 @@ namespace RUINORERP.Server
             {
                 AppContextData.log = new Logs();
             }
-            AppContextData.log.IP = "server";
+            // 使用真实的服务器IP地址而不是硬编码的"server"
+            try
+            {
+                AppContextData.log.IP = HLH.Lib.Net.IpAddressHelper.GetLocIP();
+            }
+            catch
+            {
+                // 如果获取IP失败，使用服务器机器名作为备用
+                AppContextData.log.IP = "server-" + System.Environment.MachineName;
+            }
             AppContextData.log.MachineName = System.Environment.MachineName + "-" + System.Environment.UserName;
+
+            // 初始化其他必要的日志字段，避免空值
+            if (string.IsNullOrEmpty(AppContextData.log.Operator))
+            {
+                AppContextData.log.Operator = "系统服务";
+            }
+            if (string.IsNullOrEmpty(AppContextData.log.ModName))
+            {
+                AppContextData.log.ModName = "Server";
+            }
+            if (string.IsNullOrEmpty(AppContextData.log.ActionName))
+            {
+                AppContextData.log.ActionName = "初始化";
+            }
+
             AppContextData.SysConfig = new tb_SystemConfig();
 
         }

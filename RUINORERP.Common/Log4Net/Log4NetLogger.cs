@@ -144,9 +144,8 @@ namespace RUINORERP.Common.Log4Net
                     operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
 
-                // 设置所有属性
-                // 对于 User_ID，直接使用 DBNull.Value 而不是 null，避免类型转换错误
-                ThreadContext.Properties["User_ID"] = userId.HasValue ? (object)userId.Value : DBNull.Value;
+                // 设置所有属性，User_ID 默认值为 0
+                ThreadContext.Properties["User_ID"] = userId ?? 0L;
                 ThreadContext.Properties["ModName"] = modName;
                 ThreadContext.Properties["ActionName"] = actionName;
                 ThreadContext.Properties["Path"] = path;
@@ -168,7 +167,6 @@ namespace RUINORERP.Common.Log4Net
                 {
                     ThreadContext.Properties["Exception"] = string.Empty;
                 }
-                ThreadContext.Properties["User_ID"] = null;
             }
             catch (Exception ex)
             {

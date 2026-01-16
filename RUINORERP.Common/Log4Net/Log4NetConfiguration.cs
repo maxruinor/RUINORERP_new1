@@ -1,8 +1,12 @@
 using System;
 using System.IO;
 using System.Xml;
+using log4net;
 using log4net.Config;
+using log4net.Repository;
 using RUINORERP.Common.Helper;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace RUINORERP.Common.Log4Net
 {
@@ -12,10 +16,15 @@ namespace RUINORERP.Common.Log4Net
     public static class Log4NetConfiguration
     {
         /// <summary>
+        /// 共享日志仓库名称,用于客户端和服务器统一日志配置
+        /// </summary>
+        public const string SHARED_REPOSITORY_NAME = "RUINORERP_Shared_LoggerRepository";
+
+        /// <summary>
         /// 初始化 log4net 配置
         /// </summary>
         /// <param name="configFilePath">配置文件路径,相对或绝对路径</param>
-        /// <param name="connectionString">数据库连接字符串,如果为null则从配置文件自动获取</param>
+        /// <param name="connectionString">数据库连接字符串,如果为null则从appsettings.json获取</param>
         public static void Initialize(string configFilePath, string connectionString = null)
         {
             if (string.IsNullOrEmpty(configFilePath))
@@ -25,23 +34,51 @@ namespace RUINORERP.Common.Log4Net
 
             System.Diagnostics.Debug.WriteLine($"========== 开始初始化 log4net 配置 ==========");
             System.Diagnostics.Debug.WriteLine($"配置文件路径: {configFilePath}");
+            System.Diagnostics.Debug.WriteLine($"使用共享仓库: {SHARED_REPOSITORY_NAME}");
 
             try
             {
-                // 1. 加载 XML 配置文件
+                // 如果连接字符串为空,从appsettings.json获取加密连接字符串
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    connectionString = GetConnectionStringFromAppSettings();
+                }
+                else
+                {
+                    // 传入的连接字符串需要解密
+                    connectionString = DecryptConnectionString(connectionString);
+                }
+
+                //1. 加载 XML 配置文件
                 var xmlDoc = LoadConfigFile(configFilePath);
 
-                // 2. 替换连接字符串占位符
+                //2. 替换连接字符串占位符
                 ReplaceConnectionStringPlaceholder(xmlDoc, connectionString);
 
-                // 3. 使用 XmlConfigurator 配置
+                //3. 使用 XmlConfigurator 配置
                 var log4netElement = xmlDoc.SelectSingleNode("//log4net") as XmlElement;
                 if (log4netElement == null)
                 {
                     throw new InvalidOperationException("配置文件中未找到 <log4net> 根元素");
                 }
 
-                XmlConfigurator.Configure(log4netElement);
+                // 获取或创建共享日志仓库
+                ILoggerRepository repository;
+                
+                // 检查是否已存在该仓库
+                repository = LogManager.GetAllRepositories().FirstOrDefault(r => r.Name == SHARED_REPOSITORY_NAME);
+                
+                if (repository != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"使用现有日志仓库: {SHARED_REPOSITORY_NAME}");
+                }
+                else
+                {
+                    repository = LogManager.CreateRepository(SHARED_REPOSITORY_NAME);
+                    System.Diagnostics.Debug.WriteLine($"创建了新的日志仓库: {SHARED_REPOSITORY_NAME}");
+                }
+
+                XmlConfigurator.Configure(repository, log4netElement);
 
                 System.Diagnostics.Debug.WriteLine("========== log4net 配置初始化完成 ==========");
             }
@@ -53,27 +90,87 @@ namespace RUINORERP.Common.Log4Net
             }
         }
 
-        /// <summary>
-        /// 加载配置文件
-        /// </summary>
-        /// <param name="configFilePath">配置文件路径</param>
-        /// <returns>XmlDocument 对象</returns>
+        private static string GetConnectionStringFromAppSettings()
+        {
+            try
+            {
+                string appSettingsPath = FindAppSettingsFile();
+                if (string.IsNullOrEmpty(appSettingsPath))
+                {
+                    throw new FileNotFoundException("未找到 appsettings.json 文件");
+                }
+
+                string jsonContent = File.ReadAllText(appSettingsPath);
+                var jsonObject = JObject.Parse(jsonContent);
+
+                string encryptedConnectionString = jsonObject["ConnectString"]?.ToString();
+                if (string.IsNullOrEmpty(encryptedConnectionString))
+                {
+                    throw new InvalidOperationException("appsettings.json 中未找到 ConnectString 配置");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"从 appsettings.json 获取到加密连接字符串, 长度: {encryptedConnectionString.Length}");
+                return DecryptConnectionString(encryptedConnectionString);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"从 appsettings.json 获取连接字符串失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        private static string FindAppSettingsFile()
+        {
+            string[] possiblePaths = new string[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.Development.json"),
+                Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"),
+                Path.Combine(Directory.GetCurrentDirectory(), "appsettings.Development.json")
+            };
+
+            foreach (string path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    System.Diagnostics.Debug.WriteLine($"找到 appsettings.json: {path}");
+                    return path;
+                }
+            }
+
+            return null;
+        }
+
+        private static string DecryptConnectionString(string encryptedConnectionString)
+        {
+            try
+            {
+                string key = "ruinor1234567890";
+                System.Diagnostics.Debug.WriteLine("开始解密连接字符串...");
+                string decryptedConnectionString = HLH.Lib.Security.EncryptionHelper.AesDecrypt(encryptedConnectionString, key);
+                System.Diagnostics.Debug.WriteLine("连接字符串解密成功");
+                return decryptedConnectionString;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"解密连接字符串失败: {ex.Message}");
+                throw;
+            }
+        }
+
         private static XmlDocument LoadConfigFile(string configFilePath)
         {
             XmlDocument xmlDoc = new XmlDocument();
             string actualFilePath = configFilePath;
 
-            // 如果是相对路径,尝试相对于应用程序基础目录或当前目录
             if (!Path.IsPathRooted(configFilePath))
             {
-                // 尝试相对于应用程序基础目录
                 var baseDirPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, configFilePath);
                 if (File.Exists(baseDirPath))
                 {
                     actualFilePath = baseDirPath;
                     System.Diagnostics.Debug.WriteLine($"使用应用程序基础目录的配置文件: {actualFilePath}");
                 }
-                // 尝试相对于当前目录
                 else if (File.Exists(configFilePath))
                 {
                     actualFilePath = configFilePath;
@@ -86,14 +183,12 @@ namespace RUINORERP.Common.Log4Net
             }
             else
             {
-                // 绝对路径
                 if (!File.Exists(actualFilePath))
                 {
                     throw new FileNotFoundException($"未找到配置文件: {actualFilePath}");
                 }
             }
 
-            // 加载 XML 文件
             try
             {
                 using (var stream = new FileStream(actualFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -110,18 +205,23 @@ namespace RUINORERP.Common.Log4Net
             return xmlDoc;
         }
 
-        /// <summary>
-        /// 替换配置文件中的连接字符串占位符
-        /// </summary>
-        /// <param name="xmlDoc">XmlDocument 对象</param>
-        /// <param name="connectionString">数据库连接字符串,如果为null则使用加密连接字符串</param>
         private static void ReplaceConnectionStringPlaceholder(XmlDocument xmlDoc, string connectionString)
         {
             try
             {
-                // 查找所有连接字符串节点
+                // 验证解密后的连接字符串
+                if (string.IsNullOrEmpty(connectionString))
+                {
+                    throw new InvalidOperationException("解密后的连接字符串为空");
+                }
+
+                if (!connectionString.ToLower().Contains("server"))
+                {
+                    throw new InvalidOperationException("解密后的连接字符串无效，不包含 'server' 关键字");
+                }
+
                 XmlNodeList nodes = xmlDoc.SelectNodes("//connectionString[@value]");
-                
+
                 if (nodes == null || nodes.Count == 0)
                 {
                     System.Diagnostics.Debug.WriteLine("警告: 配置文件中未找到 connectionString 节点");
@@ -130,6 +230,7 @@ namespace RUINORERP.Common.Log4Net
 
                 System.Diagnostics.Debug.WriteLine($"找到 {nodes.Count} 个连接字符串节点");
 
+                int replacedCount = 0;
                 foreach (XmlNode node in nodes)
                 {
                     XmlAttribute valueAttr = node.Attributes["value"];
@@ -141,40 +242,28 @@ namespace RUINORERP.Common.Log4Net
                     string originalValue = valueAttr.Value;
                     string newValue = originalValue;
 
-                    // 如果没有传入连接字符串,自动获取加密连接字符串
-                    if (string.IsNullOrEmpty(connectionString))
-                    {
-                        try
-                        {
-                            connectionString = CryptoHelper.GetDecryptedConnectionString();
-                            System.Diagnostics.Debug.WriteLine($"已从配置文件获取加密连接字符串");
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"获取加密连接字符串失败: {ex.Message}");
-                            throw;
-                        }
-                    }
-
-                    // 替换占位符
                     if (newValue.Contains("${ConnectionString}"))
                     {
-                        newValue = newValue.Replace("${ConnectionString}", connectionString);
-                        System.Diagnostics.Debug.WriteLine("已替换连接字符串占位符 ${ConnectionString}");
-                    }
-
-                    // 更新值
-                    if (newValue != originalValue)
-                    {
+                        newValue = connectionString;
                         valueAttr.Value = newValue;
-                        System.Diagnostics.Debug.WriteLine($"连接字符串已更新,长度: {newValue?.Length ?? 0}");
+                        replacedCount++;
+                        System.Diagnostics.Debug.WriteLine("已替换连接字符串占位符 ${ConnectionString}");
+                        System.Diagnostics.Debug.WriteLine($"替换后连接字符串长度: {newValue?.Length ?? 0}");
                     }
+                }
+
+                if (replacedCount == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("警告: 没有替换任何连接字符串占位符");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"成功替换 {replacedCount} 个连接字符串占位符");
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"替换连接字符串占位符失败: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"异常详情: {ex.StackTrace}");
                 throw;
             }
         }

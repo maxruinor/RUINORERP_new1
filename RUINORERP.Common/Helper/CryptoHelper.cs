@@ -9,7 +9,9 @@ using System.Configuration;
 
 namespace RUINORERP.Common.Helper
 {
-    public static class CryptoHelper
+
+
+    public static class ConnectionStringCryptoHelper
     {
         // 修改这些密钥 - 在实际应用中应从安全的地方获取
         //private static readonly byte[] Key = Encoding.UTF8.GetBytes("Yhua32CharacterLongKeyHere!!"); // 32字节密钥

@@ -48,10 +48,26 @@ namespace RUINORERP.Common.Log4Net
         private object LookupProperty(string property, log4net.Core.LoggingEvent loggingEvent)
         {
             object propertyValue = string.Empty;
-            PropertyInfo propertyInfo = loggingEvent.MessageObject.GetType().GetProperty(property);
-            if (propertyInfo != null)
-                propertyValue = propertyInfo.GetValue(loggingEvent.MessageObject, null);
-            return propertyValue;
+
+            // 优先从 ThreadContext.Properties 获取值（推荐方式）
+            var properties = loggingEvent.GetProperties();
+            if (properties != null && properties.Contains(property))
+            {
+                propertyValue = properties[property];
+                return propertyValue ?? string.Empty;
+            }
+
+            // 如果 ThreadContext 中没有，尝试从 MessageObject 反射获取（兼容旧代码）
+            if (loggingEvent.MessageObject != null)
+            {
+                PropertyInfo propertyInfo = loggingEvent.MessageObject.GetType().GetProperty(property);
+                if (propertyInfo != null)
+                {
+                    propertyValue = propertyInfo.GetValue(loggingEvent.MessageObject, null);
+                }
+            }
+
+            return propertyValue ?? string.Empty;
         }
 
         //private object LookupProperty(string property, LoggingEvent loggingEvent)

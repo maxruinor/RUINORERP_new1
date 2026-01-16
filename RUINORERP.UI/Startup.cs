@@ -177,11 +177,12 @@ namespace RUINORERP.UI
             Services = new ServiceCollection();
 
             MainRegister(bc, builder);
-            // 配置基础服务
-            ConfigureBaseServices(Services);
-
-            // 配置日志
+            
+            // 先配置日志，确保日志仓库在使用前已经初始化
             ConfigureLogger(Services);
+            
+            // 然后配置基础服务
+            ConfigureBaseServices(Services);
 
             // 配置Autofac容器
             ConfigureContainer(builder);
@@ -254,7 +255,7 @@ namespace RUINORERP.UI
                 // 添加自定义的数据库日志提供者
                 if (!string.IsNullOrEmpty(newconn))
                 {
-                    // 初始化 log4net 配置
+                    // 初始化 log4net 配置 - 不传入连接字符串,自动从appsettings.json获取
                     try
                     {
                         RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");

@@ -154,92 +154,11 @@ namespace RUINORERP.Server
             #region 服务注册配置
             services = new ServiceCollection();
 
-            /// <summary>
-        /// 注册当前程序集的所有类成员
-        // 通用注册放在前面，确保特殊注册可以覆盖它们
-        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-            .AsImplementedInterfaces()
-            .AsSelf()
-            .SingleInstance();
-
-        // 特殊注册放在后面，覆盖通用注册
-        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
-            .Where(type => type == typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 只对TableSchemaManager进行特殊注册
-            .AsImplementedInterfaces()
-            .AsSelf()
-            .SingleInstance();
-
-            // 配置核心服务
-            ConfigureServices(services);
-
-            // 配置外部DLL依赖注入
-            ConfigureContainerForDll(builder);
-
-
-            // 注册特定类型和参数
-            builder.RegisterType<AutoComplete>()
-                .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
-
-
-            // 注册AOP拦截器
-            builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
-
-            builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
-
-            builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope()
-                .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
-
             // 初始化应用程序上下文
             string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
 
-            // 立即初始化DatabaseSequenceService以创建表结构
-            //var sqlSugarClient = services.BuildServiceProvider().GetRequiredService<ISqlSugarClient>();
-            //var sequenceService = new DatabaseSequenceService(sqlSugarClient);
-
-            // 初始化表结构（如果不存在）
-            // sequenceService.InitializeTable();
-            System.Diagnostics.Debug.WriteLine("序号表初始化完成");
-
-            // 测试序号表功能
-            //var testResult = sequenceService.TestSequenceTable();
-            //  System.Diagnostics.Debug.WriteLine("数据库序列表测试结果:");
-            //  System.Diagnostics.Debug.WriteLine(testResult);
-
-
-            // 注册业务编码生成相关服务
-            builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务
-
-            // 初始化DatabaseSequenceService的批量更新阈值
-            // 这里可以根据需要设置初始值，或者从配置文件中读取
-            DatabaseSequenceService.SetBatchUpdateThreshold(5);
-
-            // 注册缓存管理器 - 为BNRFactory提供依赖
-            // 添加CacheManager缓存服务
-            services.AddSingleton<ICacheManager<object>>(provider =>
-            {
-                return CacheFactory.Build<object>(settings =>
-                {
-                    settings
-                        .WithSystemRuntimeCacheHandle()
-                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
-                });
-            });
-
-
-            // 注册BNR工厂
-            builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
-
-            // 注册业务编码服务
-            builder.RegisterType<ServerBizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
-
-            // 注册ProductSKUCodeGenerator服务
-            builder.RegisterType<ProductSKUCodeGenerator>().AsSelf().InstancePerLifetimeScope(); // 注册ProductSKUCodeGenerator服务
-
-
-            // 初始化 log4net 配置
+            // 首先初始化 log4net 配置，确保日志仓库在所有服务使用前已经创建
             try
             {
                 RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");
@@ -288,6 +207,86 @@ namespace RUINORERP.Server
                     return logLevel >= frmMainNew.GetGlobalLogLevel();
                 });
             });
+
+            /// <summary>
+        /// 注册当前程序集的所有类成员
+        // 通用注册放在前面，确保特殊注册可以覆盖它们
+        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .SingleInstance();
+
+        // 特殊注册放在后面，覆盖通用注册
+        builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .Where(type => type == typeof(RUINORERP.Business.Cache.TableSchemaManager)) // 只对TableSchemaManager进行特殊注册
+            .AsImplementedInterfaces()
+            .AsSelf()
+            .SingleInstance();
+
+            // 配置核心服务
+            ConfigureServices(services);
+
+            // 配置外部DLL依赖注入
+            ConfigureContainerForDll(builder);
+
+
+            // 注册特定类型和参数
+            builder.RegisterType<AutoComplete>()
+                .WithParameter((pi, c) => pi.ParameterType == typeof(SearchType), (pi, c) => SearchType.Document);
+
+
+            // 注册AOP拦截器
+            builder.RegisterType<BaseDataCacheAOP>(); // 注册拦截器
+
+            builder.RegisterType<PersonBus>().EnableClassInterceptors();  // 注册被拦截的类并启用类拦截
+
+            builder.RegisterType<tb_DepartmentServices>().As<Itb_DepartmentServices>()
+                .AsImplementedInterfaces()
+                .InstancePerLifetimeScope()
+                .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
+
+            // 立即初始化DatabaseSequenceService以创建表结构
+            //var sqlSugarClient = services.BuildServiceProvider().GetRequiredService<ISqlSugarClient>();
+            //var sequenceService = new DatabaseSequenceService(sqlSugarClient);
+
+            // 初始化表结构（如果不存在）
+            // sequenceService.InitializeTable();
+            System.Diagnostics.Debug.WriteLine("序号表初始化完成");
+
+            // 测试序号表功能
+            //var testResult = sequenceService.TestSequenceTable();
+            //  System.Diagnostics.Debug.WriteLine("数据库序列表测试结果:");
+            //  System.Diagnostics.Debug.WriteLine(testResult);
+
+
+            // 注册业务编码生成相关服务
+            builder.RegisterType<DatabaseSequenceService>().AsSelf().SingleInstance(); // 注册数据库序列服务
+
+            // 初始化DatabaseSequenceService的批量更新阈值
+            // 这里可以根据需要设置初始值，或者从配置文件中读取
+            DatabaseSequenceService.SetBatchUpdateThreshold(5);
+
+            // 注册缓存管理器 - 为BNRFactory提供依赖
+            // 添加CacheManager缓存服务
+            services.AddSingleton<ICacheManager<object>>(provider =>
+            {
+                return CacheFactory.Build<object>(settings =>
+                {
+                    settings
+                        .WithSystemRuntimeCacheHandle()
+                        .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
+                });
+            });
+
+
+            // 注册BNR工厂
+            builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂
+
+            // 注册业务编码服务
+            builder.RegisterType<ServerBizCodeGenerateService>().AsSelf().SingleInstance(); // 注册业务编码服务
+
+            // 注册ProductSKUCodeGenerator服务
+            builder.RegisterType<ProductSKUCodeGenerator>().AsSelf().InstancePerLifetimeScope(); // 注册ProductSKUCodeGenerator服务
 
             // 注册工作流相关服务（单例模式）
             builder.RegisterType(typeof(WorkflowRegisterService))

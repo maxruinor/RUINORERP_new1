@@ -21,7 +21,8 @@ namespace RUINORERP.Common.Log4Net
         public Log4NetLogger(string categoryName)
         {
             _categoryName = categoryName;
-            _log = LogManager.GetLogger(typeof(Log4NetLogger));
+            // 使用共享日志仓库获取日志记录器
+            _log = LogManager.GetLogger(Log4NetConfiguration.SHARED_REPOSITORY_NAME, categoryName);
         }
 
         /// <summary>
@@ -65,34 +66,47 @@ namespace RUINORERP.Common.Log4Net
                 return;
             }
 
-            // 设置日志上下文属性1
-            SetContextProperties(state, exception);
-
-            // 格式化日志消息
-            string message = formatter?.Invoke(state, exception) ?? string.Empty;
-
-            // 根据日志级别记录
-            switch (logLevel)
+            try
             {
-                case LogLevel.Trace:
-                case LogLevel.Debug:
-                    _log.Debug(message, exception);
-                    break;
-                case LogLevel.Information:
-                    _log.Info(message, exception);
-                    break;
-                case LogLevel.Warning:
-                    _log.Warn(message, exception);
-                    break;
-                case LogLevel.Error:
-                    _log.Error(message, exception);
-                    break;
-                case LogLevel.Critical:
-                    _log.Fatal(message, exception);
-                    break;
-                default:
-                    _log.Warn($"未知的日志级别: {logLevel}, 消息: {message}", exception);
-                    break;
+                // 设置日志上下文属性
+                SetContextProperties(state, exception);
+
+                // 格式化日志消息
+                string message = formatter?.Invoke(state, exception) ?? string.Empty;
+
+                // 根据日志级别记录
+                switch (logLevel)
+                {
+                    case LogLevel.Trace:
+                    case LogLevel.Debug:
+                        _log.Debug(message, exception);
+                        break;
+                    case LogLevel.Information:
+                        _log.Info(message, exception);
+                        break;
+                    case LogLevel.Warning:
+                        _log.Warn(message, exception);
+                        break;
+                    case LogLevel.Error:
+                        _log.Error(message, exception);
+                        break;
+                    case LogLevel.Critical:
+                        _log.Fatal(message, exception);
+                        break;
+                    default:
+                        _log.Warn($"未知的日志级别: {logLevel}, 消息: {message}", exception);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 记录日志失败时输出到调试窗口
+                System.Diagnostics.Debug.WriteLine($"记录日志失败 [{logLevel}]: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"消息: {formatter?.Invoke(state, exception) ?? "N/A"}");
+                if (exception != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"异常: {exception.Message}");
+                }
             }
         }
 
@@ -108,32 +122,45 @@ namespace RUINORERP.Common.Log4Net
                 // 获取应用程序上下文
                 var appContext = ApplicationContext.Current;
 
+                // 确保所有 ThreadContext 属性都有默认值
+                long userId = 0;
+                string modName = string.Empty;
+                string actionName = string.Empty;
+                string path = string.Empty;
+                string ip = string.Empty;
+                string mac = string.Empty;
+                string machineName = Environment.MachineName ?? string.Empty;
+                string operatorName = "系统服务";
+
                 if (appContext?.log != null)
                 {
-                    // 设置标准属性
-                    ThreadContext.Properties["User_ID"] = appContext.log.User_ID ?? 0;
-                    ThreadContext.Properties["ModName"] = appContext.log.ModName ?? string.Empty;
-                    ThreadContext.Properties["ActionName"] = appContext.log.ActionName ?? string.Empty;
-                    ThreadContext.Properties["Path"] = appContext.log.Path ?? string.Empty;
-                    ThreadContext.Properties["IP"] = appContext.log.IP ?? string.Empty;
-                    ThreadContext.Properties["MAC"] = appContext.log.MAC ?? string.Empty;
-                    ThreadContext.Properties["MachineName"] = appContext.log.MachineName ?? string.Empty;
+                    userId = appContext.log.User_ID ?? 0;
+                    modName = appContext.log.ModName ?? string.Empty;
+                    actionName = appContext.log.ActionName ?? string.Empty;
+                    path = appContext.log.Path ?? string.Empty;
+                    ip = appContext.log.IP ?? string.Empty;
+                    mac = appContext.log.MAC ?? string.Empty;
+                    machineName = appContext.log.MachineName ?? machineName;
                 }
 
-                // 设置操作者
                 if (appContext?.CurUserInfo != null)
                 {
-                    ThreadContext.Properties["Operator"] = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
+                    operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
-                else
-                {
-                    ThreadContext.Properties["Operator"] = "系统服务";
-                }
+
+                // 设置所有属性
+                ThreadContext.Properties["User_ID"] = userId;
+                ThreadContext.Properties["ModName"] = modName;
+                ThreadContext.Properties["ActionName"] = actionName;
+                ThreadContext.Properties["Path"] = path;
+                ThreadContext.Properties["IP"] = ip;
+                ThreadContext.Properties["MAC"] = mac;
+                ThreadContext.Properties["MachineName"] = machineName;
+                ThreadContext.Properties["Operator"] = operatorName;
 
                 // 设置消息和异常
                 string message = state?.ToString() ?? string.Empty;
                 ThreadContext.Properties["Message"] = message;
-                ThreadContext.Properties["Exception"] = exception?.ToString() ?? string.Empty;
 
                 // 如果有异常,递归处理 InnerException
                 if (exception != null)
@@ -141,6 +168,13 @@ namespace RUINORERP.Common.Log4Net
                     string fullException = GetFullException(exception);
                     ThreadContext.Properties["Exception"] = fullException;
                 }
+                else
+                {
+                    ThreadContext.Properties["Exception"] = string.Empty;
+                }
+
+                // 调试输出
+                System.Diagnostics.Debug.WriteLine($"设置日志属性: User_ID={userId}, Operator={operatorName}, ModName={modName}");
             }
             catch (Exception ex)
             {

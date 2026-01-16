@@ -3632,7 +3632,6 @@
     <Content Include="FM\发票管理.txt" />
     <Content Include="FM\财务各状态.txt" />
     <Content Include="FM\财务核销逻辑.txt" />
-    <Content Include="InitSQL.sql" />
     <None Include="ResourceFile\Hint.ico" />
     <Content Include="ResourceFile\copy.png" />
     <None Include="ResourceFile\guanlianchaxun.png" />
@@ -5054,7 +5053,6 @@
     <Content Include="IMResources\Profiles\face_default.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="InitData.Sql" />
     <Content Include="MRP\生产管理.txt" />
     <Content Include="ProductEAV\多属性产品库说明.txt" />
     <Content Include="PSI\INV\库存思路.txt" />

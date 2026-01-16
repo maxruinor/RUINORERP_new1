@@ -193,7 +193,7 @@ namespace RUINORERP.Business.Security
                         {
                             appcontext.log.Operator = user.tb_employee.Employee_Name;
                         }
-                        appcontext.log.User_ID = user.User_ID;
+                        appcontext.log.UserName = user.UserName;
                         //获取本地计算机名+本地计算机登录名
                         appcontext.log.MachineName = appcontext.CurUserInfo.客户端版本 + "-" + System.Environment.MachineName + "-" + System.Environment.UserName;
 

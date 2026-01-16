@@ -192,7 +192,7 @@ namespace RUINORERP.Server
         /// <summary>
         /// 全局日志级别控制器
         /// </summary>
-        private static LogLevel _currentLogLevel = LogLevel.Information; // 初始值设置为Information，允许更多日志被记录
+        private static LogLevel _currentLogLevel = LogLevel.Warning; // 初始值设置为Information，允许更多日志被记录
 
         /// <summary>
         /// 日志级别菜单项列表

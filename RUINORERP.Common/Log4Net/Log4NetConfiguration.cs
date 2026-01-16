@@ -31,10 +31,7 @@ namespace RUINORERP.Common.Log4Net
             {
                 throw new ArgumentException("配置文件路径不能为空", nameof(configFilePath));
             }
-
-            System.Diagnostics.Debug.WriteLine($"========== 开始初始化 log4net 配置 ==========");
-            System.Diagnostics.Debug.WriteLine($"配置文件路径: {configFilePath}");
-            System.Diagnostics.Debug.WriteLine($"使用共享仓库: {SHARED_REPOSITORY_NAME}");
+ 
 
             try
             {
@@ -75,12 +72,10 @@ namespace RUINORERP.Common.Log4Net
                 else
                 {
                     repository = LogManager.CreateRepository(SHARED_REPOSITORY_NAME);
-                    System.Diagnostics.Debug.WriteLine($"创建了新的日志仓库: {SHARED_REPOSITORY_NAME}");
                 }
 
                 XmlConfigurator.Configure(repository, log4netElement);
 
-                System.Diagnostics.Debug.WriteLine("========== log4net 配置初始化完成 ==========");
             }
             catch (Exception ex)
             {

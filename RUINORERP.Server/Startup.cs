@@ -179,7 +179,6 @@ namespace RUINORERP.Server
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
                     System.Diagnostics.Debug.WriteLine($"日志过滤器检查: category={category}, level={logLevel}");
-                    
                     // 临时禁用所有过滤，让所有日志通过
                     return true;
                 });

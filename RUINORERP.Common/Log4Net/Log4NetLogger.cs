@@ -118,7 +118,7 @@ namespace RUINORERP.Common.Log4Net
                 var appContext = ApplicationContext.Current;
 
                 // 设置默认值
-                long? userId = null;
+                string userName = string.Empty;
                 string modName = string.Empty;
                 string actionName = string.Empty;
                 string path = string.Empty;
@@ -130,7 +130,7 @@ namespace RUINORERP.Common.Log4Net
                 // 从应用上下文获取值
                 if (appContext?.log != null)
                 {
-                    userId = appContext.log.User_ID;
+                    userName = appContext.log.UserName ?? string.Empty;
                     modName = appContext.log.ModName ?? string.Empty;
                     actionName = appContext.log.ActionName ?? string.Empty;
                     path = appContext.log.Path ?? string.Empty;
@@ -144,8 +144,8 @@ namespace RUINORERP.Common.Log4Net
                     operatorName = appContext.CurUserInfo.客户端版本 ?? "已登录用户";
                 }
 
-                // 设置所有属性，User_ID 默认值为 0
-                ThreadContext.Properties["User_ID"] = userId ?? 0L;
+                // 设置所有属性
+                ThreadContext.Properties["UserName"] = userName;
                 ThreadContext.Properties["ModName"] = modName;
                 ThreadContext.Properties["ActionName"] = actionName;
                 ThreadContext.Properties["Path"] = path;

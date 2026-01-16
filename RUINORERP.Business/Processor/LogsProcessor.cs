@@ -38,7 +38,7 @@ namespace RUINORERP.Business.Processor
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            queryFilter.SetQueryField<Logs>(c => c.User_ID);
+            queryFilter.SetQueryField<Logs>(c => c.UserName);
             queryFilter.SetQueryField<Logs>(c => c.Operator);
             queryFilter.SetQueryField<Logs>(c => c.Level);
             queryFilter.SetQueryField<Logs>(c => c.ModName);

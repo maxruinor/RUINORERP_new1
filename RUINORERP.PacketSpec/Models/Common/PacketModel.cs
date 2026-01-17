@@ -142,11 +142,11 @@ namespace RUINORERP.PacketSpec.Models.Common
         /// <returns>是否有效</returns>
         public bool IsValid()
         {
-            // 添加1分钟的时间容差范围，允许客户端和服务器之间有一定的时间差异
+            // 添加2分钟的时间容差范围，允许客户端和服务器之间有一定的时间差异
             var now = DateTime.Now;
-            var toleranceMinutes = 1; // 1分钟容差
+            var toleranceMinutes = 2; // 2分钟容差
             
-            return CreatedTime <= now.AddMinutes(toleranceMinutes) && // 允许客户端时间最多比服务器快1分钟
+            return CreatedTime <= now.AddMinutes(toleranceMinutes) && // 允许客户端时间最多比服务器快2分钟
                    CreatedTime >= now.AddYears(-1) && 
                    !string.IsNullOrEmpty(PacketId);
         }

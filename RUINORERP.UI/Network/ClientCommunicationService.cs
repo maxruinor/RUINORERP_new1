@@ -71,7 +71,7 @@ namespace RUINORERP.UI.Network
         private readonly ILogger _logger;
 
         private const int HISTORY_WINDOW = 5; // 保留最近5次失败时间
-        
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -117,7 +117,7 @@ namespace RUINORERP.UI.Network
                 // 如果3次失败在2分钟内，触发锁定
                 if (timeSpan.TotalMinutes <= 2)
                 {
-                    _logger?.LogDebug("智能锁定检测：检测到同类型失败 {Count} 次，时间间隔 {TimeSpan} 分钟，触发锁定", 
+                    _logger?.LogDebug("智能锁定检测：检测到同类型失败 {Count} 次，时间间隔 {TimeSpan} 分钟，触发锁定",
                         recentFailures.Count, timeSpan.TotalMinutes);
                     return true;
                 }
@@ -864,7 +864,7 @@ namespace RUINORERP.UI.Network
                     bool socketConnected = _socketClient.IsConnected;
                     bool managerConnected = _connectionManager.IsConnected;
                     bool initialConnected = socketConnected && managerConnected;
-                    _logger?.LogTrace("心跳前连接状态检查: Socket={SocketConnected}, Manager={ManagerConnected}", 
+                    _logger?.LogTrace("心跳前连接状态检查: Socket={SocketConnected}, Manager={ManagerConnected}",
                         socketConnected, managerConnected);
 
                     if (!initialConnected)
@@ -875,7 +875,7 @@ namespace RUINORERP.UI.Network
                         _heartbeatFailureTracker.Reset();
                         continue;
                     }
-                    
+
                     // 检查心跳失败次数，如果已达到阈值则暂停发送心跳
                     if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
@@ -889,7 +889,7 @@ namespace RUINORERP.UI.Network
                     _logger?.LogTrace("开始发送心跳请求");
                     Exception lastException = null;
                     bool success = true;
-                    
+
                     try
                     {
                         success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
@@ -905,7 +905,7 @@ namespace RUINORERP.UI.Network
                         success = false;
                         _logger?.LogError(ex, "心跳发送过程中发生异常");
                     }
-                    
+
                     _logger?.LogTrace("心跳请求发送完成，结果: {Success}", success);
 
                     // 心跳失败时立即检查连接状态
@@ -915,7 +915,7 @@ namespace RUINORERP.UI.Network
                         bool failSocketConnected = _socketClient.IsConnected;
                         bool failManagerConnected = _connectionManager.IsConnected;
                         bool actualConnected = failSocketConnected && failManagerConnected;
-                        _logger?.LogTrace("心跳失败，实际连接状态: Socket={SocketConnected}, Manager={ManagerConnected}", 
+                        _logger?.LogTrace("心跳失败，实际连接状态: Socket={SocketConnected}, Manager={ManagerConnected}",
                             failSocketConnected, failManagerConnected);
 
                         if (!actualConnected)
@@ -1000,11 +1000,11 @@ namespace RUINORERP.UI.Network
                     // 心跳失败 - 检测失败类型
                     bool isConnected = _socketClient.IsConnected;
                     HeartbeatFailureType? failureType = null;
-                    
+
                     if (failureException != null)
                     {
                         failureType = DetectFailureType(failureException);
-                        _logger?.LogWarning("❌ 心跳失败，类型: {FailureType}, 原因: {Message}", 
+                        _logger?.LogWarning("❌ 心跳失败，类型: {FailureType}, 原因: {Message}",
                             failureType, failureException.Message);
                     }
 
@@ -1021,9 +1021,9 @@ namespace RUINORERP.UI.Network
                         {
                             currentFailures = currentValue; // 保持当前值，不再递增
                         }
-                        
+
                         Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
-                        
+
                         // 根据失败类型采取不同策略
                         if (failureType.HasValue)
                         {
@@ -1034,32 +1034,32 @@ namespace RUINORERP.UI.Network
                                     // 临时增加心跳间隔
                                     _heartbeatIntervalMs = (int)Math.Min(_heartbeatIntervalMs * 1.2, _maxHeartbeatIntervalMs);
                                     break;
-                                    
+
                                 case HeartbeatFailureType.NetworkError:
                                     _logger?.LogError("🌐 网络错误，将触发重连机制");
                                     _connectionManager.StartAutoReconnect();
                                     break;
-                                    
+
                                 case HeartbeatFailureType.ServerBusy:
                                     _logger?.LogDebug("⚠️ 服务器繁忙，延长心跳间隔");
                                     _heartbeatIntervalMs = (int)Math.Min(_heartbeatIntervalMs * 1.5, _maxHeartbeatIntervalMs);
                                     break;
-                                    
+
                                 case HeartbeatFailureType.SessionExpired:
                                     _logger?.LogError("🔒 会话过期，触发重新登录");
                                     SessionExpired?.Invoke();
                                     break;
-                                    
+
                                 default:
                                     _logger?.LogDebug("❓ 未知心跳失败类型");
                                     break;
                             }
-                            
+
                             // 记录失败到追踪器
                             _heartbeatFailureTracker.RecordFailure(failureType.Value);
                         }
-                        
-                        _logger?.LogDebug("❌ 心跳失败，连续失败: {CurrentFailures}/{Threshold}", 
+
+                        _logger?.LogDebug("❌ 心跳失败，连续失败: {CurrentFailures}/{Threshold}",
                             currentFailures, HEARTBEAT_FAILURE_THRESHOLD);
                     }
                     else
@@ -1135,7 +1135,7 @@ namespace RUINORERP.UI.Network
                 return HeartbeatFailureType.NetworkError;
             if (errorMessage.Contains("繁忙") || errorMessage.Contains("busy") || errorMessage.Contains("忙碌"))
                 return HeartbeatFailureType.ServerBusy;
-            if (errorMessage.Contains("过期") || errorMessage.Contains("expired") || 
+            if (errorMessage.Contains("过期") || errorMessage.Contains("expired") ||
                 errorMessage.Contains("未登录") || errorMessage.Contains("未登录状态"))
                 return HeartbeatFailureType.SessionExpired;
 
@@ -1161,25 +1161,25 @@ namespace RUINORERP.UI.Network
             try
             {
                 // 检查是否有有效的Session ID
-            if (string.IsNullOrEmpty(logContext.SessionId) || logContext.UserId == 0)
-            {
-                _logger?.LogDebug("⚠️ [{Timestamp:HH:mm:ss.fff}] 未登录状态，跳过心跳 #{AttemptNumber}", 
-                    logContext.Timestamp, logContext.AttemptNumber);
-                return false;
-            }
+                if (string.IsNullOrEmpty(logContext.SessionId) || logContext.UserId == 0)
+                {
+                    _logger?.LogDebug("⚠️ [{Timestamp:HH:mm:ss.fff}] 未登录状态，跳过心跳 #{AttemptNumber}",
+                        logContext.Timestamp, logContext.AttemptNumber);
+                    return false;
+                }
 
-            // 检查心跳失败次数，如果已达到阈值则停止发送心跳
-            if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
-            {
-                _logger?.LogDebug("⛔ 心跳失败次数已达到阈值({Threshold})，暂停发送心跳请求", 
-                    HEARTBEAT_FAILURE_THRESHOLD);
-                return false;
-            }
+                // 检查心跳失败次数，如果已达到阈值则停止发送心跳
+                if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
+                {
+                    _logger?.LogDebug("⛔ 心跳失败次数已达到阈值({Threshold})，暂停发送心跳请求",
+                        HEARTBEAT_FAILURE_THRESHOLD);
+                    return false;
+                }
 
-            _logger?.LogTrace("🔄 [{Timestamp:HH:mm:ss.fff}] 开始发送心跳 #{AttemptNumber}, " +
-                "会话: {SessionId}, 用户: {UserId}, IP: {ClientIP}, 当前间隔: {Interval}ms", 
-                logContext.Timestamp, logContext.AttemptNumber, logContext.SessionId, 
-                logContext.UserId, logContext.ClientIP, logContext.CurrentInterval);
+                _logger?.LogTrace("🔄 [{Timestamp:HH:mm:ss.fff}] 开始发送心跳 #{AttemptNumber}, " +
+                    "会话: {SessionId}, 用户: {UserId}, IP: {ClientIP}, 当前间隔: {Interval}ms",
+                    logContext.Timestamp, logContext.AttemptNumber, logContext.SessionId,
+                    logContext.UserId, logContext.ClientIP, logContext.CurrentInterval);
 
                 var heartbeatRequest = new HeartbeatRequest
                 {
@@ -1217,14 +1217,14 @@ namespace RUINORERP.UI.Network
                     {
                         // 根据重试次数动态调整超时时间
                         var timeout = _heartbeatTimeoutMs * (retry + 1);
-                        _logger?.LogTrace("💓 心跳重试 {Retry}/{MaxRetries}, 超时: {Timeout}ms", 
+                        _logger?.LogTrace("💓 心跳重试 {Retry}/{MaxRetries}, 超时: {Timeout}ms",
                             retry + 1, maxRetries + 1, timeout);
 
                         var sendStartTime = DateTime.Now;
 
                         var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
-                            SystemCommands.Heartbeat, 
-                            heartbeatRequest, 
+                            SystemCommands.Heartbeat,
+                            heartbeatRequest,
                             cancellationToken,
                             timeout); // 动态超时
 
@@ -1233,7 +1233,7 @@ namespace RUINORERP.UI.Network
                         if (response != null && response.IsSuccess)
                         {
                             Interlocked.Increment(ref _totalHeartbeatSuccess);
-                            
+
                             // 计算网络延迟
                             var roundTripTime = sendDuration;
                             var estimatedLatency = roundTripTime / 2;
@@ -1260,8 +1260,8 @@ namespace RUINORERP.UI.Network
                         else
                         {
                             _logger?.LogDebug("❌ [{Now:HH:mm:ss.fff}] 心跳失败 #{AttemptNumber}(尝试{Retry}/{MaxRetries}), " +
-                                "耗时: {Duration}ms, 服务器响应: {IsSuccess}, 错误: {ErrorMessage}", 
-                                DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1, 
+                                "耗时: {Duration}ms, 服务器响应: {IsSuccess}, 错误: {ErrorMessage}",
+                                DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1,
                                 sendDuration, response?.IsSuccess, response?.ErrorMessage);
 
                             if (retry < maxRetries)
@@ -1283,7 +1283,7 @@ namespace RUINORERP.UI.Network
                         lastException = ex;
                         _logger?.LogDebug("⏱️ [{Now:HH:mm:ss.fff}] 心跳超时 #{AttemptNumber}(尝试{Retry}/{MaxRetries}), " +
                             "超时: {Timeout}ms, 当前间隔: {Interval}ms, " +
-                            "最近成功: {LastSuccess:yyyy-MM-dd HH:mm:ss}", 
+                            "最近成功: {LastSuccess:yyyy-MM-dd HH:mm:ss}",
                             DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1,
                             _heartbeatTimeoutMs * (retry + 1), _heartbeatIntervalMs, _lastHeartbeatTime);
 
@@ -1306,7 +1306,7 @@ namespace RUINORERP.UI.Network
                     catch (Exception ex)
                     {
                         lastException = ex;
-                        _logger?.LogError(ex, "💥 [{Now:HH:mm:ss.fff}] 心跳发送异常 #{AttemptNumber}(尝试{Retry}/{MaxRetries})", 
+                        _logger?.LogError(ex, "💥 [{Now:HH:mm:ss.fff}] 心跳发送异常 #{AttemptNumber}(尝试{Retry}/{MaxRetries})",
                             DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1);
 
                         if (retry >= maxRetries)
@@ -1325,7 +1325,7 @@ namespace RUINORERP.UI.Network
                 // 所有重试都失败
                 Interlocked.Increment(ref _totalHeartbeatFailures);
                 _logger?.LogError("❌ 心跳重试失败 #{AttemptNumber}, 已达到最大重试次数, " +
-                    "总失败: {TotalFailures}/{TotalAttempts}({FailureRate:P1})", 
+                    "总失败: {TotalFailures}/{TotalAttempts}({FailureRate:P1})",
                     logContext.AttemptNumber, _totalHeartbeatFailures, _totalHeartbeatAttempts,
                     (double)_totalHeartbeatFailures / _totalHeartbeatAttempts);
                 return false;
@@ -1739,10 +1739,28 @@ namespace RUINORERP.UI.Network
                 }
 
 
+
+
                 // 验证数据包有效性
                 if (!packet.IsValid())
                 {
-                    _logger.LogWarning("接收到无效数据包");
+                    var now = DateTime.Now;
+                    var timeDiff = Math.Abs((now - packet.CreatedTime).TotalMinutes);
+                    var isValidPacketId = !string.IsNullOrEmpty(packet.PacketId);
+                    
+                    _logger.LogWarning($"接收到无效数据包！CommandId: {packet.CommandId}, PacketId: {packet.PacketId}, CreatedTime: {packet.CreatedTime:yyyy-MM-dd HH:mm:ss}, CurrentTime: {now:yyyy-MM-dd HH:mm:ss}");
+                    _logger.LogWarning($"时间差异: {timeDiff:F2}分钟, PacketId有效: {isValidPacketId}");
+                    
+                    // 如果时间差异超过2分钟，可能是客户端或服务器时间不同步
+                    if (timeDiff > 2)
+                    {
+                        var errorMsg = $"系统时间不同步！\n服务器时间: {now:yyyy-MM-dd HH:mm:ss}\n数据包创建时间: {packet.CreatedTime:yyyy-MM-dd HH:mm:ss}\n时间差异: {timeDiff:F1}分钟\n\n请检查您的电脑系统时间是否正确。";
+                        _logger.Error(errorMsg);
+                        
+                        // 在UI线程显示错误提示
+                        System.Windows.Forms.MessageBox.Show(errorMsg, "时间同步错误", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
+                    }
+                    
                     return;
                 }
 

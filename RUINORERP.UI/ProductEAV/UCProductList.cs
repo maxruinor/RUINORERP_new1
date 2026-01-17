@@ -1,31 +1,30 @@
-﻿﻿using System;
+﻿using AutoMapper;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.CommService;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.CollectionExtension;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-
-using AutoMapper;
-using RUINORERP.Business.AutoMapper;
-
-using RUINORERP.Model.Base;
-using System.Linq.Expressions;
-using RUINORERP.Common.Extensions;
-using System.Collections;
-using RUINORERP.Business.Processor;
-using RUINORERP.Global;
-using RUINORERP.Business.CommService;
 
 
 
@@ -37,16 +36,18 @@ namespace RUINORERP.UI.ProductEAV
     [MenuAttrAssemblyInfo("产品管理", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCProductList : BaseForm.BaseListGeneric<tb_Prod>
     {
+
         public UCProductList()
         {
             InitializeComponent();
             base.EditForm = typeof(frmProductEdit);
-
+            //显示时目前只缓存了基础数据。单据也可以考虑id显示编号。后面来实现。如果缓存优化好了
+            DisplayTextResolver.Initialize(dataGridView1);
             #region 准备枚举值在列表中显示
             System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
             expr = (p) => p.SourceType;
             base.ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));
-            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.SourceType, typeof(GoodsSource));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.SourceType, typeof(GoodsSource));
             #endregion
 
             #region 准备枚举值在列表中显示
@@ -54,12 +55,12 @@ namespace RUINORERP.UI.ProductEAV
             exprP = (p) => p.PropertyType;
             base.ColNameDataDictionary.TryAdd(exprP.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ProductAttributeType)));
 
-            DisplayTextResolver.AddFixedDictionaryMappingByEnum(t => t.PropertyType, typeof(ProductAttributeType));
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.PropertyType, typeof(ProductAttributeType));
             #endregion
 
             dataGridView1.CustomRowNo = true;
             dataGridView1.CellPainting += dataGridView1_CellPainting;
-            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.newSumDataGridView产品组合_CellFormatting);
+            //this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.newSumDataGridView产品组合_CellFormatting);
 
         }
 
@@ -234,7 +235,7 @@ namespace RUINORERP.UI.ProductEAV
                             KeyValuePair<string, string> pair = new KeyValuePair<string, string>();
 
                             base._eventDrivenCacheManager.UpdateEntity<tb_Prod>(rr.ReturnObject);
-                            
+
                         }
                         else
                         {

@@ -2545,6 +2545,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.保存:
+                    bool rsSave = false;
                     try
                     {
                         var lockStatusSave = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
@@ -2590,10 +2591,11 @@ namespace RUINORERP.UI.BaseForm
                                     editEntity.ActionStatus = ActionStatus.修改;
                                 }
 
-                                bool rsSave = await Save(true);
+                                rsSave = await Save(true);
                                 if (!rsSave)
                                 {
-                                    await LockBill();
+                                    // 验证失败或保存失败，不锁定单据，保持保存按钮可用
+                                    // await LockBill();
                                 }
                                 else
                                 {
@@ -2621,7 +2623,15 @@ namespace RUINORERP.UI.BaseForm
                         var btnSave = FindToolStripButtonByName("toolStripButtonSave");
                         if (btnSave != null)
                         {
-                            btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
+                            // 如果保存失败但实体有变化，保持保存按钮启用
+                            if (!rsSave && EditEntity != null && EditEntity.HasChanged)
+                            {
+                                btnSave.Enabled = true;
+                            }
+                            else
+                            {
+                                btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
+                            }
                             MainForm.Instance?.ShowStatusText(string.Empty);
                         }
                     }

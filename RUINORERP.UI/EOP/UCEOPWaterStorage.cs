@@ -187,34 +187,7 @@ namespace RUINORERP.UI.EOP
                     {
                         if (EditEntity.RowImage.image != null)
                         {
-                            //if (!EditEntity.RowImage.oldhash.Equals(EditEntity.RowImage.newhash, StringComparison.OrdinalIgnoreCase)
-                            // && EditEntity.PaymentImagePath == EditEntity.RowImage.ImageFullName)
-                            //{
-                            //    HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                            //    //如果服务器有旧文件 。可以先删除
-                            //    if (!string.IsNullOrEmpty(EditEntity.RowImage.oldhash))
-                            //    {
-                            //        string oldfileName = EditEntity.RowImage.Dir + EditEntity.RowImage.realName + "-" + EditEntity.RowImage.oldhash;
-                            //        string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
-                            //        MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-                            //    }
-                            //    string newfileName = EditEntity.RowImage.GetUploadfileName();
-                            //    ////上传新文件时要加后缀名
-                            //    string uploadRsult = await httpWebService.UploadImageAsync(newfileName + ".jpg", EditEntity.RowImage.ImageBytes, "upload");
-                            //    if (uploadRsult.Contains("UploadSuccessful"))
-                            //    {
-                            //        //重要
-                            //        EditEntity.RowImage.ImageFullName = EditEntity.RowImage.UpdateImageName(EditEntity.RowImage.newhash);
-                            //        EditEntity.PaymentImagePath = EditEntity.RowImage.ImageFullName;
-
-                            //        //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
-                            //        MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
-                            //    }
-                            //    else
-                            //    {
-                            //        MainForm.Instance.LoginWebServer();
-                            //    }
-                            //}
+                            
                         }
                     }
                     #endregion

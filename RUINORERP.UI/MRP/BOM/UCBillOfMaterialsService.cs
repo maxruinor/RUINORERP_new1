@@ -123,10 +123,10 @@ namespace RUINORERP.UI.MRP.BOM
             newSumDataGridViewBOM.NeedSaveColumnsXml = true;
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridViewMain.NeedSaveColumnsXml = true;
-            DisplayTextResolver.RegisterImageInfoDictionaryMapping<tb_Prod>(c => c.Images);
+            DisplayTextResolver.AddColumnDisplayType<tb_Prod>(c => c.Images, ColumnDisplayTypeEnum.Image);
             DisplayTextResolver.Initialize(newSumDataGridView产品);
             BOMDisplayTextResolver.Initialize(newSumDataGridViewBOM);
-            BOMDisplayTextResolver.RegisterImageInfoDictionaryMapping<tb_BOM_S>(c => c.BOM_Iimage);
+            BOMDisplayTextResolver.AddColumnDisplayType<tb_BOM_S>(c => c.BOM_Iimage, ColumnDisplayTypeEnum.Image);
         }
 
 

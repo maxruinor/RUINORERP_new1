@@ -158,7 +158,7 @@ namespace RUINORERP.UI.Common
             string columnName = dataGridView.Columns[e.ColumnIndex].Name;
             
             // 处理特殊列类型（如图片）
-            if (HandleImageDisplay(e, columnName))
+            if (HandleSpecialColumnDisplay(e, columnName))
             {
                 return;
             }

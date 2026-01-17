@@ -15,6 +15,7 @@ using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UControls;
+using RUINORERP.Global.EnumExt;
 
 namespace RUINORERP.UI.Common
 {
@@ -162,11 +163,46 @@ namespace RUINORERP.UI.Common
         /// 添加列显示类型
         /// </summary>
         /// <param name="columnName">列名</param>
-        /// <param name="displayType">显示类型</param>
-        public void AddColumnDisplayType(string columnName, string displayType)
+        /// <param name="columnDisplayType">列显示类型</param>
+        public void AddColumnDisplayType(string columnName, ColumnDisplayTypeEnum columnDisplayType)
         {
+            string displayType = columnDisplayType.ToString();
             ColumnDisplayTypes[columnName] = displayType;
             displayHelper.ColumnDisplayTypes[columnName] = displayType;
+
+            // 图片类型自动配置为缩略图模式
+            if (columnDisplayType == ColumnDisplayTypeEnum.Image)
+            {
+                if (displayHelper.ImagesColumnsMappings == null)
+                {
+                    displayHelper.ImagesColumnsMappings = new Dictionary<string, (bool IsByteFormat, bool UseThumbnail)>();
+                }
+
+                // 更新图片列配置：默认使用缩略图，字节数组格式
+                if (!displayHelper.ImagesColumnsMappings.ContainsKey(columnName))
+                {
+                    displayHelper.ImagesColumnsMappings[columnName] = (true, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 添加图片列显示类型（使用表达式）
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="fieldExpression">字段表达式</param>
+        /// <param name="displayType">显示类型</param>
+        public void AddColumnDisplayType<TEntity>(Expression<Func<TEntity, object>> fieldExpression, ColumnDisplayTypeEnum displayType)
+        {
+            if (fieldExpression == null)
+            {
+                throw new ArgumentNullException(nameof(fieldExpression), "字段表达式不能为空");
+            }
+
+            MemberInfo fieldInfo = fieldExpression.GetMemberInfo();
+            string columnName = fieldInfo.Name;
+
+            AddColumnDisplayType(columnName, displayType);
         }
         
         /// <summary>
@@ -180,74 +216,61 @@ namespace RUINORERP.UI.Common
             displayHelper.ReferenceKeyColumnMappings[columnName] = foreignKeyColumnName;
         }
         
-        /// <summary>
-        /// 注册图片字段信息映射
-        /// </summary>
-        /// <typeparam name="T1">实体类型</typeparam>
-        /// <param name="ImageField">图片字段表达式</param>
-        /// <param name="UseThumbnail">是否使用缩略图</param>
-        /// <param name="IsByteFormat">是否为字节数组格式</param>
-        /// <exception cref="ArgumentNullException">当ImageField为空时抛出</exception>
-        public void RegisterImageInfoDictionaryMapping<T1>(Expression<Func<T1, object>> ImageField, bool UseThumbnail = true, bool IsByteFormat = true)
-        {
-            if (ImageField == null)
-            {
-                throw new ArgumentNullException(nameof(ImageField), "图片字段表达式不能为空");
-            }
 
-            try
-            {
-                MemberInfo ImageFieldInfo = ImageField.GetMemberInfo();
-                if (displayHelper.ImagesColumnsMappings == null)
-                {
-                    displayHelper.ImagesColumnsMappings = new Dictionary<string, (bool IsByteFormat, bool UseThumbnail)>();
-                }
 
-                string fieldName = ImageFieldInfo.Name;
-                // 检查是否已存在相同的映射，如果存在则先移除再添加
-                if (displayHelper.ImagesColumnsMappings.ContainsKey(fieldName))
-                {
-                    displayHelper.ImagesColumnsMappings.Remove(fieldName);
-                }
-                // 添加新映射（无论是新增还是更新）
-                displayHelper.ImagesColumnsMappings.Add(fieldName, (IsByteFormat, UseThumbnail));
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"注册图片字段信息映射失败: {ex.Message}", ex);
-            }
-        }
-        
         /// <summary>
-        /// 处理图片字段显示
+        /// 处理特殊列显示（图片、二进制数据等）
         /// </summary>
         /// <param name="e">单元格格式化事件参数</param>
         /// <param name="columnName">列名</param>
-        /// <returns>是否处理了图片显示</returns>
-        protected bool HandleImageDisplay(DataGridViewCellFormattingEventArgs e, string columnName)
+        /// <returns>是否处理了特殊列显示</returns>
+        protected bool HandleSpecialColumnDisplay(DataGridViewCellFormattingEventArgs e, string columnName)
         {
-            if (displayHelper.ColumnDisplayTypes.ContainsKey(columnName))
+            if (!displayHelper.ColumnDisplayTypes.ContainsKey(columnName))
             {
-                string displayType = displayHelper.ColumnDisplayTypes[columnName];
-                if (displayType == "Image")
+                return false;
+            }
+
+            string displayType = displayHelper.ColumnDisplayTypes[columnName];
+
+            // 处理图片显示（显示缩略图，双击可查看原图）
+            if (displayType == ColumnDisplayTypeEnum.Image.ToString())
+            {
+                if (e.Value is byte[] imageBytes)
                 {
-                    if (e.Value is byte[])
+                    try
                     {
-                        using (MemoryStream ms = new MemoryStream((byte[])e.Value))
+                        using (MemoryStream ms = new MemoryStream(imageBytes))
                         {
                             System.Drawing.Image image = System.Drawing.Image.FromStream(ms);
                             if (image != null)
                             {
-                                //缩略图
                                 var thumbnail = UITools.CreateThumbnail(image, 100, 100);
                                 e.Value = thumbnail;
+                                e.FormattingApplied = true;
+                                return true;
                             }
-                            e.FormattingApplied = true;
-                            return true;
                         }
+                    }
+                    catch
+                    {
+                        // 图片处理失败，保持原值
+                        return false;
                     }
                 }
             }
+
+            // 处理二进制数据显示
+            if (displayType == ColumnDisplayTypeEnum.Binary.ToString())
+            {
+                if (e.Value is byte[] binaryData)
+                {
+                    e.Value = $"[Binary: {binaryData.Length} bytes]";
+                    e.FormattingApplied = true;
+                    return true;
+                }
+            }
+
             return false;
         }
         

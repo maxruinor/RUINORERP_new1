@@ -112,6 +112,7 @@ namespace RUINORERP.UI.ProductEAV
             
            
             ProdBundleDisplayTextResolver.Initialize(newSumDataGridView产品组合);
+            DisplayTextResolver.AddColumnDisplayType<tb_Prod>(c=>c.Images,ColumnDisplayTypeEnum.Image);
             DisplayTextResolver.Initialize(newSumDataGridView产品);
         }
 

@@ -121,4 +121,25 @@ namespace RUINORERP.Global
 
     }
 
+    /// <summary>
+    /// 列显示类型枚举
+    /// </summary>
+    public enum ColumnDisplayTypeEnum
+    {
+        /// <summary>
+        /// 默认文本显示
+        /// </summary>
+        Default,
+
+        /// <summary>
+        /// 图片显示（显示缩略图，双击可查看原图）
+        /// </summary>
+        Image,
+
+        /// <summary>
+        /// 二进制数据
+        /// </summary>
+        Binary
+    }
+
 }

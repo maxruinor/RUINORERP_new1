@@ -10,6 +10,11 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
+
+
+    /// <summary>
+    /// 安全库存配置规则
+    /// </summary>
     public class SafetyStockConfig : RuleConfigBase
     {
  

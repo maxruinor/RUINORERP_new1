@@ -132,6 +132,7 @@ namespace RUINORERP.UI.BI
             this.Name = "frmReminderRuleConfig";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "选择提醒规则";
+            this.Load += new System.EventHandler(this.frmReminderRuleConfig_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();

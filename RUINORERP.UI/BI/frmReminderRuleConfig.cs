@@ -41,8 +41,25 @@ namespace RUINORERP.UI.BI
         public frmReminderRuleConfig()
         {
             InitializeComponent();
-            _ruleController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderRuleController<tb_ReminderRule>>();
-            LoadRuleList();
+            
+            // 设计时不执行运行时逻辑
+            if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
+            {
+                _ruleController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderRuleController<tb_ReminderRule>>();
+                LoadRuleList();
+            }
+        }
+
+        /// <summary>
+        /// 窗体加载事件
+        /// </summary>
+        private void frmReminderRuleConfig_Load(object sender, EventArgs e)
+        {
+            // 在运行时加载规则列表
+            if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
+            {
+                LoadRuleList();
+            }
         }
 
         /// <summary>

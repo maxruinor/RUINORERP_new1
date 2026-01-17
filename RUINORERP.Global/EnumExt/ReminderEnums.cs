@@ -14,6 +14,11 @@ namespace RUINORERP.Global.EnumExt
         Roslyn = 2,
         Hybrid = 3
     }
+
+
+    /// <summary>
+    /// 提醒规则业务类型
+    /// </summary>
     public enum ReminderBizType
     {
         [Description("安全库存提醒")]

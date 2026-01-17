@@ -28,26 +28,37 @@ namespace RUINORERP.UI.BI
     [MenuAttrAssemblyInfo("提醒对象链路编辑", true, UIType.单表数据)]
     public partial class UCReminderObjectLinkEdit : BaseEditGeneric<tb_ReminderObjectLink>
     {
-        public UCReminderObjectLinkEdit()
+    public UCReminderObjectLinkEdit()
+    {
+        InitializeComponent();
+
+        // 设计时不执行运行时初始化
+        if (LicenseManager.UsageMode != LicenseUsageMode.Designtime)
         {
-            InitializeComponent();
+            // 这里可以添加运行时初始化逻辑
         }
+    }
 
-        public tb_ReminderObjectLink entity { get; set; }
+        private tb_ReminderObjectLink entity;
 
-        List<tb_UserInfo> UserInfos = new List<tb_UserInfo>();
-        List<tb_RoleInfo> RoleInfos = new List<tb_RoleInfo>();
-        List<tb_Department> DepartmentInfos = new List<tb_Department>();
+        private List<tb_UserInfo> UserInfos = new List<tb_UserInfo>();
+        private List<tb_RoleInfo> RoleInfos = new List<tb_RoleInfo>();
+        private List<tb_Department> DepartmentInfos = new List<tb_Department>();
 
-        // 规则关联相关字段
+        /// <summary>
+        /// 规则关联控制器
+        /// </summary>
         private tb_ReminderRuleController<tb_ReminderRule> _ruleController;
         private tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation> _relationController;
         private List<tb_ReminderRule> _linkedRules;
 
+        /// <summary>
+        /// 绑定数据到控件
+        /// </summary>
         public override void BindData(BaseEntity _entity)
         {
-            // 设计时不执行数据绑定逻辑，避免访问运行时服务
-            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            // 设计时不执行数据绑定逻辑
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
             {
                 return;
             }
@@ -58,6 +69,7 @@ namespace RUINORERP.UI.BI
                 return;
             }
 
+            // 初始化实体状态
             if (entity.LinkId == 0)
             {
                 entity.IsEnabled = true;
@@ -70,6 +82,43 @@ namespace RUINORERP.UI.BI
             }
 
             // 加载基础数据
+            LoadBaseData();
+
+            // 初始化控制器
+            InitControllers();
+
+            // 绑定基本信息
+            BindBasicInfo();
+
+            // 绑定提醒源配置
+            BindSourceConfig();
+
+            // 绑定单据配置
+            BindBillConfig();
+
+            // 绑定提醒目标配置
+            BindTargetConfig();
+
+            // 绑定规则按钮事件
+            BindRuleButtons();
+
+            // 初始化验证和编辑项
+            InitValidation();
+
+            // 加载已关联的规则
+            LoadLinkedRules();
+
+            // 设置属性变化事件
+            SetupPropertyChanged();
+
+            base.BindData(entity);
+        }
+
+        /// <summary>
+        /// 加载基础数据
+        /// </summary>
+        private void LoadBaseData()
+        {
             try
             {
                 UserInfos = _cacheManager.GetEntityList<tb_UserInfo>();
@@ -78,56 +127,34 @@ namespace RUINORERP.UI.BI
             }
             catch (Exception ex)
             {
-                MainForm.Instance?.logger.Error(ex, "加载基础数据失败");
-                return;
+                MainForm.Instance?.logger?.LogError(ex, "加载基础数据失败");
             }
+        }
 
-            // 初始化控制器
-            _ruleController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderRuleController<tb_ReminderRule>>();
-            _relationController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation>>();
+        /// <summary>
+        /// 初始化控制器
+        /// </summary>
+        private void InitControllers()
+        {
+            try
+            {
+                _ruleController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderRuleController<tb_ReminderRule>>();
+                _relationController = MainForm.Instance.AppContext.GetRequiredService<tb_ReminderLinkRuleRelationController<tb_ReminderLinkRuleRelation>>();
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "初始化控制器失败");
+            }
+        }
 
-            // 绑定基本信息
+        /// <summary>
+        /// 绑定基本信息
+        /// </summary>
+        private void BindBasicInfo()
+        {
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.LinkName, txtLinkName, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.Description, txtDescription, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4CheckBox<tb_ReminderObjectLink>(entity, t => t.IsEnabled, chkIsEnabled, false);
-
-            // 绑定提醒源配置
-            BindSourceConfig();
-            // 绑定单据配置
-            BindBillConfig();
-            // 绑定提醒目标配置
-            BindTargetConfig();
-            // 绑定规则按钮事件
-            BindRuleButtons();
-            // 加载已关联的规则
-            LoadLinkedRules();
-
-            // 初始化验证
-            if (!string.IsNullOrEmpty(entity.LinkName))
-            {
-                try
-                {
-                    if (MainForm.Instance?.AppContext != null)
-                    {
-                        base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkValidator>(), kryptonPanel1.Controls);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance?.logger?.LogError(ex, "初始化验证失败");
-                }
-            }
-
-            // 属性变化事件
-            entity.PropertyChanged += (sender, s2) =>
-            {
-                if (entity == null)
-                {
-                    return;
-                }
-            };
-
-            base.BindData(entity);
         }
 
         /// <summary>
@@ -135,11 +162,8 @@ namespace RUINORERP.UI.BI
         /// </summary>
         private void BindSourceConfig()
         {
-            // 绑定提醒源类型
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderObjectLink, SourceTargetType>(entity, k => k.SourceType, cmbSourceType, false);
             cmbSourceType.SelectedIndexChanged += CmbSourceType_SelectedIndexChanged;
-
-            // 根据类型绑定提醒源值
             UpdateSourceValueControl();
         }
 
@@ -148,11 +172,8 @@ namespace RUINORERP.UI.BI
         /// </summary>
         private void BindBillConfig()
         {
-            // 绑定单据类型
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderObjectLink, BizType>(entity, k => k.BizType, cmbBizType, false);
-            // 绑定操作类型
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderObjectLink, ActionType>(entity, k => k.ActionType, cmbActionType, false);
-            // 绑定单据状态
             DataBindingHelper.BindData4TextBox<tb_ReminderObjectLink>(entity, t => t.BillStatus, txtBillStatus, BindDataType4TextBox.Text, false);
         }
 
@@ -161,12 +182,42 @@ namespace RUINORERP.UI.BI
         /// </summary>
         private void BindTargetConfig()
         {
-            // 绑定提醒目标类型
             DataBindingHelper.BindData4CmbByEnum<tb_ReminderObjectLink, SourceTargetType>(entity, k => k.TargetType, cmbTargetType, false);
             cmbTargetType.SelectedIndexChanged += CmbTargetType_SelectedIndexChanged;
-
-            // 根据类型绑定提醒目标值
             UpdateTargetValueControl();
+        }
+
+        /// <summary>
+        /// 初始化验证
+        /// </summary>
+        private void InitValidation()
+        {
+            try
+            {
+                if (MainForm.Instance?.AppContext != null)
+                {
+                    base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ReminderObjectLinkValidator>(), kryptonPanel1.Controls);
+                    base.InitEditItemToControl(entity, kryptonPanel1.Controls);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "初始化验证失败");
+            }
+        }
+
+        /// <summary>
+        /// 设置属性变化事件
+        /// </summary>
+        private void SetupPropertyChanged()
+        {
+            entity.PropertyChanged += (sender, e) =>
+            {
+                if (entity == null)
+                {
+                    return;
+                }
+            };
         }
 
         /// <summary>
@@ -174,10 +225,8 @@ namespace RUINORERP.UI.BI
         /// </summary>
         private void UpdateSourceValueControl()
         {
-            // 清空现有控件
             panelSourceValue.Controls.Clear();
 
-            // 根据类型创建相应的控件
             SourceTargetType sourceType = (SourceTargetType)entity.SourceType;
             switch (sourceType)
             {
@@ -198,10 +247,8 @@ namespace RUINORERP.UI.BI
         /// </summary>
         private void UpdateTargetValueControl()
         {
-            // 清空现有控件
             panelTargetValue.Controls.Clear();
 
-            // 根据类型创建相应的控件
             SourceTargetType targetType = (SourceTargetType)entity.TargetType;
             switch (targetType)
             {
@@ -220,20 +267,13 @@ namespace RUINORERP.UI.BI
         /// <summary>
         /// 创建下拉框控件
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="container">容器</param>
-        /// <param name="controlName">控件名称</param>
-        /// <param name="dataSource">数据源</param>
-        /// <param name="valueMember">值成员</param>
-        /// <param name="displayMember">显示成员</param>
-        /// <param name="selectedValue">选中值</param>
-        private void CreateComboBoxControl<T>(Control container, string controlName, List<T> dataSource, Func<T, long> valueMember, Func<T, string> displayMember, long? selectedValue)
+        private void CreateComboBoxControl<T>(Control container, string controlName, List<T> dataSource,
+            Func<T, long> valueMember, Func<T, string> displayMember, long? selectedValue)
         {
             KryptonComboBox cmb = new KryptonComboBox();
             cmb.Name = controlName;
             cmb.Dock = DockStyle.Fill;
 
-            // 创建匿名类型数据源，包含值和显示文本
             var items = dataSource.Select(item => new
             {
                 Value = valueMember(item),
@@ -244,13 +284,11 @@ namespace RUINORERP.UI.BI
             cmb.ValueMember = "Value";
             cmb.DisplayMember = "Text";
 
-            // 设置选中值
             if (selectedValue.HasValue)
             {
                 cmb.SelectedValue = selectedValue.Value;
             }
 
-            // 添加到容器
             container.Controls.Add(cmb);
         }
 
@@ -268,132 +306,6 @@ namespace RUINORERP.UI.BI
         private void CmbTargetType_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateTargetValueControl();
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            bindingSourceEdit.CancelEdit();
-            this.DialogResult = DialogResult.Cancel;
-            this.Close();
-        }
-
-        private async void btnOk_Click(object sender, EventArgs e)
-        {
-            if (base.Validator())
-            {
-                // 更新提醒源值
-                UpdateSourceValueFromControl();
-                // 更新提醒目标值
-                UpdateTargetValueFromControl();
-
-                bindingSourceEdit.EndEdit();
-
-                if (bindingSourceEdit.Current is tb_ReminderObjectLink link)
-                {
-                    // 保存关联规则
-                    await SaveLinkedRulesAsync(link);
-                }
-
-                this.DialogResult = DialogResult.OK;
-                this.Close();
-            }
-        }
-
-        /// <summary>
-        /// 从控件更新提醒源值
-        /// </summary>
-        private void UpdateSourceValueFromControl()
-        {
-            if (panelSourceValue.Controls.Count > 0 && panelSourceValue.Controls[0] is KryptonComboBox cmb)
-            {
-                if (cmb.SelectedItem != null)
-                {
-                    // 检查设计时
-                    if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
-                    {
-                        return;
-                    }
-
-                    var selectedItem = cmb.SelectedItem;
-                    if (selectedItem != null)
-                    {
-                        try
-                        {
-                            // 尝试获取Value属性，这是我们在CreateComboBoxControl中创建的匿名类型属性
-                            var type = selectedItem.GetType();
-                            var valueProperty = type.GetProperty("Value");
-                            if (valueProperty != null)
-                            {
-                                entity.SourceValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance?.logger?.LogError(ex, "更新提醒源值失败");
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 从控件更新提醒目标值
-        /// </summary>
-        private void UpdateTargetValueFromControl()
-        {
-            if (panelTargetValue.Controls.Count > 0 && panelTargetValue.Controls[0] is KryptonComboBox cmb)
-            {
-                if (cmb.SelectedItem != null)
-                {
-                    // 检查设计时
-                    if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
-                    {
-                        return;
-                    }
-
-                    var selectedItem = cmb.SelectedItem;
-                    if (selectedItem != null)
-                    {
-                        try
-                        {
-                            // 尝试获取Value属性，这是我们在CreateComboBoxControl中创建的匿名类型属性
-                            var type = selectedItem.GetType();
-                            var valueProperty = type.GetProperty("Value");
-                            if (valueProperty != null)
-                            {
-                                entity.TargetValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MainForm.Instance?.logger?.LogError(ex, "更新提醒目标值失败");
-                        }
-                    }
-                }
-            }
-        }
-
-        private void btnTest_Click(object sender, EventArgs e)
-        {
-            // 设计时不执行测试逻辑
-            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
-            {
-                return;
-            }
-
-            // 测试链路配置
-            try
-            {
-                UpdateSourceValueFromControl();
-                UpdateTargetValueFromControl();
-
-                // 这里可以添加测试逻辑，比如验证配置是否正确
-                MessageBox.Show("测试通过，配置有效！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"测试失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         /// <summary>
@@ -431,32 +343,43 @@ namespace RUINORERP.UI.BI
                 _linkedRules = await _ruleController.QueryAsync(l => ruleIds.Contains(l.RuleId));
                 dgvLinkedRules.DataSource = _linkedRules;
 
-                // 设置列标题
-                if (dgvLinkedRules.Columns.Count > 0)
-                {
-                    dgvLinkedRules.Columns["RuleId"].HeaderText = "规则ID";
-                    dgvLinkedRules.Columns["RuleName"].HeaderText = "规则名称";
-                    dgvLinkedRules.Columns["Description"].HeaderText = "规则描述";
-                    dgvLinkedRules.Columns["RuleEngineType"].HeaderText = "引擎类型";
-                    dgvLinkedRules.Columns["ReminderBizType"].HeaderText = "业务类型";
-                    dgvLinkedRules.Columns["ReminderPriority"].HeaderText = "优先级";
-                    dgvLinkedRules.Columns["IsEnabled"].HeaderText = "是否启用";
-
-                    // 隐藏不必要的列
-                    dgvLinkedRules.Columns["NotifyChannels"].Visible = false;
-                    dgvLinkedRules.Columns["NotifyRecipients"].Visible = false;
-                    dgvLinkedRules.Columns["JsonConfig"].Visible = false;
-                    dgvLinkedRules.Columns["EffectiveDate"].Visible = false;
-                    dgvLinkedRules.Columns["ExpireDate"].Visible = false;
-                    dgvLinkedRules.Columns["Created_at"].Visible = false;
-                    dgvLinkedRules.Columns["Created_by"].Visible = false;
-                    dgvLinkedRules.Columns["Updated_at"].Visible = false;
-                    dgvLinkedRules.Columns["Updated_by"].Visible = false;
-                }
+                ConfigureDataGridViewColumns();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"加载关联规则失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 配置DataGridView列显示
+        /// </summary>
+        private void ConfigureDataGridViewColumns()
+        {
+            if (dgvLinkedRules.Columns.Count == 0)
+            {
+                return;
+            }
+
+            // 设置列标题
+            dgvLinkedRules.Columns["RuleId"].HeaderText = "规则ID";
+            dgvLinkedRules.Columns["RuleName"].HeaderText = "规则名称";
+            dgvLinkedRules.Columns["Description"].HeaderText = "规则描述";
+            dgvLinkedRules.Columns["RuleEngineType"].HeaderText = "引擎类型";
+            dgvLinkedRules.Columns["ReminderBizType"].HeaderText = "业务类型";
+            dgvLinkedRules.Columns["ReminderPriority"].HeaderText = "优先级";
+            dgvLinkedRules.Columns["IsEnabled"].HeaderText = "是否启用";
+
+            // 隐藏不必要的列
+            var columnsToHide = new[] { "NotifyChannels", "NotifyRecipients", "JsonConfig",
+                "EffectiveDate", "ExpireDate", "Created_at", "Created_by", "Updated_at", "Updated_by" };
+
+            foreach (var columnName in columnsToHide)
+            {
+                if (dgvLinkedRules.Columns.Contains(columnName))
+                {
+                    dgvLinkedRules.Columns[columnName].Visible = false;
+                }
             }
         }
 
@@ -482,39 +405,12 @@ namespace RUINORERP.UI.BI
                         var rule = await _ruleController.BaseQueryByIdNavAsync(form.SelectedRuleId);
                         if (rule != null)
                         {
-                            // 添加到本地列表
-                            if (_linkedRules == null)
-                            {
-                                _linkedRules = new List<tb_ReminderRule>();
-                            }
+                            _linkedRules = _linkedRules ?? new List<tb_ReminderRule>();
                             _linkedRules.Add(rule);
 
-                            // 更新数据源
                             dgvLinkedRules.DataSource = null;
                             dgvLinkedRules.DataSource = _linkedRules;
-
-                            // 设置列标题
-                            if (dgvLinkedRules.Columns.Count > 0)
-                            {
-                                dgvLinkedRules.Columns["RuleId"].HeaderText = "规则ID";
-                                dgvLinkedRules.Columns["RuleName"].HeaderText = "规则名称";
-                                dgvLinkedRules.Columns["Description"].HeaderText = "规则描述";
-                                dgvLinkedRules.Columns["RuleEngineType"].HeaderText = "引擎类型";
-                                dgvLinkedRules.Columns["ReminderBizType"].HeaderText = "业务类型";
-                                dgvLinkedRules.Columns["ReminderPriority"].HeaderText = "优先级";
-                                dgvLinkedRules.Columns["IsEnabled"].HeaderText = "是否启用";
-
-                                // 隐藏不必要的列
-                                dgvLinkedRules.Columns["NotifyChannels"].Visible = false;
-                                dgvLinkedRules.Columns["NotifyRecipients"].Visible = false;
-                                dgvLinkedRules.Columns["JsonConfig"].Visible = false;
-                                dgvLinkedRules.Columns["EffectiveDate"].Visible = false;
-                                dgvLinkedRules.Columns["ExpireDate"].Visible = false;
-                                dgvLinkedRules.Columns["Created_at"].Visible = false;
-                                dgvLinkedRules.Columns["Created_by"].Visible = false;
-                                dgvLinkedRules.Columns["Updated_at"].Visible = false;
-                                dgvLinkedRules.Columns["Updated_by"].Visible = false;
-                            }
+                            ConfigureDataGridViewColumns();
                         }
                     }
                 }
@@ -532,25 +428,21 @@ namespace RUINORERP.UI.BI
         {
             try
             {
-                if (dgvLinkedRules.SelectedRows.Count > 0)
-                {
-                    var selectedRow = dgvLinkedRules.SelectedRows[0];
-                    if (selectedRow.DataBoundItem is tb_ReminderRule selectedRule)
-                    {
-                        if (MessageBox.Show($"确定要移除规则 '{selectedRule.RuleName}' 吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                        {
-                            // 从本地列表中移除
-                            _linkedRules.Remove(selectedRule);
-
-                            // 更新数据源
-                            dgvLinkedRules.DataSource = null;
-                            dgvLinkedRules.DataSource = _linkedRules;
-                        }
-                    }
-                }
-                else
+                if (dgvLinkedRules.SelectedRows.Count == 0)
                 {
                     MessageBox.Show("请先选择要移除的规则", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                var selectedRow = dgvLinkedRules.SelectedRows[0];
+                if (selectedRow.DataBoundItem is tb_ReminderRule selectedRule)
+                {
+                    if (MessageBox.Show($"确定要移除规则 '{selectedRule.RuleName}' 吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        _linkedRules?.Remove(selectedRule);
+                        dgvLinkedRules.DataSource = null;
+                        dgvLinkedRules.DataSource = _linkedRules;
+                    }
                 }
             }
             catch (Exception ex)
@@ -560,15 +452,62 @@ namespace RUINORERP.UI.BI
         }
 
         /// <summary>
+        /// 从控件更新提醒源值
+        /// </summary>
+        private void UpdateSourceValueFromControl()
+        {
+            if (panelSourceValue.Controls.Count > 0 && panelSourceValue.Controls[0] is KryptonComboBox cmb && cmb.SelectedItem != null)
+            {
+                try
+                {
+                    var selectedItem = cmb.SelectedItem;
+                    var valueProperty = selectedItem.GetType().GetProperty("Value");
+                    if (valueProperty != null)
+                    {
+                        entity.SourceValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogError(ex, "更新提醒源值失败");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从控件更新提醒目标值
+        /// </summary>
+        private void UpdateTargetValueFromControl()
+        {
+            if (panelTargetValue.Controls.Count > 0 && panelTargetValue.Controls[0] is KryptonComboBox cmb && cmb.SelectedItem != null)
+            {
+                try
+                {
+                    var selectedItem = cmb.SelectedItem;
+                    var valueProperty = selectedItem.GetType().GetProperty("Value");
+                    if (valueProperty != null)
+                    {
+                        entity.TargetValue = Convert.ToInt64(valueProperty.GetValue(selectedItem));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance?.logger?.LogError(ex, "更新提醒目标值失败");
+                }
+            }
+        }
+
+        /// <summary>
         /// 保存关联规则
         /// </summary>
-        /// <param name="link">提醒对象链路</param>
         private async Task SaveLinkedRulesAsync(tb_ReminderObjectLink link)
         {
             try
             {
                 if (link == null || link.LinkId == 0)
+                {
                     return;
+                }
 
                 // 删除现有关联
                 var existingRelations = await _relationController.QueryAsync(r => r.LinkId == link.LinkId);
@@ -597,5 +536,71 @@ namespace RUINORERP.UI.BI
             }
         }
 
+        /// <summary>
+        /// 取消按钮点击事件
+        /// </summary>
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            bindingSourceEdit.CancelEdit();
+            this.DialogResult = DialogResult.Cancel;
+            this.Close();
+        }
+
+        /// <summary>
+        /// 确定按钮点击事件
+        /// </summary>
+        private async void btnOk_Click(object sender, EventArgs e)
+        {
+            if (!base.Validator())
+            {
+                return;
+            }
+
+            try
+            {
+                // 更新提醒源值
+                UpdateSourceValueFromControl();
+                // 更新提醒目标值
+                UpdateTargetValueFromControl();
+
+                bindingSourceEdit.EndEdit();
+
+                if (bindingSourceEdit.Current is tb_ReminderObjectLink link)
+                {
+                    // 保存关联规则
+                    await SaveLinkedRulesAsync(link);
+                }
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 测试按钮点击事件
+        /// </summary>
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            // 设计时不执行测试逻辑
+            if (LicenseManager.UsageMode == LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
+            try
+            {
+                UpdateSourceValueFromControl();
+                UpdateTargetValueFromControl();
+                MessageBox.Show("测试通过，配置有效！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"测试失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

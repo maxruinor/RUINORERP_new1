@@ -333,6 +333,31 @@ namespace RUINORERP.UI.BI
                         return ucSafetyStockConfigEdit.safetyStockConfig;
                     }
                     break;
+
+                case ReminderBizType.单据提交审批提醒:
+                    var ucDocumentApprovalConfigEdit = new UCDocumentApprovalConfigEdit();
+                    ucDocumentApprovalConfigEdit.Text = "单据提交审批提醒配置";
+
+                    if (entity.JsonConfig.IsNullOrEmpty())
+                    {
+                        entity.JsonConfig = "{}";
+                    }
+
+                    JObject docObj = JsonHelper.SafeParseJson(entity.JsonConfig);
+
+                    DocApprovalConfig docApprovalConfig = docObj.ToObject<DocApprovalConfig>();
+                    if (docApprovalConfig == null)
+                    {
+                        docApprovalConfig = new DocApprovalConfig();
+                    }
+                    ucDocumentApprovalConfigEdit.docApprovalConfig = docApprovalConfig;
+                    ucDocumentApprovalConfigEdit.bindingSourceEdit.DataSource = new List<DocApprovalConfig>() { docApprovalConfig };
+                    if (ucDocumentApprovalConfigEdit.ShowDialog() == DialogResult.OK)
+                    {
+                        return ucDocumentApprovalConfigEdit.docApprovalConfig;
+                    }
+                    break;
+
                 default:
                     break;
             }

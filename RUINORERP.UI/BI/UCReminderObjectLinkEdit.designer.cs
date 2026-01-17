@@ -32,16 +32,15 @@ namespace RUINORERP.UI.BI
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageBasicInfo = new Krypton.Navigator.KryptonPage();
             this.chkIsEnabled = new Krypton.Toolkit.KryptonCheckBox();
+            this.btnRemoveRule = new Krypton.Toolkit.KryptonButton();
+            this.btnAddRule = new Krypton.Toolkit.KryptonButton();
+            this.dgvLinkedRules = new Krypton.Toolkit.KryptonDataGridView();
+            this.lblLinkedRules = new Krypton.Toolkit.KryptonLabel();
             this.txtDescription = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.txtLinkName = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            // 规则关联相关控件实例化
-            this.btnAddRule = new Krypton.Toolkit.KryptonButton();
-            this.btnRemoveRule = new Krypton.Toolkit.KryptonButton();
-            this.dgvLinkedRules = new Krypton.Toolkit.KryptonDataGridView();
-            this.lblLinkedRules = new Krypton.Toolkit.KryptonLabel();
             this.kryptonPageSourceConfig = new Krypton.Navigator.KryptonPage();
             this.panelSourceValue = new Krypton.Toolkit.KryptonPanel();
             this.cmbSourceType = new Krypton.Toolkit.KryptonComboBox();
@@ -70,6 +69,7 @@ namespace RUINORERP.UI.BI
             this.kryptonNavigator1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBasicInfo)).BeginInit();
             this.kryptonPageBasicInfo.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLinkedRules)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageSourceConfig)).BeginInit();
             this.kryptonPageSourceConfig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.panelSourceValue)).BeginInit();
@@ -120,8 +120,8 @@ namespace RUINORERP.UI.BI
             this.kryptonNavigator1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.kryptonPageBasicInfo,
             this.kryptonPageSourceConfig,
-            this.kryptonPageBillConfig,
-            this.kryptonPageTargetConfig});
+            this.kryptonPageTargetConfig,
+            this.kryptonPageBillConfig});
             this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(680, 420);
             this.kryptonNavigator1.TabIndex = 0;
@@ -176,6 +176,7 @@ namespace RUINORERP.UI.BI
             // 
             this.dgvLinkedRules.AllowUserToAddRows = false;
             this.dgvLinkedRules.AllowUserToDeleteRows = false;
+            this.dgvLinkedRules.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvLinkedRules.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvLinkedRules.Location = new System.Drawing.Point(120, 140);
             this.dgvLinkedRules.Name = "dgvLinkedRules";
@@ -458,6 +459,7 @@ namespace RUINORERP.UI.BI
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBasicInfo)).EndInit();
             this.kryptonPageBasicInfo.ResumeLayout(false);
             this.kryptonPageBasicInfo.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLinkedRules)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageSourceConfig)).EndInit();
             this.kryptonPageSourceConfig.ResumeLayout(false);
             this.kryptonPageSourceConfig.PerformLayout();

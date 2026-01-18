@@ -21,6 +21,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RUINORERP.UI.UControls.ContextMenuController;
 
@@ -44,7 +45,7 @@ namespace RUINORERP.UI.UControls
     /// kryptonDataGridView1.MultiSelect = MultipleChoices;
     /// kryptonDataGridView1.UseSelectedColumn = MultipleChoices;
     /// 2023-11-25 优化列显示控制：this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
-    /// 2025 添加了很多功能，如多选模式，批量编辑列
+    /// 2025 添加了很多功能，如多选模式，批量编辑列,分页等
     /// </summary>
     [Serializable]
     public class NewSumDataGridView : KryptonDataGridView
@@ -764,55 +765,84 @@ namespace RUINORERP.UI.UControls
         private KryptonPanel _paginationPanel = new KryptonPanel();
         private bool _enablePagination = false;
 
-        /// <summary>
-        /// 分页信息
-        /// </summary>
-        public class PaginationInfo
-        {
-            public int PageIndex { get; set; } = 1;
-            public int PageSize { get; set; } = 20;
-            public long TotalCount { get; set; }
-            public int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
-            public int StartRecord => (PageIndex - 1) * PageSize + 1;
-            public int EndRecord => Math.Min(PageIndex * PageSize, (int)TotalCount);
-        }
+        //    /// <summary>
+    /// 分页信息
+    /// </summary>
+    public class PaginationInfo
+    {
+        public int PageIndex { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public long TotalCount { get; set; }
+        public int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+        public int StartRecord => (PageIndex - 1) * PageSize + 1;
+        public int EndRecord => Math.Min(PageIndex * PageSize, (int)TotalCount);
+    }
 
-        private PaginationInfo _paginationInfo = new PaginationInfo();
+    private PaginationInfo _paginationInfo = new PaginationInfo();
 
-        /// <summary>
-        /// 启用分页功能
-        /// </summary>
-        [Browsable(true)]
-        [Description("启用分页功能")]
-        public bool EnablePagination
+    /// <summary>
+    /// 启用分页功能
+    /// </summary>
+    [Browsable(true)]
+    [Description("启用分页功能")]
+    public bool EnablePagination
+    {
+        get => _enablePagination;
+        set
         {
-            get => _enablePagination;
-            set
+            _enablePagination = value;
+            UpdatePaginationPanelVisibility();
+            if (value)
             {
-                _enablePagination = value;
-                UpdatePaginationPanelVisibility();
-                if (value)
+                InitializePaginationPanel();
+            }
+            else
+            {
+                // 禁用分页时,隐藏分页面板但不释放资源
+                if (_paginationPanel != null)
                 {
-                    InitializePaginationPanel();
+                    _paginationPanel.Visible = false;
                 }
             }
         }
+    }
 
-        /// <summary>
-        /// 分页信息
-        /// </summary>
-        [Browsable(false)]
-        public PaginationInfo Pagination => _paginationInfo;
+    /// <summary>
+    /// 分页信息
+    /// </summary>
+    [Browsable(false)]
+    public PaginationInfo Pagination => _paginationInfo;
 
-        /// <summary>
-        /// 页面大小选项
-        /// </summary>
-        private int[] _pageSizeOptions = new int[] { 10, 20, 50, 100 };
+    /// <summary>
+    /// 页面大小选项
+    /// </summary>
+    private int[] _pageSizeOptions = new int[] { 10, 20, 50, 100 };
 
-        /// <summary>
-        /// 分页变更事件
-        /// </summary>
-        public event EventHandler<PaginationInfo> PaginationChanged;
+    /// <summary>
+    /// 分页变更事件
+    /// </summary>
+    public event EventHandler<PaginationInfo> PaginationChanged;
+
+    #region 分页控件引用缓存（性能优化）
+    private KryptonButton _btnFirst, _btnPrev, _btnNext, _btnLast, _btnGo;
+    private KryptonLabel _lblPage, _lblInfo, _lblPageSize, _lblJump;
+    private KryptonTextBox _txtPage;
+    private KryptonComboBox _cmbPageSize;
+    #endregion
+
+    #region 分页样式常量（消除重复）
+    private static readonly Font _paginationFont = new Font("Microsoft YaHei UI", 9f);
+    private static readonly Color _paginationGrayColor = Color.FromArgb(102, 102, 102);
+    private static readonly Color _paginationDarkColor = Color.FromArgb(51, 51, 51);
+    private static readonly Color _separatorColor = Color.FromArgb(204, 204, 204);
+    #endregion
+
+    #region 分页并发控制
+    /// <summary>
+    /// 分页操作锁，防止并发访问
+    /// </summary>
+    private readonly object _paginationLock = new object();
+    #endregion
 
         #endregion
 
@@ -1488,6 +1518,12 @@ namespace RUINORERP.UI.UControls
         /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                // 清理分页面板资源
+                DisposePaginationControls();
+            }
+
             // 关闭保存列样式，注意要先保存列样式，再调用父类的Dispose()
             if (UseCustomColumnDisplay)
             {
@@ -1498,6 +1534,44 @@ namespace RUINORERP.UI.UControls
 
 
             base.Dispose(disposing);
+        }
+
+        /// <summary>
+        /// 清理分页控件资源
+        /// </summary>
+        private void DisposePaginationControls()
+        {
+            // 取消订阅事件
+            if (_btnFirst != null) _btnFirst.Click -= (s, e) => GoToPage(1);
+            if (_btnPrev != null) _btnPrev.Click -= (s, e) => GoToPage(_paginationInfo.PageIndex - 1);
+            if (_btnNext != null) _btnNext.Click -= (s, e) => GoToPage(_paginationInfo.PageIndex + 1);
+            if (_btnLast != null) _btnLast.Click -= (s, e) => GoToPage(_paginationInfo.TotalPages);
+            if (_btnGo != null) _btnGo.Click -= null;
+            if (_cmbPageSize != null) _cmbPageSize.SelectedIndexChanged -= null;
+
+            // 释放面板
+            if (_paginationPanel != null)
+            {
+                if (this.Controls.Contains(_paginationPanel))
+                {
+                    this.Controls.Remove(_paginationPanel);
+                }
+                _paginationPanel.Dispose();
+                _paginationPanel = null;
+            }
+
+            // 清空控件引用
+            _btnFirst = null;
+            _btnPrev = null;
+            _btnNext = null;
+            _btnLast = null;
+            _btnGo = null;
+            _lblPage = null;
+            _lblInfo = null;
+            _lblPageSize = null;
+            _lblJump = null;
+            _txtPage = null;
+            _cmbPageSize = null;
         }
 
         /// <summary>
@@ -4208,6 +4282,14 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void InitializePaginationPanel()
         {
+            // 检查是否已存在分页面板,避免重复创建
+            if (_paginationPanel != null && this.Controls.Contains(_paginationPanel))
+            {
+                _paginationPanel.Visible = true;
+                _paginationPanel.BringToFront();
+                return;
+            }
+
             // 分页面板初始化
             _paginationPanel = new KryptonPanel
             {
@@ -4250,155 +4332,167 @@ namespace RUINORERP.UI.UControls
                 };
 
                 // 1. 左侧：记录统计信息
-                var lblInfo = new KryptonLabel
+                _lblInfo = new KryptonLabel
                 {
                     Text = "共 0 条记录",
                     AutoSize = true,
                     Margin = new Padding(0, 5, 15, 0),
                     StateCommon = {
                         ShortText = {
-                            Font = new Font("Microsoft YaHei UI", 9f),
-                            Color1 = Color.FromArgb(102, 102, 102)
+                            Font = _paginationFont,
+                            Color1 = _paginationGrayColor
                         }
                     }
                 };
-                flowLayout.Controls.Add(lblInfo);
+                flowLayout.Controls.Add(_lblInfo);
 
                 // 添加分隔符
                 flowLayout.Controls.Add(CreateSeparator());
 
                 // 2. 页面导航按钮
-                // 首页按钮
-                var btnFirst = new KryptonButton
+                _btnFirst = new KryptonButton
                 {
                     Text = "首页",
+                    Name = "btnFirst",
                     Size = new Size(50, 25),
                     Enabled = false,
                     Margin = new Padding(0, 0, 5, 0)
                 };
-                btnFirst.Click += (s, e) => GoToPage(1);
-                flowLayout.Controls.Add(btnFirst);
+                _btnFirst.Click += (s, e) => GoToPage(1);
+                flowLayout.Controls.Add(_btnFirst);
 
-                // 上一页按钮
-                var btnPrev = new KryptonButton
+                _btnPrev = new KryptonButton
                 {
                     Text = "上一页",
+                    Name = "btnPrev",
                     Size = new Size(60, 25),
                     Enabled = false,
                     Margin = new Padding(0, 0, 5, 0)
                 };
-                btnPrev.Click += (s, e) => GoToPage(_paginationInfo.PageIndex - 1);
-                flowLayout.Controls.Add(btnPrev);
+                _btnPrev.Click += (s, e) => GoToPage(_paginationInfo.PageIndex - 1);
+                flowLayout.Controls.Add(_btnPrev);
 
-                // 页码显示
-                var lblPage = new KryptonLabel
+                _lblPage = new KryptonLabel
                 {
                     Text = "第 1 页",
                     AutoSize = true,
                     Margin = new Padding(5, 5, 5, 0),
                     StateCommon = {
                         ShortText = {
-                            Font = new Font("Microsoft YaHei UI", 9f),
-                            Color1 = Color.FromArgb(51, 51, 51)
+                            Font = _paginationFont,
+                            Color1 = _paginationDarkColor
                         }
                     }
                 };
-                flowLayout.Controls.Add(lblPage);
+                flowLayout.Controls.Add(_lblPage);
 
-                // 下一页按钮
-                var btnNext = new KryptonButton
+                _btnNext = new KryptonButton
                 {
                     Text = "下一页",
+                    Name = "btnNext",
                     Size = new Size(60, 25),
                     Enabled = false,
                     Margin = new Padding(0, 0, 5, 0)
                 };
-                btnNext.Click += (s, e) => GoToPage(_paginationInfo.PageIndex + 1);
-                flowLayout.Controls.Add(btnNext);
+                _btnNext.Click += (s, e) => GoToPage(_paginationInfo.PageIndex + 1);
+                flowLayout.Controls.Add(_btnNext);
 
-                // 末页按钮
-                var btnLast = new KryptonButton
+                _btnLast = new KryptonButton
                 {
                     Text = "末页",
+                    Name = "btnLast",
                     Size = new Size(50, 25),
                     Enabled = false,
                     Margin = new Padding(0, 0, 5, 0)
                 };
-                btnLast.Click += (s, e) => GoToPage(_paginationInfo.TotalPages);
-                flowLayout.Controls.Add(btnLast);
+                _btnLast.Click += (s, e) => GoToPage(_paginationInfo.TotalPages);
+                flowLayout.Controls.Add(_btnLast);
 
                 // 添加分隔符
                 flowLayout.Controls.Add(CreateSeparator());
 
                 // 3. 页面大小选择
-                var lblPageSize = new KryptonLabel
+                _lblPageSize = new KryptonLabel
                 {
                     Text = "每页:",
                     AutoSize = true,
                     Margin = new Padding(0, 5, 5, 0),
                     StateCommon = {
                         ShortText = {
-                            Font = new Font("Microsoft YaHei UI", 9f),
-                            Color1 = Color.FromArgb(102, 102, 102)
+                            Font = _paginationFont,
+                            Color1 = _paginationGrayColor
                         }
                     }
                 };
-                flowLayout.Controls.Add(lblPageSize);
+                flowLayout.Controls.Add(_lblPageSize);
 
-                var cmbPageSize = new KryptonComboBox
+                _cmbPageSize = new KryptonComboBox
                 {
                     Width = 60,
                     DropDownStyle = ComboBoxStyle.DropDownList,
                     Margin = new Padding(0, 0, 15, 0)
                 };
-                cmbPageSize.Items.AddRange(_pageSizeOptions.Cast<object>().ToArray());
-                cmbPageSize.SelectedItem = _paginationInfo.PageSize;
-                cmbPageSize.SelectedIndexChanged += (s, e) =>
+                _cmbPageSize.Items.AddRange(_pageSizeOptions.Cast<object>().ToArray());
+                _cmbPageSize.SelectedItem = _paginationInfo.PageSize;
+                _cmbPageSize.SelectedIndexChanged += (s, e) =>
                 {
-                    if (cmbPageSize.SelectedItem != null)
+                    if (_cmbPageSize.SelectedItem != null)
                     {
-                        _paginationInfo.PageSize = (int)cmbPageSize.SelectedItem;
+                        _paginationInfo.PageSize = (int)_cmbPageSize.SelectedItem;
                         _paginationInfo.PageIndex = 1;
                         OnPaginationChanged();
                     }
                 };
-                flowLayout.Controls.Add(cmbPageSize);
+                flowLayout.Controls.Add(_cmbPageSize);
 
                 // 4. 页码跳转
-                var lblJump = new KryptonLabel
+                _lblJump = new KryptonLabel
                 {
                     Text = "跳至:",
                     AutoSize = true,
                     Margin = new Padding(0, 5, 5, 0),
                     StateCommon = {
                         ShortText = {
-                            Font = new Font("Microsoft YaHei UI", 9f),
-                            Color1 = Color.FromArgb(102, 102, 102)
+                            Font = _paginationFont,
+                            Color1 = _paginationGrayColor
                         }
                     }
                 };
-                flowLayout.Controls.Add(lblJump);
+                flowLayout.Controls.Add(_lblJump);
 
-                var txtPage = new KryptonTextBox
+                _txtPage = new KryptonTextBox
                 {
                     Width = 40,
                     Margin = new Padding(0, 0, 5, 0)
                 };
-                flowLayout.Controls.Add(txtPage);
+                flowLayout.Controls.Add(_txtPage);
 
-                var btnGo = new KryptonButton
+                _btnGo = new KryptonButton
                 {
                     Text = "GO",
+                    Name = "btnGo",
                     Size = new Size(40, 25)
                 };
-                btnGo.Click += (s, e) =>
+                _btnGo.Click += (s, e) =>
                 {
-                    if (int.TryParse(txtPage.Text, out int page) && page > 0 && page <= _paginationInfo.TotalPages)
+                    if (!int.TryParse(_txtPage.Text, out int page))
                     {
-                        GoToPage(page);
+                        MessageBox.Show("请输入有效的页码", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
+                    if (page < 1)
+                    {
+                        MessageBox.Show("页码必须大于 0", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    if (page > _paginationInfo.TotalPages)
+                    {
+                        MessageBox.Show($"页码范围应在 1 至 {_paginationInfo.TotalPages} 之间", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    GoToPage(page);
                 };
-                flowLayout.Controls.Add(btnGo);
+                flowLayout.Controls.Add(_btnGo);
 
                 _paginationPanel.Controls.Add(flowLayout);
             }
@@ -4418,8 +4512,8 @@ namespace RUINORERP.UI.UControls
                 Text = "|",
                 AutoSize = true,
                 Margin = new Padding(5, 5, 5, 0),
-                ForeColor = Color.FromArgb(204, 204, 204),
-                Font = new Font("Microsoft YaHei UI", 9f)
+                ForeColor = _separatorColor,
+                Font = _paginationFont
             };
         }
 
@@ -4429,11 +4523,14 @@ namespace RUINORERP.UI.UControls
         /// <param name="pageIndex">目标页码</param>
         private void GoToPage(int pageIndex)
         {
-            if (pageIndex < 1 || pageIndex > _paginationInfo.TotalPages)
-                return;
+            lock (_paginationLock)
+            {
+                if (pageIndex < 1 || pageIndex > _paginationInfo.TotalPages)
+                    return;
 
-            _paginationInfo.PageIndex = pageIndex;
-            OnPaginationChanged();
+                _paginationInfo.PageIndex = pageIndex;
+                OnPaginationChanged();
+            }
         }
 
         /// <summary>
@@ -4450,26 +4547,19 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void UpdatePaginationUI()
         {
-            if (!_enablePagination) return;
+            if (!_enablePagination || _btnFirst == null) return;
 
-            // 更新按钮状态
-            var btnFirst = _paginationPanel.Controls.OfType<KryptonButton>().FirstOrDefault(b => b.Text == "首页");
-            var btnPrev = _paginationPanel.Controls.OfType<KryptonButton>().FirstOrDefault(b => b.Text == "上一页");
-            var btnNext = _paginationPanel.Controls.OfType<KryptonButton>().FirstOrDefault(b => b.Text == "下一页");
-            var btnLast = _paginationPanel.Controls.OfType<KryptonButton>().FirstOrDefault(b => b.Text == "末页");
-
-            if (btnFirst != null) btnFirst.Enabled = _paginationInfo.PageIndex > 1;
-            if (btnPrev != null) btnPrev.Enabled = _paginationInfo.PageIndex > 1;
-            if (btnNext != null) btnNext.Enabled = _paginationInfo.PageIndex < _paginationInfo.TotalPages;
-            if (btnLast != null) btnLast.Enabled = _paginationInfo.PageIndex < _paginationInfo.TotalPages;
+            // 更新按钮状态（使用缓存的控件引用）
+            _btnFirst.Enabled = _paginationInfo.PageIndex > 1;
+            _btnPrev.Enabled = _paginationInfo.PageIndex > 1;
+            _btnNext.Enabled = _paginationInfo.PageIndex < _paginationInfo.TotalPages;
+            _btnLast.Enabled = _paginationInfo.PageIndex < _paginationInfo.TotalPages;
 
             // 更新页码显示
-            var lblPage = _paginationPanel.Controls.OfType<KryptonLabel>().FirstOrDefault(l => l.Text.StartsWith("第"));
-            if (lblPage != null) lblPage.Text = $"第 {_paginationInfo.PageIndex} 页 / 共 {_paginationInfo.TotalPages} 页";
+            _lblPage.Text = $"第 {_paginationInfo.PageIndex} 页 / 共 {_paginationInfo.TotalPages} 页";
 
             // 更新记录统计
-            var lblInfo = _paginationPanel.Controls.OfType<KryptonLabel>().FirstOrDefault(l => l.Text.StartsWith("共"));
-            if (lblInfo != null) lblInfo.Text = $"共 {_paginationInfo.TotalCount} 条记录，显示 {_paginationInfo.StartRecord}-{_paginationInfo.EndRecord}";
+            _lblInfo.Text = $"共 {_paginationInfo.TotalCount} 条记录，显示 {_paginationInfo.StartRecord}-{_paginationInfo.EndRecord}";
         }
 
         /// <summary>
@@ -4484,6 +4574,28 @@ namespace RUINORERP.UI.UControls
         }
 
         /// <summary>
+        /// 设置分页数据（内部实现）
+        /// </summary>
+        /// <param name="totalCount">总记录数</param>
+        /// <param name="pageIndex">当前页码</param>
+        /// <param name="pageSize">页面大小</param>
+        private void SetPaginationDataInternal(long totalCount, int pageIndex, int pageSize)
+        {
+            // 参数验证
+            if (totalCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalCount), "总记录数不能为负数");
+            if (pageIndex < 1)
+                throw new ArgumentOutOfRangeException(nameof(pageIndex), "页码必须大于 0");
+            if (pageSize < 1)
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "每页记录数必须大于 0");
+
+            _paginationInfo.TotalCount = totalCount;
+            _paginationInfo.PageIndex = pageIndex;
+            _paginationInfo.PageSize = pageSize;
+            UpdatePaginationUI();
+        }
+
+        /// <summary>
         /// 设置分页数据
         /// </summary>
         /// <param name="totalCount">总记录数</param>
@@ -4491,11 +4603,7 @@ namespace RUINORERP.UI.UControls
         /// <param name="pageSize">页面大小</param>
         public void SetPaginationData(long totalCount, int pageIndex = 1, int pageSize = 20)
         {
-            _paginationInfo.TotalCount = totalCount;
-            _paginationInfo.PageIndex = pageIndex;
-            _paginationInfo.PageSize = pageSize;
-
-            UpdatePaginationUI();
+            SetPaginationDataInternal(totalCount, pageIndex, pageSize);
         }
 
         /// <summary>
@@ -4506,11 +4614,26 @@ namespace RUINORERP.UI.UControls
         /// <param name="pageSize">页面大小</param>
         public void SetPaginationData(RefAsync<int> totalCount, int pageIndex = 1, int pageSize = 20)
         {
-            _paginationInfo.TotalCount = totalCount;
-            _paginationInfo.PageIndex = pageIndex;
-            _paginationInfo.PageSize = pageSize;
+            SetPaginationDataInternal(totalCount, pageIndex, pageSize);
+        }
 
-            UpdatePaginationUI();
+        /// <summary>
+        /// 绑定数据到DataGridView（内部实现，消除重复）
+        /// </summary>
+        private void BindDataInternal<TEntity>(List<TEntity> data)
+        {
+            var collection = data != null && data.Count > 0
+                ? data.ToBindingSortCollection()
+                : new List<TEntity>().ToBindingSortCollection();
+
+            if (this.DataSource is BindingSource bindingSource)
+            {
+                bindingSource.DataSource = collection;
+            }
+            else
+            {
+                this.DataSource = collection;
+            }
         }
 
         /// <summary>
@@ -4523,17 +4646,16 @@ namespace RUINORERP.UI.UControls
         /// <param name="pageSize">页面大小</param>
         public void BindPaginationData<TEntity>(List<TEntity> data, long totalCount, int pageIndex = 1, int pageSize = 20)
         {
-            SetPaginationData(totalCount, pageIndex, pageSize);
+            // 空数据处理
+            if (data == null || data.Count == 0)
+            {
+                SetPaginationDataInternal(0, 1, pageSize);
+                BindDataInternal(new List<TEntity>());
+                return;
+            }
 
-            // 绑定数据到DataGridView
-            if (this.DataSource is BindingSource bindingSource)
-            {
-                bindingSource.DataSource = data?.ToBindingSortCollection() ?? new List<TEntity>().ToBindingSortCollection();
-            }
-            else
-            {
-                this.DataSource = data?.ToBindingSortCollection() ?? new List<TEntity>().ToBindingSortCollection();
-            }
+            SetPaginationDataInternal(totalCount, pageIndex, pageSize);
+            BindDataInternal(data);
         }
 
         /// <summary>
@@ -4546,17 +4668,16 @@ namespace RUINORERP.UI.UControls
         /// <param name="pageSize">页面大小</param>
         public void BindPaginationData<TEntity>(List<TEntity> data, RefAsync<int> totalCount, int pageIndex = 1, int pageSize = 20)
         {
-            SetPaginationData(totalCount, pageIndex, pageSize);
+            // 空数据处理
+            if (data == null || data.Count == 0)
+            {
+                SetPaginationDataInternal(0, 1, pageSize);
+                BindDataInternal(new List<TEntity>());
+                return;
+            }
 
-            // 绑定数据到DataGridView
-            if (this.DataSource is BindingSource bindingSource)
-            {
-                bindingSource.DataSource = data?.ToBindingSortCollection() ?? new List<TEntity>().ToBindingSortCollection();
-            }
-            else
-            {
-                this.DataSource = data?.ToBindingSortCollection() ?? new List<TEntity>().ToBindingSortCollection();
-            }
+            SetPaginationDataInternal(totalCount, pageIndex, pageSize);
+            BindDataInternal(data);
         }
 
         /// <summary>
@@ -4566,6 +4687,11 @@ namespace RUINORERP.UI.UControls
         /// <param name="autoEnableThreshold">自动启用阈值（默认1000条）</param>
         public void SmartEnablePagination(long totalCount, int autoEnableThreshold = 1000)
         {
+            if (totalCount < 0)
+                throw new ArgumentOutOfRangeException(nameof(totalCount), "总记录数不能为负数");
+            if (autoEnableThreshold < 0)
+                throw new ArgumentOutOfRangeException(nameof(autoEnableThreshold), "阈值不能为负数");
+
             if (totalCount > autoEnableThreshold)
             {
                 EnablePagination = true;
@@ -4575,6 +4701,61 @@ namespace RUINORERP.UI.UControls
             {
                 EnablePagination = false;
             }
+        }
+
+        /// <summary>
+        /// 重置分页状态
+        /// </summary>
+        public void ResetPagination()
+        {
+            _paginationInfo.PageIndex = 1;
+            _paginationInfo.PageSize = 20;
+            _paginationInfo.TotalCount = 0;
+            UpdatePaginationUI();
+        }
+
+        /// <summary>
+        /// 异步绑定分页数据
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="data">分页数据列表</param>
+        /// <param name="totalCount">总记录数</param>
+        /// <param name="pageIndex">当前页码</param>
+        /// <param name="pageSize">页面大小</param>
+        public async Task BindPaginationDataAsync<TEntity>(List<TEntity> data, long totalCount, int pageIndex = 1, int pageSize = 20)
+        {
+            await Task.Run(() =>
+            {
+                SetPaginationDataInternal(totalCount, pageIndex, pageSize);
+            });
+
+            // 在 UI 线程绑定数据
+            this.Invoke((MethodInvoker)delegate
+            {
+                BindDataInternal(data ?? new List<TEntity>());
+            });
+        }
+
+        /// <summary>
+        /// 异步绑定分页数据（使用 RefAsync<int>）
+        /// </summary>
+        /// <typeparam name="TEntity">实体类型</typeparam>
+        /// <param name="data">分页数据列表</param>
+        /// <param name="totalCount">总记录数引用</param>
+        /// <param name="pageIndex">当前页码</param>
+        /// <param name="pageSize">页面大小</param>
+        public async Task BindPaginationDataAsync<TEntity>(List<TEntity> data, RefAsync<int> totalCount, int pageIndex = 1, int pageSize = 20)
+        {
+            await Task.Run(() =>
+            {
+                SetPaginationDataInternal(totalCount, pageIndex, pageSize);
+            });
+
+            // 在 UI 线程绑定数据
+            this.Invoke((MethodInvoker)delegate
+            {
+                BindDataInternal(data ?? new List<TEntity>());
+            });
         }
 
         #endregion

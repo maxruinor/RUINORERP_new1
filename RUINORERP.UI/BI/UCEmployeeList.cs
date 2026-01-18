@@ -44,7 +44,8 @@ namespace RUINORERP.UI.BI
             base.ColNameDataDictionary.TryAdd(colName, kvlist);
 
 
-          
+            dataGridView1.EnablePagination = false;
+            dataGridView1.EnableFiltering = false;
 
         }
 

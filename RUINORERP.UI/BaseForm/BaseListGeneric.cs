@@ -235,7 +235,7 @@ namespace RUINORERP.UI.BaseForm
                 dataGridView1.FieldNameList.TryAdd(item, Newkv);
             }
 
-
+            //dataGridView1.EnablePagination = true;
         }
 
 

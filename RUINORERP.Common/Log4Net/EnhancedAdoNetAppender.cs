@@ -64,7 +64,6 @@ namespace RUINORERP.Common.Log4Net
                 {
                     System.Diagnostics.Debug.WriteLine($"内部异常: {ex.InnerException.Message}");
                 }
-                throw;
             }
         }
 

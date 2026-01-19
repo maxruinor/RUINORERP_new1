@@ -88,6 +88,10 @@ namespace RUINORERP.Server.Network.DI
             // 注册缓存元数据同步服务
             services.AddSingleton<CacheMetadataSyncService>();
 
+            // 注册文件更新和清理服务
+            services.AddTransient<FileUpdateService>();
+            services.AddTransient<FileCleanupService>();
+
         }
 
         /// <summary>
@@ -171,6 +175,10 @@ namespace RUINORERP.Server.Network.DI
             
             // 注册缓存元数据同步服务
             builder.RegisterType<CacheMetadataSyncService>().AsSelf().SingleInstance();
+
+            // 注册文件更新和清理服务
+            builder.RegisterType<FileUpdateService>().AsSelf().InstancePerDependency();
+            builder.RegisterType<FileCleanupService>().AsSelf().InstancePerDependency();
         }
 
         /// <summary>

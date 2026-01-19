@@ -191,17 +191,17 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _Status= ((0));
+        private int _FileStatus = ((0));
         /// <summary>
         /// 文件状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "Status",ColDesc = "文件状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "Status" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "文件状态" )]
-        public int Status
+        [AdvQueryAttribute(ColName = "FileStatus", ColDesc = "文件状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FileStatus", DecimalDigits = 0,IsNullable = false,ColumnDescription = "文件状态" )]
+        public int FileStatus
         { 
-            get{return _Status;}
+            get{return _FileStatus; }
             set{
-            SetProperty(ref _Status, value);
+            SetProperty(ref _FileStatus, value);
                         }
         }
 

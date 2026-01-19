@@ -334,26 +334,26 @@ namespace RUINORERP.UI.FM
             else
             {
                 toolStripbtnPrint.Enabled = false;
-        }
+            }
 
-        // 异步下载并显示结案凭证图片（不阻塞BindData方法）
-        if (picboxCloseCaseImagePath != null)
-        {
-            _ = Task.Run(async () =>
+            // 异步下载并显示结案凭证图片（不阻塞BindData方法）
+            if (picboxCloseCaseImagePath != null)
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await DownloadImageAsync(entity, picboxCloseCaseImagePath, "结案凭证");
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError(ex, "异步下载结案凭证图片异常");
-                }
-            });
-        }
+                    try
+                    {
+                        await DownloadImageAsync(entity, picboxCloseCaseImagePath, c => c.CloseCaseImagePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "异步下载结案凭证图片异常");
+                    }
+                });
+            }
 
-        base.BindData(entity);
-    }
+            base.BindData(entity);
+        }
 
 
         private void LoadPayeeInfo(tb_FM_ExpenseClaim entity)

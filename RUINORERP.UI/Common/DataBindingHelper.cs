@@ -1978,9 +1978,9 @@ namespace RUINORERP.UI.Common
                 //数据源的数据类型转换为控件要求的数据类型。
                 dtpdata.Format += (s, args) =>
                 {
-                    if (args.Value == null || args.Value.ToString() == "0001-01-01 00:00:00")
+                    if (args.Value == null || (args.Value is DateTime dt && dt == default(DateTime)))
                     {
-                        args.Value = " ";
+                        // 不要设置字符串,保持null或DateTime类型
                         dtp.ValueNullable = DBNull.Value;
                     }
 
@@ -1998,12 +1998,12 @@ namespace RUINORERP.UI.Common
                     dtp.Format = DateTimePickerFormat.Custom;
                     dtp.CustomFormat = "   ";
                 }
-
+               
                 dtp.DataBindings.Add(dtpdata);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
+                // 捕获异常但不处理,避免绑定失败导致程序崩溃
             }
         }
 

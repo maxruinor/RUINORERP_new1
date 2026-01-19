@@ -196,7 +196,7 @@ namespace RUINORERP.UI.FM
                 entity.ReceivePaymentType = (int)PaymentType;
                 entity.ActionStatus = ActionStatus.新增;
                 entity.PaymentDate = System.DateTime.Now;
-             
+
                 entity.PaymentStatus = (int)PaymentStatus.草稿;
                 if (string.IsNullOrEmpty(entity.PaymentNo))
                 {
@@ -440,7 +440,7 @@ namespace RUINORERP.UI.FM
             }
 
             //显示图片
-            await base.DownloadImageAsync(entity, magicPictureBox付款凭证);
+            await base.DownloadImageAsync(entity, magicPictureBox付款凭证, c => c.PaymentImagePath);
             base.BindData(entity);
         }
 
@@ -689,14 +689,7 @@ namespace RUINORERP.UI.FM
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_PaymentRecordDetails);
                     if (uploadImg)
                     {
-                        ////更新图片名后保存到数据库
-                        //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_PaymentRecordDetail>(EditEntity.tb_FM_PaymentRecordDetails)
-                        //    .UpdateColumns(t => new { t.EvidenceImagePath })
-                        //    .ExecuteCommandAsync();
-                        //if (ImgCounter > 0)
-                        //{
                         MainForm.Instance.PrintInfoLog($"图片保存成功,。");
-                        //}
                     }
                     else
                     {
@@ -720,7 +713,7 @@ namespace RUINORERP.UI.FM
                             if (updatedImages.Count > 0)
                             {
                                 // 只处理更新的图片
-                                await UploadUpdatedImagesAsync(EditEntity, updatedImages);
+                                await UploadUpdatedImagesAsync<tb_FM_PaymentRecord>(EditEntity, updatedImages, c => c.PaymentImagePath);
                             }
                         }
                     }

@@ -858,7 +858,7 @@ namespace RUINORERP.UI.BaseForm
         {
             try
             {
-         
+
 
                 // 如果当前没有编辑实体或没有有效的单据ID，则不订阅
                 if (EditEntity == null || EditEntity.PrimaryKeyID <= 0 || _lockStatusNotificationService == null)
@@ -1174,13 +1174,15 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">业务实体</param>
         /// <param name="magicPicBox">图片控件</param>
         /// <param name="relatedField">关联字段名(可选，不传则下载所有字段)</param>
-        public async Task DownloadImageAsync(T entity, MagicPictureBox magicPicBox, string relatedField = null)
+        public async Task DownloadImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> TargetField)
         {
             magicPicBox.MultiImageSupport = true;
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
-                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity, relatedField);
+                MemberInfo memberInfo = TargetField.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity, columnName);
 
                 if (list == null || list.Count == 0)
                 {
@@ -1343,7 +1345,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="entity">销售订单实体</param>
         /// <param name="updatedImages">需要更新的图片列表</param>
         /// <returns>上传是否成功</returns>
-        public async Task<bool> UploadUpdatedImagesAsync(T entity, List<Tuple<byte[], ImageInfo>> updatedImages)
+        public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
         {
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
@@ -1356,6 +1358,9 @@ namespace RUINORERP.UI.BaseForm
 
                 bool allSuccess = true;
                 int successCount = 0;
+
+                MemberInfo memberInfo = TargetField.GetMemberInfo();
+                string columnName = memberInfo.Name;
 
                 // 遍历上传所有需要更新的图片
                 foreach (var imageDataWithInfo in updatedImages)
@@ -1383,7 +1388,7 @@ namespace RUINORERP.UI.BaseForm
                     long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
 
                     // 上传图片(使用新的接口)
-                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId);
+                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
 
                     if (response.IsSuccess)
                     {
@@ -2337,13 +2342,13 @@ namespace RUINORERP.UI.BaseForm
         protected async override void DoButtonClick(MenuItemEnums menuItem)
         {
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
-            
+
             // 初始化防重复操作服务（延迟初始化，避免设计时错误）
             if (_guardService == null)
             {
                 _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
             }
-            
+
             // 防重复点击检查
             long currentEntityId = EditEntity?.PrimaryKeyID ?? 0;
             if (_guardService.ShouldBlockOperation(menuItem, this.GetType().Name, currentEntityId, showStatusMessage: true))
@@ -2353,7 +2358,7 @@ namespace RUINORERP.UI.BaseForm
 
             // 记录操作
             _guardService.RecordOperation(menuItem, this.GetType().Name, currentEntityId);
-            
+
             string buttonName = ConvertActionToButtonName(menuItem);
 
             //操作前是不是锁定。自己排除
@@ -3688,7 +3693,7 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 int flag = (int)ReflectionHelper.GetPropertyValue(EditEntity, nameof(ReceivePaymentType)); ;
-               BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
+                BizEntityInfo entityInfo = _entityInfoService.GetEntityInfo<T>(flag);
                 if (entityInfo != null)
                 {
                     ae.BillNo = EditEntity.GetPropertyValue(entityInfo.NoField).ToString();

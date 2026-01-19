@@ -2,6 +2,7 @@ using Azure;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Business.Config;
+using RUINORERP.Global;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.ConfigModel;
@@ -24,12 +25,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static RUINORERP.Server.Network.Services.FileCleanupService;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
     /// <summary>
     /// 文件处理器 - 处理文件上传、下载、删除等业务逻辑
+    /// 集成了文件更新服务和清理服务,支持完整的文件生命周期管理
     /// </summary>
     [CommandHandler("FileCommandHandler", priority: 50)]
     public class FileCommandHandler : BaseCommandHandler
@@ -44,6 +47,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
         private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController;
         private readonly ApplicationContext _applicationContext;
+        
+        // 新增服务:文件更新和清理
+        private readonly FileUpdateService _fileUpdateService;
+        private readonly FileCleanupService _fileCleanupService;
         /// <summary>
         /// 解析路径中的环境变量
         /// 支持 %ENV_VAR% 的格式
@@ -75,7 +82,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             ILogger<FileCommandHandler> logger = null,
             tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> fileStorageInfoController = null,
             tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController = null,
-            tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null)
+            tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null,
+            FileUpdateService fileUpdateService = null,
+            FileCleanupService fileCleanupService = null)
         {
             _applicationContext = applicationContext;
             _sessionService = sessionService;
@@ -110,6 +119,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _businessRelationController = businessRelationController ?? throw new ArgumentNullException(nameof(businessRelationController));
             _fileStorageVersionController = fileStorageVersionController;
 
+            // 注入文件更新和清理服务(通过DI容器)
+            _fileUpdateService = fileUpdateService ?? throw new ArgumentNullException(nameof(fileUpdateService));
+            _fileCleanupService = fileCleanupService ?? throw new ArgumentNullException(nameof(fileCleanupService));
+
             // 初始化文件存储路径
             FileStorageHelper.InitializeStoragePath(_serverConfig);
 
@@ -122,6 +135,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 FileCommands.FileList,
                 FileCommands.FilePermissionCheck,
                 FileCommands.FileStorageInfo
+                // FileCommands.FileUpdate, // 新增文件更新命令(待实现)
+                // FileCommands.FileCleanup, // 新增文件清理命令(待实现)
+                // FileCommands.FileVersionHistory // 新增版本历史命令(待实现)
             );
         }
 
@@ -1004,7 +1020,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 更新数据库文件状态为已删除（逻辑删除）
                     try
                     {
-                        fileStorageInfo.Status = 0; // 标记为删除
+                        fileStorageInfo.FileStatus = (int)FileStatus.Deleted; // 标记为删除
                         await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
                         _logger?.LogDebug("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}",
                             fileStorageInfo.FileId, isPhysicalDelete ? "物理删除" : "逻辑删除");
@@ -1236,20 +1252,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     case "read":
                     case "download":
                         // 所有有效状态的文件都可以读取/下载
-                        hasPermission = fileInfo.Status == 1;
+                        hasPermission = fileInfo.FileStatus == (int)FileStatus.Active;
                         break;
 
                     case "write":
                     case "update":
                         // 检查文件是否属于当前用户
-                        hasPermission = fileInfo.Status == 1 &&
+                        hasPermission = fileInfo.FileStatus == (int)FileStatus.Active &&
                             (fileInfo.Created_by == executionContext.UserId ||
                              fileInfo.Modified_by == executionContext.UserId);
                         break;
 
                     case "delete":
                         // 删除权限检查:文件属于当前用户或文件未被其他业务引用
-                        hasPermission = fileInfo.Status == 1;
+                        hasPermission = fileInfo.FileStatus == (int)FileStatus.Active;
                         if (hasPermission && fileInfo.Created_by != executionContext.UserId)
                         {
                             // 检查是否被其他业务引用

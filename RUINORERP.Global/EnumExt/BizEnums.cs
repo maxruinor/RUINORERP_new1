@@ -122,6 +122,56 @@ namespace RUINORERP.Global
         Common          // 通用
     }
 
+    /// <summary>
+    /// 文件更新策略
+    /// </summary>
+    public enum UpdateStrategy
+    {
+        /// <summary>
+        /// 仅新增 - 保留旧文件,创建新关联(默认)
+        /// 适用于:需要保留历史记录的场景
+        /// </summary>
+        AppendOnly = 0,
+
+        /// <summary>
+        /// 替换模式 - 保留历史版本,更新关联到新文件
+        /// 适用于:需要历史追溯但只显示最新版本的场景
+        /// </summary>
+        Replace = 1,
+
+        /// <summary>
+        /// 覆盖模式 - 删除旧文件,创建新文件
+        /// 适用于:不需要历史记录的场景
+        /// </summary>
+        Overwrite = 2
+    }
+
+
+    /// <summary>
+    /// 文件管理系统中的文件状态枚举
+    /// </summary>
+    public enum FileStatus
+    {
+        /// <summary>
+        /// 正常状态 - 文件有效且有业务关联
+        /// </summary>
+        Active = 0,
+
+        /// <summary>
+        /// 已过期 - 超过ExpireTime
+        /// </summary>
+        Expired = 1,
+
+        /// <summary>
+        /// 孤立文件 - 物理文件存在但无业务关联
+        /// </summary>
+        Orphaned = 2,
+
+        /// <summary>
+        /// 逻辑删除 - 已标记删除(不参与清理)
+        /// </summary>
+        Deleted = 3
+    }
 
     public enum PlatformType
     {

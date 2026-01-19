@@ -211,6 +211,12 @@ namespace RUINORERP.UI.Network.DI
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();
+            
+            // 注册文件更新客户端服务
+            builder.RegisterType<FileUpdateClientService>()
+                .AsSelf()
+                .InstancePerLifetimeScope()
+                .PropertiesAutowired();
 
             // 注册锁状态通知服务
             builder.RegisterType<LockStatusNotificationService>()

@@ -1,14 +1,15 @@
+using Microsoft.Extensions.DependencyInjection;
+using RUINORERP.Business;
+using RUINORERP.Global;
+using RUINORERP.IServices;
+using RUINORERP.Model;
+using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.Server.Network.CommandHandlers;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using System.Linq;
-using RUINORERP.PacketSpec.Models.FileManagement;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using RUINORERP.IServices;
-using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace RUINORERP.Server.Controls
 {
@@ -22,7 +23,7 @@ namespace RUINORERP.Server.Controls
         private FileStorageSummary _currentStorageSummary;
         private List<FileCategoryInfo> _fileCategories;
         private bool _isDisposed = false;
-        
+
         // 真实的业务控制器
         private readonly tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController;
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
@@ -30,19 +31,19 @@ namespace RUINORERP.Server.Controls
         public FileManagementControl()
         {
             InitializeComponent();
-            
+
             // 从依赖注入容器获取业务控制器
             _fileStorageInfoController = Program.ServiceProvider.GetService<tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo>>();
             _businessRelationController = Program.ServiceProvider.GetService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
-            
+
             // 设置定时器，定期更新存储信息
             _updateTimer = new Timer { Interval = 60000 }; // 每分钟更新一次
             _updateTimer.Tick += UpdateTimer_Tick;
             _updateTimer.Start();
-            
+
             // 初始化列表视图
             InitializeListView();
-            
+
             // 初始加载数据
             LoadStorageInfo();
         }
@@ -61,14 +62,14 @@ namespace RUINORERP.Server.Controls
                     _updateTimer.Tick -= UpdateTimer_Tick;
                     _updateTimer.Dispose();
                 }
-                
+
                 // 释放ListView资源
                 if (listView1 != null)
                 {
                     listView1.Items.Clear();
                     listView1.Dispose();
                 }
-                
+
                 _isDisposed = true;
             }
             base.Dispose(disposing);
@@ -116,20 +117,20 @@ namespace RUINORERP.Server.Controls
 
         private async void UpdateTimer_Tick(object sender, EventArgs e)
         {
-           await LoadStorageInfo();
+            await LoadStorageInfo();
         }
 
         public async Task LoadStorageInfo()
-        {   
+        {
             try
-            {   
+            {
                 // 使用真实数据库服务获取存储信息
                 await LoadRealStorageInfoAsync();
-                
+
                 // 安全更新UI（确保在UI线程上执行）
                 if (this.InvokeRequired)
                 {
-                    this.Invoke(new Action(() => 
+                    this.Invoke(new Action(() =>
                     {
                         UpdateStorageSummary();
                         UpdateCategoryList();
@@ -144,7 +145,7 @@ namespace RUINORERP.Server.Controls
                 }
             }
             catch (Exception ex)
-            {   
+            {
                 // 安全更新错误状态
                 if (this.InvokeRequired)
                 {
@@ -162,7 +163,7 @@ namespace RUINORERP.Server.Controls
         /// 安全更新状态标签
         /// </summary>
         private void UpdateStatusLabels(bool success, string message)
-        {   
+        {
             lblLastUpdateTime.Text = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             picStatusIndicator.BackColor = success ? System.Drawing.Color.Green : System.Drawing.Color.Red;
             lblStatus.Text = message;
@@ -179,15 +180,15 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 性能优化：使用分页查询，避免一次性加载大量数据
-                var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.Status == 1 && c.isdeleted == false);
-                
+                var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.isdeleted == false);
+
                 // 安全检查：如果数据量过大，限制处理数量
                 const int MAX_FILES_TO_PROCESS = 10000;
                 if (fileInfos != null && fileInfos.Count > 0)
                 {
                     // 限制处理数量，避免内存溢出
                     var filesToProcess = fileInfos.Take(MAX_FILES_TO_PROCESS).ToList();
-                    
+
                     _currentStorageSummary.TotalFileCount = fileInfos.Count; // 显示总数，但只处理部分数据
                     _currentStorageSummary.TotalStorageSize = filesToProcess.Sum(f => ((tb_FS_FileStorageInfo)f).FileSize);
 

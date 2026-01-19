@@ -231,7 +231,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         /// <param name="entityPara">实体参数</param>
         /// <param name="actionStatus">操作状态</param>
-        public override void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
+        public override async void BindData(tb_SaleOrder entityPara, ActionStatus actionStatus)
         {
             tb_SaleOrder entity = entityPara as tb_SaleOrder;
 
@@ -623,7 +623,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.BindData(entity);
 
             // 调用基类方法下载图片，指定关联字段
-            DownloadImageAsync(entity, magicPictureBox订金付款凭证, "VoucherImage");
+           await DownloadImageAsync(entity, magicPictureBox订金付款凭证, c=> c.VoucherImage);
         }
 
         /// <summary>
@@ -1333,7 +1333,7 @@ namespace RUINORERP.UI.PSI.SAL
                             if (updatedImages.Count > 0)
                             {
                                 // 只处理更新的图片
-                                await UploadUpdatedImagesAsync(EditEntity, updatedImages);
+                                await UploadUpdatedImagesAsync<tb_SaleOrder>(EditEntity, updatedImages, c => c.VoucherImage);
                             }
                         }
                     }

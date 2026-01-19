@@ -21,25 +21,37 @@ namespace RUINORERP.Server.Helpers
         public static void InitializeStoragePath(ServerGlobalConfig serverConfig)
         {
             _serverConfig = serverConfig;
-            
+
             // 确保根存储目录存在
             if (!string.IsNullOrEmpty(_serverConfig.FileStoragePath))
             {
                 var resolvedPath = ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
-                
+
                 // 安全检查：确保存储路径不在程序运行目录或其子目录中
                 if (IsPathInProgramDirectory(resolvedPath))
                 {
                     throw new InvalidOperationException($"文件存储路径 '{resolvedPath}' 不能设置在程序运行目录或其子目录中。请选择其他目录以防止重新部署时误删文件。");
                 }
-                
+
                 if (!Directory.Exists(resolvedPath))
                 {
                     Directory.CreateDirectory(resolvedPath);
                 }
             }
-            
-            
+
+
+        }
+
+        /// <summary>
+        /// 获取存储路径(解析环境变量后的绝对路径)
+        /// </summary>
+        /// <returns>存储路径</returns>
+        public static string GetStoragePath()
+        {
+            if (_serverConfig == null || string.IsNullOrEmpty(_serverConfig.FileStoragePath))
+                return string.Empty;
+
+            return ResolveEnvironmentVariables(_serverConfig.FileStoragePath);
         }
         
         /// <summary>

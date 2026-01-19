@@ -1,12 +1,13 @@
-using System;
-using System.Threading.Tasks;
-using RUINORERP.Model;
-using RUINORERP.Business;
-using System.IO;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
+using RUINORERP.Global;
 using RUINORERP.IServices;
-using System.Linq;
+using RUINORERP.Model;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Helpers
 {
@@ -28,20 +29,20 @@ namespace RUINORERP.Server.Helpers
         /// <param name="contentHash">文件内容哈希值（可选）</param>
         /// <returns>文件存储信息实体</returns>
         public static tb_FS_FileStorageInfo CreateFileStorageInfo(
-            string fileName, 
-            long fileSize, 
-            string fileType, 
-            string storagePath, 
-            int businessType, 
+            string fileName,
+            long fileSize,
+            string fileType,
+            string storagePath,
+            int businessType,
             long userId,
             string contentHash = null)
         {
-            
+
             // 如果未提供内容哈希值，则使用传统的哈希码生成方式
             string hashValue = contentHash ?? GenerateHashCode(fileName, fileSize, fileType);
-            
+
             var fileExtension = Path.GetExtension(fileName).TrimStart('.').ToLower();
-            
+
             var fileStorageInfo = new tb_FS_FileStorageInfo
             {
                 OriginalFileName = fileName,
@@ -51,11 +52,11 @@ namespace RUINORERP.Server.Helpers
                 FileExtension = fileExtension, // 设置文件扩展名
                 FileSize = fileSize,
                 HashValue = hashValue,
-               // ContentHash = contentHash, // 存储基于内容的哈希值
+                // ContentHash = contentHash, // 存储基于内容的哈希值
                 StorageProvider = "Local",
                 StoragePath = storagePath,
                 CurrentVersion = 1,
-                Status = 1, // 1表示正常状态
+                FileStatus = (int)FileStatus.Active, // 正常状态
                 ExpireTime = DateTime.Now.AddYears(10), // 默认10年过期
                 Created_at = DateTime.Now,
                 Created_by = userId,
@@ -104,7 +105,7 @@ namespace RUINORERP.Server.Helpers
         }
 
 
-        
+
 
         /// <summary>
         /// 检查业务关联是否已存在
@@ -151,9 +152,9 @@ namespace RUINORERP.Server.Helpers
         /// <param name="userId">用户ID</param>
         /// <returns>文件版本实体</returns>
         public static tb_FS_FileStorageVersion CreateFileStorageVersion(
-            long fileId, 
-            int versionNo, 
-            string updateReason, 
+            long fileId,
+            int versionNo,
+            string updateReason,
             long userId)
         {
             var fileStorageVersion = new tb_FS_FileStorageVersion
@@ -197,7 +198,7 @@ namespace RUINORERP.Server.Helpers
         /// <returns>存储文件名</returns>
         public static string GenerateStorageFileName(string originalFileName)
         {
-           // var fileExtension = Path.GetExtension(originalFileName);
+            // var fileExtension = Path.GetExtension(originalFileName);
             var fileId = Guid.NewGuid().ToString("N");
             return $"{fileId}";
             //return $"{fileId}{fileExtension}";
@@ -280,7 +281,7 @@ namespace RUINORERP.Server.Helpers
 
                 // 验证文件是否存在
                 var fileExists = await ValidateFileExistsAsync(
-                    businessRelation.FileId, 
+                    businessRelation.FileId,
                     fileStorageInfoController,
                     logger);
                 if (!fileExists)
@@ -319,7 +320,7 @@ namespace RUINORERP.Server.Helpers
                 // 保存业务关联
                 var result = await businessRelationController.SaveOrUpdate(businessRelation);
                 logger?.Debug("没有找到需要迁移的文件记录");
-                
+
                 return result.Succeeded;
             }
             catch (Exception ex)
@@ -345,7 +346,7 @@ namespace RUINORERP.Server.Helpers
             ILogger logger = null)
         {
             var results = new Dictionary<long, bool>();
-            
+
             foreach (var relation in businessRelations)
             {
                 bool success = await SaveBusinessRelationAsync(
@@ -355,10 +356,10 @@ namespace RUINORERP.Server.Helpers
                     allowDuplicate: false,
                     setAsMain: true,
                     logger);
-                
+
                 results[relation.RelationId] = success;
             }
-            
+
             return results;
         }
 
@@ -396,7 +397,7 @@ namespace RUINORERP.Server.Helpers
             {
                 var otherRelations = await relationController.BaseQueryAsync(
                     $"BusinessType = {businessType} AND BusinessNo = '{businessNo}' AND IsMainFile = 1 AND FileId != {excludeFileId} AND IsActive = 1");
-                
+
                 foreach (var relation in otherRelations)
                 {
                     var businessRelation = relation as tb_FS_BusinessRelation;
@@ -439,7 +440,7 @@ namespace RUINORERP.Server.Helpers
                 if (fileStorageVersion.VersionNo <= 0)
                 {
                     fileStorageVersion.VersionNo = await CalculateNewVersionNoAsync(
-                        fileStorageVersion.FileId, 
+                        fileStorageVersion.FileId,
                         fileStorageVersionController);
                 }
 
@@ -455,7 +456,7 @@ namespace RUINORERP.Server.Helpers
                             logger);
 
                         // 保存新版本
-                var result = await fileStorageVersionController.SaveOrUpdate(fileStorageVersion);
+                        var result = await fileStorageVersionController.SaveOrUpdate(fileStorageVersion);
                         if (!result.Succeeded)
                         {
                             fileStorageVersionController._unitOfWorkManage.RollbackTran();
@@ -510,7 +511,7 @@ namespace RUINORERP.Server.Helpers
                 var versions = await versionController.BaseQueryAsync($"FileId = {fileId}");
                 // 不再需要设置IsActive属性，版本控制通过VersionNo实现
                 // 新版本总是通过UpdateFileCurrentVersionAsync设置为当前版本
-                logger?.Debug("处理文件版本控制: FileId={FileId}, 版本数={VersionCount}", 
+                logger?.Debug("处理文件版本控制: FileId={FileId}, 版本数={VersionCount}",
                     fileId, versions.Count);
             }
             catch (Exception ex)
@@ -572,7 +573,7 @@ namespace RUINORERP.Server.Helpers
                     {
                         // 不再需要检查IsActive属性，直接删除超出限制的旧版本
                         await versionController.BaseDeleteAsync(version);
-                        logger?.Debug("已删除旧文件版本: FileId={FileId}, VersionNo={VersionNo}", 
+                        logger?.Debug("已删除旧文件版本: FileId={FileId}, VersionNo={VersionNo}",
                             version.FileId, version.VersionNo);
                     }
                 }

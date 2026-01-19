@@ -345,7 +345,7 @@ namespace RUINORERP.UI.Network.Services
                 // 设置默认值
                 StorageProvider = "Local", // 默认本地存储
                 CurrentVersion = 1,         // 初始版本
-                Status = 0,                 // 正常状态
+                FileStatus = (int)FileStatus.Active,                 // 正常状态
                 ExpireTime = DateTime.MaxValue, // 永不过期
                 StoragePath = string.Empty
             };

@@ -1804,6 +1804,7 @@ namespace RUINORERP.Server
                 await SafetyStockWorkflowConfig.ScheduleDailySafetyStockCalculation(WorkflowHost);
                 await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(WorkflowHost);
                 await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(WorkflowHost);
+                await FileCleanupWorkflowConfig.ScheduleFileCleanup(WorkflowHost);
 
                 PrintInfoLog("工作流调度完成");
             }

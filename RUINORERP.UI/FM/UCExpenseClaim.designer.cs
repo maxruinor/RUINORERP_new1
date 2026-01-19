@@ -47,7 +47,7 @@
             this.cmbCurrency_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblReview = new Krypton.Toolkit.KryptonLabel();
             this.lblCurrency_ID = new Krypton.Toolkit.KryptonLabel();
-            this.magicPictureBox1 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
+            this.picboxCloseCaseImagePath = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             this.txtClaimNo = new Krypton.Toolkit.KryptonTextBox();
             this.lblApprovalResults = new Krypton.Toolkit.KryptonLabel();
             this.lblClaimNo = new Krypton.Toolkit.KryptonLabel();
@@ -70,6 +70,7 @@
             this.lblstatus = new Krypton.Toolkit.KryptonLabel();
             this.txtUntaxedAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedAmount = new Krypton.Toolkit.KryptonLabel();
+            this.lblCloseCaseImagePath = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -84,7 +85,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picboxCloseCaseImagePath)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).BeginInit();
             this.kryptonSplitContainer2.Panel1.SuspendLayout();
@@ -116,6 +117,7 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblCloseCaseImagePath);
             this.kryptonPanel1.Controls.Add(this.lblStore_ID);
             this.kryptonPanel1.Controls.Add(this.cmbProjectGroup);
             this.kryptonPanel1.Controls.Add(this.lblPrintStatus);
@@ -131,7 +133,7 @@
             this.kryptonPanel1.Controls.Add(this.cmbCurrency_ID);
             this.kryptonPanel1.Controls.Add(this.lblReview);
             this.kryptonPanel1.Controls.Add(this.lblCurrency_ID);
-            this.kryptonPanel1.Controls.Add(this.magicPictureBox1);
+            this.kryptonPanel1.Controls.Add(this.picboxCloseCaseImagePath);
             this.kryptonPanel1.Controls.Add(this.txtClaimNo);
             this.kryptonPanel1.Controls.Add(this.lblApprovalResults);
             this.kryptonPanel1.Controls.Add(this.lblClaimNo);
@@ -283,20 +285,20 @@
             this.lblCurrency_ID.TabIndex = 135;
             this.lblCurrency_ID.Values.Text = "币别";
             // 
-            // magicPictureBox1
+            // picboxCloseCaseImagePath
             // 
-            this.magicPictureBox1.AllowDrop = true;
-            this.magicPictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.magicPictureBox1.ImagePaths = "";
-            this.magicPictureBox1.InfoPanelDisplayTime = 3000;
-            this.magicPictureBox1.Location = new System.Drawing.Point(927, 145);
-            this.magicPictureBox1.MultiImageSupport = true;
-            this.magicPictureBox1.Name = "magicPictureBox1";
-            this.magicPictureBox1.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox1.RowImage")));
-            this.magicPictureBox1.ShowImageInfo = true;
-            this.magicPictureBox1.Size = new System.Drawing.Size(178, 95);
-            this.magicPictureBox1.TabIndex = 162;
-            this.magicPictureBox1.TabStop = false;
+            this.picboxCloseCaseImagePath.AllowDrop = true;
+            this.picboxCloseCaseImagePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.picboxCloseCaseImagePath.ImagePaths = "";
+            this.picboxCloseCaseImagePath.InfoPanelDisplayTime = 3000;
+            this.picboxCloseCaseImagePath.Location = new System.Drawing.Point(927, 145);
+            this.picboxCloseCaseImagePath.MultiImageSupport = true;
+            this.picboxCloseCaseImagePath.Name = "picboxCloseCaseImagePath";
+            this.picboxCloseCaseImagePath.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("picboxCloseCaseImagePath.RowImage")));
+            this.picboxCloseCaseImagePath.ShowImageInfo = true;
+            this.picboxCloseCaseImagePath.Size = new System.Drawing.Size(178, 95);
+            this.picboxCloseCaseImagePath.TabIndex = 162;
+            this.picboxCloseCaseImagePath.TabStop = false;
             // 
             // txtClaimNo
             // 
@@ -503,6 +505,14 @@
             this.lblUntaxedAmount.TabIndex = 153;
             this.lblUntaxedAmount.Values.Text = "未税本位币";
             // 
+            // lblCloseCaseImagePath
+            // 
+            this.lblCloseCaseImagePath.Location = new System.Drawing.Point(859, 148);
+            this.lblCloseCaseImagePath.Name = "lblCloseCaseImagePath";
+            this.lblCloseCaseImagePath.Size = new System.Drawing.Size(62, 20);
+            this.lblCloseCaseImagePath.TabIndex = 171;
+            this.lblCloseCaseImagePath.Values.Text = "审批意见";
+            // 
             // UCExpenseClaim
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -527,7 +537,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbPayeeInfoID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbEmployee_ID)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.cmbCurrency_ID)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picboxCloseCaseImagePath)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
             this.kryptonSplitContainer2.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel2)).EndInit();
@@ -568,7 +578,7 @@
         private Krypton.Toolkit.KryptonTextBox txtApprovalOpinions;
         private Krypton.Toolkit.KryptonLabel lblApprovalResults;
         private Krypton.Toolkit.KryptonCheckBox chkApprovalResults;
-        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPictureBox1;
+        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox picboxCloseCaseImagePath;
         private Krypton.Toolkit.KryptonLabel lblDataStatus;
         private Krypton.Toolkit.KryptonLabel lblPrintStatus;
         private Krypton.Toolkit.KryptonLabel lblReview;
@@ -584,5 +594,6 @@
         private Krypton.Toolkit.KryptonComboBox cmbPayStatus;
         private Krypton.Toolkit.KryptonComboBox cmbPaytype_ID;
         private Krypton.Toolkit.KryptonLabel lblPaytype_ID;
+        private Krypton.Toolkit.KryptonLabel lblCloseCaseImagePath;
     }
 }

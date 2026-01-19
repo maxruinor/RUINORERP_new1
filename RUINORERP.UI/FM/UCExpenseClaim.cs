@@ -44,6 +44,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.UI.Network.Services;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
@@ -332,11 +334,26 @@ namespace RUINORERP.UI.FM
             else
             {
                 toolStripbtnPrint.Enabled = false;
-            }
-            //显示结案凭证图片
-            LoadImageData(entity.CloseCaseImagePath);
-            base.BindData(entity);
         }
+
+        // 异步下载并显示结案凭证图片（不阻塞BindData方法）
+        if (picboxCloseCaseImagePath != null)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await DownloadImageAsync(entity, picboxCloseCaseImagePath, "结案凭证");
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "异步下载结案凭证图片异常");
+                }
+            });
+        }
+
+        base.BindData(entity);
+    }
 
 
         private void LoadPayeeInfo(tb_FM_ExpenseClaim entity)
@@ -359,6 +376,10 @@ namespace RUINORERP.UI.FM
             #endregion
         }
 
+        /// <summary>
+        /// 加载图片数据
+        /// </summary>
+        /// <param name="CloseCaseImagePath">结案凭证图片路径</param>
         private async Task LoadImageData(string CloseCaseImagePath)
         {
             if (!string.IsNullOrWhiteSpace(CloseCaseImagePath))
@@ -367,35 +388,57 @@ namespace RUINORERP.UI.FM
                 if (CloseCaseImagePath.Contains(";"))
                 {
                     // 启用多图片支持模式
-                    magicPictureBox1.MultiImageSupport = true;
-                    magicPictureBox1.ImagePaths = CloseCaseImagePath;
+                    picboxCloseCaseImagePath.MultiImageSupport = true;
+                    picboxCloseCaseImagePath.ImagePaths = CloseCaseImagePath;
                 }
                 else
                 {
-                    // 单图片模式
-                    magicPictureBox1.MultiImageSupport = false;
+                    // 单图片模式 - 从文件服务器下载图片
+                    picboxCloseCaseImagePath.MultiImageSupport = false;
 
-                    //try
-                    //{
-                    //    var image = await DownloadImageAsync(
-                    //        CloseCaseImagePath, 
-                    //        MainForm.Instance.AppContext);
+                    try
+                    {
+                        var ctrpay = Startup.GetFromFac<FileManagementController>();
+                        var list = await ctrpay.DownloadImageAsync(EditEntity);
 
-                    //    if (image != null)
-                    //    {
-                    //        magicPictureBox1.Image = image;
-                    //        magicPictureBox1.Visible = true;
-                    //    }
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                    //}
+                        if (list != null && list.Count > 0)
+                        {
+                            List<byte[]> imageDataList = new List<byte[]>();
+                            List<ImageInfo> imageInfos = new List<ImageInfo>();
+
+                            foreach (var downloadResponse in list)
+                            {
+                                if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                                {
+                                    foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                                    {
+                                        if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
+                                        {
+                                            imageDataList.Add(fileStorageInfo.FileData);
+                                            imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (imageDataList.Count > 0)
+                            {
+                                picboxCloseCaseImagePath.LoadImages(imageDataList, imageInfos, true);
+                                picboxCloseCaseImagePath.Visible = true;
+                                MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张结案凭证图片");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "下载结案凭证图片异常");
+                        MainForm.Instance.uclog.AddLog($"下载结案凭证图片出错：{ex.Message}");
+                    }
                 }
             }
             else
             {
-                magicPictureBox1.Visible = false;
+                picboxCloseCaseImagePath.Visible = false;
             }
         }
 
@@ -442,7 +485,7 @@ namespace RUINORERP.UI.FM
 
 
             // 为结案凭证图片控件添加双击事件，支持上传图片
-            magicPictureBox1.DoubleClick += MagicPictureBox1_DoubleClick;
+            picboxCloseCaseImagePath.DoubleClick += MagicPictureBox1_DoubleClick;
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -559,93 +602,7 @@ namespace RUINORERP.UI.FM
 
         }
 
-        /// <summary>
-        /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
-        /// </summary>
-        /// <param name="RemoteSave"></param>
-        /// <returns></returns>
-        private async Task<bool> SaveImage(bool RemoteSave)
-        {
-            bool result = true;
-            foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
-            {
-                PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
-                foreach (PropertyInfo prop in props)
-                {
-                    var col = sgd[prop.Name];
-                    if (col != null)
-                    {
-                        int realIndex = grid1.Columns.GetColumnInfo(col.UniqueId).Index;
-                        if (col.CustomFormat == CustomFormatType.WebPathImage)
-                        {
-                            //保存图片到本地临时目录，图片数据保存在grid1控件中，所以要循环控件的行，控件真实数据行以1为起始
-                            int totalRowsFlag = grid1.RowsCount;
-                            if (grid1.HasSummary)
-                            {
-                                totalRowsFlag--;
-                            }
-                            for (int i = 1; i < totalRowsFlag; i++)
-                            {
-                                var model = grid1[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
-                                if (grid1[i, realIndex].Value == null)
-                                {
-                                    continue;
-                                }
-                                string fileName = string.Empty;
-                                if (grid1[i, realIndex].Value.ToString().Contains(".jpg") && grid1[i, realIndex].Value.ToString() == detail.GetPropertyValue(prop.Name).ToString())
-                                {
-                                    fileName = grid1[i, realIndex].Value.ToString();
-                                    //  fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-                                    //if (grid1[i, realIndex].Tag == null && valueImageWeb.CellImageBytes != null)
-                                    if (valueImageWeb.CellImageBytes != null)
-                                    {
-                                        //保存到本地
-                                        //if (EditEntity.DataStatus == (int)DataStatus.草稿)
-                                        //{
-                                        //    //保存在本地临时目录
-                                        //    ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                        //    grid1[i, realIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
-                                        //}
-                                        //else
-                                        //{
-                                        //上传到服务器，删除本地
-                                        //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
-                                        //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                        UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
-                                        var upladurl = configManager.GetValue("WebServerUploadUrl");
-                                        string uploadRsult = await httpWebService.UploadImageAsyncOK(upladurl, fileName, valueImageWeb.CellImageBytes, "upload");
-                                        //string uploadRsult = await HttpHelper.UploadImageAsyncOK("http://192.168.0.99:8080/upload/", fileName, "upload");
-                                        if (uploadRsult.Contains("上传成功"))
-                                        {
-                                            MainForm.Instance.PrintInfoLog(uploadRsult);
-                                        }
-                                        else
-                                        {
-                                            MainForm.Instance.PrintInfoLog("请重试！ " + uploadRsult);
-                                            MainForm.Instance.LoginWebServer();
-                                        }
-
-
-                                        //}
-                                    }
-                                }
-
-                                //UploadImage("http://127.0.0.1/upload", "D:/test.jpg", "upload");
-                                // string uploadRsult = await HttpHelper.UploadImageAsync(AppContext.WebServerUrl + @"/upload", fileName, "amw");
-                                //                            string uploadRsult = await HttpHelper.UploadImage(AppContext.WebServerUrl + @"/upload", fileName, "upload");
-
-                            }
-
-
-                        }
-                    }
-                }
-            }
-            return result;
-        }
 
         List<tb_FM_ExpenseClaimDetail> details = new List<tb_FM_ExpenseClaimDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
@@ -719,7 +676,7 @@ namespace RUINORERP.UI.FM
                 }
 
                 // 处理结案凭证图片上传
-                if (NeedValidated && magicPictureBox1.Image != null)
+                if (NeedValidated && picboxCloseCaseImagePath.Image != null)
                 {
                     string fileName = $"CloseCase_{EditEntity.ClaimNo}_{DateTime.Now:yyyyMMddHHmmss}.png";
                     string fileId = "";// await UploadCloseCaseImage(magicPictureBox1.Image, fileName);
@@ -736,22 +693,16 @@ namespace RUINORERP.UI.FM
                 }
 
                 if (NeedValidated)
-                {//处理图片
+                {
+                    // 处理明细凭证图片上传（使用文件服务器方式）
                     bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
                     if (uploadImg)
                     {
-                        ////更新图片名后保存到数据库
-                        //int ImgCounter = await MainForm.Instance.AppContext.Db.Updateable<tb_FM_ExpenseClaimDetail>(EditEntity.tb_FM_ExpenseClaimDetails)
-                        //    .UpdateColumns(t => new { t.EvidenceImagePath })
-                        //    .ExecuteCommandAsync();
-                        //if (ImgCounter > 0)
-                        //{
-                        MainForm.Instance.PrintInfoLog($"图片保存成功,。");
-                        //}
+                        MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
                     }
                     else
                     {
-                        MainForm.Instance.uclog.AddLog("图片上传出错。");
+                        MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
                         return false;
                     }
                 }
@@ -766,6 +717,16 @@ namespace RUINORERP.UI.FM
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
+
+                        // 保存成功后上传结案凭证图片（只上传变更的图片）
+                        if (picboxCloseCaseImagePath != null)
+                        {
+                            var updatedImages = picboxCloseCaseImagePath.GetImagesNeedingUpdate();
+                            if (updatedImages.Count > 0)
+                            {
+                                await UploadImageAsync(EditEntity, picboxCloseCaseImagePath, "结案凭证");
+                            }
+                        }
                     }
                     else
                     {
@@ -798,62 +759,12 @@ namespace RUINORERP.UI.FM
             return true;
         }
 
-        public override async Task<bool> DeleteRemoteImages()
-        {
-
-            if (EditEntity == null || EditEntity.tb_FM_ExpenseClaimDetails == null)
-            {
-                return false;
-            }
-
-            #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
 
 
-            #endregion
-
-            bool result = true;
-            foreach (tb_FM_ExpenseClaimDetail detail in EditEntity.tb_FM_ExpenseClaimDetails)
-            {
-                PropertyInfo[] props = typeof(tb_FM_ExpenseClaimDetail).GetProperties();
-                foreach (PropertyInfo prop in props)
-                {
-                    var col = sgd[prop.Name];
-                    if (col != null)
-                    {
-                        if (col.CustomFormat == CustomFormatType.WebPathImage)
-                        {
-                            if (detail.GetPropertyValue(prop.Name) != null
-                                && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
-                            {
-                                string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
-                                //比较是否更新了图片数据
-                                //old_new 无后缀文件名
-                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
-                                valueImageWeb.CellImageHashName = imageNameValue;
-                                string oldfileName = valueImageWeb.GetOldRealfileName();
-                                string newfileName = valueImageWeb.GetNewRealfileName();
-                                string TempFileName = string.Empty;
-                                //fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-                                //保存在本地临时目录 删除
-                                if (System.IO.File.Exists(TempFileName))
-                                {
-                                    System.IO.File.Delete(TempFileName);
-                                }
-                                //上传到服务器，删除本地
-                                // 使用ImageManagementHelper替代HttpWebService
-                                //bool deleteResult = await UI.Common.ImageManagementHelper.DeleteImageAsync(
-                                //    newfileName, 
-                                //    MainForm.Instance.AppContext);
-                                //MainForm.Instance.PrintInfoLog(deleteResult ? "Success" : "Failed");
-                            }
-                        }
-                    }
-
-                }
-            }
-            return result;
-        }
-
+        /// <summary>
+        /// 删除报销单 - 重写基类方法
+        /// </summary>
+        /// <returns>删除结果</returns>
         protected async override Task<ReturnResults<tb_FM_ExpenseClaim>> Delete()
         {
             ReturnResults<tb_FM_ExpenseClaim> rss = new ReturnResults<tb_FM_ExpenseClaim>();
@@ -886,23 +797,20 @@ namespace RUINORERP.UI.FM
                     bool rs = await ctr.BaseLogicDeleteAsync(EditEntity as tb_FM_ExpenseClaim);
                     if (rs)
                     {
-                        //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", EditEntity);
-                        //if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        //{
-                        //    //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
-                        //}
-                        // bindingSourceSub.Clear();
+                        // 删除成功后，清空图片控件
+                        if (picboxCloseCaseImagePath != null)
+                        {
+                            picboxCloseCaseImagePath.ClearImage();
+                        }
 
-                        ////删除远程图片及本地图片
-                        ///暂时使用了逻辑删除所以不执行删除远程图片操作。
-                        //await DeleteRemoteImages();
+                        // 删除远程图片
+                        var ctrpay = Startup.GetFromFac<FileManagementController>();
+                        await ctrpay.DeleteImagesAsync(EditEntity, false);
 
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");
 
                         //加载一个空的显示的UI
-                        // bindingSourceSub.Clear();
-                        //base.OnBindDataToUIEvent(EditEntity as tb_FM_ExpenseClaim, ActionStatus.删除);
                         Exit(this);
                     }
                 }
@@ -969,34 +877,8 @@ namespace RUINORERP.UI.FM
         /// </summary>
         private void MagicPictureBox1_DoubleClick(object sender, EventArgs e)
         {
-            // 如果是多图片模式，使用MagicPictureBox内置的上传功能
-            if (magicPictureBox1.MultiImageSupport)
-            {
-                // MagicPictureBox已经内置了上传功能，无需额外处理
-                return;
-            }
-
-            // 单图片模式，打开文件选择对话框
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.Title = "选择结案凭证图片";
-                openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    try
-                    {
-                        System.Drawing.Image image = System.Drawing.Image.FromFile(openFileDialog.FileName);
-                        magicPictureBox1.Image = image;
-                        magicPictureBox1.Visible = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}", Global.UILogType.错误);
-                        MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
+            // MagicPictureBox已经内置了文件服务器的上传和下载功能
+            // 无需额外处理，双击即可触发内置的上传/查看功能
         }
 
 

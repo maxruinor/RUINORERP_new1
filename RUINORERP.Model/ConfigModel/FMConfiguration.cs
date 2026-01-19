@@ -88,5 +88,14 @@ namespace RUINORERP.Model.ConfigModel
         /// </summary>
         public bool EnableAutoAuditSalesOutboundForFullPrepaymentOrders { get; set; } = false;
 
+        /// <summary>
+        /// 启用销售订单付款状态验证，禁止未满足付款条件的订单进行销售出库审核
+        /// 当销售订单处于以下付款状态时，禁止出库（审核）操作：
+        /// - 未付款状态
+        /// - 部分预付状态
+        /// - 部分付款状态
+        /// </summary>
+        public bool EnableSalesOrderPaymentStatusValidation { get; set; } = false;
+
     }
 }

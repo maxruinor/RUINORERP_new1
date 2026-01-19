@@ -1169,15 +1169,18 @@ namespace RUINORERP.UI.BaseForm
         #region 图片相关
 
         /// <summary>
-        /// 下载并显示凭证图片 - 增强版本
+        /// 下载并显示图片 - 支持按字段下载
         /// </summary>
-        public async Task DownloadVoucherImageAsync(T entity, MagicPictureBox magicPicBox)
+        /// <param name="entity">业务实体</param>
+        /// <param name="magicPicBox">图片控件</param>
+        /// <param name="relatedField">关联字段名(可选，不传则下载所有字段)</param>
+        public async Task DownloadImageAsync(T entity, MagicPictureBox magicPicBox, string relatedField = null)
         {
             magicPicBox.MultiImageSupport = true;
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
-                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity);
+                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity, relatedField);
 
                 if (list == null || list.Count == 0)
                 {
@@ -1238,23 +1241,26 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 上传凭证图片 - 增强版本
+        /// 上传图片 - 支持指定关联字段
         /// </summary>
-        public async Task<bool> UploadVoucherImageAsync(T entity, MagicPictureBox magicPicBox,
-            bool onlyUpdated = true, bool useVersionControl = false)
+        /// <param name="entity">业务实体</param>
+        /// <param name="magicPicBox">图片控件</param>
+        /// <param name="relatedField">关联字段名(如VoucherImage、PaymentImagePath等)</param>
+        /// <param name="onlyUpdated">是否仅上传变更的图片</param>
+        /// <returns>是否全部上传成功</returns>
+        public async Task<bool> UploadImageAsync(T entity, MagicPictureBox magicPicBox, string relatedField, bool onlyUpdated = true)
         {
             var ctrpay = Startup.GetFromFac<FileManagementController>();
             try
             {
                 // 检查是否有图片需要上传
-                // 对于单个MagicPictureBox控件，直接检查Image属性即可
                 if (magicPicBox.Image == null)
                 {
                     logger.LogInformation("没有需要上传的图片");
                     return true;
                 }
 
-                // 根据onlyUpdated参数决定获取所有图片还是仅变更的图片
+                // 获取图片数据
                 var imageBytesWithInfoList = onlyUpdated ?
                     magicPicBox.GetUpdatedImageBytesWithInfo() :
                     magicPicBox.GetAllImageBytesWithInfo();
@@ -1290,23 +1296,16 @@ namespace RUINORERP.UI.BaseForm
                         continue;
                     }
 
-                    // 准备版本控制参数
-                    long? existingFileId = null;
-                    string updateReason = null;
+                    // 准备参数
+                    long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
 
-                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
-                    {
-                        existingFileId = imageInfo.FileId;
-                        updateReason = "图片更新";
-                    }
-
-                    // 上传图片
-                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId, updateReason, useVersionControl);
+                    // 上传图片(指定关联字段)
+                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, relatedField, existingFileId);
 
                     if (response.IsSuccess)
                     {
                         successCount++;
-                        MainForm.Instance.uclog.AddLog($"凭证图片上传成功：{imageInfo.OriginalFileName}");
+                        MainForm.Instance.uclog.AddLog($"图片上传成功：{imageInfo.OriginalFileName}");
 
                         // 上传成功后，将图片标记为未更新
                         if (imageInfo.IsUpdated)
@@ -1317,7 +1316,7 @@ namespace RUINORERP.UI.BaseForm
                     else
                     {
                         allSuccess = false;
-                        MainForm.Instance.uclog.AddLog($"凭证图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        MainForm.Instance.uclog.AddLog($"图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
                         logger.LogError("图片上传失败: {FileName}, Error: {Error}",
                             imageInfo.OriginalFileName, response.Message);
                     }
@@ -1325,15 +1324,15 @@ namespace RUINORERP.UI.BaseForm
 
                 if (successCount > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"成功上传 {successCount} 张凭证图片");
+                    MainForm.Instance.uclog.AddLog($"成功上传 {successCount} 张图片");
                 }
 
                 return allSuccess;
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.LogError(ex, "上传凭证图片异常");
-                MainForm.Instance.uclog.AddLog($"上传凭证图片出错：{ex.Message}");
+                MainForm.Instance.logger.LogError(ex, "上传图片异常");
+                MainForm.Instance.uclog.AddLog($"上传图片出错：{ex.Message}");
                 return false;
             }
         }
@@ -1380,18 +1379,11 @@ namespace RUINORERP.UI.BaseForm
                         continue;
                     }
 
-                    // 检查是否为更新操作，准备版本控制参数
-                    long? existingFileId = null;
-                    string updateReason = "图片更新";
+                    // 准备参数
+                    long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
 
-                    // 如果图片信息包含文件ID且图片已更新
-                    if (imageInfo.FileId > 0 && imageInfo.IsUpdated)
-                    {
-                        existingFileId = imageInfo.FileId;
-                    }
-
-                    // 上传图片，启用版本控制
-                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId, updateReason, true);
+                    // 上传图片(使用新的接口)
+                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, "预付凭证", existingFileId);
 
                     if (response.IsSuccess)
                     {

@@ -10,7 +10,6 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
 {
     /// <summary>
     /// 文件上传请求 - 支持单文件和多文件上传
-    /// 多文件是指一个单据下有多个文件
     /// </summary>
     public class FileUploadRequest : RequestBase
     {
@@ -19,26 +18,39 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// </summary>
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
+        /// <summary>
+        /// 业务类型 (BizType枚举值)
+        /// </summary>
         public int? BusinessType { get; set; }
-        /*
-        ## 结论与建议
-                从当前代码实现来看，RelatedField字段确实存在冗余 。在现有业务流程中，它几乎总是被设置为固定值"MainFile"，并且没有基于此字段的特殊业务逻辑处理。理论上可以只保留BusinessNo字段来完成文件与业务的关联。
 
-        然而，在进行实际修改时需要考虑以下因素：
-
-        1. 修改范围 ：删除或合并字段需要修改实体类、DTO、UI界面、验证器等多个地方
-        2. 未来扩展性 ：RelatedField可能是为了将来支持在同一业务记录下关联不同类型的文件（如主文件、附件、说明文档等）而预留的字段
-        3. 兼容性问题 ：需要考虑对现有数据的影响，可能需要数据迁移
-        如果当前业务需求确实简单，且未来短期内没有扩展计划，可以考虑合并这两个字段，简化数据模型。否则，建议保留当前结构，以支持未来可能的业务扩展*/
+        /// <summary>
+        /// 关联字段 - 支持按字段关联(如 VoucherImage、PaymentImagePath)
+        /// </summary>
         public string RelatedField { get; set; }
 
         /// <summary>
-        /// 唯一的业务编号，如订单编号、合同编号，产品SKU码
+        /// 业务编号 (兼容旧版)
         /// </summary>
         public string BusinessNo { get; set; }
 
-        public long? Created_by { get; set; }
+        /// <summary>
+        /// 业务主键ID (单据主表ID)
+        /// 单表业务时使用此项,默认为主表
+        /// </summary>
+        public long? BusinessId { get; set; }
 
+        /// <summary>
+        /// 是否明细表文件 (false=主表, true=明细表)
+        /// 默认false(主表)
+        /// </summary>
+        public bool IsDetailTable { get; set; } = false;
+
+        /// <summary>
+        /// 明细表主键ID (仅当IsDetailTable=true时有效)
+        /// </summary>
+        public long? DetailId { get; set; }
+
+        public long? Created_by { get; set; }
     }
 
 
@@ -440,6 +452,80 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         {
             var fileInfo = new tb_FS_FileStorageInfo { FileId = fileId };
             return FileUploadResponse.CreateSuccess(fileInfo, message);
+        }
+    }
+
+    /// <summary>
+    /// 文件权限检查请求
+    /// </summary>
+    public class FilePermissionCheckRequest : RequestBase
+    {
+        /// <summary>
+        /// 文件ID
+        /// </summary>
+        public long FileId { get; set; }
+
+        /// <summary>
+        /// 权限类型: read(读), write(写), delete(删除), download(下载)
+        /// </summary>
+        public string PermissionType { get; set; }
+
+        /// <summary>
+        /// 请求时间戳（用于验证请求有效性）
+        /// </summary>
+        public DateTime RequestTime { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// 验证请求是否有效
+        /// </summary>
+        public bool IsValid()
+        {
+            return FileId > 0 &&
+                   !string.IsNullOrEmpty(PermissionType) &&
+                   RequestTime > DateTime.Now.AddMinutes(-5); // 请求有效期5分钟
+        }
+    }
+
+    /// <summary>
+    /// 文件权限检查响应
+    /// </summary>
+    public class FilePermissionCheckResponse : ResponseBase
+    {
+        /// <summary>
+        /// 是否有权限
+        /// </summary>
+        public bool HasPermission { get; set; }
+
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public FilePermissionCheckResponse() : base() { }
+
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        public FilePermissionCheckResponse(bool success, string message, bool hasPermission = false, int code = 200)
+        {
+            this.IsSuccess = success;
+            this.Message = message;
+            this.HasPermission = hasPermission;
+            this.Timestamp = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 创建成功结果
+        /// </summary>
+        public static FilePermissionCheckResponse CreateSuccess(bool hasPermission, string message = "权限验证通过")
+        {
+            return new FilePermissionCheckResponse(true, message, hasPermission, 200);
+        }
+
+        /// <summary>
+        /// 创建失败结果
+        /// </summary>
+        public static FilePermissionCheckResponse CreateFailure(string message, int code = 500)
+        {
+            return new FilePermissionCheckResponse(false, message, false, code);
         }
     }
 

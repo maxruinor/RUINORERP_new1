@@ -3,7 +3,7 @@
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
-    /// 文件相关命令
+    /// 文件相关命令1
     /// </summary>
     public static class FileCommands
     {

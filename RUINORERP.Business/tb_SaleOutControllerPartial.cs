@@ -399,6 +399,22 @@ namespace RUINORERP.Business
                         return rrs;
                     }
 
+                    // 检查是否启用了付款状态验证
+                    if (_appContext.FMConfig.EnableSalesOrderPaymentStatusValidation)
+                    {
+                        var paymentValidationResult = await ValidateSalesOrderPaymentStatusAsync(entity.tb_saleorder);
+                        if (!paymentValidationResult.IsValid)
+                        {
+                            rrs.Succeeded = false;
+                            rrs.ErrorMsg = $"订单未满足付款条件，无法审核。\r\n订单：{entity.tb_saleorder.SOrderNo}\r\n付款状态：{paymentValidationResult.PaymentStatus}\r\n原因：{paymentValidationResult.Reason}";
+                            if (_appContext.SysConfig.ShowDebugInfo)
+                            {
+                                _logger.Debug($"销售出库审核被阻止：订单{entity.tb_saleorder.SOrderNo}付款状态不符合要求");
+                            }
+                            return rrs;
+                        }
+                    }
+
 
                     if (!entity.ReplaceOut)
                     {
@@ -1655,6 +1671,53 @@ namespace RUINORERP.Business
 
             }
             return entity;
+        }
+
+        /// <summary>
+        /// 验证销售订单付款状态是否符合出库审核条件
+        /// </summary>
+        /// <param name="saleOrder">销售订单实体</param>
+        /// <returns>验证结果</returns>
+        private async Task<(bool IsValid, string PaymentStatus, string Reason)> ValidateSalesOrderPaymentStatusAsync(tb_SaleOrder saleOrder)
+        {
+            try
+            {
+                if (saleOrder == null)
+                {
+                    return (false, "未知", "销售订单数据为空");
+                }
+
+                // 获取付款状态的枚举值
+                var unPaidStatus = (int)PayStatus.未付款;
+                var partialPrepaidStatus = (int)PayStatus.部分预付;
+                var partialPaidStatus = (int)PayStatus.部分付款;
+
+                // 检查付款状态是否符合要求
+                if (saleOrder.PayStatus == unPaidStatus)
+                {
+                    return (false, "未付款", "订单处于未付款状态，不允许进行销售出库审核");
+                }
+
+                if (saleOrder.PayStatus == partialPrepaidStatus)
+                {
+                    return (false, "部分预付", "订单处于部分预付状态，不允许进行销售出库审核");
+                }
+
+                if (saleOrder.PayStatus == partialPaidStatus)
+                {
+                    return (false, "部分付款", "订单处于部分付款状态，不允许进行销售出库审核");
+                }
+
+                // 符合审核条件（全额预付或全额付款）
+                var paymentStatusText = ((PayStatus)saleOrder.PayStatus).ToString();
+                _logger.LogDebug($"订单{saleOrder.SOrderNo}付款状态验证通过：{paymentStatusText}");
+                return (true, paymentStatusText, "");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, $"验证销售订单付款状态时发生异常，订单号：{saleOrder?.SOrderNo}");
+                return (false, "验证失败", $"付款状态验证异常：{ex.Message}");
+            }
         }
 
 

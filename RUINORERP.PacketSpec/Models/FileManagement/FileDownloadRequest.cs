@@ -10,14 +10,51 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
     /// <summary>
     /// 文件下载请求类
     /// 客户端通过此请求从服务器下载文件
-    /// 下载可以单个下载
     /// </summary>
     public class FileDownloadRequest : RequestBase
     {
         /// <summary>
-        /// 文件唯一标识符
+        /// 方式1: 按文件ID下载 - 直接指定文件信息
         /// </summary>
         public tb_FS_FileStorageInfo FileStorageInfo { get; set; }
+
+        /// <summary>
+        /// 方式2: 按业务信息下载
+        /// 业务类型 (BizType枚举值)
+        /// </summary>
+        public int? BusinessType { get; set; }
+
+        /// <summary>
+        /// 业务编号 (兼容旧版)
+        /// </summary>
+        public string BusinessNo { get; set; }
+
+        /// <summary>
+        /// 业务主键ID (单据主表ID)
+        /// 单表业务时使用此项,默认为主表
+        /// </summary>
+        public long? BusinessId { get; set; }
+
+        /// <summary>
+        /// 关联字段名 (如 VoucherImage、PaymentImagePath)
+        /// </summary>
+        public string RelatedField { get; set; }
+
+        /// <summary>
+        /// 下载单据所有关联图片
+        /// </summary>
+        public bool DownloadAllImages { get; set; } = false;
+
+        /// <summary>
+        /// 是否明细表文件 (false=主表, true=明细表)
+        /// 默认false(主表)
+        /// </summary>
+        public bool IsDetailTable { get; set; } = false;
+
+        /// <summary>
+        /// 明细表主键ID (仅当IsDetailTable=true时有效)
+        /// </summary>
+        public long? DetailId { get; set; }
 
         /// <summary>
         /// 请求时间戳（用于验证请求有效性）
@@ -29,8 +66,15 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// </summary>
         public bool IsValid()
         {
-            return FileStorageInfo != null && FileStorageInfo.FileId != 0 &&
-                   RequestTime > DateTime.Now.AddMinutes(-5); // 请求有效期5分钟
+            if (FileStorageInfo != null && FileStorageInfo.FileId != 0)
+                return true;
+
+            if (BusinessType.HasValue && (BusinessId.HasValue || !string.IsNullOrEmpty(BusinessNo)))
+            {
+                if (DownloadAllImages) return true;
+                if (!string.IsNullOrEmpty(RelatedField)) return true;
+            }
+            return false;
         }
     }
 

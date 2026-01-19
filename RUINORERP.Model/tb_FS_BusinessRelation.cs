@@ -7,7 +7,7 @@
 // 时间：11/06/2025 20:41:54
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -82,29 +82,73 @@ namespace RUINORERP.Model
 
         private string _BusinessNo;
         /// <summary>
-        /// 业务编号
+        /// 业务编号 (如订单编号、付款单号)
         /// </summary>
-        [AdvQueryAttribute(ColName = "BusinessNo",ColDesc = "业务编号")] 
+        [AdvQueryAttribute(ColName = "BusinessNo",ColDesc = "业务编号")]
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "BusinessNo" ,Length=50,IsNullable = false,ColumnDescription = "业务编号" )]
         public string BusinessNo
-        { 
+        {
             get{return _BusinessNo;}
             set{
             SetProperty(ref _BusinessNo, value);
                         }
         }
 
+        private long _BusinessId;
+        /// <summary>
+        /// 业务主键ID (单据主键，如 SOrder_ID、PaymentRecord_ID)
+        /// 添加此字段可显著提升查询性能
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BusinessId",ColDesc = "业务主键")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BusinessId" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "业务主键ID" )]
+        public long BusinessId
+        {
+            get{return _BusinessId;}
+            set{
+            SetProperty(ref _BusinessId, value);
+                        }
+        }
+
         private string _RelatedField;
         /// <summary>
-        /// 关联字段
+        /// 关联字段 (如 VoucherImage、PaymentImagePath)
+        /// 用于区分同一单据下的不同图片字段
         /// </summary>
-        [AdvQueryAttribute(ColName = "RelatedField",ColDesc = "关联字段")] 
+        [AdvQueryAttribute(ColName = "RelatedField",ColDesc = "关联字段")]
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "RelatedField" ,Length=50,IsNullable = false,ColumnDescription = "关联字段" )]
         public string RelatedField
-        { 
+        {
             get{return _RelatedField;}
             set{
             SetProperty(ref _RelatedField, value);
+                        }
+        }
+
+        private bool _IsDetailTable;
+        /// <summary>
+        /// 是否明细表文件 (false=主表, true=明细表)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDetailTable",ColDesc = "是否明细表")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType ="Boolean",  ColumnName = "IsDetailTable" ,IsNullable = false,ColumnDescription = "是否明细表" )]
+        public bool IsDetailTable
+        {
+            get{return _IsDetailTable;}
+            set{
+            SetProperty(ref _IsDetailTable, value);
+                        }
+        }
+
+        private long? _DetailId;
+        /// <summary>
+        /// 明细表主键ID (当IsDetailTable=true时使用)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DetailId",ColDesc = "明细主键")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "DetailId" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "明细表主键ID" )]
+        public long? DetailId
+        {
+            get{return _DetailId;}
+            set{
+            SetProperty(ref _DetailId, value);
                         }
         }
 

@@ -48,11 +48,12 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="entity">业务实体</param>
         /// <param name="OriginalFileName">文件名</param>
         /// <param name="fileData">文件数据</param>
+        /// <param name="relatedField">关联字段名(如VoucherImage、PaymentImagePath等)</param>
         /// <param name="fileId">文件ID（可选），用于更新现有文件</param>
-        /// <param name="updateReason">更新原因（可选），用于版本控制</param>
-        /// <param name="useVersionControl">是否使用版本控制（可选），默认为false</param>
+        /// <param name="isDetailTable">是否明细表文件(默认false)</param>
+        /// <param name="detailId">明细表主键ID(仅明细表时需要)</param>
         /// <returns>上传结果，包含文件ID</returns>
-        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, string RelatedField, long? fileId = null, string updateReason = null, bool useVersionControl = false)
+        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, string relatedField, long? fileId = null, bool isDetailTable = false, long? detailId = null)
         {
             // 参数验证
             if (entity == null)
@@ -84,23 +85,25 @@ namespace RUINORERP.UI.Network.Services
                 storageInfo.BusinessType = (int)entityInfo.BizType;
                 storageInfo.FileData = fileData;
 
-                // 如果提供了文件ID
+                // 如果提供了文件ID(更新场景)
                 if (fileId.HasValue)
                 {
                     storageInfo.FileId = fileId.Value;
-
-                    // 根据版本控制开关决定是否启用版本控制
-                    // 注意：tb_FS_FileStorageInfo类中没有IsUpdate和UpdateReason属性
-                    // 版本控制逻辑将在服务器端处理
-                    // 不使用版本控制时，仍然设置FileId，但不启用版本控制标志
                 }
+
+                // 获取实体主键ID(从EntityInfo中获取)
+                //var businessId = entityInfo.IdField != null ?
+                //    entity.GetPropertyValue<long>(entityInfo.IdField) : 0;
 
                 // 准备上传请求
                 var uploadRequest = new FileUploadRequest();
                 uploadRequest.FileStorageInfos.Add(storageInfo);
                 uploadRequest.BusinessNo = businessNo;
                 uploadRequest.BusinessType = (int)entityInfo.BizType;
-                uploadRequest.RelatedField = RelatedField;
+                uploadRequest.BusinessId = entity.PrimaryKeyID;
+                uploadRequest.RelatedField = relatedField;
+                uploadRequest.IsDetailTable = isDetailTable;
+                uploadRequest.DetailId = detailId;
                 // 执行上传
                 var response = await fileService.UploadFileAsync(uploadRequest);
 
@@ -111,20 +114,7 @@ namespace RUINORERP.UI.Network.Services
                     var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     foreach (var fileStorageInfo in response.FileStorageInfos)
                     {
-                        //服务器创建更合理，因为每经过一个环节 出错几率更高
-                        //// 创建业务关联记录
-                        //var businessRelation = new tb_FS_BusinessRelation
-                        //{
-                        //    BusinessType = (int)entityInfo.BizType,
-                        //    BusinessNo = businessNo,
-                        //    FileId = fileStorageInfo.FileId,
-                        //    IsMainFile = true,
-                        //    Created_at = DateTime.Now,
-                        //    Created_by = _appContext.CurrentUser?.UserID ?? 0
-                        //};
-
-                        //// 保存业务关联
-                        //await businessRelationService.SaveOrUpdate(businessRelation);
+                        //服务器创建了，更合理，因为每经过一个环节 出错几率更高
                     }
                 }
 
@@ -141,8 +131,9 @@ namespace RUINORERP.UI.Network.Services
         /// 下载图片文件
         /// </summary>
         /// <param name="entity">业务实体</param>
+        /// <param name="relatedField">关联字段名(可选，不传则下载所有字段)</param>
         /// <returns>文件下载响应列表</returns>
-        public async Task<List<FileDownloadResponse>> DownloadImageAsync(BaseEntity entity)
+        public async Task<List<FileDownloadResponse>> DownloadImageAsync(BaseEntity entity, string relatedField = null)
         {
             List<FileDownloadResponse> fileDownloadResponses = new List<FileDownloadResponse>();
             // 获取文件管理服务
@@ -154,14 +145,41 @@ namespace RUINORERP.UI.Network.Services
                 {
                     string BusinessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
 
+                    // 获取实体主键ID(性能优化：优先使用BusinessId)
+                    //long? businessId = null;
+                    //if (entityInfo.KeyProperty != null)
+                    //{
+                    //    var keyValue = entity.GetPropertyValue(entityInfo.KeyProperty.Name);
+                    //    if (keyValue != null && long.TryParse(keyValue.ToString(), out long idValue))
+                    //    {
+                    //        businessId = idValue;
+                    //    }
+                    //}
+
                     // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
                     var db = _unitOfWorkManage.GetDbClient().CopyNew();
+
+                    // 构建查询条件
+                    var query = db.Queryable<tb_FS_BusinessRelation>()
+                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo);
+
+                    // 优先使用BusinessId查询(性能优化)
+                    //if (businessId.HasValue && businessId.Value > 0)
+                    //{
+                        query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
+                    //}
+
+                    // 如果指定了关联字段，按字段筛选
+                    if (!string.IsNullOrEmpty(relatedField))
+                    {
+                        query = query.Where(c => c.RelatedField == relatedField);
+                    }
+
                     // 使用新的数据库连接上下文获取业务关联列表
-                    var BusinessRelationList = await db.Queryable<tb_FS_BusinessRelation>()
-                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo)
+                    var BusinessRelationList = await query
                         .Includes(t => t.tb_fs_filestorageinfo)
                         .ToListAsync();
-                    
+
                     // 预加载文件存储信息到内存中，避免异步操作后数据库连接关闭导致的延迟加载问题
                     var fileStorageInfosToDownload = new List<tb_FS_FileStorageInfo>();
                     foreach (var item in BusinessRelationList)
@@ -181,7 +199,7 @@ namespace RUINORERP.UI.Network.Services
                             fileStorageInfosToDownload.Add(fileInfo);
                         }
                     }
-                    
+
                     // 现在使用完全加载到内存中的文件信息进行下载操作
                     foreach (var fileInfo in fileStorageInfosToDownload)
                     {
@@ -190,7 +208,7 @@ namespace RUINORERP.UI.Network.Services
                         {
                             FileStorageInfo = fileInfo
                         };
-                        
+
                         // 下载文件
                         var response = await fileService.DownloadFileAsync(request);
                         if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)

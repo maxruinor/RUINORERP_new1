@@ -69,32 +69,6 @@ namespace RUINORERP.UI
         private TaskCompletionSource<(bool success, string announcement)> _welcomeCompletionTcs =
             new TaskCompletionSource<(bool, string)>();
 
-        /// <summary>
-        /// 连接状态枚举
-        /// </summary>
-        private enum ConnectionStatus { Disconnected, Connecting, Connected, Failed, Timeout }
-        
-        /// <summary>
-        /// 当前连接状态
-        /// </summary>
-        private ConnectionStatus _currentConnectionStatus = ConnectionStatus.Disconnected;
-
-        /// <summary>
-        /// 更新连接状态，使用系统现有状态显示机制
-        /// </summary>
-        /// <param name="status">连接状态</param>
-        /// <param name="message">状态消息</param>
-        private void UpdateConnectionStatus(ConnectionStatus status, string message = null)
-        {
-            _currentConnectionStatus = status;
-            
-            if (!string.IsNullOrEmpty(message))
-            {
-                // 使用系统现有状态显示机制
-                MainForm.Instance?.ShowStatusText(message);
-            }
-        }
-
 
 
 
@@ -142,11 +116,11 @@ namespace RUINORERP.UI
 
             if (success)
             {
-                UpdateConnectionStatus(ConnectionStatus.Connected, "服务器欢迎消息验证成功");
+                MainForm.Instance?.ShowStatusText("服务器欢迎消息验证成功");
             }
             else
             {
-                UpdateConnectionStatus(ConnectionStatus.Failed, "服务器欢迎消息验证失败");
+                MainForm.Instance?.ShowStatusText("服务器欢迎消息验证失败");
             }
 
             if (!_welcomeCompletionTcs.TrySetResult((success, announcement)))
@@ -317,12 +291,12 @@ namespace RUINORERP.UI
                 if (string.IsNullOrWhiteSpace(serverIP) || serverPort <= 0)
                 {
                     MainForm.Instance?.logger?.LogWarning("服务器配置不完整,等待用户输入");
-                    UpdateConnectionStatus(ConnectionStatus.Disconnected, "请输入有效的服务器IP和端口");
+                    MainForm.Instance?.ShowStatusText("请输入有效的服务器IP和端口");
                     return;
                 }
 
                 // 1. 连接服务器(添加10秒超时)
-                UpdateConnectionStatus(ConnectionStatus.Connecting, $"正在连接到服务器 {serverIP}:{serverPort}...");
+                MainForm.Instance?.ShowStatusText($"正在连接到服务器 {serverIP}:{serverPort}...");
                 MainForm.Instance?.logger?.LogDebug($"尝试连接到服务器 {serverIP}:{serverPort}...");
 
                 var connectTask = connectionManager.ConnectAsync(serverIP, serverPort);
@@ -336,7 +310,7 @@ namespace RUINORERP.UI
                 else
                 {
                     MainForm.Instance?.logger?.LogWarning($"连接服务器 {serverIP}:{serverPort} 超时");
-                    UpdateConnectionStatus(ConnectionStatus.Timeout, $"连接服务器 {serverIP}:{serverPort} 超时");
+                    MainForm.Instance?.ShowStatusText($"连接服务器 {serverIP}:{serverPort} 超时");
                     // 连接超时,不阻止登录界面显示
                     return;
                 }
@@ -344,12 +318,12 @@ namespace RUINORERP.UI
                 if (!connectResult)
                 {
                     MainForm.Instance?.logger?.LogWarning("无法连接到服务器 {ServerIP}:{ServerPort}", serverIP, serverPort);
-                    UpdateConnectionStatus(ConnectionStatus.Failed, $"无法连接到服务器 {serverIP}:{serverPort}");
+                    MainForm.Instance?.ShowStatusText($"无法连接到服务器 {serverIP}:{serverPort}");
                     // 连接失败,但不阻止登录界面显示,用户可以修改配置后重试
                     return;
                 }
 
-                UpdateConnectionStatus(ConnectionStatus.Connected, $"服务器 {serverIP}:{serverPort} 连接成功");
+                MainForm.Instance?.ShowStatusText($"服务器 {serverIP}:{serverPort} 连接成功");
                 MainForm.Instance.PrintInfoLog("服务器连接成功,等待欢迎消息...");
 
                 // 2. 等待欢迎流程完成(等待最多15秒)
@@ -405,7 +379,7 @@ namespace RUINORERP.UI
             catch (Exception ex)
             {
                 MainForm.Instance?.logger?.LogError(ex, "初始化连接和欢迎流程时发生异常");
-                UpdateConnectionStatus(ConnectionStatus.Failed, $"连接服务器时发生错误: {ex.Message}");
+                MainForm.Instance?.ShowStatusText($"连接服务器时发生错误: {ex.Message}");
             }
         }
 
@@ -727,7 +701,7 @@ namespace RUINORERP.UI
             if (ipChanged)
             {
                 // 显示状态提示
-                UpdateConnectionStatus(ConnectionStatus.Disconnected, "服务器地址已变更，准备重新连接...");
+                MainForm.Instance?.ShowStatusText("服务器地址已变更，准备重新连接...");
                 MainForm.Instance.PrintInfoLog($"检测到服务器地址变更，准备重新连接: {_originalServerIP}:{_originalServerPort} -> {currentIP}:{currentPort}");
 
                 // 使用防抖机制，避免频繁触发
@@ -773,7 +747,7 @@ namespace RUINORERP.UI
         private async Task ReconnectAndWelcomeAsync()
         {
             bool needsReconnect = false;
-            
+
             try
             {
                 MainForm.Instance?.PrintInfoLog("开始重新连接并执行欢迎流程...");
@@ -782,7 +756,7 @@ namespace RUINORERP.UI
                 if (string.IsNullOrWhiteSpace(txtServerIP.Text) || !int.TryParse(txtPort.Text, out int serverPort))
                 {
                     MainForm.Instance?.logger?.LogWarning("服务器配置无效，跳过重新连接");
-                    UpdateConnectionStatus(ConnectionStatus.Disconnected, "请输入有效的服务器IP和端口");
+                    MainForm.Instance?.ShowStatusText("请输入有效的服务器IP和端口");
                     return;
                 }
 
@@ -792,7 +766,7 @@ namespace RUINORERP.UI
                     string currentServerIP = (connectionManager.CurrentServerAddress ?? "").Trim();
                     string newServerIP = txtServerIP.Text.Trim();
                     int currentPort = connectionManager.CurrentServerPort;
-                    
+
                     needsReconnect = !string.Equals(currentServerIP, newServerIP, StringComparison.OrdinalIgnoreCase) ||
                                    currentPort != serverPort;
                 }
@@ -804,7 +778,7 @@ namespace RUINORERP.UI
                 // 断开现有连接（仅在需要重连时执行）
                 if (needsReconnect && connectionManager.IsConnected)
                 {
-                    UpdateConnectionStatus(ConnectionStatus.Disconnected, "正在断开现有连接...");
+                    MainForm.Instance?.ShowStatusText("正在断开现有连接...");
                     await connectionManager.DisconnectAsync();
                     await Task.Delay(500); // 等待断开完成
                 }
@@ -830,7 +804,7 @@ namespace RUINORERP.UI
             catch (Exception ex)
             {
                 MainForm.Instance?.logger?.LogError(ex, "重新连接和欢迎流程时发生异常");
-                UpdateConnectionStatus(ConnectionStatus.Failed, $"重新连接时发生错误: {ex.Message}");
+                MainForm.Instance?.ShowStatusText($"重新连接时发生错误: {ex.Message}");
             }
         }
 

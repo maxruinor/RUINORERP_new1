@@ -13,8 +13,9 @@ using RUINORERP.PacketSpec.Models.Common;
 using System.Linq;
 
 namespace RUINORERP.UI.Network
-{/// <summary>
+{    /// <summary>
  /// SuperSocket客户端实现 - 集成网络健康检查
+ /// 状态管理：仅管理底层Socket连接状态,不保留应用层状态
  /// </summary>
     public class SuperSocketClient : ISocketClient
     {
@@ -25,6 +26,11 @@ namespace RUINORERP.UI.Network
         private readonly ILogger<SuperSocketClient> _logger;
         private NetworkHealthCheckService _healthCheckService;
         private volatile bool _networkHealthWarningShown;
+
+        /// <summary>
+        /// 连接状态变更事件 - 供上层订阅以同步状态
+        /// </summary>
+        public event Action<bool> ConnectionStateChanged;
 
         /// <summary>
         /// 构造函数 - 支持依赖注入
@@ -437,6 +443,8 @@ namespace RUINORERP.UI.Network
         private void OnClientConnected(object sender, EventArgs e)
         {
             _isConnected = true;
+            ConnectionStateChanged?.Invoke(true);
+            _logger?.LogDebug("底层Socket连接已建立");
         }
 
         /// <summary>
@@ -459,6 +467,7 @@ namespace RUINORERP.UI.Network
             if (_isConnected)
             {
                 _isConnected = false;
+                ConnectionStateChanged?.Invoke(false);
                 _logger?.LogError(e.Exception, "客户端发生错误，连接状态已更新为断开");
             }
         }
@@ -471,6 +480,8 @@ namespace RUINORERP.UI.Network
             if (_isConnected)
             {
                 _isConnected = false;
+                ConnectionStateChanged?.Invoke(false);
+                _logger?.LogDebug("底层Socket连接已关闭");
             }
             Closed?.Invoke(e);
         }

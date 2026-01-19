@@ -11,7 +11,7 @@ namespace RUINORERP.UI.Network
 {
     /// <summary>
     /// 简化的客户端连接管理器
-    /// 负责统一管理连接状态和重连逻辑
+    /// 职责：统一管理连接状态和重连逻辑,作为状态唯一真实来源
     /// </summary>
     public class ConnectionManager : IDisposable
     {
@@ -22,17 +22,20 @@ namespace RUINORERP.UI.Network
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(1, 1);
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        private bool _isConnected = false;
+        /// <summary>
+        /// 唯一的连接状态标志 - 作为所有连接状态查询的真实来源
+        /// </summary>
+        private volatile bool _isConnected = false;
         private bool _isReconnecting = false;
         private bool _disposed = false;
         private Task _reconnectTask = null;
-        private bool _reconnectStopped = false; // 新增：重连是否已停止标志
-        private bool _isNetworkAvailable = true; // 当前网络状态
+        private bool _reconnectStopped = false;
+        private bool _isNetworkAvailable = true;
 
         private string _serverAddress = string.Empty;
         private int _serverPort = 0;
-        private DateTime _lastReconnectAttempt = DateTime.MinValue; // 新增：最后一次重连尝试时间
-        private readonly object _reconnectStateLock = new object(); // 新增：重连状态同步锁
+        private DateTime _lastReconnectAttempt = DateTime.MinValue;
+        private readonly object _reconnectStateLock = new object();
 
         // 网络状态变化事件句柄
         private readonly System.Net.NetworkInformation.NetworkAvailabilityChangedEventHandler _networkAvailabilityChangedHandler;
@@ -146,8 +149,14 @@ namespace RUINORERP.UI.Network
             _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<ConnectionManager>.Instance;
             _config = config ?? ConnectionManagerConfig.Default;
 
-            // 订阅Socket客户端事件
+            // 订阅Socket客户端事件 - 确保状态同步
             _socketClient.Closed += OnSocketClosed;
+            
+            // 订阅Socket客户端连接状态变更事件
+            if (_socketClient is SuperSocketClient superSocketClient)
+            {
+                superSocketClient.ConnectionStateChanged += OnSocketConnectionStateChanged;
+            }
 
             // 初始化网络状态变化事件处理
             _networkAvailabilityChangedHandler = OnNetworkAvailabilityChanged;
@@ -155,6 +164,22 @@ namespace RUINORERP.UI.Network
             // 初始检查网络状态
             _isNetworkAvailable = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable();
             _logger?.LogDebug("初始网络状态：{IsAvailable}", _isNetworkAvailable);
+        }
+
+        /// <summary>
+        /// Socket连接状态变更事件处理
+        /// 确保底层状态变更及时同步到ConnectionManager
+        /// </summary>
+        private void OnSocketConnectionStateChanged(bool connected)
+        {
+            _logger?.LogDebug("收到Socket连接状态变更通知: {Connected}", connected);
+            
+            // 只有当状态真的变化时才更新
+            if (_isConnected != connected)
+            {
+                _isConnected = connected;
+                OnConnectionStateChanged(connected);
+            }
         }
 
         /// <summary>

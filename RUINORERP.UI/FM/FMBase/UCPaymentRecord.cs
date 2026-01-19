@@ -440,7 +440,7 @@ namespace RUINORERP.UI.FM
             }
 
             //显示图片
-            await base.DownloadVoucherImageAsync(entity, magicPictureBox付款凭证);
+            await base.DownloadImageAsync(entity, magicPictureBox付款凭证);
             base.BindData(entity);
         }
 

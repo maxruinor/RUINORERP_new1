@@ -781,6 +781,10 @@ namespace RUINORERP.UI.Common
                 if (kpage.Controls.Count == 1)
                 {
                     var control = kpage.Controls[0];
+                    foreach (Control ctrl in kpage.Controls.Cast<Control>().ToArray())
+                    {
+                        ctrl.DataBindings.Clear(); // 或者只移除可疑的 binding
+                    }
                     closeHandler.ProcessControlOnClose(control);
                     MainForm.Instance.kryptonDockingManager1.RemovePage(kpage.UniqueName, true);
                     kpage.Dispose();

@@ -731,6 +731,7 @@
     </Compile>
     <Compile Include="ATechnologyStack\AOP\DbBizLogAOP.cs" />
     <Compile Include="ATechnologyStack\ISharedIdentification.cs" />
+    <Compile Include="BaseForm\Helpers\HelpSystemIntegration.cs" />
     <Compile Include="BI\frmReminderLinkConfig.cs">
       <SubType>Form</SubType>
     </Compile>

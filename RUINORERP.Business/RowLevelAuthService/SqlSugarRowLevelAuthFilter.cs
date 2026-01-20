@@ -67,9 +67,52 @@ namespace RUINORERP.Business.RowLevelAuthService
         }
 
         /// <summary>
-        /// 应用EXISTS子查询过滤
+        /// 构建行级权限过滤条件字符串（用于在 IncludesAllFirstLayer 之前统一应用所有 Where 条件）
         /// </summary>
-        private ISugarQueryable<T> ApplyExistsFilter<T>(ISugarQueryable<T> query, string existsClause) where T : class
+        /// <typeparam name="T">主实体类型</typeparam>
+        /// <param name="filterClause">过滤条件</param>
+        /// <returns>过滤条件字符串，如果为空或出错则返回null</returns>
+        public string BuildFilterClause<T>(string filterClause) where T : class
+        {
+            if (string.IsNullOrWhiteSpace(filterClause))
+            {
+                _logger?.LogDebug("行级权限过滤条件为空，跳过处理");
+                return null;
+            }
+
+            try
+            {
+                // 预处理过滤条件
+                string processedClause = PreprocessFilterClause(filterClause);
+                _logger?.LogDebug("预处理后的过滤条件: {ProcessedClause}", processedClause);
+
+                // ✅ 修复：返回过滤条件字符串，让调用方在 IncludesAllFirstLayer 之前统一调用 Where
+                // 解析过滤条件类型并获取对应的过滤SQL
+                if (IsExistsSubQuery(processedClause))
+                {
+                    return BuildExistsFilterClause<T>(processedClause);
+                }
+                else if (IsInSubQuery(processedClause))
+                {
+                    return BuildInFilterClause<T>(processedClause);
+                }
+                else
+                {
+                    // 简单条件直接返回
+                    return processedClause;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "构建行级权限过滤条件时发生错误: {FilterClause}", filterClause);
+                return null; // 出错时返回null
+            }
+        }
+
+        /// <summary>
+        /// 构建EXISTS子查询过滤条件（返回SQL字符串，不直接调用Where）
+        /// </summary>
+        private string BuildExistsFilterClause<T>(string existsClause) where T : class
         {
             try
             {
@@ -82,7 +125,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 if (joinInfo == null)
                 {
                     _logger?.LogWarning("无法解析EXISTS子查询的关联信息: {SubQuery}", subQuery);
-                    return query;
+                    return string.Empty;
                 }
 
                 // 使用解析的信息构建正确的EXISTS查询
@@ -94,14 +137,27 @@ namespace RUINORERP.Business.RowLevelAuthService
                                    $"WHERE jt.{joinInfo.MainTableField} = {mainTableName}.{joinInfo.MainTableField} " +
                                    $"AND jt.{joinInfo.FilterField} {joinInfo.FilterOperator} '{joinInfo.FilterValue}'";
 
-                // 使用SqlSugar的Where方法应用EXISTS查询
-                return query.Where($"EXISTS ({subQuerySql})");
+                // ✅ 修复：返回EXISTS条件字符串，让调用方在 IncludesAllFirstLayer 之前统一调用 Where
+                return $"EXISTS ({subQuerySql})";
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "应用EXISTS过滤时发生错误: {ExistsClause}", existsClause);
-                return query;
+                _logger?.LogError(ex, "构建EXISTS过滤条件时发生错误: {ExistsClause}", existsClause);
+                return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// 应用EXISTS子查询过滤（已废弃，改用 BuildExistsFilterClause）
+        /// </summary>
+        private ISugarQueryable<T> ApplyExistsFilter<T>(ISugarQueryable<T> query, string existsClause) where T : class
+        {
+            string whereClause = BuildExistsFilterClause<T>(existsClause);
+            if (!string.IsNullOrEmpty(whereClause))
+            {
+                return query.Where(whereClause);
+            }
+            return query;
         }
 
         /// <summary>
@@ -185,9 +241,9 @@ namespace RUINORERP.Business.RowLevelAuthService
         }
 
         /// <summary>
-        /// 应用IN子查询过滤
+        /// 构建IN子查询过滤条件（返回SQL字符串，不直接调用Where）
         /// </summary>
-        private ISugarQueryable<T> ApplyInFilter<T>(ISugarQueryable<T> query, string inClause) where T : class
+        private string BuildInFilterClause<T>(string inClause) where T : class
         {
             try
             {
@@ -199,7 +255,7 @@ namespace RUINORERP.Business.RowLevelAuthService
                 if (inInfo == null)
                 {
                     _logger?.LogWarning("无法解析IN子查询信息: {SubQuery}", subQuery);
-                    return query;
+                    return string.Empty;
                 }
 
                 // 构建完整的IN查询条件
@@ -210,15 +266,27 @@ namespace RUINORERP.Business.RowLevelAuthService
                 string subQuerySql = $"SELECT {inInfo.SelectField} FROM {relatedTableName} jt " +
                                    $"WHERE jt.{inInfo.FilterField} {inInfo.FilterOperator} '{inInfo.FilterValue}'";
                 
-                // 构建IN查询条件
-                string condition = $"{mainTableName}.{inInfo.MainTableField} IN ({subQuerySql})";
-                return query.Where(condition);
+                // ✅ 修复：返回IN条件字符串，让调用方在 IncludesAllFirstLayer 之前统一调用 Where
+                return $"{mainTableName}.{inInfo.MainTableField} IN ({subQuerySql})";
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "应用IN过滤时发生错误: {InClause}", inClause);
-                return query;
+                _logger?.LogError(ex, "构建IN过滤条件时发生错误: {InClause}", inClause);
+                return string.Empty;
             }
+        }
+
+        /// <summary>
+        /// 应用IN子查询过滤（已废弃，改用 BuildInFilterClause）
+        /// </summary>
+        private ISugarQueryable<T> ApplyInFilter<T>(ISugarQueryable<T> query, string inClause) where T : class
+        {
+            string whereClause = BuildInFilterClause<T>(inClause);
+            if (!string.IsNullOrEmpty(whereClause))
+            {
+                return query.Where(whereClause);
+            }
+            return query;
         }
 
         /// <summary>

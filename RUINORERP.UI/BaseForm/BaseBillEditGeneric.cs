@@ -101,6 +101,7 @@ using static RUINORERP.UI.Common.GUIUtils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
 using ImageHelper = RUINORERP.UI.Common.ImageHelper;
+using RUINORERP.UI.BaseForm.Helpers;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -133,26 +134,12 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 重写帮助系统初始化，传递泛型实体类型
         /// </summary>
+        private HelpSystemIntegration<T, C> _helpSystemIntegration;
+
         protected override void InitializeHelpSystem()
         {
-            if (!EnableSmartHelp) return;
-
-            try
-            {
-                // 启用F1帮助
-                this.EnableF1Help();
-
-                // 启用智能提示，传递实体类型以支持字段级帮助
-                HelpManager.Instance.EnableSmartTooltipForAll(
-                    this,
-                    FormHelpKey,
-                    typeof(T)  // 传递泛型实体类型
-                );
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"初始化帮助系统失败: {ex.Message}");
-            }
+            _helpSystemIntegration ??= new HelpSystemIntegration<T, C>(this, logger);
+            _helpSystemIntegration.Initialize();
         }
 
         #endregion
@@ -7108,8 +7095,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
-
-
 
         private async void BaseBillEditGeneric_Load(object sender, EventArgs e)
         {

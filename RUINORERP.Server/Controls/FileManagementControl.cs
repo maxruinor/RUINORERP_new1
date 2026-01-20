@@ -353,7 +353,7 @@ namespace RUINORERP.Server.Controls
                 int businessType = int.Parse(selectedItem.Text);
                 string categoryName = selectedItem.SubItems[1].Text;
 
-                await ShowCategoryDetailsAsync(businessType, categoryName);
+                await ShowCategoryDetailsAsync(businessType);
             }
             else
             {
@@ -364,18 +364,18 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 显示特定业务类型的文件详情
         /// </summary>
-        private async Task ShowCategoryDetailsAsync(int businessType, string categoryName)
+        private async Task ShowCategoryDetailsAsync(int businessType)
         {
             try
             {
                 // 查询该业务类型下的所有文件
-                var fileInfos = await _fileStorageInfoController.BaseQueryAsync($"BusinessType = {businessType} AND Status = 1 AND isdeleted = 0");
+                var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == businessType && c.isdeleted == false);
 
                 if (fileInfos != null && fileInfos.Count > 0)
                 {
                     var detailForm = new Form
                     {
-                        Text = $"文件分类详情 - {categoryName}",
+                        Text = $"文件分类详情-{(BizType)businessType}",
                         Size = new System.Drawing.Size(800, 600),
                         StartPosition = FormStartPosition.CenterParent
                     };
@@ -414,7 +414,7 @@ namespace RUINORERP.Server.Controls
                 }
                 else
                 {
-                    MessageBox.Show($"分类 '{categoryName}' 中没有找到任何文件");
+                    MessageBox.Show($"分类 '{(BizType)businessType}' 中没有找到任何文件");
                 }
             }
             catch (Exception ex)

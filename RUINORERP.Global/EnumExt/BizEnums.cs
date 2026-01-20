@@ -155,22 +155,22 @@ namespace RUINORERP.Global
         /// <summary>
         /// 正常状态 - 文件有效且有业务关联
         /// </summary>
-        Active = 0,
+        Active = 1,
 
         /// <summary>
         /// 已过期 - 超过ExpireTime
         /// </summary>
-        Expired = 1,
+        Expired = 2,
 
         /// <summary>
         /// 孤立文件 - 物理文件存在但无业务关联
         /// </summary>
-        Orphaned = 2,
+        Orphaned = 3,
 
         /// <summary>
         /// 逻辑删除 - 已标记删除(不参与清理)
         /// </summary>
-        Deleted = 3
+        Deleted = 4
     }
 
     public enum PlatformType

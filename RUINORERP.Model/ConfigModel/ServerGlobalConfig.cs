@@ -41,7 +41,11 @@ namespace RUINORERP.Model.ConfigModel
         [Description("单个文件最大上传大小(MB)")]
         public int MaxFileSizeMB { get; set; } = 10;
 
-       
+        [JsonProperty("MaxStorageSizeGB")]
+        [Category("文件存储设置")]
+        [Description("最大存储限制(GB)")]
+        public int MaxStorageSizeGB { get; set; }
+
         #endregion
 
 
@@ -91,6 +95,9 @@ namespace RUINORERP.Model.ConfigModel
         [Category("公告配置")]
         [Description("系统公告内容(一两句话即可)")]
         public string Announcement { get; set; } = "欢迎使用智能企业数字化管理系统！";
+
+
+
         #endregion
 
     }

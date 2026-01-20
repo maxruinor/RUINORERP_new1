@@ -1009,12 +1009,6 @@ namespace RUINORERP.Business
             // 初始化基础查询
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>();
 
-            // 自动更新导航关系(最多两层)，但对于基础表可以跳过
-            if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
-            {
-                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
-            }
-
             // 应用查询条件 - 统一处理逻辑，避免重复代码
             if (queryConditions != null && queryConditions.Count > 0)
             {
@@ -1042,10 +1036,22 @@ namespace RUINORERP.Business
                 querySqlQueryable = querySqlQueryable.Where("isdeleted=@isdeleted", new { isdeleted = 0 });
             }
 
-            // 应用额外的SQL条件和行级权限过滤
+            // ✅ 修复：所有查询条件（包括行级权限）构建完成后，再调用 IncludesAllFirstLayer()
+            // 应用额外的SQL条件和行级权限过滤 - 必须在 IncludesAllFirstLayer 之前
             if (!string.IsNullOrEmpty(additionalSqlWhere))
             {
-                querySqlQueryable = _rowLevelAuthFilter.ApplyFilter<T>(querySqlQueryable, additionalSqlWhere);
+                // 使用 BuildFilterClause 获取过滤条件字符串，然后统一调用 Where
+                string filterClause = _rowLevelAuthFilter.BuildFilterClause<T>(additionalSqlWhere);
+                if (!string.IsNullOrEmpty(filterClause))
+                {
+                    querySqlQueryable = querySqlQueryable.Where(filterClause);
+                }
+            }
+
+            // 自动更新导航关系(最多两层)，但对于基础表可以跳过
+            if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
+            {
+                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
             }
 
             // 执行查询

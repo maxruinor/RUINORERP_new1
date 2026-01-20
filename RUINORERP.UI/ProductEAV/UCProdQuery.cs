@@ -510,9 +510,10 @@ namespace RUINORERP.UI.ProductEAV
             }
             int maxrow = int.Parse(txtMaxRows.Value.ToString());
             var querySqlQueryable = MainForm.Instance.AppContext.Db.CopyNew().Queryable<View_ProdDetail>().Take(maxrow)
-                .IncludesAllFirstLayer()//自动导航
-                                        //.OrderBy(c => c.Type_ID)
+                //.OrderBy(c => c.Type_ID)
                 .Where(GetQueryExp());
+            // ✅ 修复：所有查询条件构建完成后，再调用 IncludesAllFirstLayer()
+            querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();//自动导航
             var list = querySqlQueryable.ToList();
             treeListView1.Items.Clear();
             AddItems(list);

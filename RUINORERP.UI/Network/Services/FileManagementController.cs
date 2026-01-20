@@ -180,45 +180,28 @@ namespace RUINORERP.UI.Network.Services
                         .Includes(t => t.tb_fs_filestorageinfo)
                         .ToListAsync();
 
-                    // 预加载文件存储信息到内存中，避免异步操作后数据库连接关闭导致的延迟加载问题
-                    var fileStorageInfosToDownload = new List<tb_FS_FileStorageInfo>();
+                    // 直接使用查询出来的对象进行下载，避免不必要的复制
                     foreach (var item in BusinessRelationList)
                     {
                         if (item.tb_fs_filestorageinfo != null)
                         {
-                            // 创建一个新的对象并复制所有必要的属性，确保数据完全加载到内存中
-                            var fileInfo = new tb_FS_FileStorageInfo
+                            // 创建下载请求
+                            var request = new FileDownloadRequest
                             {
-                                FileId = item.tb_fs_filestorageinfo.FileId,
-                                FileSize = item.tb_fs_filestorageinfo.FileSize,
-                                FileType = item.tb_fs_filestorageinfo.FileType,
-                                FileExtension = item.tb_fs_filestorageinfo.FileExtension,
-                                // 复制其他必要属性...
-                                FileData = item.tb_fs_filestorageinfo.FileData // 如果文件数据已加载，直接复制
+                                FileStorageInfo = item.tb_fs_filestorageinfo
                             };
-                            fileStorageInfosToDownload.Add(fileInfo);
-                        }
-                    }
 
-                    // 现在使用完全加载到内存中的文件信息进行下载操作
-                    foreach (var fileInfo in fileStorageInfosToDownload)
-                    {
-                        // 创建下载请求
-                        var request = new FileDownloadRequest
-                        {
-                            FileStorageInfo = fileInfo
-                        };
-
-                        // 下载文件
-                        var response = await fileService.DownloadFileAsync(request);
-                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                        {
-                            fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
-                        }
-                        else
-                        {
-                            // 记录错误日志
-                            System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
+                            // 下载文件
+                            var response = await fileService.DownloadFileAsync(request);
+                            if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                            {
+                                fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
+                            }
+                            else
+                            {
+                                // 记录错误日志
+                                System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
+                            }
                         }
                     }
                 }

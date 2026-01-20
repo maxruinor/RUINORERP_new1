@@ -2007,7 +2007,14 @@ namespace RUINORERP.UI.Common
             }
         }
 
-
+        /// <summary>
+        /// 绑定时间
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="exp"></param>
+        /// <param name="dtp"></param>
+        /// <param name="SyncUI"></param>
         public static void BindData4DataTime<T>(object entity, Expression<Func<T, DateTime?>> exp, KryptonDateTimePicker dtp, bool SyncUI)
         {
             var mb = exp.GetMemberInfo();

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Model.ConfigModel;
 using RUINORERP.Server.Helpers;
 
 namespace RUINORERP.Server.Network.Services

@@ -6,6 +6,7 @@ using RUINORERP.Business;
 using RUINORERP.Model.ConfigModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using RUINORERP.Global;
 
 namespace RUINORERP.Server.Helpers
 {
@@ -28,7 +29,7 @@ namespace RUINORERP.Server.Helpers
             ILogger logger = null)
         {
             var result = new MigrationResult();
-            
+
             if (serverConfig == null || string.IsNullOrEmpty(serverConfig.FileStoragePath))
             {
                 logger?.LogError("服务器配置或文件存储路径为空，无法执行迁移");
@@ -42,11 +43,11 @@ namespace RUINORERP.Server.Helpers
                 var resolvedRootPath = FileStorageHelper.ResolveEnvironmentVariables(serverConfig.FileStoragePath);
 
                 // 获取所有文件记录
-                var fileInfos = await fileStorageInfoController.BaseQueryAsync("Status = 1");
+                var fileInfos = await fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active);
 
                 if (fileInfos == null || fileInfos.Count == 0)
                 {
-            
+
                     result.Success = true;
                     result.Message = "没有找到需要迁移的文件记录";
                     return result;
@@ -107,7 +108,7 @@ namespace RUINORERP.Server.Helpers
 
                 // 转换为相对路径
                 var relativePath = FileStorageHelper.ConvertToRelativePath(fileInfo.StoragePath);
-                
+
                 // 验证转换后的路径是否有效
                 if (string.IsNullOrEmpty(relativePath) || relativePath == fileInfo.StoragePath)
                 {
@@ -128,7 +129,7 @@ namespace RUINORERP.Server.Helpers
                 // 更新数据库记录
                 var originalPath = fileInfo.StoragePath;
                 fileInfo.StoragePath = relativePath;
-                
+
                 var updateResult = await controller.SaveOrUpdate(fileInfo);
                 if (updateResult.Succeeded)
                 {
@@ -156,10 +157,10 @@ namespace RUINORERP.Server.Helpers
             ILogger logger = null)
         {
             var result = new ValidationResult();
-            
+
             try
             {
-                var fileInfos = await fileStorageInfoController.BaseQueryAsync("Status = 1");
+                var fileInfos = await fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active);
 
                 if (fileInfos == null || fileInfos.Count == 0)
                 {
@@ -178,7 +179,7 @@ namespace RUINORERP.Server.Helpers
 
                 result.IsValid = result.InvalidPaths.Count == 0;
                 result.Message = $"路径验证完成。有效路径: {result.ValidPaths}，无效路径: {result.InvalidPaths.Count}";
-                
+
                 return result;
             }
             catch (Exception ex)

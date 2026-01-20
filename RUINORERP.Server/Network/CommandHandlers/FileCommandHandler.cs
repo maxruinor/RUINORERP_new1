@@ -47,7 +47,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
         private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileStorageVersionController;
         private readonly ApplicationContext _applicationContext;
-        
+
         // 新增服务:文件更新和清理
         private readonly FileUpdateService _fileUpdateService;
         private readonly FileCleanupService _fileCleanupService;
@@ -135,9 +135,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 FileCommands.FileList,
                 FileCommands.FilePermissionCheck,
                 FileCommands.FileStorageInfo
-                // FileCommands.FileUpdate, // 新增文件更新命令(待实现)
-                // FileCommands.FileCleanup, // 新增文件清理命令(待实现)
-                // FileCommands.FileVersionHistory // 新增版本历史命令(待实现)
+            // FileCommands.FileUpdate, // 新增文件更新命令(待实现)
+            // FileCommands.FileCleanup, // 新增文件清理命令(待实现)
+            // FileCommands.FileVersionHistory // 新增版本历史命令(待实现)
             );
         }
 
@@ -448,8 +448,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<tb_FS_FileStorageInfo> DownloadByFileIdAsync(long fileId, CancellationToken cancellationToken)
         {
-            var fileInfos = await _fileStorageInfoController.BaseQueryAsync(
-                $"FileId = {fileId} AND Status = 1");
+            var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false); 
             if (fileInfos != null && fileInfos.Count > 0)
             {
                 return fileInfos[0] as tb_FS_FileStorageInfo;
@@ -510,8 +509,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var relation = relations[0] as tb_FS_BusinessRelation;
                 if (relation != null)
                 {
-                    var fileInfos = await _fileStorageInfoController.BaseQueryAsync(
-                        $"FileId = {relation.FileId} AND Status = 1");
+                    var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == relation.FileId && c.isdeleted == false); 
+             
                     if (fileInfos != null && fileInfos.Count > 0)
                     {
                         return fileInfos[0] as tb_FS_FileStorageInfo;
@@ -577,8 +576,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var bizRelation = relation as tb_FS_BusinessRelation;
                     if (bizRelation != null)
                     {
-                        var files = await _fileStorageInfoController.BaseQueryAsync(
-                            $"FileId = {bizRelation.FileId} AND Status = 1");
+                        var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == bizRelation.FileId && c.isdeleted == false); 
+                        
+            
                         if (files != null && files.Count > 0)
                         {
                             fileInfos.Add(files[0] as tb_FS_FileStorageInfo);
@@ -1089,8 +1089,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             var bizRelation = relation as tb_FS_BusinessRelation;
                             if (bizRelation != null)
                             {
-                                var files = await _fileStorageInfoController.BaseQueryAsync(
-                                    $"FileId = {bizRelation.FileId} AND Status = 1");
+                                var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == bizRelation.FileId && c.isdeleted == false); 
+                                
+                         
                                 if (files != null && files.Count > 0)
                                 {
                                     var fileInfo = files[0] as tb_FS_FileStorageInfo;
@@ -1104,10 +1105,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                 }
                 // 否则按分类查询所有文件
-                else if (!string.IsNullOrEmpty(listRequest.Category))
+                else if (listRequest.BusinessType.HasValue)
                 {
-                    var files = await _fileStorageInfoController.BaseQueryAsync(
-                        $"BusinessType = {listRequest.Category} AND Status = 1");
+                    var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == listRequest.BusinessType);
+                     
                     if (files != null)
                     {
                         fileInfos.AddRange(files.Cast<tb_FS_FileStorageInfo>());
@@ -1170,8 +1171,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         if (fileInfo.FileId > 0)
                         {
-                            var files = await _fileStorageInfoController.BaseQueryAsync(
-                                $"FileId = {fileInfo.FileId} AND Status = 1");
+                            var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileInfo.FileId);
+
+
                             if (files != null && files.Count > 0)
                             {
                                 var storedFileInfo = files[0] as tb_FS_FileStorageInfo;
@@ -1186,8 +1188,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 单文件查询
                 else if (infoRequest.FileStorageInfo != null && infoRequest.FileStorageInfo.FileId > 0)
                 {
-                    var files = await _fileStorageInfoController.BaseQueryAsync(
-                        $"FileId = {infoRequest.FileStorageInfo.FileId} AND Status = 1");
+                    var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == infoRequest.FileStorageInfo.FileId);
+
                     if (files != null && files.Count > 0)
                     {
                         var storedFileInfo = files[0] as tb_FS_FileStorageInfo;
@@ -1235,8 +1237,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 查询文件信息
-                var files = await _fileStorageInfoController.BaseQueryAsync(
-                    $"FileId = {permissionRequest.FileId} AND Status = 1");
+                var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == permissionRequest.FileId);
                 if (files == null || files.Count == 0)
                 {
                     _logger?.LogWarning("文件不存在或已删除,FileId: {FileId}", permissionRequest.FileId);
@@ -1321,7 +1322,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 从数据库统计各业务类型的文件使用情况
                 try
                 {
-                    var allFiles = await _fileStorageInfoController.BaseQueryAsync("Status = 1");
+                    var allFiles = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active); ;
                     if (allFiles != null && allFiles.Count > 0)
                     {
                         var fileGroups = allFiles.Cast<tb_FS_FileStorageInfo>()

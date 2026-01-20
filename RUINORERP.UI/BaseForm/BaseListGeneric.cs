@@ -1701,8 +1701,9 @@ namespace RUINORERP.UI.BaseForm
                 if (UseAutoNavQuery)
                 {
                     var query = MainForm.Instance.AppContext.Db.Queryable<T>().WhereIF(expression != null, expression)
-                   .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                    .ApplyRowLevelAuth(rowAuthPolicies, MainForm.Instance.AppContext.Db, MainForm.Instance.logger);
+                    // ✅ 修复：所有查询条件（包括行级权限）构建完成后，再调用 IncludesAllFirstLayer()
+                    query = query.IncludesAllFirstLayer();//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                     list = await query.ToListAsync();
                 }
                 else

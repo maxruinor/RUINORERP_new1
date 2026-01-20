@@ -373,7 +373,7 @@ namespace RUINORERP.Server.Helpers
         {
             try
             {
-                var fileInfos = await fileController.BaseQueryAsync($"FileId = {fileId} AND Status = 1");
+                var fileInfos = await fileController.QueryByNavAsync(c => c.FileId == fileId && c.FileStatus == (int)FileStatus.Active);
                 return fileInfos != null && fileInfos.Count > 0;
             }
             catch (Exception ex)

@@ -312,7 +312,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
     /// </summary>
     public class FileListRequest : RequestBase
     {
-        public string Category { get; set; }
+        public int? BusinessType { get; set; }
 
         public string BusinessId { get; set; }
 

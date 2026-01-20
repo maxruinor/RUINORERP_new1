@@ -134,7 +134,7 @@ namespace Krypton.Toolkit
         }
 
         /// <summary>
-        /// Gets or sets the text associated with this control. 
+        /// Gets or sets the text associated with this control. 1
         /// </summary>
         [Editor(typeof(MultilineStringEditor), typeof(UITypeEditor))]
         [Localizable(false)]

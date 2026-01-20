@@ -349,7 +349,9 @@ namespace RUINORERP.UI.BaseForm
                     var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as KryptonLabel;
                     if (lblDataStatus != null && !string.IsNullOrEmpty(statusDesc))
                     {
-                        lblDataStatus.Text = statusDesc;
+                        //因为具体的子类中绑定了Text显示的值是枚举值，不是描述
+                        //                        lblDataStatus.Text = statusDesc;
+                        lblDataStatus.Text = currentStatus.ToString();
                     }
 
                     // 更新审核状态显示

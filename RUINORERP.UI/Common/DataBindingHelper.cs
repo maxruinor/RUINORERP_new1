@@ -529,7 +529,7 @@ namespace RUINORERP.UI.Common
                 }
             }
         }
- 
+
 
 
         /// <summary>
@@ -952,7 +952,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        
+
 
 
 
@@ -1949,61 +1949,142 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 
+        /// 绑定 DateTime 类型到 KryptonDateTimePicker 控件
         /// </summary>
-        /// <param name="entity"></param>
+        /// <param name="entity">数据源对象</param>
         /// <param name="datetimeValue">datetimeValue这个值没有起到作用</param>
-        /// <param name="key"></param>
-        /// <param name="dtp"></param>
-        /// <param name="SyncUI"></param>
+        /// <param name="key">数据源的属性名</param>
+        /// <param name="dtp">KryptonDateTimePicker 控件</param>
+        /// <param name="SyncUI">是否实时同步到数据源</param>
         public static void BindData4DataTime(object entity, object datetimeValue, string key, KryptonDateTimePicker dtp, bool SyncUI)
         {
             try
             {
-
-
+                // 解除旧绑定与事件，避免重复订阅
                 dtp.DataBindings.Clear();
-                //chkbox
-                Binding dtpdata = null;
-                if (SyncUI)
-                {
-                    dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnPropertyChanged);
-                }
-                else
-                {
-                    dtpdata = new Binding("Value", entity, key, true, DataSourceUpdateMode.OnValidation);
-                }
+                dtp.Validating -= dtp_Validating;
+                dtp.CheckedChanged -= Dtp_CheckedChanged;
 
+                // 选择绑定目标属性：优先使用控件的 ValueNullable（若存在），否则回退到 Value
+                string bindTarget = dtp.GetType().GetProperty("ValueNullable") != null ? "ValueNullable" : "Value";
 
-                //数据源的数据类型转换为控件要求的数据类型。
+                var mode = SyncUI ? DataSourceUpdateMode.OnPropertyChanged : DataSourceUpdateMode.OnValidation;
+                Binding dtpdata = new Binding(bindTarget, entity, key, true, mode);
+
+                // 将数据源值格式化为控件可接受的类型并处理空值/占位
                 dtpdata.Format += (s, args) =>
                 {
-                    if (args.Value == null || (args.Value is DateTime dt && dt == default(DateTime)))
+                    var v = args.Value;
+
+                    // 空/null/DBNull/空字符串 统一视为"未选中"并在控件上显示为空白
+                    if (v == null || v == DBNull.Value || string.IsNullOrEmpty(v.ToString()))
                     {
-                        // 不要设置字符串,保持null或DateTime类型
-                        dtp.ValueNullable = DBNull.Value;
+                        try
+                        {
+                            dtp.Checked = false;
+                            dtp.Format = DateTimePickerFormat.Custom;
+                            dtp.CustomFormat = "   ";
+                        }
+                        catch { }
+
+                        // 如果控件支持可空值，传回 DBNull.Value，使数据源接受 null；否则把 args.Value 保持为当前控件值，避免框架尝试把 "" 转成 DateTime
+                        args.Value = bindTarget == "ValueNullable" ? (object)DBNull.Value : dtp.Value;
+                        return;
                     }
 
+                    // 尝试把值转换为 DateTime 并正常显示
+                    DateTime parsed;
+                    if (v is DateTime dt)
+                        parsed = dt;
+                    else if (!DateTime.TryParse(v.ToString(), out parsed))
+                    {
+                        // 无法解析，作为空处理
+                        try
+                        {
+                            dtp.Checked = false;
+                            dtp.Format = DateTimePickerFormat.Custom;
+                            dtp.CustomFormat = "   ";
+                        }
+                        catch { }
+                        args.Value = bindTarget == "ValueNullable" ? (object)DBNull.Value : dtp.Value;
+                        return;
+                    }
+
+                    try
+                    {
+                        dtp.Checked = true;
+                        dtp.Format = DateTimePickerFormat.Short;
+                        dtp.CustomFormat = null;
+                    }
+                    catch { }
+
+                    args.Value = parsed;
                 };
-                //将控件的数据类型转换为数据源要求的数据类型。
+
+                // 将控件值解析回数据源：未选中 -> null；选中 -> DateTime
                 dtpdata.Parse += (s, args) =>
                 {
-                    args.Value = !dtp.Checked ? null : args.Value;
+                    if (!dtp.Checked)
+                    {
+                        args.Value = null;
+                    }
+                    else
+                    {
+                        // 确保写入的是 DateTime 而不是空字符串或其他类型
+                        if (args.Value == null || args.Value == DBNull.Value)
+                        {
+                            args.Value = dtp.Value;
+                        }
+                        else if (!(args.Value is DateTime))
+                        {
+                            if (!DateTime.TryParse(args.Value.ToString(), out DateTime parsed))
+                            {
+                                args.Value = dtp.Value;
+                            }
+                            else
+                            {
+                                args.Value = parsed;
+                            }
+                        }
+                    }
                 };
+
+                // 捕获绑定时的转换异常，避免抛出到 UI 线程
+                dtpdata.BindingComplete += (s, e) =>
+                {
+                    if (e.Exception != null)
+                    {
+                        e.Cancel = true; // 取消绑定操作，防止异常传播
+                        try
+                        {
+                            MainForm.Instance?.logger?.LogWarning($"BindData4DataTime binding error for '{key}': {e.Exception.Message}");
+                        }
+                        catch { }
+                    }
+                };
+
+                // 订阅控件事件（去重）
                 dtp.Validating += dtp_Validating;
                 dtp.CheckedChanged += Dtp_CheckedChanged;
 
+                // 初始化显示为空
                 if (datetimeValue == null)
                 {
                     dtp.Format = DateTimePickerFormat.Custom;
                     dtp.CustomFormat = "   ";
+                    dtp.Checked = false;
                 }
-               
+
                 dtp.DataBindings.Add(dtpdata);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // 捕获异常但不处理,避免绑定失败导致程序崩溃
+                // 记录异常（避免吞掉导致难以定位）
+                try
+                {
+                    MainForm.Instance?.logger?.LogError($"BindData4DataTime failed for '{key}': {ex.Message}", ex);
+                }
+                catch { }
             }
         }
 
@@ -2411,32 +2492,6 @@ namespace RUINORERP.UI.Common
 
 
             txtBox.DataBindings.Add(depa);
-
-            //===============================
-
-            /*
-            Binding depaText = null;
-            if (SyncUI)
-            {
-                //双向绑定 应用于加载和编辑
-                depaText = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnPropertyChanged);
-            }
-            else
-            {
-                //单向绑定 应用于加载
-                depaText = new Binding("Text", entity, textField, true, DataSourceUpdateMode.OnValidation);
-            }
-
-            //数据源的数据类型转换为控件要求的数据类型。
-            depaText.Format += (s, args) => args.Value = args.Value == null ? "" : args.Value;
-            //将控件的数据类型转换为数据源要求的数据类型。
-            depaText.Parse += (s, args) => args.Value = args.Value == null ? "" : args.Value;
-
-
-            txtBox.DataBindings.Add(depaText);
-            */
-
-
         }
 
 
@@ -2820,7 +2875,7 @@ namespace RUINORERP.UI.Common
             if (cacheManager != null)
             {
                 // 获取表结构管理器以获取显示字段
-                var tableSchemaManager =  Startup.GetFromFac<ITableSchemaManager>();
+                var tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
                 var schemaInfo = tableSchemaManager.GetSchemaInfo(tableName);
 
                 if (schemaInfo != null && string.IsNullOrEmpty(value))
@@ -2884,10 +2939,10 @@ namespace RUINORERP.UI.Common
                 // 使用ExpressionSafeHelper获取优化的评估函数
                 // 该函数会自动处理闭包变量，无需修改调用方式
                 var evaluationFunction = ExpressionSafeHelper.GetEvaluationFunction(expCondition);
-                
+
                 // 使用评估函数筛选数据
                 var result = sourceList.Where(evaluationFunction).ToList();
-                
+
                 System.Diagnostics.Debug.WriteLine($"表达式筛选成功，找到 {result.Count} 条记录");
                 return result;
             }
@@ -2895,12 +2950,12 @@ namespace RUINORERP.UI.Common
             {
                 // 发生错误时，记录日志并尝试使用备选方案
                 System.Diagnostics.Debug.WriteLine($"主要筛选方法失败: {ex.Message}");
-                
+
                 try
                 {
                     // 备选方案：使用条件提取方法
                     var result = ExpressionSafeHelper.TryFilterWithConditionExtraction(sourceList, expCondition);
-                    
+
                     if (result != null && result.Any())
                     {
                         System.Diagnostics.Debug.WriteLine($"备选方案成功，找到 {result.Count} 条记录");
@@ -2911,7 +2966,7 @@ namespace RUINORERP.UI.Common
                 {
                     System.Diagnostics.Debug.WriteLine($"备选方案也失败: {fallbackEx.Message}");
                 }
-                
+
                 // 所有方法都失败时，返回原始列表
                 System.Diagnostics.Debug.WriteLine($"所有筛选方法都失败，返回原始列表");
                 return sourceList.ToList();
@@ -2966,7 +3021,7 @@ namespace RUINORERP.UI.Common
 
                 // 插入"请选择"项并设置数据源
                 InsertSelectItem<T>(key, value, filteredList);
-                
+
                 // 直接使用List作为数据源，避免BindingListView的引用问题
                 bs = new BindingSource { DataSource = filteredList };
                 System.Diagnostics.Debug.WriteLine($"使用List绑定数据源");
@@ -2989,7 +3044,7 @@ namespace RUINORERP.UI.Common
             {
                 System.Diagnostics.Debug.WriteLine($"InitDataToCmbWithCondition 执行失败: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
-                
+
                 // 发生异常时，尝试获取所有数据
                 try
                 {
@@ -3024,11 +3079,11 @@ namespace RUINORERP.UI.Common
             {
                 // 添加默认选择项
                 InsertSelectItem<T>(key, value, filteredList);
-                
+
                 // 创建数据源并绑定
                 var bs = new BindingSource { DataSource = filteredList };
                 ComboBoxHelper.InitDropList(bs, cmbBox, key, value, ComboBoxStyle.DropDown, false);
-                
+
                 System.Diagnostics.Debug.WriteLine($"使用预筛选数据初始化下拉框，共 {filteredList.Count} 条记录");
             }
             catch (Exception ex)
@@ -3048,9 +3103,9 @@ namespace RUINORERP.UI.Common
         /// <param name="cmbBox">下拉框控件</param>
         /// <param name="expression">过滤条件表达式</param>
         public static void InitDataToCmbWithDynamicExpression<T>(
-            string key, 
-            string value, 
-            string tableName, 
+            string key,
+            string value,
+            string tableName,
             KryptonComboBox cmbBox,
             Expression<Func<T, bool>> expression) where T : class
         {
@@ -3058,7 +3113,7 @@ namespace RUINORERP.UI.Common
             {
                 // 使用ExpressionSafeHelper处理表达式
                 var evaluationFunction = ExpressionSafeHelper.GetEvaluationFunction(expression);
-                
+
                 // 获取所有数据并在内存中筛选
                 var EntityList = CacheManager.GetEntityList<T>(tableName);
                 if (EntityList != null && EntityList.Any())
@@ -3081,7 +3136,7 @@ namespace RUINORERP.UI.Common
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"InitDataToCmbWithDynamicExpression 执行失败: {ex.Message}");
-                
+
                 // 发生异常时，尝试使用基本方法获取数据
                 try
                 {
@@ -3101,7 +3156,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-     
+
 
 
 
@@ -3321,7 +3376,7 @@ namespace RUINORERP.UI.Common
                 #region 从缓存中获取数据源，否则查数据库
                 // 通过依赖注入获取缓存管理器
                 var cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                if ( Startup.GetFromFac<ITableSchemaManager>().GetAllTableNames().Contains(tableName))
+                if (Startup.GetFromFac<ITableSchemaManager>().GetAllTableNames().Contains(tableName))
                 {
                     BindingSource bs = new BindingSource();
                     List<T> tlist = new List<T>();

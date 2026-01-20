@@ -85,6 +85,7 @@ namespace RUINORERP.Business.RowLevelAuthService
 
         /// <summary>
         /// 加载所有启用的行级权限策略到缓存
+        /// 注意：此方法作为后台缓存加载操作，失败不应影响系统主流程
         /// </summary>
         public async Task LoadAllPoliciesAsync()
         {
@@ -94,42 +95,47 @@ namespace RUINORERP.Business.RowLevelAuthService
                 var allPolicies = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_RowAuthPolicy>()
                     .Where(p => p.IsEnabled)
-                    .ToListAsync();
+                    .ToListAsync() ?? new List<tb_RowAuthPolicy>();
 
                 // 获取所有策略关联的用户
                 var userPolicyRelations = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_P4RowAuthPolicyByUser>()
                     .Where(u => u.IsEnabled)
-                    .ToListAsync();
+                    .ToListAsync() ?? new List<tb_P4RowAuthPolicyByUser>();
 
                 // 获取所有策略关联的角色
                 var rolePolicyRelations = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_P4RowAuthPolicyByRole>()
                     .Where(r => r.IsEnabled)
-                    .ToListAsync();
+                    .ToListAsync() ?? new List<tb_P4RowAuthPolicyByRole>();
 
                 // 获取所有唯一用户ID
-                var userIds = userPolicyRelations
+                var userIds = userPolicyRelations?
                     .Select(u => u.User_ID)
                     .Distinct()
-                    .ToList();
+                    .ToList() ?? new List<long>();
 
                 // 获取所有唯一角色ID
-                var roleIds = rolePolicyRelations
+                var roleIds = rolePolicyRelations?
                     .Select(r => r.RoleID)
                     .Distinct()
-                    .ToList();
+                    .ToList() ?? new List<long>();
 
                 // 预加载所有用户的策略缓存
-                var loadTasks = userIds.Select(userId => LoadPoliciesForUserAsync(userId, roleIds));
-                await Task.WhenAll(loadTasks);
+                if (userIds.Any() && roleIds.Any())
+                {
+                    var loadTasks = userIds.Select(userId => LoadPoliciesForUserAsync(userId, roleIds));
+                    await Task.WhenAll(loadTasks);
+                }
 
                 _isLoaded = true;
+                _logger.LogInformation($"成功加载行级权限策略: {userPolicyRelations?.Count ?? 0} 个用户关联, {rolePolicyRelations?.Count ?? 0} 个角色关联");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "加载行级权限策略失败");
-                throw;
+                // 权限缓存加载失败不应影响系统主流程，只记录日志
+                _logger.LogWarning(ex, "加载行级权限策略失败，但不影响系统运行。权限过滤将降级为默认行为");
+                _isLoaded = false;
             }
         }
 

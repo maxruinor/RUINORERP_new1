@@ -21,7 +21,7 @@ namespace RUINORERP.Model
     /// 
     /// </summary>
     [Serializable()]
-    [Description("")]
+    [Description("异常日志")]
     [SugarTable("Logs")]
     public partial class Logs : BaseEntity, ICloneable
     {

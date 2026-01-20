@@ -79,43 +79,5 @@ namespace RUINORERP.UI.BI
             }
         }
 
-        public async ValueTask<object> ExecuteAsync(CancellationToken token)
-        {
-            int counter = 0;
-            while (true)
-            {
-                try
-                {
-                    //if (MainForm.Instance.socketSession.ServerMsg != null)
-                    //{
-                    //    return MainForm.Instance.socketSession.ServerMsg;
-                    //}
-                    //超时等待
-                    //await Task.Delay(interval, token);
-                    await Task.Delay(1000, token);
-                    counter++;
-                    if (counter >= 3)
-                    {
-
-                    }
-                }
-                catch (Exception)
-                {
-
-                }
-                if (token.IsCancellationRequested)
-                {
-                    break;
-                }
-            }
-            return null;
-        }
-
-
-
-
-
-
-
     }
 }

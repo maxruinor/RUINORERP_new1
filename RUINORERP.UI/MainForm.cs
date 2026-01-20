@@ -744,7 +744,7 @@ namespace RUINORERP.UI
                         rs = true;
 
                         // 等待2秒，确保更新程序启动
-                        await Task.Delay(1500);
+                        await Task.Delay(500);
                     }
                     else
                     {
@@ -1278,7 +1278,7 @@ namespace RUINORERP.UI
             // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
             _ = Task.Run(async () =>
             {
-                await Task.Delay(3000);
+                await Task.Delay(2000);
                 #region 本位币别
                 #region 查询对应的项目组
 
@@ -1335,7 +1335,7 @@ namespace RUINORERP.UI
             // 异步延迟3秒执行本位币别查询事件，不会阻止UI线程
             _ = Task.Run(async () =>
             {
-                await Task.Delay(10000);
+                await Task.Delay(3000);
                 #region  正在查询账期的设置
                 this.BeginInvoke(new Action(() => PrintInfoLog("正在查询账期的设置")));
 
@@ -1601,7 +1601,7 @@ namespace RUINORERP.UI
             if (pendingUpdate != null)
             {
                 // 延迟一段时间再显示更新提示，确保界面状态完全恢复
-                Task.Delay(1000).ContinueWith(_ =>
+                Task.Delay(600).ContinueWith(_ =>
                 {
                     this.Invoke(new Action(() =>
                     {

@@ -780,7 +780,7 @@ namespace RUINORERP.UI
                 {
                     MainForm.Instance?.ShowStatusText("正在断开现有连接...");
                     await connectionManager.DisconnectAsync();
-                    await Task.Delay(500); // 等待断开完成
+                    await Task.Delay(200); // 等待断开完成
                 }
 
                 // 更新原始服务器信息

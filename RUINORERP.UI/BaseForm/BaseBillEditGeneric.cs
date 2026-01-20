@@ -4461,7 +4461,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 修复
+        /// 修复性保存数据 支持主表的修改，子表的修改和增减
         /// </summary>
         /// <summary>
         /// 特殊数据修正功能（仅管理员可用）

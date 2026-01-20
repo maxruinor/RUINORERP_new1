@@ -950,8 +950,11 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         List<tb_SaleOrderDetail> details = new List<tb_SaleOrderDetail>();
+
+
+
         /// <summary>
-        /// 查询结果 选中行的变化事件11
+        /// 保存订单数据
         /// </summary>
         /// <param name="entity"></param>
 

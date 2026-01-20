@@ -2068,7 +2068,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 // InstancePerLifetimeScope服务：在每个作用域内创建一次
                 T service = AutofacContainerScope.Resolve<T>();
                 
-                _logger.Debug($"成功解析服务: {serviceType.FullName}");
+                //_logger.Debug($"成功解析服务: {serviceType.FullName}");
                 return service;
             }
             catch (Exception ex)
@@ -2103,9 +2103,9 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 }
 
                 // 记录服务解析日志
-                _logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                //_logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 T service = AutofacContainerScope.ResolveNamed<T>(className);
-                _logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
+                //_logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 return service;
             }
             catch (Exception ex)

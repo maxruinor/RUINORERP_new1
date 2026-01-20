@@ -94,9 +94,15 @@ namespace RUINORERP.UI.MRP.MP
         public override void BuildSummaryCols()
         {
             base.MasterSummaryCols.Add(c => c.TotalSendQty);
+            base.MasterSummaryCols.Add(c => c.TotalPrice);
+            base.MasterSummaryCols.Add(c => c.TotalReQty);
+            base.MasterSummaryCols.Add(c => c.TotalCost);
+
             base.ChildSummaryCols.Add(c => c.ActualSentQty);
             base.ChildSummaryCols.Add(c => c.SubtotalCost);
             base.ChildSummaryCols.Add(c => c.SubtotalPrice);
+            base.ChildSummaryCols.Add(c => c.ReturnQty);
+
         }
 
         public override void BuildInvisibleCols()

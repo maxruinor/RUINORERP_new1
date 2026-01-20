@@ -3,9 +3,11 @@ using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.UI.Network.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using RUINORERP.Model;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -303,15 +305,45 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // 调用服务端的删除接口(仅删除关联,不删除物理文件)
-                // 这里需要服务端支持仅删除关联的接口
-                // 临时方案:通过FileManagementService获取旧文件列表,然后调用删除接口(物理删除=false)
-                
                 _logger?.LogDebug("准备删除旧文件关联,BusinessType:{BusinessType},BusinessId:{BusinessId},RelatedField:{RelatedField}",
                     businessType, businessId, relatedField);
-                
-                // TODO: 实现仅删除关联关系的逻辑
-                // 当服务端支持后,需要调用专门的接口
+
+                // 查询当前业务关联的旧文件
+                var listRequest = new FileListRequest
+                {
+                    BusinessType = businessType,
+                    BusinessId = businessId.ToString() // 使用BusinessId查询
+                };
+
+                var listResponse = await _fileManagementService.GetFileListAsync(listRequest, ct);
+
+                if (listResponse.IsSuccess && listResponse.Data?.FileStorageInfos != null)
+                {
+                    // 构建删除请求，仅删除关联关系
+                    var deleteRequest = new FileDeleteRequest();
+                    deleteRequest.BusinessType = businessType;
+                    deleteRequest.PhysicalDelete = false; // 不物理删除文件，只删除关联
+
+                    // 添加所有旧文件到删除列表
+                    foreach (var fileInfo in listResponse.Data.FileStorageInfos)
+                    {
+                        deleteRequest.AddDeleteFileStorageInfo(fileInfo);
+                    }
+
+                    // 执行删除（仅删除关联）
+                    if (deleteRequest.FileStorageInfos.Count > 0)
+                    {
+                        var deleteResponse = await _fileManagementService.DeleteFileAsync(deleteRequest, ct);
+                        if (deleteResponse.IsSuccess)
+                        {
+                            _logger?.LogInformation("成功删除{Count}个旧文件关联", deleteRequest.FileStorageInfos.Count);
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("删除旧文件关联失败:{ErrorMessage}", deleteResponse.ErrorMessage);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -335,13 +367,48 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // TODO: 实现获取版本历史的逻辑
-                // 需要服务端支持FileCommands.FileVersionHistory命令
-                
                 _logger?.LogDebug("获取文件版本历史,BusinessType:{BusinessType},BusinessId:{BusinessId},RelatedField:{RelatedField}",
                     businessType, businessId, relatedField);
-                
-                return new List<FileVersionHistory>();
+
+                // 查询当前业务关联的所有文件
+                var listRequest = new FileListRequest
+                {
+                    BusinessType = businessType,
+                    BusinessId = businessId.ToString()
+                };
+
+                var listResponse = await _fileManagementService.GetFileListAsync(listRequest, ct);
+
+                if (!listResponse.IsSuccess || listResponse.Data?.FileStorageInfos == null)
+                {
+                    _logger?.LogWarning("获取文件列表失败");
+                    return new List<FileVersionHistory>();
+                }
+
+                // 转换为版本历史列表
+                var versionHistoryList = new List<FileVersionHistory>();
+                foreach (var fileInfo in listResponse.Data.FileStorageInfos)
+                {
+                    versionHistoryList.Add(new FileVersionHistory
+                    {
+                        FileId = fileInfo.FileId,
+                        FileName = fileInfo.OriginalFileName,
+                        VersionNo = fileInfo.CurrentVersion,
+                        IsActive = fileInfo.FileStatus == (int)FileStatus.Active,
+                        Created_at = fileInfo.Created_at,
+                        Created_by = fileInfo.Created_by,
+                        Modified_at = fileInfo.Modified_at,
+                        Modified_by = fileInfo.Modified_by
+                    });
+                }
+
+                // 按修改时间降序排列
+                versionHistoryList = versionHistoryList
+                    .OrderByDescending(v => v.Modified_at)
+                    .ToList();
+
+                _logger?.LogInformation("获取到{Count}个文件版本历史", versionHistoryList.Count);
+                return versionHistoryList;
             }
             catch (Exception ex)
             {
@@ -368,12 +435,50 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // TODO: 实现恢复版本的逻辑
-                // 需要服务端支持版本恢复接口
-                
-                _logger?.LogDebug("恢复文件版本,FileId:{FileId}", fileId);
-                
-                return false;
+                _logger?.LogDebug("恢复文件版本,FileId:{FileId},BusinessId:{BusinessId},RelatedField:{RelatedField}",
+                    fileId, businessId, relatedField);
+
+                // 先下载要恢复的文件数据
+                var downloadRequest = new FileDownloadRequest
+                {
+                    FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
+                };
+
+                var downloadResponse = await _fileManagementService.DownloadFileAsync(downloadRequest, ct);
+
+                if (!downloadResponse.IsSuccess ||
+                    downloadResponse.FileStorageInfos == null ||
+                    downloadResponse.FileStorageInfos.Count == 0)
+                {
+                    _logger?.LogWarning("下载要恢复的文件失败");
+                    return false;
+                }
+
+                var oldFileInfo = downloadResponse.FileStorageInfos[0];
+
+                // 使用Replace策略重新上传旧文件
+                var updateResult = await UpdateBusinessFileAsync(
+                    businessType,
+                    null, // BusinessNo，服务器会自动处理
+                    businessId,
+                    relatedField,
+                    oldFileInfo.FileData,
+                    oldFileInfo.OriginalFileName,
+                    FileUpdateStrategy.Replace,
+                    false,
+                    null,
+                    ct);
+
+                if (updateResult.IsSuccess)
+                {
+                    _logger?.LogInformation("文件版本恢复成功,FileId:{FileId}", fileId);
+                    return true;
+                }
+                else
+                {
+                    _logger?.LogWarning("文件版本恢复失败:{ErrorMessage}", updateResult.Message);
+                    return false;
+                }
             }
             catch (Exception ex)
             {

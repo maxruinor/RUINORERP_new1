@@ -151,14 +151,14 @@ namespace RUINORERP.Extensions
                 // 获取原生SQL并添加调用方法信息
                 string nativeSql = UtilMethods.GetNativeSql(sql, pars);
                 string sqlWithCaller = $"{callerMethod}:{nativeSql}";
-                System.Diagnostics.Debug.WriteLine(sqlWithCaller);
+                //System.Diagnostics.Debug.WriteLine(sqlWithCaller);
 
                 // 触发自定义检查事件
                 if (CheckEvent != null)
                 {
                     string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
                     string formattedSqlWithCaller = $"{callerMethod}:     {formattedSql}";
-                    System.Diagnostics.Debug.WriteLine(formattedSqlWithCaller);
+                    //System.Diagnostics.Debug.WriteLine(formattedSqlWithCaller);
                     CheckEvent(formattedSqlWithCaller);
                 }
             };

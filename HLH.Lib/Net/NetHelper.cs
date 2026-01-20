@@ -193,10 +193,7 @@ namespace HLH.Lib.Net
         {
             try
             {
-                if (recordLog)
-                {
-                    Trace.WriteLine(filename + " " + arguments);
-                }
+  
                 Process proc = new Process();
                 proc.StartInfo.FileName = filename;
                 proc.StartInfo.CreateNoWindow = true;
@@ -209,10 +206,7 @@ namespace HLH.Lib.Net
                 {
                     string txt = sr.ReadToEnd();
                     sr.Close();
-                    if (recordLog)
-                    {
-                        Trace.WriteLine(txt);
-                    }
+           
                     if (!proc.HasExited)
                     {
                         proc.Kill();
@@ -222,7 +216,6 @@ namespace HLH.Lib.Net
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ex);
                 return ex.Message;
             }
         }

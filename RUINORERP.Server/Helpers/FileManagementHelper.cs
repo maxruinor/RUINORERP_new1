@@ -14,6 +14,7 @@ namespace RUINORERP.Server.Helpers
     /// <summary>
     /// 文件管理帮助类
     /// 提供文件与数据库实体之间的转换和操作
+    /// 负责文件存储信息、业务关联、版本管理等数据库操作
     /// </summary>
     public static class FileManagementHelper
     {

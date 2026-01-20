@@ -43,7 +43,9 @@ namespace RUINORERP.Server.Controls
             lblTotalStorage = new System.Windows.Forms.Label();
             panel1 = new System.Windows.Forms.Panel();
             btnRefresh = new System.Windows.Forms.Button();
+            btnCleanupFiles = new System.Windows.Forms.Button();
             btnViewDetails = new System.Windows.Forms.Button();
+            btnMonitorDetails = new System.Windows.Forms.Button();
             listView1 = new System.Windows.Forms.ListView();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -221,7 +223,9 @@ namespace RUINORERP.Server.Controls
             // panel1
             // 
             panel1.Controls.Add(btnRefresh);
+            panel1.Controls.Add(btnCleanupFiles);
             panel1.Controls.Add(btnViewDetails);
+            panel1.Controls.Add(btnMonitorDetails);
             panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             panel1.Location = new System.Drawing.Point(0, 569);
             panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -230,7 +234,7 @@ namespace RUINORERP.Server.Controls
             panel1.TabIndex = 1;
             // 
             // btnRefresh
-            // 
+            //
             btnRefresh.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnRefresh.Location = new System.Drawing.Point(703, 8);
             btnRefresh.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -240,9 +244,22 @@ namespace RUINORERP.Server.Controls
             btnRefresh.Text = "刷新数据";
             btnRefresh.UseVisualStyleBackColor = true;
             btnRefresh.Click += btnRefresh_Click;
-            // 
+            //
+            // btnCleanupFiles
+            //
+            btnCleanupFiles.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnCleanupFiles.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
+            btnCleanupFiles.Location = new System.Drawing.Point(586, 8);
+            btnCleanupFiles.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnCleanupFiles.Name = "btnCleanupFiles";
+            btnCleanupFiles.Size = new System.Drawing.Size(88, 33);
+            btnCleanupFiles.TabIndex = 3;
+            btnCleanupFiles.Text = "清理文件";
+            btnCleanupFiles.UseVisualStyleBackColor = false;
+            btnCleanupFiles.Click += new System.EventHandler(btnCleanupFiles_Click);
+            //
             // btnViewDetails
-            // 
+            //
             btnViewDetails.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnViewDetails.Location = new System.Drawing.Point(820, 8);
             btnViewDetails.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -252,6 +269,18 @@ namespace RUINORERP.Server.Controls
             btnViewDetails.Text = "查看详情";
             btnViewDetails.UseVisualStyleBackColor = true;
             btnViewDetails.Click += btnViewDetails_Click;
+            //
+            // btnMonitorDetails
+            //
+            btnMonitorDetails.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnMonitorDetails.Location = new System.Drawing.Point(703, 40);
+            btnMonitorDetails.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnMonitorDetails.Name = "btnMonitorDetails";
+            btnMonitorDetails.Size = new System.Drawing.Size(205, 33);
+            btnMonitorDetails.TabIndex = 2;
+            btnMonitorDetails.Text = "查看监控详情";
+            btnMonitorDetails.UseVisualStyleBackColor = true;
+            btnMonitorDetails.Click += new System.EventHandler(btnMonitorDetails_Click);
             // 
             // listView1
             // 
@@ -353,7 +382,9 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Label lblUsagePercentage;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Button btnRefresh;
+        private System.Windows.Forms.Button btnCleanupFiles;
         private System.Windows.Forms.Button btnViewDetails;
+        private System.Windows.Forms.Button btnMonitorDetails;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;

@@ -49,6 +49,63 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 验证文件是否为有效的图片文件
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>是否为有效的图片文件</returns>
+        private bool IsValidImageFile(string filePath)
+        {
+            try
+            {
+                // 首先检查扩展名
+                string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
+                if (string.IsNullOrEmpty(extension) || !ImageExtensions.Contains(extension))
+                {
+                    return false;
+                }
+
+                // 然后验证文件内容
+                using (var image = Image.FromFile(filePath))
+                {
+                    // 检查图像的宽度和高度以确保是有效的图像
+                    return image.Width > 0 && image.Height > 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证文件存储信息对象是否为有效的图片文件
+        /// </summary>
+        /// <param name="fileStorageInfo">文件存储信息</param>
+        /// <returns>是否为有效的图片文件</returns>
+        private bool IsValidImageFile(tb_FS_FileStorageInfo fileStorageInfo)
+        {
+            if (fileStorageInfo == null)
+                return false;
+
+            // 检查扩展名
+            bool isImageExtension = !string.IsNullOrEmpty(fileStorageInfo.FileExtension) &&
+                                   ImageExtensions.Contains(fileStorageInfo.FileExtension.ToLower());
+
+            // 检查文件类型
+            bool isImageType = !string.IsNullOrEmpty(fileStorageInfo.FileType) &&
+                              (fileStorageInfo.FileType.ToLower().Contains("image/") ||
+                               fileStorageInfo.FileType.Contains("图片"));
+
+            // 检查文件数据
+            bool isValidImageContent = fileStorageInfo.FileData != null &&
+                                       fileStorageInfo.FileData.Length > 0 &&
+                                       IsValidImageFile(fileStorageInfo.FileData);
+
+            // 满足任一条件即可
+            return isImageExtension || isImageType || isValidImageContent;
+        }
+
+        /// <summary>
         /// 验证文件数据是否为有效的图片文件
         /// </summary>
         /// <param name="fileData">文件数据</param>
@@ -94,132 +151,35 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 验证文件是否为有效的图片文件
+        /// 删除图片文件（重载方法，直接使用文件存储信息对象）
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>是否为有效的图片文件</returns>
-        private bool IsValidImageFile(string filePath)
-        {
-            try
-            {
-                // 首先检查扩展名
-                string extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-                if (string.IsNullOrEmpty(extension) ||
-                    !new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp" }.Contains(extension))
-                {
-                    return false;
-                }
-
-                // 然后验证文件内容
-                using (var image = Image.FromFile(filePath))
-                {
-                    // 检查图像的宽度和高度以确保是有效的图像
-                    return image.Width > 0 && image.Height > 0;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 删除图片文件
-        /// </summary>
-        /// <param name="fileId">图片文件ID</param>
+        /// <param name="fileStorageInfo">文件存储信息对象</param>
+        /// <param name="bizType">业务类型</param>
+        /// <param name="bizNo">业务编号</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件删除响应</returns>
         public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, int BizType, string BizNo, CancellationToken ct = default)
         {
+            // 参数验证
             if (fileStorageInfo == null)
-            {
                 throw new ArgumentNullException(nameof(fileStorageInfo));
-            }
 
-            // 验证参数
             if (fileStorageInfo.FileId <= 0)
                 throw new ArgumentException("文件ID必须大于0", nameof(fileStorageInfo.FileId));
 
-            // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
-            if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
-            {
-                _log?.LogWarning("获取文件操作锁超时");
-                return FileDeleteResponse.CreateFailure("系统繁忙，请稍后重试");
-            }
+            // 验证是否为图片文件
+            if (!IsValidImageFile(fileStorageInfo))
+                return FileDeleteResponse.CreateFailure("只能删除图片文件");
 
-            bool lockAcquired = true;
-            try
-            {
-                // 检查连接状态
-                if (!_communicationService.IsConnected)
-                {
-                    _log?.LogWarning("图片删除失败：未连接到服务器");
-                    return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
-                }
+            // 创建删除请求
+            var deleteRequest = new FileDeleteRequest();
+            deleteRequest.InitializeCompatibility();
+            deleteRequest.BusinessNo = BizNo;
+            deleteRequest.BusinessType = BizType;
+            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
 
-                // 验证是否为图片文件 - 基于文件扩展名和内容检查
-                // 验证是否为图片文件
-                bool isImageFile = ImageExtensions.Contains(fileStorageInfo.FileExtension?.ToLower()) ||
-                                    ImageExtensions.Contains(fileStorageInfo.FileType?.ToLower()) ||
-                                  (fileStorageInfo.FileType?.Contains("image/") ?? false) ||
-                                  (fileStorageInfo.FileType?.Contains("图片") ?? false) ||
-                                  (fileStorageInfo.FileType?.Contains("image") ?? false);
-
-                // 增加文件内容类型检查，确保真正删除的是图片文件
-                if (!isImageFile && !IsValidImageFile(fileStorageInfo.FileData))
-                {
-                    return FileDeleteResponse.CreateFailure("只能删除图片文件");
-                }
-
-                // 创建文件删除请求
-                var deleteRequest = new FileDeleteRequest();
-                deleteRequest.InitializeCompatibility();
-                deleteRequest.BusinessNo = BizNo;
-                deleteRequest.BusinessType = BizType;
-                deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
-
-                // 发送文件删除命令并获取响应
-                var response = await _communicationService.SendCommandWithResponseAsync<FileDeleteResponse>(
-                    FileCommands.FileDelete, deleteRequest, ct);
-
-                // 检查响应数据是否为空
-                if (response == null)
-                {
-                    _log?.LogError("图片删除失败：服务器返回了空的响应数据");
-                    return FileDeleteResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
-                }
-
-                // 检查响应是否成功
-                if (!response.IsSuccess)
-                {
-                    _log?.LogWarning("图片删除失败: {ErrorMessage}", response.ErrorMessage);
-                    return FileDeleteResponse.CreateFailure($"图片删除失败: {response.ErrorMessage}");
-                }
-
-                return response;
-            }
-            catch (OperationCanceledException ex)
-            {
-                return FileDeleteResponse.CreateFailure("图片删除操作已取消");
-            }
-            catch (TimeoutException ex)
-            {
-                _log?.LogWarning(ex, "图片删除请求超时");
-                return FileDeleteResponse.CreateFailure("图片删除请求超时，请检查网络连接后重试");
-            }
-            catch (Exception ex)
-            {
-                _log?.LogError(ex, "图片删除过程中发生未预期的异常");
-                return FileDeleteResponse.CreateFailure("图片删除过程中发生错误，请稍后重试");
-            }
-            finally
-            {
-                // 检查信号量是否被占用，避免重复释放
-                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
-                {
-                    _fileOperationLock.Release();
-                }
-            }
+            // 调用通用删除方法
+            return await DeleteFileAsync(deleteRequest, ct);
         }
 
 
@@ -619,6 +579,94 @@ namespace RUINORERP.UI.Network.Services
                     _fileOperationLock.Release();
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取文件存储使用情况信息
+        /// </summary>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>存储使用信息</returns>
+        public async Task<StorageUsageInfoData> GetStorageUsageInfoAsync(CancellationToken ct = default)
+        {
+            // 使用信号量确保同一时间只有一个文件操作请求，带30秒超时
+            bool lockAcquired = false;
+            try
+            {
+                if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
+                {
+                    _log?.LogWarning("获取文件操作锁超时，当前锁状态: {CurrentCount}", _fileOperationLock.CurrentCount);
+                    return new StorageUsageInfoData();
+                }
+                lockAcquired = true;
+
+                // 检查连接状态
+                if (!_communicationService.IsConnected)
+                {
+                    _log?.LogWarning("获取存储使用信息失败：未连接到服务器");
+                    return new StorageUsageInfoData();
+                }
+
+                // 创建存储使用信息请求
+                var request = new FileInfoRequest();
+
+                // 发送获取文件信息命令并获取响应
+                var response = await _communicationService.SendCommandWithResponseAsync<FileInfoResponse>(
+                    FileCommands.FileInfoQuery, request, ct);
+
+                if (response != null && response.IsSuccess)
+                {
+                    // 创建存储使用信息
+                    var usageInfo = new StorageUsageInfoData();
+
+                    // 计算存储使用情况
+                    if (response.FileStorageInfos != null)
+                    {
+                        foreach (var fileInfo in response.FileStorageInfos)
+                        {
+                            // 直接累加文件大小
+                            usageInfo.TotalSize += (fileInfo.FileSize > 0 ? fileInfo.FileSize : 0);
+                            usageInfo.TotalFileCount++;
+                        }
+                    }
+
+                    return usageInfo;
+                }
+
+                return new StorageUsageInfoData();
+            }
+            catch (Exception ex)
+            {
+                _log?.LogError(ex, "获取存储使用信息时发生异常");
+                return new StorageUsageInfoData();
+            }
+            finally
+            {
+                // 确保只在成功获取锁的情况下才尝试释放，避免重复释放
+                if (lockAcquired && _fileOperationLock.CurrentCount == 0)
+                {
+                    _fileOperationLock.Release();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 格式化文件大小
+        /// </summary>
+        /// <param name="bytes">字节数</param>
+        /// <returns>格式化后的字符串</returns>
+        private string FormatFileSize(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            int order = 0;
+            double size = bytes;
+
+            while (size >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                size /= 1024;
+            }
+
+            return $"{size:0.##} {sizes[order]}";
         }
 
 

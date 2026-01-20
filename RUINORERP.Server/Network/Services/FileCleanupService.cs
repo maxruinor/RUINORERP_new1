@@ -188,13 +188,22 @@ namespace RUINORERP.Server.Network.Services
                     .Where((f, r) => f.FileStatus ==(int) FileStatus.Active) // 正常状态
                     .Where((f, r) => f.isdeleted == false)
                     .Where((f, r) => f.Created_at < thresholdDate)
-                    .Select((f, r) => f)
-                    .Distinct()
+                    .Select((f, r) => f.FileId) // 只选择FileId避免text类型比较问题
                     .ToListAsync();
+
+                // 根据FileId查询完整文件信息
+                var fileIds = orphanedFiles.Distinct().ToList();
+                var fullFileList = new List<tb_FS_FileStorageInfo>();
+                if (fileIds.Any())
+                {
+                    fullFileList = await db.Queryable<tb_FS_FileStorageInfo>()
+                        .Where(f => fileIds.Contains(f.FileId))
+                        .ToListAsync();
+                }
 
                 int cleanedCount = 0;
 
-                foreach (var file in orphanedFiles)
+                foreach (var file in fullFileList)
                 {
                     try
                     {
@@ -377,37 +386,28 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 获取文件统计信息
+        /// 性能优化: 一次查询获取所有数据,内存中分组统计
         /// </summary>
         /// <returns>文件统计信息</returns>
         public async Task<FileCleanupStatistics> GetCleanupStatisticsAsync()
         {
             var db = _unitOfWorkManage.GetDbClient();
 
+            // 一次查询获取所有未删除的文件
+            var files = await db.Queryable<tb_FS_FileStorageInfo>()
+                .Where(f => f.isdeleted == false)
+                .Select(f => new { f.FileStatus, FileSize = f.FileSize > 0 ? f.FileSize : 0 })
+                .ToListAsync();
+
+            // 内存中分组统计
             var stats = new FileCleanupStatistics
             {
-                TotalFiles = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.isdeleted == false)
-                    .CountAsync(),
-
-                ActiveFiles = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.FileStatus == (int)FileStatus.Active && f.isdeleted == false)
-                    .CountAsync(),
-
-                ExpiredFiles = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.FileStatus == (int)FileStatus.Expired && f.isdeleted == false)
-                    .CountAsync(),
-
-                OrphanedFiles = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.FileStatus == (int)FileStatus.Orphaned && f.isdeleted == false)
-                    .CountAsync(),
-
-                DeletedFiles = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.FileStatus == (int)FileStatus.Deleted && f.isdeleted == false)
-                    .CountAsync(),
-
-                TotalStorageSize = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => f.isdeleted == false)
-                    .SumAsync(f => f.FileSize)
+                TotalFiles = files.Count,
+                ActiveFiles = files.Count(f => f.FileStatus == (int)FileStatus.Active),
+                ExpiredFiles = files.Count(f => f.FileStatus == (int)FileStatus.Expired),
+                OrphanedFiles = files.Count(f => f.FileStatus == (int)FileStatus.Orphaned),
+                DeletedFiles = files.Count(f => f.FileStatus == (int)FileStatus.Deleted),
+                TotalStorageSize = files.Sum(f => f.FileSize)
             };
 
             return stats;

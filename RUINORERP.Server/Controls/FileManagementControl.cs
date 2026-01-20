@@ -5,6 +5,8 @@ using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.Server.Network.CommandHandlers;
+using RUINORERP.Server.Helpers;
+using RUINORERP.Server.Network.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +23,7 @@ namespace RUINORERP.Server.Controls
     {
         private readonly Timer _updateTimer;
         private FileStorageSummary _currentStorageSummary;
+        private FileStorageMonitorInfo _currentMonitorInfo;
         private List<FileCategoryInfo> _fileCategories;
         private bool _isDisposed = false;
 
@@ -28,13 +31,17 @@ namespace RUINORERP.Server.Controls
         private readonly tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo> _fileStorageInfoController;
         private readonly tb_FS_BusinessRelationController<tb_FS_BusinessRelation> _businessRelationController;
 
+        // 文件监控服务
+        private readonly FileStorageMonitorService _monitorService;
+
         public FileManagementControl()
         {
             InitializeComponent();
 
-            // 从依赖注入容器获取业务控制器
+            // 从依赖注入容器获取业务控制器和监控服务
             _fileStorageInfoController = Program.ServiceProvider.GetService<tb_FS_FileStorageInfoController<tb_FS_FileStorageInfo>>();
             _businessRelationController = Program.ServiceProvider.GetService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
+            _monitorService = Program.ServiceProvider.GetService<FileStorageMonitorService>();
 
             // 设置定时器，定期更新存储信息
             _updateTimer = new Timer { Interval = 60000 }; // 每分钟更新一次
@@ -43,9 +50,6 @@ namespace RUINORERP.Server.Controls
 
             // 初始化列表视图
             InitializeListView();
-
-            // 初始加载数据
-            LoadStorageInfo();
         }
 
         /// <summary>
@@ -170,7 +174,7 @@ namespace RUINORERP.Server.Controls
         }
 
         /// <summary>
-        /// 从真实数据库加载存储信息（性能优化版本）
+        /// 从真实数据库加载存储信息（性能优化版本，集成监控服务）
         /// </summary>
         private async Task LoadRealStorageInfoAsync()
         {
@@ -179,18 +183,18 @@ namespace RUINORERP.Server.Controls
 
             try
             {
-                // 性能优化：使用分页查询，避免一次性加载大量数据
+                // 优先直接查询数据库,避免DbContext冲突
                 var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.isdeleted == false);
 
-                // 安全检查：如果数据量过大，限制处理数量
-                const int MAX_FILES_TO_PROCESS = 10000;
+                // 先完成主查询结果处理,避免并发查询导致DbContext冲突
                 if (fileInfos != null && fileInfos.Count > 0)
                 {
-                    // 限制处理数量，避免内存溢出
+                    // 安全检查：如果数据量过大，限制处理数量
+                    const int MAX_FILES_TO_PROCESS = 10000;
                     var filesToProcess = fileInfos.Take(MAX_FILES_TO_PROCESS).ToList();
 
-                    _currentStorageSummary.TotalFileCount = fileInfos.Count; // 显示总数，但只处理部分数据
-                    _currentStorageSummary.TotalStorageSize = filesToProcess.Sum(f => ((tb_FS_FileStorageInfo)f).FileSize);
+                    _currentStorageSummary.TotalFileCount = fileInfos.Count;
+                    _currentStorageSummary.TotalStorageSize = filesToProcess.Sum(f => ((tb_FS_FileStorageInfo)f).FileSize > 0 ? ((tb_FS_FileStorageInfo)f).FileSize : 0);
 
                     // 性能优化：使用更高效的分组方式
                     var groupedByBusinessType = filesToProcess
@@ -198,24 +202,16 @@ namespace RUINORERP.Server.Controls
                         .GroupBy(f => f.BusinessType ?? 0)
                         .ToList();
 
-                    // 性能优化：预分配列表容量
-                    _fileCategories = new List<FileCategoryInfo>(groupedByBusinessType.Count);
-
-                    foreach (var group in groupedByBusinessType)
+                    _fileCategories = groupedByBusinessType.Select(group => new FileCategoryInfo
                     {
-                        var categoryInfo = new FileCategoryInfo
-                        {
-                            BusinessType = group.Key,
-                            CategoryName = GetBusinessTypeName(group.Key),
-                            FileCount = group.Count(),
-                            StorageSize = group.Sum(f => f.FileSize),
-                            LastModified = group.Max(f => f.Modified_at ?? f.Created_at ?? DateTime.MinValue)
-                        };
+                        BusinessType = group.Key,
+                        CategoryName = GetBusinessTypeName(group.Key),
+                        FileCount = group.Count(),
+                        StorageSize = group.Sum(f => f.FileSize > 0 ? f.FileSize : 0),
+                        LastModified = group.Max(f => f.Modified_at ?? f.Created_at ?? DateTime.MinValue)
+                    }).ToList();
 
-                        _fileCategories.Add(categoryInfo);
-                    }
-
-                    // 3. 计算磁盘总空间 (使用系统API)
+                    // 计算磁盘总空间 (使用系统API)
                     try
                     {
                         var driveInfo = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(Environment.CurrentDirectory));
@@ -234,6 +230,20 @@ namespace RUINORERP.Server.Controls
                     _currentStorageSummary.TotalStorageSize = 0;
                     _currentStorageSummary.TotalDiskSpace = 100L * 1024L * 1024L * 1024L; // 默认100GB
                 }
+
+                // 主查询和结果处理完成后,再获取监控信息
+                if (_monitorService != null && fileInfos != null && fileInfos.Count > 0)
+                {
+                    try
+                    {
+                        _currentMonitorInfo = await _monitorService.GetMonitorInfoAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("获取监控信息失败: " + ex.Message);
+                        // 监控服务失败不影响主流程
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -241,6 +251,8 @@ namespace RUINORERP.Server.Controls
                 throw;
             }
         }
+
+
 
         /// <summary>
         /// 根据业务类型代码获取业务类型名称
@@ -277,21 +289,67 @@ namespace RUINORERP.Server.Controls
             lblUsedStorage.Text = FormatBytes(usedSize);
             lblFreeStorage.Text = FormatBytes(freeSize);
 
-            // 计算使用百分比
-            int usagePercentage = totalSize > 0 ? (int)((double)usedSize / totalSize * 100) : 0;
+            // 计算使用百分比 - 优先使用监控服务的更精确数据
+            int usagePercentage = 0;
+            if (_currentMonitorInfo != null)
+            {
+                usagePercentage = (int)_currentMonitorInfo.FileStorageUsagePercentage;
+            }
+            else
+            {
+                usagePercentage = totalSize > 0 ? (int)((double)usedSize / totalSize * 100) : 0;
+            }
+
             progressBar1.Value = usagePercentage;
             lblUsagePercentage.Text = usagePercentage + "%";
 
-            // 根据使用情况设置进度条颜色
-            if (usagePercentage > 80)
-                progressBar1.ForeColor = System.Drawing.Color.Red;
-            else if (usagePercentage > 60)
-                progressBar1.ForeColor = System.Drawing.Color.Orange;
+            // 根据使用情况设置进度条颜色和状态
+            if (_currentMonitorInfo != null)
+            {
+                if (_currentMonitorInfo.IsCritical)
+                {
+                    progressBar1.ForeColor = System.Drawing.Color.Red;
+                    UpdateStatusLabels(true, $"紧急警告: 磁盘使用率 {usagePercentage}%");
+                }
+                else if (_currentMonitorInfo.IsWarning)
+                {
+                    progressBar1.ForeColor = System.Drawing.Color.Orange;
+                    UpdateStatusLabels(true, $"警告: 磁盘使用率 {usagePercentage}%");
+                }
+                else
+                {
+                    progressBar1.ForeColor = System.Drawing.Color.Green;
+                }
+            }
             else
-                progressBar1.ForeColor = System.Drawing.Color.Green;
+            {
+                if (usagePercentage > 80)
+                    progressBar1.ForeColor = System.Drawing.Color.Red;
+                else if (usagePercentage > 60)
+                    progressBar1.ForeColor = System.Drawing.Color.Orange;
+                else
+                    progressBar1.ForeColor = System.Drawing.Color.Green;
+            }
 
             // 更新文件统计
             lblTotalFiles.Text = _currentStorageSummary.TotalFileCount.ToString();
+
+            // 如果有监控信息，显示额外信息
+            if (_currentMonitorInfo != null)
+            {
+                // 可以在状态栏或标签显示过期文件数和孤立文件数
+                var extraInfo = $"正常: {_currentMonitorInfo.ActiveFiles}";
+                if (_currentMonitorInfo.ExpiredFiles > 0)
+                    extraInfo += $" | 过期: {_currentMonitorInfo.ExpiredFiles}";
+                if (_currentMonitorInfo.OrphanedFiles > 0)
+                    extraInfo += $" | 孤立: {_currentMonitorInfo.OrphanedFiles}";
+
+                // 更新状态标签文本，如果之前没有设置为警告/紧急状态
+                if (!_currentMonitorInfo.IsWarning && !_currentMonitorInfo.IsCritical)
+                {
+                    UpdateStatusLabels(true, $"数据加载成功 - {extraInfo}");
+                }
+            }
         }
 
         private void UpdateCategoryList()
@@ -339,9 +397,19 @@ namespace RUINORERP.Server.Controls
                 return $"{bytes / (1024.0 * 1024.0 * 1024.0):F2} GB";
         }
 
-        private void btnRefresh_Click(object sender, EventArgs e)
+        private async void btnRefresh_Click(object sender, EventArgs e)
         {
-            LoadStorageInfo();
+            await LoadStorageInfo();
+        }
+
+        private async void btnCleanupFiles_Click(object sender, EventArgs e)
+        {
+            await PerformManualCleanupAsync();
+        }
+
+        private void btnMonitorDetails_Click(object sender, EventArgs e)
+        {
+            ShowMonitorDetails();
         }
 
         private async void btnViewDetails_Click(object sender, EventArgs e)
@@ -369,7 +437,7 @@ namespace RUINORERP.Server.Controls
             try
             {
                 // 查询该业务类型下的所有文件
-                var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == businessType && c.isdeleted == false);
+                var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == businessType && c.isdeleted == false);
 
                 if (fileInfos != null && fileInfos.Count > 0)
                 {
@@ -401,7 +469,7 @@ namespace RUINORERP.Server.Controls
                     {
                         var item = new ListViewItem(fileInfo.FileId.ToString());
                         item.SubItems.Add(fileInfo.OriginalFileName);
-                        item.SubItems.Add(FormatBytes(fileInfo.FileSize));
+                        item.SubItems.Add(FormatBytes(fileInfo.FileSize > 0 ? fileInfo.FileSize : 0));
                         item.SubItems.Add(fileInfo.FileType);
                         item.SubItems.Add(fileInfo.Created_at?.ToString("yyyy-MM-dd HH:mm") ?? "未知");
                         item.SubItems.Add(fileInfo.StoragePath ?? "");
@@ -423,9 +491,140 @@ namespace RUINORERP.Server.Controls
             }
         }
 
-        private void FileManagementControl_Load(object sender, EventArgs e)
+        private async void FileManagementControl_Load(object sender, EventArgs e)
         {
-            LoadStorageInfo();
+            await LoadStorageInfo();
+        }
+
+        /// <summary>
+        /// 手动触发存储空间清理
+        /// </summary>
+        private async Task PerformManualCleanupAsync()
+        {
+            if (_monitorService == null)
+            {
+                MessageBox.Show("监控服务未启动,无法执行清理操作", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var confirmResult = MessageBox.Show(
+                "确定要执行文件清理吗?\n\n" +
+                "清理内容包括:\n" +
+                "- 过期文件(超过7天未访问)\n" +
+                "- 孤立文件(无业务关联)\n\n" +
+                "建议先备份数据!",
+                "确认清理",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            if (confirmResult != DialogResult.Yes)
+                return;
+
+            try
+            {
+                // 显示等待光标
+                this.Cursor = Cursors.WaitCursor;
+                btnRefresh.Enabled = false;
+
+                // 获取清理服务
+                var cleanupService = Program.ServiceProvider.GetService<FileCleanupService>();
+                if (cleanupService == null)
+                {
+                    MessageBox.Show("清理服务未找到", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 清理过期文件
+                var expiredCount = await cleanupService.CleanupExpiredFilesAsync(
+                    daysThreshold: 7,
+                    physicalDelete: true
+                );
+
+                // 清理孤立文件
+                var orphanedCount = await cleanupService.CleanupOrphanedFilesAsync(
+                    daysThreshold: 3,
+                    physicalDelete: true
+                );
+
+                var message = $"清理完成!\n\n" +
+                             $"过期文件清理: {expiredCount} 个\n" +
+                             $"孤立文件清理: {orphanedCount} 个\n" +
+                             $"总计清理: {expiredCount + orphanedCount} 个";
+
+                MessageBox.Show(message, "清理结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 刷新数据
+                await LoadStorageInfo();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"清理失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+                btnRefresh.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 显示监控详细信息
+        /// </summary>
+        private void ShowMonitorDetails()
+        {
+            if (_currentMonitorInfo == null)
+            {
+                MessageBox.Show("监控数据不可用", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var details = new Form
+            {
+                Text = "文件存储监控详情",
+                Size = new System.Drawing.Size(600, 500),
+                StartPosition = FormStartPosition.CenterParent
+            };
+
+            var listView = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true
+            };
+
+            listView.Columns.Add("监控项", 200);
+            listView.Columns.Add("值", 300);
+
+            var items = new[]
+            {
+                new { Name = "总文件数", Value = _currentMonitorInfo.TotalFiles.ToString() },
+                new { Name = "正常文件数", Value = _currentMonitorInfo.ActiveFiles.ToString() },
+                new { Name = "过期文件数", Value = _currentMonitorInfo.ExpiredFiles.ToString() },
+                new { Name = "孤立文件数", Value = _currentMonitorInfo.OrphanedFiles.ToString() },
+                new { Name = "总存储大小", Value = _currentMonitorInfo.TotalStorageSizeFormatted },
+                new { Name = "文件存储使用率", Value = $"{_currentMonitorInfo.FileStorageUsagePercentage:F2}%" },
+                new { Name = "磁盘使用率", Value = $"{_currentMonitorInfo.DiskUsagePercentage:F2}%" },
+                new { Name = "可用磁盘空间", Value = $"{_currentMonitorInfo.FreeDiskSpaceGB:F2} GB" },
+                new { Name = "总磁盘空间", Value = $"{_currentMonitorInfo.TotalDiskSpaceGB:F2} GB" },
+                new { Name = "配置最大存储空间", Value = $"{_currentMonitorInfo.MaxStorageSizeGB:F2} GB" },
+                new { Name = "警告阈值", Value = $"{_currentMonitorInfo.WarningThreshold}%" },
+                new { Name = "紧急阈值", Value = $"{_currentMonitorInfo.CriticalThreshold}%" },
+                new { Name = "最后检查时间", Value = _currentMonitorInfo.LastCheckTime.ToString("yyyy-MM-dd HH:mm:ss") },
+                new { Name = "警告状态", Value = _currentMonitorInfo.IsWarning ? "是" : "否" },
+                new { Name = "紧急状态", Value = _currentMonitorInfo.IsCritical ? "是" : "否" }
+            };
+
+            foreach (var item in items)
+            {
+                var listViewItem = new ListViewItem(item.Name);
+                listViewItem.SubItems.Add(item.Value);
+                listView.Items.Add(listViewItem);
+            }
+
+            details.Controls.Add(listView);
+            details.ShowDialog();
         }
     }
 }

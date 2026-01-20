@@ -397,7 +397,7 @@ namespace RUINORERP.UI.FM
 
                     try
                     {
-                        var ctrpay = Startup.GetFromFac<FileManagementController>();
+                        var ctrpay = Startup.GetFromFac<FileBusinessService>();
                         var list = await ctrpay.DownloadImageAsync(EditEntity);
 
                         if (list != null && list.Count > 0)
@@ -803,7 +803,7 @@ namespace RUINORERP.UI.FM
                         }
 
                         // 删除远程图片
-                        var ctrpay = Startup.GetFromFac<FileManagementController>();
+                        var ctrpay = Startup.GetFromFac<FileBusinessService>();
                         await ctrpay.DeleteImagesAsync(EditEntity, false);
 
                         //提示一下删除成功

@@ -1166,7 +1166,7 @@ namespace RUINORERP.UI.BaseForm
         public async Task DownloadImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> TargetField)
         {
             magicPicBox.MultiImageSupport = true;
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
@@ -1241,7 +1241,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>是否全部上传成功</returns>
         public async Task<bool> UploadImageAsync(T entity, MagicPictureBox magicPicBox, string relatedField, bool onlyUpdated = true)
         {
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
                 // 检查是否有图片需要上传
@@ -1336,7 +1336,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>上传是否成功</returns>
         public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
         {
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
                 if (updatedImages == null || updatedImages.Count == 0)
@@ -5803,7 +5803,7 @@ namespace RUINORERP.UI.BaseForm
         public async virtual Task<bool> DeleteRemoteImages()
         {
             await Task.Delay(0);
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
@@ -6314,6 +6314,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance?.ShowStatusText("图片更新成功");
                     logger?.LogInformation($"业务单据[{businessNo}]的关联字段[{relatedField}]图片更新成功,新文件ID:{result.NewFileId}");
+
+                    // 标记实体已变更，确保关闭窗体时提示保存
+                    EditEntity.HasChanged = true;
+                    Edited = true;
+
                     return true;
                 }
                 else
@@ -6435,11 +6440,22 @@ namespace RUINORERP.UI.BaseForm
                 {
                     MainForm.Instance?.ShowStatusText($"批量更新成功: {result.SuccessFiles.Count}个文件");
                     logger?.LogInformation($"业务单据[{businessNo}]的关联字段[{relatedField}]批量图片更新成功,成功:{result.SuccessFiles.Count},失败:{result.FailedFiles.Count}");
+
+                    // 标记实体已变更，确保关闭窗体时提示保存
+                    EditEntity.HasChanged = true;
+                    Edited = true;
                 }
                 else
                 {
                     MainForm.Instance?.ShowStatusText($"批量更新完成,成功:{result.SuccessFiles.Count},失败:{result.FailedFiles.Count}");
                     logger?.LogWarning($"业务单据[{businessNo}]的关联字段[{relatedField}]批量图片更新部分失败: {result.Message}");
+
+                    // 即使部分失败，只要有成功的也标记为已变更
+                    if (result.SuccessFiles.Count > 0)
+                    {
+                        EditEntity.HasChanged = true;
+                        Edited = true;
+                    }
                 }
 
                 return result;
@@ -6842,8 +6858,8 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
 
-                    // 简化的错误记录
-                    if (!isSuccess)
+                    // 如果是被自己锁定的，才需要记录解锁失败的情况
+                    if (!isSuccess && lockResponse?.LockInfo?.LockedUserId == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID)
                     {
                         MainForm.Instance.logger.LogError($"单据【{billId}】解锁失败");
                     }

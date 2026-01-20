@@ -25,15 +25,29 @@ using RUINORERP.PacketSpec.Models.FileManagement;
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
-    /// 文件管理服务实现类
+    /// 文件业务服务类
+    /// 提供文件与业务实体之间的关联操作
+    /// 包括上传、下载、转换等业务层功能
     /// </summary>
-    public class FileManagementController
+    public class FileBusinessService
     {
         private readonly IUnitOfWorkManage _unitOfWorkManage;
-        private readonly ILogger<FileManagementController> _logger;
+        private readonly ILogger<FileBusinessService> _logger;
         public readonly ApplicationContext _appContext;
         private readonly IEntityMappingService _mapper;
-        public FileManagementController(IEntityMappingService mapper, IUnitOfWorkManage unitOfWorkManage, ILogger<FileManagementController> logger, ApplicationContext appContext = null)
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="mapper">实体映射服务</param>
+        /// <param name="unitOfWorkManage">工作单元管理</param>
+        /// <param name="logger">日志记录器</param>
+        /// <param name="appContext">应用上下文</param>
+        public FileBusinessService(
+            IEntityMappingService mapper,
+            IUnitOfWorkManage unitOfWorkManage,
+            ILogger<FileBusinessService> logger,
+            ApplicationContext appContext = null)
         {
             _mapper = mapper;
             _unitOfWorkManage = unitOfWorkManage;

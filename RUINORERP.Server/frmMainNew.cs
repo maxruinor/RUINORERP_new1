@@ -2378,6 +2378,14 @@ namespace RUINORERP.Server
                     var reminderService = Startup.GetFromFac<SmartReminderService>();
                     await Task.Run(async () => await reminderService.StartAsync(CancellationToken.None));
 
+                    // 启动文件存储监控服务
+                    var fileStorageMonitorService = Startup.GetFromFac<FileStorageMonitorService>();
+                    if (fileStorageMonitorService != null)
+                    {
+                        fileStorageMonitorService.StartMonitoring();
+                        PrintInfoLog("文件存储监控服务已启动");
+                    }
+
                     // 启动服务器锁管理器服务 - 直接通过接口调用，无需类型转换
                     var lockManager = Startup.GetFromFac<ILockManagerService>();
                     if (lockManager != null)
@@ -2473,6 +2481,14 @@ namespace RUINORERP.Server
                     // 释放资源
                     _memoryMonitoringService.Dispose();
                     _memoryMonitoringService = null;
+                }
+
+                // 6. 停止文件存储监控服务
+                var fileStorageMonitorService = Startup.GetFromFac<FileStorageMonitorService>();
+                if (fileStorageMonitorService != null)
+                {
+                    fileStorageMonitorService.StopMonitoring();
+                    PrintInfoLog("文件存储监控服务已停止");
                 }
             }
             catch (Exception e)

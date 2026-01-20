@@ -318,7 +318,6 @@ using Microsoft.Win32;
 				{
 					StoreIncrements();
 					this.Close();
-					Trace.WriteLine("Called this.Close()");
 				}
 			}
 			if( m_bFirstLaunch == false && m_dblLastCompletionFraction < m_dblCompletionFraction )

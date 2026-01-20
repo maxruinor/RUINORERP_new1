@@ -2346,9 +2346,8 @@
     <Compile Include="Network\Services\Cache\CacheResponseProcessor.cs" />
     <Compile Include="Network\Services\ClientLocalLockCacheService.cs" />
     <Compile Include="Network\Services\ConfigSyncService.cs" />
-    <Compile Include="Network\Services\FileManagementController.cs" />
+    <Compile Include="Network\Services\FileBusinessService.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
-    <Compile Include="Network\Services\FileStorageInfoService.cs" />
     <Compile Include="Network\Services\FileUpdateClientService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\ClientLockManagementService.cs" />

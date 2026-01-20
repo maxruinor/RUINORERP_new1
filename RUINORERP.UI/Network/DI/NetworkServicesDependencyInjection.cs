@@ -203,7 +203,7 @@ namespace RUINORERP.UI.Network.DI
            // builder.RegisterType<BusinessNotificationService>().AsSelf().InstancePerLifetimeScope();
 
             // 注册文件管理服务
-            builder.RegisterType<FileManagementController>()
+            builder.RegisterType<FileBusinessService>()
                 .AsSelf()
                 .InstancePerLifetimeScope()
                 .PropertiesAutowired();

@@ -800,7 +800,7 @@ namespace RUINORERP.UI.BaseForm
         /// <returns></returns>
         public async virtual Task<bool> DeleteImages(M EditEntity)
         {
-            var ctrpay = Startup.GetFromFac<FileManagementController>();
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);

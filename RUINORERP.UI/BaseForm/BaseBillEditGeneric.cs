@@ -4468,7 +4468,7 @@ namespace RUINORERP.UI.BaseForm
         /// 功能说明：允许管理员直接修改已保存的单据数据，包括主表和从表数据
         /// 特点：
         /// 1. 不进行完整业务验证，只进行基本数据完整性验证
-        /// 2. 支持新增和修改从表明细数据
+        /// 2. 支持新增和修改从表明细数据（包括新增、修改、删除明细行）
         /// 3. 跳过大部分业务规则检查
         /// 4. 保留审批状态和数据状态
         /// </summary>
@@ -4493,31 +4493,50 @@ namespace RUINORERP.UI.BaseForm
                 // 结束编辑状态
                 bindingSourceSub.EndEdit();
 
-                // 获取明细数据
+                // 获取明细数据并设置到EditEntity
                 List<C> detailentity = bindingSourceSub.DataSource as List<C>;
                 List<C> details = new List<C>();
+                List<C> detailsToDelete = new List<C>(); // 需要删除的明细
 
                 if (typeof(C).Name.Contains("Detail") && detailentity != null)
                 {
-                    // 提取有效明细数据（主键ID大于0的记录）
-                    string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                    details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
+                    // 获取明细中产品对应的ID，目前认为产品ID存在才是合法的明细数据
+                    string prodDetailIDName = UIHelper.GetPrimaryKeyColName(typeof(tb_ProdDetail));
+                    
+                    // 提取所有明细数据（包括新增、修改、删除）
+                    // BaseSaveOrUpdateWithChild 会根据主键ID自动判断是新增、修改还是删除
+                    details = new List<C>(detailentity);
 
-                    // 如果没有有效明细，提示用户
-                    if (details.Count == 0)
+
+                   // int validDetailCount = details.Count(t => t.ContainsProperty(prodDetailIDName) && t.GetPropertyValue(prodDetailIDName).ToLong() > 0);
+
+                    // 统计有效明细数量（ProdDetailID大于0）
+                    // 注意:需要使用属性检查而非字段检查,因为ProdDetailID是属性不是字段
+                    int validDetailCount = details.Count(t => 
                     {
-                        var detailConfirm = MessageBox.Show(
-                            "当前明细列表中没有有效数据（主键ID为0的记录）。\n\n" +
-                            "是否继续保存（只保存主表数据）？",
-                            "明细数据提示",
-                            MessageBoxButtons.YesNo,
-                            MessageBoxIcon.Question,
-                            MessageBoxDefaultButton.Button1);
-
-                        if (detailConfirm != DialogResult.Yes)
+                        var prop = t.GetType().GetProperty(prodDetailIDName);
+                        if (prop != null)
                         {
-                            return;
+                            var value = prop.GetValue(t);
+                            if (value != null)
+                            {
+                                return long.TryParse(value.ToString(), out long prodDetailId) && prodDetailId > 0;
+                            }
                         }
+                        return false;
+                    });
+                    
+                    // 必须要有子表的合法数据，否则无法修复性保存
+                    if (validDetailCount == 0)
+                    {
+                        MessageBox.Show(
+                            "修复性保存要求必须有子表的合法数据。\n\n" +
+                            "当前明细列表中没有有效数据（产品ID大于0的记录）。\n\n" +
+                            "请先添加或保留至少一条有效明细数据后再试。",
+                            "数据验证提示",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        return;
                     }
                 }
 
@@ -4528,15 +4547,19 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                if (details.Count > 0 && !BasicValidator<C>(details))
+                if (details.Count > 0 && !Validator<C>(details))
                 {
                     MainForm.Instance.PrintInfoLog($"明细数据验证失败，无法修正。", Color.Red);
                     return;
                 }
 
-                // 标记为特殊修正模式（可以在子类中覆盖此行为）
-                EditEntity.SetPropertyValue("IsSpecialFix", true);
+                // 将明细数据设置到EditEntity中
+                if (details.Count > 0)
+                {
+                    SetDetailsToEditEntity(details);
+                }
 
+        
                 // 明确调用基类的Save(T entity)方法,绕过子类Save(bool)方法中的ActionStatus检查
                 // 使用(base as BaseBillEditGeneric<T, C>).Save(EditEntity)确保调用基类方法
                 var saveResult = await ((BaseBillEditGeneric<T, C>)this).Save(EditEntity);
@@ -4547,28 +4570,24 @@ namespace RUINORERP.UI.BaseForm
                     string billNo = GetBillNoForLog();
                     MainForm.Instance.PrintInfoLog($"数据修正成功。单据号：{billNo}");
 
-                    // 清除特殊修正标记
-                    if (EditEntity.ContainsProperty("IsSpecialFix"))
-                    {
-                        EditEntity.SetPropertyValue("IsSpecialFix", false);
-                    }
-
                     // 记录审计日志
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", saveResult.ReturnObject,
                         $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
                         $"结果：成功，" +
-                        $"明细数量：{details.Count}");
+                        $"明细数量：{details.Count}，" +
+                        $"删除明细数：{detailsToDelete.Count}");
                 }
                 else
                 {
                     MainForm.Instance.PrintInfoLog($"数据修正失败。", Color.Red);
-                    MessageBox.Show($"数据修正失败！\n\n请联系系统管理员。",
+                    MessageBox.Show($"数据修正失败！\n\n{saveResult.ErrorMsg}",
                         "修正失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                     // 记录审计日志
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", EditEntity,
                         $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
-                        $"结果：失败");
+                        $"结果：失败，" +
+                        $"错误信息：{saveResult.ErrorMsg}");
                 }
             }
             catch (Exception ex)
@@ -4583,6 +4602,41 @@ namespace RUINORERP.UI.BaseForm
                     $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
                     $"结果：异常，" +
                     $"异常信息：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 将明细数据设置到EditEntity的对应属性中
+        /// 通过反射动态查找明细表属性并赋值
+        /// </summary>
+        /// <param name="details">明细数据列表</param>
+        private void SetDetailsToEditEntity(List<C> details)
+        {
+            if (EditEntity == null || details == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // 查找EditEntity中类型为List<C>或继承自IList<C>的属性
+                var detailProperty = typeof(T).GetProperties()
+                    .FirstOrDefault(p => typeof(C).IsAssignableFrom(p.PropertyType.GetGenericArguments().FirstOrDefault()));
+
+                if (detailProperty != null && detailProperty.CanWrite)
+                {
+                    // 设置明细数据到EditEntity
+                    detailProperty.SetValue(EditEntity, details);
+                }
+                else
+                {
+                    MainForm.Instance.logger.LogWarning($"未找到明细表属性。主表类型：{typeof(T).Name}，明细表类型：{typeof(C).Name}");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "设置明细数据到EditEntity失败");
+                throw new Exception("设置明细数据失败", ex);
             }
         }
 

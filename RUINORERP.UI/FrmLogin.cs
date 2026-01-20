@@ -722,7 +722,7 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
-        /// 防抖动的重新连接方法
+        /// 防抖动的重新连接方法1
         /// 避免用户在输入过程中频繁触发重连
         /// </summary>
         private int _reconnectDebounceTimer = 0;
@@ -787,13 +787,7 @@ namespace RUINORERP.UI
                 _originalServerIP = txtServerIP.Text.Trim();
                 _originalServerPort = txtPort.Text.Trim();
 
-                // 清除当前公告显示
-                if (panelAnnouncement != null)
-                {
-                    panelAnnouncement.Visible = false;
-                }
-
-                // 重置欢迎流程状态
+                // 重置欢迎流程状态(不清除公告显示,保持公告可见性)
                 _welcomeCompletionTcs = new TaskCompletionSource<(bool, string)>();
                 _welcomeCompleted = false;
                 _welcomeAnnouncement = string.Empty;

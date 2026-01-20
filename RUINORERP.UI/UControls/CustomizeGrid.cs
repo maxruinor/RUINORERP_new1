@@ -399,13 +399,16 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 设置列
         /// </summary>
-        public void SetColumns()
+        public void SetColumns(List<ColDisplayController> InitColumnDisplays)
         {
 
             if (targetDataGridView != null && targetDataGridView.DataSource != null)
             {
                 //为了显示传入带中文的集合
                 ForCustomizeGrid.frmColumnsSets set = new ForCustomizeGrid.frmColumnsSets();
+                set.DataGridViewSetTarget = targetDataGridView;
+
+                set.InitColumnDisplays = InitColumnDisplays;
 
                 var cols = from ColDisplayController col in ColumnDisplays
                            orderby col.ColDisplayIndex
@@ -473,6 +476,11 @@ namespace RUINORERP.UI.UControls
         {
             if (InitializeDefaultColumnCustomizeGrid != null)
             {
+                if (ColumnDisplays.Count == 0)
+                {
+                    // 生成默认的列配置
+                    ColumnDisplays = GenerateDefaultColumnConfig();
+                }
                 InitializeDefaultColumnCustomizeGrid(ColumnDisplays);
             }
         }

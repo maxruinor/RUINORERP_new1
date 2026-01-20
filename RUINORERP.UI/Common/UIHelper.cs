@@ -1455,9 +1455,13 @@ namespace RUINORERP.UI.Common
         public static List<ColDisplayController> GetColumnDisplayList(params Type[] types)
         {
             List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
-
+ 
             foreach (var type in types)
             {
+                if (type==null)
+                {
+                    continue;
+                }
                 // 复用已有的属性过滤逻辑
                 var properties = type.GetProperties()
                     .Where(p => !IsNavigationProperty(p))

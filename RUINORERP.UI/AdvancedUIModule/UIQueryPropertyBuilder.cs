@@ -14,8 +14,65 @@ using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.AdvancedUIModule
 {
+    /// <summary>
+    /// UI查询属性构建器 - 动态创建带查询扩展属性的代理类型
+    /// </summary>
     public static class UIQueryPropertyBuilder
     {
+        /// <summary>
+        /// 动态类型缓存键
+        /// </summary>
+        private class TypeCacheKey
+        {
+            public Type EntityType { get; set; }
+            public string QueryFieldsHash { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is TypeCacheKey other)
+                {
+                    return EntityType == other.EntityType && QueryFieldsHash == other.QueryFieldsHash;
+                }
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                // 自定义哈希计算，避免使用HashCode类型
+                unchecked
+                {
+                    int hash = 17;
+                    hash = hash * 31 + (EntityType?.GetHashCode() ?? 0);
+                    hash = hash * 31 + (QueryFieldsHash?.GetHashCode() ?? 0);
+                    return hash;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 动态类型缓存 - 避免重复创建相同的代理类型
+        /// </summary>
+        private static readonly Dictionary<TypeCacheKey, Type> _typeCache = new Dictionary<TypeCacheKey, Type>();
+        private static readonly object _cacheLock = new object();
+
+        /// <summary>
+        /// 计算查询过滤器的哈希值 - 用于缓存键
+        /// </summary>
+        private static string CalculateQueryFieldsHash(QueryFilter queryFilter)
+        {
+            if (queryFilter?.QueryFields == null || queryFilter.QueryFields.Count == 0)
+            {
+                return "default";
+            }
+
+            // 基于查询字段的关键属性生成哈希
+            var hashBuilder = new StringBuilder();
+            foreach (var field in queryFilter.QueryFields.OrderBy(f => f.FieldName))
+            {
+                hashBuilder.Append($"{field.FieldName}|{(int)field.AdvQueryFieldType}|");
+            }
+            return hashBuilder.ToString().GetHashCode().ToString("X8");
+        }
 
         /// <summary>
         /// 动态构建一些特性，针对不同的数据类型，比方日期等变动一个新的实体类型
@@ -26,6 +83,26 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// <returns>动态生成的代理类型</returns>
         public static Type AttributesBuilder_New2024(Type type, QueryFilter queryFilter)
         {
+            // 参数验证
+            if (type == null)
+                throw new ArgumentNullException(nameof(type));
+
+            // 计算缓存键
+            var cacheKey = new TypeCacheKey
+            {
+                EntityType = type,
+                QueryFieldsHash = CalculateQueryFieldsHash(queryFilter)
+            };
+
+            // 检查缓存
+            lock (_cacheLock)
+            {
+                if (_typeCache.TryGetValue(cacheKey, out Type cachedType))
+                {
+                    return cachedType;
+                }
+            }
+
             // 使用RunAndSave模式创建动态程序集,确保VS调试器能够访问类型信息
             // 使用类型名称的哈希值作为程序集名称的一部分,避免重复创建导致调试器混乱
             string uniqueName = "RUINORERP.DynamicUI." + type.Name.GetHashCode().ToString("X");
@@ -226,6 +303,17 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             #endregion
             Type newtype = tb.CreateType();
+
+            // 将生成的类型存入缓存
+            lock (_cacheLock)
+            {
+                // 再次检查，防止并发创建
+                if (!_typeCache.ContainsKey(cacheKey))
+                {
+                    _typeCache[cacheKey] = newtype;
+                }
+            }
+
             return newtype;
         }
 
@@ -365,12 +453,13 @@ namespace RUINORERP.UI.AdvancedUIModule
             numberSetIL.Emit(OpCodes.Ret);
 
             // Last, map the "get" and "set" accessor methods to the 
-            // PropertyBuilder. The property is now complete. 
+            // PropertyBuilder. The property is now complete.
             pbNumber.SetGetMethod(mbNumberGetAccessor);
             pbNumber.SetSetMethod(mbNumberSetAccessor);
-            #endregion
 
             return pbNumber;
         }
+
+        #endregion
     }
 }

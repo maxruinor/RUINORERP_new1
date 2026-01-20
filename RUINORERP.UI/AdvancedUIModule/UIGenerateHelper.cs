@@ -176,7 +176,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             Type newtype = null;
             object newDto = null;
-            //11
+            //1111
             newtype = UIQueryPropertyBuilder.AttributesBuilder_New2024(type, queryFilter);
             newDto = Activator.CreateInstance(newtype);
 

@@ -23,7 +23,9 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
         public List<ColDisplayController> ColumnDisplays { get; set; } = new List<ColDisplayController>();
 
-
+        /// <summary>
+        /// 初始化时的列配置，用于恢复默认列配置
+        /// </summary>
         public List<ColDisplayController> InitColumnDisplays { get; set; } = new List<ColDisplayController>();
 
         public ColDisplayController[] oldColumnDisplays;
@@ -287,16 +289,50 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
 
         /// <summary>
-        /// 
+        /// 恢复默认列配置
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void btnRestoreDefaultConfig_Click(object sender, EventArgs e)
         {
-
-            if (InitializeDefaultColumn != null)
+            // 参数验证
+            if (DataGridViewSetTarget == null)
             {
-                InitializeDefaultColumn(InitColumnDisplays);
+                MessageBox.Show("目标DataGridView未设置，无法恢复默认列配置！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try
+            {
+
+                // 清空当前ListView
+                listView1.Items.Clear();
+
+                // 重新加载ListView内容
+                foreach (ColDisplayController keyValue in InitColumnDisplays)
+                {
+                    if (!keyValue.Disable)
+                    {
+                        ListViewItem lvi = new ListViewItem();
+                        lvi.Checked = keyValue.Visible;
+                        lvi.Name = keyValue.ColName;
+                        lvi.Tag = keyValue;
+                        lvi.Text = keyValue.ColDisplayText;
+                        lvi.ImageKey = keyValue.ColDisplayIndex.ToString();
+                        listView1.Items.Add(lvi);
+                    }
+                }
+
+                // 同时也触发外部事件（如果有的话），保持向后兼容
+                if (InitializeDefaultColumn != null)
+                {
+                    InitializeDefaultColumn(InitColumnDisplays);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"恢复默认列配置失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

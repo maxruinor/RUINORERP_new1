@@ -170,6 +170,9 @@ namespace RUINORERP.UI.UserPersonalized
 
         }
 
+        /// <summary>
+        /// load
+        /// </summary>
         private void LoadColumnDisplayList()
         {
             listView1.Columns.Clear();

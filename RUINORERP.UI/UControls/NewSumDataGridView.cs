@@ -766,83 +766,83 @@ namespace RUINORERP.UI.UControls
         private bool _enablePagination = false;
 
         //    /// <summary>
-    /// 分页信息
-    /// </summary>
-    public class PaginationInfo
-    {
-        public int PageIndex { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
-        public long TotalCount { get; set; }
-        public int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
-        public int StartRecord => (PageIndex - 1) * PageSize + 1;
-        public int EndRecord => Math.Min(PageIndex * PageSize, (int)TotalCount);
-    }
-
-    private PaginationInfo _paginationInfo = new PaginationInfo();
-
-    /// <summary>
-    /// 启用分页功能
-    /// </summary>
-    [Browsable(true)]
-    [Description("启用分页功能")]
-    public bool EnablePagination
-    {
-        get => _enablePagination;
-        set
+        /// 分页信息
+        /// </summary>
+        public class PaginationInfo
         {
-            _enablePagination = value;
-            UpdatePaginationPanelVisibility();
-            if (value)
+            public int PageIndex { get; set; } = 1;
+            public int PageSize { get; set; } = 20;
+            public long TotalCount { get; set; }
+            public int TotalPages => TotalCount > 0 ? (int)Math.Ceiling((double)TotalCount / PageSize) : 0;
+            public int StartRecord => (PageIndex - 1) * PageSize + 1;
+            public int EndRecord => Math.Min(PageIndex * PageSize, (int)TotalCount);
+        }
+
+        private PaginationInfo _paginationInfo = new PaginationInfo();
+
+        /// <summary>
+        /// 启用分页功能
+        /// </summary>
+        [Browsable(true)]
+        [Description("启用分页功能")]
+        public bool EnablePagination
+        {
+            get => _enablePagination;
+            set
             {
-                InitializePaginationPanel();
-            }
-            else
-            {
-                // 禁用分页时,隐藏分页面板但不释放资源
-                if (_paginationPanel != null)
+                _enablePagination = value;
+                UpdatePaginationPanelVisibility();
+                if (value)
                 {
-                    _paginationPanel.Visible = false;
+                    InitializePaginationPanel();
+                }
+                else
+                {
+                    // 禁用分页时,隐藏分页面板但不释放资源
+                    if (_paginationPanel != null)
+                    {
+                        _paginationPanel.Visible = false;
+                    }
                 }
             }
         }
-    }
 
-    /// <summary>
-    /// 分页信息
-    /// </summary>
-    [Browsable(false)]
-    public PaginationInfo Pagination => _paginationInfo;
+        /// <summary>
+        /// 分页信息
+        /// </summary>
+        [Browsable(false)]
+        public PaginationInfo Pagination => _paginationInfo;
 
-    /// <summary>
-    /// 页面大小选项
-    /// </summary>
-    private int[] _pageSizeOptions = new int[] { 10, 20, 50, 100 };
+        /// <summary>
+        /// 页面大小选项
+        /// </summary>
+        private int[] _pageSizeOptions = new int[] { 10, 20, 50, 100 };
 
-    /// <summary>
-    /// 分页变更事件
-    /// </summary>
-    public event EventHandler<PaginationInfo> PaginationChanged;
+        /// <summary>
+        /// 分页变更事件
+        /// </summary>
+        public event EventHandler<PaginationInfo> PaginationChanged;
 
-    #region 分页控件引用缓存（性能优化）
-    private KryptonButton _btnFirst, _btnPrev, _btnNext, _btnLast, _btnGo;
-    private KryptonLabel _lblPage, _lblInfo, _lblPageSize, _lblJump;
-    private KryptonTextBox _txtPage;
-    private KryptonComboBox _cmbPageSize;
-    #endregion
+        #region 分页控件引用缓存（性能优化）
+        private KryptonButton _btnFirst, _btnPrev, _btnNext, _btnLast, _btnGo;
+        private KryptonLabel _lblPage, _lblInfo, _lblPageSize, _lblJump;
+        private KryptonTextBox _txtPage;
+        private KryptonComboBox _cmbPageSize;
+        #endregion
 
-    #region 分页样式常量（消除重复）
-    private static readonly Font _paginationFont = new Font("Microsoft YaHei UI", 9f);
-    private static readonly Color _paginationGrayColor = Color.FromArgb(102, 102, 102);
-    private static readonly Color _paginationDarkColor = Color.FromArgb(51, 51, 51);
-    private static readonly Color _separatorColor = Color.FromArgb(204, 204, 204);
-    #endregion
+        #region 分页样式常量（消除重复）
+        private static readonly Font _paginationFont = new Font("Microsoft YaHei UI", 9f);
+        private static readonly Color _paginationGrayColor = Color.FromArgb(102, 102, 102);
+        private static readonly Color _paginationDarkColor = Color.FromArgb(51, 51, 51);
+        private static readonly Color _separatorColor = Color.FromArgb(204, 204, 204);
+        #endregion
 
-    #region 分页并发控制
-    /// <summary>
-    /// 分页操作锁，防止并发访问
-    /// </summary>
-    private readonly object _paginationLock = new object();
-    #endregion
+        #region 分页并发控制
+        /// <summary>
+        /// 分页操作锁，防止并发访问
+        /// </summary>
+        private readonly object _paginationLock = new object();
+        #endregion
 
         #endregion
 
@@ -2567,7 +2567,7 @@ namespace RUINORERP.UI.UControls
             {
                 customizeGrid.ColumnDisplays = ColumnDisplays;
             }
-            customizeGrid.SetColumns();
+            customizeGrid.SetColumns(customizeGrid.LoadColumnsListByCdc());
         }
 
         private void NewSumDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)

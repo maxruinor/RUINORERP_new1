@@ -979,7 +979,8 @@ namespace RUINORERP.UI.Common
             _menuAssemblyList = UIHelper.RegisterForm();
 
             //这里先提取要找到实体的类型，执行一次
-            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            // 使用Load代替LoadFrom,避免程序集重复加载导致调试器元数据问题
+            Assembly dalAssemble = Assembly.Load(new AssemblyName("RUINORERP.Model"));
             _modelTypes = dalAssemble.GetExportedTypes();
 
             _typeNames = _modelTypes.Select(m => m.Name).ToList();

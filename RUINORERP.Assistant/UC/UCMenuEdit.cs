@@ -16,6 +16,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using System.Linq;
 using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Assistant
 {
@@ -39,7 +40,7 @@ namespace RUINORERP.Assistant
             }
             if (!results.IsValid)
             {
-                MessageBox.Show(msg.ToString(), "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(msg.ToString(), "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
             return results.IsValid;
         }
@@ -58,7 +59,7 @@ namespace RUINORERP.Assistant
         {
             if (comboBoxTreeView1.TreeView.SelectedNode == null || string.IsNullOrEmpty(comboBoxTreeView1.Text))
             {
-                MessageBox.Show("ÇëÑ¡ÔñÒªÌí¼ÓµÄÉÏÒ»¼¶²Ëµ¥£¡", "ÌáÊ¾", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
+                MessageBox.Show("è¯·é€‰æ‹©è¦æ·»åŠ çš„ä¸Šä¸€çº§èœå•ï¼", "æç¤º", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Information);
                 return;
             }
             else
@@ -95,13 +96,13 @@ namespace RUINORERP.Assistant
             DateTime now = DateTime.Now;
 
             TimeSpan spand = DateTime.Now - now;
-            this.Text = "²Ëµ¥¹ÜÀíÆ÷" + "ÓÃÊ±" + spand.TotalSeconds.ToString();
+            this.Text = "èœå•ç®¡ç†å™¨" + "ç”¨æ—¶" + spand.TotalSeconds.ToString();
             if (txtAssembly.Text.Trim().Length == 0)
             {
                 return;
             }
 
-            //¹ıÂËµôÒÑ¾­Ìí¼ÓµÄ
+            //è¿‡æ»¤æ‰å·²ç»æ·»åŠ çš„
             BindingSortCollection<MenuAssemblyInfo> menuInfoList = LoadTypes(txtAssembly.Text);
             List<MenuAssemblyInfo> treeNodeList = new List<MenuAssemblyInfo>();
             GetTreeNodesToList(tree_MainMenu.Nodes, ref treeNodeList);
@@ -109,7 +110,7 @@ namespace RUINORERP.Assistant
 
             this.dataGridView1.DataSource = addList.ToBindingSortCollection();
 
-            //this.dataGridView1.Columns[0].HeaderText = "´°Ìå " + ds.Tables[0].Rows.Count.ToString() + "¸ö";
+            //this.dataGridView1.Columns[0].HeaderText = "çª—ä½“ " + ds.Tables[0].Rows.Count.ToString() + "ä¸ª";
         }
 
 
@@ -119,7 +120,7 @@ namespace RUINORERP.Assistant
         }
 
         /// <summary>
-        /// »ñÈ¡×éÖ¯½á¹¹Ê÷
+        /// è·å–ç»„ç»‡ç»“æ„æ ‘
         /// </summary>
         /// <param name="list"></param>
         /// <param name="id"></param>
@@ -133,7 +134,7 @@ namespace RUINORERP.Assistant
 
             foreach (TreeNode item in TreeNodes)
             {
-                //Ö»ÊÇÍ¨¹ı²Ëµ¥ÃûÀ´¹ıÂËÒÑ¾­Ìí¼Ó¹ıµÄ
+                //åªæ˜¯é€šè¿‡èœå•åæ¥è¿‡æ»¤å·²ç»æ·»åŠ è¿‡çš„
                 NodeList.Add(new MenuAssemblyInfo(item.Name, item.Text, "", ""));
                 GetTreeNodesToList(item.Nodes, ref NodeList);
             }
@@ -153,7 +154,7 @@ namespace RUINORERP.Assistant
             info.FormName = txtFormName.Text;
             info.MenuType = cmbMenuType.Text;
             info.Discription = txtDiscription.Text.Trim();
-            //ÔİÊ±ÊÇ×Ó½ÚµãµÄ¸öÊı
+            //æš‚æ—¶æ˜¯å­èŠ‚ç‚¹çš„ä¸ªæ•°
             if (comboBoxTreeView1.TreeView.SelectedNode != null)
             {
                 info.Sort = comboBoxTreeView1.TreeView.SelectedNode.Nodes.Count;
@@ -173,12 +174,12 @@ namespace RUINORERP.Assistant
             {
                 return;
             }
-            if (!w_EidtFlag)//ĞÂ¼Ó
+            if (!w_EidtFlag)//æ–°åŠ 
             {
                 info.Created_at = System.DateTime.Now;
                 await mc.AddMenuInfoAsync(info);
             }
-            else //ĞŞ¸Ä
+            else //ä¿®æ”¹
             {
                 info.Modified_at = System.DateTime.Now;
                 if (tree_MainMenu.SelectedNode.Tag is tb_MenuInfo)
@@ -195,7 +196,7 @@ namespace RUINORERP.Assistant
 
 
 
-        //µİ¹é·½·¨
+        //é€’å½’æ–¹æ³•
         private void Bind(TreeNode parNode, List<tb_MenuInfo> list, int nodeId)
         {
             var childList = list.FindAll(t => t.parent_id == nodeId).OrderBy(t => t.Sort);
@@ -235,7 +236,7 @@ namespace RUINORERP.Assistant
             }
         }
 
-        #region TreeView²éÕÒ²¢Ñ¡ÖĞ½Úµã
+        #region TreeViewæŸ¥æ‰¾å¹¶é€‰ä¸­èŠ‚ç‚¹
         private void SearchNodes(string SearchText, TreeNodeCollection tc, TreeView treeView1)
         {
             if (tc == null)
@@ -253,7 +254,7 @@ namespace RUINORERP.Assistant
                 }
                 if (StartNode.Nodes.Count != 0)
                 {
-                    SearchNodes(SearchText, StartNode.Nodes, treeView1);//µİ¹éËÑË÷
+                    SearchNodes(SearchText, StartNode.Nodes, treeView1);//é€’å½’æœç´¢
                 }
             }
         }
@@ -277,7 +278,7 @@ namespace RUINORERP.Assistant
 
 
         /// <summary>
-        /// È¡ÏûĞŞ¸Ä
+        /// å–æ¶ˆä¿®æ”¹
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -288,7 +289,7 @@ namespace RUINORERP.Assistant
         }
 
         /// <summary>
-        /// É¾³ı½Úµã
+        /// åˆ é™¤èŠ‚ç‚¹
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -298,12 +299,12 @@ namespace RUINORERP.Assistant
             {
                 return;
             }
-            if (MessageBox.Show("È·¶¨ÒªÉ¾³ıÂğ£¿" + tree_MainMenu.SelectedNode.Text, "ÌáÊ¾", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
+            if (MessageBox.Show("ç¡®å®šè¦åˆ é™¤å—ï¼Ÿ" + tree_MainMenu.SelectedNode.Text, "æç¤º", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
             {
                 if (await mc.DeleteMenuInfo(long.Parse(tree_MainMenu.SelectedNode.Name)))
                 {
                     LoadEnevt();
-                    MessageBox.Show("É¾³ı³É¹¦!", "ÌáÊ¾", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("åˆ é™¤æˆåŠŸ!", "æç¤º", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
 
@@ -315,7 +316,7 @@ namespace RUINORERP.Assistant
 
 
         /// <summary>
-        /// Ë¢ĞÂ²Ëµ¥Ê÷
+        /// åˆ·æ–°èœå•æ ‘
         /// </summary>
         public void MenuRefresh(System.Windows.Forms.TreeView tree_MainMenu)
         {
@@ -335,7 +336,7 @@ namespace RUINORERP.Assistant
             list = await mc.QueryAsync();
             tree_MainMenu.Nodes.Clear();
             TreeNode nodeRoot = new TreeNode();
-            nodeRoot.Text = "¹ÜÀíÏµÍ³¸ù½á½Ú";
+            nodeRoot.Text = "ç®¡ç†ç³»ç»Ÿæ ¹ç»“èŠ‚";
             nodeRoot.Name = "0";
             tree_MainMenu.Nodes.Add(nodeRoot);
             Bind(nodeRoot, list, 0);
@@ -388,12 +389,12 @@ namespace RUINORERP.Assistant
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 txtAssembly.Text = openFileDialog1.FileName;
-                //ÒâË¼ÊÇ ¼ÓÔØ¹ı£¬Êı¾İ¿âÖĞÉèÖÃºÃÁË£¬¾Í²»ÏÔÊ¾ÁË¡£
+                //æ„æ€æ˜¯ åŠ è½½è¿‡ï¼Œæ•°æ®åº“ä¸­è®¾ç½®å¥½äº†ï¼Œå°±ä¸æ˜¾ç¤ºäº†ã€‚
 
 
                 this.dataGridView1.DataSource = LoadTypes(txtAssembly.Text);
 
-                // this.dataGridView1.Columns[0].HeaderText = "²Ëµ¥Êı" + menuList.Count + "¸ö";
+                // this.dataGridView1.Columns[0].HeaderText = "èœå•æ•°" + menuList.Count + "ä¸ª";
             }
         }
 
@@ -403,26 +404,31 @@ namespace RUINORERP.Assistant
             BindingSortCollection<MenuAssemblyInfo> menuList = new BindingSortCollection<MenuAssemblyInfo>();
             //List<MenuAssemblyInfo> menuList = new List<MenuAssemblyInfo>();
             List<Type> loadTypes = new List<Type>();
-            Type[]? types = Assembly.LoadFrom(assemblyPath).GetExportedTypes();
+            var assembly = AssemblyLoader.LoadFromPath(assemblyPath);
+            if (assembly == null)
+            {
+                return;
+            }
+            Type[]? types = assembly.GetExportedTypes();
             if (types != null)
             {
                 var descType = typeof(MenuAttribute);
                 foreach (Type type in types)
                 {
-                    // ÀàĞÍÊÇ·ñÎª´°Ìå£¬·ñÔòÌø¹ı£¬½øÈëÏÂÒ»¸öÑ­»·
+                    // ç±»å‹æ˜¯å¦ä¸ºçª—ä½“ï¼Œå¦åˆ™è·³è¿‡ï¼Œè¿›å…¥ä¸‹ä¸€ä¸ªå¾ªç¯
                     //if (type.GetTypeInfo() != form)
                     //    continue;
 
-                    //// ÊÇ·ñÎª×Ô¶¨ÒåÌØĞÔ£¬·ñÔòÌø¹ı£¬½øÈëÏÂÒ»¸öÑ­»·
+                    //// æ˜¯å¦ä¸ºè‡ªå®šä¹‰ç‰¹æ€§ï¼Œå¦åˆ™è·³è¿‡ï¼Œè¿›å…¥ä¸‹ä¸€ä¸ªå¾ªç¯
                     //if (!type.IsDefined(descType, false))
                     //    continue;
 
-                    // Ç¿ÖÆÎª×Ô¶¨ÒåÌØĞÔ
+                    // å¼ºåˆ¶ä¸ºè‡ªå®šä¹‰ç‰¹æ€§
                     MenuAttribute? attribute = type.GetCustomAttribute(descType, false) as MenuAttribute;
-                    // Èç¹ûÇ¿ÖÆÊ§°Ü»òÕß²»ĞèÒª×¢ÈëµÄ´°ÌåÌø¹ı£¬½øÈëÏÂÒ»¸öÑ­»·
+                    // å¦‚æœå¼ºåˆ¶å¤±è´¥æˆ–è€…ä¸éœ€è¦æ³¨å…¥çš„çª—ä½“è·³è¿‡ï¼Œè¿›å…¥ä¸‹ä¸€ä¸ªå¾ªç¯
                     if (attribute == null || !attribute.IsForm)
                         continue;
-                    // Console.WriteLine($"×¢Èë£º{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
+                    // Console.WriteLine($"æ³¨å…¥ï¼š{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     menuList.Add(new MenuAssemblyInfo(attribute.FormType.Name, attribute.Describe, attribute.FormType.FullName, attribute.FormType.Name));
                     loadTypes.Add(attribute.FormType);
                 }

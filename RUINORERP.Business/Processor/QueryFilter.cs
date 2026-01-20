@@ -751,7 +751,11 @@ namespace RUINORERP.Business.Processor
                             }
                             else
                             {
-                                queryField.SubFilter.QueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + SubQueryTableName);
+                                var queryTargetType = AssemblyLoader.GetType("RUINORERP.Model", "RUINORERP.Model." + SubQueryTableName);
+                                if (queryTargetType != null)
+                                {
+                                    queryField.SubFilter.QueryTargetType = queryTargetType;
+                                }
                             }
                             
                             // 处理子过滤器中的闭包变量

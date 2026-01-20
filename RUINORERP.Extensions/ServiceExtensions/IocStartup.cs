@@ -173,42 +173,57 @@ namespace RUINORERP.Extensions
 
             builder.RegisterType<Extensions.Filter.GlobalExceptionsFilter>();
 
-            var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
-            builder.RegisterAssemblyTypes(dalAssemble_Extensions)
-                  .AsImplementedInterfaces().AsSelf()
-                  .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                  .PropertiesAutowired();//允许属性注入
+            var dalAssemble_Extensions = AssemblyLoader.LoadAssembly("RUINORERP.Extensions");
+            if (dalAssemble_Extensions != null)
+            {
+                builder.RegisterAssemblyTypes(dalAssemble_Extensions)
+                      .AsImplementedInterfaces().AsSelf()
+                      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                      .PropertiesAutowired();//允许属性注入
+            }
 
-            var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-            builder.RegisterAssemblyTypes(dalAssemble)
-                  .AsImplementedInterfaces().AsSelf()
-                  .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                  .PropertiesAutowired();//允许属性注入
+            var dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
+            if (dalAssemble != null)
+            {
+                builder.RegisterAssemblyTypes(dalAssemble)
+                      .AsImplementedInterfaces().AsSelf()
+                      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                      .PropertiesAutowired();//允许属性注入
+            }
 
 
             // 获取所有待注入服务类
             //var dependencyService = typeof(IDependencyService);
             // var dependencyServiceArray = GetAllTypes(alldlls).ToArray();//  GlobalData.FxAllTypes
             //    .Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyService).ToArray();
-            var dalAssemble_Iservice = System.Reflection.Assembly.LoadFrom("RUINORERP.IServices.dll");
-            builder.RegisterAssemblyTypes(dalAssemble_Iservice)
-          .AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>));
+            var dalAssemble_Iservice = AssemblyLoader.LoadAssembly("RUINORERP.IServices");
+            if (dalAssemble_Iservice != null)
+            {
+                builder.RegisterAssemblyTypes(dalAssemble_Iservice)
+              .AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>));
+            }
 
 
             // builder.RegisterGeneric(typeof(Service<>)).As(typeof(IService<>)).InstancePerRequest();
 
 
-            var dalAssemble_service = System.Reflection.Assembly.LoadFrom("RUINORERP.Services.dll");
-            builder.RegisterTypes(dalAssemble_service.GetTypes())
-                .AsImplementedInterfaces().AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+            var dalAssemble_service = AssemblyLoader.LoadAssembly("RUINORERP.Services");
+            if (dalAssemble_service != null)
+            {
+                builder.RegisterTypes(dalAssemble_service.GetTypes())
+                    .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired()
+                    .InstancePerDependency();
+            }
 
-            var dalAssemble_Business = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
-            builder.RegisterTypes(dalAssemble_Business.GetTypes())
-                 .AsImplementedInterfaces().AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency();
+            var dalAssemble_Business = AssemblyLoader.LoadAssembly("RUINORERP.Business");
+            if (dalAssemble_Business != null)
+            {
+                builder.RegisterTypes(dalAssemble_Business.GetTypes())
+                     .AsImplementedInterfaces().AsSelf()
+                    .PropertiesAutowired()
+                    .InstancePerDependency();
+            }
             //.AsImplementedInterfaces()
             //.PropertiesAutowired()
             //.InstancePerDependency();
@@ -345,7 +360,7 @@ namespace RUINORERP.Extensions
                     dlls.Add(file);
                 }
             }
-            var referencedAssemblies = getFiles.Select(Assembly.LoadFrom).ToList();  //.Select(o=> Assembly.LoadFrom(o))         
+            var referencedAssemblies = getFiles.Select(AssemblyLoader.LoadFromPath).Where(a => a != null).ToList();
             var ss = referencedAssemblies.SelectMany(o => o.GetTypes());
             var types = referencedAssemblies
                 .SelectMany(a => a.DefinedTypes)

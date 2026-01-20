@@ -3014,7 +3014,7 @@ namespace RUINORERP.UI.SysConfig
 
         private void LoadTree()
         {
-            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            Assembly dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
             ModelTypes = dalAssemble.GetExportedTypes();
             typeNames = ModelTypes.Select(m => m.Name).ToList();
             treeViewTableList.Nodes.Clear();

@@ -5,6 +5,7 @@ using Quartz.Spi;
 using System;
 using System.Linq;
 using System.Reflection;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Extensions
 {
@@ -27,7 +28,13 @@ namespace RUINORERP.Extensions
 			//任务注入
 			var baseType = typeof(IJob);
             var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            var referencedAssemblies = System.IO.Directory.GetFiles(path, "RUINORERP.Tasks.dll").Select(Assembly.LoadFrom).ToArray();
+            var tasksDllPath = System.IO.Directory.GetFiles(path, "RUINORERP.Tasks.dll").FirstOrDefault();
+            Assembly tasksAssembly = null;
+            if (!string.IsNullOrEmpty(tasksDllPath))
+            {
+                tasksAssembly = AssemblyLoader.LoadFromPath(tasksDllPath);
+            }
+            var referencedAssemblies = tasksAssembly != null ? new[] { tasksAssembly } : Array.Empty<Assembly>();
             var types = referencedAssemblies
                 .SelectMany(a => a.DefinedTypes)
                 .Select(type => type.AsType())

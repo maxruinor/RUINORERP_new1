@@ -73,7 +73,8 @@ namespace  RUINORERP.Common
         private static TypeBuilder GetTypeBuilder(string typeFullName, string assemblyName)
         {
             var an = new AssemblyName(assemblyName);
-            AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
+            // 使用RunAndSave模式,确保VS调试器能够访问类型信息
+            AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
             ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
             TypeBuilder tb = moduleBuilder.DefineType(typeFullName,
                 TypeAttributes.Public |

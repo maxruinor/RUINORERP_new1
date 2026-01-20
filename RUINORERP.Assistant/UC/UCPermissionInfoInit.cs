@@ -13,6 +13,7 @@ using System.Reflection;
 using RUINORERP.Model;
 using SqlSugar;
 using RUINORERP.Business;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Assistant.UC
 {
@@ -43,7 +44,12 @@ namespace RUINORERP.Assistant.UC
         private List<tb_FieldInfo> LoadTypes(string assemblyPath)
         {
             menuList.Clear();
-            Type[]? types = Assembly.LoadFrom(assemblyPath).GetExportedTypes();
+            var assembly = AssemblyLoader.LoadFromPath(assemblyPath);
+            if (assembly == null)
+            {
+                return;
+            }
+            Type[]? types = assembly.GetExportedTypes();
             if (types != null)
             {
                 var descType = typeof(SugarColumn);

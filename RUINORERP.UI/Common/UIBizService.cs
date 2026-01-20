@@ -203,8 +203,9 @@ namespace RUINORERP.UI.Common
                         //}
                         queryField.fKRelationAttribute = FKAttribute;
                         queryField.FKTableName = FKAttribute.FKTableName;
-                        queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + FKAttribute.FKTableName);
-                        queryField.SubFilter.QueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + FKAttribute.FKTableName);
+                        var fkTableName = "RUINORERP.Model." + FKAttribute.FKTableName;
+                        queryField.SubQueryTargetType = AssemblyLoader.GetType("RUINORERP.Model", fkTableName);
+                        queryField.SubFilter.QueryTargetType = AssemblyLoader.GetType("RUINORERP.Model", fkTableName);
                     }
 
                     if (attr is SubtotalResultAttribute)

@@ -92,7 +92,13 @@ namespace RUINORERP.Common.Seed
                 Console.WriteLine("Create Tables...");
 
                 var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-                var referencedAssemblies = System.IO.Directory.GetFiles(path, "RUINORERP.Model.dll").Select(Assembly.LoadFrom).ToArray();
+                var modelDllPath = System.IO.Directory.GetFiles(path, "RUINORERP.Model.dll").FirstOrDefault();
+                Assembly modelAssembly = null;
+                if (!string.IsNullOrEmpty(modelDllPath))
+                {
+                    modelAssembly = AssemblyLoader.LoadFromPath(modelDllPath);
+                }
+                var referencedAssemblies = modelAssembly != null ? new[] { modelAssembly } : Array.Empty<Assembly>();
                 var modelTypes = referencedAssemblies
                     .SelectMany(a => a.DefinedTypes)
                     .Select(type => type.AsType())

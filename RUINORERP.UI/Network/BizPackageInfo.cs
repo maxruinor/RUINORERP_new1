@@ -1,6 +1,4 @@
 using SuperSocket.ProtoBase;
-
-using SuperSocket.ProtoBase;
 using System;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Common;

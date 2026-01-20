@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <!-- 禁用共享编译,避免PDB不一致 -->
+    <UseSharedCompilation>false</UseSharedCompilation>
+
+    <!-- 禁用确定性编译,避免时间戳问题 -->
+    <Deterministic>false</Deterministic>
+
+    <!-- Debug配置 -->
+    <DebugSymbols Condition=" '$(Configuration)' == 'Debug' ">true</DebugSymbols>
+    <DebugType Condition=" '$(Configuration)' == 'Debug' ">full</DebugType>
+    <Optimize Condition=" '$(Configuration)' == 'Debug' ">false</Optimize>
+
+    <!-- 不生成引用程序集 -->
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+
+    <!-- 强制完整重建 -->
+    <BuildInParallel>false</BuildInParallel>
+  </PropertyGroup>
+</Project>

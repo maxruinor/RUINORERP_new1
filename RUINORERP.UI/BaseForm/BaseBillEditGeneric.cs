@@ -2531,6 +2531,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     break;
                 case MenuItemEnums.保存:
+                    if (EditEntity == null)
+                    {
+                        MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                        return;
+                    }
                     bool rsSave = false;
                     try
                     {
@@ -2542,62 +2547,56 @@ namespace RUINORERP.UI.BaseForm
                         //操作前将数据收集
                         this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
-                        if (EditEntity != null)
+
+                        if (EditEntity.HasChanged)
                         {
-                            if (EditEntity.HasChanged)
+                            pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                            if (pkid > 0)
                             {
-                                pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
-                                if (pkid > 0)
+                                var ss = StateManager.IsFinalStatus(EditEntity);
+                                var canSave = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
+                                if (!canSave.CanExecute)
                                 {
-                                    var ss = StateManager.IsFinalStatus(EditEntity);
-                                    var canSave = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
-                                    if (!canSave.CanExecute)
+                                    // 使用更友好的消息框显示保存权限验证结果
+                                    MessageBox.Show(canSave.Message, "保存权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    MainForm.Instance.uclog.AddLog($"保存操作被拒绝：{canSave.Message}");
+                                    return;
+                                }
+                                //如果有审核状态才去判断
+                                if (editEntity.ContainsProperty(typeof(DataStatus).Name))
+                                {
+                                    var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
+                                    if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
                                     {
-                                        // 使用更友好的消息框显示保存权限验证结果
-                                        MessageBox.Show(canSave.Message, "保存权限验证", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                        MainForm.Instance.uclog.AddLog($"保存操作被拒绝：{canSave.Message}");
+                                        if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
+                                        {
+                                            MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
+                                        }
                                         return;
                                     }
-                                    //如果有审核状态才去判断
-                                    if (editEntity.ContainsProperty(typeof(DataStatus).Name))
-                                    {
-                                        var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                                        if (dataStatus == DataStatus.完结 || dataStatus == DataStatus.确认)
-                                        {
-                                            if (AuthorizeController.GetShowDebugInfoAuthorization(MainForm.Instance.AppContext))
-                                            {
-                                                MainForm.Instance.uclog.AddLog("已经是【完结】或【确认】状态，保存失败。");
-                                            }
-                                            return;
-                                        }
-                                    }
                                 }
-                                if (EditEntity.HasChanged)
-                                {
-                                    editEntity.ActionStatus = ActionStatus.修改;
-                                }
+                            }
+                            if (EditEntity.HasChanged)
+                            {
+                                editEntity.ActionStatus = ActionStatus.修改;
+                            }
 
-                                rsSave = await Save(true);
-                                if (!rsSave)
-                                {
-                                    // 验证失败或保存失败，不锁定单据，保持保存按钮可用
-                                    // await LockBill();
-                                }
-                                else
-                                {
-                                    EditEntity.AcceptChanges();
-                                }
+                            rsSave = await Save(true);
+                            if (!rsSave)
+                            {
+                                // 验证失败或保存失败，不锁定单据，保持保存按钮可用
+                                // await LockBill();
                             }
                             else
                             {
-                                MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
+                                EditEntity.AcceptChanges();
                             }
-
                         }
                         else
                         {
-                            MainForm.Instance.uclog.AddLog("单据不能为空，保存失败。");
+                            MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
                         }
+
                     }
                     catch (Exception ex)
                     {
@@ -2627,6 +2626,7 @@ namespace RUINORERP.UI.BaseForm
                     if (EditEntity == null)
                     {
                         MainForm.Instance.ShowStatusText($"提交单据失败：单据保存成功后才能提交");
+                        return;
                     }
 
                     if (!CanExecuteAction(menuItem, EditEntity))
@@ -4459,6 +4459,19 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+
+        /// <summary>
+        /// 修复
+        /// </summary>
+        /// <summary>
+        /// 特殊数据修正功能（仅管理员可用）
+        /// 功能说明：允许管理员直接修改已保存的单据数据，包括主表和从表数据
+        /// 特点：
+        /// 1. 不进行完整业务验证，只进行基本数据完整性验证
+        /// 2. 支持新增和修改从表明细数据
+        /// 3. 跳过大部分业务规则检查
+        /// 4. 保留审批状态和数据状态
+        /// </summary>
         protected async override void SpecialDataFix()
         {
             if (EditEntity == null)
@@ -4466,50 +4479,218 @@ namespace RUINORERP.UI.BaseForm
                 return;
             }
 
-            // 保存前检查锁定状态
-            var lockStatus = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
-            if (!lockStatus.CanPerformCriticalOperations)
+            try
             {
-                MainForm.Instance.uclog.AddLog("单据已被锁定，无法保存修改", UILogType.警告);
-                return;
-            }
-            //没有经验通过下面先不计算
-            if (!Validator(EditEntity))
-            {
-                return;
-            }
-
-            List<C> details = new List<C>();
-            bindingSourceSub.EndEdit();
-            string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-            List<C> detailentity = bindingSourceSub.DataSource as List<C>;
-            if (typeof(C).Name.Contains("Detail") && detailentity != null)
-            {
-                //产品ID有值才算有效值
-                details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
-                EditEntity.SetPropertyValue(typeof(C).Name.ToLower() + "s", details);
-                if (!Validator<C>(details))
+                // 保存前检查锁定状态
+                var lockStatus = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+                if (!lockStatus.CanPerformCriticalOperations)
                 {
+                    MainForm.Instance.uclog.AddLog("单据已被锁定，无法保存修改", UILogType.警告);
+                    MessageBox.Show("单据已被其他用户锁定，无法修正数据。\n\n请稍后刷新重试或联系锁定人员。", "锁定提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+
+                // 结束编辑状态
+                bindingSourceSub.EndEdit();
+
+                // 获取明细数据
+                List<C> detailentity = bindingSourceSub.DataSource as List<C>;
+                List<C> details = new List<C>();
+
+                if (typeof(C).Name.Contains("Detail") && detailentity != null)
+                {
+                    // 提取有效明细数据（主键ID大于0的记录）
+                    string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                    details = detailentity.Where(t => t.GetPropertyValue(detailPKName).ToLong() > 0).ToList();
+
+                    // 如果没有有效明细，提示用户
+                    if (details.Count == 0)
+                    {
+                        var detailConfirm = MessageBox.Show(
+                            "当前明细列表中没有有效数据（主键ID为0的记录）。\n\n" +
+                            "是否继续保存（只保存主表数据）？",
+                            "明细数据提示",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question,
+                            MessageBoxDefaultButton.Button1);
+
+                        if (detailConfirm != DialogResult.Yes)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                // 基本数据验证（仅验证必填字段和主键，不进行完整业务验证）
+                if (!BasicValidator(EditEntity))
+                {
+                    MainForm.Instance.PrintInfoLog($"主表数据验证失败，无法修正。", Color.Red);
+                    return;
+                }
+
+                if (details.Count > 0 && !BasicValidator<C>(details))
+                {
+                    MainForm.Instance.PrintInfoLog($"明细数据验证失败，无法修正。", Color.Red);
+                    return;
+                }
+
+                // 标记为特殊修正模式（可以在子类中覆盖此行为）
+                EditEntity.SetPropertyValue("IsSpecialFix", true);
+
+                // 明确调用基类的Save(T entity)方法,绕过子类Save(bool)方法中的ActionStatus检查
+                // 使用(base as BaseBillEditGeneric<T, C>).Save(EditEntity)确保调用基类方法
+                var saveResult = await ((BaseBillEditGeneric<T, C>)this).Save(EditEntity);
+
+                if (saveResult.Succeeded)
+                {
+                    // 获取单据号用于日志显示
+                    string billNo = GetBillNoForLog();
+                    MainForm.Instance.PrintInfoLog($"数据修正成功。单据号：{billNo}");
+
+                    // 清除特殊修正标记
+                    if (EditEntity.ContainsProperty("IsSpecialFix"))
+                    {
+                        EditEntity.SetPropertyValue("IsSpecialFix", false);
+                    }
+
+                    // 记录审计日志
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", saveResult.ReturnObject,
+                        $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
+                        $"结果：成功，" +
+                        $"明细数量：{details.Count}");
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog($"数据修正失败。", Color.Red);
+                    MessageBox.Show($"数据修正失败！\n\n请联系系统管理员。",
+                        "修正失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                    // 记录审计日志
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", EditEntity,
+                        $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
+                        $"结果：失败");
+                }
             }
-
-
-            var result = await MainForm.Instance.AppContext.Db.UpdateableByObject(details).ExecuteCommandAsync();
-            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
-            ReturnResults<T> SaveResult = new ReturnResults<T>();
-            SaveResult = await ctr.BaseSaveOrUpdate(EditEntity);
-            if (SaveResult.Succeeded)
+            catch (Exception ex)
             {
-                // MainForm.Instance.auditLogHelper.CreateAuditLog<T>("数据特殊修正", EditEntity);
-                MainForm.Instance.PrintInfoLog($"修正成功。");
+                MainForm.Instance.logger.LogError(ex, "特殊数据修正异常");
+                MainForm.Instance.PrintInfoLog($"特殊数据修正时发生异常：{ex.Message}", Color.Red);
+                MessageBox.Show($"特殊数据修正时发生异常！\n\n异常信息：{ex.Message}\n\n请联系系统管理员。",
+                    "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                // 记录审计日志
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", EditEntity,
+                    $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
+                    $"结果：异常，" +
+                    $"异常信息：{ex.Message}");
             }
-            else
+        }
+
+        /// <summary>
+        /// 基本数据验证（仅验证必填字段和主键）
+        /// 用于特殊数据修正功能，跳过复杂业务规则验证
+        /// </summary>
+        /// <typeparam name="EntityType">实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否通过基本验证</returns>
+        private bool BasicValidator<EntityType>(EntityType entity) where EntityType : class
+        {
+            try
             {
-                MainForm.Instance.PrintInfoLog($"修正失败。", Color.Red);
+                if (entity == null)
+                {
+                    return false;
+                }
+
+                // 获取主键属性
+                var pkProperty = typeof(EntityType).GetProperties()
+                    .FirstOrDefault(p => p.GetCustomAttributes(typeof(SugarColumn), false)
+                        .Any(a => ((SugarColumn)a).IsPrimaryKey));
+
+                if (pkProperty == null)
+                {
+                    return true; // 没有主键属性，跳过验证
+                }
+
+                // 验证主键ID
+                if (typeof(EntityType) == typeof(T))
+                {
+                    // 主表：必须有主键ID（新增时可以为0）
+                    long pkValue = ReflectionHelper.GetPropertyValue(entity, pkProperty.Name).ToLong();
+                    // 主表不强制验证主键，允许新增和修改
+                }
+                else if (typeof(EntityType) == typeof(C))
+                {
+                    // 从表：必须有有效主键ID（大于0）
+                    long pkValue = ReflectionHelper.GetPropertyValue(entity, pkProperty.Name).ToLong();
+                    if (pkValue <= 0)
+                    {
+                        // 从表必须有有效的明细ID
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"基本数据验证失败：{typeof(EntityType).Name}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 基本数据验证（批量）
+        /// </summary>
+        /// <typeparam name="EntityType">实体类型</typeparam>
+        /// <param name="entities">实体集合</param>
+        /// <returns>是否全部通过基本验证</returns>
+        private bool BasicValidator<EntityType>(List<EntityType> entities) where EntityType : class
+        {
+            if (entities == null || entities.Count == 0)
+            {
+                return true; // 空列表视为通过
             }
 
-            await MainForm.Instance.AuditLogHelper.CreateAuditLog("数据修正", EditEntity, $"结果:{(SaveResult.Succeeded ? "成功" : "失败")},{SaveResult.ErrorMsg}");
+            return entities.All(e => BasicValidator(e));
+        }
+
+        /// <summary>
+        /// 获取单据号用于日志显示
+        /// </summary>
+        /// <returns>单据号</returns>
+        private string GetBillNoForLog()
+        {
+            try
+            {
+                if (EditEntity == null)
+                {
+                    return "未知";
+                }
+
+                // 尝试获取常见的单据号字段
+                var commonBillNoFields = new[] { "SOrderNo", "POrderNo", "PIrderNo", "InboundNo", "OutboundNo", "BillNo", "VoucherNo" };
+
+                foreach (var fieldName in commonBillNoFields)
+                {
+                    if (EditEntity.ContainsProperty(fieldName))
+                    {
+                        var value = EditEntity.GetPropertyValue(fieldName);
+                        if (value != null && !string.IsNullOrEmpty(value.ToString()))
+                        {
+                            return value.ToString();
+                        }
+                    }
+                }
+
+                // 如果没有找到常见字段，返回主键ID
+                return $"ID:{EditEntity.PrimaryKeyID}";
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "获取单据号失败");
+                return "获取失败";
+            }
         }
 
         private string GetPrimaryKeyProperty(Type type)

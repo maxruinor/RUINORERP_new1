@@ -24,6 +24,7 @@ using RUINORERP.Extensions;
 using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Repository.Base;
 using RUINORERP.Common.Helper;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Assistant
 {
@@ -255,11 +256,14 @@ namespace RUINORERP.Assistant
 
 
 
-            var dalAssemble = Assembly.LoadFrom("RUINORERP.Model.dll");
-            builder.RegisterAssemblyTypes(dalAssemble)
-                  .AsImplementedInterfaces().AsSelf()
-                  .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                  .PropertiesAutowired();//允许属性注入
+            var dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
+            if (dalAssemble != null)
+            {
+                builder.RegisterAssemblyTypes(dalAssemble)
+                      .AsImplementedInterfaces().AsSelf()
+                      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                      .PropertiesAutowired();//允许属性注入
+            }
                                          // 获取所有待注入服务类
 
             //var dependencyService = typeof(IDependencyService);

@@ -52,9 +52,11 @@ namespace RUINORERP.WF.UI
 
 
 
+
+
         private void LoadWorkflowParaDataType(ComboBox cmb)
         {
-            var assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
+            var assembly = AssemblyLoader.LoadAssembly("RUINORERP.WF");
 
             /* 也可以这样找
             // 要搜索的接口类型

@@ -70,18 +70,26 @@ namespace RUINORERP.Extensions
             builder.RegisterGeneric(typeof(BaseServices<>)).As(typeof(IBaseServices<>)).InstancePerDependency();//注册服务
 
             // 获取 Service.dll 程序集服务，并注册
-            var assemblysServices = Assembly.LoadFrom(servicesDllFile);
-            builder.RegisterAssemblyTypes(assemblysServices)
-                .AsImplementedInterfaces()
+            var assemblysServices = AssemblyLoader.LoadFromPath(servicesDllFile);
+            if (assemblysServices != null)
+            {
+                builder.RegisterAssemblyTypes(assemblysServices)
+                    .AsImplementedInterfaces()
                 .InstancePerDependency()
                 .PropertiesAutowired()
                 .EnableInterfaceInterceptors()       //引用Autofac.Extras.DynamicProxy;
                 .InterceptedBy(cacheType.ToArray()); //允许将拦截器服务的列表分配给注册。
+            }
 
             // 获取 Repository.dll 程序集服务，并注册
-            var assemblysRepository = Assembly.LoadFrom(repositoryDllFile);
-            builder.RegisterAssemblyTypes(assemblysRepository)
-                .AsImplementedInterfaces()
+            var assemblysRepository = AssemblyLoader.LoadFromPath(repositoryDllFile);
+            if (assemblysRepository != null)
+            {
+                builder.RegisterAssemblyTypes(assemblysRepository)
+                    .AsImplementedInterfaces()
+                .PropertiesAutowired()
+                .InstancePerDependency();
+            }
                 .PropertiesAutowired()
                 .InstancePerDependency();
 

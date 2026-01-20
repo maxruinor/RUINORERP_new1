@@ -41,6 +41,7 @@ using RUINORERP.Model.Utilities;
 using RUINORERP.Business.Cache;
 using RUINORERP.UI.Monitoring.Auditing;
 using HLH.Lib.Helper;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.Common
 {
@@ -2011,7 +2012,8 @@ namespace RUINORERP.UI.Common
             }
             else
             {
-                types = Assembly.LoadFrom(assemblyPath).GetExportedTypes();
+                var assembly = AssemblyLoader.LoadFromPath(assemblyPath);
+                types = assembly?.GetExportedTypes();
             }
             //  Type[]? types = Assembly.GetExecutingAssembly()?.GetExportedTypes();
 

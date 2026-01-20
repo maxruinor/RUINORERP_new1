@@ -944,7 +944,35 @@ namespace RUINORERP.Business
                 //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
             }
 
-            return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
+            // 使用try-catch捕获DataReader关闭异常,避免短时间查询导致连接问题
+            try
+            {
+                return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("FieldCount") || ex.Message.Contains("阅读器关闭"))
+            {
+                _logger.LogError(ex, $"DataReader已关闭,尝试重新查询。实体类型: {typeof(T).Name}");
+
+                // 等待一小段时间后重试,可能是连接池繁忙
+                await Task.Delay(100);
+
+                // 重新创建查询并执行
+                using (var newScope = _unitOfWorkManage.GetDbClient())
+                {
+                    ISugarQueryable<T> retryQuery = newScope.Queryable<T>();
+                    // 重新应用查询条件
+                    retryQuery = retryQuery
+                        .WhereIF(whereLambda != null, whereLambda)
+                        .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
+
+                    if (UseAutoNavQuery)
+                    {
+                        retryQuery = retryQuery.IncludesAllFirstLayer();
+                    }
+
+                    return await retryQuery.ToPageListAsync(pageNum, pageSize);
+                }
+            }
         }
 
 
@@ -1049,11 +1077,10 @@ namespace RUINORERP.Business
             }
 
             // 自动更新导航关系(最多两层)，但对于基础表可以跳过
-            // 临时禁用：调试SqlSugar FieldCount错误
-            // if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
-            // {
-            //     querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
-            // }
+            if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
+            {
+                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
+            }
 
             // 执行查询
             var result = await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;

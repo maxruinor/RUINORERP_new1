@@ -16,7 +16,8 @@ namespace RUINORERP.Model.Base
         //d = d.Add("MyProperty", 42);
         public Dynamic Add<T>(string key, T value)
         {
-            AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RUINORERP.Model.dll"), AssemblyBuilderAccess.Run);
+            // 使用RunAndSave模式,确保VS调试器能够访问类型信息
+            AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("RUINORERP.Model.dll"), AssemblyBuilderAccess.RunAndSave);
             ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("Dynamic.dll");
             TypeBuilder typeBuilder = moduleBuilder.DefineType(Guid.NewGuid().ToString());
             typeBuilder.SetParent(this.GetType());

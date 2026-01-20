@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="ForceRebuildOnDebug" BeforeTargets="Build">
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <BuildInParallel>false</BuildInParallel>
+    </PropertyGroup>
+  </Target>
+</Project>

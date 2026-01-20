@@ -25,6 +25,7 @@ using System.Windows.Media;
 using Krypton.Toolkit;
 using Krypton.Navigator;
 using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.SysConfig
 {
@@ -433,10 +434,11 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
+
         /// <summary>
         /// 所有实体表都在这个命名空间下，不需要每次都反射
         /// </summary>
-        Assembly assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+        Assembly assembly = AssemblyLoader.LoadAssembly("RUINORERP.Model");
         private void kryptonListBox1_SelectedIndexChanged(object sender, EventArgs e)
         {   
             if (kryptonListBox1.SelectedItem is SuperValue kv)

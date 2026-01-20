@@ -163,7 +163,6 @@ namespace RUINORERP.UI
             //--------------------
             // 下面是SqlSugar自带雪花ID是成熟算法，正确配置WORKID无一例重复反馈，标题4也可以用自定义雪花算法
             //程序启时动执行一次就行
-            //从配置文件读取一定要不一样
             //服务器时间修改一定也要修改WorkId
             //即使没有这里的定义，基础数据主键 类型是long的都会自动添加
             //  IServiceProvider serviceProvider = new ServiceCollection().BuildServiceProvider();
@@ -492,12 +491,7 @@ namespace RUINORERP.UI
                         .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(30));
                 });
             });
-
-
-            // 注册客户端缓存管理器
-            // services.AddSingleton<EventDrivenCacheManager>();
-            // services.AddSingleton<CacheSyncCommandHandler>();
-
+ 
             // 注册审计日志
             services.Configure<AuditLogOptions>(options =>
             {
@@ -614,8 +608,7 @@ namespace RUINORERP.UI
             // 注册UCTodoList用户控件 - 由于没有MenuAttrAssemblyInfo特性，需要单独注册
             RegisterUCTodoList(builder);
 
-            // 注册所有带MenuAttrAssemblyInfo特性的窗体
-            RegisterForm(builder);
+            // RegisterForm的调用已移至MainRegister统一处理，避免重复注册
         }
 
         /// <summary>
@@ -679,9 +672,6 @@ namespace RUINORERP.UI
 
             // 注册GridViewRelated为单例
             builder.RegisterType<GridViewRelated>().SingleInstance();
-
-            // 最后注册AutofacServiceRegister模块，确保不会覆盖特定注册
-           // builder.RegisterModule(new AutofacServiceRegister());
         }
 
         /// <summary>
@@ -691,7 +681,8 @@ namespace RUINORERP.UI
         {
             try
             {
-                var assembly = Assembly.LoadFrom(assemblyName);
+                // 使用Load代替LoadFrom,避免程序集重复加载导致调试器元数据问题
+                var assembly = Assembly.Load(new AssemblyName(assemblyName));
 
                 // 分离BizTypeMapper和其他类型的注册
                 var bizTypeMapperType = assembly.GetType("RUINORERP.Business.CommService.BizTypeMapper");
@@ -886,12 +877,6 @@ namespace RUINORERP.UI
                  .PropertiesAutowired()//指定属性注入
                  .SingleInstance();
 
-
-
-
-            // AuditLogHelper 已在 BusinessDIConfig.cs 中注册
-
-
             //_containerBuilder = builder;
             //AutoFacContainer = builder.Build();
             #endregion
@@ -1001,12 +986,6 @@ namespace RUINORERP.UI
                 {
 
                     // .Where(x => x.GetConstructors().Length > 0) //没有构造函数的排除
-
-
-                    if (type.Name.Contains("ButtonInfo"))
-                    {
-
-                    }
                     // 类型是否为窗体，否则跳过，进入下一个循环
                     //if (type.GetTypeInfo != form)
                     //    continue;
@@ -1084,39 +1063,17 @@ namespace RUINORERP.UI
                               // .EnableClassInterceptors()//打开AOP类的虚方法注入
                               //.PropertiesAutowired();//指定属性注入
                               .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
-
-
-                            /*
-                                        builder.RegisterTypes(IOCCslaTypes.ToArray())
-                                        .Where(x => x.GetConstructors().Length > 0)
-                                    //.AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>))
-                                    .AsImplementedInterfaces().AsSelf()
-                                    .PropertiesAutowired()
-                                    .InstancePerDependency()//默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                                    .EnableInterfaceInterceptors();
-                            */
-
-
                         }
                         else
                         {
                             //BY 2025-4-19 为了解决 合并表时 窗体类又要分开的情况 像 预收付单
-
-
                         }
-
-
-
-
-
 
                         Type[] paraTypes = type.BaseType.GetGenericArguments();
                         if (paraTypes.Length > 0)
                         {
                             // info.EntityName = paraTypes[0].Name;
                         }
-
-
 
                     }
                     else
@@ -1228,21 +1185,10 @@ namespace RUINORERP.UI
                 _builder.Register(c => Assemblyobj.CreateInstance(type.FullName)).Named<BaseUControl>(type.Name)
               .PropertiesAutowired(new CustPropertyAutowiredSelector());//指定属性注入
             }
-
-
-            // 【扩展】如果需要区分收/付业务，可添加额外元数据
-            //var businessType = (BillBusinessType)type.GetProperty("BusinessType").GetValue(null);
-            //builder.RegisterMetadata(registration =>
-            //{
-            //    registration.Add("BusinessType", businessType);
-            //});
+ 
         }
 
         #endregion 注入窗体-结束
-
-
-
-
 
         /// <summary>
         /// 自带框架注入 2023-10-08
@@ -1305,23 +1251,13 @@ namespace RUINORERP.UI
 
             services.AddScoped(typeof(ReminderData));
             services.AddSingleton<ICacheService, SqlSugarMemoryCacheService>();
-
-
-
             // 添加其他服务...
             services.AddScoped<EntityLoader>();
-
-
-            // services.AddSingleton(new AppSettings(WebHostEnvironment));
-            //services.AddScoped<ICurrentUser, CurrentUser>();
-            //services.AddSingleton(Configuration);
 
             #region 
 
             //  new IdHelperBootstrapper().SetWorkderId(1).Boot();
-
             //services.AddWorkflow(x => x.UseMySQL(@"Server=127.0.0.1;Database=workflow;User=root;Password=password;", true, true));
-
             //这是新增加的服务 后面才能实例 定义器
             services.AddWorkflowDSL();
 
@@ -1338,24 +1274,12 @@ namespace RUINORERP.UI
 
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储
-
-
-            // services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
-            // services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
             services.AddMemoryCacheSetup();
 
             //这个缓存可能更好。暂时没有去实现，用了直接简单的方式
             //services.AddRedisCacheSetup();
 
             services.AddAppContext(Program.AppContextData);
-
-            //已经有配置了
-            //string conn = AppSettings.GetValue("ConnectString");
-            //string key = "ruinor1234567890";
-            //string newconn = HLH.Lib.Security.EncryptionHelper.AesDecrypt(conn, key);
-            //services.AddSqlsugarSetup(Program.AppContextData, newconn);
-
-
             IConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
             var cfgBuilder = configurationBuilder.AddJsonFile("appsettings.json");//默认读取：当前运行目录
             IConfiguration configuration = cfgBuilder.Build();
@@ -1384,57 +1308,11 @@ namespace RUINORERP.UI
 
             services.AddSingleton(typeof(MenuTracker)); // 菜单跟踪
 
-            //services.AddSingleton<ApplicationContext>(Program.AppContextData);
-            //services.AddTransient<BaseController, AuthorizeController>();
-
-            //  services.AddSingleton(typeof(AutoMapperConfig));
-            // 
-            //services.AddScoped<IMapper, Mapper>();
-            //services.AddSingleton<IMapper>(mapper);
-
-
-            //services.AddSingleton(IDefinitionLoader);
-
             services.AddSingleton(typeof(AutoMapperConfig));
             IMapper mapper = AutoMapperConfig.RegisterMappings().CreateMapper();
             services.AddScoped<IMapper, Mapper>();
             services.AddSingleton<IMapper>(mapper);
             services.AddAutoMapperSetup();
-
- 
-
-            //services.AddCorsSetup();
-            //services.AddMiniProfilerSetup();
-            //services.AddSwaggerSetup();
-            //services.AddQuartzNetJobSetup();
-            //services.AddAuthorizationSetup();
-            //services.AddSignalR().AddNewtonsoftJsonProtocol();
-            //services.AddBrowserDetection();
-            //services.AddRedisInitMqSetup();
-            //services.AddIpStrategyRateLimitSetup(Configuration);
-            //services.AddRabbitMQSetup();
-            //services.AddEventBusSetup();
-            //services.AddControllers(options =>
-            //{
-            //    // 异常过滤器
-            //    options.Filters.Add(typeof(GlobalExceptionFilter));
-            //    // 审计过滤器
-            //    options.Filters.Add<AuditingFilter>();
-            //})
-            //    .AddControllersAsServices()
-            //    .AddNewtonsoftJson(options =>
-            //    {
-            //    //全局忽略循环引用
-            //    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            //    //options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-            //    options.SerializerSettings.DateFormatString = "yyyy-MM-dd HH:mm:ss";
-            //        options.SerializerSettings.ContractResolver = new CustomContractResolver();
-            //    }
-            //    );
-
-            // 创建服务管理者  csla才注释掉
-            //ServiceProvider = Services.BuildServiceProvider();
-            //Services.AddSingleton(ServiceProvider);//注册到服务集合中,需要可以在Service中构造函数中注入使用
         }
 
         private static void RegisterContextManager(IServiceCollection services)
@@ -1445,13 +1323,7 @@ namespace RUINORERP.UI
             var contextManagerType = typeof(IContextManager);
             // default to AsyncLocal context manager
             services.AddSingleton(contextManagerType, typeof(ApplicationContextManagerAsyncLocal));
-
-            // var managerInit = services.Where(i => i.ServiceType.Equals(contextManagerType)).Any();
-            // if (managerInit) return;
-
-            // if (LoadContextManager(services, "RUINORERP.Model.ApplicationContextManager")) return;
-
-
+ 
         }
 
         private static bool LoadContextManager(IServiceCollection services, string managerTypeName)
@@ -1473,20 +1345,6 @@ namespace RUINORERP.UI
         /// <param name="builder"></param>
         public static void ConfigureContainerForDll(ContainerBuilder builder)
         {
-            //var dalAssemble_common = System.Reflection.Assembly.LoadFrom("RUINORERP.Common.dll");
-            //builder.RegisterAssemblyTypes(dalAssemble_common)
-            //      .AsImplementedInterfaces().AsSelf()
-            //      .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-            //      .PropertiesAutowired();//允许属性注入
-
-
-            /*
-             Autofac 只会把 接口 IDuplicateCheckService 注册到容器；
-DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
-因此你在解析时 只能用接口。
-             */
-            // 内存缓存配置
-
 
             // 纯内存缓存
             var cache = CacheFactory.Build<object>(c =>
@@ -1505,17 +1363,8 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
            .As<IDuplicateCheckService>() // 允许按接口解析
            .SingleInstance();
 
-            //// 1. 先建配置
-            //var cacheCfg = ConfigurationBuilder.BuildConfiguration(cfg =>
-            //{
-            //    cfg.WithRedisConnection("redis", "127.0.0.1:6379") // 换成你的 Redis
-            //       .WithRedisCacheHandle("redis", true);            // true = 作为回退
-            //});
-
-
-
-
-            var dalAssemble_WF = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
+            // 使用Load代替LoadFrom,避免程序集重复加载导致调试器元数据问题
+            var dalAssemble_WF = Assembly.Load(new AssemblyName("RUINORERP.WF"));
             builder.RegisterAssemblyTypes(dalAssemble_WF)
                   .AsImplementedInterfaces().AsSelf()
                   .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
@@ -1523,14 +1372,14 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
 
 
-            var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
+            var dalAssemble_Extensions = Assembly.Load(new AssemblyName("RUINORERP.Extensions"));
             builder.RegisterAssemblyTypes(dalAssemble_Extensions)
                   .AsImplementedInterfaces().AsSelf()
                   .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
                   .PropertiesAutowired();//允许属性注入
 
 
-            var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            var dalAssemble = Assembly.Load(new AssemblyName("RUINORERP.Model"));
             builder.RegisterAssemblyTypes(dalAssemble)
              .AsImplementedInterfaces().AsSelf()
              .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
@@ -1552,7 +1401,8 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 {
                     if (tempModelTypes[i].BaseType == typeof(BaseEntity))
                     {
-                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        // 使用dalAssemble中已加载的类型,避免重复加载
+                        Type type = tempModelTypes[i];
                         builder.Register(c => Activator.CreateInstance(type)).Named<BaseEntity>(tempModelTypes[i].Name);
                     }
 
@@ -1560,37 +1410,18 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 // ModelTypes.Add(tempModelTypes[i]);
             }
 
-            /*
-            builder.RegisterTypes(OtherModelTypes.ToArray())
-                  .AsImplementedInterfaces().AsSelf()
-                  .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-                  .PropertiesAutowired();//允许属性注入
-            */
+         
 
             // 获取所有待注入服务类
             //var dependencyService = typeof(IDependencyService);
             // var dependencyServiceArray = GetAllTypes(alldlls).ToArray();//  GlobalData.FxAllTypes
             //    .Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyService).ToArray();
-            var dalAssemble_Iservice = System.Reflection.Assembly.LoadFrom("RUINORERP.IServices.dll");
+            var dalAssemble_Iservice = Assembly.Load(new AssemblyName("RUINORERP.IServices"));
             builder.RegisterAssemblyTypes(dalAssemble_Iservice)
           .AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>));
-
-            /*
-            var asbly_service = System.Reflection.Assembly.LoadFrom("RUINORERP.Services.dll");
-            var baseType = typeof(IDependencyService);
-            //自动注入IDependency接口,支持AOP,生命周期为InstancePerDependency
-            builder.RegisterTypes(asbly_service.GetTypes())
-                .Where(x => baseType.IsAssignableFrom(x) && x != baseType)
-                .AsImplementedInterfaces().AsSelf()
-                .PropertiesAutowired()
-                .InstancePerDependency()
-                .EnableInterfaceInterceptors()
-                .InterceptedBy(typeof(BaseDataCacheAOP));
-            */
-
-
             // builder.RegisterGeneric(typeof(Service<>)).As(typeof(IService<>)).InstancePerRequest();
-            var dalAssemble_service = System.Reflection.Assembly.LoadFrom("RUINORERP.Services.dll");
+            // 使用Load代替LoadFrom,避免程序集重复加载导致调试器元数据问题
+            var dalAssemble_service = Assembly.Load(new AssemblyName("RUINORERP.Services"));
             builder.RegisterTypes(dalAssemble_service.GetTypes())
                 .AsImplementedInterfaces().AsSelf()
                 .PropertiesAutowired()
@@ -1599,7 +1430,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
 
 
 
-            var dalAssemble_Business = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
+            var dalAssemble_Business = Assembly.Load(new AssemblyName("RUINORERP.Business"));
 
 
             Type[] tempTypes = dalAssemble_Business.GetTypes();
@@ -1632,22 +1463,7 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 {
 
                 }
-                //if (tempTypes[i].Name == "IWorkflowNotificationService")
-                //{
-                //    builder.RegisterType<WorkflowNotificationService>()
-                //    .AsImplementedInterfaces().AsSelf()
-                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                //    ;
-                //    continue;
-                //}
-                //if (tempTypes[i].Name == "IStatusMachine")
-                //{
-                //    builder.RegisterType<BusinessStatusMachine>()
-                //    .AsImplementedInterfaces().AsSelf()
-                //    .PropertiesAutowired() //属性注入 如果没有这个  public Itb_LocationTypeServices _tb_LocationTypeServices { get; set; }  这个值会没有，所以实际后为null
-                //    ;
-                //    continue;
-                //}
+              
                 if (tempTypes[i].Name == "IStatusHandler")
                 {
                     builder.RegisterType<ProductionStatusHandler>()
@@ -1844,24 +1660,14 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
             }
 
 
-
-
-            //AutofacDependencyResolver.Current.RequestLifetimeScope.ResolveNamed<INewsHelper>("news");
-            //模块化注入 - 使用服务注册契约统一管理服务注册
-
-
             // 显式注册GridViewRelated为单例，确保整个应用程序中使用同一个实例
             builder.RegisterType<GridViewRelated>().SingleInstance();
 
-            // 注册ILogger和SqlSugarScope服务，用于SqlSugarRowLevelAuthFilter的依赖注入
-            //builder.RegisterInstance(Program.AppContextData.Db).As<SqlSugarScope>().SingleInstance();
             builder.RegisterGeneric(typeof(Logger<>)).As(typeof(ILogger<>)).InstancePerDependency();
-
 
             // 注册SqlSugarRowLevelAuthFilter
             builder.RegisterType<SqlSugarRowLevelAuthFilter>().AsSelf().InstancePerDependency();
 
-            //builder.RegisterModule(new AutofacServiceRegister());
         }
 
 
@@ -1912,7 +1718,13 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 {
                     try
                     {
-                        var assembly = Assembly.LoadFrom(file);
+                        // 使用AssemblyLoader.LoadFromPath避免程序集重复加载
+                        var assembly = AssemblyLoader.LoadFromPath(file);
+                        if (assembly == null)
+                        {
+                            continue;
+                        }
+
                         var types = assembly.GetTypes()
                             .Where(t => t.IsPublic && !t.IsAbstract && !t.IsInterface && baseType.IsAssignableFrom(t))
                             .ToList();
@@ -2061,20 +1873,13 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                     _logger.Warn($"警告: AutofacContainerScope尚未初始化，无法解析服务 {serviceType.FullName}");
                     return default(T);
                 }
-
-                // 直接从Autofac容器解析，让Autofac管理生命周期
-                // SingleInstance服务：Autofac确保整个应用生命周期只创建一次
-                // InstancePerDependency服务：每次都创建新实例
-                // InstancePerLifetimeScope服务：在每个作用域内创建一次
+            
                 T service = AutofacContainerScope.Resolve<T>();
-                
-                //_logger.Debug($"成功解析服务: {serviceType.FullName}");
                 return service;
             }
             catch (Exception ex)
             {
                 _logger.Error($"解析服务失败 {serviceType.FullName}", ex);
-                // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }
         }
@@ -2103,15 +1908,12 @@ DuplicateCheckService 这个 具体类 并不会被注册为可解析的 key。
                 }
 
                 // 记录服务解析日志
-                //_logger.Debug($"正在从Autofac容器中按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 T service = AutofacContainerScope.ResolveNamed<T>(className);
-                //_logger.Debug($"成功按名称解析服务: {typeof(T).FullName}, 名称: {className}");
                 return service;
             }
             catch (Exception ex)
             {
                 _logger.Error($"按名称解析服务失败 {typeof(T).FullName}, 名称: {className}", ex);
-                // 错误处理：返回默认值而不是抛出异常，确保应用程序继续运行
                 return default(T);
             }
         }

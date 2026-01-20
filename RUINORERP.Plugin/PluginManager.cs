@@ -7,6 +7,7 @@ using System.Windows.Forms;
 // 添加System.Drawing引用以解决CS7069错误
 using System.Drawing;
 using System.Security.Principal;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Plugin
 {
@@ -102,8 +103,12 @@ namespace RUINORERP.Plugin
                             continue; // 已加载，跳过
                         }
                         
-                        // 加载插件程序集
-                        var assembly = Assembly.LoadFrom(pluginFile);
+                        // 加载插件程序集，使用AssemblyLoader避免重复加载
+                        var assembly = AssemblyLoader.LoadFromPath(pluginFile);
+                        if (assembly == null)
+                        {
+                            continue;
+                        }
                         _loadedAssemblies[assemblyName] = assembly;
                         
                         // 获取所有实现了IPlugin接口的非抽象类

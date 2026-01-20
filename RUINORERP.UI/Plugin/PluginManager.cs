@@ -1,4 +1,5 @@
 using Autofac;
+using RUINORERP.Common.Helper;
 using RUINORERP.UI;
 using System;
 using System.Collections.Generic;
@@ -80,9 +81,9 @@ namespace RUINORERP.Plugin
                         {
                             continue; // 已加载，跳过
                         }
-                        
-                        // 加载插件程序集
-                        var assembly = Assembly.LoadFrom(pluginFile);
+
+                        // 加载插件程序集(插件需要从特定路径加载,使用LoadFromPath)
+                        var assembly = AssemblyLoader.LoadFromPath(pluginFile);
                         _loadedAssemblies[assemblyName] = assembly;
                         
                         // 获取所有实现了IPlugin接口的非抽象类

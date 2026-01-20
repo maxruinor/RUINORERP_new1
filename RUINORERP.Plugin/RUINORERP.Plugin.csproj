@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="PluginCommunicationChannel.cs">
       <SubType>Code</SubType>
     </Compile>

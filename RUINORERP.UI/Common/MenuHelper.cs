@@ -573,7 +573,7 @@ namespace RUINORERP.UI.Common
                             {
                                 await Task.Delay(600);
                                 billEdit.Invoke(new Action(() => billEdit.LoadDataToUI(LoadItem)));
-                            }
+                            }   
 
                             /* LoadDataToUI只能在UI线程中调用，所以需要使用Task.Run来切换到UI线程
                             await Task.Delay(1000); // 2000 表示2秒，单位为毫秒

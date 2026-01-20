@@ -21,14 +21,17 @@ namespace RUINORERP.UI.AdvancedUIModule
         /// 动态构建一些特性，针对不同的数据类型，比方日期等变动一个新的实体类型
         /// 注意这里构建代理类时是在原以字段后面加上Proxy,字段是_加下划线,这个在解析查询条件时会用到
         /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
+        /// <param name="type">基础实体类型</param>
+        /// <param name="queryFilter">查询过滤器</param>
+        /// <returns>动态生成的代理类型</returns>
         public static Type AttributesBuilder_New2024(Type type, QueryFilter queryFilter)
         {
-            //TypeBuilder
-            var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
-            var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(aName, AssemblyBuilderAccess.Run);
-            var mb = ab.DefineDynamicModule(aName.Name);
+            // 使用RunAndSave模式创建动态程序集,确保VS调试器能够访问类型信息
+            // 使用类型名称的哈希值作为程序集名称的一部分,避免重复创建导致调试器混乱
+            string uniqueName = "RUINORERP.DynamicUI." + type.Name.GetHashCode().ToString("X");
+            var dynamicAssemblyName = new System.Reflection.AssemblyName(uniqueName);
+            var ab = AppDomain.CurrentDomain.DefineDynamicAssembly(dynamicAssemblyName, AssemblyBuilderAccess.RunAndSave);
+            var mb = ab.DefineDynamicModule("DynamicUIModule");
             var tb = mb.DefineType(type.Name + "Proxy", System.Reflection.TypeAttributes.Public, type);
             #region 前期处理  根据指定的类型  生成对应的相关属性
 

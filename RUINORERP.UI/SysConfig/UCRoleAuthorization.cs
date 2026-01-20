@@ -1520,7 +1520,7 @@ namespace RUINORERP.UI.SysConfig
             }
 
             //增量式增加字段
-            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            Assembly dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
             Type[] ModelTypes = dalAssemble.GetExportedTypes();
             List<string> typeNames = ModelTypes.Select(m => m.Name).ToList();
             Type mai = ModelTypes.FirstOrDefault(e => e.Name == menuInfo.EntityName);
@@ -1629,7 +1629,7 @@ namespace RUINORERP.UI.SysConfig
                     // 使用后台任务加载模型类型，避免阻塞UI
                     await Task.Run(async () =>
                     {
-                        var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+                        var dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
                         var modelTypes = dalAssemble.GetExportedTypes();
                         var typeNames = modelTypes.Select(m => m.Name).ToList();
                         var mainType = modelTypes.FirstOrDefault(e => e.Name == SelectedMenuInfo.EntityName);

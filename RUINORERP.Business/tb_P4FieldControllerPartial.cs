@@ -15,7 +15,7 @@ namespace RUINORERP.Business
     {
         public  void InitAllField()
         {
-            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            Assembly dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
 
             Type[] ModelTypes = dalAssemble.GetExportedTypes();
 

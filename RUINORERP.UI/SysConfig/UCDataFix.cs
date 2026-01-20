@@ -62,7 +62,7 @@ namespace RUINORERP.UI.SysConfig
         private void UCDataFix_Load(object sender, EventArgs e)
         {
             //这里先提取要找到实体的类型，执行一次
-            Assembly dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            Assembly dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
             ModelTypes = dalAssemble.GetExportedTypes();
 
             typeNames = ModelTypes.Select(m => m.Name).ToList();

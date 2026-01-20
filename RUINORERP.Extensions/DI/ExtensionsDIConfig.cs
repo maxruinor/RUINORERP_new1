@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using RUINORERP.Extensions.AOP;
 using RUINORERP.Extensions.ServiceExtensions;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.Extensions.DI
 {
@@ -25,13 +26,13 @@ namespace RUINORERP.Extensions.DI
             builder.RegisterType<BlogRedisCacheAOP>();
             builder.RegisterType<BlogTranAOP>();
             builder.RegisterType<BlogUserAuditAOP>();
-         
-            
+
+
             // 注册服务扩展相关类
             builder.RegisterType<AutofacRegister>();
-            
+
             // 批量注册Extensions程序集中的类型
-            var assembly = Assembly.LoadFrom("RUINORERP.Extensions.dll");
+            var assembly = AssemblyLoader.LoadAssembly("RUINORERP.Extensions");
             builder.RegisterAssemblyTypes(assembly)
                   .AsImplementedInterfaces()
                   .AsSelf()

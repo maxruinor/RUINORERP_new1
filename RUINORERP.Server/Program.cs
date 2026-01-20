@@ -59,10 +59,15 @@ namespace RUINORERP.Server
         private static TField GetPrivateField<TClass, TField>(TClass obj, string fieldName)
         {
             if (obj == null) return default;
-            
+
             var field = typeof(TClass).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
             return field != null ? (TField)field.GetValue(obj) : default;
         }
+
+        /// <summary>
+        /// 正在加载的程序集列表,用于防止AssemblyResolve事件中的无限递归
+        /// </summary>
+        private static readonly System.Collections.Generic.HashSet<string> _loadingAssemblies = new System.Collections.Generic.HashSet<string>();
 
         public static IWorkflowHost WorkflowHost;
 
@@ -146,6 +151,9 @@ namespace RUINORERP.Server
 
             // Phase 3.2 优化：配置线程池参数，提高并发性能
             ConfigureThreadPool();
+
+            // 注册程序集解析事件,避免重复加载导致的调试器问题
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
 
 //#if DEBUG
 //            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
@@ -596,6 +604,55 @@ namespace RUINORERP.Server
             {
                 // 如果日志记录也失败，确保有基本的错误输出
                 System.Diagnostics.Debug.WriteLine("记录应用程序域异常日志失败: " + logEx.Message);
+            }
+        }
+
+        /// <summary>
+        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题
+        /// </summary>
+        private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            // 避免无限递归:检查当前是否已经在处理此程序集
+            string assemblyKey = args.Name?.ToLower();
+            if (_loadingAssemblies.Contains(assemblyKey))
+            {
+                return null; // 正在加载中,避免递归
+            }
+
+            try
+            {
+                // 尝试从已加载的程序集中查找
+                var assemblyName = new System.Reflection.AssemblyName(args.Name);
+                var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == assemblyName.Name);
+
+                if (loadedAssembly != null)
+                {
+                    return loadedAssembly;
+                }
+
+                // 标记为正在加载,防止递归
+                _loadingAssemblies.Add(assemblyKey);
+
+                // 尝试使用Load加载(优先使用Load避免LoadFrom的问题)
+                try
+                {
+                    var result = System.Reflection.Assembly.Load(assemblyName);
+                    _loadingAssemblies.Remove(assemblyKey);
+                    return result;
+                }
+                catch
+                {
+                    // Load失败,返回null让系统自行处理
+                    _loadingAssemblies.Remove(assemblyKey);
+                }
+
+                return null;
+            }
+            catch
+            {
+                _loadingAssemblies.Remove(assemblyKey);
+                return null;
             }
         }
     }

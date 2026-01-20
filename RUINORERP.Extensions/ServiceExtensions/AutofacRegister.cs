@@ -43,7 +43,7 @@ namespace RUINORERP.Extensions
             //dlls.Add(System.IO.Path.Combine(Application.StartupPath, System.AppDomain.CurrentDomain.FriendlyName));
             // dlls.Add(System.IO.Path.Combine(Application.StartupPath, "RUINORERP.Entity.dll"));
 
-             var referencedAssemblies = dlls.ToArray().Select(System.Reflection.Assembly.LoadFrom).ToList();  //.Select(o=> Assembly.LoadFrom(o))         
+             var referencedAssemblies = dlls.ToArray().Select(AssemblyLoader.LoadFromPath).ToList();
              var types = referencedAssemblies.SelectMany(o => o.GetTypes());
             List<System.Reflection.Assembly> alldlls = RUINORERP.Common.Helper.AssemblyHelper.GetReferanceAssemblies(AppDomain.CurrentDomain, true);
             //var dependencyService = typeof(IDependencyService);

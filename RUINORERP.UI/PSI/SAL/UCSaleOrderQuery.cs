@@ -1,51 +1,51 @@
-﻿using System;
+﻿using AutoMapper;
+using CacheManager.Core;
+using Microsoft.Extensions.Logging;
+using Netron.NetronLight;
+using Newtonsoft.Json;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINORERP.AutoMapper;
+using RUINORERP.Business;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.Model.CommonModel;
+using RUINORERP.UI.ATechnologyStack;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.HelpSystem;
+using RUINORERP.UI.HelpSystem.Core;
+using RUINORERP.UI.SS;
+using RUINORERP.UI.ToolForm;
+using RUINORERP.UI.UControls;
+using RUINORERP.UI.WorkFlowDesigner.Entities;
+using RulesEngine;
+using RulesEngine.Models;
+using SqlSugar;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Dynamic.Core.CustomTypeProviders;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.UI.Common;
-using RUINORERP.Model;
-using RUINORERP.Global;
-using RUINORERP.Business;
-using RUINORERP.AutoMapper;
-using AutoMapper;
-using RUINORERP.Common.CollectionExtension;
-using SqlSugar;
-using RUINORERP.Common.Extensions;
-using System.Collections;
-using RUINORERP.Model.Base;
-using RUINORERP.Business.Security;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business.Processor;
-using Microsoft.Extensions.Logging;
-using RulesEngine.Models;
-using System.Linq.Dynamic.Core;
-using Newtonsoft.Json;
-using System.IO;
-using Rule = RulesEngine.Models.Rule;
-using RUINORERP.Model.CommonModel;
-using System.Linq.Expressions;
-using RUINORERP.UI.WorkFlowDesigner.Entities;
 using WorkflowCore.Interface;
-using RUINORERP.UI.SS;
-using RulesEngine;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-
-using Netron.NetronLight;
-using RUINORERP.UI.UControls;
-using RUINORERP.UI.ATechnologyStack;
-using RUINORERP.UI.CommonUI;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.UI.ToolForm;
-using NPOI.SS.Formula.Functions;
-using RUINORERP.UI.HelpSystem;
-using RUINORERP.UI.HelpSystem.Core;
+using Rule = RulesEngine.Models.Rule;
 
 namespace RUINORERP.UI.PSI.SAL
 {
@@ -70,7 +70,7 @@ namespace RUINORERP.UI.PSI.SAL
                 ShowFocusedControlHelp();
                 e.Handled = true;
             }
-           
+
         }
 
         /// <summary>
@@ -78,11 +78,11 @@ namespace RUINORERP.UI.PSI.SAL
         /// </summary>
         private void ShowFocusedControlHelp()
         {
-            
+
         }
 
 
-     
+
 
         /// <summary>
         /// 查找主窗体
@@ -214,6 +214,18 @@ namespace RUINORERP.UI.PSI.SAL
                             {
                                 return;
                             }
+                        }
+
+                        string customerName = string.Empty;
+                        if (SOrder.tb_customervendor == null && SOrder.CustomerVendor_ID > 0)
+                        {
+                            var customerVendor = _cacheManager.GetEntity<tb_CustomerVendor>(SOrder.CustomerVendor_ID);
+                            if (customerVendor != null)
+                            {
+                                customerName = customerVendor.CVName;
+                                SOrder.tb_customervendor = customerVendor;
+                            }
+
                         }
 
                         if (MessageBox.Show($"针对订单：{SOrder.SOrderNo}，确定收到客户{SOrder.tb_customervendor.CVName}:收到预付款：{inputForm.InputContent}元吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)

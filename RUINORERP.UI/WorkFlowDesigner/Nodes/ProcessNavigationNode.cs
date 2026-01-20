@@ -16,6 +16,7 @@ using System.Linq;
 using Netron.GraphLib;
 using RUINORERP.WF;
 using RUINORERP.Model;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.WorkFlowDesigner.Nodes
 {
@@ -896,8 +897,8 @@ namespace RUINORERP.UI.WorkFlowDesigner.Nodes
                 else if (!string.IsNullOrEmpty(mFormName) && !string.IsNullOrEmpty(mClassPath))
                 {
                     // 直接通过反射创建窗体
-                    var assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.UI.exe");
-                    var formType = assembly.GetType(mClassPath + "." + mFormName);
+                    var assembly = AssemblyLoader.LoadAssembly("RUINORERP.UI");
+                    var formType = assembly?.GetType(mClassPath + "." + mFormName);
 
                     if (formType != null)
                     {

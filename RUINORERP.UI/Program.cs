@@ -143,106 +143,6 @@ namespace RUINORERP.UI
         }
 
 
-        /// <summary>
-        /// 配置依赖注入对象
-        /// </summary>
-        /// <param name="services"></param>
-        public static void ConfigureRepository(IServiceCollection services)
-        {
-
-
-
-            #region 自动注入对应的服务接口
-            //services.AddSingleton<IDictDataService, DictDataService>();//services.AddScoped<IUserService, UserService>();
-            /*
-            var baseType = typeof(IDependencyRepository);
-            var path = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            //            var getFiles = Directory.GetFiles(path, "*.dll").Where(Match);  //.Where(o=>o.Match())
-            var getFiles = Directory.GetFiles(path, "*.dll").Where(o => o.ToLower().StartsWith(@path.ToLower() + "ruinor"));//路径筛选
-
-            List<string> dlls = new List<string>();
-            foreach (var file in getFiles)
-            {
-                FileInfo fi = new FileInfo(file);
-                if (fi.Name.ToLower().Contains("ruinor"))
-                {
-                    // dlls.Add(file);
-                }
-            }*/
-            //Process.GetCurrentProcess().ProcessName
-            //dlls.Add(System.IO.Path.Combine(Application.StartupPath, System.AppDomain.CurrentDomain.FriendlyName));
-            //List<string> dlls = new List<string>();
-            // dlls.Add(System.IO.Path.Combine(Application.StartupPath, "RUINORERP.Entity.dll"));
-
-            // var referencedAssemblies = dlls.ToArray().Select(Assembly.LoadFrom).ToList();  //.Select(o=> Assembly.LoadFrom(o))         
-
-            // var ss = referencedAssemblies.SelectMany(o => o.GetTypes());
-
-
-            //  var dependencyService = typeof(IDependencyService);
-            //var ServiceTypes = ss.Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyService).ToArray();
-
-            // var dependencyRepository = typeof(IDependencyRepository);
-            // var RepositoryTypes = ss.Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyRepository).ToArray();
-
-
-
-
-            //var types = referencedAssemblies
-            //    .SelectMany(a => a.DefinedTypes)
-            //    .Select(type => type.AsType())
-            //    .Where(x => x != baseType && baseType.IsAssignableFrom(x)).ToList();
-            //var implementTypes = types.Where(x => x.IsClass).ToList();
-            //var interfaceTypes = types.Where(x => x.IsInterface).ToList();
-
-
-            //foreach (var implementType in ServiceTypes)
-            //{
-            //if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
-            //{
-            //    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //    if (interfaceType != null)
-            //        services.AddScoped(interfaceType, implementType);
-            //}
-            //else if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
-            //{
-            //    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //    if (interfaceType != null)
-            //        services.AddSingleton(interfaceType, implementType);
-            //}
-            //else
-            //{
-            //    var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //    if (interfaceType != null)
-            //        services.AddTransient(interfaceType, implementType);
-            //}
-            //}
-
-            //foreach (var implementType in implementTypes)
-            //{
-            //    if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
-            //    {
-            //        var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //        if (interfaceType != null)
-            //            services.AddScoped(interfaceType, implementType);
-            //    }
-            //    else if (typeof(IDependencyRepository).IsAssignableFrom(implementType))
-            //    {
-            //        var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //        if (interfaceType != null)
-            //            services.AddSingleton(interfaceType, implementType);
-            //    }
-            //    else
-            //    {
-            //        var interfaceType = interfaceTypes.FirstOrDefault(x => x.IsAssignableFrom(implementType));
-            //        if (interfaceType != null)
-            //            services.AddTransient(interfaceType, implementType);
-            //}
-            //}
-            #endregion
-        }
-
-
 
 
 
@@ -259,6 +159,11 @@ namespace RUINORERP.UI
         private const string AppGuid = "{11-22-33-4400}"; // 替换为你自己的GUID
 
         /// <summary>
+        /// 正在加载的程序集列表,用于防止AssemblyResolve事件中的无限递归
+        /// </summary>
+        private static readonly System.Collections.Generic.HashSet<string> _loadingAssemblies = new System.Collections.Generic.HashSet<string>();
+
+        /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
@@ -271,6 +176,9 @@ namespace RUINORERP.UI
             if (!CheckSingleInstance())
                 return;
 
+            // 注册程序集解析事件,避免重复加载导致的调试器问题
+            AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
+
             try
             {
                 // 注册应用程序退出事件
@@ -282,6 +190,74 @@ namespace RUINORERP.UI
                 ReleaseMutex();
             }
 
+        }
+
+        /// <summary>
+        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题
+        /// </summary>
+        private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            // 避免无限递归:检查当前是否已经在处理此程序集
+            string assemblyKey = args.Name?.ToLower();
+            if (_loadingAssemblies.Contains(assemblyKey))
+            {
+                return null; // 正在加载中,避免递归
+            }
+
+            try
+            {
+                // 尝试从已加载的程序集中查找
+                var assemblyName = new System.Reflection.AssemblyName(args.Name);
+                var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == assemblyName.Name);
+
+                if (loadedAssembly != null)
+                {
+                    return loadedAssembly;
+                }
+
+                // 标记为正在加载,防止递归
+                _loadingAssemblies.Add(assemblyKey);
+
+                // 尝试使用Load加载(优先使用Load避免LoadFrom的问题)
+                try
+                {
+                    var result = System.Reflection.Assembly.Load(assemblyName);
+                    _loadingAssemblies.Remove(assemblyKey);
+                    return result;
+                }
+                catch
+                {
+                    // Load失败,继续尝试其他方式
+                    _loadingAssemblies.Remove(assemblyKey);
+                }
+
+                // 尝试从当前目录加载
+                string assemblyPath = Path.Combine(Application.StartupPath, $"{assemblyName.Name}.dll");
+                if (File.Exists(assemblyPath))
+                {
+                    var result = RUINORERP.Common.Helper.AssemblyLoader.LoadFromPath(assemblyPath);
+                    _loadingAssemblies.Remove(assemblyKey);
+                    return result;
+                }
+
+                // 尝试从可执行文件路径加载
+                assemblyPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), $"{assemblyName.Name}.dll");
+                if (File.Exists(assemblyPath))
+                {
+                    var result = RUINORERP.Common.Helper.AssemblyLoader.LoadFromPath(assemblyPath);
+                    _loadingAssemblies.Remove(assemblyKey);
+                    return result;
+                }
+
+                _loadingAssemblies.Remove(assemblyKey);
+                return null;
+            }
+            catch
+            {
+                _loadingAssemblies.Remove(assemblyKey);
+                return null;
+            }
         }
 
         /// <summary>
@@ -454,7 +430,8 @@ namespace RUINORERP.UI
 
                     IWorkflowRegistry _workflowRegistry = Startup.GetFromFac<IWorkflowRegistry>();
                     // var assembly = Assembly.GetExecutingAssembly();
-                    var assembly = System.Reflection.Assembly.LoadFrom("RUINORERP.WF.dll");
+                    // 使用Load代替LoadFrom,避免程序集重复加载导致调试器元数据问题
+                    var assembly = Assembly.Load(new AssemblyName("RUINORERP.WF"));
                     var workflowTypes = assembly.GetTypes()
                         .Where(t => typeof(IWorkflowMarker).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
                     foreach (var workflowType in workflowTypes)
@@ -924,7 +901,23 @@ namespace RUINORERP.UI
                         (t.GetCustomAttributes(typeof(SugarTable), true)
                             .FirstOrDefault() as SugarTable)?.TableName == tableName);
 
-                entityType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                // 尝试通过已加载程序集查找
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    var type = asm.GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                    if (type != null)
+                    {
+                        entityType = type;
+                        break;
+                    }
+                }
+
+                // 如果未找到,使用Load加载
+                if (entityType == null)
+                {
+                    var modelAssembly = Assembly.Load(new AssemblyName("RUINORERP.Model"));
+                    entityType = modelAssembly.GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
+                }
 
                 if (entityType != null)
                 {

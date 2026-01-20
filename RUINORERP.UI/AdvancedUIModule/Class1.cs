@@ -92,7 +92,8 @@ namespace RUINORERP.UI.AdvancedQuery
             string typeName = "modified_" + model.Name;
             AssemblyName assemblyName = new AssemblyName(typeName);
 
-            AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+            // 使用RunAndSave模式,确保VS调试器能够访问类型信息
+            AssemblyBuilder assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
             ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("Module");
 
             TypeBuilder typeBuilder = moduleBuilder.DefineType(typeName,

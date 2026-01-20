@@ -625,7 +625,7 @@ namespace RUINORERP.Server
 
             #region Extensions程序集依赖注入
 
-            var dalAssemble_Extensions = System.Reflection.Assembly.LoadFrom("RUINORERP.Extensions.dll");
+            var dalAssemble_Extensions = Assembly.Load(new AssemblyName("RUINORERP.Extensions"));
             builder.RegisterAssemblyTypes(dalAssemble_Extensions)
                   .AsImplementedInterfaces().AsSelf()
                   .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
@@ -635,7 +635,7 @@ namespace RUINORERP.Server
             // 最后注册AutofacRegister模块，确保不会覆盖特定注册
             builder.RegisterModule(new AutofacRegister());
 
-            var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
+            var dalAssemble = Assembly.Load(new AssemblyName("RUINORERP.Model"));
             builder.RegisterAssemblyTypes(dalAssemble)
              .AsImplementedInterfaces().AsSelf()
              .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
@@ -657,12 +657,12 @@ namespace RUINORERP.Server
                 {
                     if (tempModelTypes[i].BaseType == typeof(BaseEntity))
                     {
-                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        Type type = tempModelTypes[i];
                         builder.Register(c => Activator.CreateInstance(type)).Named<BaseEntity>(tempModelTypes[i].Name);
                     }
                     if (tempModelTypes[i].BaseType == typeof(BaseConfig))
                     {
-                        Type type = Assembly.LoadFrom("RUINORERP.Model.dll").GetType(tempModelTypes[i].FullName);
+                        Type type = tempModelTypes[i];
                         builder.Register(c => Activator.CreateInstance(type)).Named<BaseConfig>(tempModelTypes[i].Name);
                     }
                 }
@@ -673,20 +673,20 @@ namespace RUINORERP.Server
             //var dependencyService = typeof(IDependencyService);
             // var dependencyServiceArray = GetAllTypes(alldlls).ToArray();//  GlobalData.FxAllTypes
             //    .Where(x => dependencyService.IsAssignableFrom(x) && x != dependencyService).ToArray();
-            var dalAssemble_Iservice = System.Reflection.Assembly.LoadFrom("RUINORERP.IServices.dll");
+            var dalAssemble_Iservice = Assembly.Load(new AssemblyName("RUINORERP.IServices"));
             builder.RegisterAssemblyTypes(dalAssemble_Iservice)
           .AsClosedTypesOf(typeof(IServices.BASE.IBaseServices<>));
 
 
             // builder.RegisterGeneric(typeof(Service<>)).As(typeof(IService<>)).InstancePerRequest();
-            var dalAssemble_service = System.Reflection.Assembly.LoadFrom("RUINORERP.Services.dll");
+            var dalAssemble_service = Assembly.Load(new AssemblyName("RUINORERP.Services"));
             builder.RegisterTypes(dalAssemble_service.GetTypes())
                 .AsImplementedInterfaces().AsSelf()
                 .PropertiesAutowired()
                 .InstancePerDependency();
             // .EnableInterfaceInterceptors();//打开AOP接口注入
 
-            var dalAssemble_Business = System.Reflection.Assembly.LoadFrom("RUINORERP.Business.dll");
+            var dalAssemble_Business = Assembly.Load(new AssemblyName("RUINORERP.Business"));
 
 
             Type[] tempTypes = dalAssemble_Business.GetTypes();
@@ -966,7 +966,12 @@ namespace RUINORERP.Server
             {
                 try
                 {
-                    referencedAssemblies.Add(Assembly.LoadFrom(file));
+                    // 使用AssemblyLoader.LoadFromPath避免程序集重复加载
+                    var assembly = AssemblyLoader.LoadFromPath(file);
+                    if (assembly != null)
+                    {
+                        referencedAssemblies.Add(assembly);
+                    }
                 }
                 catch (Exception ex)
                 {

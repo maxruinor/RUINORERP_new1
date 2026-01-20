@@ -174,8 +174,8 @@ namespace RUINORERP.UI.BI
 
                 string ClassPath = group.Key;
                 List<tb_FieldInfo> list = group.ToList();
-                //                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(Global.GlobalConstants.Model_NAME + "." + tableName);
-                var type = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(ClassPath);
+
+                var type = AssemblyLoader.GetType(Global.GlobalConstants.ModelDLL_NAME, ClassPath);
                 //创建这个类型的实体
                 var entity = Activator.CreateInstance(type);
                 foreach (var item in list)
@@ -227,8 +227,11 @@ namespace RUINORERP.UI.BI
                 {
                     try
                     {
-                        entityType = Assembly.LoadFrom(Global.GlobalConstants.ModelDLL_NAME).GetType(classPath);
-                        typeCache[classPath] = entityType;
+                        entityType = AssemblyLoader.GetType(Global.GlobalConstants.ModelDLL_NAME, classPath);
+                        if (entityType != null)
+                        {
+                            typeCache[classPath] = entityType;
+                        }
                     }
                     catch (Exception ex)
                     {

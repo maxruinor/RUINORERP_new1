@@ -176,6 +176,7 @@ namespace RUINORERP.UI.AdvancedUIModule
 
             Type newtype = null;
             object newDto = null;
+            //11
             newtype = UIQueryPropertyBuilder.AttributesBuilder_New2024(type, queryFilter);
             newDto = Activator.CreateInstance(newtype);
 
@@ -219,7 +220,11 @@ namespace RUINORERP.UI.AdvancedUIModule
                     //如果上级指定了就不要覆盖
                     if (queryField.SubQueryTargetType == null)
                     {
-                        queryField.SubQueryTargetType = Assembly.LoadFrom("RUINORERP.Model.dll").GetType("RUINORERP.Model." + queryField.FKTableName);
+                        var subQueryType = AssemblyLoader.GetType("RUINORERP.Model", "RUINORERP.Model." + queryField.FKTableName);
+                        if (subQueryType != null)
+                        {
+                            queryField.SubQueryTargetType = subQueryType;
+                        }
                     }
 
                 }

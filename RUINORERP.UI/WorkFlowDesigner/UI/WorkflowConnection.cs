@@ -14,6 +14,7 @@ using System.Security.Permissions;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using Newtonsoft.Json;
+using RUINORERP.Common.Helper;
 
 namespace RUINORERP.UI.WorkFlowDesigner.UI
 {
@@ -304,7 +305,7 @@ namespace RUINORERP.UI.WorkFlowDesigner.UI
 
                                 //TODO: add some .Net security checks here to make sure no malicious code will harm your computer
                                 Directory.SetCurrentDirectory(Path.GetDirectoryName(Application.ExecutablePath));//reset the dir since the Dialogs can change the CurrentDirectory!
-                                Assembly ass = Assembly.LoadFrom(consum.LibPath);
+                                Assembly ass = AssemblyLoader.LoadFromPath(consum.LibPath);
 
                                 //Directory.SetCurrentDirectory(Path.GetDirectoryName(Application.ExecutablePath));
 

@@ -1,3 +1,4 @@
+using CacheManager.Core;
 using Krypton.Docking;
 using Krypton.Navigator;
 using Krypton.Toolkit;
@@ -7,6 +8,7 @@ using NPOI.SS.Formula.Functions;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.RowLevelAuthService;
@@ -64,6 +66,9 @@ namespace RUINORERP.UI.BaseForm
     /// <typeparam name="C"></typeparam>
     public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth, IToolStripMenuInfoAuth where M : class, new() where C : class, new()
     {
+
+
+        public  IEntityCacheManager _cacheManager;
         /// <summary>
         /// 统一状态管理器
         /// </summary>
@@ -177,6 +182,8 @@ namespace RUINORERP.UI.BaseForm
 
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
+                _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+
                 if (!this.DesignMode)
                 {
                     if (frm == null)

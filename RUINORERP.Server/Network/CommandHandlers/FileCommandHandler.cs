@@ -1079,30 +1079,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 如果指定了业务编号,查询业务关联的文件
                 if (!string.IsNullOrEmpty(listRequest.BusinessId))
                 {
-                    var relations = await _businessRelationController.QueryByNavAsync(
-                        c => c.BusinessNo == listRequest.BusinessId && c.IsActive);
+                    // 优化后: 使用 INNER JOIN 一次查询完成,避免 N+1 查询问题
+                    var dbClient = _unitOfWorkManage.GetDbClient();
+                    var fileQueryResult = await dbClient
+                        .Queryable<tb_FS_BusinessRelation>()
+                        .InnerJoin<tb_FS_FileStorageInfo>((br, fs) => br.FileId == fs.FileId)
+                        .Where((br, fs) => br.BusinessNo == listRequest.BusinessId
+                                          && br.IsActive
+                                          && fs.FileStatus == (int)FileStatus.Active
+                                          && fs.isdeleted == false)
+                        .OrderBy((br, fs) => br.Created_at, OrderByType.Desc)
+                        .Select((br, fs) => new { br, fs })
+                        .ToListAsync();
 
-                    if (relations != null && relations.Count > 0)
-                    {
-                        foreach (var relation in relations)
-                        {
-                            var bizRelation = relation as tb_FS_BusinessRelation;
-                            if (bizRelation != null)
-                            {
-                                var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == bizRelation.FileId && c.isdeleted == false); 
-                                
-                         
-                                if (files != null && files.Count > 0)
-                                {
-                                    var fileInfo = files[0] as tb_FS_FileStorageInfo;
-                                    if (fileInfo != null)
-                                    {
-                                        fileInfos.Add(fileInfo);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    fileInfos = fileQueryResult.Select(x => x.fs).ToList();
                 }
                 // 否则按分类查询所有文件
                 else if (listRequest.BusinessType.HasValue)

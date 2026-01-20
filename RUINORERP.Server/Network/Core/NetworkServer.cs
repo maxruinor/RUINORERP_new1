@@ -574,7 +574,7 @@ namespace RUINORERP.Server.Network.Core
                             }
                             else
                             {
-                                _logger?.LogInformation("未找到有效的服务器配置，将使用默认配置");
+                                _logger?.LogDebug("未找到有效的服务器配置，将使用默认配置");
                                 serverOptions = new ERPServerOptions();
                             }
                         }
@@ -586,7 +586,7 @@ namespace RUINORERP.Server.Network.Core
                     }
                     else
                     {
-                        _logger?.LogInformation("配置对象为空，将使用默认配置");
+                        _logger?.LogDebug("配置对象为空，将使用默认配置");
                         serverOptions = new ERPServerOptions();
                     }
                 }

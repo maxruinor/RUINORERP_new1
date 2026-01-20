@@ -95,6 +95,10 @@ namespace RUINORERP.Server.Network.DI
             // 注册文件存储监控服务(单例,长期运行)
             services.AddSingleton<FileStorageMonitorService>();
 
+            // 注册图片缓存和HasAttachment同步服务(单例,长期运行)
+            //services.AddSingleton<ImageCacheService>();
+            services.AddSingleton<HasAttachmentSyncService>();
+
         }
 
         /// <summary>

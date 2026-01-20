@@ -1049,10 +1049,11 @@ namespace RUINORERP.Business
             }
 
             // 自动更新导航关系(最多两层)，但对于基础表可以跳过
-            if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
-            {
-                querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
-            }
+            // 临时禁用：调试SqlSugar FieldCount错误
+            // if (!_tableSchemaManager.GetAllTableNames().Contains(typeof(T).Name) || typeof(T).Name == typeof(tb_Prod).Name)
+            // {
+            //     querySqlQueryable = querySqlQueryable.IncludesAllFirstLayer();
+            // }
 
             // 执行查询
             var result = await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;

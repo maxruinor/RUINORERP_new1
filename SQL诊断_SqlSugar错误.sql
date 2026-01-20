@@ -1,0 +1,70 @@
+-- SQL诊断脚本：用于排查SqlSugar SqlDataReader FieldCount错误
+-- 可能的原因：表结构与实体类不匹配
+
+-- 1. 检查tb_Prod表结构
+DESCRIBE tb_Prod;
+
+-- 2. 检查tb_Prod表的列
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    IS_NULLABLE,
+    COLUMN_KEY
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'tb_Prod'
+ORDER BY ORDINAL_POSITION;
+
+-- 3. 检查是否有HasAttachment字段（如果未执行迁移脚本，这个字段不存在）
+SELECT 
+    TABLE_NAME,
+    COLUMN_NAME,
+    DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME IN ('tb_Prod', 'tb_SaleOrder')
+AND COLUMN_NAME = 'HasAttachment';
+
+-- 4. 检查可能引起问题的字段（如Images二进制字段）
+SELECT 
+    TABLE_NAME,
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+    CHARACTER_MAXIMUM_LENGTH / (1024 * 1024) AS Size_MB
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'tb_Prod'
+AND DATA_TYPE IN ('blob', 'longblob', 'image', 'varbinary', 'binary');
+
+-- 5. 检查是否有重复列名
+SELECT 
+    TABLE_NAME,
+    COLUMN_NAME,
+    COUNT(*) as DuplicateCount
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME IN ('tb_Prod', 'tb_SaleOrder')
+GROUP BY TABLE_NAME, COLUMN_NAME
+HAVING COUNT(*) > 1;
+
+-- 6. 检查表的主键约束
+SELECT 
+    TABLE_NAME,
+    COLUMN_NAME,
+    CONSTRAINT_NAME
+FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+WHERE TABLE_NAME = 'tb_Prod';
+
+-- 7. 检查表的字符集
+SELECT 
+    TABLE_NAME,
+    TABLE_COLLATION,
+    ENGINE
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_NAME = 'tb_Prod';
+
+-- 8. 统计每个表的字段数量
+SELECT 
+    TABLE_NAME,
+    COUNT(*) as ColumnCount
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'tb_Prod'
+GROUP BY TABLE_NAME;

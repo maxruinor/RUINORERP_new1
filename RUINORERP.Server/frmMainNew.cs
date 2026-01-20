@@ -1542,7 +1542,6 @@ namespace RUINORERP.Server
                 SetServerButtonsEnabled(true, false);
 
                 PrintInfoLog("服务器已停止");
-                MessageBox.Show("服务器已成功停止", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -1570,7 +1569,6 @@ namespace RUINORERP.Server
                 DbInit();
 
                 PrintInfoLog("配置重新加载完成");
-                MessageBox.Show("配置重新加载完成", "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -2373,7 +2371,6 @@ namespace RUINORERP.Server
                     {
                         _serverInfoTimer.Start();
                     }
-
                     // 更新UI状态
                     SetServerButtonsEnabled(false, true);
 

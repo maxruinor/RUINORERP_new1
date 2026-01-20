@@ -51,6 +51,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         // 新增服务:文件更新和清理
         private readonly FileUpdateService _fileUpdateService;
         private readonly FileCleanupService _fileCleanupService;
+        private readonly HasAttachmentSyncService _hasAttachmentSyncService;
         /// <summary>
         /// 解析路径中的环境变量
         /// 支持 %ENV_VAR% 的格式
@@ -84,7 +85,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController = null,
             tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null,
             FileUpdateService fileUpdateService = null,
-            FileCleanupService fileCleanupService = null)
+            FileCleanupService fileCleanupService = null,
+            HasAttachmentSyncService hasAttachmentSyncService = null)
         {
             _applicationContext = applicationContext;
             _sessionService = sessionService;
@@ -122,6 +124,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             // 注入文件更新和清理服务(通过DI容器)
             _fileUpdateService = fileUpdateService ?? throw new ArgumentNullException(nameof(fileUpdateService));
             _fileCleanupService = fileCleanupService ?? throw new ArgumentNullException(nameof(fileCleanupService));
+            _hasAttachmentSyncService = hasAttachmentSyncService;
 
             // 初始化文件存储路径
             FileStorageHelper.InitializeStoragePath(_serverConfig);
@@ -320,6 +323,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             _logger?.Debug("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessId={BusinessId}, BusinessType={BusinessType}, RelatedField={RelatedField}",
                                 fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.BusinessType.Value, uploadRequest.RelatedField);
+
+                            // 同步HasAttachment标志
+                            if (_hasAttachmentSyncService != null && uploadRequest.BusinessType.HasValue && uploadRequest.BusinessId.HasValue)
+                            {
+                                await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                                    uploadRequest.BusinessType.Value,
+                                    uploadRequest.BusinessId.Value,
+                                    uploadRequest.BusinessNo);
+                            }
                         }
                     }
 
@@ -1035,6 +1047,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 response.DeletedFileIds = deletedFileIds;
+
+                // 同步HasAttachment标志（在删除关联后）
+                // 从关联记录中获取BusinessType和BusinessId（用于单据级别的HasAttachment同步）
+                if (relationDeletedCount > 0 && _hasAttachmentSyncService != null && relationsToDelete.Count > 0)
+                {
+                    // 获取第一个关联记录的BusinessType和BusinessId
+                    var firstRelation = relationsToDelete.FirstOrDefault();
+                    if (firstRelation != null)
+                    {
+                        await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
+                            firstRelation.BusinessType,
+                            firstRelation.BusinessId);
+                    }
+                }
+
                 // 设置响应消息
                 if (relationDeletedCount > 0)
                 {

@@ -315,7 +315,7 @@ namespace RUINORERP.Server.Controls
                 bool broadcastResult = await BroadcastConfigChange(_currentConfig);
                 if (broadcastResult)
                 {
-                    _logger?.LogInformation("配置变更已成功广播给所有客户端");
+                    _logger?.LogDebug("配置变更已成功广播给所有客户端");
                 }
 
                 // 更新UI状态

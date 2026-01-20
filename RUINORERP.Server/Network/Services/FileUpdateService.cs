@@ -29,6 +29,7 @@ namespace RUINORERP.Server.Network.Services
         private readonly ILogger<FileUpdateService> _logger;
         private readonly ServerGlobalConfig _serverConfig;
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
+        private readonly HasAttachmentSyncService _hasAttachmentSyncService;
 
         /// <summary>
         /// 构造函数
@@ -36,11 +37,13 @@ namespace RUINORERP.Server.Network.Services
         public FileUpdateService(
             IUnitOfWorkManage unitOfWorkManage,
             ILogger<FileUpdateService> logger,
-            ServerGlobalConfig serverConfig)
+            ServerGlobalConfig serverConfig,
+            HasAttachmentSyncService hasAttachmentSyncService = null)
         {
             _unitOfWorkManage = unitOfWorkManage;
             _logger = logger;
             _serverConfig = serverConfig;
+            _hasAttachmentSyncService = hasAttachmentSyncService;
         }
 
         /// <summary>
@@ -134,6 +137,15 @@ namespace RUINORERP.Server.Network.Services
                 _logger.LogInformation(
                     "文件更新成功,Strategy: {Strategy}, BusinessNo: {BusinessNo}, RelatedField: {RelatedField}, OldFileCount: {OldCount}, NewFileId: {NewFileId}",
                     strategy, businessNo, relatedField, oldFiles.Count, newFileInfo.FileId);
+
+                // 同步HasAttachment标志
+                if (_hasAttachmentSyncService != null)
+                {
+                    await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                        businessType,
+                        businessId,
+                        businessNo);
+                }
 
                 return (newFileInfo, newRelation, oldFiles);
             }
@@ -257,6 +269,15 @@ namespace RUINORERP.Server.Network.Services
                 _logger.LogInformation(
                     "批量文件更新完成,Strategy: {Strategy}, Success: {SuccessCount}, Failed: {FailedCount}",
                     strategy, result.SuccessFiles.Count, result.FailedFiles.Count);
+
+                // 同步HasAttachment标志
+                if (_hasAttachmentSyncService != null && result.SuccessFiles.Count > 0)
+                {
+                    await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                        businessType,
+                        businessId,
+                        businessNo);
+                }
 
                 return result;
             }

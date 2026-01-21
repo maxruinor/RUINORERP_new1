@@ -45,105 +45,6 @@ namespace RUINORERP.UI.Network
 {
     /// <summary>
     /// 心跳失败类型枚举
-    /// 用于区分不同原因导致的心跳失败，采取不同的处理策略
-    /// </summary>
-    internal enum HeartbeatFailureType
-    {
-        /// <summary>超时 - 网络延迟高或服务器响应慢</summary>
-        Timeout,
-        /// <summary>网络错误 - 网络连接问题</summary>
-        NetworkError,
-        /// <summary>服务器繁忙 - 服务器处理能力不足</summary>
-        ServerBusy,
-        /// <summary>会话过期 - 会话已失效需要重新登录</summary>
-        SessionExpired,
-        /// <summary>未知原因 - 无法确定具体原因</summary>
-        Unknown
-    }
-
-    /// <summary>
-    /// 心跳失败追踪器 - 智能检测是否需要锁定
-    /// 根据失败类型和时间模式判断是否达到锁定条件
-    /// </summary>
-    internal class HeartbeatFailureTracker
-    {
-        private readonly Dictionary<HeartbeatFailureType, Queue<DateTime>> _failureHistory = new Dictionary<HeartbeatFailureType, Queue<DateTime>>();
-        private readonly ILogger _logger;
-
-        private const int HISTORY_WINDOW = 5; // 保留最近5次失败时间
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public HeartbeatFailureTracker(ILogger logger = null)
-        {
-            _logger = logger;
-        }
-
-        /// <summary>
-        /// 记录失败
-        /// </summary>
-        public void RecordFailure(HeartbeatFailureType type)
-        {
-            if (!_failureHistory.ContainsKey(type))
-                _failureHistory[type] = new Queue<DateTime>();
-
-            _failureHistory[type].Enqueue(DateTime.Now);
-
-            // 只保留最近的HISTORY_WINDOW次失败
-            while (_failureHistory[type].Count > HISTORY_WINDOW)
-                _failureHistory[type].Dequeue();
-        }
-
-        /// <summary>
-        /// 判断是否应该触发锁定
-        /// 如果在短时间内(2分钟)发生3次同类型失败，则锁定
-        /// </summary>
-        public bool ShouldTriggerLockout()
-        {
-            foreach (var kvp in _failureHistory)
-            {
-                var failures = kvp.Value;
-
-                if (failures.Count < 3)
-                    continue;
-
-                // 检查最近的失败是否在短时间内
-                // 兼容.NET Framework: 使用Skip替代TakeLast
-                var skipCount = failures.Count - 3;
-                var recentFailures = failures.Skip(skipCount).ToList();
-                var timeSpan = recentFailures[2] - recentFailures[0];
-
-                // 如果3次失败在2分钟内，触发锁定
-                if (timeSpan.TotalMinutes <= 2)
-                {
-                    _logger?.LogDebug("智能锁定检测：检测到同类型失败 {Count} 次，时间间隔 {TimeSpan} 分钟，触发锁定",
-                        recentFailures.Count, timeSpan.TotalMinutes);
-                    return true;
-                }
-            }
-
-            // 检查所有类型的失败总数
-            int totalFailures = _failureHistory.Sum(kvp => kvp.Value.Count);
-            if (totalFailures >= 5) // 如果总失败次数达到5次，也触发锁定
-            {
-                _logger?.LogDebug("智能锁定检测：检测到总失败 {TotalFailures} 次，触发锁定", totalFailures);
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// 重置失败记录
-        /// </summary>
-        public void Reset()
-        {
-            foreach (var queue in _failureHistory.Values)
-                queue.Clear();
-        }
-    }
-
     /// <summary>
     /// 优化后的客户端通信与命令处理服务 - 统一网络通信核心组件
     /// 简化版：专注于命令发送和接收，连接管理委托给ConnectionManager，集成心跳检测功能
@@ -192,26 +93,14 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private readonly TokenManager _tokenManager;
 
-        // 新增心跳相关字段
-        private int _heartbeatIntervalMs = 30000; // 默认30秒心跳间隔（与服务器端保持一致）
-        private int _baseHeartbeatIntervalMs = 30000; // 基础心跳间隔
-        private int _minHeartbeatIntervalMs = 10000; // 最小心跳间隔10秒
-        private int _maxHeartbeatIntervalMs = 120000; // 最大心跳间隔2分钟
-        private int _networkQualityThresholdGood = 100; // 网络质量良好的阈值（毫秒）
-        private int _networkQualityThresholdPoor = 500; // 网络质量差的阈值（毫秒）
-        private int _heartbeatTimeoutMs = 60000; // 心跳超时时间（60秒）
-        private CancellationTokenSource _heartbeatCancellationTokenSource;
+        // 心跳相关字段（优化后）
+        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒
+        private readonly int _heartbeatTimeoutMs = 60000; // 心跳超时时间60秒
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
-        private int _heartbeatFailedAttempts;
-        private bool _isHeartbeatRunning;
-        private readonly Queue<double> _latencyHistory = new Queue<double>();
-        private readonly int _maxLatencyHistory = 10; // 延迟历史记录的最大数量
-        private HeartbeatFailureTracker _heartbeatFailureTracker; // 心跳失败追踪器
-        private int _totalHeartbeatAttempts = 0; // 总心跳尝试次数
-        private int _totalHeartbeatSuccess = 0; // 总心跳成功次数
-        private int _totalHeartbeatFailures = 0; // 总心跳失败次数
+        private int _heartbeatFailedAttempts; // 心跳失败计数
+        private bool _isHeartbeatRunning; // 心跳运行状态
 
 
 
@@ -226,8 +115,14 @@ namespace RUINORERP.UI.Network
         private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new();
         private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
         private bool _isProcessingQueue = false;
-        private bool _isReconnecting = false; // 重连状态标志
-        private bool _isDisposed = false; // 资源释放状态标志
+        
+        /// <summary>
+        /// 是否正在重连
+        /// 注意：此状态应作为辅助标志，真实来源是 ConnectionManager.IsReconnecting
+        /// </summary>
+        private bool _isReconnecting = false; 
+        
+        private bool _disposed = false; // 资源释放状态标志
         private readonly object _heartbeatLock = new object();
         private DateTime _lastHeartbeatTime;
         private readonly object _reconnectCoordinationLock = new object(); // 新增：重连协调锁
@@ -244,9 +139,9 @@ namespace RUINORERP.UI.Network
         }
 
 
+
+
         private Timer _cleanupTimer;
-        // 是否已释放资源
-        private bool _disposed = false;
         #endregion
 
         #region 公共属性
@@ -296,17 +191,6 @@ namespace RUINORERP.UI.Network
         public event Action HeartbeatFailureThresholdReached;
 
         /// <summary>
-        /// 会话过期事件
-        /// 当检测到会话过期时触发，需要重新登录
-        /// </summary>
-        public event Action SessionExpired;
-
-        /// <summary>
-        /// 本地备用重连失败事件，当_clientEventManager失败时使用
-        /// </summary>
-        private event Action _fallbackReconnectFailed;
-
-        /// <summary>
         /// 最后一次心跳时间
         /// </summary>
         public DateTime LastHeartbeatTime => _lastHeartbeatTime;
@@ -332,67 +216,6 @@ namespace RUINORERP.UI.Network
         public bool IsReconnecting => _connectionManager.IsReconnecting;
 
         #endregion
-
-        #region 网络质量评估方法
-
-        /// <summary>
-        /// 记录网络延迟
-        /// </summary>
-        /// <param name="latencyMs">延迟时间（毫秒）</param>
-        private void RecordLatency(double latencyMs)
-        {
-            _latencyHistory.Enqueue(latencyMs);
-            if (_latencyHistory.Count > _maxLatencyHistory)
-            {
-                _latencyHistory.Dequeue();
-            }
-        }
-
-        /// <summary>
-        /// 计算平均延迟
-        /// </summary>
-        /// <returns>平均延迟时间</returns>
-        private double GetAverageLatency()
-        {
-            if (_latencyHistory.Count == 0) return 0;
-            return _latencyHistory.Average();
-        }
-
-        /// <summary>
-        /// 根据网络质量动态调整心跳间隔
-        /// </summary>
-        private void AdjustHeartbeatInterval()
-        {
-            var avgLatency = GetAverageLatency();
-
-            if (avgLatency == 0) return; // 没有延迟数据，不调整
-
-            int newInterval;
-            if (avgLatency < _networkQualityThresholdGood) // 网络良好
-            {
-                newInterval = Math.Max(_baseHeartbeatIntervalMs / 2, _minHeartbeatIntervalMs); // 减少心跳间隔，但不低于最小值
-            }
-            else if (avgLatency < _networkQualityThresholdPoor) // 网络一般
-            {
-                newInterval = _baseHeartbeatIntervalMs; // 使用基础间隔
-            }
-            else // 网络较差
-            {
-                newInterval = Math.Min(_baseHeartbeatIntervalMs * 2, _maxHeartbeatIntervalMs); // 增加心跳间隔，但不超过最大值
-            }
-
-            // 如果心跳失败次数较多，适当增加间隔
-            if (_heartbeatFailedAttempts > 1)
-            {
-                newInterval = Math.Min(newInterval * (_heartbeatFailedAttempts + 1), _maxHeartbeatIntervalMs);
-            }
-
-            _heartbeatIntervalMs = newInterval;
-        }
-
-        #endregion
-
-
 
         #region 构造函数
 
@@ -437,8 +260,6 @@ namespace RUINORERP.UI.Network
             _heartbeatFailedAttempts = 0;
             _isHeartbeatRunning = false;
             _lastHeartbeatTime = DateTime.MinValue;
-            _heartbeatFailureTracker = new HeartbeatFailureTracker(_logger);
-
             // 初始化定时清理任务
             _cleanupTimer = new Timer(CleanupTimeoutRequests, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
@@ -579,17 +400,6 @@ namespace RUINORERP.UI.Network
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "触发客户端事件管理器重连失败事件时发生异常");
-
-                    // 如果事件管理器失败，直接触发本地事件作为备用方案
-                    try
-                    {
-                        _logger?.LogWarning("事件管理器失败，尝试触发本地备用重连失败事件");
-                        _fallbackReconnectFailed?.Invoke();
-                    }
-                    catch (Exception fallbackEx)
-                    {
-                        _logger?.LogError(fallbackEx, "备用重连失败事件触发也失败");
-                    }
                 }
             }
             catch (Exception ex)
@@ -664,10 +474,8 @@ namespace RUINORERP.UI.Network
 
                 // 重置心跳失败次数和失败追踪器
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                _heartbeatFailureTracker?.Reset();
-
-                // 重置心跳间隔为基础值
-                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
+                // 重置心跳失败计数
+                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
 
                 // 显示重连成功信息到UI
                 try
@@ -747,11 +555,11 @@ namespace RUINORERP.UI.Network
 
                 _isHeartbeatRunning = true;
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                _heartbeatCancellationTokenSource = new CancellationTokenSource();
+                _heartbeatCts = new CancellationTokenSource();
 
                 // 使用ConfigureAwait(false)避免UI线程上下文捕获
                 _heartbeatTask = Task.Run(async () =>
-                    await HeartbeatLoopAsync(_heartbeatCancellationTokenSource.Token).ConfigureAwait(false));
+                    await HeartbeatLoopAsync(_heartbeatCts.Token).ConfigureAwait(false));
 
                 _logger?.LogDebug("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
             }
@@ -776,7 +584,7 @@ namespace RUINORERP.UI.Network
                 _isHeartbeatRunning = false;
 
                 // 取消心跳任务
-                _heartbeatCancellationTokenSource?.Cancel();
+                _heartbeatCts?.Cancel();
 
                 // 安全地等待任务完成，避免阻塞
                 SafeWaitForHeartbeatTaskCompletion();
@@ -839,10 +647,10 @@ namespace RUINORERP.UI.Network
             {
                 _heartbeatTask = null;
 
-                if (_heartbeatCancellationTokenSource != null)
+                if (_heartbeatCts != null)
                 {
-                    _heartbeatCancellationTokenSource.Dispose();
-                    _heartbeatCancellationTokenSource = null;
+                    _heartbeatCts.Dispose();
+                    _heartbeatCts = null;
                 }
             }
             catch (Exception ex)
@@ -863,329 +671,83 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    _logger?.LogTrace("心跳循环迭代开始");
-
-                    // 使用动态心跳间隔，使用ConfigureAwait(false)避免UI线程阻塞
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
-                    // 检查连接状态 - 双重验证
-                    bool socketConnected = _socketClient.IsConnected;
-                    bool managerConnected = _connectionManager.IsConnected;
-                    bool initialConnected = socketConnected && managerConnected;
-                    _logger?.LogTrace("心跳前连接状态检查: Socket={SocketConnected}, Manager={ManagerConnected}",
-                        socketConnected, managerConnected);
-
-                    if (!initialConnected)
+                    if (!_connectionManager.IsConnected)
                     {
-                        _logger?.LogDebug("连接已断开，跳过本次心跳发送");
-                        // 如果连接已断开，重置心跳失败计数
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                        _heartbeatFailureTracker.Reset();
                         continue;
                     }
 
-                    // 检查心跳失败次数，如果已达到阈值则暂停发送心跳
-                    if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
-                    {
-                        _logger?.LogDebug("心跳失败次数已达到阈值({Threshold})，暂停发送心跳");
-                        // 每隔一段时间检查一次连接状态，避免长时间无响应
-                        await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
-                        continue;
-                    }
+                    bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
 
-                    // 发送心跳（异步执行，避免阻塞）
-                    _logger?.LogTrace("开始发送心跳请求");
-                    Exception lastException = null;
-                    bool success = true;
-
-                    try
+                    if (success)
                     {
-                        success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    catch (Exception ex) when (ex is OperationCanceledException)
-                    {
-                        _logger?.LogDebug("心跳发送被取消");
-                        success = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        lastException = ex;
-                        success = false;
-                        _logger?.LogError(ex, "心跳发送过程中发生异常");
-                    }
+                        int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                        _lastHeartbeatTime = DateTime.Now;
 
-                    _logger?.LogTrace("心跳请求发送完成，结果: {Success}", success);
-
-                    // 心跳失败时立即检查连接状态
-                    if (!success)
-                    {
-                        // 主动检查连接状态，确保与实际网络状态一致 - 双重验证
-                        bool failSocketConnected = _socketClient.IsConnected;
-                        bool failManagerConnected = _connectionManager.IsConnected;
-                        bool actualConnected = failSocketConnected && failManagerConnected;
-                        _logger?.LogTrace("心跳失败，实际连接状态: Socket={SocketConnected}, Manager={ManagerConnected}",
-                            failSocketConnected, failManagerConnected);
-
-                        if (!actualConnected)
+                        if (previousFailures > 0)
                         {
-                            _logger?.LogWarning("心跳失败，检测到实际连接已断开，更新连接状态");
-                            // 直接更新连接状态，触发重连
-                            OnConnectionStateChanged(false);
-                            // 重置心跳失败计数
-                            Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                            _heartbeatFailureTracker.Reset();
-                        }
-                        else
-                        {
-                            // 网络连接正常但心跳失败，可能是服务器繁忙或网络暂时波动
-                            // 不立即触发重连，让心跳机制继续运行
-                            _logger?.LogDebug("心跳失败但网络连接正常，等待下一次心跳");
+                            Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
                         }
                     }
+                    else
+                    {
+                        int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+                        Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
 
-                    // 使用轻量级同步机制处理状态更新，传递异常信息用于失败类型检测
-                    UpdateHeartbeatState(success, lastException);
-
-                    _logger?.LogTrace("心跳循环迭代结束");
+                        if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
+                        {
+                            Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                        }
+                    }
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger?.LogDebug("心跳循环被取消");
                     break;
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "心跳循环中发生异常");
-                    // 异常情况下也更新状态
-                    UpdateHeartbeatState(false, ex);
-                }
-            }
-
-            _logger?.LogDebug("退出心跳循环");
-        }
-
-        /// <summary>
-        /// 更新心跳状态（增强版 - 集成失败类型检测和智能阈值判断）
-        /// 避免频繁的锁操作，减少资源竞争
-        /// </summary>
-        /// <param name="success">心跳是否成功</param>
-        /// <param name="failureException">失败时的异常信息</param>
-        private void UpdateHeartbeatState(bool success, Exception failureException = null)
-        {
-            try
-            {
-                if (success)
-                {
-                    // 心跳成功 - 重置所有失败计数
-                    int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                    _lastHeartbeatTime = DateTime.Now;
-                    _heartbeatFailureTracker.Reset();
-
-                    if (previousFailures > 0)
+                    int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
+                    if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
-                        Task.Run(() => HeartbeatRecovered?.Invoke()).ConfigureAwait(false);
-                        _logger?.LogInformation("✅ 心跳恢复，之前连续失败: {PreviousFailures}次", previousFailures);
-
-                        try
-                        {
-                            _connectionManager.StartAutoReconnect();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "恢复自动重连时发生异常");
-                        }
-
-                        // 心跳恢复后，适当减小心跳间隔
-                        _heartbeatIntervalMs = Math.Max(_baseHeartbeatIntervalMs, _heartbeatIntervalMs / 2);
-                    }
-                    else
-                    {
-                        _logger?.LogTrace("心跳成功");
-                    }
-                }
-                else
-                {
-                    // 心跳失败 - 检测失败类型
-                    bool isConnected = _socketClient.IsConnected;
-                    HeartbeatFailureType? failureType = null;
-
-                    if (failureException != null)
-                    {
-                        failureType = DetectFailureType(failureException);
-                        _logger?.LogWarning("❌ 心跳失败，类型: {FailureType}, 原因: {Message}",
-                            failureType, failureException.Message);
-                    }
-
-                    int currentFailures;
-                    if (isConnected)
-                    {
-                        // 只有当前失败次数小于阈值时才递增，避免计数无限增长
-                        int currentValue = Volatile.Read(ref _heartbeatFailedAttempts);
-                        if (currentValue < HEARTBEAT_FAILURE_THRESHOLD)
-                        {
-                            currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
-                        }
-                        else
-                        {
-                            currentFailures = currentValue; // 保持当前值，不再递增
-                        }
-
-                        Task.Run(() => HeartbeatFailed?.Invoke(currentFailures)).ConfigureAwait(false);
-
-                        // 根据失败类型采取不同策略
-                        if (failureType.HasValue)
-                        {
-                            switch (failureType.Value)
-                            {
-                                case HeartbeatFailureType.Timeout:
-                                    _logger?.LogDebug("⏱️ 心跳超时，可能原因:网络延迟高/服务器响应慢");
-                                    // 临时增加心跳间隔
-                                    _heartbeatIntervalMs = (int)Math.Min(_heartbeatIntervalMs * 1.2, _maxHeartbeatIntervalMs);
-                                    break;
-
-                                case HeartbeatFailureType.NetworkError:
-                                    _logger?.LogError("🌐 网络错误，连接断开事件将自动触发重连机制");
-                                    // 网络错误通常会导致连接断开，连接断开时会自动触发重连
-                                    // 这里不手动触发，避免重复
-                                    break;
-
-                                case HeartbeatFailureType.ServerBusy:
-                                    _logger?.LogDebug("⚠️ 服务器繁忙，延长心跳间隔");
-                                    _heartbeatIntervalMs = (int)Math.Min(_heartbeatIntervalMs * 1.5, _maxHeartbeatIntervalMs);
-                                    break;
-
-                                case HeartbeatFailureType.SessionExpired:
-                                    _logger?.LogError("🔒 会话过期，触发重新登录");
-                                    SessionExpired?.Invoke();
-                                    break;
-
-                                default:
-                                    _logger?.LogDebug("❓ 未知心跳失败类型");
-                                    break;
-                            }
-
-                            // 记录失败到追踪器
-                            _heartbeatFailureTracker.RecordFailure(failureType.Value);
-                        }
-
-                        _logger?.LogDebug("❌ 心跳失败，连续失败: {CurrentFailures}/{Threshold}",
-                            currentFailures, HEARTBEAT_FAILURE_THRESHOLD);
-                    }
-                    else
-                    {
-                        Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                        _heartbeatFailureTracker.Reset();
-                        currentFailures = 0;
-
-                        _logger?.LogWarning("❌ 心跳失败且连接已断开，重置失败计数，连接断开事件将自动触发重连机制");
-                        // 连接断开时，Socket的OnClientClosed事件会触发ConnectionManager的OnSocketClosed
-                        // OnSocketClosed会自动启动重连，这里不需要手动触发
-                    }
-
-                    // 智能阈值检测：使用追踪器判断是否应该锁定
-                    if (isConnected && (_heartbeatFailureTracker.ShouldTriggerLockout() || currentFailures >= HEARTBEAT_FAILURE_THRESHOLD))
-                    {
-                        _logger?.LogError("🚨 心跳失败达到阈值({Threshold})，触发锁定机制", HEARTBEAT_FAILURE_THRESHOLD);
-
                         Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
-
-                        _logger?.LogDebug("💡 锁定后保持自动重连机制运行，以便网络恢复后自动重连");
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "更新心跳状态时发生异常");
-            }
         }
 
         /// <summary>
-        /// 判断心跳失败类型
-        /// 根据异常信息判断失败原因，采取不同的处理策略
+        /// 重置心跳失败计数
+        /// 用于用户手动登录后重置锁定状态
         /// </summary>
-        /// <param name="ex">异常对象</param>
-        /// <returns>心跳失败类型</returns>
-        private HeartbeatFailureType DetectFailureType(Exception ex)
+        public void ResetHeartbeatFailureCount()
         {
-            if (ex == null)
-                return HeartbeatFailureType.Unknown;
-
-            if (ex is TimeoutException)
-                return HeartbeatFailureType.Timeout;
-
-            if (ex is SocketException socketEx)
+            int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+            if (previousFailures > 0)
             {
-                switch (socketEx.SocketErrorCode)
-                {
-                    case SocketError.TimedOut:
-                        return HeartbeatFailureType.Timeout;
-                    case SocketError.ConnectionRefused:
-                    case SocketError.NetworkDown:
-                    case SocketError.NetworkUnreachable:
-                    case SocketError.HostUnreachable:
-                        return HeartbeatFailureType.NetworkError;
-                    default:
-                        return HeartbeatFailureType.Unknown;
-                }
+                _logger?.LogInformation("重置心跳失败计数，之前连续失败: {PreviousFailures}次", previousFailures);
             }
-
-            // 检查异常消息中的关键字
-            var errorMessage = ex.Message?.ToLower() ?? "";
-            if (errorMessage.Contains("超时") || errorMessage.Contains("timeout"))
-                return HeartbeatFailureType.Timeout;
-            if (errorMessage.Contains("网络") || errorMessage.Contains("network"))
-                return HeartbeatFailureType.NetworkError;
-            if (errorMessage.Contains("繁忙") || errorMessage.Contains("busy") || errorMessage.Contains("忙碌"))
-                return HeartbeatFailureType.ServerBusy;
-            if (errorMessage.Contains("过期") || errorMessage.Contains("expired") ||
-                errorMessage.Contains("未登录") || errorMessage.Contains("未登录状态"))
-                return HeartbeatFailureType.SessionExpired;
-
-            return HeartbeatFailureType.Unknown;
         }
 
         /// <summary>
-        /// 发送单个心跳请求（增强版 - 包含详细日志和智能重试）
+        /// 发送心跳请求（优化版 - 简化逻辑）
         /// </summary>
         private async Task<bool> SendHeartbeatAsync(CancellationToken cancellationToken)
         {
-            var attemptNumber = Interlocked.Increment(ref _totalHeartbeatAttempts);
-            var logContext = new
-            {
-                Timestamp = DateTime.Now,
-                SessionId = MainForm.Instance?.AppContext?.SessionId ?? "N/A",
-                UserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserID ?? 0,
-                ClientIP = _socketClient?.ClientIP ?? "N/A",
-                AttemptNumber = attemptNumber,
-                CurrentInterval = _heartbeatIntervalMs
-            };
-
             try
             {
-                // 检查是否有有效的Session ID
-                if (string.IsNullOrEmpty(logContext.SessionId) || logContext.UserId == 0)
+                var sessionId = MainForm.Instance?.AppContext?.SessionId;
+                var userId = MainForm.Instance?.AppContext?.CurUserInfo?.UserID ?? 0;
+
+                if (string.IsNullOrEmpty(sessionId) || userId == 0)
                 {
-                    _logger?.LogDebug("⚠️ [{Timestamp:HH:mm:ss.fff}] 未登录状态，跳过心跳 #{AttemptNumber}",
-                        logContext.Timestamp, logContext.AttemptNumber);
                     return false;
                 }
-
-                // 检查心跳失败次数，如果已达到阈值则停止发送心跳
-                if (_heartbeatFailedAttempts >= HEARTBEAT_FAILURE_THRESHOLD)
-                {
-                    _logger?.LogDebug("⛔ 心跳失败次数已达到阈值({Threshold})，暂停发送心跳请求",
-                        HEARTBEAT_FAILURE_THRESHOLD);
-                    return false;
-                }
-
-                _logger?.LogTrace("🔄 [{Timestamp:HH:mm:ss.fff}] 开始发送心跳 #{AttemptNumber}, " +
-                    "会话: {SessionId}, 用户: {UserId}, IP: {ClientIP}, 当前间隔: {Interval}ms",
-                    logContext.Timestamp, logContext.AttemptNumber, logContext.SessionId,
-                    logContext.UserId, logContext.ClientIP, logContext.CurrentInterval);
 
                 var heartbeatRequest = new HeartbeatRequest
                 {
-                    UserId = MainForm.Instance.AppContext.CurUserInfo.UserID,
+                    UserId = userId,
                     ClientId = _socketClient.ClientID,
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
@@ -1209,133 +771,27 @@ namespace RUINORERP.UI.Network
                     }
                 };
 
-                // 增强心跳重试机制，最多重试2次，使用指数退避
-                const int maxRetries = 2;
-                Exception lastException = null;
+                var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
+                    SystemCommands.Heartbeat,
+                    heartbeatRequest,
+                    cancellationToken,
+                    _heartbeatTimeoutMs);
 
-                for (int retry = 0; retry <= maxRetries; retry++)
+                if (response != null && response.IsSuccess)
                 {
-                    try
+                    _lastHeartbeatTime = DateTime.Now;
+                    if (MainForm.Instance?.lblServerInfo != null)
                     {
-                        // 根据重试次数动态调整超时时间
-                        var timeout = _heartbeatTimeoutMs * (retry + 1);
-                        _logger?.LogTrace("💓 心跳重试 {Retry}/{MaxRetries}, 超时: {Timeout}ms",
-                            retry + 1, maxRetries + 1, timeout);
-
-                        var sendStartTime = DateTime.Now;
-
-                        var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
-                            SystemCommands.Heartbeat,
-                            heartbeatRequest,
-                            cancellationToken,
-                            timeout); // 动态超时
-
-                        var sendDuration = (DateTime.Now - sendStartTime).TotalMilliseconds;
-
-                        if (response != null && response.IsSuccess)
-                        {
-                            Interlocked.Increment(ref _totalHeartbeatSuccess);
-
-                            // 计算网络延迟
-                            var roundTripTime = sendDuration;
-                            var estimatedLatency = roundTripTime / 2;
-                            RecordLatency(estimatedLatency);
-
-                            // 动态调整心跳间隔
-                            AdjustHeartbeatInterval();
-
-                            // 检查服务器是否推荐了新的心跳间隔
-                            if (response.ServerInfo != null &&
-                                response.ServerInfo.ContainsKey("RecommendedInterval") &&
-                                int.TryParse(response.ServerInfo["RecommendedInterval"]?.ToString(), out int recommendedInterval))
-                            {
-                                // 使用服务器推荐的间隔，并在客户端设置的范围内
-                                _heartbeatIntervalMs = Clamp(recommendedInterval, _minHeartbeatIntervalMs, _maxHeartbeatIntervalMs);
-                            }
-
-                            var lastSuccessTime = _lastHeartbeatTime;
-                            _lastHeartbeatTime = DateTime.Now;
-
-                            MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
-                            return true;
-                        }
-                        else
-                        {
-                            _logger?.LogDebug("❌ [{Now:HH:mm:ss.fff}] 心跳失败 #{AttemptNumber}(尝试{Retry}/{MaxRetries}), " +
-                                "耗时: {Duration}ms, 服务器响应: {IsSuccess}, 错误: {ErrorMessage}",
-                                DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1,
-                                sendDuration, response?.IsSuccess, response?.ErrorMessage);
-
-                            if (retry < maxRetries)
-                            {
-                                // 指数退避：500ms, 1000ms, 1500ms
-                                int waitTime = 500 * (retry + 1);
-                                _logger?.LogTrace("⏳ 等待 {WaitTime}ms后重试...", waitTime);
-                                await Task.Delay(waitTime, cancellationToken);
-                            }
-                        }
+                        MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
                     }
-                    catch (TaskCanceledException)
-                    {
-                        _logger?.LogTrace("⏸️ 心跳发送被取消");
-                        throw;
-                    }
-                    catch (TimeoutException ex)
-                    {
-                        lastException = ex;
-                        _logger?.LogDebug("⏱️ [{Now:HH:mm:ss.fff}] 心跳超时 #{AttemptNumber}(尝试{Retry}/{MaxRetries}), " +
-                            "超时: {Timeout}ms, 当前间隔: {Interval}ms, " +
-                            "最近成功: {LastSuccess:yyyy-MM-dd HH:mm:ss}",
-                            DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1,
-                            _heartbeatTimeoutMs * (retry + 1), _heartbeatIntervalMs, _lastHeartbeatTime);
-
-                        // 心跳超时时主动检查连接状态
-                        if (!_socketClient.IsConnected)
-                        {
-                            _logger?.LogDebug("🌐 心跳超时，检测到连接已断开，立即触发重连");
-                            _connectionManager.StartAutoReconnect();
-                            return false;
-                        }
-
-                        if (retry < maxRetries)
-                        {
-                            // 指数退避
-                            int waitTime = 500 * (retry + 1);
-                            _logger?.LogTrace("⏳ 超时后等待 {WaitTime}ms重试...", waitTime);
-                            await Task.Delay(waitTime, cancellationToken);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        lastException = ex;
-                        _logger?.LogError(ex, "💥 [{Now:HH:mm:ss.fff}] 心跳发送异常 #{AttemptNumber}(尝试{Retry}/{MaxRetries})",
-                            DateTime.Now, logContext.AttemptNumber, retry + 1, maxRetries + 1);
-
-                        if (retry >= maxRetries)
-                        {
-                            // 非超时异常,不再重试
-                            break;
-                        }
-
-                        // 指数退避
-                        int waitTime = 500 * (retry + 1);
-                        _logger?.LogTrace("⏳ 异常后等待 {WaitTime}ms重试...", waitTime);
-                        await Task.Delay(waitTime, cancellationToken);
-                    }
+                    return true;
                 }
 
-                // 所有重试都失败
-                Interlocked.Increment(ref _totalHeartbeatFailures);
-                _logger?.LogError("❌ 心跳重试失败 #{AttemptNumber}, 已达到最大重试次数, " +
-                    "总失败: {TotalFailures}/{TotalAttempts}({FailureRate:P1})",
-                    logContext.AttemptNumber, _totalHeartbeatFailures, _totalHeartbeatAttempts,
-                    (double)_totalHeartbeatFailures / _totalHeartbeatAttempts);
                 return false;
             }
             catch (Exception ex)
             {
-                Interlocked.Increment(ref _totalHeartbeatFailures);
-                _logger?.LogError(ex, "💥 发送心跳时发生未处理异常 #{AttemptNumber}", logContext.AttemptNumber);
+                _logger?.LogError(ex, "发送心跳时发生异常");
                 return false;
             }
         }
@@ -1425,12 +881,8 @@ namespace RUINORERP.UI.Network
             {
                 _logger?.LogInformation("手动触发重连，重置心跳失败计数和锁定状态");
 
-                // 重置心跳失败计数和失败追踪器
+                // 重置心跳失败计数
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                _heartbeatFailureTracker?.Reset();
-
-                // 重置心跳间隔
-                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
 
                 // 尝试重连
                 bool reconnectSuccess = await _connectionManager.ManualReconnectAsync();
@@ -1522,16 +974,8 @@ namespace RUINORERP.UI.Network
         /// </summary>
         public event Action ReconnectFailed
         {
-            add
-            {
-                _clientEventManager.ReconnectFailed += value;
-                _fallbackReconnectFailed += value; // 同时订阅备用事件
-            }
-            remove
-            {
-                _clientEventManager.ReconnectFailed -= value;
-                _fallbackReconnectFailed -= value; // 同时取消订阅备用事件
-            }
+            add => _clientEventManager.ReconnectFailed += value;
+            remove => _clientEventManager.ReconnectFailed -= value;
         }
 
         /// <summary>
@@ -2924,7 +2368,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             lock (_reconnectCoordinationLock)
             {
                 // 检查是否需要重连并避免重复触发
-                if (_connectionManager.IsConnected || _isReconnecting || _isDisposed)
+                if (_connectionManager.IsConnected || _isReconnecting)
                 {
                     return;
                 }
@@ -3104,7 +2548,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     processedCount, failedCount, _queuedCommands.Count);
 
                 // 如果队列中还有命令，设置标志以便下次处理
-                if (!_queuedCommands.IsEmpty && !_isDisposed && !_disposed)
+                if (!_queuedCommands.IsEmpty && !_disposed)
                 {
                     // 避免递归调用，改为使用Task.Run启动新的处理任务
                     // 不使用递归调用避免可能的栈溢出和过多任务创建

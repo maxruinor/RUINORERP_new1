@@ -107,6 +107,12 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <returns>重连是否成功</returns>
         Task<bool> ManualReconnectAsync();
+
+        /// <summary>
+        /// 重置心跳失败计数
+        /// 用于用户手动登录后重置锁定状态
+        /// </summary>
+        void ResetHeartbeatFailureCount();
     }
 
 }

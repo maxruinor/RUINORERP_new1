@@ -357,13 +357,10 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 重连循环（优化版 - 修复退出逻辑）
-        /// 避免资源竞争和重复重连，提高稳定性
-        /// 确保重连成功后正确退出循环
+        /// 重连循环（优化版 - 持续重连）
         /// </summary>
         private async Task ReconnectLoopAsync()
         {
-            _logger?.LogDebug("进入重连循环");
             int reconnectAttempts = 0;
             int currentBackoffInterval = _config.ReconnectInterval;
 
@@ -371,7 +368,6 @@ namespace RUINORERP.UI.Network
             {
                 await Task.Delay(_config.ReconnectCheckInterval, _cancellationTokenSource.Token).ConfigureAwait(false);
 
-                // 如果已连接，退出重连循环
                 if (IsConnected)
                 {
                     if (reconnectAttempts > 0)
@@ -381,25 +377,21 @@ namespace RUINORERP.UI.Network
                     break;
                 }
 
-                // 检查服务器信息完整性
                 if (!HasValidServerInfo())
                 {
                     continue;
                 }
 
-                // 检查是否达到最大重连次数
                 if (ShouldStopReconnecting(reconnectAttempts))
                 {
                     StopReconnecting();
                     break;
                 }
 
-                // 执行重连尝试
                 bool reconnectResult = await AttemptReconnectAsync(reconnectAttempts);
 
                 if (reconnectResult)
                 {
-                    // 重连成功，退出循环
                     HandleReconnectSuccess(ref reconnectAttempts, ref currentBackoffInterval);
                     break;
                 }
@@ -411,13 +403,10 @@ namespace RUINORERP.UI.Network
                 }
             }
 
-            // 清除重连状态标志
             lock (_reconnectStateLock)
             {
                 _isReconnecting = false;
             }
-
-            _logger?.LogDebug("退出重连循环");
         }
 
         /// <summary>
@@ -470,28 +459,23 @@ namespace RUINORERP.UI.Network
         /// <returns>重连是否成功</returns>
         private async Task<bool> AttemptReconnectAsync(int attempt)
         {
-            _logger?.LogDebug("尝试重新连接到服务器 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
-            OnReconnectAttempt(attempt, _config.MaxReconnectAttempts);
-
             try
             {
                 bool connected = await _socketClient.ConnectAsync(_serverAddress, _serverPort, _cancellationTokenSource.Token);
 
                 if (connected)
                 {
-                    _logger?.LogDebug("重连成功 {ServerAddress}:{ServerPort}，共尝试 {Attempt} 次", _serverAddress, _serverPort, attempt);
+                    _logger?.LogInformation("重连成功 {ServerAddress}:{ServerPort}，共尝试 {Attempt} 次", _serverAddress, _serverPort, attempt);
                     OnReconnectSucceeded();
                     return true;
                 }
                 else
                 {
-                    _logger?.LogWarning("重连失败 {ServerAddress}:{ServerPort}，第 {Attempt} 次尝试", _serverAddress, _serverPort, attempt);
                     return false;
                 }
             }
             catch (OperationCanceledException)
             {
-                _logger?.LogDebug("重连操作被取消");
                 throw;
             }
             catch (Exception ex)
@@ -913,8 +897,9 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 最大重连次数（0表示无限重试）
+        /// 优化后默认值为0，表示持续重连直到服务器恢复
         /// </summary>
-        public int MaxReconnectAttempts { get; set; } = 5;
+        public int MaxReconnectAttempts { get; set; } = 0;
 
         /// <summary>
         /// 是否启用指数退避算法

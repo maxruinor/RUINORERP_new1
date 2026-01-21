@@ -46,6 +46,7 @@ using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Enums.Core;
 using RUINORERP.PacketSpec.Models;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Repository.UnitOfWorks;
@@ -1338,82 +1339,153 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 专门处理已更新图片的上传 - 增强版本
+        /// 支持两种场景：
+        /// 1. 删除原图后上传新图片：先删除服务器上的旧文件，再上传新文件
+        /// 2. 仅删除原图不上传新图：删除服务器上的文件
         /// </summary>
         /// <param name="entity">销售订单实体</param>
-        /// <param name="updatedImages">需要更新的图片列表</param>
-        /// <returns>上传是否成功</returns>
-        public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
+        /// <param name="updatedImages">需要更新的图片列表（包含新上传的图片）</param>
+        /// <param name="deletedImages">已删除的图片列表（需要从服务器删除的图片）</param>
+        /// <param name="TargetField">关联字段表达式</param>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> UploadUpdatedImagesAsync<Target>(
+            Target entity, 
+            List<Tuple<byte[], ImageInfo>> updatedImages, 
+            List<ImageInfo> deletedImages,
+            Expression<Func<Target, object>> TargetField)
         {
             var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
-                if (updatedImages == null || updatedImages.Count == 0)
-                {
-                    logger.LogInformation("没有需要更新的图片");
-                    return true;
-                }
-
                 bool allSuccess = true;
-                int successCount = 0;
-
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
                 string columnName = memberInfo.Name;
-
-                // 遍历上传所有需要更新的图片
-                foreach (var imageDataWithInfo in updatedImages)
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
+                long billId = entity.GetPropertyValue(EntityInfo.IdField).ToLong();
+                // ========== 第一步：处理已删除的图片 ==========
+                // 场景2：仅删除原图不上传新图
+                if (deletedImages != null && deletedImages.Count > 0)
                 {
-                    byte[] imageData = imageDataWithInfo.Item1;
-                    ImageInfo imageInfo = imageDataWithInfo.Item2;
-
-                    if (imageData == null || imageData.Length == 0)
+                    logger.LogInformation("开始处理 {Count} 张已删除的图片", deletedImages.Count);
+                    
+                    foreach (var deletedImage in deletedImages)
                     {
-                        logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
-                        continue;
-                    }
-
-                    // 检查文件大小限制
-                    if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
-                    {
-                        logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
-                            imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
-                        MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
-                        allSuccess = false;
-                        continue;
-                    }
-
-                    // 准备参数
-                    long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
-
-                    // 上传图片(使用新的接口)
-                    var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
-
-                    // 检查响应是否为空
-                    if (response == null)
-                    {
-                        allSuccess = false;
-                        logger.LogError("图片更新返回空响应：{FileName}", imageInfo.OriginalFileName);
-                        continue;
-                    }
-
-                    if (response.IsSuccess)
-                    {
-                        successCount++;
-                        MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
-                        // 上传成功后，将图片标记为未更新
-                        imageInfo.IsUpdated = false;
-                    }
-                    else
-                    {
-                        allSuccess = false;
-                        MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
-                        logger.LogError("图片更新失败: {FileName}, Error: {Error}",
-                            imageInfo.OriginalFileName, response.Message);
+                        // 只有有FileId的图片才是已上传到服务器的，需要删除
+                        if (deletedImage != null && deletedImage.FileId > 0)
+                        {
+                            try
+                            {
+                                logger.LogInformation("删除服务器上的图片：FileId={FileId}, FileName={FileName}", 
+                                    deletedImage.FileId, deletedImage.OriginalFileName);
+                                
+                                // 创建删除请求
+                                var deleteRequest = new FileDeleteRequest();
+                                deleteRequest.BusinessNo = billNo;
+                                deleteRequest.BusinessId = billId;
+                                deleteRequest.BusinessType = (int)EntityInfo.BizType;
+                                deleteRequest.PhysicalDelete = false; // 逻辑删除
+                                
+                                // 添加要删除的文件信息
+                                var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
+                                if (fileStorageInfo != null)
+                                {
+                                    deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                                }
+                                
+                                // 调用文件管理服务删除文件
+                                var fileService = Startup.GetFromFac<FileManagementService>();
+                                var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+                                
+                                if (deleteResponse.IsSuccess)
+                                {
+                                    MainForm.Instance.uclog.AddLog($"图片删除成功：{deletedImage.OriginalFileName}");
+                                    logger.LogInformation("图片删除成功：FileId={FileId}", deletedImage.FileId);
+                                }
+                                else
+                                {
+                                    allSuccess = false;
+                                    MainForm.Instance.uclog.AddLog($"图片删除失败：{deletedImage.OriginalFileName}，原因：{deleteResponse.ErrorMessage}");
+                                    logger.LogError("图片删除失败：FileId={FileId}, Error={Error}", 
+                                        deletedImage.FileId, deleteResponse.ErrorMessage);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                allSuccess = false;
+                                logger.LogError(ex, "删除图片异常：FileId={FileId}", deletedImage.FileId);
+                                MainForm.Instance.uclog.AddLog($"删除图片出错：{deletedImage.OriginalFileName}，{ex.Message}");
+                            }
+                        }
                     }
                 }
 
-                if (successCount > 0)
+                // ========== 第二步：处理新上传或更新的图片 ==========
+                // 场景1：删除原图后上传新图片 或 普通的新图片上传
+                if (updatedImages != null && updatedImages.Count > 0)
                 {
-                    MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
+                    logger.LogInformation("开始处理 {Count} 张需要更新的图片", updatedImages.Count);
+
+                    int successCount = 0;
+
+                    // 遍历上传所有需要更新的图片
+                    foreach (var imageDataWithInfo in updatedImages)
+                    {
+                        byte[] imageData = imageDataWithInfo.Item1;
+                        ImageInfo imageInfo = imageDataWithInfo.Item2;
+
+                        if (imageData == null || imageData.Length == 0)
+                        {
+                            logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                            continue;
+                        }
+
+                        // 检查文件大小限制
+                        if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                        {
+                            logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB",
+                                imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                            MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                            allSuccess = false;
+                            continue;
+                        }
+
+                        // 准备参数
+                        // 如果图片有FileId，说明这是替换操作，服务器会更新现有文件
+                        long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
+
+                        // 上传图片(使用新的接口)
+                        var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
+
+                        // 检查响应是否为空
+                        if (response == null)
+                        {
+                            allSuccess = false;
+                            logger.LogError("图片更新返回空响应：{FileName}", imageInfo.OriginalFileName);
+                            continue;
+                        }
+
+                        if (response.IsSuccess)
+                        {
+                            successCount++;
+                            MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
+                            // 上传成功后，将图片标记为未更新
+                            imageInfo.IsUpdated = false;
+                            imageInfo.IsDeleted = false; // 重置删除标记
+                        }
+                        else
+                        {
+                            allSuccess = false;
+                            MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                            logger.LogError("图片更新失败: {FileName}, Error: {Error}",
+                                imageInfo.OriginalFileName, response.Message);
+                        }
+                    }
+
+                    if (successCount > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
+                    }
                 }
 
                 return allSuccess;
@@ -1424,6 +1496,20 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog($"更新凭证图片出错：{ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 专门处理已更新图片的上传 - 兼容旧版本的重载方法
+        /// 当不需要处理删除图片时使用此方法
+        /// </summary>
+        /// <param name="entity">销售订单实体</param>
+        /// <param name="updatedImages">需要更新的图片列表</param>
+        /// <param name="TargetField">关联字段表达式</param>
+        /// <returns>上传是否成功</returns>
+        public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
+        {
+            // 调用新版本方法，deletedImages参数传入null
+            return await UploadUpdatedImagesAsync(entity, updatedImages, null, TargetField);
         }
 
         /// <summary>

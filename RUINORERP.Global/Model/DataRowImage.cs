@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Global.Model
 {
     /// <summary>
-    /// 一个图片名包含的元素：24/10/01J9XPW73YMB56ZWP3FJFH5Q68-f82df05f9d34bb4a84e6856b235e00e7_f82df05f9d34bb4a84e6856b235e00e7
+    /// 11一个图片名包含的元素：24/10/01J9XPW73YMB56ZWP3FJFH5Q68-f82df05f9d34bb4a84e6856b235e00e7_f82df05f9d34bb4a84e6856b235e00e7
     /// 前缀：24/10/年月来区别子文件夹
     /// 文件名：J9XPW73YMB56ZWP3FJFH5Q68 ，唯一的一个文件名，因为后面是hash值，相同图片会一样。但是保存到服务器时是可以多行数据 使用相同的图片文件名的
     /// hash值：f82df05f9d34bb4a84e6856b235e00e7  旧的hash值

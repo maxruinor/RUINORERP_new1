@@ -16,7 +16,7 @@ namespace RUINORERP.UI.Network
     public interface IClientCommunicationService : IDisposable
     {
         /// <summary>
-        /// 连接状态
+        /// 连接状态11
         /// </summary>
         bool IsConnected { get; }
 

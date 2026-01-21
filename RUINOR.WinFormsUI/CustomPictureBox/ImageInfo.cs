@@ -39,6 +39,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public bool IsUpdated { get; set; } = false;
         
         /// <summary>
+        /// 标记图片是否已删除
+        /// 当用户删除已有图片时，设置为true，用于后续删除服务器上的文件
+        /// </summary>
+        public bool IsDeleted { get; set; } = false;
+        
+        /// <summary>
         /// 图片宽度
         /// </summary>
         public int Width { get; set; } = 0;

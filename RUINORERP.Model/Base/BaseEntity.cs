@@ -718,7 +718,7 @@ namespace RUINORERP.Model
         private DataRowImage _RowImage = new DataRowImage();
 
         /// <summary>
-        /// 表中行数据可能存在的图片列。将来可能会扩展到多张图片
+        /// 表中行数据可能存在的图片列。将来可能会扩展到多张图片11
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]

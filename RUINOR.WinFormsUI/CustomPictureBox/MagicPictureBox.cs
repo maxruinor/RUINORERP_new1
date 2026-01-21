@@ -129,6 +129,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         // 多图片支持
         private List<Image> images = new List<Image>();
+        private List<ImageInfo> imageInfos = new List<ImageInfo>();
+        private List<ImageInfo> _deletedImages = new List<ImageInfo>(); // 已删除但未同步到服务器的图片
         private int currentImageIndex = 0;
         private string imagePaths = ""; // 存储图片路径，用;分隔
 
@@ -144,9 +146,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private Label fileSizeLabel;
         private Label createTimeLabel;
         private System.Windows.Forms.Timer infoPanelTimer;
-
-        // 图片信息列表
-        private List<ImageInfo> imageInfos = new List<ImageInfo>();
 
         // 使用ImageUpdateManager中的UPDATE_MARKER常量
 
@@ -1475,38 +1474,86 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         /// <summary>
         /// 删除当前图片
+        /// 
+        /// 功能说明：
+        /// - 从显示列表中删除当前选中的图片
+        /// - 如果图片有 FileId（已上传到服务器），则标记为待删除
+        /// - 将删除的图片信息保存到 _deletedImages 列表，用于后续服务器同步删除
+        /// 
+        /// 处理逻辑：
+        /// 1. 保存当前图片的信息（在删除前）
+        /// 2. 如果图片有 FileId，设置 IsDeleted=true 和 IsUpdated=true
+        /// 3. 将图片信息添加到 _deletedImages 列表（避免重复添加）
+        /// 4. 从显示列表中移除图片（images 和 imageInfos）
+        /// 5. 调整当前索引（确保指向有效图片）
+        /// 6. 更新UI显示（显示下一张图片或清空）
+        /// 
+        /// 特殊情况处理：
+        /// - 删除的是最后一张图片：索引减1，显示前一张
+        /// - 删除的是唯一一张图片：清空显示
+        /// - 新添加的图片（无 FileId）：直接从列表中删除，不标记为待删除
+        /// 
+        /// 数据一致性：
+        /// - 已删除的图片信息保存在 _deletedImages 中，不会丢失
+        /// - 保存时会调用 FileBusinessService.DeleteFileAsync 删除服务器文件
+        /// - 成功删除后，调用 ClearDeletedImagesList() 清空列表
         /// </summary>
         private void DeleteCurrentImage(object sender, EventArgs e)
         {
-            if (MultiImageSupport && images.Count > 0)
+            if (MultiImageSupport && images.Count > 0 && currentImageIndex < imageInfos.Count)
             {
-                // 删除当前图片
+                // 保存被删除图片的信息（必须在删除前保存）
+                ImageInfo deletedImageInfo = imageInfos[currentImageIndex];
+                
+                // 标记图片为已删除（如果有FileId表示是已上传的图片）
+                if (deletedImageInfo != null && deletedImageInfo.FileId > 0)
+                {
+                    deletedImageInfo.IsDeleted = true;
+                    deletedImageInfo.IsUpdated = true; // 标记为需要更新
+                    
+                    // 保存到删除列表，用于后续处理
+                    // 使用 Contains 检查避免重复添加同一图片引用
+                    if (!_deletedImages.Contains(deletedImageInfo))
+                    {
+                        _deletedImages.Add(deletedImageInfo);
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
+                }
+                else
+                {
+                    // 新添加的图片（无 FileId），直接删除，不需要标记为待删除
+                    System.Diagnostics.Debug.WriteLine($"删除新图片（未上传）: {deletedImageInfo?.OriginalFileName}");
+                }
+                
+                // 从显示列表中删除当前图片
                 images.RemoveAt(currentImageIndex);
                 imageInfos.RemoveAt(currentImageIndex);
 
-                // 调整当前索引
+                // 调整当前索引：确保索引指向有效的图片
                 if (currentImageIndex >= images.Count && images.Count > 0)
                 {
                     currentImageIndex = images.Count - 1;
                 }
 
-                // 显示新图片或清空
+                // 更新UI显示
                 if (images.Count > 0)
                 {
+                    // 还有其他图片，显示当前索引的图片
                     ShowCurrentImage();
                 }
                 else
                 {
+                    // 没有图片了，清空显示
                     this.Image = null;
                     imagePaths = "";
-                    // 确保信息面板被正确更新
                     UpdateInfoPanel();
                 }
 
-                // 更新导航控件
+                // 更新导航控件和页面信息
                 CreateNavigationControls();
                 UpdatePageInfo();
-                UpdateImagePathsFromImages(); // 更新图片路径
+                UpdateImagePathsFromImages();
             }
         }
 
@@ -1514,15 +1561,41 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             ClearImage();
         }
+        
+        /// <summary>
+        /// 清空所有图片
+        /// 标记所有已有图片为已删除状态
+        /// 注意：此方法会标记所有图片为删除，但不清空删除列表（用于后续服务器删除）
+        /// </summary>
         public void ClearImage()
         {
             this.Image = null;
             if (MultiImageSupport)
             {
                 // 在多图片模式下，清除所有图片
+                // 标记所有有FileId的图片为已删除（这些图片需要从服务器删除）
+                foreach (var imageInfo in imageInfos)
+                {
+                    if (imageInfo != null && imageInfo.FileId > 0)
+                    {
+                        imageInfo.IsDeleted = true;
+                        imageInfo.IsUpdated = true;
+                        
+                        // 保存到删除列表，用于后续处理
+                        if (!_deletedImages.Contains(imageInfo))
+                        {
+                            _deletedImages.Add(imageInfo);
+                        }
+                        
+                        System.Diagnostics.Debug.WriteLine($"ClearImage: 标记图片为已删除: {imageInfo.OriginalFileName}, FileId: {imageInfo.FileId}");
+                    }
+                }
+                
+                // 清空图片列表，但保留删除列表（因为需要上传删除操作到服务器）
                 images.Clear();
                 imageInfos.Clear();
                 currentImageIndex = 0;
+                // 不要清空 _deletedImages 列表！这些图片需要被删除
                 imagePaths = "";
 
                 // 更新导航控件和页面信息
@@ -3351,6 +3424,96 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
             return updateList;
         }
+
+        /// <summary>
+        /// 获取已删除但尚未同步到服务器的图片列表
+        /// 
+        /// 功能说明：
+        /// - 返回已被用户删除的图片信息列表
+        /// - 这些图片有 FileId（已上传到服务器），但已从显示列表中移除
+        /// - 需要在保存时从服务器上删除这些文件
+        /// 
+        /// 返回值说明：
+        /// - 返回列表的副本（new List<ImageInfo>()），避免外部修改内部列表
+        /// - 每个图片信息的 IsDeleted=true 和 IsUpdated=true
+        /// - 每个图片信息的 FileId > 0（表示已上传到服务器）
+        /// 
+        /// 使用场景：
+        /// - 在 BaseBillEditGeneric.UploadUpdatedImagesAsync 中调用
+        /// - 获取需要从服务器删除的图片列表
+        /// - 调用 FileBusinessService 删除这些文件
+        /// 
+        /// 注意事项：
+        /// - 此方法只返回已删除的图片，不包含新添加的图片
+        /// - 新添加的图片通过 GetImagesNeedingUpdate() 获取
+        /// - 删除操作成功后应调用 ClearDeletedImagesList() 清空列表
+        /// </summary>
+        /// <returns>已删除的图片信息列表（副本）</returns>
+        public List<ImageInfo> GetDeletedImages()
+        {
+            // 返回副本，避免外部代码直接修改内部列表
+            return new List<ImageInfo>(_deletedImages);
+        }
+
+        /// <summary>
+        /// 清空已删除图片列表
+        /// 
+        /// 功能说明：
+        /// - 清空 _deletedImages 列表
+        /// - 表示所有已删除的图片都已成功从服务器删除
+        /// 
+        /// 调用时机：
+        /// - 在成功调用 FileBusinessService.DeleteFileAsync 后
+        /// - 确保服务器删除操作成功后
+        /// - 通常与 ResetImageChangeStatus() 一起调用
+        /// 
+        /// 数据一致性：
+        /// - 调用此方法后，无法再访问之前删除的图片信息
+        /// - 如果保存失败，不应调用此方法（否则会丢失删除记录）
+        /// - 正常流程：保存成功 -> 删除服务器文件成功 -> 清空列表
+        /// 
+        /// 异常处理：
+        /// - 如果服务器删除失败，不应清空列表
+        /// - 用户再次保存时会重试删除操作
+        /// - 如果用户取消编辑，列表会在窗体关闭时自然清空
+        /// </summary>
+        public void ClearDeletedImagesList()
+        {
+            _deletedImages.Clear();
+        }
+
+        /// <summary>
+        /// 重置所有图片的更新和删除状态
+        /// 在成功保存并同步到服务器后调用此方法
+        /// 
+        /// 功能说明：
+        /// 1. 重置当前图片列表中所有图片的 IsUpdated 和 IsDeleted 标记
+        /// 2. 清空删除图片列表（因为这些图片已经成功从服务器删除）
+        /// 
+        /// 调用时机：
+        /// - 在 BaseBillEditGeneric.UploadUpdatedImagesAsync 成功执行后
+        /// - 确保所有图片变更（上传、更新、删除）都已同步到服务器
+        /// 
+        /// 特殊说明：
+        /// - 此方法不应在保存失败时调用，否则会丢失删除记录
+        /// - 已删除的图片不会出现在 imageInfos 列表中，所以只需处理当前存在的图片
+        /// </summary>
+        public void ResetImageChangeStatus()
+        {
+            foreach (var imageInfo in imageInfos)
+            {
+                if (imageInfo != null)
+                {
+                    imageInfo.IsUpdated = false;
+                    imageInfo.IsDeleted = false;
+                    _updateManager.ResetImageUpdateStatus(imageInfo);
+                }
+            }
+            // 清空删除列表：因为所有已删除的图片都已经成功从服务器删除
+            _deletedImages.Clear();
+        }
+
+
 
 
 

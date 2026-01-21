@@ -252,7 +252,7 @@ namespace RUINORERP.UI.Network
         #region 公共属性
 
         /// <summary>
-        /// 获取当前连接状态 - 简化版，直接委托给ConnectionManager
+        /// 获取当前连接状态 - 简化版，直接委托给ConnectionManager11
         /// </summary>
         public bool IsConnected => _connectionManager.IsConnected;
 

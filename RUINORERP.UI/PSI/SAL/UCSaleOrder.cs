@@ -1328,15 +1328,31 @@ namespace RUINORERP.UI.PSI.SAL
                     {
                         MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.SOrderNo}。");
 
-                        // 保存成功后上传凭证图片（只上传变更的图片）
+                        // 保存成功后处理图片（上传新图片 + 删除旧图片）
+                        // 支持两种场景：
+                        // 1. 删除原图后上传新图片
+                        // 2. 仅删除原图不上传新图
                         if (magicPictureBox订金付款凭证 != null)
                         {
-                            // 明确区分处理逻辑
+                            // 获取需要更新的图片（新上传或修改的图片）
                             var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
-                            if (updatedImages.Count > 0)
+                            
+                            // 获取已删除的图片（需要从服务器删除的图片）
+                            var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
+                            
+                            // 如果有图片需要处理（更新或删除）
+                            if (updatedImages.Count > 0 || deletedImages.Count > 0)
                             {
-                                // 只处理更新的图片
-                                await UploadUpdatedImagesAsync<tb_SaleOrder>(EditEntity, updatedImages, c => c.VoucherImage);
+                                // 调用增强版的上传方法，同时处理新增/更新和删除的图片
+                                await UploadUpdatedImagesAsync<tb_SaleOrder>(
+                                    EditEntity, 
+                                    updatedImages, 
+                                    deletedImages, 
+                                    c => c.VoucherImage);
+                                
+                                // 处理完成后，清空删除列表并重置状态
+                                magicPictureBox订金付款凭证.ClearDeletedImagesList();
+                                magicPictureBox订金付款凭证.ResetImageChangeStatus();
                             }
                         }
                     }

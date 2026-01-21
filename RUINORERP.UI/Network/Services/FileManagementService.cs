@@ -13,16 +13,16 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Model;
 using System.Drawing;
 using RUINORERP.PacketSpec.Models.FileManagement;
+using RUINORERP.Global;
 
 namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
     /// 文件管理服务类
-    /// 提供文件上传、下载、删除、查询等核心功能
+    /// 提供文件上传、下载、删除、查询、更新等核心功能
     /// 参考UserLoginService的设计模式实现
     /// </summary>
     public sealed class FileManagementService : IDisposable

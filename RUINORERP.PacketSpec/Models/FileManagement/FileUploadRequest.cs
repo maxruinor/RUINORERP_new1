@@ -50,6 +50,11 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// </summary>
         public long? DetailId { get; set; }
 
+        /// <summary>
+        /// 是否启用版本控制(默认false)
+        /// </summary>
+        public bool EnableVersioning { get; set; } = false;
+
         public long? Created_by { get; set; }
     }
 

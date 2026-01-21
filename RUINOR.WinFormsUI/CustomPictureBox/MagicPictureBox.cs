@@ -830,6 +830,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 this.Image = null;
             }
 
+            // 更新上下文菜单,确保显示正确的菜单项
+            UpdateContextMenu();
+
             // 如果有加载失败的图片，记录日志
             if (failedImages.Count > 0)
             {
@@ -1554,6 +1557,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 CreateNavigationControls();
                 UpdatePageInfo();
                 UpdateImagePathsFromImages();
+                // 更新上下文菜单
+                UpdateContextMenu();
             }
         }
 
@@ -1618,6 +1623,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 infoPanel.Visible = false;
             }
+            // 更新上下文菜单
+            UpdateContextMenu();
             // 重绘 PictureBox
             this.Invalidate();
         }
@@ -1707,6 +1714,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
                     UpdatePageInfo();
                     UpdateImagePathsFromImages(); // 更新图片路径
+                    UpdateContextMenu(); // 更新上下文菜单
                 }
             }
         }
@@ -2017,11 +2025,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     Image image = Clipboard.GetImage();
 
+                    // 获取图片的实际格式扩展名
+                    string imageExtension = GetImageFormatExtension(image);
+
                     // 转换为字节数组以计算哈希值
                     byte[] imageBytes;
                     using (MemoryStream ms = new MemoryStream())
                     {
-                        image.Save(ms, ImageFormat.Jpeg);
+                        // 根据图片实际格式保存
+                        ImageFormat format = GetImageFormatFromExtension(imageExtension);
+                        image.Save(ms, format);
                         imageBytes = ms.ToArray();
                     }
 
@@ -2033,8 +2046,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     string fileName = GetFileNameFromClipboard();
                     if (string.IsNullOrWhiteSpace(fileName))
                     {
-                        // 如果无法获取，使用默认名称
-                        fileName = $"粘贴图片{(MultiImageSupport ? images.Count + 1 : 1)}";
+                        // 如果无法获取,使用默认名称并添加正确的扩展名
+                        fileName = $"粘贴图片{(MultiImageSupport ? images.Count + 1 : 1)}.{imageExtension}";
+                    }
+                    else
+                    {
+                        // 确保文件名包含扩展名
+                        if (!fileName.Contains('.'))
+                        {
+                            fileName = $"{fileName}.{imageExtension}";
+                        }
                     }
 
                     // 如果是多图片模式，添加到列表中
@@ -2247,6 +2268,44 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             catch (Exception)
             {
                 return "";
+            }
+        }
+
+        /// <summary>
+        /// 根据扩展名获取图片格式
+        /// </summary>
+        /// <param name="extension">图片扩展名（不含点号）</param>
+        /// <returns>对应的ImageFormat，默认返回Jpeg</returns>
+        private ImageFormat GetImageFormatFromExtension(string extension)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(extension))
+                    return ImageFormat.Jpeg;
+
+                // 转换为小写进行比较
+                string extLower = extension.ToLowerInvariant();
+
+                switch (extLower)
+                {
+                    case "jpg":
+                    case "jpeg":
+                        return ImageFormat.Jpeg;
+                    case "png":
+                        return ImageFormat.Png;
+                    case "gif":
+                        return ImageFormat.Gif;
+                    case "bmp":
+                        return ImageFormat.Bmp;
+                    case "tiff":
+                        return ImageFormat.Tiff;
+                    default:
+                        return ImageFormat.Jpeg; // 默认返回Jpeg格式
+                }
+            }
+            catch (Exception)
+            {
+                return ImageFormat.Jpeg;
             }
         }
 

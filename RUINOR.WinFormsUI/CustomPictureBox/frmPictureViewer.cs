@@ -33,6 +33,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 多图片支持
         private List<string> imagePaths = new List<string>(); // 图片路径列表
         private int currentImageIndex = 0; // 当前图片索引
+        
+        // 裁剪功能
+        private bool isCropping = false; // 是否正在裁剪
+        private Rectangle cropRect = Rectangle.Empty; // 裁剪区域
+        private Point cropStartPoint = Point.Empty; // 裁剪起始点
+        private bool isDrawingCrop = false; // 是否正在绘制裁剪框
 
         public frmPictureViewer()
         {
@@ -162,8 +168,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private void pbImage_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (isCropping && e.Button == MouseButtons.Left)
             {
+                // 裁剪模式下，开始绘制裁剪框
+                isDrawingCrop = true;
+                cropStartPoint = e.Location;
+                cropRect = new Rectangle(e.X, e.Y, 0, 0);
+            }
+            else if (!isCropping && e.Button == MouseButtons.Left)
+            {
+                // 非裁剪模式下，拖动图片
                 isDragging = true;
                 lastMousePosition = e.Location;
             }
@@ -171,7 +185,17 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private void pbImage_MouseMove(object sender, MouseEventArgs e)
         {
-            if (isDragging)
+            if (isDrawingCrop)
+            {
+                // 正在绘制裁剪框
+                cropRect = new Rectangle(
+                    Math.Min(cropStartPoint.X, e.X),
+                    Math.Min(cropStartPoint.Y, e.Y),
+                    Math.Abs(e.X - cropStartPoint.X),
+                    Math.Abs(e.Y - cropStartPoint.Y));
+                PictureBoxViewer.Invalidate();
+            }
+            else if (isDragging)
             {
                 // 计算鼠标移动的距离
                 int deltaX = e.X - lastMousePosition.X;
@@ -194,7 +218,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         private void pbImage_MouseUp(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (isDrawingCrop)
+            {
+                // 完成裁剪框绘制
+                isDrawingCrop = false;
+                // 确保裁剪区域有实际大小
+                if (cropRect.Width < 5 || cropRect.Height < 5)
+                {
+                    cropRect = Rectangle.Empty;
+                }
+                PictureBoxViewer.Invalidate();
+            }
+            else if (isDragging && !isCropping)
             {
                 isDragging = false;
             }
@@ -219,6 +254,38 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 //y = Math.Max(0, Math.Min(y, PictureBoxViewer.Height - height));
                 // 绘制缩放后的图像
                 e.Graphics.DrawImage(PictureBoxViewer.Image, new Rectangle(x, y, width, height));
+                
+                // 裁剪模式下，绘制裁剪框
+                if (isCropping && cropRect.Width > 0 && cropRect.Height > 0)
+                {
+                    using (Pen pen = new Pen(Color.Red, 2))
+                    {
+                        pen.DashPattern = new float[] { 5, 3 }; // 虚线效果
+                        e.Graphics.DrawRectangle(pen, cropRect);
+                        
+                        // 绘制半透明遮罩
+                        using (Brush brush = new SolidBrush(Color.FromArgb(100, Color.Black)))
+                        {
+                            // 上方遮罩
+                            e.Graphics.FillRectangle(brush, 0, 0, PictureBoxViewer.Width, cropRect.Top);
+                            // 下方遮罩
+                            e.Graphics.FillRectangle(brush, 0, cropRect.Bottom, PictureBoxViewer.Width, PictureBoxViewer.Height - cropRect.Bottom);
+                            // 左侧遮罩
+                            e.Graphics.FillRectangle(brush, 0, cropRect.Top, cropRect.Left, cropRect.Height);
+                            // 右侧遮罩
+                            e.Graphics.FillRectangle(brush, cropRect.Right, cropRect.Top, PictureBoxViewer.Width - cropRect.Right, cropRect.Height);
+                        }
+                    }
+                    
+                    // 显示裁剪区域尺寸
+                    string sizeInfo = $"裁剪区域: {cropRect.Width} x {cropRect.Height}";
+                    using (Font font = new Font("Microsoft YaHei", 10))
+                    {
+                        SizeF textSize = e.Graphics.MeasureString(sizeInfo, font);
+                        e.Graphics.FillRectangle(Brushes.White, cropRect.X, cropRect.Y - 25, textSize.Width + 10, 25);
+                        e.Graphics.DrawString(sizeInfo, font, Brushes.Black, cropRect.X + 5, cropRect.Y - 20);
+                    }
+                }
             }
         }
 
@@ -275,6 +342,97 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 PictureBoxViewer.Image = bmp;
                 UpdateStatusBar();
             }
+        }
+        
+        /// <summary>
+        /// 开始裁剪
+        /// </summary>
+        private void StartCrop()
+        {
+            if (PictureBoxViewer.Image != null)
+            {
+                isCropping = true;
+                cropRect = Rectangle.Empty;
+                this.Cursor = Cursors.Cross;
+                this.Text = "图片查看器 - 裁剪模式";
+                PictureBoxViewer.Invalidate();
+            }
+        }
+        
+        /// <summary>
+        /// 执行裁剪
+        /// </summary>
+        private void ExecuteCrop()
+        {
+            if (!isCropping || cropRect.Width <= 0 || cropRect.Height <= 0)
+            {
+                MessageBox.Show("请先选择裁剪区域", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            
+            if (PictureBoxViewer.Image == null)
+            {
+                return;
+            }
+            
+            try
+            {
+                // 计算图片在屏幕上的实际位置
+                int width = (int)(PictureBoxViewer.Image.Width * zoomFactor);
+                int height = (int)(PictureBoxViewer.Image.Height * zoomFactor);
+                int imgX = (PictureBoxViewer.Width - width) / 2 + dragOffset.X;
+                int imgY = (PictureBoxViewer.Height - height) / 2 + dragOffset.Y;
+                
+                // 计算裁剪区域在原图中的位置
+                float scaleX = (float)PictureBoxViewer.Image.Width / width;
+                float scaleY = (float)PictureBoxViewer.Image.Height / height;
+                
+                int originalCropX = (int)((cropRect.X - imgX) * scaleX);
+                int originalCropY = (int)((cropRect.Y - imgY) * scaleY);
+                int originalCropWidth = (int)(cropRect.Width * scaleX);
+                int originalCropHeight = (int)(cropRect.Height * scaleY);
+                
+                // 确保裁剪区域在图片范围内
+                originalCropX = Math.Max(0, Math.Min(originalCropX, PictureBoxViewer.Image.Width));
+                originalCropY = Math.Max(0, Math.Min(originalCropY, PictureBoxViewer.Image.Height));
+                originalCropWidth = Math.Max(1, Math.Min(originalCropWidth, PictureBoxViewer.Image.Width - originalCropX));
+                originalCropHeight = Math.Max(1, Math.Min(originalCropHeight, PictureBoxViewer.Image.Height - originalCropY));
+                
+                // 执行裁剪
+                Bitmap croppedImage = new Bitmap(originalCropWidth, originalCropHeight);
+                using (Graphics g = Graphics.FromImage(croppedImage))
+                {
+                    g.DrawImage(PictureBoxViewer.Image,
+                        new Rectangle(0, 0, originalCropWidth, originalCropHeight),
+                        new Rectangle(originalCropX, originalCropY, originalCropWidth, originalCropHeight),
+                        GraphicsUnit.Pixel);
+                }
+                
+                // 替换图片
+                PictureBoxViewer.Image = croppedImage;
+                
+                // 退出裁剪模式
+                StopCrop();
+                
+                MessageBox.Show("裁剪完成", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"裁剪失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 取消裁剪
+        /// </summary>
+        private void StopCrop()
+        {
+            isCropping = false;
+            isDrawingCrop = false;
+            cropRect = Rectangle.Empty;
+            this.Cursor = Cursors.Default;
+            this.Text = "可放大缩小拖动的图片查看器";
+            PictureBoxViewer.Invalidate();
         }
 
         private void InitializeControls()
@@ -337,6 +495,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             ToolStripMenuItem rotateRightMenuItem = new ToolStripMenuItem("向右旋转90度");
             rotateMenu.DropDownItems.Add(rotateLeftMenuItem);
             rotateMenu.DropDownItems.Add(rotateRightMenuItem);
+            
+            // 添加 "裁剪" 菜单
+            ToolStripMenuItem cropMenu = new ToolStripMenuItem("裁剪");
+            menuStrip1.Items.Add(cropMenu);
+            
+            // 添加裁剪子菜单项
+            ToolStripMenuItem startCropMenuItem = new ToolStripMenuItem("开始裁剪");
+            ToolStripMenuItem executeCropMenuItem = new ToolStripMenuItem("执行裁剪");
+            ToolStripMenuItem cancelCropMenuItem = new ToolStripMenuItem("取消裁剪");
+            cropMenu.DropDownItems.Add(startCropMenuItem);
+            cropMenu.DropDownItems.Add(executeCropMenuItem);
+            cropMenu.DropDownItems.Add(cancelCropMenuItem);
 
             PictureBoxViewer.SizeMode = PictureBoxSizeMode.Zoom;
 
@@ -353,6 +523,9 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             nextMenuItem.Click += (sender, e) => LoadNextImage();
             rotateLeftMenuItem.Click += (sender, e) => RotateImage(-90);
             rotateRightMenuItem.Click += (sender, e) => RotateImage(90);
+            startCropMenuItem.Click += (sender, e) => StartCrop();
+            executeCropMenuItem.Click += (sender, e) => ExecuteCrop();
+            cancelCropMenuItem.Click += (sender, e) => StopCrop();
         }
         
         private void frmPictureViewer_Load(object sender, EventArgs e)

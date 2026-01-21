@@ -33,32 +33,24 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private readonly OptimizedImageLoader _imageLoader;
 
 
+
         private bool isPanning = false;
         private Point panOffset;
         private float rotationAngle = 0f;
-        private bool isCropping = false;
-        private Rectangle cropRectangle;
-        private Cursor cropCursor = new Cursor(System.Windows.Forms.Cursors.Cross.Handle);
         private float zoomFactor = 1.0F; // 初始缩放比例
-        private float minX = 0; // 滚动的最小 X 值
-        private float minY = 0; // 滚动的最小 Y 值
         private bool isDragging = false; // 是否正在拖动
         private Point dragOffset; // 拖动偏移量
         private Point lastMousePosition; // 上一次鼠标位置
 
         // 菜单相关字段
         private ContextMenuStrip _mainContextMenu; // 主上下文菜单
-        private ContextMenuStrip _cropContextMenu;  // 裁剪模式上下文菜单
-        private ImageCroppingBox _imageCroppingBox; // 裁剪框控件
 
         // 菜单项ID常量定义
         private const string MENU_VIEW_LARGE = "查看大图";
-        private const string MENU_CROP = "裁剪图片";
         private const string MENU_ADD_IMAGE = "添加图片";
         private const string MENU_PASTE_IMAGE = "粘贴图片";
         private const string MENU_CLEAR_IMAGE = "清除图片";
         private const string MENU_DELETE_CURRENT = "删除当前图片";
-        private const string MENU_CANCEL_CROP = "取消裁剪";
 
         #region 菜单配置属性
         /// <summary>
@@ -76,15 +68,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         [Description("控制是否显示查看大图菜单项")]
         [DefaultValue(true)]
         public bool ShowViewLargeImageMenuItem { get; set; } = true;
-
-        /// <summary>
-        /// 是否显示"裁剪图片"菜单项
-        /// </summary>
-        [Browsable(true)]
-        [Category("菜单配置")]
-        [Description("控制是否显示裁剪图片菜单项")]
-        [DefaultValue(true)]
-        public bool ShowCropImageMenuItem { get; set; } = true;
 
         /// <summary>
         /// 是否显示"添加图片"菜单项
@@ -509,23 +492,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             // 创建菜单实例
             _mainContextMenu = new ContextMenuStrip();
-            _cropContextMenu = new ContextMenuStrip();
-            _imageCroppingBox = new ImageCroppingBox();
-
-            // 配置裁剪框控件
-            _imageCroppingBox.Size = this.Size;
-            _imageCroppingBox.Visible = false;
-            _imageCroppingBox.ContextMenuStrip = _cropContextMenu;
-            _imageCroppingBox.DoubleClick += new EventHandler(SaveCrop);
-
-            if (!this.Controls.Contains(_imageCroppingBox))
-            {
-                this.Controls.Add(_imageCroppingBox);
-                this._imageCroppingBox.TabIndex = 3;
-            }
-
-            // 初始化裁剪菜单
-            InitializeCropContextMenu();
 
             // 设置主上下文菜单
             this.ContextMenuStrip = _mainContextMenu;
@@ -533,17 +499,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             // 初始更新菜单内容
             // 在构造函数中调用一次，后续状态变化时需手动调用
             UpdateContextMenu();
-        }
-
-        /// <summary>
-        /// 初始化裁剪上下文菜单
-        /// 创建并配置裁剪操作专用的上下文菜单
-        /// 此方法应在InitializeMenuSystem中调用，仅需初始化一次
-        /// </summary>
-        private void InitializeCropContextMenu()
-        {
-            _cropContextMenu.Items.Clear();
-            _cropContextMenu.Items.Add(new ToolStripMenuItem(MENU_CANCEL_CROP, null, new EventHandler(StopCrop), MENU_CANCEL_CROP));
         }
 
         /// <summary>
@@ -584,12 +539,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             if (ShowViewLargeImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_VIEW_LARGE, null, new EventHandler(ViewLargeImage), MENU_VIEW_LARGE));
-                hasAddedMenuItem = true;
-            }
-
-            if (ShowCropImageMenuItem)
-            {
-                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CROP, null, new EventHandler(StartCrop), MENU_CROP));
                 hasAddedMenuItem = true;
             }
 
@@ -1743,152 +1692,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
 
-        /// <summary>
-        /// 裁剪
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void StartCrop(object sender, EventArgs e)
-        {
-            if (this.Image != null)
-            {
-                isCropping = true;
-                cropRectangle = new Rectangle(new Point(0, 0), new Size(this.Image.Width, this.Image.Height));
-                this.Cursor = cropCursor;
-                _imageCroppingBox.Visible = true;
-                _imageCroppingBox.TabIndex = this.TabIndex + 1;
-                _imageCroppingBox.Image = this.Image;
-            }
-        }
+        
 
-
-        private void SaveCrop(object sender, EventArgs e)
-        {
-            if (this.Image != null)
-            {
-                if (isCropping)
-                {
-                    isCropping = false;
-                    this.Cursor = Cursors.Default;
-                    cropRectangle = new Rectangle(0, 0, 0, 0);
-                    cropRectangle = Rectangle.Empty;
-                }
-                this.Visible = true;
-                _imageCroppingBox.Visible = false;
-
-                // 保存原始图片信息
-                ImageInfo originalInfo = null;
-                if (MultiImageSupport && currentImageIndex < imageInfos.Count)
-                {
-                    originalInfo = imageInfos[currentImageIndex];
-                }
-                else if (imageInfos.Count > 0)
-                {
-                    originalInfo = imageInfos[0];
-                }
-
-                // 获取裁剪后的图片
-                this.Image = _imageCroppingBox.GetSelectedImage();
-
-                // 更新多图片列表中的当前图片
-                if (MultiImageSupport && currentImageIndex < images.Count)
-                {
-                    images[currentImageIndex] = this.Image;
-
-                    // 更新图片信息，保留原始文件名
-                    if (currentImageIndex < imageInfos.Count && originalInfo != null)
-                    {
-                        imageInfos[currentImageIndex] = new ImageInfo
-                        {
-                            OriginalFileName = originalInfo.OriginalFileName, // 保留原始文件名
-                            FileSize = GetImageFileSize(this.Image), // 更新文件大小
-                            CreateTime = originalInfo.CreateTime, // 保留创建时间
-                            Metadata = originalInfo.Metadata, // 保留元数据
-                            FileType = originalInfo.FileType, // 保留文件类型
-                            FileExtension = originalInfo.FileExtension, // 保留文件扩展名
-                            HashValue = CalculateImageHash(this.Image), // 更新哈希值
-                            Width = this.Image?.Width ?? 0,
-                            Height = this.Image?.Height ?? 0
-                        };
-                    }
-                    else if (originalInfo != null) // 如果列表中没有对应的信息，则添加
-                    {
-                        imageInfos.Add(new ImageInfo
-                        {
-                            OriginalFileName = originalInfo.OriginalFileName,
-                            FileSize = GetImageFileSize(this.Image),
-                            CreateTime = originalInfo.CreateTime,
-                            Metadata = originalInfo.Metadata,
-                            FileType = originalInfo.FileType,
-                            FileExtension = originalInfo.FileExtension,
-                            HashValue = CalculateImageHash(this.Image), // 添加哈希值
-                            Width = this.Image?.Width ?? 0,
-                            Height = this.Image?.Height ?? 0
-                        });
-                    }
-                }
-                else if (originalInfo != null) // 单图片模式
-                {
-                    // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
-                    try
-                    {
-                        // 保存原始图片信息
-                        ImageInfo tempInfo = imageInfos.Count > 0 ? imageInfos[0] : null;
-
-                        // 为单图片模式临时启用多图片支持以便使用更新方法
-                        bool wasMultiImageSupported = MultiImageSupport;
-                        MultiImageSupport = true;
-
-                        // 确保图片列表不为空
-                        if (images == null || images.Count == 0)
-                        {
-                            images = new List<Image> { this.Image };
-                            currentImageIndex = 0;
-                        }
-                        else if (images.Count > 0)
-                        {
-                            images[0] = this.Image;
-                            currentImageIndex = 0;
-                        }
-
-                        // 更新图片信息
-                        UpdateImageWithOriginalInfo(0, this.Image, "旋转图片");
-
-                        // 标记为已更新
-                        MarkImageAsUpdated(0);
-
-                        // 恢复多图片支持设置
-                        MultiImageSupport = wasMultiImageSupported;
-
-                        // 确保单图片模式下的Image属性也被更新
-                        if (!wasMultiImageSupported && images.Count > 0)
-                        {
-                            this.Image = images[0];
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
-                    }
-                }
-            }
-        }
-
-        private void StopCrop(object sender, EventArgs e)
-        {
-            if (this.Image != null)
-            {
-                if (isCropping)
-                {
-                    isCropping = false;
-                    this.Cursor = Cursors.Default;
-                    cropRectangle = new Rectangle(0, 0, 0, 0);
-                    cropRectangle = Rectangle.Empty;
-                }
-                this.Visible = true;
-                this._imageCroppingBox.Visible = false;
-            }
-        }
         // 拖拽事件
         protected override void OnDragDrop(DragEventArgs e)
         {
@@ -2309,10 +2114,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
+        /// <summary>
+        /// 查看大图
+        /// 支持单图片和多图片模式
+        /// </summary>
         private void ViewLargeImage(object sender, EventArgs e)
         {
             if (this.Image != null)
             {
+                // 多图片模式 - 暂时只支持显示当前图片
+                // TODO: 后续优化支持多图片切换功能
                 frmPictureViewer frmShow = new frmPictureViewer();
                 frmShow.PictureBoxViewer.Image = this.Image;
                 frmShow.ShowDialog();
@@ -2322,12 +2133,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 双击事件
         private void CustomPictureBox_DoubleClick(object sender, EventArgs e)
         {
-            // 如果处于裁剪状态，处理裁剪操作
-            if (isCropping)
-            {
-                ProcessCropOperation();
-                return;
-            }
+            
 
             // 检查是否已有图片
             bool hasImage = (this.Image != null) || (MultiImageSupport && images.Count > 0);
@@ -2344,82 +2150,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
         }
 
-        /// <summary>
-        /// 处理裁剪操作
-        /// </summary>
-        private void ProcessCropOperation()
-        {
-            // 保存原始图片信息
-            ImageInfo originalInfo = null;
-            if (MultiImageSupport && currentImageIndex < imageInfos.Count)
-            {
-                originalInfo = imageInfos[currentImageIndex];
-            }
-            else if (imageInfos.Count > 0)
-            {
-                originalInfo = imageInfos[0];
-            }
-
-            this.Image = CropImage(this.Image, cropRectangle);
-            string newhash = ImageHelper.GetImageHash(this.Image);
-            RowImage.SetImageNewHash(newhash);
-
-            // 更新多图片列表中的当前图片
-            if (MultiImageSupport && currentImageIndex < images.Count)
-            {
-                images[currentImageIndex] = this.Image;
-                UpdateImagePathsFromImages(); // 更新图片路径
-
-                // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
-                UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "旋转图片");
-
-                // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
-                MarkImageAsUpdated(currentImageIndex);
-            }
-            else if (originalInfo != null) // 单图片模式
-            {
-                // 在单图片模式下，我们也使用UpdateImageWithOriginalInfo，但需要特殊处理
-                try
-                {
-                    // 为单图片模式临时启用多图片支持以便使用更新方法
-                    bool wasMultiImageSupported = MultiImageSupport;
-                    MultiImageSupport = true;
-
-                    // 确保图片列表不为空
-                    if (images == null || images.Count == 0)
-                    {
-                        images = new List<Image> { this.Image };
-                        currentImageIndex = 0;
-                    }
-                    else if (images.Count > 0)
-                    {
-                        images[0] = this.Image;
-                        currentImageIndex = 0;
-                    }
-
-                    // 更新图片信息
-                    UpdateImageWithOriginalInfo(0, this.Image, "裁剪图片");
-
-                    // 标记为已更新
-                    MarkImageAsUpdated(0);
-
-                    // 恢复多图片支持设置
-                    MultiImageSupport = wasMultiImageSupported;
-
-                    // 确保单图片模式下的Image属性也被更新
-                    if (!wasMultiImageSupported && images.Count > 0)
-                    {
-                        this.Image = images[0];
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"单图片模式下更新图片信息失败: {ex.Message}");
-                }
-            }
-
-            isCropping = false;
-        }
 
         /// <summary>
         /// 从文件对话框添加图片
@@ -2559,8 +2289,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             if (rect.Width > 0 && rect.Height > 0)
             {
-                ImageHelper.MakeThumbnailfromImage(img, rect.Width, rect.Height);
-                //return img.Clone(rect, img.PixelFormat);
+                // 克隆裁剪区域，转换为Bitmap以避免动画帧问题
+                Bitmap croppedImg = new Bitmap(rect.Width, rect.Height);
+                using (Graphics g = Graphics.FromImage(croppedImg))
+                {
+                    g.DrawImage(img, 0, 0, rect, GraphicsUnit.Pixel);
+                }
+                return croppedImg;
             }
             return img;
         }
@@ -2580,10 +2315,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     panOffset = e.Location;
                     lastMousePosition = e.Location;
                 }
-                else if (isCropping)
-                {
-                    cropRectangle.Location = e.Location;
-                }
+                
             }
 
         }
@@ -2609,11 +2341,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
 
             }
-            else if (isCropping && e.Button == MouseButtons.Left)
-            {
-                cropRectangle.Size = new Size(Math.Abs(e.X - cropRectangle.Left), Math.Abs(e.Y - cropRectangle.Top));
-                this.Invalidate(); // Redraw the control to show the crop rectangle
-            }
+           
         }
 
         private void CustomPictureBox_MouseUp(object sender, MouseEventArgs e)
@@ -2622,56 +2350,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 isPanning = false;
             }
-            else if (isCropping && e.Button == MouseButtons.Left)
-            {
-                isCropping = false;
-                this.Cursor = Cursors.Default;
-                if (cropRectangle.Width > 0 && cropRectangle.Height > 0)
-                {
-                    // 保存原始图片信息
-                    ImageInfo originalInfo = null;
-                    if (MultiImageSupport && currentImageIndex < imageInfos.Count)
-                    {
-                        originalInfo = imageInfos[currentImageIndex];
-                    }
-                    else if (imageInfos.Count > 0)
-                    {
-                        originalInfo = imageInfos[0];
-                    }
-
-                    this.Image = CropImage(this.Image, cropRectangle);
-                    string newhash = ImageHelper.GetImageHash(this.Image);
-                    RowImage.SetImageNewHash(newhash);
-
-                    // 更新多图片列表中的当前图片
-                    if (MultiImageSupport && currentImageIndex < images.Count)
-                    {
-                        images[currentImageIndex] = this.Image;
-
-                        // 使用新方法更新图片及其信息，自动处理哈希值比较和版本管理
-                        UpdateImageWithOriginalInfo(currentImageIndex, this.Image, "裁剪图片");
-
-                        // 标记图片为已更新，以便业务层处理时能识别出需要上传的图片
-                        MarkImageAsUpdated(currentImageIndex);
-                    }
-                    else if (originalInfo != null) // 单图片模式
-                    {
-                        // 更新单图片信息，保留原始文件名
-                        imageInfos[0] = new ImageInfo
-                        {
-                            OriginalFileName = originalInfo.OriginalFileName,
-                            FileSize = GetImageFileSize(this.Image),
-                            CreateTime = originalInfo.CreateTime,
-                            Metadata = originalInfo.Metadata,
-                            FileType = originalInfo.FileType,
-                            FileExtension = originalInfo.FileExtension,
-
-                        };
-                    }
-
-                    cropRectangle = Rectangle.Empty;
-                }
-            }
+            
         }
 
         /// <summary>

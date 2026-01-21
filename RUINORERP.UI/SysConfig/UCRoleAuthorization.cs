@@ -1762,6 +1762,12 @@ namespace RUINORERP.UI.SysConfig
 
         private bool _isSelectingNode = false;
 
+        /// <summary>
+        /// 树节点选择后事件
+        /// 当选择行为菜单节点时，强制刷新按钮和字段权限列表
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">TreeView事件参数</param>
         private async void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
             // 防止重复选择
@@ -1796,10 +1802,11 @@ namespace RUINORERP.UI.SysConfig
                 kryptonNavigator1.SelectedPage = kryptonPageBtn;
                 CurrentMenuInfo = selectMenu;
 
-                // 优化：使用Task.WhenAll并行加载按钮和字段权限
+                // 强制刷新按钮和字段权限数据（每次点击节点都重新加载）
+                // 修改参数为 true，确保数据源完全刷新
                 await Task.WhenAll(
-                    InitLoadP4Button(selectMenu, false),
-                    InitLoadP4Field(selectMenu, false)
+                    InitLoadP4Button(selectMenu, true),
+                    InitLoadP4Field(selectMenu, true)
                 );
 
                 //加载行级权限规则，优先默认的在前面

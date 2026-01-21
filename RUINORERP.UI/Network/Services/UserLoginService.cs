@@ -84,7 +84,7 @@ namespace RUINORERP.UI.Network.Services
                     ct.ThrowIfCancellationRequested();
                 }
 
-                // 检查连接状态 - 直接依赖ConnectionManager的连接状态
+                // 检查连接状态 - 直接依赖ConnectionManager的连接状态1111
                 if (!_communicationService.IsConnected)
                 {
                     _logger?.LogWarning("登录失败：未连接到服务器");

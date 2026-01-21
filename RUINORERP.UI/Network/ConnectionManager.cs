@@ -169,16 +169,24 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// Socket连接状态变更事件处理
         /// 确保底层状态变更及时同步到ConnectionManager
+        /// 使用volatile确保线程安全
         /// </summary>
         private void OnSocketConnectionStateChanged(bool connected)
         {
-            _logger?.LogDebug("收到Socket连接状态变更通知: {Connected}", connected);
-            
+            _logger?.LogDebug("收到Socket连接状态变更通知: {Connected}, 当前状态: {IsConnected}", connected, _isConnected);
+
             // 只有当状态真的变化时才更新
-            if (_isConnected != connected)
+            // 注意：这个事件可能在ConnectAsync调用期间被触发，需要避免重复设置
+            bool currentState = _isConnected;
+            if (currentState != connected)
             {
+                _logger?.LogDebug("更新连接状态: {OldState} -> {NewState}", currentState, connected);
                 _isConnected = connected;
                 OnConnectionStateChanged(connected);
+            }
+            else
+            {
+                _logger?.LogTrace("连接状态未变化，跳过更新: {State}", currentState);
             }
         }
 
@@ -200,11 +208,27 @@ namespace RUINORERP.UI.Network
             await _connectionLock.WaitAsync(cancellationToken);
             try
             {
-                // 如果已经连接到同一服务器，直接返回成功
+                // 保存服务器信息 - 必须在判断之前更新，确保后续判断使用的是新地址
+                _serverAddress = serverAddress;
+                _serverPort = serverPort;
+
+                // 如果已经连接到同一服务器，先验证Socket是否真的可用
                 if (IsConnected && _serverAddress == serverAddress && _serverPort == serverPort)
                 {
-                    _logger?.LogDebug("已经连接到目标服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
-                    return true;
+                    _logger?.LogDebug("检查连接到目标服务器 {ServerAddress}:{ServerPort} 的状态", serverAddress, serverPort);
+
+                    // 验证Socket是否真的可用
+                    if (_socketClient.IsConnected)
+                    {
+                        _logger?.LogDebug("已经连接到目标服务器 {ServerAddress}:{ServerPort}，且Socket可用", serverAddress, serverPort);
+                        return true;
+                    }
+                    else
+                    {
+                        // 虽然IsConnected标志为true，但Socket已断开，需要重新连接
+                        _logger?.LogWarning("连接状态标志显示已连接，但Socket实际已断开，需要重新连接");
+                        await DisconnectInternalAsync();
+                    }
                 }
 
                 // 如果已连接到其他服务器，先断开
@@ -214,16 +238,14 @@ namespace RUINORERP.UI.Network
                     await DisconnectInternalAsync();
                 }
 
-                // 保存服务器信息
-                _serverAddress = serverAddress;
-                _serverPort = serverPort;
-
                 // 尝试连接
 
                 bool connected = await _socketClient.ConnectAsync(serverAddress, serverPort, cancellationToken);
 
                 if (connected)
                 {
+                    _logger?.LogDebug("Socket客户端连接成功，准备更新连接状态");
+                    // 先设置连接状态，确保事件触发时状态已同步
                     _isConnected = true;
                     OnConnectionStateChanged(true);
                     _logger?.LogDebug("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
@@ -234,6 +256,8 @@ namespace RUINORERP.UI.Network
                 else
                 {
                     _logger?.LogWarning("连接服务器失败 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+                    // 确保失败时状态为false
+                    _isConnected = false;
                 }
 
                 return connected;

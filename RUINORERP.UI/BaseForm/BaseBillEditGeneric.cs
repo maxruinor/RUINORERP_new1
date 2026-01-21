@@ -2490,8 +2490,9 @@ namespace RUINORERP.UI.BaseForm
                         var deleteResult = await Delete();
                         if (deleteResult.Succeeded)
                         {
+                            Exit(this);
                             // 状态同步已在删除方法内部处理，无需重复调用
-                            Add();
+                            //Add();
                         }
                         else
                         {
@@ -4555,17 +4556,17 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 获取明细中产品对应的ID，目前认为产品ID存在才是合法的明细数据
                     string prodDetailIDName = UIHelper.GetPrimaryKeyColName(typeof(tb_ProdDetail));
-                    
+
                     // 提取所有明细数据（包括新增、修改、删除）
                     // BaseSaveOrUpdateWithChild 会根据主键ID自动判断是新增、修改还是删除
                     details = new List<C>(detailentity);
 
 
-                   // int validDetailCount = details.Count(t => t.ContainsProperty(prodDetailIDName) && t.GetPropertyValue(prodDetailIDName).ToLong() > 0);
+                    // int validDetailCount = details.Count(t => t.ContainsProperty(prodDetailIDName) && t.GetPropertyValue(prodDetailIDName).ToLong() > 0);
 
                     // 统计有效明细数量（ProdDetailID大于0）
                     // 注意:需要使用属性检查而非字段检查,因为ProdDetailID是属性不是字段
-                    int validDetailCount = details.Count(t => 
+                    int validDetailCount = details.Count(t =>
                     {
                         var prop = t.GetType().GetProperty(prodDetailIDName);
                         if (prop != null)
@@ -4578,7 +4579,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         return false;
                     });
-                    
+
                     // 必须要有子表的合法数据，否则无法修复性保存
                     if (validDetailCount == 0)
                     {
@@ -4612,7 +4613,7 @@ namespace RUINORERP.UI.BaseForm
                     SetDetailsToEditEntity(details);
                 }
 
-        
+
                 // 明确调用基类的Save(T entity)方法,绕过子类Save(bool)方法中的ActionStatus检查
                 // 使用(base as BaseBillEditGeneric<T, C>).Save(EditEntity)确保调用基类方法
                 var saveResult = await ((BaseBillEditGeneric<T, C>)this).Save(EditEntity);

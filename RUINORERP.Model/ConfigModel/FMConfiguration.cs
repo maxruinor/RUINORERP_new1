@@ -97,5 +97,13 @@ namespace RUINORERP.Model.ConfigModel
         /// </summary>
         public bool EnableSalesOrderPaymentStatusValidation { get; set; } = false;
 
+        /// <summary>
+        /// 金额计算容差阈值
+        /// 用于处理浮点数计算精度问题，当|计算金额-原始金额|≤阈值时按0处理
+        /// 适用于折扣、运费分摊等各种金额计算场景
+        /// 默认值：0.0001，最大精度：4位小数
+        /// </summary>
+        public decimal AmountCalculationTolerance { get; set; } = 0.0001m;
+
     }
 }

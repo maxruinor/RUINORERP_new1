@@ -51,6 +51,8 @@ namespace RUINORERP.UI.BI
             this.cmbFreightAllocationRules = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.txtAmountCalculationTolerance = new Krypton.Toolkit.KryptonTextBox();
+            this.lblAmountCalculationTolerance = new Krypton.Toolkit.KryptonLabel();
             this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.chkIsDebug = new Krypton.Toolkit.KryptonCheckBox();
@@ -137,6 +139,8 @@ namespace RUINORERP.UI.BI
             this.kryptonPanel1.Controls.Add(this.txtTaxRateDataPrecision);
             this.kryptonPanel1.Controls.Add(this.lblMoneyDataPrecision);
             this.kryptonPanel1.Controls.Add(this.txtMoneyDataPrecision);
+            this.kryptonPanel1.Controls.Add(this.lblAmountCalculationTolerance);
+            this.kryptonPanel1.Controls.Add(this.txtAmountCalculationTolerance);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Controls.Add(this.lblCheckNegativeInventory);
@@ -576,6 +580,21 @@ namespace RUINORERP.UI.BI
             this.txtMoneyDataPrecision.Size = new System.Drawing.Size(100, 23);
             this.txtMoneyDataPrecision.TabIndex = 27;
             // 
+            // txtAmountCalculationTolerance
+            // 
+            this.txtAmountCalculationTolerance.Location = new System.Drawing.Point(184, 510);
+            this.txtAmountCalculationTolerance.Name = "txtAmountCalculationTolerance";
+            this.txtAmountCalculationTolerance.Size = new System.Drawing.Size(181, 21);
+            this.txtAmountCalculationTolerance.TabIndex = 211;
+            // 
+            // lblAmountCalculationTolerance
+            // 
+            this.lblAmountCalculationTolerance.Location = new System.Drawing.Point(44, 512);
+            this.lblAmountCalculationTolerance.Name = "lblAmountCalculationTolerance";
+            this.lblAmountCalculationTolerance.Size = new System.Drawing.Size(140, 20);
+            this.lblAmountCalculationTolerance.TabIndex = 210;
+            this.lblAmountCalculationTolerance.Values.Text = "金额计算容差阈值";
+            // 
             // btnCancel
             // 
             this.btnCancel.Location = new System.Drawing.Point(594, 712);
@@ -726,7 +745,6 @@ namespace RUINORERP.UI.BI
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCSystemConfigEdit";
             this.Text = "UCSystemConfigEdit";
-            this.Load += new System.EventHandler(this.UCSystemConfigEdit_Load);
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
@@ -791,6 +809,8 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonComboBox cmbFreightAllocationRules;
         private Krypton.Toolkit.KryptonLabel kryptonLabel10;
         private Krypton.Toolkit.KryptonLabel kryptonLabel11;
+        private Krypton.Toolkit.KryptonLabel lblAmountCalculationTolerance;
+        private Krypton.Toolkit.KryptonTextBox txtAmountCalculationTolerance;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditReceiveable;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditReceivePaymentRecordByPlatform;

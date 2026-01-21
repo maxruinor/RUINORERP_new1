@@ -17,6 +17,8 @@ using LiveChartsCore.Geo;
 using Newtonsoft.Json;
 using RUINORERP.UI.BusinessService.SmartMenuService;
 using System.Collections.Generic;
+using RUINORERP.Business.Validator;
+using FluentValidation.Results;
 
 namespace RUINORERP.UI.BI
 {
@@ -112,6 +114,9 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoRefundOnOrderCancel, chkEnableAutoRefundOnOrderCancel, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditExpensePaymentRecord, chkAutoAuditExpensePaymentRecord, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoAuditSalesOutboundForFullPrepaymentOrders, chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders, false);
+
+            // 金额计算容差阈值数据绑定
+            DataBindingHelper.BindData4TextBox<FMConfiguration>(fMConfiguration, t => t.AmountCalculationTolerance, txtAmountCalculationTolerance, BindDataType4TextBox.Money, false);
             #endregion
 
             #region 系统功能配置
@@ -141,6 +146,7 @@ namespace RUINORERP.UI.BI
         FMConfiguration fMConfiguration = new FMConfiguration();
 
         FunctionConfiguration functionConfiguration = new FunctionConfiguration();
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();
@@ -151,7 +157,82 @@ namespace RUINORERP.UI.BI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            //这里不能用上面的SystemConfig，丢失？ 引用没传到值？
+            // 使用 FluentValidation 验证 FMConfiguration
+            var fmValidator = new FMConfigurationValidator();
+            ValidationResult fmValidationResult = fmValidator.Validate(fMConfiguration);
+            if (!fmValidationResult.IsValid)
+            {
+                string errorMessage = string.Join("\n", fmValidationResult.Errors.Select(e => e.ErrorMessage));
+                MessageBox.Show(
+                    "财务配置验证失败：\n" + errorMessage,
+                    "配置验证",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 使用 FluentValidation 验证 FunctionConfiguration
+            var functionValidator = new FunctionConfigurationValidator();
+            ValidationResult functionValidationResult = functionValidator.Validate(functionConfiguration);
+            if (!functionValidationResult.IsValid)
+            {
+                string errorMessage = string.Join("\n", functionValidationResult.Errors.Select(e => e.ErrorMessage));
+                MessageBox.Show(
+                    "功能配置验证失败：\n" + errorMessage,
+                    "配置验证",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 额外验证：金额计算容差阈值建议值与金额精度保持一致
+            // 默认值 = 10^(-金额精度)，但允许设置更大的值（不能超过1）
+            int moneyPrecision = 2; // 默认2位
+            if (bindingSourceEdit.Current is tb_SystemConfig config && config.MoneyDataPrecision >= 0)
+            {
+                moneyPrecision = config.MoneyDataPrecision;
+            }
+
+            // 计算推荐的容差阈值（基于金额精度）
+            // 3位精度 -> 0.001
+            // 2位精度 -> 0.01
+            // 4位精度 -> 0.0001
+            decimal recommendedTolerance = (decimal)Math.Pow(10, -moneyPrecision);
+
+            // 验证容差阈值不能超过1
+            if (fMConfiguration.AmountCalculationTolerance >= 1m)
+            {
+                MessageBox.Show(
+                    $"金额计算容差阈值必须小于1。\n" +
+                    $"当前值为 {fMConfiguration.AmountCalculationTolerance}。",
+                    "输入验证",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 如果当前值不是推荐值，给出提示但允许保存
+            if (fMConfiguration.AmountCalculationTolerance != recommendedTolerance)
+            {
+                var result = MessageBox.Show(
+                    $"当前金额精度为 {moneyPrecision} 位小数。\n" +
+                    $"推荐容差阈值为 {recommendedTolerance}。\n" +
+                    $"当前值为 {fMConfiguration.AmountCalculationTolerance}。\n\n" +
+                    $"是否自动调整为推荐值 {recommendedTolerance}？\n\n" +
+                    $"点击[是]使用推荐值\n" +
+                    $"点击[否]保留当前值继续保存",
+                    "容差阈值建议",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    fMConfiguration.AmountCalculationTolerance = recommendedTolerance;
+                    // 更新文本框显示
+                    txtAmountCalculationTolerance.Text = recommendedTolerance.ToString();
+                }
+            }
+
             // 更新JSON数据
             var fmjsonData = JsonConvert.SerializeObject(fMConfiguration);
             var funjsonData = JsonConvert.SerializeObject(functionConfiguration);
@@ -166,11 +247,6 @@ namespace RUINORERP.UI.BI
                 this.DialogResult = DialogResult.OK;
                 this.Close();
             }
-        }
-
-        private void UCSystemConfigEdit_Load(object sender, EventArgs e)
-        {
-
         }
 
         private void chkIsDebug_CheckedChanged(object sender, EventArgs e)

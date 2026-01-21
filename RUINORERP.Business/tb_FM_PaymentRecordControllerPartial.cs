@@ -1,4 +1,5 @@
 
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -18,6 +19,7 @@ using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
+using RUINORERP.Model;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.IServices;
@@ -47,6 +49,21 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_PaymentRecordController<T> : BaseController<T> where T : class
     {
+        /// <summary>
+        /// 授权控制器，用于获取系统配置信息
+        /// </summary>
+        private IAuthorizeController _authorizeController;
+
+        /// <summary>
+        /// 初始化授权控制器（延迟加载，避免构造函数冲突）
+        /// </summary>
+        private void InitializeAuthorizeController()
+        {
+            if (_authorizeController == null)
+            {
+                _authorizeController = _appContext?.GetRequiredService<IAuthorizeController>();
+            }
+        }
 
         /// <summary>
         /// 收付款单反审核方法
@@ -416,6 +433,9 @@ namespace RUINORERP.Business
                             // 2. 根据对账单类型和混合场景决定核销顺序和逻辑
                             List<tb_FM_ReceivablePayable> receivablePayableList = new List<tb_FM_ReceivablePayable>();
 
+                            // 初始化授权控制器
+                            InitializeAuthorizeController();
+
                             // 检查是否存在混合对冲场景
                             bool hasMixedTypes = receivableList.Any() && payableList.Any();
 
@@ -437,10 +457,13 @@ namespace RUINORERP.Business
                                 totalNetAmount = statement.tb_FM_StatementDetails.Sum(sd => sd.tb_fm_receivablepayable.LocalBalanceAmount);
                             }
 
+                            // 获取金额计算容差阈值
+                            decimal tolerance = _authorizeController.GetAmountCalculationTolerance();
+
                             // 业务规则检查：确保实际支付金额不超过净支付金额
                             // 说明：所有明细相互抵冲后的净支付金额是最高可支付限额
                             // 如果实付金额超过这个净额，则属于预付款业务，不应在对账单中处理
-                            if (Math.Abs(ARAPTotalPaidAmount) > Math.Abs(totalNetAmount) + 0.01m) // 考虑精度误差，允许0.01的差异
+                            if (Math.Abs(ARAPTotalPaidAmount) > Math.Abs(totalNetAmount) + tolerance)
                             {
                                 // 提供专业的错误提示，说明业务规则违反情况
                                 _unitOfWorkManage.RollbackTran();
@@ -454,8 +477,8 @@ namespace RUINORERP.Business
                             // 计算实付金额与总净额的关系
                             // 1. 如果实付金额的绝对值等于总净额的绝对值，说明完全匹配，应全额核销所有明细
                             // 2. 否则，按FIFO顺序进行部分核销
-                            bool isExactMatch = Math.Abs(ARAPTotalPaidAmount) >= Math.Abs(totalNetAmount) - 0.01m &&
-                                              Math.Abs(ARAPTotalPaidAmount) <= Math.Abs(totalNetAmount) + 0.01m;
+                            bool isExactMatch = Math.Abs(ARAPTotalPaidAmount) >= Math.Abs(totalNetAmount) - tolerance &&
+                                              Math.Abs(ARAPTotalPaidAmount) <= Math.Abs(totalNetAmount) + tolerance;
 
                             if (hasMixedTypes && statement.ReceivePaymentType == (int)ReceivePaymentType.付款)
                             {

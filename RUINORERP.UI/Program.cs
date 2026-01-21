@@ -208,6 +208,13 @@ namespace RUINORERP.UI
             {
                 // 尝试从已加载的程序集中查找
                 var assemblyName = new System.Reflection.AssemblyName(args.Name);
+
+                // 跳过资源程序集(.resources) - 这些程序集应该由.NET Framework自动加载
+                if (assemblyName.Name.EndsWith(".resources"))
+                {
+                    return null;
+                }
+
                 var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
                     .FirstOrDefault(a => a.GetName().Name == assemblyName.Name);
 

@@ -385,8 +385,24 @@ namespace RUINORERP.Business
                         // 计算外币金额总和
                         decimal totalForeignAmount = items.Sum(i => i.ForeignPrepaidAmount);
 
+                        // 获取金额计算容差阈值
+                        decimal tolerance = 0.0001m; // 默认容差
+                        try
+                        {
+                            // 使用 ApplicationContext.Current 获取服务
+                            var authorizeController = RUINORERP.Model.Context.ApplicationContext.Current?.GetRequiredService<IAuthorizeController>();
+                            if (authorizeController != null)
+                            {
+                                tolerance = authorizeController.GetAmountCalculationTolerance();
+                            }
+                        }
+                        catch
+                        {
+                            // 使用默认容差
+                        }
+
                         // 检查是否满足对冲条件（总和接近0，考虑浮点数精度问题）
-                        if (Math.Abs(totalLocalAmount) < 0.001m && Math.Abs(totalForeignAmount) < 0.001m)
+                        if (Math.Abs(totalLocalAmount) <= tolerance && Math.Abs(totalForeignAmount) <= tolerance)
                             continue;
 
                         if (totalLocalAmount > totalOrderAmount)

@@ -14,6 +14,7 @@ using RUINORERP.Business.BizMapperService;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.EntityLoadService;
 using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
@@ -47,7 +48,6 @@ namespace RUINORERP.Business
     /// </summary>
     public partial class tb_FM_ReceivablePayableController<T> : BaseController<T> where T : class
     {
-
         // 应收应付标记坏账
         //protected async Task MarkBadDebt()
         //{
@@ -426,6 +426,22 @@ namespace RUINORERP.Business
                         .GroupBy(d => d.ReceivePaymentType) // 应收/应付类型字段
                         .ToList();
 
+                    // 获取金额计算容差阈值
+                    decimal tolerance = 0.0001m; // 默认容差
+                    try
+                    {
+                        // 使用 ApplicationContext.Current 获取服务
+                        var authorizeController = ApplicationContext.Current?.GetRequiredService<IAuthorizeController>();
+                        if (authorizeController != null)
+                        {
+                            tolerance = authorizeController.GetAmountCalculationTolerance();
+                        }
+                    }
+                    catch
+                    {
+                        // 使用默认容差
+                    }
+
                     bool hasError = false;
                     foreach (var directionGroup in directionGroups)
                     {
@@ -436,7 +452,7 @@ namespace RUINORERP.Business
                         {
                             decimal totalLocal = dirItems.Sum(i => i.LocalBalanceAmount);
                             decimal totalForeign = dirItems.Sum(i => i.ForeignBalanceAmount);
-                            if (Math.Abs(totalLocal) < 0.001m && Math.Abs(totalForeign) < 0.001m)
+                            if (Math.Abs(totalLocal) <= tolerance && Math.Abs(totalForeign) <= tolerance)
                                 continue; // 对冲成功
                         }
                         // 子情况2.2：单方向单条记录（允许不同方向共存）

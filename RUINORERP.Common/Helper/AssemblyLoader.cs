@@ -8,7 +8,7 @@ using System.Reflection;
 namespace RUINORERP.Common.Helper
 {
     /// <summary>
-    /// 程序集加载辅助类,使用Load代替LoadFrom避免调试器元数据问题
+    /// 程序集加载辅助类
     /// </summary>
     public static class AssemblyLoader
     {
@@ -18,14 +18,9 @@ namespace RUINORERP.Common.Helper
         private static readonly HashSet<string> _loadingAssemblies = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
-        /// 已加载程序集的完整路径缓存,用于避免LoadFrom重复加载
+        /// 已加载程序集的路径缓存,用于避免重复加载
         /// </summary>
         private static readonly ConcurrentDictionary<string, string> _loadedAssemblyPaths = new ConcurrentDictionary<string, string>();
-
-        /// <summary>
-        /// 用于线程同步的锁对象
-        /// </summary>
-        private static readonly object _lockObj = new object();
 
         /// <summary>
         /// 安全加载程序集,避免重复加载导致调试器元数据损坏
@@ -97,73 +92,69 @@ namespace RUINORERP.Common.Helper
             string assemblyName = Path.GetFileNameWithoutExtension(assemblyPath);
             string normalizedPath = Path.GetFullPath(assemblyPath);
 
-            // 加锁防止多线程竞争
-            lock (_lockObj)
+            // 检查是否已通过此路径加载过
+            string loadedPath;
+            if (_loadedAssemblyPaths.TryGetValue(assemblyName.ToLower(), out loadedPath))
             {
-                // 检查是否已通过此路径加载过
-                string loadedPath;
-                if (_loadedAssemblyPaths.TryGetValue(assemblyName.ToLower(), out loadedPath))
-                {
-                    // 如果路径相同,返回已加载的程序集
-                    if (string.Equals(loadedPath, normalizedPath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return GetLoadedAssembly(assemblyName);
-                    }
-                    // 路径不同但程序集名相同,跳过加载避免冲突
-                    return GetLoadedAssembly(assemblyName);
-                }
-
-                // 防止递归加载
-                if (_loadingAssemblies.Contains(assemblyName))
+                // 如果路径相同,返回已加载的程序集
+                if (string.Equals(loadedPath, normalizedPath, StringComparison.OrdinalIgnoreCase))
                 {
                     return GetLoadedAssembly(assemblyName);
                 }
+                // 路径不同但程序集名相同,返回已加载的避免冲突
+                return GetLoadedAssembly(assemblyName);
+            }
 
-                // 首先尝试从已加载的程序集中查找
-                var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
-                    .FirstOrDefault(a => a.GetName().Name.Equals(assemblyName, StringComparison.OrdinalIgnoreCase));
+            // 防止递归加载
+            if (_loadingAssemblies.Contains(assemblyName))
+            {
+                return GetLoadedAssembly(assemblyName);
+            }
 
-                if (loadedAssembly != null)
-                {
-                    // 缓存路径
-                    _loadedAssemblyPaths.TryAdd(assemblyName.ToLower(), normalizedPath);
-                    return loadedAssembly;
-                }
+            // 首先尝试从已加载的程序集中查找
+            var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                .FirstOrDefault(a => a.GetName().Name.Equals(assemblyName, StringComparison.OrdinalIgnoreCase));
 
-                // 标记为正在加载
-                _loadingAssemblies.Add(assemblyName);
+            if (loadedAssembly != null)
+            {
+                // 缓存路径
+                _loadedAssemblyPaths.TryAdd(assemblyName.ToLower(), normalizedPath);
+                return loadedAssembly;
+            }
+
+            // 标记为正在加载
+            _loadingAssemblies.Add(assemblyName);
+            try
+            {
+                // 优先使用Assembly.Load(通过程序集名加载)
+                Assembly assembly = null;
                 try
                 {
-                    // 先尝试通过Assembly.Load加载(使用完整路径获取程序集名)
-                    Assembly assembly = null;
-                    try
-                    {
-                        var assemblyNameObj = AssemblyName.GetAssemblyName(assemblyPath);
-                        assembly = Assembly.Load(assemblyNameObj);
-                    }
-                    catch
-                    {
-                        // 如果Load失败,使用LoadFrom(插件需要支持从任意路径加载)
-                        // 在LoadFrom之前,再次检查是否已被加载(可能在其他线程加载了)
-                        assembly = GetLoadedAssembly(assemblyName);
-                        if (assembly == null)
-                        {
-                            assembly = Assembly.LoadFrom(assemblyPath);
-                        }
-                    }
-
-                    // 加载成功后缓存路径
-                    if (assembly != null)
-                    {
-                        _loadedAssemblyPaths.TryAdd(assemblyName.ToLower(), normalizedPath);
-                    }
-
-                    return assembly;
+                    var assemblyNameObj = AssemblyName.GetAssemblyName(assemblyPath);
+                    assembly = Assembly.Load(assemblyNameObj);
                 }
-                finally
+                catch
                 {
-                    _loadingAssemblies.Remove(assemblyName);
+                    // Load失败,使用LoadFrom
+                    // 在LoadFrom之前,再次检查是否已被加载
+                    assembly = GetLoadedAssembly(assemblyName);
+                    if (assembly == null)
+                    {
+                        assembly = Assembly.LoadFrom(assemblyPath);
+                    }
                 }
+
+                // 加载成功后缓存路径
+                if (assembly != null)
+                {
+                    _loadedAssemblyPaths.TryAdd(assemblyName.ToLower(), normalizedPath);
+                }
+
+                return assembly;
+            }
+            finally
+            {
+                _loadingAssemblies.Remove(assemblyName);
             }
         }
 

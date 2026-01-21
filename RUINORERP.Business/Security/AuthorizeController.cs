@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
+using RUINORERP.Model.ConfigModel;
 
 namespace RUINORERP.Business.Security
 {
@@ -22,6 +23,7 @@ namespace RUINORERP.Business.Security
         int GetMoneyDataPrecision();
         bool GetDebugInfoAuth();
         bool GetShowDebugInfoAuthorization();
+        decimal GetAmountCalculationTolerance();
     }
 
 
@@ -78,12 +80,53 @@ namespace RUINORERP.Business.Security
         }
 
         /// <summary>
-        /// 取金额的精度
+        /// 取金额的精度1
         /// </summary>
         /// <returns>统一按系统配置中的金额精度参数</returns>
         public int GetMoneyDataPrecision()
         {
             return _context.SysConfig?.MoneyDataPrecision ?? 2;
+        }
+
+        /// <summary>
+        /// 获取金额计算容差阈值
+        /// 用于处理浮点数计算精度问题，适用于折扣、运费分摊等各种金额计算场景
+        /// 当|计算金额-原始金额|≤阈值时按0处理
+        /// 容差阈值会根据当前金额精度自动调整，确保不超过精度的最小值
+        /// </summary>
+        /// <returns>容差阈值，默认值基于金额精度：2位精度为0.01，3位精度为0.001，4位精度为0.0001</returns>
+        public decimal GetAmountCalculationTolerance()
+        {
+            try
+            {
+                if (_context?.SysConfig?.FMConfig != null)
+                {
+                    var fmConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<FMConfiguration>(
+                        _context.SysConfig.FMConfig);
+                    if (fmConfig != null && fmConfig.AmountCalculationTolerance > 0)
+                    {
+                        // 获取当前金额精度
+                        int moneyPrecision = GetMoneyDataPrecision();
+
+                        // 计算最小允许的容差阈值（基于金额精度）
+                        decimal minTolerance = (decimal)Math.Pow(10, -moneyPrecision);
+
+                        // 确保配置的容差阈值不超过精度限制
+                        decimal tolerance = Math.Min(fmConfig.AmountCalculationTolerance, minTolerance);
+
+                        // 四舍五入到精度位
+                        return Math.Round(tolerance, moneyPrecision);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // 反序列化失败时使用默认值
+            }
+
+            // 根据金额精度返回默认容差阈值
+            int precision = GetMoneyDataPrecision();
+            return (decimal)Math.Pow(10, -precision);
         }
 
         /// <summary>

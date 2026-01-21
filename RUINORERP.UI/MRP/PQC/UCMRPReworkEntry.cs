@@ -340,6 +340,12 @@ namespace RUINORERP.UI.MRP.PQC
         }
 
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="_rowObj">行对象</param>
+        /// <param name="myGridDefine">网格定义</param>
+        /// <param name="position">位置</param>
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
             if (EditEntity == null)
@@ -358,9 +364,12 @@ namespace RUINORERP.UI.MRP.PQC
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCost = details.Sum(c => c.SubtotalCostAmount);
-                EditEntity.TotalReworkFee = details.Sum(c => c.SubtotalReworkFee);
+                EditEntity.TotalCost = details.Sum(c => c.SubtotalCostAmount).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalReworkFee = details.Sum(c => c.SubtotalReworkFee).ToRoundDecimalPlaces(precision);
 
             }
             catch (Exception ex)

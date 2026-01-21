@@ -287,6 +287,12 @@ namespace RUINORERP.UI.PSI.INV
             }
         }
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="_rowObj">行对象</param>
+        /// <param name="myGridDefine">网格定义</param>
+        /// <param name="position">位置</param>
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
 
@@ -307,9 +313,12 @@ namespace RUINORERP.UI.PSI.INV
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+                
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
-                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
-                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty).ToRoundDecimalPlaces(precision);
             }
             catch (Exception ex)
             {
@@ -335,9 +344,12 @@ namespace RUINORERP.UI.PSI.INV
                 //产品ID有值才算有效值
                 details = detailentity.Where(t => t.ProdDetailID > 0).ToList();
                 EditEntity.tb_StockInDetails = details;
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+                
                 EditEntity.TotalQty = details.Sum(c => c.Qty);
-                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty);
-                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty);
+                EditEntity.TotalCost = details.Sum(c => c.Cost * c.Qty).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalAmount = details.Sum(c => c.Price * c.Qty).ToRoundDecimalPlaces(precision);
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

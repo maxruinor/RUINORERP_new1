@@ -404,6 +404,12 @@ namespace RUINORERP.UI.PSI.PUR
         }
 
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="_rowObj">行对象</param>
+        /// <param name="myGridDefine">网格定义</param>
+        /// <param name="position">位置</param>
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
             if (EditEntity == null)
@@ -423,9 +429,12 @@ namespace RUINORERP.UI.PSI.PUR
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity);
-                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount);
+                EditEntity.TotalAmount = details.Sum(c => (c.UnitPrice + c.CustomizedCost) * c.Quantity).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalTaxAmount = details.Sum(c => c.TaxAmount).ToRoundDecimalPlaces(precision);
             }
             catch (Exception ex)
             {
@@ -495,8 +504,11 @@ namespace RUINORERP.UI.PSI.PUR
                 //   表格中的验证提示
                 //   其他输入条码验证
 
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity);
+                EditEntity.TotalAmount = details.Sum(c => (c.CustomizedCost + c.UnitPrice) * c.Quantity).ToRoundDecimalPlaces(precision);
 
                 ReturnMainSubResults<tb_PurEntryRe> SaveResult = new ReturnMainSubResults<tb_PurEntryRe>();
                 if (NeedValidated)
@@ -728,10 +740,14 @@ protected async override void ReReview()
 
 
 
+
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 entity.tb_PurEntryReDetails = NewDetails;
-                entity.TotalAmount = NewDetails.Sum(c => c.SubtotalTrPriceAmount);
+                entity.TotalAmount = NewDetails.Sum(c => c.SubtotalTrPriceAmount).ToRoundDecimalPlaces(precision);
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
-                entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount);
+                entity.TotalTaxAmount = NewDetails.Sum(c => c.TaxAmount).ToRoundDecimalPlaces(precision);
                 //这里还要有一个未税总金额TotalUntaxedAmount
 
                 entity.DataStatus = (int)DataStatus.草稿;

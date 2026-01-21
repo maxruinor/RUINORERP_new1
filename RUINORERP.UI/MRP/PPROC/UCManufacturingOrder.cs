@@ -537,6 +537,12 @@ namespace RUINORERP.UI.MRP.MP
 
         }
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="rowObj">行对象</param>
+        /// <param name="griddefine">网格定义</param>
+        /// <param name="Position">位置</param>
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
         {
             if (EditEntity == null)
@@ -559,6 +565,9 @@ namespace RUINORERP.UI.MRP.MP
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 //if (EditEntity.IsOutSourced)
                 //{
                 //    //外发
@@ -568,8 +577,8 @@ namespace RUINORERP.UI.MRP.MP
                 //{
                 //    //自制
                 //}
-                EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost);
-                EditEntity.TotalProductionCost = EditEntity.TotalMaterialCost + EditEntity.ApportionedCost + EditEntity.TotalManuFee;
+                EditEntity.TotalMaterialCost = details.Sum(c => c.SubtotalUnitCost).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalProductionCost = (EditEntity.TotalMaterialCost + EditEntity.ApportionedCost + EditEntity.TotalManuFee).ToRoundDecimalPlaces(precision);
             }
             catch (Exception ex)
             {

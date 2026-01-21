@@ -901,6 +901,12 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="rowObj">行对象</param>
+        /// <param name="griddefine">网格定义</param>
+        /// <param name="Position">位置</param>
         private void Sgh_OnCalculateColumnValue(object rowObj, SourceGridDefine griddefine, SourceGrid.Position Position)
         {
             if (EditEntity == null)
@@ -913,6 +919,9 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
 
+        /// <summary>
+        /// 计算销售退回单汇总金额
+        /// </summary>
         private void Summation()
         {
             try
@@ -929,10 +938,13 @@ namespace RUINORERP.UI.PSI.SAL
                     MainForm.Instance.uclog.AddLog("请先选择产品数据");
                     return;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
-                EditEntity.TotalAmount = EditEntity.TotalAmount - EditEntity.TotalCommissionAmount;
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalAmount = (details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalAmount = (EditEntity.TotalAmount - EditEntity.TotalCommissionAmount).ToRoundDecimalPlaces(precision);
             }
             catch (Exception ex)
             {
@@ -996,10 +1008,13 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     EditEntity.IsIncludeTax = false;
                 }
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.TotalQty = details.Sum(c => c.Quantity);
-                EditEntity.TotalAmount = details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome;
-                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount);
-                EditEntity.TotalAmount = EditEntity.TotalAmount - EditEntity.TotalCommissionAmount;
+                EditEntity.TotalAmount = (details.Sum(c => c.TransactionPrice * c.Quantity) + EditEntity.FreightIncome).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalCommissionAmount = details.Sum(c => c.CommissionAmount).ToRoundDecimalPlaces(precision);
+                EditEntity.TotalAmount = (EditEntity.TotalAmount - EditEntity.TotalCommissionAmount).ToRoundDecimalPlaces(precision);
 
                 //产品ID有值才算有效值
                 LastRefurbishedMaterials = RefurbishedMaterials.Where(t => t.ProdDetailID > 0).ToList();

@@ -80,12 +80,14 @@ namespace RUINORERP.Business.Security
         }
 
         /// <summary>
-        /// 取金额的精度1
+        /// 获取金额精度
+        /// 优先级：角色配置 > 系统配置，如果都没有配置则返回默认值2
         /// </summary>
-        /// <returns>统一按系统配置中的金额精度参数</returns>
+        /// <returns>金额小数位精度</returns>
         public int GetMoneyDataPrecision()
         {
-            return _context.SysConfig?.MoneyDataPrecision ?? 2;
+            // 优先使用角色级配置，如果没有则使用系统级配置
+            return _context.rolePropertyConfig?.MoneyDataPrecision ?? _context.SysConfig?.MoneyDataPrecision ?? 2;
         }
 
         /// <summary>

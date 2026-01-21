@@ -486,6 +486,12 @@ namespace RUINORERP.UI.PSI.INV
             System.Diagnostics.Debug.WriteLine(op(5, 2));
         }
 
+        /// <summary>
+        /// 明细列值变更时计算汇总金额
+        /// </summary>
+        /// <param name="_rowObj">行对象</param>
+        /// <param name="myGridDefine">网格定义</param>
+        /// <param name="position">位置</param>
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
 
@@ -509,12 +515,15 @@ namespace RUINORERP.UI.PSI.INV
                     return;
                 }
 
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
                 EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);
                 EditEntity.DiffTotalQty = details.Sum(c => c.DiffQty);
-                EditEntity.CheckTotalAmount = details.Sum(c => c.UntaxedCost * c.CheckQty);
-                EditEntity.CarryingTotalAmount = details.Sum(c => c.UntaxedCost * c.CarryinglQty);
-                EditEntity.DiffTotalAmount = details.Sum(c => c.UntaxedCost * c.DiffQty);
+                EditEntity.CheckTotalAmount = details.Sum(c => c.UntaxedCost * c.CheckQty).ToRoundDecimalPlaces(precision);
+                EditEntity.CarryingTotalAmount = details.Sum(c => c.UntaxedCost * c.CarryinglQty).ToRoundDecimalPlaces(precision);
+                EditEntity.DiffTotalAmount = details.Sum(c => c.UntaxedCost * c.DiffQty).ToRoundDecimalPlaces(precision);
 
             }
             catch (Exception ex)
@@ -623,13 +632,17 @@ namespace RUINORERP.UI.PSI.INV
                 }
 
 
+
                 EditEntity.tb_StocktakeDetails = details;
+                // 获取系统配置的金额精度
+                int precision = MainForm.Instance.authorizeController.GetMoneyDataPrecision();
+
                 EditEntity.CheckTotalQty = details.Sum(c => c.CheckQty);
                 EditEntity.CarryingTotalQty = details.Sum(c => c.CarryinglQty);
                 EditEntity.DiffTotalQty = details.Sum(c => c.DiffQty);
-                EditEntity.CheckTotalAmount = details.Sum(c => c.Cost * c.CheckQty);
-                EditEntity.CarryingTotalAmount = details.Sum(c => c.Cost * c.CarryinglQty);
-                EditEntity.DiffTotalAmount = details.Sum(c => c.Cost * c.DiffQty);
+                EditEntity.CheckTotalAmount = details.Sum(c => c.Cost * c.CheckQty).ToRoundDecimalPlaces(precision);
+                EditEntity.CarryingTotalAmount = details.Sum(c => c.Cost * c.CarryinglQty).ToRoundDecimalPlaces(precision);
+                EditEntity.DiffTotalAmount = details.Sum(c => c.Cost * c.DiffQty).ToRoundDecimalPlaces(precision);
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))
                 {

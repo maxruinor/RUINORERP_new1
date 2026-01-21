@@ -41,6 +41,38 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             SetMapFields(c => c.ShipCost, d => d.AllocatedFreightCost);
         }
 
+        /// <summary>
+        /// 获取明细行的分摊基础值
+        /// </summary>
+        /// <param name="detail">明细行</param>
+        /// <param name="rule">分摊规则</param>
+        /// <returns>分摊基础值(数量/金额)</returns>
+        private decimal GetAllocationBaseValue(tb_PurEntryDetail detail, FreightAllocationRules rule)
+        {
+            switch (rule)
+            {
+                case FreightAllocationRules.产品数量占比:
+                    return detail.Quantity.ObjToDecimal();
+                case FreightAllocationRules.产品金额占比:
+                    return detail.SubtotalAmount;
+                case FreightAllocationRules.产品重量占比:
+                    // 如果明细表没有重量字段,使用数量作为替代
+                    return detail.Quantity.ObjToDecimal();
+                default:
+                    return 0m;
+            }
+        }
+
+        /// <summary>
+        /// 获取所有明细行的分摊基础值总和
+        /// </summary>
+        /// <param name="rule">分摊规则</param>
+        /// <returns>总和</returns>
+        private decimal GetTotalAllocationBaseValue(FreightAllocationRules rule)
+        {
+            return Details.Sum(d => GetAllocationBaseValue(d, rule));
+        }
+
         protected override void HandleMasterPropertyChange(string propertyName)
         {
             if (Details == null)
@@ -94,13 +126,12 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             if (Math.Abs(masterFieldValue - currentAllocatedTotal) <= tolerance)
                 return;
 
-            // 检查分摊规则配置
-            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules != (int)FreightAllocationRules.产品数量占比)
-                return;
+            // 获取当前的分摊规则
+            FreightAllocationRules allocationRule = (FreightAllocationRules)MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
 
-            // 验证总数量
-            Master.TotalQty = Details.Sum(d => d.Quantity);
-            if (Master.TotalQty <= 0) return;
+            // 根据分摊规则计算总基础值
+            decimal totalBaseValue = GetTotalAllocationBaseValue(allocationRule);
+            if (totalBaseValue <= 0) return;
 
             // 获取系统配置的金额精度（确保为4位小数）
             int precision = _authController.GetMoneyDataPrecision();
@@ -112,7 +143,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
             for (int i = 0; i < Details.Count; i++)
             {
                 var detail = Details[i];
-                var quantity = detail.Quantity.ObjToDecimal();
+                var baseValue = GetAllocationBaseValue(detail, allocationRule);
 
                 if (i == lastDetailIndex)
                 {
@@ -124,11 +155,13 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                         allocatedValue = 0m;
                     }
                     detail.SetPropertyValue(detailPropertyName, allocatedValue);
+                    // 保存分摊规则到明细行
+                    detail.FreightAllocationRules = (int)allocationRule;
                 }
                 else
                 {
-                    // 非最后一行：按数量比例分摊
-                    var allocatedValue = masterValue * (quantity / Master.TotalQty)
+                    // 非最后一行：按基础值比例分摊
+                    var allocatedValue = masterValue * (baseValue / totalBaseValue)
                         .ToRoundDecimalPlaces(precision);
                     // 确保分摊值在容差范围内
                     if (Math.Abs(allocatedValue) <= tolerance)
@@ -137,6 +170,8 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                     }
                     detail.SetPropertyValue(detailPropertyName, allocatedValue);
                     remainingAmount -= allocatedValue;
+                    // 保存分摊规则到明细行
+                    detail.FreightAllocationRules = (int)allocationRule;
                 }
             }
 
@@ -157,6 +192,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
 
             // 更新网格显示
             _gridHelper.UpdateGridColumn<tb_PurEntryDetail>(detailPropertyName);
+            _gridHelper.UpdateGridColumn<tb_PurEntryDetail>(c => c.FreightAllocationRules);
         }
 
 

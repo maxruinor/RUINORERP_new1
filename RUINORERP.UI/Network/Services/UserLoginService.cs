@@ -84,8 +84,8 @@ namespace RUINORERP.UI.Network.Services
                     ct.ThrowIfCancellationRequested();
                 }
 
-                // 检查连接状态 - 直接依赖ConnectionManager的连接状态1111
-                if (!_communicationService.IsConnected)
+                // 检查连接状态 - 直接依赖ConnectionManager的连接状态
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _logger?.LogWarning("登录失败：未连接到服务器");
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
@@ -156,7 +156,7 @@ namespace RUINORERP.UI.Network.Services
                 bool serverLogoutSuccess = true;
 
                 // 只有当连接有效时，才发送服务器登出请求
-                if (_communicationService.IsConnected)
+                if (_communicationService.ConnectionManager.IsConnected)
                 {
                     try
                     {
@@ -303,7 +303,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                if (!_communicationService.IsConnected || string.IsNullOrEmpty(sessionId))
+                if (!_communicationService.ConnectionManager.IsConnected || string.IsNullOrEmpty(sessionId))
                 {
                     _logger?.LogWarning("取消登录失败：未连接到服务器或会话ID为空");
                     return false;
@@ -347,7 +347,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                if (!_communicationService.IsConnected || _duplicateLoginResult == null || _duplicateLoginResult.ExistingSessions == null || _duplicateLoginResult.ExistingSessions.Count == 0)
+                if (!_communicationService.ConnectionManager.IsConnected || _duplicateLoginResult == null || _duplicateLoginResult.ExistingSessions == null || _duplicateLoginResult.ExistingSessions.Count == 0)
                 {
                     _logger?.LogWarning("处理重复登录失败：未连接到服务器或参数不完整");
                     return false;

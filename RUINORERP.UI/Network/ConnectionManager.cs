@@ -65,7 +65,7 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// 当前连接状态
-        /// 增强版：更全面的连接状态判断
+        /// 增强版：直接查询底层Socket客户端状态，确保实时性
         /// </summary>
         public bool IsConnected
         {
@@ -73,47 +73,57 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 1. 检查本地连接状态标志
+                    // 1. 首先检查本地连接状态标志（快速路径）
                     if (!_isConnected)
                     {
-                        _logger?.LogTrace("连接状态检查：本地连接状态标志为false");
+                        _logger?.LogTrace("ConnectionManager连接状态检查：本地状态为false");
                         return false;
                     }
-                    
-                    // 2. 检查Socket客户端连接状态
-                    if (!_socketClient.IsConnected)
-                    {
-                        _logger?.LogTrace("连接状态检查：Socket客户端未连接");
-                        return false;
-                    }
-                    
-                    // 3. 检查服务器信息是否完整
-                    if (string.IsNullOrEmpty(_serverAddress) || _serverPort <= 0)
-                    {
-                        _logger?.LogTrace("连接状态检查：服务器信息不完整");
-                        return false;
-                    }
-                    
-                    // 4. 检查是否正在进行重连操作
-                    if (_isReconnecting)
-                    {
-                        _logger?.LogTrace("连接状态检查：正在进行重连操作");
-                        return false;
-                    }
-                    
-                    // 5. 检查资源是否已释放
+
+                    // 2. 检查资源是否已释放
                     if (_disposed)
                     {
-                        _logger?.LogTrace("连接状态检查：资源已释放");
+                        _logger?.LogTrace("ConnectionManager连接状态检查：资源已释放");
                         return false;
                     }
-                    
-                    _logger?.LogTrace("连接状态检查：所有检查通过，连接正常");
-                    return true;
+
+                    // 3. 实时查询Socket客户端状态（确保准确性）
+                    bool socketConnected = _socketClient.IsConnected;
+
+                    // 4. 如果Socket状态与本地状态不一致，进行同步
+                    if (socketConnected != _isConnected)
+                    {
+                        _logger?.LogWarning("ConnectionManager状态不一致，正在同步: 本地状态={LocalState}, Socket状态={SocketState}", _isConnected, socketConnected);
+                        _isConnected = socketConnected;
+                        OnConnectionStateChanged(socketConnected);
+                    }
+
+                    // 5. 检查是否正在进行重连操作（重连期间认为未连接）
+                    if (_isReconnecting)
+                    {
+                        _logger?.LogTrace("ConnectionManager连接状态检查：正在进行重连操作");
+                        return false;
+                    }
+
+                    // 6. 检查服务器信息是否完整
+                    if (string.IsNullOrEmpty(_serverAddress) || _serverPort <= 0)
+                    {
+                        _logger?.LogTrace("ConnectionManager连接状态检查：服务器信息不完整");
+                        return false;
+                    }
+
+                    _logger?.LogTrace("ConnectionManager连接状态检查：所有检查通过，连接正常");
+                    return socketConnected;
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "检查连接状态时发生异常");
+                    _logger?.LogError(ex, "ConnectionManager检查连接状态时发生异常");
+                    // 在出现异常时，认为连接已断开
+                    if (_isConnected)
+                    {
+                        _isConnected = false;
+                        OnConnectionStateChanged(false);
+                    }
                     return false;
                 }
             }
@@ -176,12 +186,15 @@ namespace RUINORERP.UI.Network
             _logger?.LogDebug("收到Socket连接状态变更通知: {Connected}, 当前状态: {IsConnected}", connected, _isConnected);
 
             // 只有当状态真的变化时才更新
-            // 注意：这个事件可能在ConnectAsync调用期间被触发，需要避免重复设置
             bool currentState = _isConnected;
             if (currentState != connected)
             {
                 _logger?.LogDebug("更新连接状态: {OldState} -> {NewState}", currentState, connected);
+
+                // 先更新本地状态
                 _isConnected = connected;
+
+                // 触发状态变更事件
                 OnConnectionStateChanged(connected);
             }
             else
@@ -245,13 +258,24 @@ namespace RUINORERP.UI.Network
                 if (connected)
                 {
                     _logger?.LogDebug("Socket客户端连接成功，准备更新连接状态");
-                    // 先设置连接状态，确保事件触发时状态已同步
-                    _isConnected = true;
-                    OnConnectionStateChanged(true);
-                    _logger?.LogDebug("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
 
-                    // 停止可能存在的重连任务
-                    StopReconnectTask();
+                    // 验证Socket是否真的连接
+                    if (_socketClient.IsConnected)
+                    {
+                        // 更新连接状态
+                        _isConnected = true;
+                        OnConnectionStateChanged(true);
+                        _logger?.LogDebug("成功连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+
+                        // 停止可能存在的重连任务
+                        StopReconnectTask();
+                    }
+                    else
+                    {
+                        _logger?.LogWarning("Socket客户端返回连接成功，但IsConnected检查失败");
+                        _isConnected = false;
+                        OnConnectionStateChanged(false);
+                    }
                 }
                 else
                 {
@@ -591,36 +615,33 @@ namespace RUINORERP.UI.Network
 
         /// <summary>
         /// Socket连接关闭事件处理（优化版）
-        /// 避免重复触发重连，提高稳定性
+        /// 立即更新连接状态，避免延迟
         /// </summary>
         private void OnSocketClosed(EventArgs e)
         {
-            // 快速检查，避免不必要的锁操作
-            if (!_isConnected || _disposed)
-                return;
+            // 立即更新连接状态，不等待锁
+            // 使用volatile确保线程可见性
+            if (_isConnected)
+            {
+                _logger?.LogDebug("收到Socket关闭事件，立即更新连接状态为false");
+                _isConnected = false;
+                OnConnectionStateChanged(false);
+            }
 
             bool shouldStartReconnect = false;
-            
+
             lock (_reconnectStateLock)
             {
                 // 双重检查，确保线程安全
-                if (_isConnected && !_disposed)
+                if (!_isReconnecting && !_disposed && _config.AutoReconnect)
                 {
-                    _isConnected = false;
-                    OnConnectionStateChanged(false);
-                    _logger?.LogDebug("检测到连接已断开");
-
-                    // 检查是否应该启动重连
-                    shouldStartReconnect = _config.AutoReconnect && !_isReconnecting && !_disposed;
-                    
-                    if (shouldStartReconnect)
-                    {
-                        _logger?.LogDebug("启动自动重连机制");
-                    }
-                    else if (_isReconnecting)
-                    {
-                        _logger?.LogDebug("重连已在进行中，不重复启动");
-                    }
+                    shouldStartReconnect = true;
+                    _isReconnecting = true;
+                    _logger?.LogDebug("准备启动自动重连机制");
+                }
+                else if (_isReconnecting)
+                {
+                    _logger?.LogDebug("重连已在进行中，不重复启动");
                 }
             }
 
@@ -631,13 +652,18 @@ namespace RUINORERP.UI.Network
                 Task.Run(async () =>
                 {
                     await Task.Delay(_config.ReconnectDelayMs).ConfigureAwait(false);
-                    
+
                     // 再次检查连接状态，避免重复启动
                     lock (_reconnectStateLock)
                     {
-                        if (!_isConnected && !_isReconnecting && !_disposed)
+                        if (!_isConnected && _isReconnecting && !_disposed)
                         {
                             StartAutoReconnect();
+                        }
+                        else if (_isConnected)
+                        {
+                            _logger?.LogDebug("连接已恢复，取消重连");
+                            _isReconnecting = false;
                         }
                     }
                 }).ConfigureAwait(false);

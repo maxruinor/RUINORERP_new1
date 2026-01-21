@@ -228,7 +228,7 @@ namespace RUINORERP.UI
                 else
                 {
                     // 如果当前不是登录中状态且已连接，则断开连接
-                    if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.IsConnected)
+                    if (CurrentLoginStatus != LoginStatus.LoggingIn && communicationService != null && communicationService.ConnectionManager.IsConnected)
                     {
                         if (InvokeRequired)
                         {
@@ -2079,7 +2079,7 @@ namespace RUINORERP.UI
                     CurrentLoginStatus = LoginStatus.None;
 
                     // 检查是否与服务器连接，如果连接则断开
-                    if (communicationService != null && communicationService.IsConnected)
+                    if (communicationService != null && communicationService.ConnectionManager.IsConnected)
                     {
                         var disconnectResult = await communicationService.Disconnect();
                         logger?.LogInformation($"登录过程中断开连接结果: {disconnectResult}");
@@ -2100,7 +2100,7 @@ namespace RUINORERP.UI
                 CurrentLoginStatus = LoginStatus.None;
 
                 // 异常情况下断开连接
-                if (communicationService != null && communicationService.IsConnected)
+                if (communicationService != null && communicationService.ConnectionManager.IsConnected)
                 {
                     var disconnectResult = await communicationService.Disconnect();
                     logger?.LogInformation($"异常处理中断开连接结果: {disconnectResult}");
@@ -2129,7 +2129,7 @@ namespace RUINORERP.UI
                 Application.DoEvents();
 
                 // 登出完成，断开与服务器的连接
-                if (communicationService != null && communicationService.IsConnected)
+                if (communicationService != null && communicationService.ConnectionManager.IsConnected)
                 {
                     var disconnectResult = await communicationService.Disconnect();
                 }

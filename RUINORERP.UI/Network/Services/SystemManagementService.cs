@@ -86,7 +86,7 @@ namespace RUINORERP.UI.Network.Services
                     computerStatus.DiskUsage,
                     computerStatus.SystemUptime,
                     System.Windows.Forms.Application.ProductVersion,
-                    _communicationService.IsConnected ? "Connected" : "Disconnected"
+                    _communicationService.ConnectionManager.IsConnected ? "Connected" : "Disconnected"
                 );
 
                 _logger?.LogDebug("本地电脑状态信息已生成");

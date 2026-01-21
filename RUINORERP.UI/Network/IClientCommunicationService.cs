@@ -16,9 +16,9 @@ namespace RUINORERP.UI.Network
     public interface IClientCommunicationService : IDisposable
     {
         /// <summary>
-        /// 连接状态11
+        /// 连接管理器 - 提供连接状态管理
         /// </summary>
-        bool IsConnected { get; }
+        ConnectionManager ConnectionManager { get; }
 
         /// <summary>
         /// 连接到服务器
@@ -45,7 +45,7 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         Task<bool> Disconnect();
 
- 
+        /// <summary>
         /// 发送单向命令（不需要响应）
         /// </summary>
         /// <typeparam name="TRequest">请求数据类型</typeparam>

@@ -62,7 +62,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 验证连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _logger?.LogWarning("配置同步失败：未连接到服务器");
                     return false;

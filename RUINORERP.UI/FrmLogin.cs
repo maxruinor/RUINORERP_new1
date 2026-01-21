@@ -510,7 +510,7 @@ namespace RUINORERP.UI
                 MainForm.Instance.logger?.LogError(ex, "登录过程中发生异常");
 
                 // 异常情况下，断开连接
-                if (MainForm.Instance?.communicationService?.IsConnected == true)
+                if (MainForm.Instance?.communicationService?.ConnectionManager.IsConnected == true)
                 {
                     await MainForm.Instance.communicationService.Disconnect();
                     MainForm.Instance.CurrentLoginStatus = MainForm.LoginStatus.None;
@@ -579,7 +579,7 @@ namespace RUINORERP.UI
                 }
 
                 // 取消登录时，如果已连接则断开连接
-                if (MainForm.Instance?.communicationService?.IsConnected == true)
+                if (MainForm.Instance?.communicationService?.ConnectionManager.IsConnected == true)
                 {
                     // 使用异步断开连接，但设置超时以避免长时间等待
                     var disconnectTask = MainForm.Instance.communicationService.Disconnect();

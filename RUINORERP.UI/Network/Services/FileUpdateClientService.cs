@@ -82,7 +82,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _logger?.LogWarning("文件更新失败:未连接到服务器");
                     return FileUpdateResult.CreateFailure("未连接到服务器,请检查网络连接后重试");
@@ -202,7 +202,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _logger?.LogWarning("批量文件更新失败:未连接到服务器");
                     return FileBatchUpdateResult.CreateFailure("未连接到服务器,请检查网络连接后重试");

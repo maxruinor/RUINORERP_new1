@@ -393,7 +393,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _logger?.LogWarning("业务编码生成失败：未连接到服务器");
                     throw new Exception("未连接到服务器，请检查网络连接后重试");

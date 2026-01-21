@@ -96,7 +96,7 @@ namespace RUINORERP.UI.Network
         public string SessionID { get; set; }
         /// <summary>
         /// 获取客户端是否已连接到服务器
-        /// 增强版：更全面的连接状态检测
+        /// 增强版：直接检查Socket实时状态，确保状态准确性
         /// </summary>
         public bool IsConnected
         {
@@ -104,61 +104,91 @@ namespace RUINORERP.UI.Network
             {
                 try
                 {
-                    // 1. 快速检查基本状态标志
-                    if (!_isConnected || _client == null)
+                    // 1. 快速检查客户端和Socket实例
+                    if (_client == null || _client.Socket == null)
                     {
-                        _logger?.LogTrace("连接状态检查：基本状态标志为false");
+                        _logger?.LogTrace("连接状态检查：客户端或Socket实例为null");
                         return false;
                     }
-                    
-                    // 2. 检查Socket实例是否存在且已连接
-                    if (_client.Socket == null || !_client.Socket.Connected)
+
+                    // 2. 直接检查Socket.Connected属性
+                    bool socketConnected = _client.Socket.Connected;
+
+                    // 3. 如果Socket.Connected为true，进一步验证Socket可用性
+                    if (socketConnected)
                     {
-                        _logger?.LogTrace("连接状态检查：Socket不存在或未连接");
-                        return false;
-                    }
-                    
-                    // 3. 检查Socket是否可用 - 更可靠的检测方法
-                    try
-                    {
-                        // 检查Socket是否有挂起的错误
-                        int errorCode = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
-                        if (errorCode != 0)
+                        try
                         {
-                            _logger?.LogDebug("连接状态检查：检测到Socket错误，错误码: {ErrorCode}", errorCode);
-                            return false;
-                        }
-                        
-                        // 检查Socket是否可写（不发送数据，只检查状态）
-                        if (!_client.Socket.Poll(0, SelectMode.SelectWrite))
-                        {
-                            // 检查是否可读，如果可读但没有数据，则连接可能已关闭
-                            if (_client.Socket.Poll(0, SelectMode.SelectRead))
+                            // 检查Socket是否可写（不发送数据，只检查状态）
+                            if (!_client.Socket.Poll(0, SelectMode.SelectWrite))
                             {
-                                byte[] buffer = new byte[1];
-                                if (_client.Socket.Receive(buffer, SocketFlags.Peek) == 0)
+                                // 检查是否可读，如果可读但没有数据，则连接可能已关闭
+                                if (_client.Socket.Poll(0, SelectMode.SelectRead))
                                 {
-                                    _logger?.LogDebug("连接状态检查：检测到Socket已关闭（远程主机已关闭连接）");
-                                    return false;
+                                    byte[] buffer = new byte[1];
+                                    if (_client.Socket.Receive(buffer, SocketFlags.Peek) == 0)
+                                    {
+                                        _logger?.LogDebug("连接状态检查：检测到Socket已关闭（远程主机已关闭连接）");
+                                        // 立即更新本地状态
+                                        if (_isConnected)
+                                        {
+                                            _isConnected = false;
+                                            ConnectionStateChanged?.Invoke(false);
+                                        }
+                                        return false;
+                                    }
                                 }
                             }
+
+                            // 检查状态标志是否与Socket状态一致
+                            if (!_isConnected)
+                            {
+                                _logger?.LogWarning("连接状态检查：Socket.Connected=true但_isConnected=false，正在同步状态");
+                                _isConnected = true;
+                                ConnectionStateChanged?.Invoke(true);
+                            }
+
+                            _logger?.LogTrace("连接状态检查：Socket连接正常");
+                            return true;
+                        }
+                        catch (SocketException ex)
+                        {
+                            // Socket异常，认为连接已断开
+                            _logger?.LogDebug("连接状态检查：Socket状态检查异常: {ExceptionMessage}", ex.Message);
+                            // 立即更新本地状态
+                            if (_isConnected)
+                            {
+                                _isConnected = false;
+                                ConnectionStateChanged?.Invoke(false);
+                            }
+                            return false;
                         }
                     }
-                    catch (SocketException ex)
+                    else
                     {
-                        // Socket异常，认为连接已断开
-                        _logger?.LogDebug("连接状态检查：Socket状态检查异常: {ExceptionMessage}", ex.Message);
+                        // Socket.Connected为false
+                        _logger?.LogTrace("连接状态检查：Socket.Connected=false");
+
+                        // 立即更新本地状态
+                        if (_isConnected)
+                        {
+                            _logger?.LogDebug("连接状态检查：正在同步_isConnected状态为false");
+                            _isConnected = false;
+                            ConnectionStateChanged?.Invoke(false);
+                        }
+
                         return false;
                     }
-                    
-                    // 所有检查通过，认为连接正常
-                    _logger?.LogTrace("连接状态检查：所有检查通过，连接正常");
-                    return true;
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "检查连接状态时发生异常");
                     // 在出现异常时，认为连接已断开
+                    if (_isConnected)
+                    {
+                        _isConnected = false;
+                        ConnectionStateChanged?.Invoke(false);
+                    }
                     return false;
                 }
             }
@@ -247,19 +277,24 @@ namespace RUINORERP.UI.Network
 
                 if (connected)
                 {
-                    // 等待连接状态更新（最多等待500ms）
-                    for (int i = 0; i < 10 && !_isConnected; i++)
+                    // 立即检查Socket状态并设置连接状态
+                    // 不再依赖事件触发，直接根据Socket.Connected状态设置
+                    _isConnected = _client.Socket?.Connected == true;
+
+                    if (_isConnected)
                     {
-                        await Task.Delay(50, cancellationToken);
+                        _logger?.LogDebug("连接成功，已更新连接状态为true");
+                        ConnectionStateChanged?.Invoke(true);
+
+                        // 启动网络健康检查服务
+                        if (_healthCheckService == null)
+                        {
+                            InitializeHealthCheckService(serverUrl, port);
+                        }
                     }
-
-                    // 确保状态同步
-                    _isConnected = connected && _client.Socket?.Connected == true;
-
-                    // 启动网络健康检查服务
-                    if (_isConnected && _healthCheckService == null)
+                    else
                     {
-                        InitializeHealthCheckService(serverUrl, port);
+                        _logger?.LogWarning("EasyClient返回连接成功，但Socket.Connected为false");
                     }
 
                 }
@@ -438,13 +473,30 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 处理客户端连接事件 - 确保状态同步
+        /// 处理客户端连接事件
+        /// 仅用于确认连接状态，不作为主要的状态设置机制
         /// </summary>
         private void OnClientConnected(object sender, EventArgs e)
         {
-            _isConnected = true;
-            ConnectionStateChanged?.Invoke(true);
-            _logger?.LogDebug("底层Socket连接已建立");
+            // 如果当前已经是连接状态，则忽略
+            if (_isConnected)
+            {
+                _logger?.LogTrace("连接状态已为true，忽略OnClientConnected事件");
+                return;
+            }
+
+            // 验证Socket是否真的连接
+            if (_client?.Socket?.Connected == true)
+            {
+                _isConnected = true;
+                _logger?.LogDebug("通过OnClientConnected事件更新连接状态为true");
+                ConnectionStateChanged?.Invoke(true);
+                _logger?.LogDebug("底层Socket连接已建立");
+            }
+            else
+            {
+                _logger?.LogWarning("OnClientConnected事件触发，但Socket未连接");
+            }
         }
 
         /// <summary>
@@ -473,15 +525,22 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 处理客户端关闭事件 - 确保状态同步
+        /// 处理客户端关闭事件
+        /// 立即更新连接状态
         /// </summary>
         private void OnClientClosed(object sender, EventArgs e)
         {
+            // 立即更新连接状态，无论当前状态如何
             if (_isConnected)
             {
                 _isConnected = false;
+                _logger?.LogDebug("通过OnClientClosed事件更新连接状态为false");
                 ConnectionStateChanged?.Invoke(false);
                 _logger?.LogDebug("底层Socket连接已关闭");
+            }
+            else
+            {
+                _logger?.LogTrace("连接状态已为false，仅触发Closed事件");
             }
             Closed?.Invoke(e);
         }

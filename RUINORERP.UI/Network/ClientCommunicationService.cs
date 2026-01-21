@@ -252,17 +252,17 @@ namespace RUINORERP.UI.Network
         #region 公共属性
 
         /// <summary>
-        /// 获取当前连接状态 - 简化版，直接委托给ConnectionManager11
+        /// 连接管理器 - 提供连接状态管理
         /// </summary>
-        public bool IsConnected => _connectionManager.IsConnected;
+        public ConnectionManager ConnectionManager => _connectionManager;
 
         /// <summary>
-        /// 获取当前连接的服务器地址 - 简化版
+        /// 获取当前连接的服务器地址
         /// </summary>
         public string GetCurrentServerAddress() => _connectionManager.CurrentServerAddress;
 
         /// <summary>
-        /// 获取当前连接的服务器端口 - 简化版
+        /// 获取当前连接的服务器端口
         /// </summary>
         public int GetCurrentServerPort() => _connectionManager.CurrentServerPort;
 
@@ -2378,7 +2378,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 ct.ThrowIfCancellationRequested();
 
                 // 检查连接状态
-                if (!IsConnected)
+                if (!_connectionManager.IsConnected)
                 {
                     _logger.LogWarning("尝试发送单向命令但连接已断开，命令ID: {CommandId}", commandId);
 
@@ -2447,7 +2447,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 ct.ThrowIfCancellationRequested();
 
                 // 检查连接状态
-                if (!IsConnected)
+                if (!_connectionManager.IsConnected)
                 {
                     _logger.LogWarning("尝试发送响应但连接已断开，命令ID: {CommandId}", commandId);
                     return false;
@@ -2881,7 +2881,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             lock (_reconnectCoordinationLock)
             {
                 // 检查是否需要重连并避免重复触发
-                if (IsConnected || _isReconnecting || _isDisposed)
+                if (_connectionManager.IsConnected || _isReconnecting || _isDisposed)
                 {
                     return;
                 }
@@ -3041,7 +3041,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         }
 
                         // 检查连接状态（原子操作）
-                        bool isConnectedNow = IsConnected;
+                        bool isConnectedNow = _connectionManager.IsConnected;
                         if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列
@@ -3092,7 +3092,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                         }
 
                         // 检查连接状态（原子操作）
-                        bool isConnectedNow = IsConnected;
+                        bool isConnectedNow = _connectionManager.IsConnected;
                         if (!isConnectedNow)
                         {
                             // 连接仍然断开，重新加入队列

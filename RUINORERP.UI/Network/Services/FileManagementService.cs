@@ -210,7 +210,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("文件上传失败：未连接到服务器");
                     return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("未连接到服务器，请检查网络连接后重试");
@@ -290,7 +290,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("文件下载失败：未连接到服务器");
                     return FileDownloadResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
@@ -367,7 +367,7 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("文件删除失败：未连接到服务器");
                     return FileDeleteResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
@@ -449,7 +449,7 @@ namespace RUINORERP.UI.Network.Services
                 lockAcquired = true;
 
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("获取文件信息失败：未连接到服务器");
                     return FileInfoResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
@@ -527,7 +527,7 @@ namespace RUINORERP.UI.Network.Services
                 lockAcquired = true;
 
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("获取文件列表失败：未连接到服务器");
                     return FileListResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
@@ -600,7 +600,7 @@ namespace RUINORERP.UI.Network.Services
                 lockAcquired = true;
 
                 // 检查连接状态
-                if (!_communicationService.IsConnected)
+                if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("获取存储使用信息失败：未连接到服务器");
                     return new StorageUsageInfoData();

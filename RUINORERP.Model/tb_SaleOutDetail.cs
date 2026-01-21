@@ -158,7 +158,7 @@ namespace RUINORERP.Model
         /// 折扣
         /// </summary>
         [AdvQueryAttribute(ColName = "Discount",ColDesc = "折扣")] 
-        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 3,IsNullable = false,ColumnDescription = "折扣" )]
+        [SugarColumn(ColumnDataType = "decimal", SqlParameterDbType ="Decimal",  ColumnName = "Discount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "折扣" )]
         public decimal Discount
         { 
             get{return _Discount;}

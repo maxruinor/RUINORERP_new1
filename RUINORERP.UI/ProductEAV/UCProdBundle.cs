@@ -44,7 +44,7 @@ using static System.Drawing.Html.CssLength;
 namespace RUINORERP.UI.ProductEAV
 {
     [MenuAttrAssemblyInfo("套装组合", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料, BizType.套装组合)]
-    public partial class UCProdBundle : BaseBillEditGeneric<tb_ProdBundle, tb_ProdBundle>
+    public partial class UCProdBundle : BaseBillEditGeneric<tb_ProdBundle, tb_ProdBundleDetail>
     {
         public UCProdBundle()
         {

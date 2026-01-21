@@ -844,9 +844,16 @@ namespace RUINORERP.UI.BaseForm
                         BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
                         string PKColName = UIHelper.GetPrimaryKeyColName(typeof(M));
                         object PKValue = item.GetPropertyValue(PKColName);
-
-                        bool rs = await ctr.BaseDeleteByNavAsync(item as M);
-                        //bool rs = await ctr.BaseDeleteAsync(item);
+                        bool rs = false;
+                        //这个表特殊当时没有命名好
+                        if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
+                        {
+                            rs = await ctr.BaseDeleteByNavAsync(item as M);
+                        }
+                        else
+                        {
+                            rs = await ctr.BaseDeleteAsync(item as M);
+                        }
                         if (rs)
                         {
                             //删除远程图片及本地图片

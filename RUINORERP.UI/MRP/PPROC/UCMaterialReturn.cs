@@ -42,7 +42,7 @@ using RUINORERP.UI.Network.Services;
 namespace RUINORERP.UI.MRP.MP
 {
     [MenuAttrAssemblyInfo("生产退料单", ModuleMenuDefine.模块定义.生产管理, ModuleMenuDefine.生产管理.制程生产, BizType.生产退料单)]
-    public partial class UCMaterialReturn : BaseBillEditGeneric<tb_MaterialReturn, tb_MaterialReturn>
+    public partial class UCMaterialReturn : BaseBillEditGeneric<tb_MaterialReturn, tb_MaterialReturnDetail>
     {
         public UCMaterialReturn()
         {

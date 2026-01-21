@@ -221,6 +221,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
         /// <summary>
         /// 处理文件上传
+        /// 集成事务处理，确保文件保存、业务关联、HasAttachment同步的原子性
         /// </summary>
         private async Task<IResponse> HandleFileUploadAsync(FileUploadRequest uploadRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
@@ -235,112 +236,129 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传请求中未包含任何文件数据");
                 }
 
-                for (int i = 0; i < uploadRequest.FileStorageInfos.Count; i++)
+                // 开启事务
+                _unitOfWorkManage.BeginTran();
+                try
                 {
-                    var FileStorageInfo = uploadRequest.FileStorageInfos[i];
-                    #region 保存单文件 
-                    _logger?.Debug("处理文件[{Index}]：{FileName}", i + 1, FileStorageInfo.OriginalFileName);
-
-                    // 生成唯一文件名
-                    var fileId = Guid.NewGuid().ToString();
-                    var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName);
-                    //扩展名。看如何取好。原来名有没有带？
-                    var savedFileName = $"{fileId}{fileExtension}";
-
-                    // 根据分类和当前时间确定存储路径（按YYMM分目录）
-                    var fileCreateTime = DateTime.Now;
-                    var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString(), fileCreateTime);
-                    if (!Directory.Exists(categoryPath))
+                    for (int i = 0; i < uploadRequest.FileStorageInfos.Count; i++)
                     {
-                        Directory.CreateDirectory(categoryPath);
-                        _logger?.Debug("创建分类存储目录: {CategoryPath}", categoryPath);
-                    }
+                        var FileStorageInfo = uploadRequest.FileStorageInfos[i];
+                        #region 保存单文件 
+                        _logger?.Debug("处理文件[{Index}]：{FileName}", i + 1, FileStorageInfo.OriginalFileName);
 
-                    var filePath = Path.Combine(categoryPath, savedFileName);
-                    _logger?.Debug("文件将保存至: {FilePath}", filePath);
+                        // 生成唯一文件名
+                        var fileId = Guid.NewGuid().ToString();
+                        var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName);
+                        //扩展名。看如何取好。原来名有没有带？
+                        var savedFileName = $"{fileId}{fileExtension}";
 
-                    // 直接计算文件内容哈希值，无需保存后再计算
-                    var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
-                    _logger?.Debug("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
-
-                    // 保存文件
-                    await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
-                    _logger?.Debug("文件物理保存成功");
-
-                    // 将绝对路径转换为相对路径保存到数据库
-                    var relativeStoragePath = FileStorageHelper.ConvertToRelativePath(filePath);
-
-                    // 创建文件信息实体并保存到数据库
-                    var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
-                        FileStorageInfo.OriginalFileName,  // fileName
-                        FileStorageInfo.FileData.Length,   // fileSize
-                        fileExtension.TrimStart('.'),     // fileType
-                        relativeStoragePath,              // storagePath（保存相对路径）
-                        FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0, // businessType
-                        executionContext.UserId,          // userId
-                        contentHash);                     // contentHash (可选)
-
-                    // 设置哈希值（保持与旧代码兼容）
-                    fileStorageInfo.HashValue = contentHash;
-
-                    // 保存文件信息到数据库
-                    var saveResult = await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
-                    if (!saveResult.Succeeded)
-                    {
-                        _logger?.LogWarning("文件信息保存到数据库失败: {FileName}, 错误: {Error}",
-                            FileStorageInfo.OriginalFileName, saveResult.ErrorMsg);
-                        continue;
-                    }
-
-                    responseData.FileStorageInfos.Add(saveResult.ReturnObject);
-                    _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
-
-                    // 在服务器端创建业务关联
-                    if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.BusinessType.HasValue)
-                    {
-                        var businessRelation = new tb_FS_BusinessRelation
+                        // 根据分类和当前时间确定存储路径（按YYMM分目录）
+                        var fileCreateTime = DateTime.Now;
+                        var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString(), fileCreateTime);
+                        if (!Directory.Exists(categoryPath))
                         {
-                            BusinessType = uploadRequest.BusinessType.Value,
-                            BusinessNo = uploadRequest.BusinessNo,
-                            BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
-                            FileId = fileStorageInfo.FileId,
-                            IsMainFile = (i == 0), // 第一个文件为主文件
-                            RelatedField = uploadRequest.RelatedField ?? "MainFile", // 设置关联字段，必填项
-                            IsDetailTable = uploadRequest.IsDetailTable, // 新增:是否明细表
-                            DetailId = uploadRequest.DetailId, // 新增:明细表主键
-                            Created_at = DateTime.Now,
-                            Created_by = uploadRequest.Created_by ?? executionContext.UserId
-                        };
-
-                        // 保存业务关联
-                        var relationResult = await _businessRelationController.SaveOrUpdate(businessRelation);
-                        if (!relationResult.Succeeded)
-                        {
-                            _logger?.LogWarning("业务关联保存失败: {FileName}, 错误: {Error}",
-                                FileStorageInfo.OriginalFileName, relationResult.ErrorMsg);
+                            Directory.CreateDirectory(categoryPath);
+                            _logger?.Debug("创建分类存储目录: {CategoryPath}", categoryPath);
                         }
-                        else
-                        {
-                            _logger?.Debug("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessId={BusinessId}, BusinessType={BusinessType}, RelatedField={RelatedField}",
-                                fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.BusinessType.Value, uploadRequest.RelatedField);
 
-                            // 同步HasAttachment标志
-                            if (_hasAttachmentSyncService != null && uploadRequest.BusinessType.HasValue && uploadRequest.BusinessId.HasValue)
+                        var filePath = Path.Combine(categoryPath, savedFileName);
+                        _logger?.Debug("文件将保存至: {FilePath}", filePath);
+
+                        // 直接计算文件内容哈希值，无需保存后再计算
+                        var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
+                        _logger?.Debug("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
+
+                        // 保存文件
+                        await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
+                        _logger?.Debug("文件物理保存成功");
+
+                        // 将绝对路径转换为相对路径保存到数据库
+                        var relativeStoragePath = FileStorageHelper.ConvertToRelativePath(filePath);
+
+                        // 创建文件信息实体并保存到数据库
+                        var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
+                            FileStorageInfo.OriginalFileName,  // fileName
+                            FileStorageInfo.FileData.Length,   // fileSize
+                            fileExtension.TrimStart('.'),     // fileType
+                            relativeStoragePath,              // storagePath（保存相对路径）
+                            FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0, // businessType
+                            executionContext.UserId,          // userId
+                            contentHash);                     // contentHash (可选)
+
+                        // 设置哈希值（保持与旧代码兼容）
+                        fileStorageInfo.HashValue = contentHash;
+
+                        // 保存文件信息到数据库
+                        var saveResult = await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
+                        if (!saveResult.Succeeded)
+                        {
+                            _logger?.LogWarning("文件信息保存到数据库失败: {FileName}, 错误: {Error}",
+                                FileStorageInfo.OriginalFileName, saveResult.ErrorMsg);
+                            continue;
+                        }
+
+                        responseData.FileStorageInfos.Add(saveResult.ReturnObject);
+                        _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
+
+                        // 在服务器端创建业务关联
+                        if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.BusinessType.HasValue)
+                        {
+                            var businessRelation = new tb_FS_BusinessRelation
                             {
-                                await _hasAttachmentSyncService.SyncOnFileUploadAsync(
-                                    uploadRequest.BusinessType.Value,
-                                    uploadRequest.BusinessId.Value,
-                                    uploadRequest.BusinessNo);
+                                BusinessType = uploadRequest.BusinessType.Value,
+                                BusinessNo = uploadRequest.BusinessNo,
+                                BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
+                                FileId = fileStorageInfo.FileId,
+                                IsMainFile = (i == 0), // 第一个文件为主文件
+                                RelatedField = uploadRequest.RelatedField ?? "MainFile", // 设置关联字段，必填项
+                                IsDetailTable = uploadRequest.IsDetailTable, // 新增:是否明细表
+                                DetailId = uploadRequest.DetailId, // 新增:明细表主键
+                                Created_at = DateTime.Now,
+                                Created_by = uploadRequest.Created_by ?? executionContext.UserId
+                            };
+
+                            // 保存业务关联
+                            var relationResult = await _businessRelationController.SaveOrUpdate(businessRelation);
+                            if (!relationResult.Succeeded)
+                            {
+                                _logger?.LogWarning("业务关联保存失败: {FileName}, 错误: {Error}",
+                                    FileStorageInfo.OriginalFileName, relationResult.ErrorMsg);
+                            }
+                            else
+                            {
+                                _logger?.Debug("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessId={BusinessId}, BusinessType={BusinessType}, RelatedField={RelatedField}",
+                                    fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.BusinessType.Value, uploadRequest.RelatedField);
+
+                                // 同步HasAttachment标志（在事务内执行）
+                                if (_hasAttachmentSyncService != null && uploadRequest.BusinessType.HasValue && uploadRequest.BusinessId.HasValue)
+                                {
+                                    await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                                        uploadRequest.BusinessType.Value,
+                                        uploadRequest.BusinessId.Value,
+                                        uploadRequest.BusinessNo,
+                                        cancellationToken,
+                                        useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                                }
                             }
                         }
+
+                        #endregion
                     }
 
-                    #endregion
+                    // 提交事务
+                    _unitOfWorkManage.CommitTran();
+
+                    responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
+                    _logger?.Debug("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
+                    responseData.IsSuccess = true;
+                    return responseData;
                 }
-                responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
-                _logger?.Debug("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
-                responseData.IsSuccess = true;
-                return responseData;
+                catch (Exception ex)
+                {
+                    // 回滚事务
+                    _unitOfWorkManage.RollbackTran();
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -762,6 +780,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         ///    - PhysicalDelete=false：逻辑删除（标记文件状态为已删除）
         /// 2. 如果有别的业务引用文件，则只删除关联记录
         /// 所有数据库操作逻辑都在服务器端处理
+        /// 集成事务处理，确保删除操作的原子性
         /// </summary>
         private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
@@ -773,23 +792,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return FileDeleteResponse.CreateFailure("文件删除请求中未包含任何文件信息");
                 }
 
-                //定义一个要删除的关联列表
-                var relationsToDelete = new List<tb_FS_BusinessRelation>();
-
-                //定义一个要删除的文件列表
-                var filesToDelete = new List<tb_FS_FileStorageInfo>();
-
-                // 记录删除结果
-                var deletedFileIds = new List<string>();
-                var deletedCount = 0;
-                var relationDeletedCount = 0;
-
-                var response = new FileDeleteResponse
+                // 开启事务
+                _unitOfWorkManage.BeginTran();
+                try
                 {
-                    IsSuccess = true,
-                    DeletedFileIds = deletedFileIds,
-                    Message = ""
-                };
+                    //定义一个要删除的关联列表
+                    var relationsToDelete = new List<tb_FS_BusinessRelation>();
+
+                    //定义一个要删除的文件列表
+                    var filesToDelete = new List<tb_FS_FileStorageInfo>();
+
+                    // 记录删除结果
+                    var deletedFileIds = new List<string>();
+                    var deletedCount = 0;
+                    var relationDeletedCount = 0;
+
+                    var response = new FileDeleteResponse
+                    {
+                        IsSuccess = true,
+                        DeletedFileIds = deletedFileIds,
+                        Message = ""
+                    };
 
                 // 遍历处理每个文件
                 for (int i = 0; i < deleteRequest.FileStorageInfos.Count; i++)
@@ -1048,41 +1071,53 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 response.DeletedFileIds = deletedFileIds;
 
-                // 同步HasAttachment标志（在删除关联后）
-                // 从关联记录中获取BusinessType和BusinessId（用于单据级别的HasAttachment同步）
-                if (relationDeletedCount > 0 && _hasAttachmentSyncService != null && relationsToDelete.Count > 0)
-                {
-                    // 获取第一个关联记录的BusinessType和BusinessId
-                    var firstRelation = relationsToDelete.FirstOrDefault();
-                    if (firstRelation != null)
+                    // 同步HasAttachment标志（在删除关联后，事务内执行）
+                    // 从关联记录中获取BusinessType和BusinessId（用于单据级别的HasAttachment同步）
+                    if (relationDeletedCount > 0 && _hasAttachmentSyncService != null && relationsToDelete.Count > 0)
                     {
-                        await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
-                            firstRelation.BusinessType,
-                            firstRelation.BusinessId);
+                        // 获取第一个关联记录的BusinessType和BusinessId
+                        var firstRelation = relationsToDelete.FirstOrDefault();
+                        if (firstRelation != null)
+                        {
+                            await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
+                                firstRelation.BusinessType,
+                                firstRelation.BusinessId,
+                                cancellationToken,
+                                useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                        }
                     }
-                }
 
-                // 设置响应消息
-                if (relationDeletedCount > 0)
-                {
-                    if (deletedCount > 0)
+                    // 提交事务
+                    _unitOfWorkManage.CommitTran();
+
+                    // 设置响应消息
+                    if (relationDeletedCount > 0)
                     {
-                        // 根据删除请求中是否包含物理删除，调整响应消息
-                        string deleteTypeDesc = deleteRequest.PhysicalDelete ? "物理删除" : "逻辑删除";
-                        response.Message = $"文件处理完成，成功{deleteTypeDesc} {deletedCount} 个文件，删除 {relationDeletedCount} 个业务关联";
+                        if (deletedCount > 0)
+                        {
+                            // 根据删除请求中是否包含物理删除，调整响应消息
+                            string deleteTypeDesc = deleteRequest.PhysicalDelete ? "物理删除" : "逻辑删除";
+                            response.Message = $"文件处理完成，成功{deleteTypeDesc} {deletedCount} 个文件，删除 {relationDeletedCount} 个业务关联";
+                        }
+                        else
+                        {
+                            response.Message = $"业务关联删除成功，共删除 {relationDeletedCount} 个关联记录";
+                        }
                     }
                     else
                     {
-                        response.Message = $"业务关联删除成功，共删除 {relationDeletedCount} 个关联记录";
+                        response.Message = "未找到或未能删除任何业务关联记录";
+                        _logger?.LogWarning("未找到或未能删除任何业务关联记录");
                     }
-                }
-                else
-                {
-                    response.Message = "未找到或未能删除任何业务关联记录";
-                    _logger?.LogWarning("未找到或未能删除任何业务关联记录");
-                }
 
-                return response;
+                    return response;
+                }
+                catch (Exception ex)
+                {
+                    // 回滚事务
+                    _unitOfWorkManage.RollbackTran();
+                    throw;
+                }
             }
             catch (Exception ex)
             {

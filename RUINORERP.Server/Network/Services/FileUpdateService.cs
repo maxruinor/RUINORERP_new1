@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using RUINORERP.Business;
 using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.ConfigModel;
@@ -30,6 +31,7 @@ namespace RUINORERP.Server.Network.Services
         private readonly ServerGlobalConfig _serverConfig;
         private readonly SemaphoreSlim _updateLock = new SemaphoreSlim(1, 1);
         private readonly HasAttachmentSyncService _hasAttachmentSyncService;
+        private readonly tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> _fileVersionController;
 
         /// <summary>
         /// 构造函数
@@ -38,12 +40,14 @@ namespace RUINORERP.Server.Network.Services
             IUnitOfWorkManage unitOfWorkManage,
             ILogger<FileUpdateService> logger,
             ServerGlobalConfig serverConfig,
-            HasAttachmentSyncService hasAttachmentSyncService = null)
+            HasAttachmentSyncService hasAttachmentSyncService = null,
+            tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileVersionController = null)
         {
             _unitOfWorkManage = unitOfWorkManage;
             _logger = logger;
             _serverConfig = serverConfig;
             _hasAttachmentSyncService = hasAttachmentSyncService;
+            _fileVersionController = fileVersionController;
         }
 
         /// <summary>
@@ -59,6 +63,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="userId">操作用户ID</param>
         /// <param name="isDetailTable">是否明细表</param>
         /// <param name="detailId">明细表ID</param>
+        /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         /// <returns>更新后的文件信息</returns>
         public async Task<(tb_FS_FileStorageInfo newFileInfo, tb_FS_BusinessRelation newRelation, List<tb_FS_FileStorageInfo> oldFiles)> UpdateBusinessFileAsync(
             int businessType,
@@ -70,7 +75,8 @@ namespace RUINORERP.Server.Network.Services
             UpdateStrategy strategy = UpdateStrategy.AppendOnly,
             long? userId = null,
             bool isDetailTable = false,
-            long? detailId = null)
+            long? detailId = null,
+            bool enableVersioning = false)
         {
             if (!await _updateLock.WaitAsync(TimeSpan.FromMinutes(5)))
             {
@@ -102,7 +108,7 @@ namespace RUINORERP.Server.Network.Services
                     switch (strategy)
                     {
                         case UpdateStrategy.Replace:
-                            await HandleReplaceStrategyAsync(db, currentRelations, userId);
+                            await HandleReplaceStrategyAsync(db, currentRelations, userId, enableVersioning);
                             break;
 
                         case UpdateStrategy.Overwrite:
@@ -167,6 +173,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="userId">操作用户ID</param>
         /// <param name="isDetailTable">是否明细表</param>
         /// <param name="detailId">明细表ID</param>
+        /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         /// <returns>更新结果</returns>
         public async Task<FileBatchUpdateResult> BatchUpdateBusinessFilesAsync(
             int businessType,
@@ -177,7 +184,8 @@ namespace RUINORERP.Server.Network.Services
             UpdateStrategy strategy = UpdateStrategy.AppendOnly,
             long? userId = null,
             bool isDetailTable = false,
-            long? detailId = null)
+            long? detailId = null,
+            bool enableVersioning = false)
         {
             var result = new FileBatchUpdateResult();
             var oldFiles = new List<tb_FS_FileStorageInfo>();
@@ -211,7 +219,7 @@ namespace RUINORERP.Server.Network.Services
                     switch (strategy)
                     {
                         case UpdateStrategy.Replace:
-                            await HandleReplaceStrategyAsync(db, currentRelations, userId);
+                            await HandleReplaceStrategyAsync(db, currentRelations, userId, enableVersioning);
                             break;
 
                         case UpdateStrategy.Overwrite:
@@ -289,23 +297,45 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 处理替换策略 - 保留历史版本,更新关联到新文件
+        /// 1. 保存旧文件版本信息（如果启用版本控制）
+        /// 2. 将旧关联标记为不活跃
+        /// 3. 创建新文件和新关联
         /// </summary>
+        /// <param name="db">数据库客户端</param>
+        /// <param name="currentRelations">当前关联列表</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         private async Task HandleReplaceStrategyAsync(
             ISqlSugarClient db,
             List<tb_FS_BusinessRelation> currentRelations,
-            long? userId)
+            long? userId,
+            bool enableVersioning = false)
         {
             foreach (var relation in currentRelations)
             {
-                // 将旧关联标记为不活跃,但保留记录
-                relation.IsActive = false;
-                relation.Modified_at = DateTime.Now;
-                relation.Modified_by = userId;
-                await db.Updateable(relation).ExecuteCommandAsync();
+                try
+                {
+                    // 1. 如果有版本控制器且启用版本控制，保存旧文件版本信息
+                    if (_fileVersionController != null && relation.tb_fs_filestorageinfo != null)
+                    {
+                        await SaveFileVersionAsync(relation.tb_fs_filestorageinfo.FileId, "文件更新替换", userId, enableVersioning);
+                    }
 
-                _logger.Debug(
-                    "已标记旧关联为不活跃,RelationId: {RelationId}, FileId: {FileId}",
-                    relation.RelationId, relation.FileId);
+                    // 2. 将旧关联标记为不活跃,但保留记录
+                    relation.IsActive = false;
+                    relation.Modified_at = DateTime.Now;
+                    relation.Modified_by = userId;
+                    await db.Updateable(relation).ExecuteCommandAsync();
+
+                    _logger?.Debug(
+                        "已标记旧关联为不活跃{VersionControl},RelationId: {RelationId}, FileId: {FileId}",
+                        enableVersioning ? "并保存版本" : "", relation.RelationId, relation.FileId);
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "处理替换策略失败,RelationId: {RelationId}", relation.RelationId);
+                    // 继续处理其他关联，不抛出异常
+                }
             }
         }
 
@@ -522,6 +552,202 @@ namespace RUINORERP.Server.Network.Services
             {
                 _logger.LogError(ex, "获取文件版本历史失败");
                 return new List<FileVersionHistory>();
+            }
+        }
+
+        /// <summary>
+        /// 保存文件版本记录
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <param name="updateReason">更新原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
+        /// <returns>是否保存成功</returns>
+        private async Task<bool> SaveFileVersionAsync(long fileId, string updateReason, long? userId, bool enableVersioning = false)
+        {
+            try
+            {
+                // 如果未启用版本控制，直接返回成功
+                if (!enableVersioning)
+                {
+                    _logger?.Debug("文件 {FileId} 未启用版本控制，跳过版本保存", fileId);
+                    return false;
+                }
+
+                if (_fileVersionController == null)
+                {
+                    _logger?.Debug("文件版本控制器未注入，跳过版本保存");
+                    return false;
+                }
+
+                // 创建版本记录
+                var fileVersion = new tb_FS_FileStorageVersion
+                {
+                    FileId = fileId,
+                    VersionNo = 0, // 0表示自动计算版本号
+                    UpdateReason = updateReason,
+                    Modified_at = DateTime.Now,
+                    Modified_by = userId
+                };
+
+                // 使用FileManagementHelper保存版本（包含自动版本号计算、旧版本清理等逻辑）
+                var result = await FileManagementHelper.SaveFileStorageVersionAsync(
+                    fileVersion,
+                    _fileVersionController,
+                    null, // 文件存储控制器不需要，因为版本已存在
+                    maxVersions: 10, // 默认保留最近10个版本
+                    logger: _logger);
+
+                if (result)
+                {
+                    _logger?.Debug("文件版本保存成功,FileId: {FileId}", fileId);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "保存文件版本失败,FileId: {FileId}", fileId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 恢复文件到指定版本
+        /// </summary>
+        /// <param name="businessType">业务类型</param>
+        /// <param name="businessId">业务ID</param>
+        /// <param name="relatedField">关联字段</param>
+        /// <param name="versionFileId">要恢复的版本文件ID</param>
+        /// <param name="userId">用户ID</param>
+        /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
+        /// <returns>恢复结果</returns>
+        public async Task<bool> RestoreFileVersionAsync(
+            int businessType,
+            long businessId,
+            string relatedField,
+            long versionFileId,
+            long? userId,
+            bool enableVersioning = false)
+        {
+            try
+            {
+                if (!await _updateLock.WaitAsync(TimeSpan.FromMinutes(5)))
+                {
+                    throw new TimeoutException("文件恢复操作繁忙,请稍后重试");
+                }
+
+                var db = _unitOfWorkManage.GetDbClient();
+
+                // 1. 查询当前活跃的关联
+                var currentRelations = await db.Queryable<tb_FS_BusinessRelation>()
+                    .Where(r => r.BusinessType == businessType)
+                    .Where(r => r.BusinessId == businessId)
+                    .Where(r => r.RelatedField == relatedField)
+                    .Where(r => r.IsActive == true)
+                    .Where(r => r.isdeleted == false)
+                    .Includes(r => r.tb_fs_filestorageinfo)
+                    .ToListAsync();
+
+                if (currentRelations.Count == 0)
+                {
+                    _logger.Warning("未找到当前活跃的文件关联,无法恢复");
+                    return false;
+                }
+
+                // 2. 查询要恢复的版本文件信息
+                var versionFileInfo = await db.Queryable<tb_FS_FileStorageInfo>()
+                    .Where(f => f.FileId == versionFileId && f.isdeleted == false)
+                    .FirstAsync();
+
+                if (versionFileInfo == null)
+                {
+                    _logger.Warning("指定的版本文件不存在,FileId: {FileId}", versionFileId);
+                    return false;
+                }
+
+                // 3. 保存当前文件为版本（用于后续回退）
+                foreach (var currentRelation in currentRelations)
+                {
+                    if (currentRelation.tb_fs_filestorageinfo != null)
+                    {
+                        await SaveFileVersionAsync(
+                            currentRelation.tb_fs_filestorageinfo.FileId,
+                            "版本恢复前的当前版本",
+                            userId,
+                            enableVersioning);
+
+                        // 标记当前关联为不活跃
+                        currentRelation.IsActive = false;
+                        currentRelation.Modified_at = DateTime.Now;
+                        currentRelation.Modified_by = userId;
+                        await db.Updateable(currentRelation).ExecuteCommandAsync();
+                    }
+                }
+
+                // 4. 创建新的关联指向要恢复的版本文件
+                var newRelation = new tb_FS_BusinessRelation
+                {
+                    FileId = versionFileId,
+                    BusinessType = businessType,
+                    BusinessId = businessId,
+                    RelatedField = relatedField,
+                    IsActive = true,
+                    VersionNo = versionFileInfo.CurrentVersion ?? 1,
+                    IsMainFile = true,
+                    Created_at = DateTime.Now,
+                    Created_by = userId,
+                    Modified_at = DateTime.Now,
+                    Modified_by = userId
+                };
+
+                await db.Insertable(newRelation).ExecuteCommandAsync();
+
+                // 5. 保存新版本记录（如果启用版本控制）
+                if (enableVersioning)
+                {
+                    await SaveFileVersionAsync(versionFileId, $"恢复到版本 {versionFileInfo.CurrentVersion}", userId, enableVersioning);
+                }
+
+                _logger.LogInformation(
+                    "文件版本恢复成功,BusinessId: {BusinessId}, RelatedField: {RelatedField}, RestoredFileId: {FileId}",
+                    businessId, relatedField, versionFileId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "文件版本恢复失败");
+                return false;
+            }
+            finally
+            {
+                _updateLock.Release();
+            }
+        }
+
+        /// <summary>
+        /// 检查文件是否启用版本控制
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>是否启用版本控制</returns>
+        public async Task<bool> IsVersioningEnabledAsync(long fileId)
+        {
+            try
+            {
+                if (_fileVersionController == null)
+                {
+                    return false;
+                }
+
+                // 检查是否存在版本记录
+                var versions = await _fileVersionController.QueryByNavAsync(v => v.FileId == fileId && v.isdeleted == false);
+                return versions != null && versions.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查版本控制状态失败，FileId: {FileId}", fileId);
+                return false;
             }
         }
     }

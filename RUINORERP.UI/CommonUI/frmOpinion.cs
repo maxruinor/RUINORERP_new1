@@ -175,7 +175,7 @@ namespace RUINORERP.UI.CommonUI
                     string filePath = files[0];
                     if (IsValidImageFile(filePath))
                     {
-                        picBoxAttachment.Image = RUINORERP.UI.Common.ImageHelper.GetImage(filePath, 800, 600);
+                        picBoxAttachment.Image = ImageHelper.GetImage(filePath, 800, 600);
                     }
                     else
                     {

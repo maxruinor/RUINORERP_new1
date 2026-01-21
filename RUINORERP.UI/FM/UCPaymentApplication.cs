@@ -273,7 +273,7 @@ namespace RUINORERP.UI.FM
                 try
                 {
                     byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    magicPictureBox1.Image = ImageHelper.ByteArrayToImage(img);
                     magicPictureBox1.Visible = true;
                 }
                 catch (Exception ex)
@@ -512,7 +512,7 @@ namespace RUINORERP.UI.FM
                         //{
                         //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
                         //    frmPictureViewer pictureViewer = new frmPictureViewer();
-                        //    pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                        //    pictureViewer.PictureBoxViewer.Image = ImageHelper.byteArrayToImage(img);
                         //    pictureViewer.ShowDialog();
                         //}
                         //catch (Exception ex)

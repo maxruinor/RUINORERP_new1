@@ -121,8 +121,29 @@ namespace RUINORERP.UI.Network.Services
                 // 执行上传
                 var response = await fileService.UploadFileAsync(uploadRequest);
 
+                // 检查响应是否为空
+                if (response == null)
+                {
+                    _logger?.LogError("上传图片失败：服务器返回了空的响应数据");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据，请联系系统管理员");
+                }
+
+                // 检查响应是否成功
+                if (!response.IsSuccess)
+                {
+                    _logger?.LogError($"上传图片失败: {response.ErrorMessage}");
+                    return response;
+                }
+
+                // 检查 FileStorageInfos 是否为空
+                if (response.FileStorageInfos == null)
+                {
+                    _logger?.LogError("上传图片失败：服务器返回的响应中 FileStorageInfos 为空");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回的响应数据不完整，请联系系统管理员");
+                }
+
                 // 如果上传成功，创建业务关联
-                if (response.IsSuccess && response.FileStorageInfos.Count > 0)
+                if (response.FileStorageInfos.Count > 0)
                 {
                     // 获取业务关联服务
                     var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();

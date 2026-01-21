@@ -10,12 +10,19 @@ using System.Web;
 
 namespace RUINORERP.Common.Helper
 {
-
     /// <summary>
-    /// Í¼Æ¬´¦Àí°ïÖúÀà
+    /// å›¾ç‰‡å¤„ç†å¸®åŠ©ç±» - ç»Ÿä¸€ç‰ˆæœ¬
+    /// æ•´åˆäº†HLH.Lib.Draw.ImageHelperã€RUINORERP.Common.Helper.ImageHelperã€RUINORERP.UI.Common.ImageHelperçš„æ‰€æœ‰åŠŸèƒ½
     /// </summary>
     public class ImageHelper
     {
+        #region å“ˆå¸Œè®¡ç®—
+
+        /// <summary>
+        /// è®¡ç®—å›¾ç‰‡æ–‡ä»¶çš„å“ˆå¸Œå€¼(MD5)
+        /// </summary>
+        /// <param name="filePath">å›¾ç‰‡æ–‡ä»¶è·¯å¾„</param>
+        /// <returns>MD5å“ˆå¸Œå­—ç¬¦ä¸²(å°å†™,æ— è¿å­—ç¬¦)</returns>
         public static string GetImageHash(string filePath)
         {
             using (var md5 = MD5.Create())
@@ -28,23 +35,64 @@ namespace RUINORERP.Common.Helper
             }
         }
 
-        public static string GetImageHash(Image image)
+        /// <summary>
+        /// è®¡ç®—å›¾ç‰‡å¯¹è±¡çš„å“ˆå¸Œå€¼(MD5)
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>MD5å“ˆå¸Œå­—ç¬¦ä¸²(å°å†™,æ— è¿å­—ç¬¦),å¦‚æœå›¾ç‰‡ä¸ºnullè¿”å›ç©ºå­—ç¬¦ä¸²</returns>
+        public static string GetImageHash(Image img)
         {
-            if (image == null)
+            if (img == null)
             {
                 return string.Empty;
             }
-            using (var md5 = MD5.Create())
-            {
-                byte[] imageBytes = ConvertImageToByteEx(image);
-                // ¼ÆËã hash
-                var hashBytes = md5.ComputeHash(imageBytes);
-                // ½« byte Êı×é×ª»»Îª×Ö·û´®
-                return BitConverter.ToString(hashBytes).Replace("-", String.Empty).ToLowerInvariant();
+            byte[] bytes = ConvertImageToByteEx(img);
+            return GenerateHash(bytes);
+        }
 
+        /// <summary>
+        /// è®¡ç®—å­—èŠ‚æ•°ç»„çš„å“ˆå¸Œå€¼(MD5)
+        /// </summary>
+        /// <param name="data">å­—èŠ‚æ•°ç»„</param>
+        /// <returns>MD5å“ˆå¸Œå­—ç¬¦ä¸²(å°å†™,æ— è¿å­—ç¬¦)</returns>
+        public static string GenerateHash(byte[] data)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(data)).Replace("-", "").ToLowerInvariant();
             }
         }
 
+        /// <summary>
+        /// è®¡ç®—æµçš„å“ˆå¸Œå€¼(MD5)
+        /// </summary>
+        /// <param name="stream">æ•°æ®æµ</param>
+        /// <returns>MD5å“ˆå¸Œå­—ç¬¦ä¸²(å°å†™,æ— è¿å­—ç¬¦)</returns>
+        public static string GenerateHash(Stream stream)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                return BitConverter.ToString(md5.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        /// <summary>
+        /// æ¯”è¾ƒä¸¤ä¸ªå“ˆå¸Œå€¼æ˜¯å¦ç›¸ç­‰(ä¸åŒºåˆ†å¤§å°å†™)
+        /// </summary>
+        /// <param name="hash1">å“ˆå¸Œå€¼1</param>
+        /// <param name="hash2">å“ˆå¸Œå€¼2</param>
+        /// <returns>ç›¸ç­‰è¿”å›true,å¦åˆ™è¿”å›false</returns>
+        public static bool AreHashesEqual(string hash1, string hash2)
+        {
+            return hash1.Equals(hash2, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// æ¯”è¾ƒä¸¤ä¸ªå›¾ç‰‡æ–‡ä»¶æ˜¯å¦ç›¸åŒ(é€šè¿‡å“ˆå¸Œå€¼)
+        /// </summary>
+        /// <param name="filePath1">æ–‡ä»¶1è·¯å¾„</param>
+        /// <param name="filePath2">æ–‡ä»¶2è·¯å¾„</param>
+        /// <returns>ç›¸åŒè¿”å›true,å¦åˆ™è¿”å›false</returns>
         public static bool AreImagesEqual(string filePath1, string filePath2)
         {
             var hash1 = GetImageHash(filePath1);
@@ -52,6 +100,39 @@ namespace RUINORERP.Common.Helper
             return hash1 == hash2;
         }
 
+        #endregion
+
+        #region å›¾ç‰‡ä¸å­—èŠ‚æ•°ç»„è½¬æ¢
+
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„(GIFæ ¼å¼)
+        /// </summary>
+        /// <param name="imageIn">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>å­—èŠ‚æ•°ç»„</returns>
+        public static byte[] ImageToByteArray(Image imageIn)
+        {
+            MemoryStream ms = new MemoryStream();
+            imageIn.Save(ms, ImageFormat.Gif);
+            return ms.ToArray();
+        }
+
+        /// <summary>
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºå›¾ç‰‡
+        /// </summary>
+        /// <param name="byteArrayIn">å­—èŠ‚æ•°ç»„</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡</returns>
+        public static Image ByteArrayToImage(byte[] byteArrayIn)
+        {
+            MemoryStream ms = new MemoryStream(byteArrayIn);
+            Image returnImage = Image.FromStream(ms);
+            return returnImage;
+        }
+
+        /// <summary>
+        /// ä»å­—èŠ‚æ•°ç»„è·å–å›¾ç‰‡
+        /// </summary>
+        /// <param name="bytes">å­—èŠ‚æ•°ç»„</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡</returns>
         public Image GetImageByBytes(byte[] bytes)
         {
             Image photo = null;
@@ -59,13 +140,15 @@ namespace RUINORERP.Common.Helper
             {
                 ms.Write(bytes, 0, bytes.Length);
                 photo = Image.FromStream(ms, true);
-
             }
             return photo;
         }
 
-
-
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„(BMPæ ¼å¼)
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>å­—èŠ‚æ•°ç»„,å¦‚æœå›¾ç‰‡ä¸ºnullè¿”å›null</returns>
         public byte[] GetByteImage(Image img)
         {
             byte[] bt = null;
@@ -74,24 +157,20 @@ namespace RUINORERP.Common.Helper
                 using (MemoryStream mostream = new MemoryStream())
                 {
                     Bitmap bmp = new Bitmap(img);
-                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);//½«Í¼ÏñÒÔÖ¸¶¨µÄ¸ñÊ½´æÈë»º´æÄÚ´æÁ÷
+                    bmp.Save(mostream, System.Drawing.Imaging.ImageFormat.Bmp);
                     bt = new byte[mostream.Length];
-                    mostream.Position = 0;//ÉèÖÃÁôµÄ³õÊ¼Î»ÖÃ
+                    mostream.Position = 0;
                     mostream.Read(bt, 0, Convert.ToInt32(bt.Length));
                 }
             }
             return bt;
         }
 
-
-
-
-
         /// <summary>
-        /// ½«×Ö½Ú×ª»¯Îªimage¶ÔÏó
+        /// å°†å­—èŠ‚æ•°ç»„è½¬æ¢ä¸ºå›¾ç‰‡å¯¹è±¡
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
+        /// <param name="buffer">å­—èŠ‚æ•°ç»„</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡,å¦‚æœä¸ºç©ºè¿”å›null</returns>
         public static Image ConvertByteToImg(byte[] buffer)
         {
             if (buffer == null || buffer.Length == 0) return null;
@@ -104,8 +183,11 @@ namespace RUINORERP.Common.Helper
             }
         }
 
-
-
+        /// <summary>
+        /// å°†å›¾ç‰‡å¯¹è±¡è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„(BMPæ ¼å¼,å¢å¼ºç‰ˆ)
+        /// </summary>
+        /// <param name="src">æºå›¾ç‰‡</param>
+        /// <returns>å­—èŠ‚æ•°ç»„</returns>
         public static byte[] ConvertImageToByteEx(Image src)
         {
             Rectangle rect = new Rectangle(0, 0, src.Width, src.Height);
@@ -114,10 +196,9 @@ namespace RUINORERP.Common.Helper
             Rectangle rr = new Rectangle(0, 0, rect.Width, rect.Height);
             if (src != null)
             {
-                gs.DrawImage(src, rr, rect, GraphicsUnit.Pixel);//07072/07074/07076
+                gs.DrawImage(src, rr, rect, GraphicsUnit.Pixel);
             }
             gs.Dispose();
-
 
             MemoryStream stream = new MemoryStream();
             bmp.Save(stream, ImageFormat.Bmp);
@@ -127,6 +208,12 @@ namespace RUINORERP.Common.Helper
             stream.Close();
             return temp;
         }
+
+        /// <summary>
+        /// å°†Bitmapå¯¹è±¡è½¬æ¢ä¸ºå­—èŠ‚æ•°ç»„(BMPæ ¼å¼)
+        /// </summary>
+        /// <param name="src">æºBitmap</param>
+        /// <returns>å­—èŠ‚æ•°ç»„</returns>
         public static byte[] ConvertBitmapToByteEx(Bitmap src)
         {
             if (src == null)
@@ -145,19 +232,140 @@ namespace RUINORERP.Common.Helper
             bmp.Save(stream, ImageFormat.Bmp);
             stream.Position = 0;
 
-            byte[] temp = stream.ToArray(); // Ê¹ÓÃ ToArray ¶ø²»ÊÇ GetBuffer
+            byte[] temp = stream.ToArray();
             stream.Close();
             return temp;
         }
 
-        ///============================================================2023
+        #endregion
+
+        #region Base64è½¬æ¢
+
         /// <summary>
-        /// ÏÔÊ¾Í¼Æ¬
+        /// ä»æ–‡ä»¶è·å–å›¾ç‰‡
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="W"></param>
-        /// <param name="H"></param>
-        /// <returns></returns>
+        /// <param name="fileName">æ–‡ä»¶å</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡</returns>
+        public static Image GetImgFromFile(string fileName)
+        {
+            return Image.FromFile(fileName);
+        }
+
+        /// <summary>
+        /// ä»base64å­—ç¬¦ä¸²è¯»å–å›¾ç‰‡
+        /// </summary>
+        /// <param name="base64">base64å­—ç¬¦ä¸²</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡</returns>
+        public static Image GetImgFromBase64(string base64)
+        {
+            byte[] bytes = Convert.FromBase64String(base64);
+            MemoryStream memStream = new MemoryStream(bytes);
+            Image img = Image.FromStream(memStream);
+
+            return img;
+        }
+
+        /// <summary>
+        /// ä»URLæ ¼å¼çš„Base64å›¾ç‰‡è·å–çœŸæ­£çš„å›¾ç‰‡
+        /// å³å»æ‰data:image/jpg;base64,è¿™æ ·çš„æ ¼å¼
+        /// </summary>
+        /// <param name="base64Url">å›¾ç‰‡Base64çš„URLå½¢å¼</param>
+        /// <returns>å›¾ç‰‡å¯¹è±¡</returns>
+        public static Image GetImgFromBase64Url(string base64Url)
+        {
+            string base64 = GetBase64String(base64Url);
+            return GetImgFromBase64(base64);
+        }
+
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬ä¸ºbase64å­—ç¬¦ä¸²
+        /// é»˜è®¤ä½¿ç”¨jpgæ ¼å¼
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>base64å­—ç¬¦ä¸²</returns>
+        public static string ToBase64String(Image img)
+        {
+            return ToBase64String(img, ImageFormat.Jpeg);
+        }
+
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬ä¸ºbase64å­—ç¬¦ä¸²
+        /// ä½¿ç”¨æŒ‡å®šæ ¼å¼
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <param name="imageFormat">æŒ‡å®šæ ¼å¼</param>
+        /// <returns>base64å­—ç¬¦ä¸²</returns>
+        public static string ToBase64String(Image img, ImageFormat imageFormat)
+        {
+            MemoryStream memStream = new MemoryStream();
+            img.Save(memStream, imageFormat);
+            byte[] bytes = memStream.ToArray();
+            string base64 = Convert.ToBase64String(bytes);
+
+            return base64;
+        }
+
+        /// <summary>
+        /// å°†å­—èŠ‚æ•°ç»„è½¬ä¸ºå¸¦URLå‰ç¼€çš„base64å­—ç¬¦ä¸²
+        /// </summary>
+        /// <param name="bytes">å­—èŠ‚æ•°ç»„</param>
+        /// <returns>å¸¦URLå‰ç¼€çš„base64å­—ç¬¦ä¸²</returns>
+        public static string ToBase64StringUrl(byte[] bytes)
+        {
+            return "data:image/jpg;base64," + Convert.ToBase64String(bytes);
+        }
+
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬ä¸ºbase64å­—ç¬¦ä¸²
+        /// é»˜è®¤ä½¿ç”¨jpgæ ¼å¼,å¹¶æ·»åŠ data:image/jpg;base64,å‰ç¼€
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <returns>å¸¦URLå‰ç¼€çš„base64å­—ç¬¦ä¸²</returns>
+        public static string ToBase64StringUrl(Image img)
+        {
+            return "data:image/jpg;base64," + ToBase64String(img, ImageFormat.Jpeg);
+        }
+
+        /// <summary>
+        /// å°†å›¾ç‰‡è½¬ä¸ºbase64å­—ç¬¦ä¸²
+        /// ä½¿ç”¨æŒ‡å®šæ ¼å¼,å¹¶æ·»åŠ data:image/jpg;base64,å‰ç¼€
+        /// </summary>
+        /// <param name="img">å›¾ç‰‡å¯¹è±¡</param>
+        /// <param name="imageFormat">æŒ‡å®šæ ¼å¼</param>
+        /// <returns>å¸¦URLå‰ç¼€çš„base64å­—ç¬¦ä¸²</returns>
+        public static string ToBase64StringUrl(Image img, ImageFormat imageFormat)
+        {
+            string base64 = ToBase64String(img, imageFormat);
+            return $"data:image/{imageFormat.ToString().ToLower()};base64,{base64}";
+        }
+
+        /// <summary>
+        /// è·å–çœŸæ­£çš„å›¾ç‰‡base64æ•°æ®
+        /// å³å»æ‰data:image/jpg;base64,è¿™æ ·çš„æ ¼å¼
+        /// </summary>
+        /// <param name="base64UrlStr">å¸¦å‰ç¼€çš„base64å›¾ç‰‡å­—ç¬¦ä¸²</param>
+        /// <returns>çº¯base64å­—ç¬¦ä¸²</returns>
+        public static string GetBase64String(string base64UrlStr)
+        {
+            string parttern = "^(data:image/.*?;base64,).*?$";
+            var match = Regex.Match(base64UrlStr, parttern);
+            if (match.Groups.Count > 1)
+                base64UrlStr = base64UrlStr.Replace(match.Groups[1].ToString(), "");
+
+            return base64UrlStr;
+        }
+
+        #endregion
+
+        #region å›¾ç‰‡è¯»å–ä¸æ˜¾ç¤º
+
+        /// <summary>
+        /// è·å–æŒ‡å®šå°ºå¯¸çš„å›¾ç‰‡
+        /// </summary>
+        /// <param name="path">å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="W">ç›®æ ‡å®½åº¦</param>
+        /// <param name="H">ç›®æ ‡é«˜åº¦</param>
+        /// <returns>è°ƒæ•´å¤§å°åçš„å›¾ç‰‡,è·¯å¾„æ— æ•ˆè¿”å›null</returns>
         public static Image GetImage(string path, int W, int H)
         {
             if (path.StartsWith("//") || string.IsNullOrEmpty(path))
@@ -176,33 +384,37 @@ namespace RUINORERP.Common.Helper
             {
                 return null;
             }
-
         }
 
         /// <summary>
-        /// Í¨¹ıFileStream À´´ò¿ªÎÄ¼ş£¬ÕâÑù¾Í¿ÉÒÔÊµÏÖ²»Ëø¶¨ImageÎÄ¼ş£¬µ½Ê±¿ÉÒÔÈÃ¶àÓÃ»§Í¬Ê±·ÃÎÊImageÎÄ¼ş
+        /// é€šè¿‡FileStream æ¥æ‰“å¼€æ–‡ä»¶,è¿™æ ·å¯ä»¥å®ç°ä¸é”å®šImageæ–‡ä»¶,åˆ°æ—¶å¯ä»¥è®©å¤šç”¨æˆ·åŒæ—¶è®¿é—®Imageæ–‡ä»¶
         /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
+        /// <param name="path">å›¾ç‰‡æ–‡ä»¶è·¯å¾„</param>
+        /// <returns>Bitmapå¯¹è±¡</returns>
         public static Bitmap ReadImageFile(string path)
         {
-            FileStream fs = File.OpenRead(path); //OpenRead
+            FileStream fs = File.OpenRead(path);
             int filelength = 0;
-            filelength = (int)fs.Length; //»ñµÃÎÄ¼ş³¤¶È 
-            Byte[] image = new Byte[filelength]; //½¨Á¢Ò»¸ö×Ö½ÚÊı×é 
-            fs.Read(image, 0, filelength); //°´×Ö½ÚÁ÷¶ÁÈ¡ 
+            filelength = (int)fs.Length;
+            Byte[] image = new Byte[filelength];
+            fs.Read(image, 0, filelength);
             System.Drawing.Image result = System.Drawing.Image.FromStream(fs);
             fs.Close();
             Bitmap bit = new Bitmap(result);
             return bit;
         }
 
+        #endregion
+
+        #region æ°´å°
+
         /// <summary>
-        /// ÔÚÍ¼Æ¬ÉÏÔö¼ÓÎÄ×ÖË®Ó¡
+        /// åœ¨å›¾ç‰‡ä¸Šå¢åŠ æ–‡å­—æ°´å°
         /// </summary>
-        /// <param name="addText">Ë®Ó¡ÉÏµÄÎÄ×Ö</param>
-        /// <param name="PathSource">Ô­·şÎñÆ÷Í¼Æ¬Â·¾¶</param>
-        /// <param name="PathTarget">Éú³ÉµÄ´øÎÄ×ÖË®Ó¡µÄÍ¼Æ¬Â·¾¶</param>
+        /// <param name="addText">æ°´å°ä¸Šçš„æ–‡å­—</param>
+        /// <param name="PathSource">åŸæœåŠ¡å™¨å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="PathTarget">ç”Ÿæˆçš„å¸¦æ–‡å­—æ°´å°çš„å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="fontSize">å­—ä½“å¤§å°</param>
         public static void AddWater(string addText, string PathSource, string PathTarget, float fontSize)
         {
             System.Drawing.Image image = System.Drawing.Image.FromFile(PathSource);
@@ -218,14 +430,12 @@ namespace RUINORERP.Common.Helper
             image.Dispose();
         }
 
-
-
         /// <summary>
-        /// ÔÚÍ¼Æ¬ÉÏÔö¼ÓÎÄ×ÖË®Ó¡
+        /// åœ¨å›¾ç‰‡ä¸Šå¢åŠ æ–‡å­—æ°´å°(é»˜è®¤å­—ä½“å¤§å°60)
         /// </summary>
-        /// <param name="addText">Ë®Ó¡ÉÏµÄÎÄ×Ö</param>
-        /// <param name="PathSource">Ô­·şÎñÆ÷Í¼Æ¬Â·¾¶</param>
-        /// <param name="PathTarget">Éú³ÉµÄ´øÎÄ×ÖË®Ó¡µÄÍ¼Æ¬Â·¾¶</param>
+        /// <param name="addText">æ°´å°ä¸Šçš„æ–‡å­—</param>
+        /// <param name="PathSource">åŸæœåŠ¡å™¨å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="PathTarget">ç”Ÿæˆçš„å¸¦æ–‡å­—æ°´å°çš„å›¾ç‰‡è·¯å¾„</param>
         public static void AddWater(string addText, string PathSource, string PathTarget)
         {
             System.Drawing.Image image = System.Drawing.Image.FromFile(PathSource);
@@ -241,13 +451,12 @@ namespace RUINORERP.Common.Helper
             image.Dispose();
         }
 
-
         /// <summary>
-        /// ÔÚÍ¼Æ¬ÉÏÉú³ÉÍ¼Æ¬Ë®Ó¡
+        /// åœ¨å›¾ç‰‡ä¸Šç”Ÿæˆå›¾ç‰‡æ°´å°
         /// </summary>
-        /// <param name="Path">Ô­·şÎñÆ÷Í¼Æ¬Â·¾¶</param>
-        /// <param name="Path_syp">Éú³ÉµÄ´øÍ¼Æ¬Ë®Ó¡µÄÍ¼Æ¬Â·¾¶</param>
-        /// <param name="Path_sypf">Ë®Ó¡Í¼Æ¬Â·¾¶</param>
+        /// <param name="Path">åŸæœåŠ¡å™¨å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="Path_syp">ç”Ÿæˆçš„å¸¦å›¾ç‰‡æ°´å°çš„å›¾ç‰‡è·¯å¾„</param>
+        /// <param name="Path_sypf">æ°´å°å›¾ç‰‡è·¯å¾„</param>
         public static void AddWaterPic(string Path, string Path_syp, string Path_sypf)
         {
             System.Drawing.Image image = System.Drawing.Image.FromFile(Path);
@@ -260,17 +469,17 @@ namespace RUINORERP.Common.Helper
             image.Dispose();
         }
 
-        #region Éú³ÉËõÂÔÍ¼
+        #endregion
+
+        #region ç¼©ç•¥å›¾ç”Ÿæˆ
 
         /// <summary>
-        /// ´´½¨ËõÂÔÍ¼
+        /// åˆ›å»ºç¼©ç•¥å›¾(ä»å­—èŠ‚æ•°ç»„)
         /// </summary>
-        /// <param name="src">À´Ô´Ò³Ãæ
-        /// ¿ÉÒÔÊÇÏà¶ÔµØÖ·»òÕß¾ø¶ÔµØÖ·
-        /// </param>
-        /// <param name="width">ËõÂÔÍ¼¿í¶È</param>
-        /// <param name="height">ËõÂÔÍ¼¸ß¶È</param>
-        /// <returns>×Ö½ÚÊı×é</returns>
+        /// <param name="data">å›¾ç‰‡å­—èŠ‚æ•°ç»„</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <returns>ç¼©ç•¥å›¾å­—èŠ‚æ•°ç»„</returns>
         public static byte[] MakeThumbnail(byte[] data, double width, double height)
         {
             MemoryStream ms = new MemoryStream(data);
@@ -296,23 +505,15 @@ namespace RUINORERP.Common.Helper
                 newHeight = height;
                 newWidth = image.Width * (newHeight / image.Height);
             }
-            //È¡µÃÍ¼Æ¬´óĞ¡
             Size size = new Size((int)newWidth, (int)newHeight);
-            //ĞÂ½¨Ò»¸öbmpÍ¼Æ¬
             Image bitmap = new Bitmap(size.Width, size.Height);
-            //ĞÂ½¨Ò»¸ö»­°å
             Graphics g = Graphics.FromImage(bitmap);
-            //ÉèÖÃ¸ßÖÊÁ¿²åÖµ·¨
             g.InterpolationMode = InterpolationMode.High;
-            //ÉèÖÃ¸ßÖÊÁ¿,µÍËÙ¶È³ÊÏÖÆ½»¬³Ì¶È
             g.SmoothingMode = SmoothingMode.HighQuality;
-            //Çå¿ÕÒ»ÏÂ»­²¼
             g.Clear(Color.White);
-            //ÔÚÖ¸¶¨Î»ÖÃ»­Í¼
             g.DrawImage(image, new Rectangle(0, 0, bitmap.Width, bitmap.Height),
                         new Rectangle(0, 0, image.Width, image.Height),
                         GraphicsUnit.Pixel);
-            //±£´æ¸ßÇåÎú¶ÈµÄËõÂÔÍ¼
             MemoryStream stream = new MemoryStream();
             bitmap.Save(stream, ImageFormat.Jpeg);
             byte[] buffer = stream.GetBuffer();
@@ -323,19 +524,28 @@ namespace RUINORERP.Common.Helper
         }
 
         /// <summary>
-        /// ´´½¨ËõÂÔÍ¼
+        /// åˆ›å»ºç¼©ç•¥å›¾(ä»å­—èŠ‚æ•°ç»„,è¿”å›Image)
         /// </summary>
-        /// <param name="src">À´Ô´Ò³Ãæ
-        /// ¿ÉÒÔÊÇÏà¶ÔµØÖ·»òÕß¾ø¶ÔµØÖ·
-        /// </param>
-        /// <param name="width">ËõÂÔÍ¼¿í¶È</param>
-        /// <param name="height">ËõÂÔÍ¼¸ß¶È</param>
-        /// <returns>×Ö½ÚÊı×é</returns>
+        /// <param name="data">å›¾ç‰‡å­—èŠ‚æ•°ç»„</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <returns>ç¼©ç•¥å›¾Imageå¯¹è±¡</returns>
         public static Image MakeThumbnailfromByte(byte[] data, double width, double height)
         {
             MemoryStream ms = new MemoryStream(data);
-            Image image = System.Drawing.Image.FromStream(ms);
+            Image image = Image.FromStream(ms);
+            return MakeThumbnailfromImage(image, width, height);
+        }
 
+        /// <summary>
+        /// åˆ›å»ºç¼©ç•¥å›¾(ä»Imageå¯¹è±¡)
+        /// </summary>
+        /// <param name="image">å›¾ç‰‡å¯¹è±¡</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <returns>ç¼©ç•¥å›¾Imageå¯¹è±¡</returns>
+        public static Image MakeThumbnailfromImage(Image image, double width, double height)
+        {
             double newWidth, newHeight;
             if (image.Width > image.Height)
             {
@@ -356,55 +566,40 @@ namespace RUINORERP.Common.Helper
                 newHeight = height;
                 newWidth = image.Width * (newHeight / image.Height);
             }
-            //È¡µÃÍ¼Æ¬´óĞ¡
             Size size = new Size((int)newWidth, (int)newHeight);
-            //ĞÂ½¨Ò»¸öbmpÍ¼Æ¬
             Image bitmap = new Bitmap(size.Width, size.Height);
-            //ĞÂ½¨Ò»¸ö»­°å
             Graphics g = Graphics.FromImage(bitmap);
-            //ÉèÖÃ¸ßÖÊÁ¿²åÖµ·¨
             g.InterpolationMode = InterpolationMode.High;
-            //ÉèÖÃ¸ßÖÊÁ¿,µÍËÙ¶È³ÊÏÖÆ½»¬³Ì¶È
             g.SmoothingMode = SmoothingMode.HighQuality;
-            //Çå¿ÕÒ»ÏÂ»­²¼
             g.Clear(Color.White);
-            //ÔÚÖ¸¶¨Î»ÖÃ»­Í¼
             g.DrawImage(image, new Rectangle(0, 0, bitmap.Width, bitmap.Height),
                         new Rectangle(0, 0, image.Width, image.Height),
                         GraphicsUnit.Pixel);
 
-            //±£´æ¸ßÇåÎú¶ÈµÄËõÂÔÍ¼
             MemoryStream stream = new MemoryStream();
             bitmap.Save(stream, ImageFormat.Jpeg);
-            //byte[] buffer = stream.GetBuffer();
             g.Dispose();
             image.Dispose();
-            //bitmap.Dispose();
             return bitmap;
         }
 
-
-        /*
         /// <summary>
-        /// ´´½¨ËõÂÔÍ¼
+        /// åˆ›å»ºç¼©ç•¥å›¾(ä»URLæˆ–æœ¬åœ°è·¯å¾„)
         /// </summary>
-        /// <param name="src">À´Ô´Ò³Ãæ
-        /// ¿ÉÒÔÊÇÏà¶ÔµØÖ·»òÕß¾ø¶ÔµØÖ·
-        /// </param>
-        /// <param name="width">ËõÂÔÍ¼¿í¶È</param>
-        /// <param name="height">ËõÂÔÍ¼¸ß¶È</param>
-        /// <returns>×Ö½ÚÊı×é</returns>
+        /// <param name="src">æ¥æºé¡µé¢,å¯ä»¥æ˜¯ç›¸å¯¹åœ°å€æˆ–è€…ç»å¯¹åœ°å€</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <returns>ç¼©ç•¥å›¾å­—èŠ‚æ•°ç»„</returns>
         public static byte[] MakeThumbnail(string src, double width, double height)
         {
             Image image;
 
-            // Ïà¶ÔÂ·¾¶´Ó±¾»úÖ±½Ó¶ÁÈ¡
             if (src.ToLower().IndexOf("http") == -1)
             {
                 src = HttpContext.Current.Server.MapPath(src);
                 image = Image.FromFile(src, true);
             }
-            else // ¾ø¶ÔÂ·¾¶´Ó Http ¶ÁÈ¡
+            else
             {
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(src);
                 req.Method = "GET";
@@ -434,23 +629,15 @@ namespace RUINORERP.Common.Helper
                 newHeight = height;
                 newWidth = image.Width * (newHeight / image.Height);
             }
-            //È¡µÃÍ¼Æ¬´óĞ¡
             Size size = new Size((int)newWidth, (int)newHeight);
-            //ĞÂ½¨Ò»¸öbmpÍ¼Æ¬
             Image bitmap = new Bitmap(size.Width, size.Height);
-            //ĞÂ½¨Ò»¸ö»­°å
             Graphics g = Graphics.FromImage(bitmap);
-            //ÉèÖÃ¸ßÖÊÁ¿²åÖµ·¨
             g.InterpolationMode = InterpolationMode.High;
-            //ÉèÖÃ¸ßÖÊÁ¿,µÍËÙ¶È³ÊÏÖÆ½»¬³Ì¶È
             g.SmoothingMode = SmoothingMode.HighQuality;
-            //Çå¿ÕÒ»ÏÂ»­²¼
             g.Clear(Color.White);
-            //ÔÚÖ¸¶¨Î»ÖÃ»­Í¼
             g.DrawImage(image, new Rectangle(0, 0, bitmap.Width, bitmap.Height),
                         new Rectangle(0, 0, image.Width, image.Height),
                         GraphicsUnit.Pixel);
-            //±£´æ¸ßÇåÎú¶ÈµÄËõÂÔÍ¼
             MemoryStream stream = new MemoryStream();
             bitmap.Save(stream, ImageFormat.Jpeg);
             byte[] buffer = stream.GetBuffer();
@@ -459,18 +646,15 @@ namespace RUINORERP.Common.Helper
             bitmap.Dispose();
             return buffer;
         }
-        */
-        #endregion
-
 
         /// <summary>
-        /// Éú³ÉËõÂÔÍ¼
+        /// ç”Ÿæˆç¼©ç•¥å›¾(ä¿å­˜åˆ°æ–‡ä»¶)
         /// </summary>
-        /// <param name="originalImagePath">Ô´Í¼Â·¾¶£¨ÎïÀíÂ·¾¶£©</param>
-        /// <param name="thumbnailPath">ËõÂÔÍ¼Â·¾¶£¨ÎïÀíÂ·¾¶£©</param>
-        /// <param name="width">ËõÂÔÍ¼¿í¶È</param>
-        /// <param name="height">ËõÂÔÍ¼¸ß¶È</param>
-        /// <param name="mode">Éú³ÉËõÂÔÍ¼µÄ·½Ê½</param>    
+        /// <param name="originalImagePath">æºå›¾è·¯å¾„(ç‰©ç†è·¯å¾„)</param>
+        /// <param name="thumbnailPath">ç¼©ç•¥å›¾è·¯å¾„(ç‰©ç†è·¯å¾„)</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <param name="mode">ç”Ÿæˆç¼©ç•¥å›¾çš„æ–¹å¼:HW-æŒ‡å®šé«˜å®½ç¼©æ”¾,W-æŒ‡å®šå®½é«˜æŒ‰æ¯”ä¾‹,H-æŒ‡å®šé«˜å®½æŒ‰æ¯”ä¾‹,Cut-æŒ‡å®šé«˜å®½è£å‡</param>    
         public static void MakeThumbnail(string originalImagePath, string thumbnailPath, int width, int height, string mode)
         {
             System.Drawing.Image originalImage = System.Drawing.Image.FromFile(originalImagePath);
@@ -485,15 +669,15 @@ namespace RUINORERP.Common.Helper
 
             switch (mode)
             {
-                case "HW"://Ö¸¶¨¸ß¿íËõ·Å£¨¿ÉÄÜ±äĞÎ£©                
+                case "HW":
                     break;
-                case "W"://Ö¸¶¨¿í£¬¸ß°´±ÈÀı                    
+                case "W":
                     toheight = originalImage.Height * width / originalImage.Width;
                     break;
-                case "H"://Ö¸¶¨¸ß£¬¿í°´±ÈÀı
+                case "H":
                     towidth = originalImage.Width * height / originalImage.Height;
                     break;
-                case "Cut"://Ö¸¶¨¸ß¿í²Ã¼õ£¨²»±äĞÎ£©                
+                case "Cut":
                     if ((double)originalImage.Width / (double)originalImage.Height > (double)towidth / (double)toheight)
                     {
                         oh = originalImage.Height;
@@ -513,29 +697,17 @@ namespace RUINORERP.Common.Helper
                     break;
             }
 
-            //ĞÂ½¨Ò»¸öbmpÍ¼Æ¬
             System.Drawing.Image bitmap = new System.Drawing.Bitmap(towidth, toheight);
-
-            //ĞÂ½¨Ò»¸ö»­°å
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bitmap);
-
-            //ÉèÖÃ¸ßÖÊÁ¿²åÖµ·¨
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
-
-            //ÉèÖÃ¸ßÖÊÁ¿,µÍËÙ¶È³ÊÏÖÆ½»¬³Ì¶È
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-
-            //Çå¿Õ»­²¼²¢ÒÔÍ¸Ã÷±³¾°É«Ìî³ä
             g.Clear(System.Drawing.Color.Transparent);
-
-            //ÔÚÖ¸¶¨Î»ÖÃ²¢ÇÒ°´Ö¸¶¨´óĞ¡»æÖÆÔ­Í¼Æ¬µÄÖ¸¶¨²¿·Ö
             g.DrawImage(originalImage, new System.Drawing.Rectangle(0, 0, towidth, toheight),
                 new System.Drawing.Rectangle(x, y, ow, oh),
                 System.Drawing.GraphicsUnit.Pixel);
 
             try
             {
-                //ÒÔjpg¸ñÊ½±£´æËõÂÔÍ¼
                 bitmap.Save(thumbnailPath, System.Drawing.Imaging.ImageFormat.Jpeg);
             }
             catch (System.Exception e)
@@ -550,7 +722,14 @@ namespace RUINORERP.Common.Helper
             }
         }
 
-
+        /// <summary>
+        /// ç”Ÿæˆç¼©ç•¥å›¾(è¿”å›Imageå¯¹è±¡)
+        /// </summary>
+        /// <param name="originalImagePath">æºå›¾è·¯å¾„(ç‰©ç†è·¯å¾„)</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <param name="mode">ç”Ÿæˆç¼©ç•¥å›¾çš„æ–¹å¼:HW-æŒ‡å®šé«˜å®½ç¼©æ”¾,W-æŒ‡å®šå®½é«˜æŒ‰æ¯”ä¾‹,H-æŒ‡å®šé«˜å®½æŒ‰æ¯”ä¾‹,Cut-æŒ‡å®šé«˜å®½è£å‡</param>
+        /// <returns>ç¼©ç•¥å›¾Imageå¯¹è±¡</returns>
         public static System.Drawing.Image MakeThumbnailNewImage(string originalImagePath, int width, int height, string mode)
         {
             System.Drawing.Image originalImage = System.Drawing.Image.FromFile(originalImagePath);
@@ -565,15 +744,15 @@ namespace RUINORERP.Common.Helper
 
             switch (mode)
             {
-                case "HW"://Ö¸¶¨¸ß¿íËõ·Å£¨¿ÉÄÜ±äĞÎ£©                
+                case "HW":
                     break;
-                case "W"://Ö¸¶¨¿í£¬¸ß°´±ÈÀı                    
+                case "W":
                     toheight = originalImage.Height * width / originalImage.Width;
                     break;
-                case "H"://Ö¸¶¨¸ß£¬¿í°´±ÈÀı
+                case "H":
                     towidth = originalImage.Width * height / originalImage.Height;
                     break;
-                case "Cut"://Ö¸¶¨¸ß¿í²Ã¼õ£¨²»±äĞÎ£©                
+                case "Cut":
                     if ((double)originalImage.Width / (double)originalImage.Height > (double)towidth / (double)toheight)
                     {
                         oh = originalImage.Height;
@@ -593,32 +772,17 @@ namespace RUINORERP.Common.Helper
                     break;
             }
 
-            //ĞÂ½¨Ò»¸öbmpÍ¼Æ¬
             System.Drawing.Image bitmap = new System.Drawing.Bitmap(towidth, toheight);
-
-            //ĞÂ½¨Ò»¸ö»­°å
             System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bitmap);
-
-            //ÉèÖÃ¸ßÖÊÁ¿²åÖµ·¨
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.High;
-
-            //ÉèÖÃ¸ßÖÊÁ¿,µÍËÙ¶È³ÊÏÖÆ½»¬³Ì¶È
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-
-            //Çå¿Õ»­²¼²¢ÒÔÍ¸Ã÷±³¾°É«Ìî³ä
             g.Clear(System.Drawing.Color.Transparent);
-
-            //ÔÚÖ¸¶¨Î»ÖÃ²¢ÇÒ°´Ö¸¶¨´óĞ¡»æÖÆÔ­Í¼Æ¬µÄÖ¸¶¨²¿·Ö
             g.DrawImage(originalImage, new System.Drawing.Rectangle(0, 0, towidth, toheight),
                 new System.Drawing.Rectangle(x, y, ow, oh),
                 System.Drawing.GraphicsUnit.Pixel);
 
             try
             {
-
-
-                //ÒÔjpg¸ñÊ½±£´æËõÂÔÍ¼
-                //  bitmap.Save(thumbnailPath, System.Drawing.Imaging.ImageFormat.Jpeg);
             }
             catch (System.Exception e)
             {
@@ -635,39 +799,40 @@ namespace RUINORERP.Common.Helper
         }
 
         /// <summary>
-        /// Éú³ÉËõÂÔÍ¼
+        /// ç”Ÿæˆç¼©ç•¥å›¾(è¿”å›å­—èŠ‚æ•°ç»„)
         /// </summary>
-        /// <param name="originalImagePath">Ô´Í¼Â·¾¶£¨ÎïÀíÂ·¾¶£©</param>
-        /// <param name="thumbnailPath">ËõÂÔÍ¼Â·¾¶£¨ÎïÀíÂ·¾¶£©</param>
-        /// <param name="width">ËõÂÔÍ¼¿í¶È</param>
-        /// <param name="height">ËõÂÔÍ¼¸ß¶È</param>
-        /// <param name="mode">Éú³ÉËõÂÔÍ¼µÄ·½Ê½</param>    
+        /// <param name="originalImagePath">æºå›¾è·¯å¾„(ç‰©ç†è·¯å¾„)</param>
+        /// <param name="width">ç¼©ç•¥å›¾å®½åº¦</param>
+        /// <param name="height">ç¼©ç•¥å›¾é«˜åº¦</param>
+        /// <param name="mode">ç”Ÿæˆç¼©ç•¥å›¾çš„æ–¹å¼:HW-æŒ‡å®šé«˜å®½ç¼©æ”¾,W-æŒ‡å®šå®½é«˜æŒ‰æ¯”ä¾‹,H-æŒ‡å®šé«˜å®½æŒ‰æ¯”ä¾‹,Cut-æŒ‡å®šé«˜å®½è£å‡</param>
+        /// <returns>ç¼©ç•¥å›¾å­—èŠ‚æ•°ç»„</returns>
         public static byte[] MakeThumbnail(string originalImagePath, int width, int height, string mode)
         {
             MemoryStream ms = new MemoryStream();
             System.Drawing.Image img = MakeThumbnailNewImage(originalImagePath, width, height, mode);
             img.Save(ms, System.Drawing.Imaging.ImageFormat.Jpeg);
             return ms.ToArray();
-
         }
 
+        #endregion
+
+        #region å›¾ç‰‡å‹ç¼©
 
         /// <summary>
-        /// ¸ù¾İÉèÖÃµÄÖÊÁ¿À´Ñ¹ËõÍ¼Æ¬
+        /// æ ¹æ®è®¾ç½®çš„è´¨é‡æ¥å‹ç¼©å›¾ç‰‡å¹¶ä¿å­˜åˆ°æ–‡ä»¶
         /// </summary>
-        /// <param name="sFile"></param>
-        /// <param name="outPath"></param>
-        /// <param name="flag">ÉèÖÃÑ¹ËõµÄ±ÈÀı1-100</param>
-        /// <returns></returns>
+        /// <param name="sFile">æºæ–‡ä»¶è·¯å¾„</param>
+        /// <param name="outPath">è¾“å‡ºæ–‡ä»¶è·¯å¾„</param>
+        /// <param name="flag">è®¾ç½®å‹ç¼©çš„æ¯”ä¾‹1-100</param>
+        /// <returns>æˆåŠŸè¿”å›true,å¤±è´¥è¿”å›false</returns>
         public static bool GetPicThumbnail(string sFile, string outPath, int flag)
         {
             System.Drawing.Image iSource = System.Drawing.Image.FromFile(sFile);
             ImageFormat tFormat = iSource.RawFormat;
 
-            //ÒÔÏÂ´úÂëÎª±£´æÍ¼Æ¬Ê±£¬ÉèÖÃÑ¹ËõÖÊÁ¿  
             EncoderParameters ep = new EncoderParameters();
             long[] qy = new long[1];
-            qy[0] = flag;//ÉèÖÃÑ¹ËõµÄ±ÈÀı1-100  
+            qy[0] = flag;
             EncoderParameter eParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, qy);
             ep.Param[0] = eParam;
             try
@@ -684,7 +849,7 @@ namespace RUINORERP.Common.Helper
                 }
                 if (jpegICIinfo != null)
                 {
-                    iSource.Save(outPath, jpegICIinfo, ep);//dFileÊÇÑ¹ËõºóµÄĞÂÂ·¾¶  
+                    iSource.Save(outPath, jpegICIinfo, ep);
                 }
                 else
                 {
@@ -699,20 +864,24 @@ namespace RUINORERP.Common.Helper
             finally
             {
                 iSource.Dispose();
-                iSource.Dispose();
             }
         }
 
+        /// <summary>
+        /// æ ¹æ®è®¾ç½®çš„è´¨é‡æ¥å‹ç¼©å›¾ç‰‡(è¿”å›å­—èŠ‚æ•°ç»„)
+        /// </summary>
+        /// <param name="strOriginalFile">æºæ–‡ä»¶è·¯å¾„</param>
+        /// <param name="flag">è®¾ç½®å‹ç¼©çš„æ¯”ä¾‹1-100</param>
+        /// <returns>å‹ç¼©åçš„å›¾ç‰‡å­—èŠ‚æ•°ç»„</returns>
         public static byte[] GetPicThumbnail(string strOriginalFile, int flag)
         {
             byte[] buffer = null;
             System.Drawing.Image iSource = System.Drawing.Image.FromFile(strOriginalFile);
             ImageFormat tFormat = iSource.RawFormat;
 
-            //ÒÔÏÂ´úÂëÎª±£´æÍ¼Æ¬Ê±£¬ÉèÖÃÑ¹ËõÖÊÁ¿  
             EncoderParameters ep = new EncoderParameters();
             long[] qy = new long[1];
-            qy[0] = flag;//ÉèÖÃÑ¹ËõµÄ±ÈÀı1-100  
+            qy[0] = flag;
             EncoderParameter eParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, qy);
             ep.Param[0] = eParam;
             MemoryStream stream = new MemoryStream();
@@ -730,7 +899,7 @@ namespace RUINORERP.Common.Helper
                 }
                 if (jpegICIinfo != null)
                 {
-                    iSource.Save(stream, jpegICIinfo, ep);//dFileÊÇÑ¹ËõºóµÄĞÂÂ·¾¶  
+                    iSource.Save(stream, jpegICIinfo, ep);
                 }
                 else
                 {
@@ -739,8 +908,6 @@ namespace RUINORERP.Common.Helper
 
                 buffer = stream.GetBuffer();
                 return buffer;
-
-
             }
             catch
             {
@@ -749,170 +916,33 @@ namespace RUINORERP.Common.Helper
             finally
             {
                 iSource.Dispose();
-                iSource.Dispose();
             }
         }
 
-
         /// <summary>
-        /// ´ÓÎÄ¼ş»ñÈ¡Í¼Æ¬
+        /// å‹ç¼©å›¾ç‰‡(ç­‰æ¯”å‹ç¼©)
         /// </summary>
-        /// <param name="fileName">ÎÄ¼şÃû</param>
-        /// <returns></returns>
-        public static Image GetImgFromFile(string fileName)
-        {
-            return Image.FromFile(fileName);
-        }
-
-        /// <summary>
-        /// ´Óbase64×Ö·û´®¶ÁÈëÍ¼Æ¬
-        /// </summary>
-        /// <param name="base64">base64×Ö·û´®</param>
-        /// <returns></returns>
-        public static Image GetImgFromBase64(string base64)
-        {
-            byte[] bytes = Convert.FromBase64String(base64);
-            MemoryStream memStream = new MemoryStream(bytes);
-            Image img = Image.FromStream(memStream);
-
-            return img;
-        }
-
-        /// <summary>
-        /// ´ÓURL¸ñÊ½µÄBase64Í¼Æ¬»ñÈ¡ÕæÕıµÄÍ¼Æ¬
-        /// ¼´È¥µôdata:image/jpg;base64,ÕâÑùµÄ¸ñÊ½
-        /// </summary>
-        /// <param name="base64Url">Í¼Æ¬Base64µÄURLĞÎÊ½</param>
-        /// <returns></returns>
-        public static Image GetImgFromBase64Url(string base64Url)
-        {
-            string base64 = GetBase64String(base64Url);
-
-            return GetImgFromBase64(base64);
-        }
-
-        /// <summary>
-        /// Ñ¹ËõÍ¼Æ¬
-        /// ×¢:µÈ±ÈÑ¹Ëõ
-        /// </summary>
-        /// <param name="img">Ô­Í¼Æ¬</param>
-        /// <param name="width">Ñ¹Ëõºó¿í¶È</param>
-        /// <returns></returns>
+        /// <param name="img">åŸå›¾ç‰‡</param>
+        /// <param name="width">å‹ç¼©åå®½åº¦</param>
+        /// <returns>å‹ç¼©åçš„å›¾ç‰‡</returns>
         public static Image CompressImg(Image img, int width)
         {
             return CompressImg(img, width, (int)((double)width / img.Width * img.Height));
         }
 
         /// <summary>
-        /// Ñ¹ËõÍ¼Æ¬
+        /// å‹ç¼©å›¾ç‰‡
         /// </summary>
-        /// <param name="img">Ô­Í¼Æ¬</param>
-        /// <param name="width">Ñ¹Ëõºó¿í¶È</param>
-        /// <param name="height">Ñ¹Ëõºó¸ß¶È</param>
-        /// <returns></returns>
+        /// <param name="img">åŸå›¾ç‰‡</param>
+        /// <param name="width">å‹ç¼©åå®½åº¦</param>
+        /// <param name="height">å‹ç¼©åé«˜åº¦</param>
+        /// <returns>å‹ç¼©åçš„å›¾ç‰‡</returns>
         public static Image CompressImg(Image img, int width, int height)
         {
             Bitmap bitmap = new Bitmap(img, width, height);
-
             return bitmap;
         }
 
-        /// <summary>
-        /// ½«Í¼Æ¬×ªÎªbase64×Ö·û´®
-        /// Ä¬ÈÏÊ¹ÓÃjpg¸ñÊ½
-        /// </summary>
-        /// <param name="img">Í¼Æ¬¶ÔÏó</param>
-        /// <returns></returns>
-        public static string ToBase64String(Image img)
-        {
-            return ToBase64String(img, ImageFormat.Jpeg);
-        }
-
-        /// <summary>
-        /// ½«Í¼Æ¬×ªÎªbase64×Ö·û´®
-        /// Ê¹ÓÃÖ¸¶¨¸ñÊ½
-        /// </summary>
-        /// <param name="img">Í¼Æ¬¶ÔÏó</param>
-        /// <param name="imageFormat">Ö¸¶¨¸ñÊ½</param>
-        /// <returns></returns>
-        public static string ToBase64String(Image img, ImageFormat imageFormat)
-        {
-            MemoryStream memStream = new MemoryStream();
-            img.Save(memStream, imageFormat);
-            byte[] bytes = memStream.ToArray();
-            string base64 = Convert.ToBase64String(bytes);
-
-            return base64;
-        }
-
-        public static string ToBase64StringUrl(byte[] bytes)
-        {
-            return "data:image/jpg;base64," + Convert.ToBase64String(bytes);
-        }
-
-        /// <summary>
-        /// ½«Í¼Æ¬×ªÎªbase64×Ö·û´®
-        /// Ä¬ÈÏÊ¹ÓÃjpg¸ñÊ½,²¢Ìí¼Ódata:image/jpg;base64,Ç°×º
-        /// </summary>
-        /// <param name="img">Í¼Æ¬¶ÔÏó</param>
-        /// <returns></returns>
-        public static string ToBase64StringUrl(Image img)
-        {
-            return "data:image/jpg;base64," + ToBase64String(img, ImageFormat.Jpeg);
-        }
-
-        /// <summary>
-        /// ½«Í¼Æ¬×ªÎªbase64×Ö·û´®
-        /// Ê¹ÓÃÖ¸¶¨¸ñÊ½,²¢Ìí¼Ódata:image/jpg;base64,Ç°×º
-        /// </summary>
-        /// <param name="img">Í¼Æ¬¶ÔÏó</param>
-        /// <param name="imageFormat">Ö¸¶¨¸ñÊ½</param>
-        /// <returns></returns>
-        public static string ToBase64StringUrl(Image img, ImageFormat imageFormat)
-        {
-            string base64 = ToBase64String(img, imageFormat);
-
-            return $"data:image/{imageFormat.ToString().ToLower()};base64,{base64}";
-        }
-
-        /// <summary>
-        /// »ñÈ¡ÕæÕıµÄÍ¼Æ¬base64Êı¾İ
-        /// ¼´È¥µôdata:image/jpg;base64,ÕâÑùµÄ¸ñÊ½
-        /// </summary>
-        /// <param name="base64UrlStr">´øÇ°×ºµÄbase64Í¼Æ¬×Ö·û´®</param>
-        /// <returns></returns>
-        public static string GetBase64String(string base64UrlStr)
-        {
-            string parttern = "^(data:image/.*?;base64,).*?$";
-
-            var match = Regex.Match(base64UrlStr, parttern);
-            if (match.Groups.Count > 1)
-                base64UrlStr = base64UrlStr.Replace(match.Groups[1].ToString(), "");
-
-            return base64UrlStr;
-        }
-
-        ///// <summary>
-        ///// ½«Í¼Æ¬µÄURL»òÕßBase64×Ö·û´®×ªÎªÍ¼Æ¬²¢ÉÏ´«µ½·şÎñÆ÷£¬·µ»ØÉÏ´«ºóµÄÍêÕûÍ¼Æ¬URL
-        ///// </summary>
-        ///// <param name="imgBase64OrUrl">URLµØÖ·»òÕßBase64×Ö·û´®</param>
-        ///// <returns></returns>
-        //public static string GetImgUrl(string imgBase64OrUrl)
-        //{
-        //    if (imgBase64OrUrl.Contains("data:image"))
-        //    {
-        //        Image img = GetImgFromBase64Url(imgBase64OrUrl);
-        //        string fileName = $"{GuidHelper.GenerateKey()}.jpg";
-
-        //        string dir = Path.Combine(AppSettings.WebRootPath, "Upload", "Img");
-        //        if (!Directory.Exists(dir))
-        //            Directory.CreateDirectory(dir);
-        //        img.Save(Path.Combine(dir, fileName));
-
-        //        return $"{AppSettings.WebRootPath}/Upload/Img/{fileName}";
-        //    }
-
-        //    return imgBase64OrUrl;
-        //}
+        #endregion
     }
 }

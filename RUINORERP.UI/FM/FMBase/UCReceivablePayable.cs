@@ -1432,7 +1432,7 @@ namespace RUINORERP.UI.FM
                         //{
                         //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
                         //    frmPictureViewer pictureViewer = new frmPictureViewer();
-                        //    pictureViewer.PictureBoxViewer.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                        //    pictureViewer.PictureBoxViewer.Image = ImageHelper.byteArrayToImage(img);
                         //    pictureViewer.ShowDialog();
                         //}
                         //catch (Exception ex)

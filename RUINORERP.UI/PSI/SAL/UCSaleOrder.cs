@@ -1705,5 +1705,74 @@ namespace RUINORERP.UI.PSI.SAL
             // 需要确认的条件：备注中有"定制"且未标记为定制单
             return hasCustomizedInNotes && notMarkedAsCustomized;
         }
+
+        /// <summary>
+        /// 检查是否有图片需要上传
+        /// 重写基类方法，支持编辑订单后补传图片的场景
+        /// </summary>
+        /// <returns>如果有图片需要上传返回true，否则返回false</returns>
+        protected override bool HasImagesToUpload()
+        {
+            // 检查凭证图片控件是否有需要上传的图片
+            if (magicPictureBox订金付款凭证 != null)
+            {
+                var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                return updatedImages != null && updatedImages.Count > 0;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 上传图片（如果需要）
+        /// 重写基类方法，实现销售订单凭证图片的上传逻辑
+        /// </summary>
+        /// <returns>上传是否成功</returns>
+        protected override async Task<bool> UploadImagesIfNeeded()
+        {
+            try
+            {
+                // 检查实体是否已保存（必须有主键ID）
+                if (EditEntity == null || EditEntity.PrimaryKeyID <= 0)
+                {
+                    MainForm.Instance.uclog.AddLog("单据尚未保存，无法上传图片");
+                    return false;
+                }
+
+                // 检查是否有图片需要上传
+                if (magicPictureBox订金付款凭证 != null)
+                {
+                    var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                    if (updatedImages != null && updatedImages.Count > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"检测到 {updatedImages.Count} 张图片需要上传");
+
+                        // 上传图片
+                        bool uploadSuccess = await UploadUpdatedImagesAsync<tb_SaleOrder>(
+                            EditEntity,
+                            updatedImages,
+                            c => c.VoucherImage);
+
+                        if (uploadSuccess)
+                        {
+                            MainForm.Instance.uclog.AddLog("图片上传成功", Global.UILogType.成功提示消息);
+                            return true;
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog("图片上传失败", Global.UILogType.错误);
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
+                logger.LogError(ex, "上传图片异常");
+                return false;
+            }
+        }
     }
 }

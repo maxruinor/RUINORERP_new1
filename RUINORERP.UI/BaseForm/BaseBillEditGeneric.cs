@@ -100,7 +100,7 @@ using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
-using ImageHelper = RUINORERP.UI.Common.ImageHelper;
+using RUINORERP.Common.Helper;
 using RUINORERP.UI.BaseForm.Helpers;
 
 namespace RUINORERP.UI.BaseForm
@@ -1293,6 +1293,14 @@ namespace RUINORERP.UI.BaseForm
                     // 上传图片(指定关联字段)
                     var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, relatedField, existingFileId);
 
+                    // 检查响应是否为空
+                    if (response == null)
+                    {
+                        allSuccess = false;
+                        logger.LogError("图片上传返回空响应：{FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
+
                     if (response.IsSuccess)
                     {
                         successCount++;
@@ -1379,6 +1387,14 @@ namespace RUINORERP.UI.BaseForm
                     // 上传图片(使用新的接口)
                     var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
 
+                    // 检查响应是否为空
+                    if (response == null)
+                    {
+                        allSuccess = false;
+                        logger.LogError("图片更新返回空响应：{FileName}", imageInfo.OriginalFileName);
+                        continue;
+                    }
+
                     if (response.IsSuccess)
                     {
                         successCount++;
@@ -1408,6 +1424,30 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog($"更新凭证图片出错：{ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 检查是否有图片需要上传
+        /// 子类可以重写此方法以支持自定义的图片控件
+        /// </summary>
+        /// <returns>如果有图片需要上传返回true，否则返回false</returns>
+        protected virtual bool HasImagesToUpload()
+        {
+            // 子类可以重写此方法，检查其MagicPictureBox控件
+            // 默认返回false，子类可以根据需要实现
+            return false;
+        }
+
+        /// <summary>
+        /// 上传图片（如果需要）
+        /// 子类可以重写此方法以支持自定义的图片上传逻辑
+        /// </summary>
+        /// <returns>上传是否成功</returns>
+        protected virtual async Task<bool> UploadImagesIfNeeded()
+        {
+            // 子类可以重写此方法，实现具体的图片上传逻辑
+            // 默认返回true，子类可以根据需要实现
+            return await Task.FromResult(true);
         }
 
 
@@ -2547,6 +2587,15 @@ namespace RUINORERP.UI.BaseForm
                         //操作前将数据收集
                         this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
+                        // 检查是否有图片需要上传（支持编辑单据后补传图片的场景）
+                        bool hasImagesToUpload = HasImagesToUpload();
+
+                        // 如果实体没有变化且没有图片需要上传，则提示并返回
+                        if (!EditEntity.HasChanged && !hasImagesToUpload)
+                        {
+                            MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
+                            return;
+                        }
 
                         if (EditEntity.HasChanged)
                         {
@@ -2592,9 +2641,13 @@ namespace RUINORERP.UI.BaseForm
                                 EditEntity.AcceptChanges();
                             }
                         }
-                        else
+                        else if (hasImagesToUpload)
                         {
-                            MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
+                            // 实体没有变化但有图片需要上传，直接调用上传图片方法
+                            MainForm.Instance.uclog.AddLog("单据数据未变更，但检测到有图片需要上传");
+                            await UploadImagesIfNeeded();
+
+                            rsSave = true; // 图片上传成功视为保存成功
                         }
 
                     }
@@ -3572,7 +3625,7 @@ namespace RUINORERP.UI.BaseForm
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        byte[] bytes = UI.Common.ImageHelper.ImageToByteArray(frm.CloseCaseImage);
+                        byte[] bytes = ImageHelper.ImageToByteArray(frm.CloseCaseImage);
                         HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
                         ////上传新文件时要加后缀名
                         string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");

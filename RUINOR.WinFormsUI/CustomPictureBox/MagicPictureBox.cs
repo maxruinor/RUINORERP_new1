@@ -15,11 +15,12 @@ using System.Threading;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using RUINOR.WinFormsUI.CustomPictureBox.Implementations;
+using RUINORERP.Common.Helper;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {
     /// <summary>
-    /// 自定义PictureBox控件
+    /// 自定义PictureBox控件1
     /// 支持多张图片显示，路径用;隔开
     /// </summary>
     public class MagicPictureBox : PictureBox

@@ -217,7 +217,7 @@ namespace RUINORERP.UI.FM.FMBase
                 try
                 {
                     byte[] img = await httpWebService.DownloadImgFileAsync(CloseCaseImagePath);
-                    magicPictureBox1.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    magicPictureBox1.Image = ImageHelper.ByteArrayToImage(img);
                     magicPictureBox1.Visible = true;
                 }
                 catch (Exception ex)

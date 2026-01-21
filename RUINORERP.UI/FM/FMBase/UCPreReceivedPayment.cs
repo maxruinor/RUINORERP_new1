@@ -457,7 +457,7 @@ namespace RUINORERP.UI.FM
                 try
                 {
                     byte[] img = await httpWebService.DownloadImgFileAsync(ImagePath);
-                    PaymentImage.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    PaymentImage.Image = ImageHelper.ByteArrayToImage(img);
                     PaymentImage.Visible = true;
                 }
                 catch (Exception ex)

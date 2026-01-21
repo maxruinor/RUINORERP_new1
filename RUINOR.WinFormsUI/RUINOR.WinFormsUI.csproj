@@ -561,6 +561,10 @@
       <Project>{3ae43324-7d66-42ec-8fdf-13ba0faf1dbc}</Project>
       <Name>RUINOR.Runtime.InteropServices.APIs</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
+      <Project>{921663BD-B801-4680-BACB-58D490046B6A}</Project>
+      <Name>RUINORERP.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj">
       <Project>{4838ca4a-b538-4bfd-a366-ce7b25620558}</Project>
       <Name>RUINORERP.Global</Name>

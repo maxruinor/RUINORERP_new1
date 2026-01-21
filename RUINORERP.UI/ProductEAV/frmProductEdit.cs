@@ -1124,7 +1124,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             // e.Value is the original value
             Byte[] img = (Byte[])e.Value;
-            e.Value = Common.ImageHelper.byteArrayToImage(img);
+            e.Value = ImageHelper.ByteArrayToImage(img);
         }
 
         private void DataSourceToControl(object sender, ConvertEventArgs cevent)

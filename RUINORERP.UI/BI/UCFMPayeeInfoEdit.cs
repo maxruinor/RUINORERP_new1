@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Common;
+using RUINORERP.Common.Helper;
 using RUINORERP.UI.UCToolBar;
 using RUINORERP.Model;
 using Krypton.Toolkit;
@@ -254,7 +255,7 @@ namespace RUINORERP.UI.BI
                     PicRowImage.RowImage.ImageFullName = ImagePath;
                     string ImageRealPath = string.Join("_", ImagePath.Split('_').Take(1));
                     byte[] img = await httpWebService.DownloadImgFileAsync(ImageRealPath);
-                    PicRowImage.Image = UI.Common.ImageHelper.byteArrayToImage(img);
+                    PicRowImage.Image = RUINORERP.Common.Helper.ImageHelper.ByteArrayToImage(img);
                     PicRowImage.RowImage.image = PicRowImage.Image;
                     PicRowImage.Visible = true;
 

@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/10/2025 23:38:12
+// 时间：01/21/2026 18:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -37,10 +37,13 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.FileId).Must(CheckForeignKeyValue).WithMessage("文件ID:下拉选择值不正确。");
 
 //***** 
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessType).NotNull().WithMessage("业务类型:不能为空。");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessId).NotNull().WithMessage(":不能为空。");
 
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).MaximumMixedLength(50).WithMessage("业务编号:不能超过最大长度,50.");
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).NotEmpty().WithMessage("业务编号:不能为空。");
+
+//***** 
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessType).NotNull().WithMessage("业务类型:不能为空。");
 
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.RelatedField).MaximumMixedLength(50).WithMessage("关联字段:不能超过最大长度,50.");
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.RelatedField).NotEmpty().WithMessage("关联字段:不能为空。");
@@ -51,13 +54,16 @@ namespace RUINORERP.Business
 
 
 
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.DetailId).NotEmpty().When(x => x.DetailId.HasValue);
+
+
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.Created_by).NotEmpty().When(x => x.Created_by.HasValue);
 
 
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	  
+           	      
      }
 
 

@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/28/2025 17:43:46
+// 时间：01/21/2026 18:12:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -47,16 +47,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int _BusinessType;
+        private long _BusinessId;
         /// <summary>
-        /// 业务类型
+        /// 
         /// </summary>
-        [AdvQueryAttribute(ColName = "BusinessType",ColDesc = "业务类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BusinessType",IsNullable = false,ColumnDescription = "业务类型" )]
-        public int BusinessType 
+        [AdvQueryAttribute(ColName = "BusinessId",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "BusinessId",IsNullable = false,ColumnDescription = "" )]
+        public long BusinessId 
         { 
-            get{return _BusinessType;}
-            set{SetProperty(ref _BusinessType, value);}
+            get{return _BusinessId;}
+            set{SetProperty(ref _BusinessId, value);}
         }
      
 
@@ -70,6 +70,19 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _BusinessNo;}
             set{SetProperty(ref _BusinessNo, value);}
+        }
+     
+
+        private int _BusinessType;
+        /// <summary>
+        /// 业务类型
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BusinessType",ColDesc = "业务类型")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BusinessType",IsNullable = false,ColumnDescription = "业务类型" )]
+        public int BusinessType 
+        { 
+            get{return _BusinessType;}
+            set{SetProperty(ref _BusinessType, value);}
         }
      
 
@@ -122,6 +135,32 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _IsMainFile;}
             set{SetProperty(ref _IsMainFile, value);}
+        }
+     
+
+        private bool _IsDetailTable= false;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "IsDetailTable",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bit",SqlParameterDbType ="Boolean",ColumnName = "IsDetailTable",IsNullable = false,ColumnDescription = "" )]
+        public bool IsDetailTable 
+        { 
+            get{return _IsDetailTable;}
+            set{SetProperty(ref _IsDetailTable, value);}
+        }
+     
+
+        private long? _DetailId;
+        /// <summary>
+        /// 
+        /// </summary>
+        [AdvQueryAttribute(ColName = "DetailId",ColDesc = "")]
+        [SugarColumn(ColumnDataType = "bigint",SqlParameterDbType ="Int64",ColumnName = "DetailId",IsNullable = true,ColumnDescription = "" )]
+        public long? DetailId 
+        { 
+            get{return _DetailId;}
+            set{SetProperty(ref _DetailId, value);}
         }
      
 

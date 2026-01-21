@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：10/28/2025 17:43:48
+// 时间：01/21/2026 18:12:14
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -163,16 +163,16 @@ namespace RUINORERP.Model.QueryDto
         }
      
 
-        private int _Status= ((0));
+        private int _FileStatus= ((0));
         /// <summary>
         /// 文件状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "Status",ColDesc = "文件状态")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "Status",IsNullable = false,ColumnDescription = "文件状态" )]
-        public int Status 
+        [AdvQueryAttribute(ColName = "FileStatus",ColDesc = "文件状态")]
+        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "FileStatus",IsNullable = false,ColumnDescription = "文件状态" )]
+        public int FileStatus 
         { 
-            get{return _Status;}
-            set{SetProperty(ref _Status, value);}
+            get{return _FileStatus;}
+            set{SetProperty(ref _FileStatus, value);}
         }
      
 

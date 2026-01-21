@@ -209,7 +209,7 @@ namespace RUINORERP.UI.Network.Services
             bool lockAcquired = true;
             try
             {
-                // 检查连接状态
+                // 检查连接状态????
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
                     _log?.LogWarning("文件上传失败：未连接到服务器");

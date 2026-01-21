@@ -436,7 +436,7 @@ namespace RUINORERP.Server.Controls
         {
             try
             {
-                // 查询该业务类型下的所有文件
+                // 查询该业务类型下的所有文件及其业务关联信息
                 var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == businessType && c.isdeleted == false);
 
                 if (fileInfos != null && fileInfos.Count > 0)
@@ -444,7 +444,7 @@ namespace RUINORERP.Server.Controls
                     var detailForm = new Form
                     {
                         Text = $"文件分类详情-{(BizType)businessType}",
-                        Size = new System.Drawing.Size(800, 600),
+                        Size = new System.Drawing.Size(1100, 700),
                         StartPosition = FormStartPosition.CenterParent
                     };
 
@@ -456,13 +456,39 @@ namespace RUINORERP.Server.Controls
                         GridLines = true
                     };
 
-                    // 添加列
+                    // 添加列 - 包含业务关联表的字段
                     listView.Columns.Add("文件ID", 80);
-                    listView.Columns.Add("原始文件名", 200);
+                    listView.Columns.Add("原始文件名", 180);
                     listView.Columns.Add("文件大小", 100);
                     listView.Columns.Add("文件类型", 80);
-                    listView.Columns.Add("创建时间", 120);
-                    listView.Columns.Add("存储路径", 200);
+                    listView.Columns.Add("业务编号", 120);
+                    listView.Columns.Add("业务主键ID", 100);
+                    listView.Columns.Add("关联字段", 100);
+                    listView.Columns.Add("是否明细表", 80);
+                    listView.Columns.Add("明细主键ID", 100);
+                    listView.Columns.Add("关联版本号", 80);
+                    listView.Columns.Add("主文件", 60);
+                    listView.Columns.Add("活跃", 60);
+                    listView.Columns.Add("创建时间", 140);
+
+                    // 获取所有文件ID列表
+                    var fileIds = fileInfos.Cast<tb_FS_FileStorageInfo>().Select(f => f.FileId).ToList();
+
+                    // 通过FileId查询业务关联信息
+                    var businessRelations = await _businessRelationController.QueryAsync(br => fileIds.Contains( br.FileId) && !br.isdeleted);
+
+                    // 创建FileId到业务关联的映射字典
+                    var relationDict = new System.Collections.Generic.Dictionary<long, tb_FS_BusinessRelation>();
+                    if (businessRelations != null)
+                    {
+                        foreach (var relation in businessRelations.Cast<tb_FS_BusinessRelation>())
+                        {
+                            if (!relationDict.ContainsKey(relation.FileId))
+                            {
+                                relationDict[relation.FileId] = relation;
+                            }
+                        }
+                    }
 
                     // 添加文件数据
                     foreach (var fileInfo in fileInfos.Cast<tb_FS_FileStorageInfo>())
@@ -471,8 +497,32 @@ namespace RUINORERP.Server.Controls
                         item.SubItems.Add(fileInfo.OriginalFileName);
                         item.SubItems.Add(FormatBytes(fileInfo.FileSize > 0 ? fileInfo.FileSize : 0));
                         item.SubItems.Add(fileInfo.FileType);
+
+                        // 通过FileId从字典中获取业务关联信息
+                        if (relationDict.TryGetValue(fileInfo.FileId, out var businessRelation))
+                        {
+                            item.SubItems.Add(businessRelation.BusinessNo ?? "");
+                            item.SubItems.Add(businessRelation.BusinessId.ToString());
+                            item.SubItems.Add(businessRelation.RelatedField ?? "");
+                            item.SubItems.Add(businessRelation.IsDetailTable ? "是" : "否");
+                            item.SubItems.Add(businessRelation.DetailId?.ToString() ?? "");
+                            item.SubItems.Add(businessRelation.VersionNo.ToString());
+                            item.SubItems.Add(businessRelation.IsMainFile ? "是" : "否");
+                            item.SubItems.Add(businessRelation.IsActive ? "是" : "否");
+                        }
+                        else
+                        {
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                            item.SubItems.Add("");
+                        }
+
                         item.SubItems.Add(fileInfo.Created_at?.ToString("yyyy-MM-dd HH:mm") ?? "未知");
-                        item.SubItems.Add(fileInfo.StoragePath ?? "");
 
                         listView.Items.Add(item);
                     }

@@ -4,10 +4,10 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 20:41:54
+// 时间：01/21/2026 18:12:15
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -191,15 +191,15 @@ namespace RUINORERP.Model
                         }
         }
 
-        private int _FileStatus = ((0));
+        private int _FileStatus= ((0));
         /// <summary>
         /// 文件状态
         /// </summary>
-        [AdvQueryAttribute(ColName = "FileStatus", ColDesc = "文件状态")] 
-        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FileStatus", DecimalDigits = 0,IsNullable = false,ColumnDescription = "文件状态" )]
+        [AdvQueryAttribute(ColName = "FileStatus",ColDesc = "文件状态")] 
+        [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "FileStatus" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "文件状态" )]
         public int FileStatus
         { 
-            get{return _FileStatus; }
+            get{return _FileStatus;}
             set{
             SetProperty(ref _FileStatus, value);
                         }
@@ -322,21 +322,15 @@ namespace RUINORERP.Model
 
         #region 扩展属性
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FS_BusinessRelation.FileId))]
         public virtual List<tb_FS_BusinessRelation> tb_FS_BusinessRelations { get; set; }
-        //tb_FS_BusinessRelation.FileId)
-        //FileId.FK_TB_FS_BU_REFERENCE_TB_FS_FI)
-        //tb_FS_FileStorageInfo.FileId)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
+
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_FS_FileStorageVersion.FileId))]
         public virtual List<tb_FS_FileStorageVersion> tb_FS_FileStorageVersions { get; set; }
-        //tb_FS_FileStorageVersion.FileId)
-        //FileId.FK_TB_FS_FI_REFERENCE_TB_FS_FI)
-        //tb_FS_FileStorageInfo.FileId)
 
 
         #endregion

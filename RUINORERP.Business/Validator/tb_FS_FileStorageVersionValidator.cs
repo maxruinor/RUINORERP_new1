@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/10/2025 23:38:12
+// 时间：01/21/2026 18:12:15
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -49,7 +49,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_FileStorageVersion =>tb_FS_FileStorageVersion.Modified_by).NotEmpty().When(x => x.Modified_by.HasValue);
 
 
-           	  
+           	      
      }
 
 

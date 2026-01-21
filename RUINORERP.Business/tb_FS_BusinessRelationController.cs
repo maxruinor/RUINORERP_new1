@@ -2,7 +2,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：11/06/2025 19:43:11
+// 时间：01/21/2026 18:12:13
 // **************************************
 using System;
 using System.Collections.Generic;
@@ -15,7 +15,6 @@ using RUINORERP.Repository.UnitOfWorks;
 using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
-
 using RUINORERP.Model.Base;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
@@ -292,7 +291,8 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_FS_BusinessRelation>()
-                                //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                .Includes(m => m.tb_fs_filestorageinfo)
+                                            //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                 .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
                                 .WhereCustom(useLike, dto);;
             return await querySqlQueryable.ToListAsync()as List<T>;
@@ -403,7 +403,7 @@ namespace RUINORERP.Business
             List<tb_FS_BusinessRelation> list = await  _tb_FS_BusinessRelationServices.QueryAsync();
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
      
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
@@ -415,7 +415,7 @@ namespace RUINORERP.Business
             List<tb_FS_BusinessRelation> list =  _tb_FS_BusinessRelationServices.Query();
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
     
              _eventDrivenCacheManager.UpdateEntityList<tb_FS_BusinessRelation>(list);
@@ -479,7 +479,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
  
@@ -500,7 +500,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
   
@@ -521,7 +521,7 @@ namespace RUINORERP.Business
             
             foreach (var item in list)
             {
-                item.AcceptChanges();
+               item.AcceptChanges();
             }
             
      
@@ -560,7 +560,7 @@ namespace RUINORERP.Business
                                 .FirstAsync();
             if(entity!=null)
             {
-                entity.AcceptChanges();
+                entity.HasChanged = false;
             }
 
          

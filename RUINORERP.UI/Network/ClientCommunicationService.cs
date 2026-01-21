@@ -662,6 +662,13 @@ namespace RUINORERP.UI.Network
                     _isReconnecting = false;
                 }
 
+                // 重置心跳失败次数和失败追踪器
+                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                _heartbeatFailureTracker?.Reset();
+
+                // 重置心跳间隔为基础值
+                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
+
                 // 显示重连成功信息到UI
                 try
                 {
@@ -679,6 +686,12 @@ namespace RUINORERP.UI.Network
                                 MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
 
 
+                                // 如果之前是锁定状态，现在应该解除锁定
+                                if (MainForm.Instance.IsLocked)
+                                {
+                                    MainForm.Instance.UpdateLockStatus(false);
+                                    MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定");
+                                }
                             }));
                         }
                         else
@@ -694,6 +707,7 @@ namespace RUINORERP.UI.Network
                             if (MainForm.Instance.IsLocked)
                             {
                                 MainForm.Instance.UpdateLockStatus(false);
+                                MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定");
                             }
                         }
                     }
@@ -705,12 +719,6 @@ namespace RUINORERP.UI.Network
 
                 // 重连成功后，立即启动队列处理
                 _ = Task.Run(ProcessCommandQueueAsync);
-
-                // 重置心跳失败次数
-                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-
-                // 重置心跳间隔为基础值
-                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
 
                 // 重新启动心跳
                 StartHeartbeat();
@@ -1036,8 +1044,9 @@ namespace RUINORERP.UI.Network
                                     break;
 
                                 case HeartbeatFailureType.NetworkError:
-                                    _logger?.LogError("🌐 网络错误，将触发重连机制");
-                                    _connectionManager.StartAutoReconnect();
+                                    _logger?.LogError("🌐 网络错误，连接断开事件将自动触发重连机制");
+                                    // 网络错误通常会导致连接断开，连接断开时会自动触发重连
+                                    // 这里不手动触发，避免重复
                                     break;
 
                                 case HeartbeatFailureType.ServerBusy:
@@ -1068,16 +1077,9 @@ namespace RUINORERP.UI.Network
                         _heartbeatFailureTracker.Reset();
                         currentFailures = 0;
 
-                        _logger?.LogWarning("❌ 心跳失败且连接已断开，重置失败计数并触发重连机制");
-
-                        try
-                        {
-                            _connectionManager.StartAutoReconnect();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "启动自动重连时发生异常");
-                        }
+                        _logger?.LogWarning("❌ 心跳失败且连接已断开，重置失败计数，连接断开事件将自动触发重连机制");
+                        // 连接断开时，Socket的OnClientClosed事件会触发ConnectionManager的OnSocketClosed
+                        // OnSocketClosed会自动启动重连，这里不需要手动触发
                     }
 
                     // 智能阈值检测：使用追踪器判断是否应该锁定
@@ -1408,6 +1410,47 @@ namespace RUINORERP.UI.Network
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "取消重连并强制断开连接时发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 手动触发重连（用于服务器恢复后客户端锁定状态的解除）
+        /// 重置心跳失败计数和锁定状态，然后尝试重连
+        /// </summary>
+        /// <returns>重连是否成功</returns>
+        public async Task<bool> ManualReconnectAsync()
+        {
+            try
+            {
+                _logger?.LogInformation("手动触发重连，重置心跳失败计数和锁定状态");
+
+                // 重置心跳失败计数和失败追踪器
+                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                _heartbeatFailureTracker?.Reset();
+
+                // 重置心跳间隔
+                _heartbeatIntervalMs = _baseHeartbeatIntervalMs;
+
+                // 尝试重连
+                bool reconnectSuccess = await _connectionManager.ManualReconnectAsync();
+
+                if (reconnectSuccess)
+                {
+                    _logger?.LogInformation("手动重连成功");
+                    // 重连成功后，心跳会在OnReconnectSucceeded中自动启动
+                    // 锁定状态也会在OnReconnectSucceeded中自动解除
+                }
+                else
+                {
+                    _logger?.LogWarning("手动重连失败，可能服务器不可用");
+                }
+
+                return reconnectSuccess;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "手动重连时发生异常");
                 return false;
             }
         }
@@ -2924,67 +2967,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "尝试重连时发生异常");
-            }
-            finally
-            {
-                lock (_reconnectCoordinationLock)
-                {
-                    _isReconnecting = false;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 手动触发重连
-        /// </summary>
-        /// <returns>重连是否成功</returns>
-        public async Task<bool> ManualReconnectAsync()
-        {
-            lock (_reconnectCoordinationLock)
-            {
-                if (_isDisposed)
-                {
-                    _logger?.LogWarning("服务已释放，无法进行手动重连");
-                    return false;
-                }
-
-                // 防止频繁手动重连
-                var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
-                if (timeSinceLastAttempt.TotalSeconds < 3)
-                {
-                    _logger?.LogDebug("手动重连过于频繁，请稍后再试");
-                    return false;
-                }
-
-                _isReconnecting = true;
-                _lastManualReconnectAttempt = DateTime.Now;
-            }
-
-            try
-            {
-                _logger?.LogDebug("用户手动触发重连");
-
-                // 使用ConnectionManager的手动重连方法
-                bool result = await _connectionManager.ManualReconnectAsync();
-
-                if (result)
-                {
-                    _logger?.LogDebug("手动重连成功");
-
-                    // 重连成功后，立即启动队列处理
-                    _ = Task.Run(ProcessCommandQueueAsync);
-                }
-                else
-                {
-                    _logger?.LogWarning("手动重连失败");
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "手动重连时发生异常");
-                return false;
             }
             finally
             {

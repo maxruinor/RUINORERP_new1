@@ -200,6 +200,18 @@ namespace RUINORERP.UI.Network
                     await DisconnectInternalAsync();
                 }
 
+                // 停止当前正在进行的重连任务（如果存在）
+                lock (_reconnectStateLock)
+                {
+                    if (_isReconnecting)
+                    {
+                        _logger?.LogDebug("检测到正在进行重连，停止重连任务以进行手动连接");
+                        _isReconnecting = false;
+                        _reconnectStopped = true;
+                        StopReconnectTask();
+                    }
+                }
+
                 // 尝试连接
 
                 bool connected = await _socketClient.ConnectAsync(serverAddress, serverPort, cancellationToken);
@@ -219,7 +231,6 @@ namespace RUINORERP.UI.Network
                     }
 
                     OnConnectionStateChanged(true);
-                    StopReconnectTask();
                 }
                 else
                 {
@@ -259,8 +270,12 @@ namespace RUINORERP.UI.Network
         {
             lock (_reconnectStateLock)
             {
-                if (_isReconnecting || _disposed)
+                // 如果已重连中且任务仍在运行，不重复启动
+                if (_isReconnecting && _reconnectTask != null && !_reconnectTask.IsCompleted && !_reconnectTask.IsCanceled)
+                {
+                    _logger?.LogDebug("重连任务已在运行，不重复启动");
                     return;
+                }
 
                 _isReconnecting = true;
                 _reconnectStopped = false;
@@ -443,8 +458,8 @@ namespace RUINORERP.UI.Network
                 _isReconnecting = false;
                 _reconnectStopped = true;
             }
-            
-            _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连", _config.MaxReconnectAttempts);
+
+            _logger?.LogWarning("已达到最大重连次数 {MaxAttempts}，停止重连。重连机制保持活跃，可手动触发或等待连接事件", _config.MaxReconnectAttempts);
             OnReconnectFailed();
         }
 
@@ -554,8 +569,11 @@ namespace RUINORERP.UI.Network
             lock (_reconnectStateLock)
             {
                 // 检查是否需要启动重连
+                // 即使达到最大重连次数，如果AutoReconnect为true，也允许继续重连
                 if (!_isReconnecting && !_disposed && _config.AutoReconnect)
                 {
+                    // 重置重连停止标志，允许新的重连尝试
+                    _reconnectStopped = false;
                     shouldStartReconnect = true;
                     _isReconnecting = true;
                     _logger?.LogDebug("准备启动自动重连机制");

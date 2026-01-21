@@ -395,13 +395,32 @@ namespace RUINORERP.UI.Network.Services
             try
             {
                 _logger?.LogDebug("服务器切换：取消重连并断开连接");
-                
+
                 // 使用通信服务的取消重连和断开连接方法
                 return await _communicationService.CancelReconnectAndForceDisconnectAsync();
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "服务器切换时取消重连并断开连接失败");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 手动触发重连（用于服务器恢复后解除锁定状态）
+        /// 重置心跳失败计数和锁定状态，然后尝试重连
+        /// </summary>
+        /// <returns>重连是否成功</returns>
+        public async Task<bool> ManualReconnectAsync()
+        {
+            try
+            {
+                _logger?.LogInformation("用户触发手动重连");
+                return await _communicationService.ManualReconnectAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "手动重连失败");
                 return false;
             }
         }

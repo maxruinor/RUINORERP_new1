@@ -101,6 +101,12 @@ namespace RUINORERP.UI.Network
         /// </summary>
         /// <returns>是否正在重连</returns>
         bool IsReconnecting { get; }
+
+        /// <summary>
+        /// 手动触发重连（用于服务器恢复后客户端锁定状态的解除）
+        /// </summary>
+        /// <returns>重连是否成功</returns>
+        Task<bool> ManualReconnectAsync();
     }
 
 }

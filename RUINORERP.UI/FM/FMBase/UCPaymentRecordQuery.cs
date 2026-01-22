@@ -113,42 +113,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-
-        protected async override void Delete(List<tb_FM_PaymentRecord> Datas)
-        {
-            if (Datas == null || Datas.Count == 0)
-            {
-                //提示一下删除成功
-                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
-                return;
-            }
-
-            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-            {
-                int counter = 0;
-                foreach (var item in Datas)
-                {
-                    //https://www.runoob.com/w3cnote/csharp-enum.html
-                    var paymentStatus = (PaymentStatus)(item.GetPropertyValue(typeof(PaymentStatus).Name).ToInt());
-                    if (paymentStatus == PaymentStatus.待审核 || paymentStatus == PaymentStatus.草稿)
-                    {
-                        //查询删除逻辑和编辑的删除逻辑 其它功能也一样。要统一起来。 维护一份！！！！！！！！！！！！TODO by watson 2025-6-22
-                        BaseController<tb_FM_PaymentRecord> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentRecord>>(typeof(tb_FM_PaymentRecord).Name + "Controller");
-                        bool rs = await ctr.BaseDeleteByNavAsync(item);
-                        if (rs)
-                        {
-                            counter++;
-                        }
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("提示", "【未审核】的单据才能删除");
-                    }
-                }
-                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
-            }
-        }
-
+ 
         private void UCPaymentRecordQuery_Load(object sender, EventArgs e)
         {
             #region 双击单号后按业务类型查询显示对应业务窗体

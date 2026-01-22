@@ -56,13 +56,13 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
 
-        protected async override void Delete(List<View_BOM> Datas)
+        protected async override Task<bool> Delete(List<View_BOM> Datas)
         {
             if (Datas == null || Datas.Count == 0)
             {
                 //提示一下删除成功
                 MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
-                return;
+                return false;
             }
 
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
@@ -98,6 +98,7 @@ namespace RUINORERP.UI.MRP.BOM
                 }
                 MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
             }
+            return true;
         }
 
 

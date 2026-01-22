@@ -529,46 +529,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-
-        protected async override void Delete(List<tb_FM_PreReceivedPayment> Datas)
-        {
-            if (Datas == null || Datas.Count == 0)
-            {
-                //提示一下删除成功
-                MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
-                return;
-            }
-
-            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-            {
-                int counter = 0;
-                foreach (var item in Datas)
-                {
-                    //https://www.runoob.com/w3cnote/csharp-enum.html
-                    var dataStatus = (PrePaymentStatus)(item.GetPropertyValue(typeof(PrePaymentStatus).Name).ToInt());
-                    if (dataStatus == PrePaymentStatus.待审核 || dataStatus == PrePaymentStatus.草稿)
-                    {
-                        BaseController<tb_FM_PreReceivedPayment> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PreReceivedPayment>>(typeof(tb_FM_PreReceivedPayment).Name + "Controller");
-                        bool rs = await ctr.BaseDeleteAsync(item);
-                        if (rs)
-                        {
-                            FMAuditLogHelper fMAuditLog = Startup.GetFromFac<FMAuditLogHelper>();
-                            fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("删除预收款单", item  as tb_FM_PreReceivedPayment);
-                            counter++;
-                        }
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
-                    }
-                }
-                if (counter > 0)
-                {
-                    MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
-                }
-            }
-        }
-
+ 
         private void UCPreReceivedPaymentQuery_Load(object sender, EventArgs e)
         {
             if (base._UCBillMasterQuery == null)

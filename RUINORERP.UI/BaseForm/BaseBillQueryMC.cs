@@ -51,6 +51,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.UI.WebControls;
+using System.Windows.Documents;
 using System.Windows.Forms;
 using System.Xml;
 using CommonHelper = RUINORERP.UI.Common.CommonHelper;
@@ -68,7 +69,7 @@ namespace RUINORERP.UI.BaseForm
     {
 
 
-        public  IEntityCacheManager _cacheManager;
+        public IEntityCacheManager _cacheManager;
         /// <summary>
         /// 统一状态管理器
         /// </summary>
@@ -632,9 +633,12 @@ namespace RUINORERP.UI.BaseForm
                     }
                     try
                     {
-                        Delete(selectlist);
-                        // 添加同步代码
-                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.Deleted, "单据已删除");
+                        bool deleters =await Delete(selectlist);
+                        if (deleters)
+                        {
+                            // 添加同步代码
+                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.Deleted, "单据已删除");
+                        }
                     }
                     finally
                     {
@@ -823,13 +827,13 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        protected async virtual void Delete(List<M> Datas)
+        protected async virtual Task<bool> Delete(List<M> Datas)
         {
             if (Datas == null || Datas.Count == 0)
             {
                 //提示一下删除成功
                 MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
-                return;
+                return false;
             }
 
             if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
@@ -875,10 +879,13 @@ namespace RUINORERP.UI.BaseForm
                     {
                         //
                         MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
+                        return false;
                     }
                 }
                 MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+
             }
+            return true;
         }
 
 
@@ -2858,11 +2865,11 @@ namespace RUINORERP.UI.BaseForm
                         break;
                     case Keys.F1:
                         // 显示帮助 - 优先显示当前焦点控件的帮助
-                        
+
                         return true;
                     case Keys.F2:
                         // 显示帮助系统主窗体
-                        
+
                         return true;
                     case Keys.Enter:
                         // 检查当前焦点控件是否为下拉控件或其他特殊控件，避免重复触发查询

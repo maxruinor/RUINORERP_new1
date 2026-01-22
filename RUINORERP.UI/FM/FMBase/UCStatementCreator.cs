@@ -506,11 +506,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-        protected override void Delete(List<tb_FM_ReceivablePayable> Datas)
-        {
-            MessageBox.Show("应收应付记录不能删除？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
-        }
+ 
 
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
         {

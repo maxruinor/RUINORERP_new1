@@ -62,14 +62,14 @@ namespace RUINORERP.Business
             {
                 SettlementRecord.TargetBizType = (int)BizType.应收款单;
                 // 确保异步调用正确执行
-                SettlementRecord.SettlementNo = await Task.Run(async () => 
+                SettlementRecord.SettlementNo = await Task.Run(async () =>
                     await bizCodeService.GenerateBizBillNoAsync(BizType.收款核销, CancellationToken.None));
             }
             else
             {
                 SettlementRecord.SourceBizType = (int)BizType.应付款单;
                 // 确保异步调用正确执行
-                SettlementRecord.SettlementNo = await Task.Run(async () => 
+                SettlementRecord.SettlementNo = await Task.Run(async () =>
                     await bizCodeService.GenerateBizBillNoAsync(BizType.付款核销, CancellationToken.None));
             }
             SettlementRecord.SettlementType = (int)SettlementType.坏账核销;
@@ -184,7 +184,8 @@ namespace RUINORERP.Business
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail, tb_FM_ReceivablePayable receivablePayable, decimal amountToWriteOff)
+        public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail,
+            tb_FM_ReceivablePayable receivablePayable, decimal amountToWriteOff, int RelatedBizType = -1, long RelatedBillId = 0, string RelatedBillNo = "")
         {
 
             //预收付款单 审核时 自动生成 收付款记录
@@ -197,6 +198,12 @@ namespace RUINORERP.Business
             }
 
             SettlementRecord.ActionStatus = ActionStatus.新增;
+            if (RelatedBizType > -1)
+            {
+                SettlementRecord.RelatedBizType = RelatedBizType;
+                SettlementRecord.RelatedBillId = RelatedBillId;
+                SettlementRecord.RelatedBillNo = RelatedBillNo;
+            }
             SettlementRecord.IsAutoSettlement = true;
             SettlementRecord.ReceivePaymentType = PaymentRecord.ReceivePaymentType;
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
@@ -223,7 +230,7 @@ namespace RUINORERP.Business
             //成熟系统的设计目标是保证财务数据的清晰性、一致性和可审计性。核销记录本身不应该使用负数来区分方向。
             SettlementRecord.SettledLocalAmount = Math.Abs(amountToWriteOff);  // 使用绝对值确保金额为正
             SettlementRecord.SettledForeignAmount = 0; //暂时不支付外币
-            //应收单转收款
+                                                       //应收单转收款
             SettlementRecord.SourceBillNo = receivablePayable.ARAPNo;
             SettlementRecord.SourceBillId = receivablePayable.ARAPId;
 

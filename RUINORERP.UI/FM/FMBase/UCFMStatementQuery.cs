@@ -280,10 +280,10 @@ namespace RUINORERP.UI.FM
         }
 
 
-        protected override void Delete(List<tb_FM_Statement> Datas)
+        protected override async Task<bool> Delete(List<tb_FM_Statement> Datas)
         {
             MessageBox.Show("对账单记录不能删除？", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            return;
+            return false;
         }
         public GridViewDisplayTextResolver DisplayTextResolver;
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)

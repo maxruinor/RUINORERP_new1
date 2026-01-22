@@ -1,41 +1,38 @@
+using AutoMapper;
+using AutoUpdateTools;
+using ExCSS;
+using Krypton.Navigator;
+using Org.BouncyCastle.Crypto.Prng;
+using RUINOR.Core;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.CollectionExtension;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-
-using RUINORERP.Business.AutoMapper;
-using AutoMapper;
-using RUINORERP.Model.Base;
-using SqlSugar;
-using Krypton.Navigator;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.Global.EnumExt.CRM;
-using RUINORERP.Global;
-
-
-
-using AutoUpdateTools;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Common.Extensions;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.Business.BizMapperService;
-using RUINORERP.Global.Model;
-using Org.BouncyCastle.Crypto.Prng;
 namespace RUINORERP.UI.FM
 {
     /// <summary>
@@ -116,10 +113,32 @@ namespace RUINORERP.UI.FM
         }
 
 
-        protected override void Delete(List<tb_FM_PaymentSettlement> Datas)
+        protected override async Task<bool> Delete(List<tb_FM_PaymentSettlement> Datas)
         {
-            MessageBox.Show("核销记录不能删除？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            return;
+
+            if (!MainForm.Instance.AppContext.IsSuperUser)
+            {
+                MessageBox.Show("核销记录不能删除？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                return false;
+            }
+            else
+            {
+                if (MessageBox.Show("系统不建议删除【核销记录】\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                {
+                    for (int i = 0; i < Datas.Count; i++)
+                    {
+                        var item = Datas[i];
+                        BaseController<tb_FM_PaymentSettlement> ctr = Startup.GetFromFacByName<BaseController<tb_FM_PaymentSettlement>>(typeof(tb_FM_PaymentSettlement).Name + "Controller");
+                        bool rs = false;
+                        rs = await ctr.BaseDeleteAsync(item);
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         private void UCPaymentSettlementQuery_Load(object sender, EventArgs e)
@@ -134,10 +153,10 @@ namespace RUINORERP.UI.FM
                     base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentSettlement>(c => c.SourceBizType, c => c.SourceBillNo);
                     base._UCBillMasterQuery.GridRelated.SetComplexTargetField<tb_FM_PaymentSettlement>(c => c.TargetBizType, c => c.TargetBillNo);
                     // 使用EntityMappingHelper代替BizTypeMapper
-            //将枚举中的值循环
-            foreach (var biztype in Enum.GetValues(typeof(BizType)))
-            {
-                var tableName = EntityMappingHelper.GetEntityType((BizType)biztype);
+                    //将枚举中的值循环
+                    foreach (var biztype in Enum.GetValues(typeof(BizType)))
+                    {
+                        var tableName = EntityMappingHelper.GetEntityType((BizType)biztype);
                         if (tableName == null)
                         {
                             continue;
@@ -153,7 +172,7 @@ namespace RUINORERP.UI.FM
                     base._UCBillMasterQuery.newSumDataGridViewMaster.DataBindingComplete += new DataGridViewBindingCompleteEventHandler(grid_DataBindingComplete);
                 }
             }
-          
+
         }
 
         private void grid_DataBindingComplete(object sender,

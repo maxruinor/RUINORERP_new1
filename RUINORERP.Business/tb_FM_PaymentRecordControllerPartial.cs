@@ -445,6 +445,7 @@ namespace RUINORERP.Business
                             // 计算所有明细的总净额（应收应付的代数和）
                             // 这是所有应收应付单相互抵冲后的最终净额
                             // 例如：应收3102元 + 应付6120元 = 净支付金额3018元
+                            // 其中间 应收应付 单项中：也是求负，如果有负数（余额模式）会对冲。如  付款时：负-100，+500，则是付400
                             decimal totalNetAmount = 0;
                             if (hasMixedTypes)
                             {
@@ -831,6 +832,7 @@ namespace RUINORERP.Business
                                     receivablePayable.AllowAddToStatement = true;
                                 }
 
+                         
                                 // 生成核销记录
                                 await settlementController.GenerateSettlement(entity, RecordDetail, receivablePayable, amountToWriteOff);
 

@@ -187,8 +187,6 @@ namespace RUINORERP.Business
         public async Task<tb_FM_PaymentSettlement> GenerateSettlement(tb_FM_PaymentRecord PaymentRecord, tb_FM_PaymentRecordDetail PaymentRecordDetail, tb_FM_ReceivablePayable receivablePayable, decimal amountToWriteOff)
         {
 
-
-
             //预收付款单 审核时 自动生成 收付款记录
             tb_FM_PaymentSettlement SettlementRecord = new tb_FM_PaymentSettlement();
             SettlementRecord = mapper.Map<tb_FM_PaymentSettlement>(PaymentRecordDetail);

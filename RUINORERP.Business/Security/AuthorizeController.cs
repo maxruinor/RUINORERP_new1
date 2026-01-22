@@ -114,10 +114,16 @@ namespace RUINORERP.Business.Security
                         decimal minTolerance = (decimal)Math.Pow(10, -moneyPrecision);
 
                         // 确保配置的容差阈值不超过精度限制
-                        decimal tolerance = Math.Min(fmConfig.AmountCalculationTolerance, minTolerance);
+                        decimal tolerance = fmConfig.AmountCalculationTolerance;
 
-                        // 四舍五入到精度位
-                        return Math.Round(tolerance, moneyPrecision);
+                        // 如果用户设置的容差阈值小于最小值，则使用最小值
+                        if (tolerance < minTolerance)
+                        {
+                            tolerance = minTolerance;
+                        }
+
+                        // 不进行四舍五入，直接返回用户配置的值（如果大于最小值）
+                        return tolerance;
                     }
                 }
             }

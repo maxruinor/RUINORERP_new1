@@ -412,6 +412,14 @@ namespace RUINORERP.Server.Controls
             ShowMonitorDetails();
         }
 
+        /// <summary>
+        /// 查看已删除文件
+        /// </summary>
+        private async void btnViewDeletedFiles_Click(object sender, EventArgs e)
+        {
+            await ShowDeletedFilesAsync();
+        }
+
         private async void btnViewDetails_Click(object sender, EventArgs e)
         {
             // 打开详细视图功能
@@ -675,6 +683,357 @@ namespace RUINORERP.Server.Controls
 
             details.Controls.Add(listView);
             details.ShowDialog();
+        }
+
+        /// <summary>
+        /// 显示已删除文件列表并提供管理功能
+        /// </summary>
+        private async Task ShowDeletedFilesAsync()
+        {
+            try
+            {
+                this.Cursor = Cursors.WaitCursor;
+
+                // 获取清理服务
+                var cleanupService = Program.ServiceProvider.GetService<FileCleanupService>();
+                if (cleanupService == null)
+                {
+                    MessageBox.Show("清理服务未找到", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 获取已删除文件列表
+                var deletedFiles = await cleanupService.GetDeletedFilesAsync();
+
+                // 创建已删除文件管理窗体
+                var deletedFilesForm = new Form
+                {
+                    Text = "已删除文件管理",
+                    Size = new System.Drawing.Size(1200, 700),
+                    StartPosition = FormStartPosition.CenterParent,
+                    MinimumSize = new System.Drawing.Size(1000, 600)
+                };
+
+                // 创建顶部面板（按钮）
+                var topPanel = new Panel
+                {
+                    Dock = DockStyle.Top,
+                    Height = 60,
+                    Padding = new System.Windows.Forms.Padding(10)
+                };
+
+                var btnPhysicalDelete = new Button
+                {
+                    Text = "物理删除选中文件",
+                    Location = new System.Drawing.Point(10, 10),
+                    Size = new System.Drawing.Size(150, 40),
+                    BackColor = System.Drawing.Color.LightCoral,
+                    ForeColor = System.Drawing.Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnPhysicalDelete.FlatAppearance.BorderSize = 0;
+
+                var btnRestore = new Button
+                {
+                    Text = "恢复选中文件",
+                    Location = new System.Drawing.Point(170, 10),
+                    Size = new System.Drawing.Size(120, 40),
+                    BackColor = System.Drawing.Color.LightGreen,
+                    ForeColor = System.Drawing.Color.White,
+                    FlatStyle = FlatStyle.Flat
+                };
+                btnRestore.FlatAppearance.BorderSize = 0;
+
+                var btnRefreshDeleted = new Button
+                {
+                    Text = "刷新列表",
+                    Location = new System.Drawing.Point(300, 10),
+                    Size = new System.Drawing.Size(100, 40),
+                    FlatStyle = FlatStyle.Flat
+                };
+
+                var btnSelectAll = new Button
+                {
+                    Text = "全选",
+                    Location = new System.Drawing.Point(410, 10),
+                    Size = new System.Drawing.Size(80, 40),
+                    FlatStyle = FlatStyle.Flat
+                };
+
+                var btnUnselectAll = new Button
+                {
+                    Text = "取消全选",
+                    Location = new System.Drawing.Point(500, 10),
+                    Size = new System.Drawing.Size(100, 40),
+                    FlatStyle = FlatStyle.Flat
+                };
+
+                var lblCount = new Label
+                {
+                    Text = $"共 {deletedFiles.Count} 个已删除文件",
+                    Location = new System.Drawing.Point(620, 20),
+                    AutoSize = true,
+                    Font = new System.Drawing.Font("微软雅黑", 10, System.Drawing.FontStyle.Bold)
+                };
+
+                topPanel.Controls.AddRange(new Control[] { 
+                    btnPhysicalDelete, btnRestore, btnRefreshDeleted, btnSelectAll, btnUnselectAll, lblCount 
+                });
+
+                // 创建ListView
+                var listView = new ListView
+                {
+                    Dock = DockStyle.Fill,
+                    View = View.Details,
+                    FullRowSelect = true,
+                    GridLines = true,
+                    MultiSelect = true,
+                    CheckBoxes = true
+                };
+
+                // 添加列
+                listView.Columns.Add("关联ID", 80);
+                listView.Columns.Add("文件ID", 80);
+                listView.Columns.Add("原始文件名", 200);
+                listView.Columns.Add("文件大小", 100);
+                listView.Columns.Add("业务编号", 120);
+                listView.Columns.Add("业务类型", 120);
+                listView.Columns.Add("关联字段", 120);
+                listView.Columns.Add("业务主键ID", 100);
+                listView.Columns.Add("文件状态", 80);
+                listView.Columns.Add("删除时间", 160);
+
+                // 添加数据
+                foreach (var file in deletedFiles)
+                {
+                    var item = new ListViewItem(file.RelationId.ToString());
+                    item.Tag = file.RelationId;
+                    item.SubItems.Add(file.FileId.ToString());
+                    item.SubItems.Add(file.OriginalFileName);
+                    item.SubItems.Add(file.FileSizeFormatted);
+                    item.SubItems.Add(file.BusinessNo ?? "");
+                    item.SubItems.Add(file.BusinessTypeName);
+                    item.SubItems.Add(file.RelatedField ?? "");
+                    item.SubItems.Add(file.BusinessId?.ToString() ?? "");
+                    item.SubItems.Add(file.FileStatusName);
+                    item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                    // 根据删除时间设置颜色
+                    var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
+                    if (daysSinceDeleted > 30)
+                        item.BackColor = System.Drawing.Color.LightPink;
+                    else if (daysSinceDeleted > 7)
+                        item.BackColor = System.Drawing.Color.LightYellow;
+
+                    listView.Items.Add(item);
+                }
+
+                // 刷新按钮事件
+                btnRefreshDeleted.Click += async (s, e) =>
+                {
+                    try
+                    {
+                        deletedFilesForm.Cursor = Cursors.WaitCursor;
+                        var refreshedFiles = await cleanupService.GetDeletedFilesAsync();
+                        
+                        listView.Items.Clear();
+                        foreach (var file in refreshedFiles)
+                        {
+                            var item = new ListViewItem(file.RelationId.ToString());
+                            item.Tag = file.RelationId;
+                            item.SubItems.Add(file.FileId.ToString());
+                            item.SubItems.Add(file.OriginalFileName);
+                            item.SubItems.Add(file.FileSizeFormatted);
+                            item.SubItems.Add(file.BusinessNo ?? "");
+                            item.SubItems.Add(file.BusinessTypeName);
+                            item.SubItems.Add(file.RelatedField ?? "");
+                            item.SubItems.Add(file.BusinessId?.ToString() ?? "");
+                            item.SubItems.Add(file.FileStatusName);
+                            item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                            var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
+                            if (daysSinceDeleted > 30)
+                                item.BackColor = System.Drawing.Color.LightPink;
+                            else if (daysSinceDeleted > 7)
+                                item.BackColor = System.Drawing.Color.LightYellow;
+
+                            listView.Items.Add(item);
+                        }
+
+                        lblCount.Text = $"共 {refreshedFiles.Count} 个已删除文件";
+                        MessageBox.Show("刷新成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"刷新失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        deletedFilesForm.Cursor = Cursors.Default;
+                    }
+                };
+
+                // 全选按钮事件
+                btnSelectAll.Click += (s, e) =>
+                {
+                    foreach (ListViewItem item in listView.Items)
+                        item.Checked = true;
+                };
+
+                // 取消全选按钮事件
+                btnUnselectAll.Click += (s, e) =>
+                {
+                    foreach (ListViewItem item in listView.Items)
+                        item.Checked = false;
+                };
+
+                // 物理删除按钮事件
+                btnPhysicalDelete.Click += async (s, e) =>
+                {
+                    var selectedItems = listView.CheckedItems.Cast<ListViewItem>().ToList();
+                    if (selectedItems.Count == 0)
+                    {
+                        MessageBox.Show("请先选择要删除的文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    var confirmResult = MessageBox.Show(
+                        $"确定要物理删除选中的 {selectedItems.Count} 个文件吗？\n\n" +
+                        "注意：此操作不可恢复，将永久删除物理文件和数据库记录！",
+                        "确认删除",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning
+                    );
+
+                    if (confirmResult != DialogResult.Yes)
+                        return;
+
+                    try
+                    {
+                        deletedFilesForm.Cursor = Cursors.WaitCursor;
+
+                        var relationIds = selectedItems.Select(item => (long)item.Tag).ToList();
+                        var deletedCount = await cleanupService.PhysicalDeleteDeletedFilesAsync(relationIds);
+
+                        MessageBox.Show(
+                            $"物理删除完成！\n\n成功删除 {deletedCount} 个文件",
+                            "删除结果",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+
+                        // 刷新列表
+                        var refreshedFiles = await cleanupService.GetDeletedFilesAsync();
+                        listView.Items.Clear();
+                        foreach (var file in refreshedFiles)
+                        {
+                            var item = new ListViewItem(file.RelationId.ToString());
+                            item.Tag = file.RelationId;
+                            item.SubItems.Add(file.FileId.ToString());
+                            item.SubItems.Add(file.OriginalFileName);
+                            item.SubItems.Add(file.FileSizeFormatted);
+                            item.SubItems.Add(file.BusinessNo ?? "");
+                            item.SubItems.Add(file.BusinessTypeName);
+                            item.SubItems.Add(file.RelatedField ?? "");
+                            item.SubItems.Add(file.BusinessId?.ToString() ?? "");
+                            item.SubItems.Add(file.FileStatusName);
+                            item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                            var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
+                            if (daysSinceDeleted > 30)
+                                item.BackColor = System.Drawing.Color.LightPink;
+                            else if (daysSinceDeleted > 7)
+                                item.BackColor = System.Drawing.Color.LightYellow;
+
+                            listView.Items.Add(item);
+                        }
+
+                        lblCount.Text = $"共 {refreshedFiles.Count} 个已删除文件";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"物理删除失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        deletedFilesForm.Cursor = Cursors.Default;
+                    }
+                };
+
+                // 恢复按钮事件
+                btnRestore.Click += async (s, e) =>
+                {
+                    var selectedItems = listView.CheckedItems.Cast<ListViewItem>().ToList();
+                    if (selectedItems.Count == 0)
+                    {
+                        MessageBox.Show("请先选择要恢复的文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    try
+                    {
+                        deletedFilesForm.Cursor = Cursors.WaitCursor;
+
+                        var relationIds = selectedItems.Select(item => (long)item.Tag).ToList();
+                        var restoredCount = await cleanupService.RestoreDeletedFilesAsync(relationIds);
+
+                        MessageBox.Show(
+                            $"恢复完成！\n\n成功恢复 {restoredCount} 个文件关联",
+                            "恢复结果",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+
+                        // 刷新列表
+                        var refreshedFiles = await cleanupService.GetDeletedFilesAsync();
+                        listView.Items.Clear();
+                        foreach (var file in refreshedFiles)
+                        {
+                            var item = new ListViewItem(file.RelationId.ToString());
+                            item.Tag = file.RelationId;
+                            item.SubItems.Add(file.FileId.ToString());
+                            item.SubItems.Add(file.OriginalFileName);
+                            item.SubItems.Add(file.FileSizeFormatted);
+                            item.SubItems.Add(file.BusinessNo ?? "");
+                            item.SubItems.Add(file.BusinessTypeName);
+                            item.SubItems.Add(file.RelatedField ?? "");
+                            item.SubItems.Add(file.BusinessId?.ToString() ?? "");
+                            item.SubItems.Add(file.FileStatusName);
+                            item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
+
+                            var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
+                            if (daysSinceDeleted > 30)
+                                item.BackColor = System.Drawing.Color.LightPink;
+                            else if (daysSinceDeleted > 7)
+                                item.BackColor = System.Drawing.Color.LightYellow;
+
+                            listView.Items.Add(item);
+                        }
+
+                        lblCount.Text = $"共 {refreshedFiles.Count} 个已删除文件";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"恢复失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        deletedFilesForm.Cursor = Cursors.Default;
+                    }
+                };
+
+                deletedFilesForm.Controls.Add(topPanel);
+                deletedFilesForm.Controls.Add(listView);
+                deletedFilesForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载已删除文件失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
         }
     }
 }

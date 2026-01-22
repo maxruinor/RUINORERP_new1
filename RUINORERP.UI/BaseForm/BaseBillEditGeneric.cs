@@ -1349,8 +1349,8 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="TargetField">关联字段表达式</param>
         /// <returns>操作是否成功</returns>
         public async Task<bool> UploadUpdatedImagesAsync<Target>(
-            Target entity, 
-            List<Tuple<byte[], ImageInfo>> updatedImages, 
+            Target entity,
+            List<Tuple<byte[], ImageInfo>> updatedImages,
             List<ImageInfo> deletedImages,
             Expression<Func<Target, object>> TargetField)
         {
@@ -1368,7 +1368,7 @@ namespace RUINORERP.UI.BaseForm
                 if (deletedImages != null && deletedImages.Count > 0)
                 {
                     logger.LogInformation("开始处理 {Count} 张已删除的图片", deletedImages.Count);
-                    
+
                     foreach (var deletedImage in deletedImages)
                     {
                         // 只有有FileId的图片才是已上传到服务器的，需要删除
@@ -1376,27 +1376,27 @@ namespace RUINORERP.UI.BaseForm
                         {
                             try
                             {
-                                logger.LogInformation("删除服务器上的图片：FileId={FileId}, FileName={FileName}", 
+                                logger.LogInformation("删除服务器上的图片：FileId={FileId}, FileName={FileName}",
                                     deletedImage.FileId, deletedImage.OriginalFileName);
-                                
+
                                 // 创建删除请求
                                 var deleteRequest = new FileDeleteRequest();
                                 deleteRequest.BusinessNo = billNo;
                                 deleteRequest.BusinessId = billId;
                                 deleteRequest.BusinessType = (int)EntityInfo.BizType;
                                 deleteRequest.PhysicalDelete = false; // 逻辑删除
-                                
+
                                 // 添加要删除的文件信息
                                 var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
                                 if (fileStorageInfo != null)
                                 {
                                     deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
                                 }
-                                
+
                                 // 调用文件管理服务删除文件
                                 var fileService = Startup.GetFromFac<FileManagementService>();
                                 var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
-                                
+
                                 if (deleteResponse.IsSuccess)
                                 {
                                     MainForm.Instance.uclog.AddLog($"图片删除成功：{deletedImage.OriginalFileName}");
@@ -1406,7 +1406,7 @@ namespace RUINORERP.UI.BaseForm
                                 {
                                     allSuccess = false;
                                     MainForm.Instance.uclog.AddLog($"图片删除失败：{deletedImage.OriginalFileName}，原因：{deleteResponse.ErrorMessage}");
-                                    logger.LogError("图片删除失败：FileId={FileId}, Error={Error}", 
+                                    logger.LogError("图片删除失败：FileId={FileId}, Error={Error}",
                                         deletedImage.FileId, deleteResponse.ErrorMessage);
                                 }
                             }
@@ -4647,7 +4647,12 @@ namespace RUINORERP.UI.BaseForm
                     // BaseSaveOrUpdateWithChild 会根据主键ID自动判断是新增、修改还是删除
                     details = new List<C>(detailentity);
 
-
+                    //明细中有产品的才去判断需要产品ID大于0的记录
+                    bool ContainDetail = false;
+                    if (typeof(C).ContainsProperty(prodDetailIDName))
+                    {
+                        ContainDetail = true;
+                    }
                     // int validDetailCount = details.Count(t => t.ContainsProperty(prodDetailIDName) && t.GetPropertyValue(prodDetailIDName).ToLong() > 0);
 
                     // 统计有效明细数量（ProdDetailID大于0）
@@ -4667,7 +4672,7 @@ namespace RUINORERP.UI.BaseForm
                     });
 
                     // 必须要有子表的合法数据，否则无法修复性保存
-                    if (validDetailCount == 0)
+                    if (validDetailCount == 0 && ContainDetail)
                     {
                         MessageBox.Show(
                             "修复性保存要求必须有子表的合法数据。\n\n" +

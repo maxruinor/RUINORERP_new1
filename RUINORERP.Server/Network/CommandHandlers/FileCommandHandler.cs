@@ -827,11 +827,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     int SelfRelationCount = 0;
                     try
                     {
-                        var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo == deleteRequest.BusinessNo);
+                        var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo == deleteRequest.BusinessNo && c.isdeleted == false);
                         SelfRelationCount = SelfRelations?.Count ?? 0;
                         relationsToDelete.AddRange(SelfRelations);
 
-                        var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo != deleteRequest.BusinessNo);
+                        var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo != deleteRequest.BusinessNo && c.isdeleted == false);
                         int OtherRelationCount = OtherRelations?.Count ?? 0;
 
                         // 检查文件是否被其他业务引用
@@ -849,15 +849,25 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
                     }
 
-                    // 1. 删除业务关联记录（无论是否被其他业务引用，都需要删除当前业务的关联）
+                    // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
                     try
                     {
                         for (int dr = 0; dr < relationsToDelete.Count; dr++)
                         {
-                            var relationDeleteResult = await _businessRelationController.BaseDeleteAsync(relationsToDelete[dr]);
-                            if (relationDeleteResult)
+                            // 使用逻辑删除：设置isdeleted标记而不是物理删除
+                            var relation = relationsToDelete[dr];
+                            relation.isdeleted = true;
+                            var updateResult = await _businessRelationController.UpdateAsync(relation);
+                            
+                            if (updateResult)
                             {
                                 relationDeletedCount++;
+                                _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessNo: {BusinessNo}", 
+                                    relation.RelationId, currentFileId, deleteRequest.BusinessNo);
+                            }
+                            else
+                            {
+                                _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
                             }
                         }
                     }

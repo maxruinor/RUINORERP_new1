@@ -196,7 +196,7 @@ namespace RUINORERP.UI.Network.Services
 
                     // 构建查询条件
                     var query = db.Queryable<tb_FS_BusinessRelation>()
-                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo);
+                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo && c.isdeleted == false);
 
                     // 优先使用BusinessId查询(性能优化)
                     //if (businessId.HasValue && businessId.Value > 0)

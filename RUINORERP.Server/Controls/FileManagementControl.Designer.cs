@@ -46,6 +46,7 @@ namespace RUINORERP.Server.Controls
             btnCleanupFiles = new System.Windows.Forms.Button();
             btnViewDetails = new System.Windows.Forms.Button();
             btnMonitorDetails = new System.Windows.Forms.Button();
+            btnViewDeletedFiles = new System.Windows.Forms.Button();
             listView1 = new System.Windows.Forms.ListView();
             statusStrip1 = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
@@ -226,6 +227,7 @@ namespace RUINORERP.Server.Controls
             panel1.Controls.Add(btnCleanupFiles);
             panel1.Controls.Add(btnViewDetails);
             panel1.Controls.Add(btnMonitorDetails);
+            panel1.Controls.Add(btnViewDeletedFiles);
             panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             panel1.Location = new System.Drawing.Point(0, 569);
             panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -281,6 +283,19 @@ namespace RUINORERP.Server.Controls
             btnMonitorDetails.Text = "查看监控详情";
             btnMonitorDetails.UseVisualStyleBackColor = true;
             btnMonitorDetails.Click += new System.EventHandler(btnMonitorDetails_Click);
+            //
+            // btnViewDeletedFiles
+            //
+            btnViewDeletedFiles.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnViewDeletedFiles.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(173)))), ((int)(((byte)(216)))), ((int)(((byte)(230)))));
+            btnViewDeletedFiles.Location = new System.Drawing.Point(469, 8);
+            btnViewDeletedFiles.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            btnViewDeletedFiles.Name = "btnViewDeletedFiles";
+            btnViewDeletedFiles.Size = new System.Drawing.Size(111, 33);
+            btnViewDeletedFiles.TabIndex = 4;
+            btnViewDeletedFiles.Text = "已删除文件";
+            btnViewDeletedFiles.UseVisualStyleBackColor = false;
+            btnViewDeletedFiles.Click += new System.EventHandler(btnViewDeletedFiles_Click);
             // 
             // listView1
             // 
@@ -385,6 +400,7 @@ namespace RUINORERP.Server.Controls
         private System.Windows.Forms.Button btnCleanupFiles;
         private System.Windows.Forms.Button btnViewDetails;
         private System.Windows.Forms.Button btnMonitorDetails;
+        private System.Windows.Forms.Button btnViewDeletedFiles;
         private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;

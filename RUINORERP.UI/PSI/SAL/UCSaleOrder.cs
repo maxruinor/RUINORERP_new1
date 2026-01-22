@@ -227,7 +227,7 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
         /// <summary>
-        /// 绑定数据到控件
+        /// 绑定数据到控件1
         /// </summary>
         /// <param name="entityPara">实体参数</param>
         /// <param name="actionStatus">操作状态</param>
@@ -623,6 +623,7 @@ namespace RUINORERP.UI.PSI.SAL
             base.BindData(entity);
 
             // 调用基类方法下载图片，指定关联字段
+           // 注意:LoadImages内部已自动完成初始化和状态重置,无需额外调用InitializeImageControl
            await DownloadImageAsync(entity, magicPictureBox订金付款凭证, c=> c.VoucherImage);
         }
 

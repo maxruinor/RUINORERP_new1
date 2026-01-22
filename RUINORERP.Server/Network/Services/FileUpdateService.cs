@@ -651,7 +651,7 @@ namespace RUINORERP.Server.Network.Services
 
                 if (currentRelations.Count == 0)
                 {
-                    _logger.Warning("未找到当前活跃的文件关联,无法恢复");
+                    _logger.LogWarning("未找到当前活跃的文件关联,无法恢复");
                     return false;
                 }
 
@@ -662,7 +662,7 @@ namespace RUINORERP.Server.Network.Services
 
                 if (versionFileInfo == null)
                 {
-                    _logger.Warning("指定的版本文件不存在,FileId: {FileId}", versionFileId);
+                    _logger.LogWarning("指定的版本文件不存在,FileId: {FileId}", versionFileId);
                     return false;
                 }
 
@@ -693,7 +693,7 @@ namespace RUINORERP.Server.Network.Services
                     BusinessId = businessId,
                     RelatedField = relatedField,
                     IsActive = true,
-                    VersionNo = versionFileInfo.CurrentVersion ?? 1,
+                    VersionNo = versionFileInfo.CurrentVersion > 0 ? versionFileInfo.CurrentVersion : 1,
                     IsMainFile = true,
                     Created_at = DateTime.Now,
                     Created_by = userId,

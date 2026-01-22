@@ -2170,7 +2170,6 @@
     <Compile Include="Common\GridHelper.cs" />
     <Compile Include="Common\GUIUtils.cs" />
     <Compile Include="Common\HttpWebService.cs" />
-    <Compile Include="Common\ImageHelper.cs" />
     <Compile Include="Common\InitModuleMenu.cs" />
     <Compile Include="Common\KryptonTreeGridViewExt.cs" />
     <Compile Include="Common\MenuAssemblyInfo.cs" />

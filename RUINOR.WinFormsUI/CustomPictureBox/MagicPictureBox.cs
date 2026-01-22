@@ -1559,11 +1559,27 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             else
             {
-                // 单图片模式下也需要清空imageInfos
+                // 单图片模式下也需要清空图片列表
+                // 标记所有有FileId的图片为已删除
                 if (imageInfos.Count > 0)
                 {
+                    foreach (var imageInfo in imageInfos)
+                    {
+                        if (imageInfo != null && imageInfo.FileId > 0)
+                        {
+                            imageInfo.IsDeleted = true;
+                            imageInfo.IsUpdated = true;
+                            _deletedImages.Add(imageInfo);
+                        }
+                    }
                     imageInfos.Clear();
                 }
+                // 同时清空images列表
+                if (images.Count > 0)
+                {
+                    images.Clear();
+                }
+                currentImageIndex = 0;
             }
             // 更新信息面板，确保清空
             UpdateInfoPanel();
@@ -2172,69 +2188,59 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 如果是多图片模式，添加到列表中
                     if (MultiImageSupport)
                     {
-                        images.Add(this.Image);
+                        // 如果已经清除过图片，重新设置this.Image
+                        // 注意：这里需要创建新的Image对象，不能重复使用
+                        var newImage = Image.FromFile(openFileDialog.FileName);
+                        images.Add(newImage);
+
                         ImageInfo newImageInfo = new ImageInfo
                         {
                             OriginalFileName = fileInfo.Name,
                             FileSize = fileInfo.Length,
                             CreateTime = fileInfo.CreationTime,
                             FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                            HashValue = CalculateImageHash(this.Image),
-                            Width = this.Image?.Width ?? 0,
-                            Height = this.Image?.Height ?? 0,
+                            HashValue = CalculateImageHash(newImage),
+                            Width = newImage?.Width ?? 0,
+                            Height = newImage?.Height ?? 0,
                             IsUpdated = true // 标记为已更新
                         };
                         imageInfos.Add(newImageInfo);
                         // 标记图片需要更新
                         _updateManager.MarkImageAsUpdated(newImageInfo);
                         currentImageIndex = images.Count - 1;
+                        // 显示当前图片
+                        ShowCurrentImage();
                         CreateNavigationControls();
                         UpdatePageInfo();
                         UpdateImagePathsFromImages(); // 更新图片路径
                         CreateInfoPanel();
+                        // 更新上下文菜单
+                        UpdateContextMenu();
                     }
                     else
                     {
-                        // 单图片模式，替换第一张图片
-                        if (images.Count > 0)
+                        // 单图片模式，直接使用当前Image
+                        ImageInfo newImageInfo = new ImageInfo
                         {
-                            // 替换现有图片
-                            images[0] = this.Image;
-                            imageInfos[0] = new ImageInfo
-                            {
-                                OriginalFileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                IsUpdated = true, // 标记为已更新
-                                CreateTime = fileInfo.CreationTime,
-                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                                HashValue = CalculateImageHash(this.Image),
-                                Width = this.Image?.Width ?? 0,
-                                Height = this.Image?.Height ?? 0
-                            };
-                            // 标记图片需要更新
-                            _updateManager.MarkImageAsUpdated(imageInfos[0]);
-                            currentImageIndex = 0;
-                        }
-                        else
-                        {
-                            // 如果还没有图片，添加新图片
-                            images.Add(this.Image);
-                            ImageInfo newImageInfo = new ImageInfo
-                            {
-                                OriginalFileName = fileInfo.Name,
-                                FileSize = fileInfo.Length,
-                                IsUpdated = true, // 标记为已更新
-                                CreateTime = fileInfo.CreationTime,
-                                FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
-                                HashValue = CalculateImageHash(this.Image),
-                                Width = this.Image?.Width ?? 0,
-                                Height = this.Image?.Height ?? 0
-                            };
-                            imageInfos.Add(newImageInfo);
-                            // 标记图片需要更新
-                            _updateManager.MarkImageAsUpdated(newImageInfo);
-                            currentImageIndex = 0;
-                        }
+                            OriginalFileName = fileInfo.Name,
+                            FileSize = fileInfo.Length,
+                            IsUpdated = true, // 标记为已更新
+                            CreateTime = fileInfo.CreationTime,
+                            FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
+                            HashValue = CalculateImageHash(this.Image),
+                            Width = this.Image?.Width ?? 0,
+                            Height = this.Image?.Height ?? 0
+                        };
+
+                        // 标记图片需要更新
+                        _updateManager.MarkImageAsUpdated(newImageInfo);
+
+                        // 单图片模式：清空列表，只保留当前图片
+                        images.Clear();
+                        imageInfos.Clear();
+                        images.Add(this.Image);
+                        imageInfos.Add(newImageInfo);
+                        currentImageIndex = 0;
                         UpdateInfoPanel();
                     }
 
@@ -3218,6 +3224,41 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public void ClearDeletedImagesList()
         {
             _deletedImages.Clear();
+        }
+
+        /// <summary>
+        /// 初始化图片控件状态
+        /// 在从服务器重新加载图片后调用此方法
+        /// 
+        /// 功能说明：
+        /// 1. 重置当前图片列表中所有图片的 IsUpdated 和 IsDeleted 标记
+        /// 2. 清空删除图片列表
+        /// 3. 确保显示当前图片
+        /// 
+        /// 调用时机：
+        /// - 在 BindData 或 DownloadImageAsync 从服务器加载图片后
+        /// - 需要确保控件状态与服务器数据同步
+        /// </summary>
+        public void InitializeImageControl()
+        {
+            // 重置所有图片的更新和删除状态
+            foreach (var imageInfo in imageInfos)
+            {
+                if (imageInfo != null)
+                {
+                    imageInfo.IsUpdated = false;
+                    imageInfo.IsDeleted = false;
+                    _updateManager.ResetImageUpdateStatus(imageInfo);
+                }
+            }
+            // 清空删除列表
+            _deletedImages.Clear();
+            // 确保显示当前图片
+            ShowCurrentImage();
+            // 更新导航和信息面板
+            CreateNavigationControls();
+            UpdatePageInfo();
+            CreateInfoPanel();
         }
 
         /// <summary>

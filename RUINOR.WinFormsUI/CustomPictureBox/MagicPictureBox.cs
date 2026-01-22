@@ -49,7 +49,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         private const string MENU_VIEW_LARGE = "查看大图";
         private const string MENU_ADD_IMAGE = "添加图片";
         private const string MENU_PASTE_IMAGE = "粘贴图片";
-        private const string MENU_CLEAR_IMAGE = "清除图片";
         private const string MENU_DELETE_CURRENT = "删除当前图片";
 
         #region 菜单配置属性
@@ -88,16 +87,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         public bool ShowPasteImageMenuItem { get; set; } = true;
 
         /// <summary>
-        /// 是否显示"清除图片"菜单项
-        /// </summary>
-        [Browsable(true)]
-        [Category("菜单配置")]
-        [Description("控制是否显示清除图片菜单项")]
-        [DefaultValue(true)]
-        public bool ShowClearImageMenuItem { get; set; } = true;
-
-        /// <summary>
         /// 是否显示"删除当前图片"菜单项
+        /// 注意:已移除"清除图片"功能,统一使用"删除当前图片"删除单张图片
         /// </summary>
         [Browsable(true)]
         [Category("菜单配置")]
@@ -529,13 +520,15 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// <summary>
         /// 添加有图片时的菜单项
         /// 根据配置属性动态添加适用于有图片状态的菜单项
-        /// 包括查看、编辑、添加和删除等功能选项
+        /// 包括查看、添加和删除等功能选项
+        /// 
+        /// 注意:已移除"清除图片"功能,统一使用"删除当前图片"删除单张图片
         /// </summary>
         private void AddImageAvailableMenuItems()
         {
             bool hasAddedMenuItem = false;
 
-            // 查看和编辑相关菜单项
+            // 查看相关菜单项
             if (ShowViewLargeImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_VIEW_LARGE, null, new EventHandler(ViewLargeImage), MENU_VIEW_LARGE));
@@ -549,21 +542,17 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 hasAddedMenuItem = true;
             }
 
-            // 如果添加了菜单项，则添加分隔线
-            if (hasAddedMenuItem && (ShowClearImageMenuItem || (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)))
+            // 如果添加了菜单项且需要显示删除菜单项，则添加分隔线
+            if (hasAddedMenuItem && ShowDeleteCurrentImageMenuItem)
             {
                 _mainContextMenu.Items.Add(new ToolStripSeparator());
             }
 
-            // 清除选项
-            if (ShowClearImageMenuItem)
+            // 删除当前图片选项(统一使用删除当前图片,支持单图和多图模式)
+            if (ShowDeleteCurrentImageMenuItem)
             {
-                _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_CLEAR_IMAGE, null, new EventHandler(ClearImage), MENU_CLEAR_IMAGE));
-            }
-
-            // 多图片模式下的额外选项
-            if (MultiImageSupport && images.Count > 1 && ShowDeleteCurrentImageMenuItem)
-            {
+                // 如果是多图模式且有多张图片,菜单显示为"删除当前图片"
+                // 如果是单图模式或只有一张图片,也显示"删除当前图片"(但会删除唯一图片)
                 _mainContextMenu.Items.Add(new ToolStripMenuItem(MENU_DELETE_CURRENT, null, new EventHandler(DeleteCurrentImage), MENU_DELETE_CURRENT));
             }
         }
@@ -1444,6 +1433,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// - 删除的是最后一张图片：索引减1，显示前一张
         /// - 删除的是唯一一张图片：清空显示
         /// - 新添加的图片（无 FileId）：直接从列表中删除，不标记为待删除
+        /// - 单图模式：清空当前图片并标记为已删除
         /// 
         /// 数据一致性：
         /// - 已删除的图片信息保存在 _deletedImages 中，不会丢失
@@ -1452,30 +1442,84 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         private void DeleteCurrentImage(object sender, EventArgs e)
         {
-            if (MultiImageSupport && images.Count > 0 && currentImageIndex < imageInfos.Count)
+            if (images.Count > 0)
             {
+                // 单图模式处理
+                if (!MultiImageSupport)
+                {
+                    // 保存当前图片信息
+                    ImageInfo deletedImageInfo = imageInfos.Count > 0 ? imageInfos[0] : null;
+                    
+                    // 标记图片为已删除（如果有FileId表示是已上传的图片）
+                    if (deletedImageInfo != null && deletedImageInfo.FileId > 0)
+                    {
+                        deletedImageInfo.IsDeleted = true;
+                        deletedImageInfo.IsUpdated = true; // 标记为需要更新
+                        
+                        // 保存到删除列表，用于后续处理
+                        if (!_deletedImages.Contains(deletedImageInfo))
+                        {
+                            _deletedImages.Add(deletedImageInfo);
+                        }
+                        
+                        System.Diagnostics.Debug.WriteLine($"单图模式:标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
+                    }
+                    else if (deletedImageInfo != null)
+                    {
+                        // 新添加的图片（无 FileId），直接删除
+                        System.Diagnostics.Debug.WriteLine($"单图模式:删除新图片（未上传）: {deletedImageInfo.OriginalFileName}");
+                    }
+                    
+                    // 清空图片
+                    this.Image = null;
+                    imagePaths = "";
+                    
+                    // 清空列表
+                    images.Clear();
+                    imageInfos.Clear();
+                    
+                    // 更新UI
+                    UpdateInfoPanel();
+                    if (infoPanel != null)
+                    {
+                        infoPanel.Visible = false;
+                    }
+                    
+                    // 更新上下文菜单
+                    UpdateContextMenu();
+                    // 重绘 PictureBox
+                    this.Invalidate();
+                    return;
+                }
+                
+                // 多图模式处理
+                if (currentImageIndex >= imageInfos.Count)
+                {
+                    return;
+                }
+                
                 // 保存被删除图片的信息（必须在删除前保存）
-                ImageInfo deletedImageInfo = imageInfos[currentImageIndex];
+                ImageInfo multiDeletedImageInfo = imageInfos[currentImageIndex];
                 
                 // 标记图片为已删除（如果有FileId表示是已上传的图片）
-                if (deletedImageInfo != null && deletedImageInfo.FileId > 0)
+                if (multiDeletedImageInfo != null && multiDeletedImageInfo.FileId > 0)
                 {
-                    deletedImageInfo.IsDeleted = true;
-                    deletedImageInfo.IsUpdated = true; // 标记为需要更新
+                    multiDeletedImageInfo.IsDeleted = true;
+                    multiDeletedImageInfo.IsUpdated = true; // 标记为需要更新
                     
                     // 保存到删除列表，用于后续处理
                     // 使用 Contains 检查避免重复添加同一图片引用
-                    if (!_deletedImages.Contains(deletedImageInfo))
+                    if (!_deletedImages.Contains(multiDeletedImageInfo))
                     {
-                        _deletedImages.Add(deletedImageInfo);
+                        _deletedImages.Add(multiDeletedImageInfo);
                     }
                     
-                    System.Diagnostics.Debug.WriteLine($"标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
+                    System.Diagnostics.Debug.WriteLine($"多图模式:标记图片为已删除: {multiDeletedImageInfo.OriginalFileName}, FileId: {multiDeletedImageInfo.FileId}");
                 }
                 else
                 {
                     // 新添加的图片（无 FileId），直接删除，不需要标记为待删除
-                    System.Diagnostics.Debug.WriteLine($"删除新图片（未上传）: {deletedImageInfo?.OriginalFileName}");
+                    System.Diagnostics.Debug.WriteLine($"多图模式:删除新图片（未上传）: {multiDeletedImageInfo?.OriginalFileName}");
                 }
                 
                 // 从显示列表中删除当前图片
@@ -1599,11 +1643,32 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         private void AddImage(object sender, EventArgs e)
         {
+            // 单图模式检查:如果已有图片,提示用户先删除
+            if (!MultiImageSupport && images.Count > 0)
+            {
+                var result = MessageBox.Show(
+                    "单图模式已存在一张图片,需要先删除当前图片才能添加新图片。\n\n是否要删除当前图片并继续添加?",
+                    "提示",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    // 先删除当前图片
+                    DeleteCurrentImage(null, null);
+                }
+                else
+                {
+                    // 用户取消,直接返回
+                    return;
+                }
+            }
+
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Title = "选择图片";
                 openFileDialog.Filter = "图片文件|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
-                openFileDialog.Multiselect = true; // 允许多选
+                openFileDialog.Multiselect = MultiImageSupport; // 多图模式允许多选,单图模式只允许选择一个
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
@@ -1611,6 +1676,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         try
                         {
+                            // 单图模式只能添加第一张图片
+                            if (!MultiImageSupport && images.Count >= 1)
+                            {
+                                break;
+                            }
+
                             // 读取图片字节数组，用于计算哈希值
                             byte[] imageBytes = File.ReadAllBytes(fileName);
                             var image = Image.FromStream(new MemoryStream(imageBytes));
@@ -1645,7 +1716,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             }
                             else
                             {
-                                // 单图片模式下也保存文件名信息
+                                // 单图片模式:直接设置Image属性显示图片
+                                this.Image = image;
+                                
+                                // 保存图片信息
                                 if (imageInfos.Count > 0)
                                 {
                                     imageInfos[0].OriginalFileName = fileInfo.Name;
@@ -1716,6 +1790,28 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             if (files != null && files.Length > 0)
             {
+                // 单图模式检查:如果已有图片,提示用户先删除
+                if (!MultiImageSupport && images.Count > 0)
+                {
+                    var result = MessageBox.Show(
+                        "单图模式已存在一张图片,需要先删除当前图片才能拖拽新图片。\n\n是否要删除当前图片并继续拖拽?",
+                        "提示",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        // 先删除当前图片
+                        DeleteCurrentImage(null, null);
+                    }
+                    else
+                    {
+                        // 用户取消,直接返回
+                        base.OnDragDrop(e);
+                        return;
+                    }
+                }
+
                 if (MultiImageSupport)
                 {
                     // 多图片模式，添加所有拖拽的图片
@@ -1783,53 +1879,60 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
                 else
                 {
-                    // 单图片模式，替换第一张图片
-                    byte[] imageBytes = File.ReadAllBytes(files[0]);
-                    Image image = Image.FromStream(new MemoryStream(imageBytes));
-
-                    // 计算哈希值
-                    string newhash = CalculateImageHash(imageBytes);
-                    RowImage.SetImageNewHash(newhash);
-                    this.Image = image;
-
-                    // 获取文件信息并更新ImageInfo
-                    var fileInfo = new FileInfo(files[0]);
-                    if (images.Count > 0)
+                    // 单图片模式，只处理第一个文件
+                    try
                     {
-                        // 替换现有图片
-                        images[0] = image;
-                        imageInfos[0] = new ImageInfo
-                        {
-                            OriginalFileName = fileInfo.Name,
-                            FileSize = imageBytes.Length,
-                            CreateTime = fileInfo.CreationTime,
-                            Metadata = new Dictionary<string, string>(),
-                            FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
-                            HashValue = newhash,
-                            IsUpdated = true,
-                            Width = image?.Width ?? 0,
-                            Height = image?.Height ?? 0
-                        };
-                    }
-                    else
-                    {
-                        // 如果还没有图片，添加新图片
-                        images.Add(image);
-                        imageInfos.Add(new ImageInfo
-                        {
-                            OriginalFileName = fileInfo.Name,
-                            FileSize = imageBytes.Length,
-                            CreateTime = fileInfo.CreationTime,
-                            Metadata = new Dictionary<string, string>(),
-                            FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
-                            HashValue = newhash,
-                            IsUpdated = true,
-                            Width = image?.Width ?? 0,
-                            Height = image?.Height ?? 0
-                        });
-                    }
+                        byte[] imageBytes = File.ReadAllBytes(files[0]);
+                        Image image = Image.FromStream(new MemoryStream(imageBytes));
 
-                    UpdateInfoPanel();
+                        // 计算哈希值
+                        string newhash = CalculateImageHash(imageBytes);
+                        RowImage.SetImageNewHash(newhash);
+                        this.Image = image;
+
+                        // 获取文件信息并更新ImageInfo
+                        var fileInfo = new FileInfo(files[0]);
+                        if (images.Count > 0)
+                        {
+                            // 替换现有图片
+                            images[0] = image;
+                            imageInfos[0] = new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = imageBytes.Length,
+                                CreateTime = fileInfo.CreationTime,
+                                Metadata = new Dictionary<string, string>(),
+                                FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
+                                HashValue = newhash,
+                                IsUpdated = true,
+                                Width = image?.Width ?? 0,
+                                Height = image?.Height ?? 0
+                            };
+                        }
+                        else
+                        {
+                            // 如果还没有图片，添加新图片
+                            images.Add(image);
+                            imageInfos.Add(new ImageInfo
+                            {
+                                OriginalFileName = fileInfo.Name,
+                                FileSize = imageBytes.Length,
+                                CreateTime = fileInfo.CreationTime,
+                                Metadata = new Dictionary<string, string>(),
+                                FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
+                                HashValue = newhash,
+                                IsUpdated = true,
+                                Width = image?.Width ?? 0,
+                                Height = image?.Height ?? 0
+                            });
+                        }
+
+                        UpdateInfoPanel();
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"加载图片失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
             base.OnDragDrop(e);
@@ -1841,6 +1944,27 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             try
             {
+                // 单图模式检查:如果已有图片,提示用户先删除
+                if (!MultiImageSupport && images.Count > 0)
+                {
+                    var result = MessageBox.Show(
+                        "单图模式已存在一张图片,需要先删除当前图片才能粘贴新图片。\n\n是否要删除当前图片并继续粘贴?",
+                        "提示",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        // 先删除当前图片
+                        DeleteCurrentImage(null, null);
+                    }
+                    else
+                    {
+                        // 用户取消,直接返回
+                        return;
+                    }
+                }
+
                 // this.CanFocus
                 if (Clipboard.ContainsImage())
                 {
@@ -2064,7 +2188,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     return (int)ms.Length;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return 0;
             }

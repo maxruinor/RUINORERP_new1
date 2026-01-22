@@ -806,26 +806,34 @@ namespace RUINORERP.Server.Controls
                 // 添加数据
                 foreach (var file in deletedFiles)
                 {
-                    var item = new ListViewItem(file.RelationId.ToString());
-                    item.Tag = file.RelationId;
-                    item.SubItems.Add(file.FileId.ToString());
-                    item.SubItems.Add(file.OriginalFileName);
-                    item.SubItems.Add(file.FileSizeFormatted);
-                    item.SubItems.Add(file.BusinessNo ?? "");
-                    item.SubItems.Add(file.BusinessTypeName);
-                    item.SubItems.Add(file.RelatedField ?? "");
-                    item.SubItems.Add(file.BusinessId?.ToString() ?? "");
-                    item.SubItems.Add(file.FileStatusName);
-                    item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                    try
+                    {
+                        var item = new ListViewItem(file.RelationId.ToString());
+                        item.Tag = file.RelationId;
+                        item.SubItems.Add(file.FileId.ToString());
+                        item.SubItems.Add(file.OriginalFileName ?? "未知文件名");
+                        item.SubItems.Add(file.FileSizeFormatted);
+                        item.SubItems.Add(file.BusinessNo ?? "");
+                        item.SubItems.Add(file.BusinessTypeName);
+                        item.SubItems.Add(file.RelatedField ?? "");
+                        item.SubItems.Add(file.BusinessId?.ToString() ?? "");
+                        item.SubItems.Add(file.FileStatusName);
+                        item.SubItems.Add(file.DeletedTime.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                    // 根据删除时间设置颜色
-                    var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
-                    if (daysSinceDeleted > 30)
-                        item.BackColor = System.Drawing.Color.LightPink;
-                    else if (daysSinceDeleted > 7)
-                        item.BackColor = System.Drawing.Color.LightYellow;
+                        // 根据删除时间设置颜色
+                        var daysSinceDeleted = (DateTime.Now - file.DeletedTime).Days;
+                        if (daysSinceDeleted > 30)
+                            item.BackColor = System.Drawing.Color.LightPink;
+                        else if (daysSinceDeleted > 7)
+                            item.BackColor = System.Drawing.Color.LightYellow;
 
-                    listView.Items.Add(item);
+                        listView.Items.Add(item);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"添加已删除文件到列表失败: {ex.Message}");
+                        // 跳过有问题的记录，继续处理其他文件
+                    }
                 }
 
                 // 刷新按钮事件

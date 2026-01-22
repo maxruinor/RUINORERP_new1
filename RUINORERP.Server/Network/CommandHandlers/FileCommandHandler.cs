@@ -478,7 +478,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<tb_FS_FileStorageInfo> DownloadByFileIdAsync(long fileId, CancellationToken cancellationToken)
         {
-            var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false); 
+            var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false);
             if (fileInfos != null && fileInfos.Count > 0)
             {
                 return fileInfos[0] as tb_FS_FileStorageInfo;
@@ -539,8 +539,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 var relation = relations[0] as tb_FS_BusinessRelation;
                 if (relation != null)
                 {
-                    var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == relation.FileId && c.isdeleted == false); 
-             
+                    var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == relation.FileId && c.isdeleted == false);
+
                     if (fileInfos != null && fileInfos.Count > 0)
                     {
                         return fileInfos[0] as tb_FS_FileStorageInfo;
@@ -606,9 +606,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var bizRelation = relation as tb_FS_BusinessRelation;
                     if (bizRelation != null)
                     {
-                        var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == bizRelation.FileId && c.isdeleted == false); 
-                        
-            
+                        var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == bizRelation.FileId && c.isdeleted == false);
+
+
                         if (files != null && files.Count > 0)
                         {
                             fileInfos.Add(files[0] as tb_FS_FileStorageInfo);
@@ -814,125 +814,115 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         Message = ""
                     };
 
-                // 遍历处理每个文件
-                for (int i = 0; i < deleteRequest.FileStorageInfos.Count; i++)
-                {
-                    long currentFileId = deleteRequest.FileStorageInfos[i].FileId;
-
-                    // 从数据库获取文件信息
-                    tb_FS_FileStorageInfo fileStorageInfo = deleteRequest.FileStorageInfos[i];
-
-                    // 检查文件是否被其他业务引用
-                    bool isReferencedByOtherBusiness = false;
-                    int SelfRelationCount = 0;
-                    try
+                    // 遍历处理每个文件
+                    for (int i = 0; i < deleteRequest.FileStorageInfos.Count; i++)
                     {
-                        var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo == deleteRequest.BusinessNo && c.isdeleted == false);
-                        SelfRelationCount = SelfRelations?.Count ?? 0;
-                        relationsToDelete.AddRange(SelfRelations);
+                        long currentFileId = deleteRequest.FileStorageInfos[i].FileId;
 
-                        var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo != deleteRequest.BusinessNo && c.isdeleted == false);
-                        int OtherRelationCount = OtherRelations?.Count ?? 0;
+                        // 从数据库获取文件信息
+                        tb_FS_FileStorageInfo fileStorageInfo = deleteRequest.FileStorageInfos[i];
 
                         // 检查文件是否被其他业务引用
-                        if (OtherRelationCount > 0)
+                        bool isReferencedByOtherBusiness = false;
+                        int SelfRelationCount = 0;
+                        try
                         {
-                            isReferencedByOtherBusiness = true;
-                        }
-                        else
-                        {
-                            filesToDelete.Add(fileStorageInfo);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
-                    }
+                            var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo == deleteRequest.BusinessNo && c.isdeleted == false);
+                            SelfRelationCount = SelfRelations?.Count ?? 0;
+                            relationsToDelete.AddRange(SelfRelations);
 
-                    // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
-                    try
-                    {
-                        for (int dr = 0; dr < relationsToDelete.Count; dr++)
-                        {
-                            // 使用逻辑删除：设置isdeleted标记而不是物理删除
-                            var relation = relationsToDelete[dr];
-                            relation.isdeleted = true;
-                            var updateResult = await _businessRelationController.UpdateAsync(relation);
-                            
-                            if (updateResult)
+                            var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo != deleteRequest.BusinessNo && c.isdeleted == false);
+                            int OtherRelationCount = OtherRelations?.Count ?? 0;
+
+                            // 检查文件是否被其他业务引用
+                            if (OtherRelationCount > 0)
                             {
-                                relationDeletedCount++;
-                                _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessNo: {BusinessNo}", 
-                                    relation.RelationId, currentFileId, deleteRequest.BusinessNo);
+                                isReferencedByOtherBusiness = true;
                             }
                             else
                             {
-                                _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                filesToDelete.Add(fileStorageInfo);
                             }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "删除业务关联记录失败，FileId: {FileId}", currentFileId);
-                    }
-
-                    // 2. 根据条件决定删除方式
-                    // 根据用户要求和PhysicalDelete属性决定删除方式
-                    bool shouldDeleteFileAndMetadata = !isReferencedByOtherBusiness;
-                    bool isPhysicalDelete = deleteRequest.PhysicalDelete; // 获取是否物理删除的标识
-
-                    if (shouldDeleteFileAndMetadata)
-                    {
-                        // 根据PhysicalDelete属性决定是否物理删除文件
-                        bool fileDeleted = false;
-                        if (isPhysicalDelete)
+                        catch (Exception ex)
                         {
-                            // 优先使用StoragePath直接删除文件
-                            if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
+                            _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
+                        }
+
+                        // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
+                        // 按方案A：统一以关联表 isdeleted 为准进行删除
+                        try
+                        {
+                            for (int dr = 0; dr < relationsToDelete.Count; dr++)
                             {
-                                // 首先尝试将相对路径解析为绝对路径
-                                var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fileStorageInfo.StoragePath);
-                                if (File.Exists(resolvedPath))
+                                // 使用逻辑删除：设置isdeleted标记而不是物理删除
+                                var relation = relationsToDelete[dr];
+                                relation.isdeleted = true;
+                                relation.Modified_at = DateTime.Now;
+                                var updateResult = await _businessRelationController.UpdateAsync(relation);
+
+                                if (updateResult)
                                 {
-                                    try
+                                    relationDeletedCount++;
+                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessNo: {BusinessNo}",
+                                        relation.RelationId, currentFileId, deleteRequest.BusinessNo);
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "删除业务关联记录失败，FileId: {FileId}", currentFileId);
+                        }
+
+                        // 2. 检查文件是否还有其他有效关联
+                        // 根据方案A：只有当文件无任何有效关联时，才标记文件为删除状态
+                        if (!isReferencedByOtherBusiness && relationsToDelete.Count > 0)
+                        {
+                            // 检查是否需要物理删除文件
+                            bool isPhysicalDelete = deleteRequest.PhysicalDelete;
+
+                            if (isPhysicalDelete)
+                            {
+                                // 优先使用StoragePath直接删除文件
+                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
+                                {
+                                    // 首先尝试将相对路径解析为绝对路径
+                                    var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fileStorageInfo.StoragePath);
+                                    if (File.Exists(resolvedPath))
                                     {
-                                        _logger?.LogDebug("使用解析后的路径删除文件: {FilePath}", resolvedPath);
-                                        File.Delete(resolvedPath);
-                                        fileDeleted = true;
-                                        _logger?.LogDebug("使用解析后的路径删除文件成功: {FilePath}", resolvedPath);
+                                        try
+                                        {
+                                            _logger?.LogDebug("使用解析后的路径删除文件: {FilePath}", resolvedPath);
+                                            File.Delete(resolvedPath);
+                                            _logger?.LogDebug("使用解析后的路径删除文件成功: {FilePath}", resolvedPath);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
+                                        }
                                     }
-                                    catch (Exception ex)
+
+                                    // 如果解析后的路径不存在，尝试原路径（可能是绝对路径）
+                                    if (File.Exists(fileStorageInfo.StoragePath))
                                     {
-                                        _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
+                                        try
+                                        {
+                                            _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
+                                            File.Delete(fileStorageInfo.StoragePath);
+                                            _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
+                                        }
                                     }
                                 }
 
-                                // 如果解析后的路径不存在，尝试原路径（可能是绝对路径）
-                                if (!fileDeleted && File.Exists(fileStorageInfo.StoragePath))
-                                {
-                                    try
-                                    {
-                                        _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
-                                        File.Delete(fileStorageInfo.StoragePath);
-                                        fileDeleted = true;
-                                        _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
-                                        // 即使直接删除失败，也继续尝试搜索删除作为备用方案
-                                    }
-                                }
-                            }
-
-                            if (!fileDeleted)
-                            {
-                                _logger?.LogDebug("StoragePath不存在或文件不存在，尝试通过搜索模式查找并删除");
-                            }
-
-                            // 如果通过StoragePath删除失败或不存在，则使用搜索模式作为备用方案
-                            if (!fileDeleted)
-                            {
+                                // 如果通过StoragePath删除失败或不存在，则使用搜索模式作为备用方案
                                 // 优化搜索策略：优先从StoragePath中提取路径信息
                                 var searchPaths = new List<string>();
 
@@ -1011,6 +1001,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
 
                                 // 在所有搜索路径中查找并删除文件，一旦找到并删除就停止搜索
+                                bool fileDeleted = false;
                                 foreach (var searchPath in searchPaths)
                                 {
                                     if (!Directory.Exists(searchPath))
@@ -1062,24 +1053,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                     }
 
-                    // 更新数据库文件状态为已删除（逻辑删除）
-                    try
-                    {
-                        fileStorageInfo.FileStatus = (int)FileStatus.Deleted; // 标记为删除
-                        await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
-                        _logger?.LogDebug("数据库文件状态更新成功，FileId: {FileId}, 删除类型: {DeleteType}",
-                            fileStorageInfo.FileId, isPhysicalDelete ? "物理删除" : "逻辑删除");
-
-                        deletedCount++;
-                        deletedFileIds.Add(fileStorageInfo.FileId.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogError(ex, "更新数据库文件状态失败，FileId: {FileId}", fileStorageInfo.FileId);
-                    }
-                }
-
-                response.DeletedFileIds = deletedFileIds;
+                    response.DeletedFileIds = deletedFileIds;
 
                     // 同步HasAttachment标志（在删除关联后，事务内执行）
                     // 从关联记录中获取BusinessType和BusinessId（用于单据级别的HasAttachment同步）
@@ -1170,7 +1144,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 else if (listRequest.BusinessType.HasValue)
                 {
                     var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == listRequest.BusinessType);
-                     
+
                     if (files != null)
                     {
                         fileInfos.AddRange(files.Cast<tb_FS_FileStorageInfo>());

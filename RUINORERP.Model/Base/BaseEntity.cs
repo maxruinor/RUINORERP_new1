@@ -511,15 +511,6 @@ namespace RUINORERP.Model
         [XmlIgnore]
         public List<tb_FS_FileStorageInfo> FileStorageInfoList { get; set; } = new List<tb_FS_FileStorageInfo>();
 
-        /// <summary>
-        /// 是否存在附件/图片关联标志位
-        /// 用于快速判断是否需要查询关联表，提升查询性能
-        /// 注意：此字段在部分业务表中为数据库字段，在未迁移的表中仅为内存属性
-        /// </summary>
-        [Description("是否存在附件/图片"), Category("自定属性")]
-        [SugarColumn(IsIgnore = true)]
-        [Browsable(false)]
-        public bool HasAttachment { get; set; }
 
         /// <summary>
         /// 生成字段名称列表（优化版本）

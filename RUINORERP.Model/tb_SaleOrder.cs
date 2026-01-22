@@ -675,6 +675,22 @@ namespace RUINORERP.Model
             }
         }
 
+        private bool? _HasAttachment;
+        /// <summary>
+        /// 交期确认
+        /// </summary>
+        [AdvQueryAttribute(ColName = "HasAttachment", ColDesc = "是否存在附件")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "HasAttachment", IsNullable = true, ColumnDescription = "是否存在附件")]
+        public bool? HasAttachment
+        {
+            get { return _HasAttachment; }
+            set
+            {
+                SetProperty(ref _HasAttachment, value);
+            }
+        }
+
+
         private int? _KeepAccountsType;
         /// <summary>
         /// 立帐类型

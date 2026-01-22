@@ -333,7 +333,6 @@ namespace RUINORERP.Server.Network.Services
 
                 // 4. 逻辑删除文件元数据
                 fileInfo.isdeleted = true;
-                fileInfo.FileStatus = (int)FileStatus.Deleted;
                 fileInfo.Modified_at = DateTime.Now;
                 await db.Updateable(fileInfo).ExecuteCommandAsync();
                 return true;
@@ -373,18 +372,23 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 获取文件统计信息
-        /// 性能优化: 一次查询获取所有数据,内存中分组统计
+        /// 按方案A：以关联表 isdeleted 为准统计已删除文件
         /// </summary>
         /// <returns>文件统计信息</returns>
         public async Task<FileCleanupStatistics> GetCleanupStatisticsAsync()
         {
             var db = _unitOfWorkManage.GetDbClient();
 
-            // 一次查询获取所有未删除的文件
+            // 查询所有未删除的文件信息（用于基础统计）
             var files = await db.Queryable<tb_FS_FileStorageInfo>()
                 .Where(f => f.isdeleted == false)
                 .Select(f => new { f.FileStatus, FileSize = f.FileSize > 0 ? f.FileSize : 0 })
                 .ToListAsync();
+
+            // 按方案A：统计已删除的关联记录数
+            var deletedRelationsCount = await db.Queryable<tb_FS_BusinessRelation>()
+                .Where(r => r.isdeleted == true)
+                .CountAsync();
 
             // 内存中分组统计
             var stats = new FileCleanupStatistics
@@ -393,7 +397,7 @@ namespace RUINORERP.Server.Network.Services
                 ActiveFiles = files.Count(f => f.FileStatus == (int)FileStatus.Active),
                 ExpiredFiles = files.Count(f => f.FileStatus == (int)FileStatus.Expired),
                 OrphanedFiles = files.Count(f => f.FileStatus == (int)FileStatus.Orphaned),
-                DeletedFiles = files.Count(f => f.FileStatus == (int)FileStatus.Deleted),
+                DeletedFiles = deletedRelationsCount, // 改为统计已删除的关联记录数
                 TotalStorageSize = files.Sum(f => f.FileSize)
             };
 
@@ -402,73 +406,55 @@ namespace RUINORERP.Server.Network.Services
 
         /// <summary>
         /// 获取已删除的文件和业务关联记录
+        /// 按方案A：以关联表 isdeleted 为准查询
         /// </summary>
         /// <returns>已删除文件信息列表</returns>
         public async Task<List<DeletedFileInfo>> GetDeletedFilesAsync()
         {
             var db = _unitOfWorkManage.GetDbClient();
 
-            // 查询已删除的业务关联记录
-            var deletedRelations = await db.Queryable<tb_FS_BusinessRelation>()
+            // 调试：查询所有已删除的关联记录
+            var allDeletedRelations = await db.Queryable<tb_FS_BusinessRelation>()
                 .Where(r => r.isdeleted == true)
-                .OrderBy(r => r.Modified_at, OrderByType.Desc)
+                .CountAsync();
+            _logger?.LogDebug("已删除的关联记录总数: {Count}", allDeletedRelations);
+
+            // 调试：查询所有文件记录
+            var allFiles = await db.Queryable<tb_FS_FileStorageInfo>()
+                .CountAsync();
+            _logger?.LogDebug("所有文件记录总数: {Count}", allFiles);
+
+            // 调试：查询未删除的文件记录
+            var activeFiles = await db.Queryable<tb_FS_FileStorageInfo>()
+                .Where(f => f.isdeleted == false)
+                .CountAsync();
+            _logger?.LogDebug("未删除的文件记录数: {Count}", activeFiles);
+
+            // 使用 INNER JOIN 查询已删除的业务关联及其文件信息
+            // 关键：以关联表 isdeleted=true 为准，文件表 isdeleted=false (排除已物理删除的文件)
+            var deletedFiles = await db.Queryable<tb_FS_BusinessRelation>()
+                .InnerJoin<tb_FS_FileStorageInfo>((r, f) => r.FileId == f.FileId)
+                .Where((r, f) => r.isdeleted == true)  // 以关联表为准
+                .Where((r, f) => f.isdeleted == false) // 排除已物理删除的文件
+                .OrderByDescending((r, f) => r.Modified_at)
+                .Select((r, f) => new DeletedFileInfo
+                {
+                    RelationId = r.RelationId,
+                    FileId = r.FileId,
+                    OriginalFileName = f.OriginalFileName,
+                    FileSize = f.FileSize,
+                    StoragePath = f.StoragePath ?? "",
+                    BusinessNo = r.BusinessNo ?? "",
+                    BusinessId = r.BusinessId,
+                    BusinessType = r.BusinessType,
+                    RelatedField = r.RelatedField ?? "",
+                    FileStatus = f.FileStatus,
+                    DeletedTime = r.Modified_at ?? r.Created_at ?? DateTime.MinValue
+                })
                 .ToListAsync();
 
-            var result = new List<DeletedFileInfo>();
-
-            if (deletedRelations != null && deletedRelations.Count > 0)
-            {
-                // 获取关联的文件ID
-                var fileIds = deletedRelations.Select(r => r.FileId).Distinct().ToList();
-
-                // 查询文件信息
-                var fileInfos = await db.Queryable<tb_FS_FileStorageInfo>()
-                    .Where(f => fileIds.Contains(f.FileId))
-                    .ToListAsync();
-
-                // 创建文件信息映射
-                var fileInfoDict = new Dictionary<long, tb_FS_FileStorageInfo>();
-                if (fileInfos != null)
-                {
-                    foreach (var file in fileInfos)
-                    {
-                        fileInfoDict[file.FileId] = file;
-                    }
-                }
-
-                // 组装结果
-                foreach (var relation in deletedRelations)
-                {
-                    var deletedFile = new DeletedFileInfo
-                    {
-                        RelationId = relation.RelationId,
-                        FileId = relation.FileId,
-                        BusinessNo = relation.BusinessNo,
-                        BusinessId = relation.BusinessId,
-                        BusinessType = relation.BusinessType,
-                        RelatedField = relation.RelatedField,
-                        DeletedTime = relation.Modified_at ?? relation.Created_at ?? DateTime.MinValue,
-                        
-                        // 从文件信息中获取文件详情
-                        OriginalFileName = fileInfoDict.ContainsKey(relation.FileId) 
-                            ? fileInfoDict[relation.FileId].OriginalFileName 
-                            : "未知",
-                        FileSize = fileInfoDict.ContainsKey(relation.FileId) 
-                            ? fileInfoDict[relation.FileId].FileSize 
-                            : 0,
-                        StoragePath = fileInfoDict.ContainsKey(relation.FileId) 
-                            ? fileInfoDict[relation.FileId].StoragePath 
-                            : "",
-                        FileStatus = fileInfoDict.ContainsKey(relation.FileId)
-                            ? fileInfoDict[relation.FileId].FileStatus
-                            : 0
-                    };
-
-                    result.Add(deletedFile);
-                }
-            }
-
-            return result;
+            _logger?.LogDebug("查询到的已删除文件数: {Count}", deletedFiles?.Count ?? 0);
+            return deletedFiles ?? new List<DeletedFileInfo>();
         }
 
         /// <summary>
@@ -536,6 +522,7 @@ namespace RUINORERP.Server.Network.Services
                             fileInfo.isdeleted = true;
                             fileInfo.Modified_at = DateTime.Now;
                             await db.Updateable(fileInfo).ExecuteCommandAsync();
+                            _logger?.LogInformation("逻辑删除文件记录成功, FileId: {FileId}", fileId);
 
                             deletedCount++;
                         }
@@ -594,17 +581,14 @@ namespace RUINORERP.Server.Network.Services
                         relation.Modified_at = DateTime.Now;
                         await db.Updateable(relation).ExecuteCommandAsync();
 
-                        // 如果文件状态为已删除，也恢复文件状态
-                        var fileInfo = await db.Queryable<tb_FS_FileStorageInfo>()
-                            .Where(f => f.FileId == relation.FileId)
-                            .FirstAsync();
+                        // 检查该文件是否还有其他已删除的关联
+                        var otherDeletedRelations = await db.Queryable<tb_FS_BusinessRelation>()
+                            .Where(r => r.FileId == relation.FileId)
+                            .Where(r => r.isdeleted == true)
+                            .CountAsync();
 
-                        if (fileInfo != null && fileInfo.FileStatus == (int)FileStatus.Deleted)
-                        {
-                            fileInfo.FileStatus = (int)FileStatus.Active;
-                            fileInfo.Modified_at = DateTime.Now;
-                            await db.Updateable(fileInfo).ExecuteCommandAsync();
-                        }
+                        // 恢复业务关联记录（设置isdeleted=false）
+                        // 按方案A：恢复时只需要修改关联表的isdeleted字段，不需要修改文件状态
 
                         restoredCount++;
                     }
@@ -663,7 +647,8 @@ namespace RUINORERP.Server.Network.Services
         public int OrphanedFiles { get; set; }
 
         /// <summary>
-        /// 已删除文件数
+        /// 已删除文件数 - 统计tb_FS_BusinessRelation.isdeleted=true的记录数
+        /// 按方案A：删除逻辑由关联表isdeleted字段控制
         /// </summary>
         public int DeletedFiles { get; set; }
 

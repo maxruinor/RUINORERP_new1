@@ -149,6 +149,8 @@ namespace RUINORERP.Global
 
     /// <summary>
     /// 文件管理系统中的文件状态枚举
+    /// 按方案A：删除逻辑由tb_FS_BusinessRelation.isdeleted字段控制
+    /// FileStatus只描述文件的"业务状态"，不涉及删除
     /// </summary>
     public enum FileStatus
     {
@@ -165,12 +167,7 @@ namespace RUINORERP.Global
         /// <summary>
         /// 孤立文件 - 物理文件存在但无业务关联
         /// </summary>
-        Orphaned = 3,
-
-        /// <summary>
-        /// 逻辑删除 - 已标记删除(不参与清理)
-        /// </summary>
-        Deleted = 4
+        Orphaned = 3
     }
 
     public enum PlatformType

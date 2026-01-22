@@ -45,7 +45,8 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SettlementNo);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.SourceBillNo);
             queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.TargetBillNo);
-
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.RelatedBillNo);
+            queryFilter.SetQueryField<tb_FM_PaymentSettlement>(c => c.RelatedBizType, QueryFieldType.CmbEnum, typeof(BizType));
             //没有限制了。这里应该是财务才能看
             var lambda = Expressionable.Create<tb_CustomerVendor>()
                        .And(t => t.isdeleted == false)

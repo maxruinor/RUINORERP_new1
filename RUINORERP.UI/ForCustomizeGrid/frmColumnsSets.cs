@@ -216,8 +216,12 @@ namespace RUINORERP.UI.ForCustomizeGrid
                     if (columnDisplays != null)
                     {
                         ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == columnDisplays.ColName).FirstOrDefault();
-                        cdc.Visible = item.Checked;
-                        cdc.ColDisplayIndex = sortindex;
+                        if (cdc != null)
+                        {
+                            cdc.Visible = item.Checked;
+                            cdc.ColDisplayIndex = sortindex;
+                        }
+
                     }
                 }
                 if (string.IsNullOrEmpty(item.Text))
@@ -287,6 +291,11 @@ namespace RUINORERP.UI.ForCustomizeGrid
 
         public Type DataSourceType { get; set; }
 
+        /// <summary>
+        /// 系统硬编码不可见列集合
+        /// </summary>
+        public HashSet<string> InvisibleCols { get; set; } = new HashSet<string>();
+
 
         /// <summary>
         /// 恢复默认列配置
@@ -295,20 +304,22 @@ namespace RUINORERP.UI.ForCustomizeGrid
         /// <param name="e"></param>
         private void btnRestoreDefaultConfig_Click(object sender, EventArgs e)
         {
-            // 参数验证
-            if (DataGridViewSetTarget == null)
-            {
-                MessageBox.Show("目标DataGridView未设置，无法恢复默认列配置！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
             try
             {
+                // 检查是否有初始化的列配置
+                if (InitColumnDisplays == null || InitColumnDisplays.Count == 0)
+                {
+                    // 同时也触发外部事件（如果有的话），保持向后兼容
+                    if (InitializeDefaultColumn != null && InitColumnDisplays.Count == 0)
+                    {
+                        InitializeDefaultColumn(InitColumnDisplays);
+                    }
+                }
 
                 // 清空当前ListView
                 listView1.Items.Clear();
 
-                // 重新加载ListView内容
+                // 重新加载ListView内容 - 使用 InitColumnDisplays 作为默认配置
                 foreach (ColDisplayController keyValue in InitColumnDisplays)
                 {
                     if (!keyValue.Disable)
@@ -323,12 +334,8 @@ namespace RUINORERP.UI.ForCustomizeGrid
                     }
                 }
 
-                // 同时也触发外部事件（如果有的话），保持向后兼容
-                if (InitializeDefaultColumn != null)
-                {
-                    InitializeDefaultColumn(InitColumnDisplays);
-                }
-
+          
+ 
             }
             catch (Exception ex)
             {

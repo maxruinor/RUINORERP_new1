@@ -206,11 +206,13 @@ namespace RUINORERP.UI.UControls
             }
 
             // 如果需要保存列配置，并且列配置为空（可能是init=true删除了配置文件，或者配置文件不存在）
-            if (NeedSaveColumnsXml && (ColumnDisplays.Count == 0 || init))
+            if ((ColumnDisplays.Count == 0 || init))
             {
                 // 生成默认的列配置
                 ColumnDisplays = GenerateDefaultColumnConfig();
-
+            }
+            if (NeedSaveColumnsXml)
+            {
                 // 保存默认配置
                 SaveColumnsList(ColumnDisplays);
             }
@@ -238,6 +240,22 @@ namespace RUINORERP.UI.UControls
                         cdc.ColWidth = dc.Width;
                         cdc.ColName = dc.Name;
                         cdc.IsFixed = dc.Frozen;
+                        if (string.IsNullOrEmpty(cdc.ColDisplayText))
+                        {
+                            //不可用
+                            cdc.Disable = true;
+                        }
+                        else
+                        {
+                            cdc.Disable = false;
+                        }
+                        if (cdc.ColName == "Selected")
+                        {
+                            //不可用
+                            cdc.Disable = true;
+                            cdc.Visible = true;
+                        }
+
                         if (targetDataGridView.FieldNameList.ContainsKey(cdc.ColName))
                         {
                             KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(cdc.ColName, false);
@@ -423,47 +441,13 @@ namespace RUINORERP.UI.UControls
 
                 set.InitializeDefaultColumn += Set_InitializeDefaultColumn;
 
-                //SerializableDictionary<string, bool> qr = new SerializableDictionary<string, bool>();
-                //qr = LoadColumnsList();
-                ////如果加载默认的 为空时，则默认有中文的全选中显示
-                //if (qr == null || qr.Count == 0)
-                //{
-                //    foreach (var item in FieldNameList)
-                //    {
-                //        if (targetDataGridView.Columns.Contains(item.Key))
-                //        {
-                //            qr.Add(item.Key, targetDataGridView.Columns[item.Key].Visible);
-                //        }
-                //    }
-                //}
+
                 //将上次保存的带到UI上 如勾选状态
                 // set.QueryResult = qr;
                 if (set.ShowDialog() == DialogResult.OK)
                 {
                     targetDataGridView.BindColumnStyle();
                     SaveColumnsList(ColumnDisplays);
-
-                    //qr = set.QueryResult;
-                    //ShowColumns(qr);
-                    //SaveColumnsList(ColumnDisplays);
-                    /*
-                    foreach (var item in FieldNameList)
-                    {
-                        if (set.QueryResult.ContainsKey(item.Key) && targetDataGridView.Columns.Contains(item.Key))
-                        {
-                            KeyValuePair<string, bool> kv;
-                            if (FieldNameList.TryGetValue(targetDataGridView.Columns[item.Key].Name, out kv))
-                            {
-                                targetDataGridView.Columns[item.Key].HeaderText = kv.Key;
-                                targetDataGridView.Columns[item.Key].Visible = set.QueryResult[item.Key];
-                            }
-                            else
-                            {
-                                targetDataGridView.Columns[item.Key].Visible = false;
-                            }
-                        }
-                    }
-                    */
                 }
             }
             else
@@ -476,6 +460,7 @@ namespace RUINORERP.UI.UControls
         {
             if (InitializeDefaultColumnCustomizeGrid != null)
             {
+                ColumnDisplays.Clear();
                 if (ColumnDisplays.Count == 0)
                 {
                     // 生成默认的列配置

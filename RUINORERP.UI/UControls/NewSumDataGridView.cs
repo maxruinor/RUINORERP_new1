@@ -2567,7 +2567,12 @@ namespace RUINORERP.UI.UControls
             {
                 customizeGrid.ColumnDisplays = ColumnDisplays;
             }
-            customizeGrid.SetColumns(customizeGrid.LoadColumnsListByCdc());
+            if (this.DataSource is BindingSource bs)
+            {
+                
+            }
+
+            customizeGrid.SetColumns(customizeGrid.LoadColumnsListByCdc(true));
         }
 
         private void NewSumDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)

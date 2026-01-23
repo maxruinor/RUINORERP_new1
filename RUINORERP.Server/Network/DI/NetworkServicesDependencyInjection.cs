@@ -90,7 +90,8 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册文件更新和清理服务
             services.AddTransient<FileUpdateService>();
-            services.AddTransient<FileCleanupService>();
+            // FileCleanupService 改为 Singleton 以确保定时器只有一个实例
+            services.AddSingleton<FileCleanupService>();
 
             // 注册文件存储监控服务(单例,长期运行)
             services.AddSingleton<FileStorageMonitorService>();
@@ -185,7 +186,8 @@ namespace RUINORERP.Server.Network.DI
 
             // 注册文件更新和清理服务
             builder.RegisterType<FileUpdateService>().AsSelf().InstancePerDependency();
-            builder.RegisterType<FileCleanupService>().AsSelf().InstancePerDependency();
+            // FileCleanupService 改为 Singleton 以确保定时器只有一个实例
+            builder.RegisterType<FileCleanupService>().AsSelf().SingleInstance();
 
             // 注册文件存储监控服务(单例,长期运行)
             builder.RegisterType<FileStorageMonitorService>().AsSelf().SingleInstance();

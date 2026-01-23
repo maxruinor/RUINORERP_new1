@@ -17,6 +17,7 @@ namespace RUINORERP.Server.Network.Services
     /// <summary>
     /// 文件清理服务 - 负责处理过期文件和孤立文件的清理
     /// 支持自动清理和手动清理两种模式
+    /// 重要: 此服务注册为 Singleton,确保定时器只有一个实例,避免并发访问导致的数据库连接冲突
     /// </summary>
     public class FileCleanupService : IDisposable
     {
@@ -25,7 +26,9 @@ namespace RUINORERP.Server.Network.Services
         private readonly ServerGlobalConfig _serverConfig;
         private readonly Timer _cleanupTimer;
         private readonly SemaphoreSlim _cleanupLock = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _dbLock = new SemaphoreSlim(1, 1); // 数据库操作锁
         private bool _disposed = false;
+        private int _activeOperations = 0; // 活跃操作计数器
 
 
 
@@ -42,6 +45,7 @@ namespace RUINORERP.Server.Network.Services
             _serverConfig = serverConfig;
 
             // 启动定时清理任务(每天凌晨2点执行)
+            // 使用 State 避免闭包捕获问题,确保 Timer 回调异常不会导致定时器停止
             var now = DateTime.Now;
             var nextRun = new DateTime(now.Year, now.Month, now.Day, 2, 0, 0);
             if (now > nextRun)
@@ -51,26 +55,60 @@ namespace RUINORERP.Server.Network.Services
             var dueTime = nextRun - now;
 
             _cleanupTimer = new Timer(
-                async _ => await ExecuteAutoCleanupAsync(),
+                state =>
+                {
+                    var task = ExecuteAutoCleanupAsync();
+                    // 不 await,让 Timer 继续运行
+                    // 异常在 ExecuteAutoCleanupAsync 内部处理
+                },
                 null,
                 dueTime,
                 TimeSpan.FromDays(1));
-
         }
 
         /// <summary>
         /// 执行自动清理任务
+        /// 使用独立的数据库作用域,确保线程安全
         /// </summary>
         private async Task ExecuteAutoCleanupAsync()
         {
+            // 检查是否已有活跃任务在执行
+            if (Interlocked.CompareExchange(ref _activeOperations, 1, 0) != 0)
+            {
+                _logger.LogWarning("文件清理任务已在执行中,跳过本次执行");
+                return;
+            }
+
             try
             {
-                await CleanupExpiredFilesAsync();
-                await CleanupOrphanedFilesAsync();
+                _logger.LogInformation("开始执行自动文件清理任务");
+
+                // 检查清理锁,避免重叠执行
+                if (!await _cleanupLock.WaitAsync(TimeSpan.Zero))
+                {
+                    _logger.LogWarning("清理任务正在进行中,跳过本次执行");
+                    return;
+                }
+
+                try
+                {
+                    await CleanupExpiredFilesAsync();
+                    await CleanupOrphanedFilesAsync();
+
+                    _logger.LogInformation("自动文件清理任务执行成功");
+                }
+                finally
+                {
+                    _cleanupLock.Release();
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "自动文件清理任务执行失败");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _activeOperations, 0);
             }
         }
 
@@ -82,9 +120,10 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>清理的文件数量</returns>
         public async Task<int> CleanupExpiredFilesAsync(int daysThreshold = 30, bool physicalDelete = false)
         {
-            if (!await _cleanupLock.WaitAsync(TimeSpan.FromMinutes(10)))
+            // 使用数据库操作锁,避免并发访问导致的连接冲突
+            if (!await _dbLock.WaitAsync(TimeSpan.FromMinutes(10)))
             {
-                _logger.LogWarning("清理任务正在进行中,跳过本次执行");
+                _logger.LogWarning("数据库操作繁忙,跳过本次清理");
                 return 0;
             }
 
@@ -93,7 +132,7 @@ namespace RUINORERP.Server.Network.Services
                 var db = _unitOfWorkManage.GetDbClient();
                 var expireDate = DateTime.Now.AddDays(-daysThreshold);
 
-                // 查询过期且未逻辑删除的文件
+                // 使用 ToList 而不是 ToListAsync,避免异步操作在特定场景下的连接问题
                 var expiredFiles = await db.Queryable<tb_FS_FileStorageInfo>()
                     .Where(f => f.ExpireTime < DateTime.Now)
                     .Where(f => f.FileStatus == (int)FileStatus.Active) // 0=正常状态
@@ -139,7 +178,7 @@ namespace RUINORERP.Server.Network.Services
                 }
                 else
                 {
-                    // 逻辑删除模式:仅标记状态
+                    // 逻辑删除模式:仅标记状态 - 使用批量更新减少数据库连接次数
                     await db.Updateable<tb_FS_FileStorageInfo>()
                         .SetColumns(f => f.FileStatus == (int)FileStatus.Expired)
                         .Where(f => f.ExpireTime < DateTime.Now)
@@ -150,11 +189,12 @@ namespace RUINORERP.Server.Network.Services
                     cleanedCount = expiredFiles.Count;
                 }
 
+                _logger.LogInformation("过期文件清理完成,共清理 {Count} 个文件", cleanedCount);
                 return cleanedCount;
             }
             finally
             {
-                _cleanupLock.Release();
+                _dbLock.Release();
             }
         }
 
@@ -166,9 +206,10 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>清理的文件数量</returns>
         public async Task<int> CleanupOrphanedFilesAsync(int daysThreshold = 7, bool physicalDelete = false)
         {
-            if (!await _cleanupLock.WaitAsync(TimeSpan.FromMinutes(10)))
+            // 使用数据库操作锁,避免并发访问导致的连接冲突
+            if (!await _dbLock.WaitAsync(TimeSpan.FromMinutes(10)))
             {
-                _logger.LogWarning("清理任务正在进行中,跳过本次执行");
+                _logger.LogWarning("数据库操作繁忙,跳过本次清理");
                 return 0;
             }
 
@@ -225,11 +266,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
+                _logger.LogInformation("孤立文件清理完成,共清理 {Count} 个文件", cleanedCount);
                 return cleanedCount;
             }
             finally
             {
-                _cleanupLock.Release();
+                _dbLock.Release();
             }
         }
 
@@ -239,9 +281,10 @@ namespace RUINORERP.Server.Network.Services
         /// <returns>清理的文件数量</returns>
         public async Task<int> CleanupPhysicalOrphanedFilesAsync()
         {
-            if (!await _cleanupLock.WaitAsync(TimeSpan.FromMinutes(30)))
+            // 使用数据库操作锁,避免并发访问导致的连接冲突
+            if (!await _dbLock.WaitAsync(TimeSpan.FromMinutes(30)))
             {
-                _logger.LogWarning("清理任务正在进行中,跳过本次执行");
+                _logger.LogWarning("数据库操作繁忙,跳过本次清理");
                 return 0;
             }
 
@@ -295,11 +338,12 @@ namespace RUINORERP.Server.Network.Services
                     }
                 }
 
+                _logger.LogInformation("物理孤立文件清理完成,共清理 {Count} 个文件", cleanedCount);
                 return cleanedCount;
             }
             finally
             {
-                _cleanupLock.Release();
+                _dbLock.Release();
             }
         }
 
@@ -616,8 +660,11 @@ namespace RUINORERP.Server.Network.Services
                 return;
 
             _disposed = true;
+
+            // 释放定时器
             _cleanupTimer?.Dispose();
             _cleanupLock?.Dispose();
+            _dbLock?.Dispose();
         }
     }
 

@@ -528,10 +528,11 @@ namespace RUINORERP.UI.ProductEAV
                 // 检查是否有需要处理的组合
                 if (combinationsToAdd.Count > 0 || combinationsToRemove.Count > 0)
                 {
-                    // 如果有需要添加的组合，打开选择对话框让用户选择
                     List<AttributeCombination> userSelectedCombinations = combinationsToAdd;
 
-                    if (combinationsToAdd.Count > 0)
+                    // 如果是添加新属性的场景，必须添加所有组合以确保维度一致
+                    // 只有在已有属性中添加新属性值的场景，才允许用户选择部分组合
+                    if (combinationsToAdd.Count > 0 && !isAddingNewProperty)
                     {
                         // 打开选择对话框
                         using (var selectForm = new frmSelectCombinations(combinationsToAdd))
@@ -982,9 +983,9 @@ namespace RUINORERP.UI.ProductEAV
                             .Select(n => n.Tag as tb_Prod_Attr_Relation)
                             .ToList();
 
-                        // 检查当前组合的属性是否与现有产品详情的属性匹配
-                        // 在指定属性下 只要有一个属性值属于现有关系中，则认为这个产品就是旧产品了
-                        bool isMatch = true;
+                        // 检查现有关系中是否包含新组合的所有属性值
+                        // 只要新组合的属性值都已经在现有产品的属性关系中，就使用现有产品
+                        bool allAttributesMatch = true;
                         foreach (var attrValuePair in combination.Properties)
                         {
                             // 检查现有关系中是否包含当前组合的每个属性值对
@@ -993,13 +994,13 @@ namespace RUINORERP.UI.ProductEAV
                                 r.PropertyValueID == attrValuePair.PropertyValue.PropertyValueID);
                             if (!foundMatch)
                             {
-                                isMatch = false;
+                                allAttributesMatch = false;
                                 break;
                             }
                         }
 
-                        // 如果属性匹配，并且现有产品详情的属性数量与组合属性数量相同，则复制现有产品详情
-                        if (isMatch)
+                        // 如果新组合的所有属性值都包含在现有产品中，则使用现有产品详情
+                        if (allAttributesMatch)
                         {
                             // 复制现有产品详情实体到组合中
                             combination.ProductDetail = existingDetail;
@@ -1068,6 +1069,8 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     // 创建新的产品详情
                     long skuRowId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                    string editorSEQ = Guid.NewGuid().ToString("N"); // 生成唯一的多属性编辑序号
+
                     var newDetail = new tb_ProdDetail
                     {
                         ProdBaseID = EditEntity.ProdBaseID,
@@ -1076,9 +1079,11 @@ namespace RUINORERP.UI.ProductEAV
                         Is_available = true,
                         Created_at = DateTime.Now,
                         Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID,
+                        MultiPropertyEditorSEQ = editorSEQ, // 设置多属性编辑序号，用于区分新生成产品
                         tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>()
                     };
                     combination.ProductDetail = newDetail;
+
                     #region 添加关系，因为生成SKU需要这些关系 生成更友好的编号
                     // 为每个属性值创建属性关系
                     foreach (var attrValuePair in combination.Properties)
@@ -1118,7 +1123,7 @@ namespace RUINORERP.UI.ProductEAV
 
                     node = treeGridView1.Nodes.Add(skuRowId, 0, "", GetPropertiesText(combination),
                           combination.ProductDetail.SKU != null ? combination.ProductDetail.SKU : "等待生成", EditEntity.CNName, "新增", combination.ProductDetail.Is_enabled);
-                    node.NodeName = skuRowId.ToString();
+                    node.NodeName = editorSEQ; // 使用MultiPropertyEditorSEQ作为节点名称，用于删除时识别
                     node.ImageIndex = 1; // 新增图标
                     node.Tag = combination.ProductDetail;
                     node.DefaultCellStyle.Font = boldFont;
@@ -1460,79 +1465,109 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         //加载产品属性时也要排序，按后面添加多属性一样的规则，这样才正确的比较重复等
+        /// <summary>
+        /// 加载产品详情数据
+        /// <summary>
+        /// 从内存刷新产品详情显示，保留临时产品的 MultiPropertyEditorSEQ 标记
+        /// 只移除 TreeGrid 节点并重新绑定，不清除内存中的临时数据
+        /// </summary>
         private void LoadProdDetail()
         {
             if (dataGridViewProd.CurrentRow != null)
             {
-                EditEntity = null;
-                oldOjb = null;
                 EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
-                //oldOjb = CloneHelper.DeepCloneObject<tb_Prod>(EditEntity);
-                oldOjb = EditEntity.DeepCloneByjson();
+
                 if (EditEntity != null)
                 {
-                    //去掉临时添加的关系数据，因为要重新加载
-                    EditEntity.tb_ProdDetails.RemoveWhere(c => c.ProdDetailID == 0);
-                    EditEntity.tb_ProdDetails.RemoveWhere(c => c.ActionStatus == ActionStatus.新增);
+                    // 清除 TreeGrid 上的显示
+                    treeGridView1.Nodes.Clear();
+
+                    // 重新绑定数据到 TreeGrid，保持内存中的 MultiPropertyEditorSEQ 标记不变
                     if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
                     {
-                        listView1.Clear();
-
-                        //加载属性
-                        //去掉临时添加的关系数据，因为要重新加载
-                        EditEntity.tb_Prod_Attr_Relations.RemoveWhere(c => c.RAR_ID == 0);
-                        EditEntity.tb_Prod_Attr_Relations.RemoveWhere(c => c.ActionStatus == ActionStatus.新增);
-                        foreach (var detail in EditEntity.tb_ProdDetails)
-                        {
-                            detail.tb_Prod_Attr_Relations.RemoveWhere(c => c.RAR_ID == 0);
-                            detail.tb_Prod_Attr_Relations.RemoveWhere(c => c.ActionStatus == ActionStatus.新增);
-                        }
-
                         LoadTreeGridItems(EditEntity);
 
-                        //加载属性类型，再加载属性及对应的值
-                        cmbPropertyType.SelectedValue = EditEntity.PropertyType;
-
-                        //加载动态属性区域 根据数据库的值加载控件及选中属性
-                        foreach (var detail in EditEntity.tb_ProdDetails)
+                        // 如果是第一次加载，才需要重新加载属性和属性值
+                        // 否则保留用户当前的属性选择状态
+                        if (listView1.Groups.Length == 0)
                         {
-                            //如果是单属性则属性值不能为空
-                            var propGroup = detail.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).GroupBy(c => c.Property_ID.Value);
-                            foreach (var item in propGroup)
-                            {
-                                var prop = prodpropList.FirstOrDefault(c => c.Property_ID == item.Key);
-                                if (prop != null)
-                                {
-                                    AddProperty(prop);
-                                }
-                            }
+                            LoadAttributesFromDetails(EditEntity);
                         }
-
-                        //加载属性值后  不可以再修改选中状态。
-                        //循环所有属性，如果有值则选中并且不可以修改
-                        if (EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)//要多属性的时候才需要
-                        {
-                            var propertys = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).Select(c => c.Property_ID.Value).Distinct().ToList();
-                            foreach (var item in propertys)
-                            {
-                                var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue && c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();
-                                foreach (var pv in pvs)
-                                {
-                                    var group = listView1.Groups.FirstOrDefault(c => c.GroupID == item.ToString());
-                                    if (group != null)
-                                    {
-                                        group.Items.FirstOrDefault(c => c.Name == pv.ToString()).Enabled = false;
-                                    }
-                                }
-                            }
-                        }
-
-                        listView1.UpdateUI();
                     }
-
                 }
             }
         }
+
+        /// <summary>
+        /// 从产品详情中加载属性并添加到控件中
+        /// </summary>
+        private void LoadAttributesFromDetails(tb_Prod product)
+        {
+            if (product.tb_ProdDetails == null || product.tb_ProdDetails.Count == 0)
+            {
+                return;
+            }
+
+            // 获取所有属性ID
+            var propertyIds = product.tb_Prod_Attr_Relations
+                .Where(c => c.Property_ID.HasValue)
+                .Select(c => c.Property_ID.Value)
+                .Distinct()
+                .ToList();
+
+            foreach (var propertyId in propertyIds)
+            {
+                var property = prodpropList.FirstOrDefault(c => c.Property_ID == propertyId);
+                if (property != null)
+                {
+                    AddProperty(property);
+
+                    // 选中属性值
+                    var propertyValueIds = product.tb_Prod_Attr_Relations
+                        .Where(c => c.Property_ID.HasValue && c.Property_ID.Value == propertyId)
+                        .Select(c => c.PropertyValueID.Value)
+                        .Distinct()
+                        .ToList();
+
+                    foreach (var propertyValueId in propertyValueIds)
+                    {
+                        var group = listView1.Groups.FirstOrDefault(c => c.GroupID == propertyId.ToString());
+                        if (group != null)
+                        {
+                            var checkbox = group.Items.FirstOrDefault(c => c.Tag is tb_ProdPropertyValue ppv && ppv.PropertyValueID == propertyValueId);
+                            if (checkbox != null)
+                            {
+                                checkbox.Checked = true;
+                                AddProperty(property);
+                            }
+                        }
+                    }
+
+                    //加载属性值后  不可以再修改选中状态。
+                    //循环所有属性，如果有值则选中并且不可以修改
+                    if (EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)//要多属性的时候才需要
+                    {
+                        var propertys = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).Select(c => c.Property_ID.Value).Distinct().ToList();
+                        foreach (var item in propertys)
+                        {
+                            var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue && c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();
+                            foreach (var pv in pvs)
+                            {
+                                var group = listView1.Groups.FirstOrDefault(c => c.GroupID == item.ToString());
+                                if (group != null)
+                                {
+                                    group.Items.FirstOrDefault(c => c.Name == pv.ToString()).Enabled = false;
+                                }
+                            }
+                        }
+                    }
+
+                    listView1.UpdateUI();
+                }
+
+            }
+        }
+
         // 在类开始处添加：
         private static IEntityCacheManager _cacheManager;
         private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
@@ -1713,9 +1748,10 @@ namespace RUINORERP.UI.ProductEAV
 
             }
             #endregion
+            // 维度检查：确保用户选择的所有组合中，每个产品的属性维度一致
+            // 例如：选择了"红色M"和"绿色L"，那么所有产品都应该有颜色和尺码两个属性
             if (MixByTreeGrid.Count > 0)
             {
-                //保存的关系中的唯度。每个产品详情的属性个数要一样。如果不一样。则提示不能保存。
                 // 获取第一个元素的数据维度作为参考
                 int referenceDimension = MixByTreeGrid[0].Split(',').Length;
                 // 检查列表中每个元素的数据维度是否与参考维度相等
@@ -1725,8 +1761,13 @@ namespace RUINORERP.UI.ProductEAV
                     MessageBox.Show("产品明细中，属性维度不一致,保存失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-
             }
+
+
+
+
+
+
 
 
             #region 判断是否有重复的属性值。将属性值添加到列表，按一定规则排序，然后判断是否有重复
@@ -1833,8 +1874,6 @@ namespace RUINORERP.UI.ProductEAV
             }
             //生成属性后 所有的属性值都按一个规则排序，再比较是否有相同的。如果有则提示不能保存。
 
-
-
             tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
             ReturnResults<tb_Prod> rr = new ReturnResults<tb_Prod>();
             rr = await pctr.SaveOrUpdateAsync(EditEntity);
@@ -1842,7 +1881,12 @@ namespace RUINORERP.UI.ProductEAV
             {
                 btnOk.Enabled = true;
                 MainForm.Instance.uclog.AddLog("保存成功");
-                this.Exit(this);
+
+                // 刷新产品详情数据，而不是关闭窗体
+                // 这样用户可以继续编辑，同时数据已保存到数据库
+                LoadProdDetail();
+                btnOk.Enabled = true;
+                MessageBox.Show("保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
@@ -2008,7 +2052,15 @@ namespace RUINORERP.UI.ProductEAV
                                         {
                                             // 从集合中移除
                                             detail?.tb_Prod_Attr_Relations.Remove(Prod_Attr_Relation);
-                                            treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                            var parentNode = treeGridView1.CurrentNode.Parent;
+                                            if (parentNode != null)
+                                            {
+                                                parentNode.Nodes.Remove(treeGridView1.CurrentNode);
+                                            }
+                                            else
+                                            {
+                                                treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                            }
                                             MainForm.Instance.ShowStatusText("成功删除该SKU对应的属性值。");
                                         }
                                     }
@@ -2020,81 +2072,111 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
+        /// <summary>
+        /// 删除SKU明细
+        /// 根据产品类型执行不同操作：
+        /// - 新生成产品（MultiPropertyEditorSEQ存在且非0）：使用MultiPropertyEditorSEQ执行删除
+        /// - 已存在产品（MultiPropertyEditorSEQ为0或空值）：使用ProdDetailID执行删除
+        /// </summary>
         private async void 删除SKU明细toolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (treeGridView1.CurrentCell != null)
+            if (treeGridView1.CurrentCell == null)
             {
-                if (dataGridViewProd.CurrentRow != null)
+                return;
+            }
+
+            if (dataGridViewProd.CurrentRow == null)
+            {
+                return;
+            }
+
+            oldOjb = null;
+            if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
+            {
+                // 获取当前选中的节点
+                TreeGridNode currentNode = treeGridView1.CurrentNode;
+                if (currentNode == null || currentNode.Tag == null)
                 {
-                    oldOjb = null;
-                    if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
+                    return;
+                }
+
+                if (currentNode.Tag is tb_ProdDetail detail)
+                {
+                    // 判断产品类型：新生成产品 vs 已存在产品
+                    bool isNewGeneratedProduct = !string.IsNullOrEmpty(detail.MultiPropertyEditorSEQ);
+
+                    if (isNewGeneratedProduct)
                     {
-                        var detailID = treeGridView1.CurrentRow.NodeName;
-                        var detail = Prod.tb_ProdDetails.FirstOrDefault(c => c.ProdDetailID.ToString() == detailID);
-                        if (detail != null)
+                        // 场景1：删除新生成的产品组合（临时产品）
+                        // 直接从内存中移除，不需要数据库操作
+                        string message = $"确定删除该临时SKU明细吗？\n\n组合：{detail.PropertyGroupName}";
+
+                        if (MessageBox.Show(message, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
-                            if (detail.ProdDetailID > 0)
+                            // 从TreeGrid中移除节点
+                            treeGridView1.Nodes.Remove(currentNode);
+
+                            // 从产品详情集合中移除
+                            Prod.tb_ProdDetails.Remove(detail);
+
+                            MainForm.Instance.ShowStatusText("删除临时SKU明细成功。");
+                        }
+                    }
+                    else if (detail.ProdDetailID > 0)
+                    {
+                        // 场景2：删除数据库已存在的产品
+                        // 检查该产品明细是否被业务表引用
+                        bool hasBusinessReferences = CheckBusinessReferences(detail);
+
+                        // 检查该产品明细的属性值是否被其他产品引用
+                        bool hasPropertyValueReferences = false;
+                        foreach (var relation in detail.tb_Prod_Attr_Relations)
+                        {
+                            if (IsPropertyValueUsedElsewhere(relation.PropertyValueID, detail.ProdDetailID))
                             {
-                                // 检查该产品明细是否被业务表引用
-                                bool hasBusinessReferences = CheckBusinessReferences(detail);
-
-                                // 检查该产品明细的属性值是否被其他产品引用
-                                bool hasPropertyValueReferences = false;
-                                foreach (var relation in detail.tb_Prod_Attr_Relations)
-                                {
-                                    if (IsPropertyValueUsedElsewhere(relation.PropertyValueID, detail.ProdDetailID))
-                                    {
-                                        hasPropertyValueReferences = true;
-                                        break;
-                                    }
-                                }
-
-                                string message = "确定删除该SKU明细吗？";
-
-                                if (hasBusinessReferences)
-                                {
-                                    message += "\n\n警告：该产品明细已被业务表（如订单、库存等）引用，删除后可能影响历史数据！";
-                                }
-
-                                if (hasPropertyValueReferences)
-                                {
-                                    message += "\n\n注意：该产品明细包含的属性值已被其他产品使用，删除后不会删除属性值定义。";
-                                }
-
-                                // 如果有业务引用，需要更严格的确认
-                                var icon = hasBusinessReferences ? MessageBoxIcon.Warning : MessageBoxIcon.Question;
-                                if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, icon) == DialogResult.Yes)
-                                {
-                                    try
-                                    {
-                                        bool counter = await MainForm.Instance.AppContext.Db.DeleteNav<tb_ProdDetail>(detail)
-                                            .Include(c => c.tb_Prod_Attr_Relations)
-                                            .ExecuteCommandAsync();
-                                        if (counter)
-                                        {
-                                            // 刷新
-                                            LoadProdDetail();
-                                            MainForm.Instance.ShowStatusText("删除SKU明细成功。");
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        MainForm.Instance.uclog.AddLog($"删除SKU明细失败: {ex.Message}");
-                                        MessageBox.Show($"删除失败：{ex.Message}\n\n可能存在外键约束冲突，请检查业务数据。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                    }
-                                }
+                                hasPropertyValueReferences = true;
+                                break;
                             }
                         }
-                        else
+
+                        string message = "确定删除该SKU明细吗？";
+                        message += $"\n\n组合：{detail.PropertyGroupName}";
+
+                        if (hasBusinessReferences)
                         {
-                            // 新增式生成的组合有错误时，这里可以手动删除指定的行，其实就是树的节点
-                            if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_ProdDetail)
+                            message += "\n\n警告：该产品明细已被业务表（如订单、库存等）引用，删除后可能影响历史数据！";
+                        }
+
+                        if (hasPropertyValueReferences)
+                        {
+                            message += "\n\n注意：该产品明细包含的属性值已被其他产品使用，删除后不会删除属性值定义。";
+                        }
+
+                        // 如果有业务引用，需要更严格的确认
+                        var icon = hasBusinessReferences ? MessageBoxIcon.Warning : MessageBoxIcon.Question;
+                        if (MessageBox.Show(message, "确认删除", MessageBoxButtons.YesNo, icon) == DialogResult.Yes)
+                        {
+                            try
                             {
-                                var tempDetail = treeGridView1.CurrentNode.Tag as tb_ProdDetail;
-                                // 从集合中移除
-                                Prod.tb_ProdDetails.Remove(tempDetail);
-                                treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
-                                MainForm.Instance.ShowStatusText("删除临时SKU明细成功。");
+                                bool counter = await MainForm.Instance.AppContext.Db.DeleteNav<tb_ProdDetail>(detail)
+                                    .Include(c => c.tb_Prod_Attr_Relations)
+                                    .ExecuteCommandAsync();
+
+                                if (counter)
+                                {
+                                    // 从TreeGrid中移除节点
+                                    treeGridView1.Nodes.Remove(currentNode);
+
+                                    // 从产品详情集合中移除
+                                    Prod.tb_ProdDetails.Remove(detail);
+
+                                    MainForm.Instance.ShowStatusText("删除SKU明细成功。");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.uclog.AddLog($"删除SKU明细失败: {ex.Message}");
+                                MessageBox.Show($"删除失败：{ex.Message}\n\n可能存在外键约束冲突，请检查业务数据。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                     }

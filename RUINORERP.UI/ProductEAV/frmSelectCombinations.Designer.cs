@@ -117,17 +117,19 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridViewCombinations.Name = "dataGridViewCombinations";
             this.dataGridViewCombinations.ReadOnly = false;
             this.dataGridViewCombinations.RowHeadersVisible = false;
-            this.dataGridViewCombinations.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dataGridViewCombinations.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dataGridViewCombinations.Size = new System.Drawing.Size(780, 425);
             this.dataGridViewCombinations.TabIndex = 1;
             this.dataGridViewCombinations.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewCombinations_ColumnHeaderMouseClick);
+            this.dataGridViewCombinations.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewCombinations_CellDoubleClick);
             //
             // colCheck
             //
             this.colCheck.HeaderText = "选择";
             this.colCheck.Name = "colCheck";
             this.colCheck.ReadOnly = false;
-            this.colCheck.Width = 60;
+            this.colCheck.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colCheck.Width = 80;
             //
             // colCombinationText
             //

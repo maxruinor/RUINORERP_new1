@@ -68,10 +68,10 @@ namespace RUINORERP.UI.ProductEAV
                 DataGridViewRow row = dataGridViewCombinations.Rows[rowIndex];
 
                 // 选中列
-                row.Cells[colCheck.Name].Value = false;
+                row.Cells[0].Value = false;
 
                 // 组合文本列
-                row.Cells[colCombinationText.Name].Value = GetPropertiesText(combination);
+                row.Cells[1].Value = GetPropertiesText(combination);
 
                 // 存储组合对象
                 row.Tag = combination;
@@ -108,7 +108,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             foreach (DataGridViewRow row in dataGridViewCombinations.Rows)
             {
-                row.Cells[colCheck.Name].Value = true;
+                row.Cells[0].Value = true;
             }
         }
 
@@ -119,7 +119,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             foreach (DataGridViewRow row in dataGridViewCombinations.Rows)
             {
-                row.Cells[colCheck.Name].Value = false;
+                row.Cells[0].Value = false;
             }
         }
 
@@ -132,7 +132,7 @@ namespace RUINORERP.UI.ProductEAV
 
             foreach (DataGridViewRow row in dataGridViewCombinations.Rows)
             {
-                if (row.Cells[colCheck.Name].Value != null && (bool)row.Cells[colCheck.Name].Value)
+                if (row.Cells[0].Value != null && (bool)row.Cells[0].Value)
                 {
                     if (row.Tag is AttributeCombination combination)
                     {
@@ -160,10 +160,29 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         private void dataGridViewCombinations_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            if (e.ColumnIndex == colCombinationText.Index)
+            if (e.ColumnIndex == 1)
             {
                 // 实现排序逻辑
                 // 这里可以根据需要实现升序/降序切换
+            }
+        }
+
+        /// <summary>
+        /// 双击行事件 - 切换复选框状态
+        /// </summary>
+        private void dataGridViewCombinations_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                var cell = dataGridViewCombinations.Rows[e.RowIndex].Cells[0];
+                if (cell.Value != null)
+                {
+                    cell.Value = !(bool)cell.Value;
+                }
+                else
+                {
+                    cell.Value = true;
+                }
             }
         }
     }

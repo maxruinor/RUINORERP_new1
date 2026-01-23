@@ -37,7 +37,7 @@ namespace RUINORERP.Model
         public string PropertyGroupName { get; set; }
 
         /// <summary>
-        /// 多属性新组合序号，用于多属性组合生成时的唯一 标识，此字段不存储到数据库
+        /// 多属性新组合序号，用于多属性组合生成时的唯一 标识，此字段不存储到数据库1
         /// </summary>
         [SugarColumn(IsIgnore = true, ColumnDescription = "多属性新组合序号")]
         [Browsable(true)]

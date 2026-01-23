@@ -452,8 +452,8 @@ namespace RUINORERP.UI.ProductEAV
                     //如果一个属性都没有选 。可能是取消选中，全没有选。则要恢复默认第一个产品中的属性为空，或直接加载
                     #region
                     //去掉临时添加的关系数据，因为要重新加载
-                    EditEntity.tb_ProdDetails.RemoveWhere(c => c.ProdDetailID == 0);
-                    EditEntity.tb_ProdDetails.RemoveWhere(c => c.ActionStatus == ActionStatus.新增);
+                    // 使用MultiPropertyEditorSEQ来识别临时产品
+                    EditEntity.tb_ProdDetails.RemoveWhere(c => !string.IsNullOrEmpty(c.MultiPropertyEditorSEQ));
                     if (EditEntity.tb_ProdDetails != null && EditEntity.tb_ProdDetails.Count > 0)
                     {
                         //加载属性
@@ -1129,47 +1129,42 @@ namespace RUINORERP.UI.ProductEAV
                     node.DefaultCellStyle.Font = boldFont;
 
                     // 添加到产品详情列表
-                    if (!EditEntity.tb_ProdDetails.Any(c => c.ProdDetailID == combination.ProductDetail.ProdDetailID))
+                    // 使用MultiPropertyEditorSEQ或ProdDetailID来判断是否已存在
+                    bool existsInList = !string.IsNullOrEmpty(combination.ProductDetail.MultiPropertyEditorSEQ)
+                        ? EditEntity.tb_ProdDetails.Any(c => c.MultiPropertyEditorSEQ == combination.ProductDetail.MultiPropertyEditorSEQ)
+                        : EditEntity.tb_ProdDetails.Any(c => c.ProdDetailID == combination.ProductDetail.ProdDetailID);
+
+                    if (!existsInList)
                     {
                         EditEntity.tb_ProdDetails.Add(combination.ProductDetail);
                     }
                 }
                 else
                 {
-                    #region 更新关系 ，下面会根据关系来添加节点
-                    #region 添加关系，因为生成SKU需要这些关系 生成更友好的编号
+                    #region 更新关系，处理已存在的产品
+
+                    // 对于已存在的产品，清空其现有属性关系，然后根据新组合重新设置
+                    // 避免属性关系累积导致重复或多余属性值
+                    combination.ProductDetail.tb_Prod_Attr_Relations.Clear();
+
                     // 为每个属性值创建属性关系
                     foreach (var attrValuePair in combination.Properties)
                     {
-                        //根据属性及值找到对应的关系。如果存在则不管。不存在则新增
-                        tb_Prod_Attr_Relation attr_Relation = combination.ProductDetail.tb_Prod_Attr_Relations.FirstOrDefault(c => c.Property_ID == attrValuePair.Property.Property_ID && c.PropertyValueID == attrValuePair.PropertyValue.PropertyValueID);
-
-                        if (attr_Relation != null)
+                        long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                        var relation = new tb_Prod_Attr_Relation
                         {
-                            if (attr_Relation.ActionStatus != ActionStatus.新增)
-                            {
-                                attr_Relation.ActionStatus = ActionStatus.修改;
-                            }
-
-                        }
-                        else
-                        {
-                            long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                            var relation = new tb_Prod_Attr_Relation
-                            {
-                                Property_ID = attrValuePair.Property.Property_ID,
-                                PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
-                                ProdBaseID = EditEntity.ProdBaseID,
-                                RAR_ID = RARId,
-                                ProdDetailID = combination.ProductDetail?.ProdDetailID,// skuRowId,
-                                ActionStatus = ActionStatus.新增,
-                                tb_prodproperty = attrValuePair.Property,
-                                tb_prodpropertyvalue = attrValuePair.PropertyValue
-                            };
-                            combination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
-                        }
+                            Property_ID = attrValuePair.Property.Property_ID,
+                            PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
+                            ProdBaseID = EditEntity.ProdBaseID,
+                            RAR_ID = RARId,
+                            ProdDetailID = combination.ProductDetail.ProdDetailID,
+                            ActionStatus = ActionStatus.新增,
+                            tb_prodproperty = attrValuePair.Property,
+                            tb_prodpropertyvalue = attrValuePair.PropertyValue
+                        };
+                        combination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
                     }
-                    #endregion
+
                     if (combination.ProductDetail.ActionStatus == ActionStatus.新增)
                     {
                         BusinessHelper.Instance.InitEntity(combination.ProductDetail); // 初始化编辑信息
@@ -1186,15 +1181,24 @@ namespace RUINORERP.UI.ProductEAV
                     }
 
                     // 添加到产品详情列表
-                    if (!EditEntity.tb_ProdDetails.Any(c => c.ProdDetailID == combination.ProductDetail.ProdDetailID))
+                    // 使用MultiPropertyEditorSEQ或ProdDetailID来判断是否已存在
+                    bool existsInListForUpdate = !string.IsNullOrEmpty(combination.ProductDetail.MultiPropertyEditorSEQ)
+                        ? EditEntity.tb_ProdDetails.Any(c => c.MultiPropertyEditorSEQ == combination.ProductDetail.MultiPropertyEditorSEQ)
+                        : EditEntity.tb_ProdDetails.Any(c => c.ProdDetailID == combination.ProductDetail.ProdDetailID);
+
+                    if (!existsInListForUpdate)
                     {
                         EditEntity.tb_ProdDetails.Add(combination.ProductDetail);
                     }
-
                     #endregion
 
 
-                    node = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == combination.ProductDetail.ProdDetailID.ToString());
+                    // 更新TreeGrid节点
+                    string nodeIdentifier = !string.IsNullOrEmpty(combination.ProductDetail.MultiPropertyEditorSEQ)
+                        ? combination.ProductDetail.MultiPropertyEditorSEQ
+                        : combination.ProductDetail.ProdDetailID.ToString();
+
+                    node = treeGridView1.Nodes.FirstOrDefault(c => c.NodeName == nodeIdentifier);
                     if (node != null)
                     {
                         node.Cells[3].Value = GetPropertiesText(combination);
@@ -1302,6 +1306,7 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 从TreeGrid中获取产品属性值等各种关系信息
+        /// 正确处理临时产品（使用MultiPropertyEditorSEQ标记）和已保存产品（使用ProdDetailID）
         /// </summary>
         /// <returns></returns>
         private List<tb_Prod_Attr_Relation> GetProdDetailsFromTreeGrid()
@@ -1313,7 +1318,18 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     foreach (var subNode in item.Nodes)
                     {
-                        prodDetails_relation.Add(subNode.Tag as tb_Prod_Attr_Relation);
+                        var relation = subNode.Tag as tb_Prod_Attr_Relation;
+                        if (relation != null)
+                        {
+                            // 确保属性关系关联到正确的产品
+                            // 获取父节点的Tag（产品详情）
+                            if (item.Tag is tb_ProdDetail detail)
+                            {
+                                // 设置ProdDetailID（无论临时还是已保存的产品，都有这个字段）
+                                relation.ProdDetailID = detail.ProdDetailID;
+                            }
+                            prodDetails_relation.Add(relation);
+                        }
                     }
                 }
             }
@@ -1321,6 +1337,33 @@ namespace RUINORERP.UI.ProductEAV
             prodDetails_relation = prodDetails_relation.OrderBy(p => p.Property_ID).ToList();
 
             return prodDetails_relation;
+        }
+
+        /// <summary>
+        /// 获取产品详情的唯一标识键
+        /// 对于临时产品：返回MultiPropertyEditorSEQ
+        /// 对于已保存产品：返回ProdDetailID
+        /// </summary>
+        /// <param name="detail">产品详情</param>
+        /// <returns>唯一标识键</returns>
+        private long? GetProductDetailUniqueKey(tb_ProdDetail detail)
+        {
+            if (detail == null)
+            {
+                return null;
+            }
+
+            // 优先使用MultiPropertyEditorSEQ判断是否为临时产品
+            if (!string.IsNullOrEmpty(detail.MultiPropertyEditorSEQ))
+            {
+                // 临时产品：使用临时ProdDetailID作为键
+                return detail.ProdDetailID;
+            }
+            else
+            {
+                // 已保存产品：使用真实的ProdDetailID作为键
+                return detail.ProdDetailID > 0 ? detail.ProdDetailID : (long?)null;
+            }
         }
 
         /// <summary>
@@ -1736,16 +1779,26 @@ namespace RUINORERP.UI.ProductEAV
             List<string> MixByTreeGrid = new List<string>();
             #region 获取最新的组合关系。并且保存为一个新的数组与现有的组合关系进行比较 取差集
             List<tb_Prod_Attr_Relation> attr_Relations = GetProdDetailsFromTreeGrid();
-            var existDetails = attr_Relations.GroupBy(c => c.ProdDetailID).ToList();
-            foreach (var item in existDetails)
+
+            // 获取TreeGrid中的所有产品详情
+            var productDetails = new List<tb_ProdDetail>();
+            foreach (TreeGridNode item in treeGridView1.Nodes)
+            {
+                if (item.Tag is tb_ProdDetail detail)
+                {
+                    productDetails.Add(detail);
+                }
+            }
+
+            // 对每个产品详情获取其属性关系
+            foreach (var detail in productDetails)
             {
                 var array = attr_Relations
-                    .Where(c => c.ProdDetailID == item.Key)
-                     .OrderBy(c => c.Property_ID) // 按属性 ID 排序
+                    .Where(c => c.ProdDetailID == detail.ProdDetailID && c.tb_prodpropertyvalue != null)
+                    .OrderBy(c => c.Property_ID) // 按属性 ID 排序
                     .ToList()
                     .Select(c => c.PropertyValueID + "|" + c.tb_prodpropertyvalue.PropertyValueName).ToArray();
                 MixByTreeGrid.Add(string.Join(",", array));
-
             }
             #endregion
             // 维度检查：确保用户选择的所有组合中，每个产品的属性维度一致
@@ -1774,15 +1827,21 @@ namespace RUINORERP.UI.ProductEAV
 
             // 使用规范化字符串来检查重复
             Dictionary<long?, string> normalizedStrings = new Dictionary<long?, string>();
-            foreach (var item in existDetails)
+            foreach (var detail in productDetails)
             {
                 var relations = attr_Relations
-                    .Where(c => c.ProdDetailID == item.Key)
+                    .Where(c => c.ProdDetailID == detail.ProdDetailID)
                     .ToList();
 
                 // 生成规范化字符串
                 string normalizedStr = GenerateNormalizedCombinationString(relations);
-                normalizedStrings[item.Key] = normalizedStr;
+
+                // 使用产品详情的唯一键
+                long? uniqueKey = GetProductDetailUniqueKey(detail);
+                if (uniqueKey.HasValue)
+                {
+                    normalizedStrings[uniqueKey.Value] = normalizedStr;
+                }
             }
 
             // 找出重复的规范化字符串
@@ -1862,15 +1921,18 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             //如果是单属性，则关系中只会有一条数据。并且属性值为空。
-            ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
-            if (pt == ProductAttributeType.单属性 && EditEntity.tb_Prod_Attr_Relations.Count > 1)
+            if (cmbPropertyType.SelectedValue != null)
             {
-                MessageBox.Show("单属性的产品时，属性关系不能超过一条。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            else
-            {
-                EditEntity.PropertyType = (int)ProductAttributeType.可配置多属性;
+                ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
+                if (pt == ProductAttributeType.单属性 && EditEntity.tb_Prod_Attr_Relations.Count > 1)
+                {
+                    MessageBox.Show("单属性的产品时，属性关系不能超过一条。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                else
+                {
+                    EditEntity.PropertyType = (int)ProductAttributeType.可配置多属性;
+                }
             }
             //生成属性后 所有的属性值都按一个规则排序，再比较是否有相同的。如果有则提示不能保存。
 
@@ -1881,6 +1943,22 @@ namespace RUINORERP.UI.ProductEAV
             {
                 btnOk.Enabled = true;
                 MainForm.Instance.uclog.AddLog("保存成功");
+
+                // 保存成功后，清除已保存产品的MultiPropertyEditorSEQ标记
+                // 这些产品已经保存到数据库，不再是临时产品
+                if (EditEntity.tb_ProdDetails != null)
+                {
+                    foreach (var detail in EditEntity.tb_ProdDetails)
+                    {
+                        if (detail.ProdDetailID > 0 && !string.IsNullOrEmpty(detail.MultiPropertyEditorSEQ))
+                        {
+                            detail.MultiPropertyEditorSEQ = null;
+                        }
+                    }
+                }
+
+                // 更新旧对象，以便下次比较
+                oldOjb = EditEntity.DeepCloneByjson();
 
                 // 刷新产品详情数据，而不是关闭窗体
                 // 这样用户可以继续编辑，同时数据已保存到数据库
@@ -2102,7 +2180,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (currentNode.Tag is tb_ProdDetail detail)
                 {
-                    // 判断产品类型：新生成产品 vs 已存在产品
+                    // 判断产品类型：新生成产品（有MultiPropertyEditorSEQ） vs 已存在产品（无MultiPropertyEditorSEQ）
                     bool isNewGeneratedProduct = !string.IsNullOrEmpty(detail.MultiPropertyEditorSEQ);
 
                     if (isNewGeneratedProduct)
@@ -2114,7 +2192,15 @@ namespace RUINORERP.UI.ProductEAV
                         if (MessageBox.Show(message, "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                         {
                             // 从TreeGrid中移除节点
-                            treeGridView1.Nodes.Remove(currentNode);
+                            var parentNode = currentNode.Parent;
+                            if (parentNode != null)
+                            {
+                                parentNode.Nodes.Remove(currentNode);
+                            }
+                            else
+                            {
+                                treeGridView1.Nodes.Remove(currentNode);
+                            }
 
                             // 从产品详情集合中移除
                             Prod.tb_ProdDetails.Remove(detail);
@@ -2122,7 +2208,7 @@ namespace RUINORERP.UI.ProductEAV
                             MainForm.Instance.ShowStatusText("删除临时SKU明细成功。");
                         }
                     }
-                    else if (detail.ProdDetailID > 0)
+                    else
                     {
                         // 场景2：删除数据库已存在的产品
                         // 检查该产品明细是否被业务表引用
@@ -2165,7 +2251,15 @@ namespace RUINORERP.UI.ProductEAV
                                 if (counter)
                                 {
                                     // 从TreeGrid中移除节点
-                                    treeGridView1.Nodes.Remove(currentNode);
+                                    var parentNode = currentNode.Parent;
+                                    if (parentNode != null)
+                                    {
+                                        parentNode.Nodes.Remove(currentNode);
+                                    }
+                                    else
+                                    {
+                                        treeGridView1.Nodes.Remove(currentNode);
+                                    }
 
                                     // 从产品详情集合中移除
                                     Prod.tb_ProdDetails.Remove(detail);

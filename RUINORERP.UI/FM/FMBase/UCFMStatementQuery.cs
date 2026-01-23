@@ -269,7 +269,9 @@ namespace RUINORERP.UI.FM
         {
             base.MasterInvisibleCols.Add(c => c.StatementId);
             base.MasterInvisibleCols.Add(c => c.ARAPNos);
-
+            base.MasterInvisibleCols.Add(c => c.MergedCustomerVendorIDs);
+            base.ChildInvisibleCols.Add(c => c.StatementDetailId); 
+            base.ChildInvisibleCols.Add(c => c.ARAPId);
             //if (PaymentType == ReceivePaymentType.收款)
             //{
             //    //应收款，不需要对方的收款信息。付款才要显示

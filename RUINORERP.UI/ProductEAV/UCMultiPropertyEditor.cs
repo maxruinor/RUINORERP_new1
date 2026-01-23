@@ -61,7 +61,7 @@ namespace RUINORERP.UI.ProductEAV
             InitializeComponent();
             clientBizCodeService = Startup.GetFromFac<ClientBizCodeService>();
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_Prod));
-
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.PropertyType, typeof(ProductAttributeType));
         }
         private ClientBizCodeService clientBizCodeService;
         private void btnQueryForGoods_Click(object sender, EventArgs e)
@@ -1602,6 +1602,8 @@ namespace RUINORERP.UI.ProductEAV
 
         private void dataGridViewProd_DoubleClick(object sender, EventArgs e)
         {
+            listView1.Clear();
+            contextMenuStrip1.Items.Clear();
             cmbPropertyType.Enabled = true;
             cmb属性.Enabled = false;
             LoadProdDetail();
@@ -1756,7 +1758,7 @@ namespace RUINORERP.UI.ProductEAV
                         var array = ProdAttrRelations
                             .Where(c => c.ProdDetailID == item.ProdDetailID)
                             .OrderBy(c => c.Property_ID) // 按属性 ID 排序
-                            .ToList().Select(c => c.tb_prodpropertyvalue.PropertyValueName).ToArray();
+                            .ToList().Select(c => c.tb_prodpropertyvalue?.PropertyValueName).ToArray();
                         DisplayPropText = string.Join(",", array);
                     }
                     TreeGridNode node = treeGridView1.Nodes.Add(item.ProdDetailID, item.ProdDetailID, "", DisplayPropText, item.SKU, viewProdDetail.CNName, "加载", item.Is_enabled);

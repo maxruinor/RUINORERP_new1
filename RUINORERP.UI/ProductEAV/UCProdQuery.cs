@@ -93,6 +93,7 @@ namespace RUINORERP.UI.ProductEAV
 
             // 初始化网格显示文本解析器
             DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_Prod>();
+            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.PropertyType, typeof(ProductAttributeType));
             ProdBundleDisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProdBundle>();
             newSumDataGridView产品.NeedSaveColumnsXml = true;
             newSumDataGridView产品组合.NeedSaveColumnsXml = true;

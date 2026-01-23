@@ -58,6 +58,11 @@ namespace RUINORERP.UI.Common
         private static IEntityCacheManager _cacheManager;
 
         /// <summary>
+        /// 缓存实体类型的FKRelations，避免重复创建实例
+        /// </summary>
+        private static ConcurrentDictionary<Type, List<FKRelation>> _fkRelationsCache = new ConcurrentDictionary<Type, List<FKRelation>>();
+
+        /// <summary>
         /// 获取缓存管理器实例
         /// </summary>
         private static IEntityCacheManager CacheManager
@@ -1696,9 +1701,13 @@ namespace RUINORERP.UI.Common
                 {
                     try
                     {
-                        // 创建实体实例来获取FKRelations
-                        BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(type);
-                        var fkRelations = entityInstance.FKRelations;
+                        // 获取外键关系 - 使用缓存避免重复创建实例
+                        var fkRelations = _fkRelationsCache.GetOrAdd(type, t =>
+                        {
+                            // 首次创建实例获取FKRelations并缓存
+                            BaseEntity entityInstance = (BaseEntity)Activator.CreateInstance(t);
+                            return entityInstance.FKRelations.ToList();
+                        });
 
                         // 限制关联表数量，避免UI卡顿
                         foreach (var relation in fkRelations.Take(3))

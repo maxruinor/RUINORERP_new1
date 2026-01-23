@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.DotNetBar.Controls;
+using FastReport.DevComponents.DotNetBar.Controls;
 using HLH.Lib.List;
 using Krypton.Toolkit;
 using Newtonsoft.Json;
@@ -2734,7 +2734,6 @@ namespace RUINORERP.UI.UControls
                     {
                         t = dr.DataBoundItem.GetType();
                         //必须是更新
-                        si = Activator.CreateInstance(t);
                         si = dr.DataBoundItem;
                         if (si == null)
                         {

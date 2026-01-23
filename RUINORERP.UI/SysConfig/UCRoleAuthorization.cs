@@ -1312,22 +1312,30 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        List<MenuAttrAssemblyInfo> MenuAssemblylist = UIHelper.RegisterForm();
-
-        /// <summary>
-        /// 初始化菜单下的按钮权限（旧版本，仅作参考）
-        /// </summary>
-        /// <param name="role">当前角色</param>
-        /// <param name="menuInfo">当前菜单</param>
-        /// <param name="ButtonInfolist"></param>
-        /// <param name="P4Buttonlist">如果已经存在部分正常的权限和按钮关系，则要排除</param>
-        /// <returns></returns>
-        public async Task<List<tb_P4Button>> InitBtnByRole_old(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
+        private List<MenuAttrAssemblyInfo> MenuAssemblylist
         {
-            // 此方法已过时，建议使用新的InitBtnByRole方法
-            // 保持代码完整性，但不做修改
-            return await InitBtnByRole(role, menuInfo, Seleted);
+            get
+            {
+                if (_menuAssemblylist == null)
+                {
+                    // 确保在主线程调用
+                    if (MainForm.Instance != null && MainForm.Instance.InvokeRequired)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            _menuAssemblylist = UIHelper.RegisterForm();
+                        }));
+                    }
+                    else
+                    {
+                        _menuAssemblylist = UIHelper.RegisterForm();
+                    }
+                }
+                return _menuAssemblylist;
+            }
         }
+        private List<MenuAttrAssemblyInfo> _menuAssemblylist = null;
+
 
 
         /// <summary>
@@ -1490,116 +1498,6 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-        /// <summary>
-        /// 根据权限初始化字段 以角色权限为基础了。不是以菜单为基础了。菜单只是默认
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="menuInfo"></param>
-        /// <param name="Seleted">是否选中</param>
-        /// <returns></returns>
-        public async Task<List<tb_P4Field>> InitFiledByRole_old(tb_RoleInfo role, tb_MenuInfo menuInfo, bool Seleted = false)
-        {
-            //List<tb_FieldInfo> objlist = new List<tb_FieldInfo>();
-            //没有就添加 有就查询出来 
-            List<tb_P4Field> Newpblist = new List<tb_P4Field>();
-            List<tb_P4Field> Updatepblist = new List<tb_P4Field>();
-            //objlist = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_FieldInfo>()
-            //        .Where(t => t.MenuID == menuInfo.MenuID)
-            //        .Includes(t => t.tb_menuinfo)
-            //        .ToListAsync();
-            if (menuInfo.tb_FieldInfos == null)
-            {
-                menuInfo.tb_FieldInfos = new List<tb_FieldInfo>();
-            }
-
-            if (menuInfo.tb_P4Fields == null)
-            {
-                menuInfo.tb_P4Fields = new List<tb_P4Field>();
-            }
-
-            //增量式增加字段
-            Assembly dalAssemble = AssemblyLoader.LoadAssembly("RUINORERP.Model");
-            Type[] ModelTypes = dalAssemble.GetExportedTypes();
-            List<string> typeNames = ModelTypes.Select(m => m.Name).ToList();
-            Type mai = ModelTypes.FirstOrDefault(e => e.Name == menuInfo.EntityName);
-            if (mai != null)
-            {
-                InitModuleMenu imm = Startup.GetFromFac<InitModuleMenu>();
-                if (imm != null)
-                {
-                    //imm.InitFieldInoMainAndSub(mai, menuInfo, false, "");
-                    await imm.InitFieldInoMainAndSubAsync(mai, menuInfo, false, "");
-                    //尝试找子表类型
-                    string childType = typeNames.FirstOrDefault(s => s.Contains(mai.Name + "Detail"));
-                    if (!string.IsNullOrEmpty(childType))
-                    {
-                        Type cType = ModelTypes.FirstOrDefault(t => t.FullName == mai.FullName + "Detail");
-                        if (cType != null)
-                        {
-                            await imm.InitFieldInoMainAndSubAsync(cType, menuInfo, true, childType);
-                        }
-                    }
-                }
-            }
-            for (int i = 0; i < menuInfo.tb_FieldInfos.Count; i++)
-            {
-                var item = menuInfo.tb_FieldInfos[i];
-                //}
-
-                //foreach (var item in menuInfo.tb_FieldInfos)
-                //{
-                tb_P4Field pb = new tb_P4Field();
-                pb = menuInfo.tb_P4Fields.FirstOrDefault(e => e.FieldInfo_ID == item.FieldInfo_ID
-                && e.MenuID == menuInfo.MenuID && e.RoleID == role.RoleID);
-                if (pb == null)
-                {
-                    pb = new tb_P4Field();
-                    BusinessHelper.Instance.InitEntity(pb);
-                    pb.Notes = item.FieldText;
-                }
-                else
-                {
-                    pb.HasChanged = false;
-                }
-                //冗余 ,让 配置权限时更方便查看
-                pb.IsChild = item.IsChild;
-
-                pb.RoleID = CurrentRole.RoleID;
-                pb.FieldInfo_ID = item.FieldInfo_ID;
-                pb.MenuID = menuInfo.MenuID;
-                //pb.IsVisble = false;//加上就不对了 保存了勾选都被显示为没勾选了
-                if (Seleted)
-                {
-                    pb.IsVisble = true;
-                    if (pb.P4Field_ID > 0 && pb.HasChanged)
-                    {
-                        Updatepblist.Add(pb);
-                    }
-                }
-
-                if (pb.P4Field_ID == 0)
-                {
-                    Newpblist.Add(pb);
-                }
-            }
-            if (Newpblist.Count > 0)
-            {
-                var ids = await ctrPField.AddAsync(Newpblist);
-                if (ids.Count > 0)
-                {
-                    menuInfo.tb_P4Fields.AddRange(Newpblist);
-                }
-            }
-
-            if (Updatepblist.Count > 0)
-            {
-                await MainForm.Instance.AppContext.Db.Updateable(Updatepblist).ExecuteCommandAsync();
-            }
-
-            // var ids = await MainForm.Instance.AppContext.Db.Insertable(pblist).ExecuteReturnSnowflakeIdListAsync();
-            return menuInfo.tb_P4Fields.Where(c => c.RoleID == role.RoleID).ToList();
-        }
-
 
         InitModuleMenu imm = null;
 
@@ -1637,11 +1535,11 @@ namespace RUINORERP.UI.SysConfig
                         if (mainType != null)
                         {
                             // 在UI线程上下文中获取服务实例（InitModuleMenu构造函数需要STA线程）
+                            InitModuleMenu imm = null;
 
-                            if (imm == null)
-                            {
-                                imm = Startup.GetFromFac<InitModuleMenu>();
-                            }
+                            imm = Startup.GetFromFac<InitModuleMenu>();
+                            imm.MenuAssemblyList = MenuAssemblylist;
+
                             if (imm != null)
                             {
                                 await imm.InitFieldInoMainAndSubAsync(mainType, SelectedMenuInfo, false, "");

@@ -43,12 +43,28 @@ namespace RUINORERP.UI.Common
         private List<string> _typeNames = new List<string>();
         private Type[] _modelTypes;
 
+        public List<MenuAttrAssemblyInfo> MenuAssemblyList { get => _menuAssemblyList; set => _menuAssemblyList = value; }
+
         public InitModuleMenu(ApplicationContext appContext, ILogger<InitModuleMenu> logger)
         {
             _appContext = appContext;
             _logger = logger;
-            // 加载菜单程序集信息
-            _menuAssemblyList = UIHelper.RegisterForm();
+            // 加载菜单程序集信息（确保在主线程调用）
+            if (MenuAssemblyList == null || MenuAssemblyList.Count == 0)
+            {
+                // 检查当前是否在主线程
+                if (MainForm.Instance != null && MainForm.Instance.InvokeRequired)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        MenuAssemblyList = UIHelper.RegisterForm();
+                    }));
+                }
+                else
+                {
+                    MenuAssemblyList = UIHelper.RegisterForm();
+                }
+            }
         }
 
         #region 系统级初始化菜单
@@ -61,10 +77,7 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                // 加载模型类型信息
-                //var dalAssemble = System.Reflection.Assembly.LoadFrom("RUINORERP.Model.dll");
-                //_modelTypes = dalAssemble.GetExportedTypes();
-                //_typeNames = _modelTypes.Select(m => m.Name).ToList();
+                
 
                 // 获取控制器实例
                 var mdctr = _appContext.GetRequiredService<tb_ModuleDefinitionController<tb_ModuleDefinition>>();
@@ -200,10 +213,15 @@ namespace RUINORERP.UI.Common
                     .SelectMany(m => m.tb_MenuInfos)
                     .Where(m => m.Parent_id == 0)
                     .ToList();
+                
+                if (MenuAssemblyList.Count == 0)
+                {
+                    MenuAssemblyList = UIHelper.RegisterForm();
+                }
 
                 foreach (var topMenu in topMenus)
                 {
-                    await StartInitNavMenuAsync(topMenu, _menuAssemblyList, topMenu.tb_moduledefinition.ModuleName);
+                    await StartInitNavMenuAsync(topMenu, MenuAssemblyList, topMenu.tb_moduledefinition.ModuleName);
                 }
             }
             catch (Exception ex)
@@ -778,7 +796,7 @@ namespace RUINORERP.UI.Common
                     #region 取明细中的公共产品类，或其它类。
                     try
                     {
-                        MenuAttrAssemblyInfo mai = _menuAssemblyList.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
+                        MenuAttrAssemblyInfo mai = MenuAssemblyList.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
                         if (mai != null)
                         {
                             // 创建并获取窗体实例

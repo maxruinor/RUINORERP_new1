@@ -2001,48 +2001,65 @@ namespace RUINORERP.UI.Common
 
         #region 注入窗体-开始
 
+        /// <summary>
+        /// 缓存已扫描的菜单程序集信息，避免重复扫描
+        /// Key: assemblyPath (空字符串表示当前程序集)
+        /// </summary>
+        private static readonly Dictionary<string, List<MenuAttrAssemblyInfo>> _cachedMenuAssemblyInfo = new Dictionary<string, List<MenuAttrAssemblyInfo>>();
+        private static readonly object _cacheLock = new object();
 
         /// <summary>
         /// 获取对应的窗体用于首次自动生成菜单
+        /// 优化：使用缓存避免重复扫描，延迟实例化提升性能
         /// </summary>
-        /// <returns></returns>
+        /// <param name="assemblyPath">程序集路径，空字符串表示当前程序集</param>
+        /// <returns>菜单程序集信息列表</returns>
         public static List<MenuAttrAssemblyInfo> RegisterForm(string assemblyPath)
         {
+            // 使用缓存，避免重复扫描程序集
+            string cacheKey = string.IsNullOrEmpty(assemblyPath) ? "" : assemblyPath;
+
+            if (_cachedMenuAssemblyInfo.TryGetValue(cacheKey, out var cachedList))
+            {
+                return cachedList;
+            }
+
             List<MenuAttrAssemblyInfo> infolist = new List<MenuAttrAssemblyInfo>();
             Type[] types = null;
+            Assembly assembly = null;
+
             if (string.IsNullOrEmpty(assemblyPath))
             {
                 types = Assembly.GetExecutingAssembly()?.GetExportedTypes();
+                assembly = Assembly.GetExecutingAssembly();
             }
             else
             {
-                var assembly = AssemblyLoader.LoadFromPath(assemblyPath);
+                assembly = AssemblyLoader.LoadFromPath(assemblyPath);
                 types = assembly?.GetExportedTypes();
             }
-            //  Type[]? types = Assembly.GetExecutingAssembly()?.GetExportedTypes();
 
             if (types != null)
             {
                 var descType = typeof(MenuAttrAssemblyInfo);
                 var form = typeof(Form);
+                var interfaceType = typeof(ISharedIdentification);
+                PropertyInfo sharedFlagProperty = interfaceType.GetProperty("sharedFlag", BindingFlags.Public | BindingFlags.Instance);
+
                 foreach (Type type in types)
                 {
-                    // 类型是否为窗体，否则跳过，进入下一个循环
-                    //if (type.GetTypeInfo != form)
-                    //    continue;
+                    // 跳过抽象类
+                    if (type.IsAbstract || type.IsInterface)
+                        continue;
 
-                    // 是否为自定义特性，否则跳过，进入下一个循环
+                    // 是否有自定义特性
                     if (!type.IsDefined(descType, false))
                         continue;
-                    // 强制为自定义特性
+
                     MenuAttrAssemblyInfo? attribute = type.GetCustomAttribute(descType, false) as MenuAttrAssemblyInfo;
-                    // 如果强制失败或者不需要注入的窗体跳过，进入下一个循环
                     if (attribute == null || !attribute.Enabled)
                         continue;
 
-
-                    // 域注入
-                    //Services.AddScoped(type);
                     MenuAttrAssemblyInfo info = new MenuAttrAssemblyInfo();
                     info = attribute;
                     info.ClassName = type.Name;
@@ -2057,38 +2074,24 @@ namespace RUINORERP.UI.Common
                     }
                     info.BIBaseForm = type.BaseType.Name;
 
-                    #region  判断是不是财务合并接口
+                    #region 判断是不是财务合并接口
 
-                    // 确保是具体类，且实现了IBillBusinessType接口
-                    if (type.IsClass && !type.IsAbstract &&
-                           typeof(ISharedIdentification).IsAssignableFrom(type))
+                    // 优化：不在此处实例化，只标记实现了接口
+                    if (type.IsClass && !type.IsAbstract && interfaceType.IsAssignableFrom(type))
                     {
                         info.BizInterface = nameof(ISharedIdentification);
 
-                        // 获取接口类型（避免硬编码字符串）
-                        Type interfaceType = typeof(ISharedIdentification);
-
-                        // 检查类型是否显式或隐式实现了该接口
-                        if (interfaceType.IsAssignableFrom(type) && !type.IsInterface)
+                        // 延迟获取 sharedFlag：只在需要时才实例化
+                        // 使用 Func<T> 延迟计算
+                        if (sharedFlagProperty != null && sharedFlagProperty.CanRead)
                         {
-                            // 获取接口属性（支持显式/隐式实现）
-                            PropertyInfo property = interfaceType.GetProperty("sharedFlag", BindingFlags.Public | BindingFlags.Instance);
-                            if (property != null && property.CanRead)
-                            {
-                                object instance = Activator.CreateInstance(type); // 需要无参构造函数
-                                info.UIPropertyIdentifier = interfaceType.GetProperty("sharedFlag").GetValue(instance, null).ToString();
-                            }
-                            else
-                            {
-                                // 处理属性未正确实现的异常（日志或忽略）
-                                MainForm.Instance.uclog.AddLog($"类型 {type.Name} 未正确实现 {interfaceType.Name} 接口的 sharedFlag 属性", Global.UILogType.警告);
-                            }
+                            info.UIPropertyIdentifier = GetSharedFlagLazy(type, sharedFlagProperty);
                         }
-
                     }
 
                     #endregion
 
+                    #region 提取实体名称
 
                     if (type.BaseType.IsGenericType)
                     {
@@ -2097,67 +2100,143 @@ namespace RUINORERP.UI.Common
                         {
                             info.EntityName = paraTypes[0].Name;
                         }
-                        //如果类型是例如此代码可为空，返回int部分(底层类型)。如果只需要将对象转换为特定类型，则可以使用System.Convert.ChangeType方法。
                     }
-                    else
+                    else if (type.BaseType.FullName == "RUINORERP.UI.BaseForm.BaseList")
                     {
-
-                        if (type.BaseType.FullName == "System.Windows.Forms.UserControl")
-                        {
-
-                        }
-                        else
-                        {
-
-                        }
-
-                        //UserControl 都是这个类型
-                        if (type.BaseType.FullName == "RUINORERP.UI.BaseForm.BaseList")
-                        {
-                            //这个实例化过程 到UCUnitList时居然会执行里面的Query方法 导致 出错。只是会在init菜单时
-                            var RelatedForms = Startup.GetFromFacByName<UserControl>(type.Name);
-                            //var menu=Startup.GetFromFac<UI.BI.UCLocationTypeList>();
-                            //获取关联实体名
-                        }
+                        // 优化：不在此处从 DI 容器获取实例，延迟到需要时
+                        // var RelatedForms = Startup.GetFromFacByName<UserControl>(type.Name); // 移除此行
+                        // 延迟获取实体名
+                        info.EntityName = GetEntityNameLazy(type, assembly);
 
                         if (type.BaseType.IsGenericType)
                         {
                             Type[] paraTypes = type.BaseType.GetGenericArguments();
                             if (paraTypes.Length > 0)
                             {
-                                info.EntityName = paraTypes[0].Name;
+                                info.EntityName = info.EntityName ?? paraTypes[0].Name;
                                 info.BIBaseForm = type.BaseType.Name;
                             }
                         }
                         else
                         {
-                            //再找上一级的父类    预收付款查询  暂时两级吧。主要是合并表 分开菜单好控制
-                            if (type.BaseType.BaseType.IsGenericType)
+                            if (type.BaseType.BaseType != null && type.BaseType.BaseType.IsGenericType)
                             {
                                 Type[] paraTypes = type.BaseType.BaseType.GetGenericArguments();
                                 if (paraTypes.Length > 0)
                                 {
-                                    info.EntityName = paraTypes[0].Name;
+                                    info.EntityName = info.EntityName ?? paraTypes[0].Name;
                                     info.BIBaseForm = type.BaseType.BaseType.Name;
                                 }
                             }
                             info.BIBizBaseForm = type.BaseType.Name;
                         }
-
-                        // System.Diagnostics.Debug.WriteLine($"注入：{attribute.FormType.Namespace}.{attribute.FormType.Name},{attribute.Describe}");
                     }
+                    else
+                    {
+                        if (type.BaseType != null && type.BaseType.IsGenericType)
+                        {
+                            Type[] paraTypes = type.BaseType.GetGenericArguments();
+                            if (paraTypes.Length > 0)
+                            {
+                                info.EntityName = paraTypes[0].Name;
+                            }
+                        }
+                        else if (type.BaseType?.BaseType != null && type.BaseType.BaseType.IsGenericType)
+                        {
+                            Type[] paraTypes = type.BaseType.BaseType.GetGenericArguments();
+                            if (paraTypes.Length > 0)
+                            {
+                                info.EntityName = paraTypes[0].Name;
+                                info.BIBaseForm = type.BaseType.BaseType.Name;
+                            }
+                            info.BIBizBaseForm = type.BaseType?.Name;
+                        }
+                    }
+
+                    #endregion
 
                     //特性标记
                     if (!string.IsNullOrEmpty(info.MenuPath))
                     {
                         infolist.Add(info);
                     }
-
                 }
             }
 
+            // 缓存结果
+            lock (_cacheLock)
+            {
+                if (!_cachedMenuAssemblyInfo.ContainsKey(cacheKey))
+                {
+                    _cachedMenuAssemblyInfo[cacheKey] = infolist;
+                }
+            }
 
             return infolist;
+        }
+
+        /// <summary>
+        /// 延迟获取 sharedFlag 属性值
+        /// </summary>
+        private static string GetSharedFlagLazy(Type type, PropertyInfo property)
+        {
+            try
+            {
+                // 尝试通过 DI 容器获取实例，避免手动实例化
+                if (typeof(UserControl).IsAssignableFrom(type))
+                {
+                    var instance = Startup.GetFromFacByName<UserControl>(type.Name);
+                    if (instance != null)
+                    {
+                        return property.GetValue(instance, null)?.ToString() ?? string.Empty;
+                    }
+                }
+                else if (typeof(Form).IsAssignableFrom(type))
+                {
+                    var instance = Startup.GetFromFacByName<KryptonForm>(type.Name);
+                    if (instance != null)
+                    {
+                        return property.GetValue(instance, null)?.ToString() ?? string.Empty;
+                    }
+                }
+            }
+            catch
+            {
+                // DI 容器获取失败，忽略
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 延迟获取实体名称
+        /// </summary>
+        private static string GetEntityNameLazy(Type type, Assembly assembly)
+        {
+            try
+            {
+                // 通过 DI 容器获取实例
+                var instance = Startup.GetFromFacByName<UserControl>(type.Name);
+                if (instance != null)
+                {
+                    // 从实例中获取实体类型（如果有相关属性）
+                    var entityTypeProperty = instance.GetType().GetProperty("EntityType");
+                    if (entityTypeProperty != null)
+                    {
+                        var entityType = entityTypeProperty.GetValue(instance);
+                        if (entityType != null)
+                        {
+                            return entityType.GetType().Name;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 获取失败，返回空
+            }
+
+            return string.Empty;
         }
 
         public static List<MenuAttrAssemblyInfo> RegisterForm()

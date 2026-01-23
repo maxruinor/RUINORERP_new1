@@ -209,12 +209,21 @@ namespace RUINORERP.Repository.UnitOfWorks
         //    }
         //}
 
+        //
         public void BeginTran()
         {
             lock (this)
             {
                 try
                 {
+                    // 检查并清理可能存在的僵尸事务
+                    // 如果深度为0但仍有物理事务，说明上一次事务没有正确清理
+                    if (PrivateTransactionDepth == 0 && _sqlSugarClient.Ado.Transaction != null)
+                    {
+                        _logger.LogWarning("检测到僵尸事务，强制清理");
+                        ForceRollback();
+                    }
+
                     int newDepth = PrivateTransactionDepth + 1;
                     PrivateTransactionDepth = newDepth;
 
@@ -285,7 +294,8 @@ namespace RUINORERP.Repository.UnitOfWorks
                     int currentDepth = PrivateTransactionDepth;
                     if (currentDepth <= 0)
                     {
-                        _logger.LogWarning("提交请求但无活动事务");
+                        _logger.LogWarning("提交请求但无活动事务，深度={0}, Transaction={1}",
+                            currentDepth, _sqlSugarClient.Ado.Transaction != null);
                         return;
                     }
 
@@ -303,7 +313,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "事务提交失败");
+                    _logger.LogError(ex, "事务提交失败，将执行强制回滚");
                     ForceRollback();
                     throw;
                 }
@@ -330,7 +340,13 @@ namespace RUINORERP.Repository.UnitOfWorks
                     int currentDepth = PrivateTransactionDepth;
                     if (currentDepth <= 0)
                     {
-                        _logger.LogWarning("回滚请求但无活动事务");
+                        _logger.LogWarning("回滚请求但无活动事务，深度={0}, Transaction={1}",
+                            currentDepth, _sqlSugarClient.Ado.Transaction != null);
+                        // 如果深度为0但仍有物理事务，说明是异常状态，强制清理
+                        if (_sqlSugarClient.Ado.Transaction != null)
+                        {
+                            ForceRollback();
+                        }
                         return;
                     }
 
@@ -356,7 +372,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "回滚操作失败");
+                    _logger.LogError(ex, "回滚操作失败，将执行强制回滚");
                     ForceRollback();
                     throw;
                 }

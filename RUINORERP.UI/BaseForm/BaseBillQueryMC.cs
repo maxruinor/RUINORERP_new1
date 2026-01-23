@@ -841,7 +841,7 @@ namespace RUINORERP.UI.BaseForm
                 int counter = 0;
                 foreach (var item in Datas)
                 {
-                    //https://www.runoob.com/w3cnote/csharp-enum.html
+                    //https://www.runoob.com/w3cnote/csharp-enum.html C# 枚举与位枚举
                     var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
                     if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                     {

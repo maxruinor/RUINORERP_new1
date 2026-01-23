@@ -306,6 +306,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 手动生成预付款单，需要手工审核
+        /// 注意: 此方法不开启事务,让SaveOrUpdate方法统一管理事务
         /// </summary>
         /// <param name="PrepaidAmount">本次预付金额</param>
         /// <param name="entity">对应的订单</param>
@@ -316,13 +317,12 @@ namespace RUINORERP.Business
             AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
             if (authorizeController.EnableFinancialModule())
             {
-                #region 生成预收款单 
+                #region 生成预收款单
 
                 #region 生成预收款单条件判断检测
                 // 获取付款方式信息
                 if (_appContext.PaymentMethodOfPeriod == null)
                 {
-                    _unitOfWorkManage.RollbackTran();
                     rmrs.Succeeded = false;
                     rmrs.ErrorMsg = $"请先配置付款方式信息！";
                     if (_appContext.SysConfig.ShowDebugInfo)
@@ -338,7 +338,6 @@ namespace RUINORERP.Business
                     if (entity.PayStatus != (int)PayStatus.未付款)
                     {
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -353,7 +352,6 @@ namespace RUINORERP.Business
                     if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
                     {
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -392,7 +390,6 @@ namespace RUINORERP.Business
                     {
                         // 处理预收款单生成失败的情况
                         rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
                         rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
@@ -416,7 +413,6 @@ namespace RUINORERP.Business
                             if (!autoApproval.Succeeded)
                             {
                                 rmrs.Succeeded = false;
-                                _unitOfWorkManage.RollbackTran();
                                 rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
                                 if (_appContext.SysConfig.ShowDebugInfo)
                                 {

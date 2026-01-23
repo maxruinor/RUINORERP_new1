@@ -421,8 +421,7 @@ namespace RUINORERP.UI.ProductEAV
                         selected = true;
                     }
                     CheckBox checkBox = listView1.AddItemToGroup(ppv.Property_ID.ToString(), item.PropertyValueName, selected, item.PropertyValueID.ToString(), item);
-                    checkBox.CheckStateChanged -= CheckBox_CheckStateChanged;
-                    checkBox.CheckStateChanged += CheckBox_CheckStateChanged;
+                    // 不在这里绑定事件，统一在LoadProdDetail完成后绑定
                 }
                 keys = keys.Trim(',');
                 names = names.Trim(',');
@@ -432,10 +431,51 @@ namespace RUINORERP.UI.ProductEAV
             #endregion
         }
 
+        /// <summary>
+        /// 解绑所有CheckBox的CheckStateChanged事件
+        /// </summary>
+        private void UnbindCheckBoxEvents()
+        {
+            foreach (var group in listView1.Groups)
+            {
+                foreach (var item in group.Items)
+                {
+                    if (item is CheckBox cb)
+                    {
+                        cb.CheckStateChanged -= CheckBox_CheckStateChanged;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 绑定所有CheckBox的CheckStateChanged事件
+        /// </summary>
+        private void BindCheckBoxEvents()
+        {
+            foreach (var group in listView1.Groups)
+            {
+                foreach (var item in group.Items)
+                {
+                    if (item is CheckBox cb)
+                    {
+                        cb.CheckStateChanged -= CheckBox_CheckStateChanged;
+                        cb.CheckStateChanged += CheckBox_CheckStateChanged;
+                    }
+                }
+            }
+        }
+
         private async void CheckBox_CheckStateChanged(object sender, EventArgs e)
         {
             CheckBox cb = sender as CheckBox;
             if (cb == null || !(cb.Tag is tb_ProdPropertyValue ppv))
+            {
+                return;
+            }
+
+            // 如果是在加载已存在数据时触发的事件,直接返回
+            if (!this.Enabled)
             {
                 return;
             }
@@ -530,9 +570,14 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     List<AttributeCombination> userSelectedCombinations = combinationsToAdd;
 
-                    // 如果是添加新属性的场景，必须添加所有组合以确保维度一致
-                    // 只有在已有属性中添加新属性值的场景，才允许用户选择部分组合
-                    if (combinationsToAdd.Count > 0 && !isAddingNewProperty)
+                    // 判断是否有临时产品详情（使用MultiPropertyEditorSEQ标记）
+                    // 或者产品本身是新产品（ProductID == 0）
+                    //bool hasTempDetails = EditEntity.tb_ProdDetails.Any(d => !string.IsNullOrEmpty(d.MultiPropertyEditorSEQ));
+            
+
+                    // 按需生成：让用户选择需要添加的组合
+                    // 条件：有新组合需要添加 且 不是取消全部勾选
+                    if (combinationsToAdd.Count > 0 && (hasTempDetails))
                     {
                         // 打开选择对话框
                         using (var selectForm = new frmSelectCombinations(combinationsToAdd))
@@ -546,7 +591,6 @@ namespace RUINORERP.UI.ProductEAV
                             else
                             {
                                 // 用户取消了选择，不执行任何操作
-                                // 需要恢复CheckBox的选中状态（这里简化处理，不恢复）
                                 return;
                             }
                         }
@@ -1507,17 +1551,21 @@ namespace RUINORERP.UI.ProductEAV
             LoadProdDetail();
         }
 
-        //加载产品属性时也要排序，按后面添加多属性一样的规则，这样才正确的比较重复等
         /// <summary>
         /// 加载产品详情数据
+        /// </summary>
         /// <summary>
         /// 从内存刷新产品详情显示，保留临时产品的 MultiPropertyEditorSEQ 标记
         /// 只移除 TreeGrid 节点并重新绑定，不清除内存中的临时数据
+        /// 双击产品后，重置属性及属性值的勾选状态，只勾选当前产品中存在的属性及属性值
         /// </summary>
         private void LoadProdDetail()
         {
             if (dataGridViewProd.CurrentRow != null)
             {
+                // 加载前解绑事件，防止触发
+                UnbindCheckBoxEvents();
+
                 EditEntity = dataGridViewProd.CurrentRow.DataBoundItem as tb_Prod;
 
                 if (EditEntity != null)
@@ -1530,14 +1578,24 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         LoadTreeGridItems(EditEntity);
 
-                        // 如果是第一次加载，才需要重新加载属性和属性值
-                        // 否则保留用户当前的属性选择状态
-                        if (listView1.Groups.Length == 0)
+                        // 重新加载属性和属性值，根据当前产品的实际数据进行勾选
+                        LoadAttributesFromDetails(EditEntity);
+                    }
+                    else
+                    {
+                        // 没有产品详情时，清空属性勾选状态
+                        foreach (var group in listView1.Groups)
                         {
-                            LoadAttributesFromDetails(EditEntity);
+                            foreach (var item in group.Items)
+                            {
+                                item.Checked = false;
+                            }
                         }
                     }
                 }
+
+                // 加载完成后重新绑定事件
+                BindCheckBoxEvents();
             }
         }
 
@@ -1549,6 +1607,15 @@ namespace RUINORERP.UI.ProductEAV
             if (product.tb_ProdDetails == null || product.tb_ProdDetails.Count == 0)
             {
                 return;
+            }
+
+            // 先清空所有勾选状态
+            foreach (var group in listView1.Groups)
+            {
+                foreach (var item in group.Items)
+                {
+                    item.Checked = false;
+                }
             }
 
             // 获取所有属性ID
@@ -1581,33 +1648,12 @@ namespace RUINORERP.UI.ProductEAV
                             if (checkbox != null)
                             {
                                 checkbox.Checked = true;
-                                AddProperty(property);
-                            }
-                        }
-                    }
-
-                    //加载属性值后  不可以再修改选中状态。
-                    //循环所有属性，如果有值则选中并且不可以修改
-                    if (EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)//要多属性的时候才需要
-                    {
-                        var propertys = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue).Select(c => c.Property_ID.Value).Distinct().ToList();
-                        foreach (var item in propertys)
-                        {
-                            var pvs = EditEntity.tb_Prod_Attr_Relations.Where(c => c.Property_ID.HasValue && c.Property_ID.Value == item).Select(c => c.PropertyValueID.Value).Distinct().ToList();
-                            foreach (var pv in pvs)
-                            {
-                                var group = listView1.Groups.FirstOrDefault(c => c.GroupID == item.ToString());
-                                if (group != null)
-                                {
-                                    group.Items.FirstOrDefault(c => c.Name == pv.ToString()).Enabled = false;
-                                }
                             }
                         }
                     }
 
                     listView1.UpdateUI();
                 }
-
             }
         }
 
@@ -1647,7 +1693,10 @@ namespace RUINORERP.UI.ProductEAV
                     string DisplayPropText = string.Empty;
                     if (viewProdDetail.prop != null)
                     {
+
+                        //这个显示没有顺序
                         DisplayPropText = viewProdDetail.prop;
+                        //要按顺序显示
                         var array = ProdAttrRelations
                             .Where(c => c.ProdDetailID == item.ProdDetailID)
                             .OrderBy(c => c.Property_ID) // 按属性 ID 排序

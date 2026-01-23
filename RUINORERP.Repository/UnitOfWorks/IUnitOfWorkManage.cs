@@ -3,6 +3,9 @@ using SqlSugar;
 
 namespace RUINORERP.Repository.UnitOfWorks
 {
+    /// <summary>
+    /// 1
+    /// </summary>
     public interface IUnitOfWorkManage
     {
         SqlSugarScope GetDbClient();

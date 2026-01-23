@@ -148,6 +148,13 @@ namespace RUINORERP.UI.PSI.SAL
                 _UCBillMasterQuery.newSumDataGridViewMaster.ContextMenuStrip = newContextMenuStrip;
             }
         }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void NewSumDataGridView_预收货款(object sender, EventArgs e)
         {
             //金额，付款方式，收款账号，备注，经办人

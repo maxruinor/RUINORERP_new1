@@ -1085,16 +1085,20 @@ namespace RUINORERP.Business
                                             if (saleOrder != null)
                                             {
                                                 //订金全退时 作废
-                                                if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount) || prePayment.LocalBalanceAmount == 0)
+                                                if (saleOrder.Deposit == Math.Abs(prePayment.LocalPrepaidAmount) || prePayment.LocalBalanceAmount == 0)
                                                 {
                                                     if (saleOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
                                                     {
+                                                        saleOrder.Deposit -= entity.TotalLocalAmount;
                                                         saleOrder.CloseCaseOpinions += $"订金全退，订单取消作废";
+                                                        saleOrder.PayStatus = (int)PayStatus.未付款;
                                                         saleOrder.DataStatus = (int)DataStatus.作废;
                                                     }
                                                     else
                                                     {
+                                                        //这时订单如果不作废，则要把订单的订金 减少去这次退回的金额
                                                         saleOrder.CloseCaseOpinions += $"部分出库，订金部分退款，订单结案";
+                                                        saleOrder.Deposit -= entity.TotalLocalAmount;
                                                         saleOrder.DataStatus = (int)DataStatus.完结;
                                                     }
 
@@ -1387,8 +1391,6 @@ namespace RUINORERP.Business
                                         #endregion
                                     }
                                 }
-
-
 
                             }
 

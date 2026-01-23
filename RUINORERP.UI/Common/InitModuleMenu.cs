@@ -793,12 +793,6 @@ namespace RUINORERP.UI.Common
                             }
                         }
 
-                        // 在处理方法中直接通过类型访问
-                        //var publicEntityObjects = formType.GetProperty("PublicEntityObjects",
-                        //                                  BindingFlags.Static | BindingFlags.Public)
-                        //                     ?.GetValue(null) as List<Type>;
-
-
                     }
                     catch (Exception ex)
                     {

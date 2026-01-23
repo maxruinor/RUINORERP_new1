@@ -2041,9 +2041,6 @@ namespace RUINORERP.UI.Common
                         continue;
 
 
-
-
-
                     // 域注入
                     //Services.AddScoped(type);
                     MenuAttrAssemblyInfo info = new MenuAttrAssemblyInfo();
@@ -2166,6 +2163,7 @@ namespace RUINORERP.UI.Common
         public static List<MenuAttrAssemblyInfo> RegisterForm()
         {
             return RegisterForm("");
+            //return new List<MenuAttrAssemblyInfo>();
         }
         #endregion 注入窗体-结束
 

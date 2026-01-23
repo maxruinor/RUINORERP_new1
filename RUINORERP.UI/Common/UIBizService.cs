@@ -1059,6 +1059,12 @@ namespace RUINORERP.UI.Common
             ColumnDisplays.Clear();
             List<ColDisplayController> allInitCols = new List<ColDisplayController>();
             allInitCols = UIHelper.GetColumnDisplayList(GridSourceType);
+
+            //当前角色的菜单权限下的字段不显示，则要排除,反过来显示才初始化为列集合中的有效数据
+            if (CurMenuInfo != null && CurMenuInfo.tb_P4Fields != null)
+            {
+                allInitCols = allInitCols.Where(col => CurMenuInfo.tb_P4Fields.Any(p4f => p4f.IsVisble == true && p4f.tb_fieldinfo.FieldName == col.ColName)).ToList();
+            }
             //如果功能变化 新增加了列则会显示到allInitCols,这时要把多出来的也显示到ColumnDisplays
             foreach (var col in allInitCols.Except(ColumnDisplays))
             {

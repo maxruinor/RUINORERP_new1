@@ -234,6 +234,11 @@ namespace RUINORERP.UI.UControls
 
                     foreach (DataGridViewColumn dc in targetDataGridView.Columns)
                     {
+                        //理论上不应该有导航属性
+                        if (dc.Name.Contains("tb_"))
+                        {
+                            continue;
+                        }
                         ColDisplayController cdc = new ColDisplayController();
                         cdc.ColDisplayText = dc.HeaderText;
                         cdc.ColDisplayIndex = dc.DisplayIndex;

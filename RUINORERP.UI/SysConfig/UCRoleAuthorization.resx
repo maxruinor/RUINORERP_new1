@@ -117,7 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="dataGridView1.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
+  <metadata name="BaseToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>162, 17</value>
+  </metadata>
+  <metadata name="contextMenuStrip4InitData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>605, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripCopyRoleConfig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACfSURBVDhPY8AGKrrn/MeFa/vnXoEqww1ACj/9+o+BQeI9
+        c1cDDZl/AaoUO8BnwLfvP/7X98z+BzcEJIgLT1y0AcMAEPjy7fv/+q4ZQEMWHAcbgA2AxHvmrvk/eckm
+        FAPQMV4DQM7tmwc0ZPFGFJcgG4jXABAAObdn9qr/M1ZsJd0AdEySAehg1ACIYmyYJAPASRcdUMUAYjFU
+        CxJgYAAAkw/ztAv0siwAAAAASUVORK5CYII=
+</value>
+  </data>
+  <data name="dataGridViewButton.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAJ0BbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1u
         ZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0sIFN5c3RlbS5Db3JlLCBWZXJz
@@ -132,7 +148,7 @@
         AwAAAAs=
 </value>
   </data>
-  <data name="dataGridView2.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
+  <data name="dataGridViewField.BizInvisibleCols" mimetype="application/x-microsoft.net.object.binary.base64">
     <value>
         AAEAAAD/////AQAAAAAAAAAMAgAAAJ0BbXNjb3JsaWIsIFZlcnNpb249NC4wLjAuMCwgQ3VsdHVyZT1u
         ZXV0cmFsLCBQdWJsaWNLZXlUb2tlbj1iNzdhNWM1NjE5MzRlMDg5XV0sIFN5c3RlbS5Db3JlLCBWZXJz
@@ -160,22 +176,6 @@
         YXJlcmAxW1tTeXN0ZW0uU3RyaW5nAwAAAAgCAAAAAAAAAAkEAAAAAAAAAAUEAAAAQ1N5c3RlbS5Db2xs
         ZWN0aW9ucy5HZW5lcmljLkdlbmVyaWNFcXVhbGl0eUNvbXBhcmVyYDFbW1N5c3RlbS5TdHJpbmcAAAAA
         AwAAAAs=
-</value>
-  </data>
-  <metadata name="BaseToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>162, 17</value>
-  </metadata>
-  <metadata name="contextMenuStrip4InitData.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>605, 17</value>
-  </metadata>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="toolStripCopyRoleConfig.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACfSURBVDhPY8AGKrrn/MeFa/vnXoEqww1ACj/9+o+BQeI9
-        c1cDDZl/AaoUO8BnwLfvP/7X9875BzcEJIgLT1y0AcMAEPjy7fv/+u6ZQEMWHAcbgA2AxHvmrvk/eckm
-        FAPQMV4DQM7tmwc0ZPFGFJcgG4jXABAAObdn9qr/M1ZsJd0AdEySAehg1ACIYmyYJAPASRcdUMUAYjFU
-        CxJgYAAAn+PzuHO/HlwAAAAASUVORK5CYII=
 </value>
   </data>
   <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

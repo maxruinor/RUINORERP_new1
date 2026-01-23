@@ -26,7 +26,7 @@ namespace RUINORERP.Business.Cache
         private readonly ICacheSyncMetadata _cacheSyncMetadata;
         private readonly DynamicQueryHelper _queryHelper;
         private readonly ITableSchemaManager _tableSchemaManager; // 唯一表结构管理入口
-        
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -107,10 +107,6 @@ namespace RUINORERP.Business.Cache
             try
             {
                 _logger.Debug("开始初始化表结构信息");
-                
-                // 添加调试信息，跟踪TableSchemaManager实例
-                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] InitializeAllTableSchemas开始: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}");
-                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 初始化前表数: {_tableSchemaManager.GetAllTableNames().Count}");
 
                 // 注册所有需要缓存的表结构信息
                 // 基础数据表
@@ -184,9 +180,9 @@ namespace RUINORERP.Business.Cache
 
                 // 补充缺失的表
                 RegistInformation<tb_FieldInfo>(k => k.FieldInfo_ID, v => v.FieldName, tableType: TableType.Base);
+                RegistInformation<tb_ButtonInfo>(k => k.ButtonInfo_ID, v => v.BtnName, tableType: TableType.Base);
 
                 // 添加调试信息，跟踪初始化完成情况
-                System.Diagnostics.Debug.WriteLine($"[EntityCacheInitializationService] 所有表注册完成: TableSchemaManager实例ID {_tableSchemaManager.GetHashCode()}, 注册后表数: {_tableSchemaManager.GetAllTableNames().Count}");
                 _logger.Debug("表结构信息初始化完成");
             }
             catch (Exception ex)
@@ -265,13 +261,13 @@ namespace RUINORERP.Business.Cache
                 }
 
                 _logger.LogDebug($"开始初始化表 {tableName} 的缓存");
-                            
+
                 // 添加调试信息：检查TableSchemaManager状态
                 System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] TableSchemaManager实例ID: {_tableSchemaManager.GetHashCode()}");
                 System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] TableSchemaManager已注册表数: {_tableSchemaManager.GetAllTableNames().Count}");
                 System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] 已注册的表: {string.Join(", ", _tableSchemaManager.GetAllTableNames())}");
                 System.Diagnostics.Debug.WriteLine($"[InitializeCacheForTable] 尝试获取表: {tableName}");
-                
+
                 // 获取实体类型
                 var entityType = _cacheManager.GetEntityType(tableName);
                 if (entityType == null)
@@ -288,10 +284,10 @@ namespace RUINORERP.Business.Cache
                 // 注意：LoadDataAndUpdateCache方法内部通过_cacheManager.UpdateEntityList已经更新了缓存同步元数据
                 // UpdateEntityList方法会通过UpdateCacheSyncMetadataAfterEntityChange间接调用UpdateTableSyncInfo
                 LoadDataAndUpdateCache(entityType, tableName, _queryHelper);
-     
-                
-                
-                
+
+
+
+
             }
             catch (Exception ex)
             {
@@ -317,7 +313,7 @@ namespace RUINORERP.Business.Cache
                 }
 
                 _logger.LogDebug($"开始异步初始化表 {tableName} 的缓存");
-                            
+
                 // 获取实体类型
                 var entityType = _cacheManager.GetEntityType(tableName);
                 if (entityType == null)
@@ -351,7 +347,7 @@ namespace RUINORERP.Business.Cache
             }
 
             var list = _queryHelper.QueryAll(tableName, entityType);
-         
+
             try
             {
                 // 获取表结构信息，特别是需要缓存的字段
@@ -495,7 +491,7 @@ namespace RUINORERP.Business.Cache
         /// </summary>
         public async Task InitializeBaseBusinessTablesAsync()
         {
-         
+
             var tables = _tableSchemaManager.GetBaseBusinessTableNames();
             await InitializeTablesAsync(tables, "初始化基础业务表缓存");
         }
@@ -526,7 +522,7 @@ namespace RUINORERP.Business.Cache
                 // 显式传递数据数量，确保元数据正确更新
                 _cacheSyncMetadata.UpdateTableSyncInfo(tableName, dataCount);
 
-          
+
 
                 // 验证元数据完整性
                 bool isValid = _cacheSyncMetadata.ValidateTableCacheIntegrity(tableName);

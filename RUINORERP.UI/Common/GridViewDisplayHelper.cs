@@ -115,7 +115,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         ///  
         /// </summary>
-        public HashSet<ReferenceKeyMapping> ReferenceKeyMappings { get; set; } = new HashSet<ReferenceKeyMapping>();
+        public List<ReferenceKeyMapping> ReferenceKeyMappings { get; set; } = new List<ReferenceKeyMapping>();
 
 
         // 用于存储列的显示类型
@@ -147,7 +147,7 @@ namespace RUINORERP.UI.Common
         /// <param name="_type"></param>
         public void InitializeFixedDictionaryMappings(Type _type)
         {
-            if (_type==null)
+            if (_type == null)
             {
                 return;
             }
@@ -268,7 +268,7 @@ namespace RUINORERP.UI.Common
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(ARAPStatus), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(ARAPStatus))));
                 }
-                else if (prop.Name == nameof(BizType) || prop.Name == "TargetBizType" 
+                else if (prop.Name == nameof(BizType) || prop.Name == "TargetBizType"
                     || prop.Name == "SourceBizType" || prop.Name == "RefBizType")
                 {
                     FixedDictionaryMappings.Add(new FixedDictionaryMapping(_type.Name, nameof(BizType), Common.CommonHelper.Instance.GetKeyValuePairs(typeof(BizType))));
@@ -322,7 +322,7 @@ namespace RUINORERP.UI.Common
 
         public void InitializeReferenceKeyMapping(Type _type)
         {
-            if (_type==null)
+            if (_type == null)
             {
                 return;
             }
@@ -379,7 +379,16 @@ namespace RUINORERP.UI.Common
         // 添加外键映射
         public void AddReferenceKeyMapping(string columnName, ReferenceKeyMapping mapping)
         {
-            if (!ReferenceKeyMappings.Contains(mapping))
+            if (ReferenceKeyMappings.Contains(mapping))
+            {
+                return;
+            }
+            // 有CustomDisplayColumnName的插入到前面
+            if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
+            {
+                ReferenceKeyMappings.Insert(0, mapping);
+            }
+            else
             {
                 ReferenceKeyMappings.Add(mapping);
             }
@@ -403,7 +412,7 @@ namespace RUINORERP.UI.Common
             {
                 throw new ArgumentException("The provided type must be an enum type.", nameof(enumType));
             }
-            
+
             List<KeyValuePair<object, string>> keyValuePairs = Common.CommonHelper.Instance.GetKeyValuePairs(enumType);
             FixedDictionaryMappings.Add(new FixedDictionaryMapping(tableName, columnName, keyValuePairs));
         }
@@ -421,11 +430,11 @@ namespace RUINORERP.UI.Common
             {
                 throw new ArgumentException("The provided type must be an enum type.", nameof(enumType));
             }
-            
+
             MemberInfo memberInfo = columnExpression.GetMemberInfo();
             string tableName = typeof(TEntity).Name;
             string columnName = memberInfo.Name;
-            
+
             List<KeyValuePair<object, string>> keyValuePairs = Common.CommonHelper.Instance.GetKeyValuePairs(enumType);
             FixedDictionaryMappings.Add(new FixedDictionaryMapping(tableName, columnName, keyValuePairs));
         }
@@ -514,7 +523,11 @@ namespace RUINORERP.UI.Common
                 }
                 #endregion
 
-                ReferenceKeyMapping mapping = ReferenceKeyMappings.Where(c => c.MappedTargetTableName == TargetTableName && c.MappedTargetFieldName == idColName).FirstOrDefault();
+                //优先使用有CustomDisplayColumnName的映射
+                ReferenceKeyMapping mapping = ReferenceKeyMappings
+                    .Where(c => c.MappedTargetTableName == TargetTableName && c.MappedTargetFieldName == idColName)
+                    .OrderByDescending(c => !string.IsNullOrEmpty(c.CustomDisplayColumnName))
+                    .FirstOrDefault();
                 if (mapping != null)
                 {
                     if (mapping.MappedTargetFieldName == idColName)

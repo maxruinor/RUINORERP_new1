@@ -58,24 +58,26 @@ namespace RUINORERP.UI.SysConfig
     public partial class UCRoleAuthorization : UserControl, IContextMenuInfoAuth
     {
         private readonly IRowAuthService _rowAuthService;
-        
+
         // 缓存默认的行级权限策略，避免重复从数据库加载
         private Dictionary<BizType, List<tb_RowAuthPolicy>> _policyCache = new Dictionary<BizType, List<tb_RowAuthPolicy>>();
-        
+
         // 菜单树缓存，避免重复加载
         private List<tb_ModuleDefinition> _menuTreeCache = null;
-        
+
         // 加载状态标志，防止重复加载
         private bool _isLoading = false;
 
         private CancellationTokenSource _loadingCancellationTokenSource;
-        
+
         // DataGridView配置状态缓存
         private bool _dataGridView1Configured = false;
         private bool _dataGridView2Configured = false;
-        
+
         public GridViewDisplayTextResolver DisplayTextResolver;
-        
+        public GridViewDisplayTextResolver DisplayTextResolverForField;
+        public GridViewDisplayTextResolver DisplayTextResolverForButton;
+
         public UCRoleAuthorization()
         {
             InitializeComponent();
@@ -84,13 +86,8 @@ namespace RUINORERP.UI.SysConfig
                 BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.SetProperty,
                 null, TreeView1, new object[] { true });
             BuildContextMenuController();
-
-
             _rowAuthService = Startup.GetFromFac<IRowAuthService>();
-
-            newSumDataGridViewRowAuthPolicy.CellFormatting += new DataGridViewCellFormattingEventHandler(DataGridView3_CellFormatting);
         }
-
 
         #region 检测是否重复
         public List<ContextMenuController> AddContextMenu()
@@ -112,22 +109,22 @@ namespace RUINORERP.UI.SysConfig
             List<ContextMenuController> list = new List<ContextMenuController>();
             list = AddContextMenu();
 
-            if (dataGridView1 != null)
+            if (dataGridViewButton != null)
             {
                 //base.dataGridView1.Use是否使用内置右键功能 = false;
-                ContextMenuStrip newContextMenuStrip = this.dataGridView1.GetContextMenu(this.dataGridView1.ContextMenuStrip
+                ContextMenuStrip newContextMenuStrip = this.dataGridViewButton.GetContextMenu(this.dataGridViewButton.ContextMenuStrip
                 , ContextClickList, list, true
                     );
-                dataGridView1.ContextMenuStrip = newContextMenuStrip;
+                dataGridViewButton.ContextMenuStrip = newContextMenuStrip;
             }
 
-            if (dataGridView2 != null)
+            if (dataGridViewField != null)
             {
                 //base.dataGridView1.Use是否使用内置右键功能 = false;
-                ContextMenuStrip newContextMenuStrip = this.dataGridView2.GetContextMenu(this.dataGridView2.ContextMenuStrip
+                ContextMenuStrip newContextMenuStrip = this.dataGridViewField.GetContextMenu(this.dataGridViewField.ContextMenuStrip
                 , ContextClickList, list, true
                     );
-                dataGridView2.ContextMenuStrip = newContextMenuStrip;
+                dataGridViewField.ContextMenuStrip = newContextMenuStrip;
             }
 
             if (newSumDataGridViewRowAuthPolicy != null)
@@ -145,8 +142,8 @@ namespace RUINORERP.UI.SysConfig
             tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageBtn.Name)
             {
-                dataGridView1.UseSelectedColumn = true;
-                if (!dataGridView1.UseSelectedColumn)
+                dataGridViewButton.UseSelectedColumn = true;
+                if (!dataGridViewButton.UseSelectedColumn)
                 {
                     //请先开启多模式，重复结果将会勾选
                     MessageBox.Show("请先开启多模式，重复结果将会勾选");
@@ -161,11 +158,11 @@ namespace RUINORERP.UI.SysConfig
                 //数据源开始绑定时用的BindingSortCollection
                 var oklist = UITools.CheckDuplicateData<tb_P4Button>(ListDataSoure1.Cast<tb_P4Button>().ToList(), ButtonProperties.ToList());
                 List<long> buttonids = oklist.Select(c => c.P4Btn_ID).ToList();
-                if (dataGridView1.UseSelectedColumn)
+                if (dataGridViewButton.UseSelectedColumn)
                 {
-                    for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                    for (int i = 0; i < dataGridViewButton.Rows.Count; i++)
                     {
-                        var dr = dataGridView1.Rows[i];
+                        var dr = dataGridViewButton.Rows[i];
                         if (dr.DataBoundItem is tb_P4Button p4Button)
                         {
                             if (buttonids.Contains(p4Button.P4Btn_ID))
@@ -184,8 +181,8 @@ namespace RUINORERP.UI.SysConfig
 
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageFieldInfo.Name)
             {
-                dataGridView2.UseSelectedColumn = true;
-                if (!dataGridView2.UseSelectedColumn)
+                dataGridViewField.UseSelectedColumn = true;
+                if (!dataGridViewField.UseSelectedColumn)
                 {
                     //请先开启多模式，重复结果将会勾选
                     MessageBox.Show("请先开启多模式，重复结果将会勾选");
@@ -197,11 +194,11 @@ namespace RUINORERP.UI.SysConfig
                     .Include<tb_P4Field>(c => c.RoleID);
 
                 var okList = UITools.CheckDuplicateData<tb_P4Field>(ListDataSoure2.Cast<tb_P4Field>().ToList(), includeProperties.ToList());
-                if (dataGridView1.UseSelectedColumn)
+                if (dataGridViewButton.UseSelectedColumn)
                 {
-                    for (int i = 0; i < dataGridView1.Rows.Count; i++)
+                    for (int i = 0; i < dataGridViewButton.Rows.Count; i++)
                     {
-                        var dr = dataGridView1.Rows[i];
+                        var dr = dataGridViewButton.Rows[i];
                         if (dr.DataBoundItem is tb_P4Field p4Field)
                         {
                             if (okList.Contains(p4Field))
@@ -288,7 +285,8 @@ namespace RUINORERP.UI.SysConfig
                     if (CurrentRole.tb_P4RowAuthPolicyByRoles.Contains(selectedPolicy))
                     {
                         CurrentRole.tb_P4RowAuthPolicyByRoles.Remove(selectedPolicy);
-                    };
+                    }
+                    ;
 
                 }
 
@@ -347,8 +345,14 @@ namespace RUINORERP.UI.SysConfig
         }
         private async void UCRoleAuthorization_Load(object sender, EventArgs e)
         {
-            UIBizService.RequestCache<tb_RowAuthPolicy>();
+            await UIBizService.RequestCache<tb_RowAuthPolicy>();
             DisplayTextResolver = new GridViewDisplayTextResolver(typeof(tb_P4RowAuthPolicyByRole));
+
+            DisplayTextResolverForField = new GridViewDisplayTextResolver(typeof(tb_P4Field));
+            DisplayTextResolverForField.AddReferenceKeyMapping<tb_FieldInfo, tb_P4Field>(c => c.FieldName, c => c.FieldInfo_ID, c => c.FieldText);
+
+            DisplayTextResolverForButton = new GridViewDisplayTextResolver(typeof(tb_P4Button));
+            DisplayTextResolverForButton.AddReferenceKeyMapping<tb_ButtonInfo, tb_P4Button>(c => c.BtnName, c => c.ButtonInfo_ID, c => c.BtnText);
             kryptonNavigator1.SelectedPageChanged += KryptonNavigator1_SelectedIndexChanged;
 
             TreeView1.HideSelection = false;
@@ -366,17 +370,19 @@ namespace RUINORERP.UI.SysConfig
             //加载空菜单，等待cmb选择时再勾选上对应角色的菜单
             await LoadTreeView();
             InitListData();
-            dataGridView1.NeedSaveColumnsXml = true;
-            dataGridView2.NeedSaveColumnsXml = true;
+            dataGridViewButton.NeedSaveColumnsXml = true;
+            dataGridViewField.NeedSaveColumnsXml = true;
             newSumDataGridViewRowAuthPolicy.NeedSaveColumnsXml = true;
-            dataGridView1.Use是否使用内置右键功能 = false;
-            dataGridView2.Use是否使用内置右键功能 = false;
+            dataGridViewButton.Use是否使用内置右键功能 = false;
+            dataGridViewField.Use是否使用内置右键功能 = false;
             newSumDataGridViewRowAuthPolicy.Use是否使用内置右键功能 = false;
             // dataGridView1.ContextMenuStrip = contextMenuStrip1;
             // dataGridView2.ContextMenuStrip = contextMenuStrip1;
-            dataGridView1.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView1_CellMouseDown);
-            dataGridView2.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView2_CellMouseDown);
+            dataGridViewButton.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView1_CellMouseDown);
+            dataGridViewField.CellMouseDown += new DataGridViewCellMouseEventHandler(dataGridView2_CellMouseDown);
             DisplayTextResolver.Initialize(newSumDataGridViewRowAuthPolicy);
+            DisplayTextResolverForButton.Initialize(dataGridViewButton);
+            DisplayTextResolverForField.Initialize(dataGridViewField);
         }
 
 
@@ -413,7 +419,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     DefaultModules = DefaultModules.Where(m => m.ModuleName != ModuleMenuDefine.模块定义.客户关系.ToString()).ToList();
                 }
-                
+
                 // 缓存菜单树数据
                 _menuTreeCache = DefaultModules;
             }
@@ -693,23 +699,23 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         internal void InitListData()
         {
-            dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewButton.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList1 = UIHelper.GetFieldNameColList(typeof(tb_P4Button));
-            dataGridView1.XmlFileName = "UCRoleAuthorization1";
-            dataGridView1.FieldNameList = FieldNameList1;
-            dataGridView1.DataSource = null;
+            dataGridViewButton.XmlFileName = "UCRoleAuthorization1";
+            dataGridViewButton.FieldNameList = FieldNameList1;
+            dataGridViewButton.DataSource = null;
             ListDataSoure1 = bindingSource1;
             //绑定导航
-            dataGridView1.DataSource = ListDataSoure1.DataSource;
+            dataGridViewButton.DataSource = ListDataSoure1.DataSource;
 
-            dataGridView2.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewField.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList2 = UIHelper.GetFieldNameColList(typeof(tb_P4Field));
-            dataGridView2.XmlFileName = "UCRoleAuthorization2";
-            dataGridView2.FieldNameList = FieldNameList2;
-            dataGridView2.DataSource = null;
+            dataGridViewField.XmlFileName = "UCRoleAuthorization2";
+            dataGridViewField.FieldNameList = FieldNameList2;
+            dataGridViewField.DataSource = null;
             ListDataSoure2 = bindingSource2;
             //绑定导航
-            dataGridView2.DataSource = ListDataSoure2.DataSource;
+            dataGridViewField.DataSource = ListDataSoure2.DataSource;
 
 
             newSumDataGridViewRowAuthPolicy.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -765,8 +771,8 @@ namespace RUINORERP.UI.SysConfig
 
             #endregion
 
-            dataGridView1.EndEdit();
-            dataGridView2.EndEdit();
+            dataGridViewButton.EndEdit();
+            dataGridViewField.EndEdit();
 
             //@@@@@@！分层级处理！@@@@@@@@
             //==================看到的  选项 处理一次保存一次
@@ -1046,7 +1052,7 @@ namespace RUINORERP.UI.SysConfig
 
                 // 设置合理的超时时间（单位：秒）
                 db.Ado.CommandTimeOut = 30;
-                
+
                 // 检查是否需要加载菜单权限数据
                 var pmlis = await db.Queryable<tb_P4Menu>()
                     .Where(r => r.RoleID == CurrentRole.RoleID)
@@ -1055,7 +1061,7 @@ namespace RUINORERP.UI.SysConfig
                     .Includes(t => t.tb_menuinfo, b => b.tb_P4Menus)
                     .ToListAsync(_loadingCancellationTokenSource.Token)
                     .ConfigureAwait(false);
-                    
+
                 if (pmlis.Count == 0)
                 {
                     // 改为异步初始化
@@ -1068,10 +1074,10 @@ namespace RUINORERP.UI.SysConfig
                 {
                     await LoadTreeView();
                 }
-                
+
                 // 检查取消请求
                 _loadingCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                
+
                 //循环去钩选
                 UpdateP4MenuUI(TreeView1.Nodes[0].Nodes, CurrentRole.tb_P4Menus);
 
@@ -1080,7 +1086,7 @@ namespace RUINORERP.UI.SysConfig
                 {
                     // 展开根节点
                     TreeView1.Nodes[0].Expand();
-                    
+
                     // 展开所有第一级模块节点
                     foreach (TreeNode moduleNode in TreeView1.Nodes[0].Nodes)
                     {
@@ -1143,7 +1149,7 @@ namespace RUINORERP.UI.SysConfig
         private readonly object _menuLock = new object();
         private readonly object _newListLock = new object();
         private bool _isInitializing = false;
-        
+
         /// <summary>
         /// 按角色初始化所有菜单（优化版本）
         /// </summary>
@@ -1159,13 +1165,13 @@ namespace RUINORERP.UI.SysConfig
             }
 
             _isInitializing = true;
-            
+
             try
             {
                 var db = MainForm.Instance.AppContext.Db;
                 var list = await ctrMenu.QueryByNavAsync();
                 int totalItems = list.Count;
-                
+
                 // 预先过滤需要处理的菜单，减少循环中的计算
                 var existingMenuDict = role.tb_P4Menus?
                     .Where(p => p.RoleID == role.RoleID)
@@ -1173,7 +1179,7 @@ namespace RUINORERP.UI.SysConfig
 
                 List<tb_P4Menu> newMenus = new List<tb_P4Menu>();
                 List<tb_P4Menu> menusToUpdate = new List<tb_P4Menu>();
-                
+
                 // 批量处理菜单 - 减少数据库操作
                 foreach (var item in list)
                 {
@@ -1187,7 +1193,7 @@ namespace RUINORERP.UI.SysConfig
                             ModuleID = item.ModuleID,
                             IsVisble = Selected ? true : item.IsVisble
                         };
-                        
+
                         BusinessHelper.Instance.InitEntity(pm);
                         newMenus.Add(pm);
                     }
@@ -1199,11 +1205,11 @@ namespace RUINORERP.UI.SysConfig
                             // 并行初始化按钮和字段权限
                             var buttonTask = InitBtnByRole(role, item, true);
                             var fieldTask = InitFiledByRole(role, item, true);
-                            
+
                             // 等待两个任务完成
                             await Task.WhenAll(buttonTask, fieldTask);
                         }
-                        
+
                         // 更新菜单可见性
                         if (pm.IsVisble != (Selected ? true : item.IsVisble))
                         {
@@ -1296,14 +1302,6 @@ namespace RUINORERP.UI.SysConfig
         {
             try
             {
-                // 统一将所有新生成的权限菜单添加到数据库
-                //var newMenusToAdd = Newplist.Where(c => c.P4Menu_ID == 0).ToList();
-                //if (newMenusToAdd.Count > 0)
-                //{
-                //    var ids = await ctrPMenu.AddAsync(newMenusToAdd);
-                //    CurrentRole.tb_P4Menus.AddRange(newMenusToAdd);
-                //}
-
                 // 更新UI
                 UpdateP4MenuUI(TreeView1.Nodes, CurrentRole.tb_P4Menus);
             }
@@ -1393,7 +1391,7 @@ namespace RUINORERP.UI.SysConfig
             if (duplicateButtons.Any())
             {
                 MainForm.Instance.logger.Warn($"发现重复按钮权限，菜单ID:{menuId},角色ID:{currentRoleId}");
-                
+
                 // 批量删除重复数据
                 await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Button>()
                     .Where(p => duplicateButtons.Select(d => d.P4Btn_ID).Contains(p.P4Btn_ID))
@@ -1425,7 +1423,7 @@ namespace RUINORERP.UI.SysConfig
                         MenuID = menuId,
                         ButtonType = buttonInfo.ButtonType
                     };
-                    
+
                     BusinessHelper.Instance.InitEntity(button);
                     SetButtonSelection(button, selected);
                     newButtons.Add(button);
@@ -1603,6 +1601,8 @@ namespace RUINORERP.UI.SysConfig
         }
 
 
+        InitModuleMenu imm = null;
+
         /// <summary>
         /// 初始化字段权限（优化版本）
         /// </summary>
@@ -1637,12 +1637,11 @@ namespace RUINORERP.UI.SysConfig
                         if (mainType != null)
                         {
                             // 在UI线程上下文中获取服务实例（InitModuleMenu构造函数需要STA线程）
-                            InitModuleMenu imm = null;
-                            await Task.Factory.StartNew(() =>
+
+                            if (imm == null)
                             {
                                 imm = Startup.GetFromFac<InitModuleMenu>();
-                            }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
-
+                            }
                             if (imm != null)
                             {
                                 await imm.InitFieldInoMainAndSubAsync(mainType, SelectedMenuInfo, false, "");
@@ -1682,7 +1681,7 @@ namespace RUINORERP.UI.SysConfig
             if (duplicateFields.Any())
             {
                 MainForm.Instance.logger.Warn($"发现重复字段权限，菜单ID:{menuId},角色ID:{currentRoleId}");
-                
+
                 // 批量删除重复数据
                 await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Field>()
                     .Where(p => duplicateFields.Select(d => d.P4Field_ID).Contains(p.P4Field_ID))
@@ -1715,7 +1714,7 @@ namespace RUINORERP.UI.SysConfig
                         MenuID = menuId,
                         IsVisble = selected
                     };
-                    
+
                     BusinessHelper.Instance.InitEntity(field);
                     newFields.Add(field);
                 }
@@ -1789,13 +1788,13 @@ namespace RUINORERP.UI.SysConfig
             {
                 return;
             }
-            
+
             tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
             if (selectMenu.MenuType != "行为菜单")
             {
                 return;
             }
-            
+
             _isSelectingNode = true;
             try
             {
@@ -1819,9 +1818,9 @@ namespace RUINORERP.UI.SysConfig
 
                 #region 设置全选菜单
                 // 只在首次选择时设置右键菜单
-                if (!_dataGridView1Configured && dataGridView1.Columns.Count > 0)
+                if (!_dataGridView1Configured && dataGridViewButton.Columns.Count > 0)
                 {
-                    foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                    foreach (DataGridViewColumn dc in dataGridViewButton.Columns)
                     {
                         if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
                         {
@@ -1863,13 +1862,13 @@ namespace RUINORERP.UI.SysConfig
             if (pblist.Count == 0 || InitLoadData)
             {
                 pblist = await InitBtnByRole(CurrentRole, selectMenu);
-                
+
                 // 更新缓存
                 if (CurrentRole.tb_P4Buttons == null)
                 {
                     CurrentRole.tb_P4Buttons = new List<tb_P4Button>();
                 }
-                
+
                 // 移除旧数据并添加新数据（优化：避免多次遍历）
                 var existingButtons = CurrentRole.tb_P4Buttons.Where(c => c.MenuID == selectMenu.MenuID).ToList();
                 existingButtons.ForEach(b => CurrentRole.tb_P4Buttons.Remove(b));
@@ -1880,7 +1879,7 @@ namespace RUINORERP.UI.SysConfig
             if (bindingSource1.DataSource == null || InitLoadData)
             {
                 bindingSource1.DataSource = pblist.ToBindingSortCollection();
-                dataGridView1.DataSource = ListDataSoure1;
+                dataGridViewButton.DataSource = ListDataSoure1;
             }
             else
             {
@@ -1889,9 +1888,9 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 优化列设置 - 只设置一次
-            if (!_dataGridView1Configured && dataGridView1.Columns.Count > 0)
+            if (!_dataGridView1Configured && dataGridViewButton.Columns.Count > 0)
             {
-                foreach (DataGridViewColumn col in dataGridView1.Columns)
+                foreach (DataGridViewColumn col in dataGridViewButton.Columns)
                 {
                     if (col.ValueType?.Name == "Boolean")
                     {
@@ -1905,7 +1904,7 @@ namespace RUINORERP.UI.SysConfig
             // 批量更新保存状态
             pblist.ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
         }
-        
+
 
         /// <summary>
         /// 加载字段权限（优化版本）
@@ -1928,13 +1927,13 @@ namespace RUINORERP.UI.SysConfig
             if (pflist.Count == 0 || InitLoadData)
             {
                 pflist = await InitFiledByRole(CurrentRole, selectMenu);
-                
+
                 // 更新缓存
                 if (CurrentRole.tb_P4Fields == null)
                 {
                     CurrentRole.tb_P4Fields = new List<tb_P4Field>();
                 }
-                
+
                 // 移除旧数据并添加新数据（优化：避免多次遍历）
                 var existingFields = CurrentRole.tb_P4Fields.Where(c => c.MenuID == selectMenu.MenuID).ToList();
                 existingFields.ForEach(f => CurrentRole.tb_P4Fields.Remove(f));
@@ -1945,7 +1944,7 @@ namespace RUINORERP.UI.SysConfig
             if (bindingSource2.DataSource == null || InitLoadData)
             {
                 bindingSource2.DataSource = pflist.ToBindingSortCollection();
-                dataGridView2.DataSource = ListDataSoure2;
+                dataGridViewField.DataSource = ListDataSoure2;
             }
             else
             {
@@ -1954,9 +1953,9 @@ namespace RUINORERP.UI.SysConfig
             }
 
             // 优化列设置 - 只设置一次
-            if (!_dataGridView2Configured && dataGridView2.Columns.Count > 0)
+            if (!_dataGridView2Configured && dataGridViewField.Columns.Count > 0)
             {
-                foreach (DataGridViewColumn col in dataGridView2.Columns)
+                foreach (DataGridViewColumn col in dataGridViewField.Columns)
                 {
                     if (col.ValueType?.Name == "Boolean")
                     {
@@ -2014,7 +2013,7 @@ namespace RUINORERP.UI.SysConfig
             var RlAList = CurrentRole.tb_P4RowAuthPolicyByRoles.Where(k => k.MenuID == selectMenu.MenuID).ToList();
             bindingSourceRowAuthPolicy.DataSource = RlAList.ToBindingSortCollection();
             newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy;
-            foreach (DataGridViewColumn col in dataGridView2.Columns)
+            foreach (DataGridViewColumn col in dataGridViewField.Columns)
             {
                 if (col.ValueType.Name == "Boolean")
                 {
@@ -2096,222 +2095,6 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<object, string>>> ColNameDataDictionary { get => _DataDictionary; set => _DataDictionary = value; }
 
-
-
-        private void DataGridView1_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!dataGridView1.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-            //图片特殊处理
-            if (dataGridView1.Columns[e.ColumnIndex].Name == "Image")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    //这里用缓存
-                }
-            }
-
-            //固定字典值显示
-            string colDbName = dataGridView1.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                    }
-
-                }
-            }
-
-            if (dataGridView1.Rows[e.RowIndex].DataBoundItem is tb_P4Button)
-            {
-                tb_P4Button pb = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_P4Button;
-                if (pb.tb_buttoninfo != null && colDbName == pb.GetPropertyName<tb_P4Button>(c => c.ButtonInfo_ID))
-                {
-                    e.Value = pb.tb_buttoninfo.BtnText;
-                    return;
-                }
-                //因为是下拉选的角色来配置这里直接用下拉的
-                if (colDbName == pb.GetPropertyName<tb_P4Button>(c => c.RoleID))
-                {
-                    e.Value = CurrentRole.RoleName;
-                    return;
-                }
-
-
-            }
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_ButtonInfo>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-
-
-        }
-
-
-        private void DataGridView2_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!dataGridView2.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-            //图片特殊处理
-            if (dataGridView2.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    return;
-                }
-            }
-            //固定字典值显示
-            string colDbName = dataGridView2.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                    }
-
-                }
-            }
-
-            if (dataGridView2.Rows[e.RowIndex].DataBoundItem is tb_P4Field)
-            {
-                tb_P4Field pf = dataGridView2.Rows[e.RowIndex].DataBoundItem as tb_P4Field;
-
-                if (pf.tb_fieldinfo != null && colDbName == pf.GetPropertyName<tb_P4Field>(c => c.FieldInfo_ID))
-                {
-                    e.Value = pf.tb_fieldinfo.FieldText;
-                }
-                //因为是下拉选的角色来配置这里直接用下拉的
-                if (colDbName == pf.GetPropertyName<tb_P4Field>(c => c.RoleID))
-                {
-                    e.Value = CurrentRole.RoleName;
-                    return;
-                }
-            }
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_FieldInfo>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-
-
-
-        }
-
-
-        private void DataGridView3_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            //如果列是隐藏的是不是可以不需要控制显示了呢? 后面看是否是导出这块需要不需要 不然可以隐藏的直接跳过
-            if (!newSumDataGridViewRowAuthPolicy.Columns[e.ColumnIndex].Visible)
-            {
-                return;
-            }
-            if (e.Value == null)
-            {
-                e.Value = "";
-                return;
-            }
-            //图片特殊处理
-            if (newSumDataGridViewRowAuthPolicy.Columns[e.ColumnIndex].Name == "Image" || e.Value.GetType().Name == "Byte[]")
-            {
-                if (e.Value != null)
-                {
-                    System.IO.MemoryStream buf = new System.IO.MemoryStream((byte[])e.Value);
-                    Image image = Image.FromStream(buf, true);
-                    e.Value = image;
-                    return;
-                }
-            }
-            //固定字典值显示
-            string colDbName = dataGridView2.Columns[e.ColumnIndex].Name;
-            if (ColNameDataDictionary.ContainsKey(colDbName))
-            {
-                List<KeyValuePair<object, string>> kvlist = new List<KeyValuePair<object, string>>();
-                //意思是通过列名找，再通过值找到对应的文本
-                ColNameDataDictionary.TryGetValue(colDbName, out kvlist);
-                if (kvlist != null)
-                {
-                    KeyValuePair<object, string> kv = kvlist.FirstOrDefault(t => t.Key.ToString().ToLower() == e.Value.ToString().ToLower());
-                    if (kv.Value != null)
-                    {
-                        e.Value = kv.Value;
-                    }
-
-                }
-            }
-
-            if (newSumDataGridViewRowAuthPolicy.Rows[e.RowIndex].DataBoundItem is tb_P4RowAuthPolicyByRole authPolicy)
-            {
-                if (authPolicy.tb_rowauthpolicy != null && colDbName == authPolicy.GetPropertyName<tb_RowAuthPolicy>(c => c.PolicyId))
-                {
-                    e.Value = authPolicy.tb_rowauthpolicy.PolicyName;
-                }
-
-                if (colDbName == authPolicy.GetPropertyName<tb_MenuInfo>(c => c.MenuID))
-                {
-                    e.Value = CurrentMenuInfo.MenuName;
-                    return;
-                }
-
-                //因为是下拉选的角色来配置这里直接用下拉的
-                if (colDbName == authPolicy.GetPropertyName<tb_RoleInfo>(c => c.RoleID))
-                {
-                    e.Value = CurrentRole.RoleName;
-                    return;
-                }
-            }
-
-            //动态字典值显示
-            string colName = UIHelper.ShowGridColumnsNameValue<tb_RowAuthPolicy>(colDbName, e.Value);
-            if (!string.IsNullOrEmpty(colName))
-            {
-                e.Value = colName;
-            }
-
-        }
-
-
         private void dataGridView1_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
 
@@ -2328,7 +2111,7 @@ namespace RUINORERP.UI.SysConfig
                 if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
                 {
                     // 选择了行和列
-                    dataGridView1.CurrentCell = dataGridView1.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                    dataGridViewButton.CurrentCell = dataGridViewButton.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 }
             }
         }
@@ -2340,7 +2123,7 @@ namespace RUINORERP.UI.SysConfig
                 if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
                 {
                     // 选择了行和列
-                    dataGridView2.CurrentCell = dataGridView2.Rows[e.RowIndex].Cells[e.ColumnIndex];
+                    dataGridViewField.CurrentCell = dataGridViewField.Rows[e.RowIndex].Cells[e.ColumnIndex];
                 }
             }
         }
@@ -2377,7 +2160,7 @@ namespace RUINORERP.UI.SysConfig
         private void selectAll_Click(object sender, EventArgs e)
         {
             //dataGridView1.Columns[4].CellTemplate
-            if (dataGridView1.CurrentCell != null)
+            if (dataGridViewButton.CurrentCell != null)
             {
 
             }
@@ -2404,9 +2187,9 @@ namespace RUINORERP.UI.SysConfig
             NewSumDataGridView dg = new NewSumDataGridView();
             if (contextMenuStrip1.SourceControl == null)
             {
-                if (dataGridView1.Focused)
+                if (dataGridViewButton.Focused)
                 {
-                    dg = dataGridView1;
+                    dg = dataGridViewButton;
                 }
             }
             else
@@ -2431,9 +2214,9 @@ namespace RUINORERP.UI.SysConfig
             if (contextMenuStrip1.Tag != null)
             {
                 NewSumDataGridView dg = new NewSumDataGridView();
-                if (dataGridView1.Focused)
+                if (dataGridViewButton.Focused)
                 {
-                    dg = dataGridView1;
+                    dg = dataGridViewButton;
                 }
                 else
                 {
@@ -2455,13 +2238,13 @@ namespace RUINORERP.UI.SysConfig
                     }
 
                 }
-                
+
                 // 确保编辑更改提交到数据源
-                if (dg == dataGridView1)
+                if (dg == dataGridViewButton)
                 {
                     bindingSource1.EndEdit();
                 }
-                else if (dg == dataGridView2)
+                else if (dg == dataGridViewField)
                 {
                     bindingSource2.EndEdit();
                 }
@@ -2498,11 +2281,21 @@ namespace RUINORERP.UI.SysConfig
         }
 
         /// <summary>
-        /// 添加字段
+        /// 添加字段 - 包装方法，用于事件绑定
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void toolStripMenuItemInitField_Click(object sender, EventArgs e)
+        private async void toolStripMenuItemInitField_Click(object sender, EventArgs e)
+        {
+            await toolStripMenuItemInitField_ClickAsync(sender, e);
+        }
+
+        /// <summary>
+        /// 添加字段 - 实际执行逻辑
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async Task toolStripMenuItemInitField_ClickAsync(object sender, EventArgs e)
         {
             if (CurrentRole == null)
             {
@@ -2519,7 +2312,7 @@ namespace RUINORERP.UI.SysConfig
             tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
 
 
-            InitLoadP4Field(mInfo, true);
+            await InitLoadP4Field(mInfo, true);
 
         }
 
@@ -2680,7 +2473,7 @@ namespace RUINORERP.UI.SysConfig
 
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageBtn.Name)
             {
-                if (dataGridView1.UseSelectedColumn)
+                if (dataGridViewButton.UseSelectedColumn)
                 {
                     await BatchDelete<tb_P4Button>(ListDataSoure1, true);
                 }
@@ -2693,7 +2486,7 @@ namespace RUINORERP.UI.SysConfig
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageFieldInfo.Name)
             {
                 tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
-                if (dataGridView1.UseSelectedColumn)
+                if (dataGridViewButton.UseSelectedColumn)
                 {
                     List<long> ids = await BatchDelete<tb_P4Field>(ListDataSoure2, true);
                     selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => !ids.Contains(c.P4Field_ID)).ToList();
@@ -3189,7 +2982,7 @@ namespace RUINORERP.UI.SysConfig
             if (kryptonNavigator1.SelectedPage.Name == kryptonPageBtn.Name)
             {
                 //如果是bool型的才显示右键菜单全选全不选
-                foreach (DataGridViewColumn dc in dataGridView1.Columns)
+                foreach (DataGridViewColumn dc in dataGridViewButton.Columns)
                 {
                     if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
                     {
@@ -3199,7 +2992,7 @@ namespace RUINORERP.UI.SysConfig
             }
             else
             {
-                foreach (DataGridViewColumn dc in dataGridView2.Columns)
+                foreach (DataGridViewColumn dc in dataGridViewField.Columns)
                 {
                     if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
                     {
@@ -3255,10 +3048,10 @@ namespace RUINORERP.UI.SysConfig
                     {
                         // 添加到数据源
                         bindingSourceRowAuthPolicy.Add(newPolicyRelation);
-                        
+
                         // 确保编辑更改提交到数据源
                         bindingSourceRowAuthPolicy.EndEdit();
-                        
+
                         toolStripButtonSave.Enabled = true;
                     }
                     else

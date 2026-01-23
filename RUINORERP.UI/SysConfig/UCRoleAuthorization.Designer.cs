@@ -29,17 +29,17 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCRoleAuthorization));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.TreeView1 = new RUINOR.WinFormsUI.TreeViewThreeState.ThreeStateTreeView();
             this.kryptonNavigator1 = new Krypton.Navigator.KryptonNavigator();
             this.kryptonPageBtn = new Krypton.Navigator.KryptonPage();
-            this.dataGridView1 = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dataGridViewButton = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPageFieldInfo = new Krypton.Navigator.KryptonPage();
-            this.dataGridView2 = new RUINORERP.UI.UControls.NewSumDataGridView();
+            this.dataGridViewField = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPageRowAuthPolicy = new Krypton.Navigator.KryptonPage();
             this.kryptonSplitContainer2 = new Krypton.Toolkit.KryptonSplitContainer();
             this.newSumDataGridViewRowAuthPolicy = new RUINORERP.UI.UControls.NewSumDataGridView();
@@ -74,10 +74,10 @@
             this.kryptonNavigator1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBtn)).BeginInit();
             this.kryptonPageBtn.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewButton)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFieldInfo)).BeginInit();
             this.kryptonPageFieldInfo.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageRowAuthPolicy)).BeginInit();
             this.kryptonPageRowAuthPolicy.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2)).BeginInit();
@@ -153,7 +153,7 @@
             this.kryptonPageBtn,
             this.kryptonPageFieldInfo,
             this.kryptonPageRowAuthPolicy});
-            this.kryptonNavigator1.SelectedIndex = 2;
+            this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(649, 620);
             this.kryptonNavigator1.TabIndex = 1;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -162,7 +162,7 @@
             // kryptonPageBtn
             // 
             this.kryptonPageBtn.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPageBtn.Controls.Add(this.dataGridView1);
+            this.kryptonPageBtn.Controls.Add(this.dataGridViewButton);
             this.kryptonPageBtn.Flags = 65534;
             this.kryptonPageBtn.LastVisibleSet = true;
             this.kryptonPageBtn.MinimumSize = new System.Drawing.Size(50, 50);
@@ -178,46 +178,46 @@
             this.kryptonPageBtn.ToolTipTitle = "Page ToolTip";
             this.kryptonPageBtn.UniqueName = "60445288435B49021FB28348D07C5399";
             // 
-            // dataGridView1
+            // dataGridViewButton
             // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.dataGridViewButton.AllowUserToAddRows = false;
+            this.dataGridViewButton.AllowUserToDeleteRows = false;
+            this.dataGridViewButton.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle4.BackColor = System.Drawing.Color.Beige;
+            this.dataGridViewButton.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
+            this.dataGridViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView1.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridView1.BizInvisibleCols")));
-            this.dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.CustomRowNo = false;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.EnableFiltering = false;
-            this.dataGridView1.FieldNameList = null;
-            this.dataGridView1.IsShowSumRow = false;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.NeedSaveColumnsXml = false;
-            this.dataGridView1.RowTemplate.Height = 23;
-            this.dataGridView1.Size = new System.Drawing.Size(647, 589);
-            this.dataGridView1.SumColumns = null;
-            this.dataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dataGridView1.SumRowCellFormat = "N2";
-            this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.UseBatchEditColumn = false;
-            this.dataGridView1.UseCustomColumnDisplay = true;
-            this.dataGridView1.UseSelectedColumn = false;
-            this.dataGridView1.Use是否使用内置右键功能 = true;
-            this.dataGridView1.XmlFileName = "";
-            this.dataGridView1.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView1_CellFormatting);
-            this.dataGridView1.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
-            this.dataGridView1.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
+            this.dataGridViewButton.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridViewButton.BizInvisibleCols")));
+            this.dataGridViewButton.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dataGridViewButton.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewButton.CustomRowNo = false;
+            this.dataGridViewButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewButton.EnableFiltering = false;
+            this.dataGridViewButton.EnablePagination = false;
+            this.dataGridViewButton.FieldNameList = null;
+            this.dataGridViewButton.IsShowSumRow = false;
+            this.dataGridViewButton.Location = new System.Drawing.Point(0, 0);
+            this.dataGridViewButton.Name = "dataGridViewButton";
+            this.dataGridViewButton.NeedSaveColumnsXml = false;
+            this.dataGridViewButton.RowTemplate.Height = 23;
+            this.dataGridViewButton.Size = new System.Drawing.Size(647, 589);
+            this.dataGridViewButton.SumColumns = null;
+            this.dataGridViewButton.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dataGridViewButton.SumRowCellFormat = "N2";
+            this.dataGridViewButton.TabIndex = 0;
+            this.dataGridViewButton.UseBatchEditColumn = false;
+            this.dataGridViewButton.UseCustomColumnDisplay = true;
+            this.dataGridViewButton.UseSelectedColumn = false;
+            this.dataGridViewButton.Use是否使用内置右键功能 = true;
+            this.dataGridViewButton.XmlFileName = "";
+            this.dataGridViewButton.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_ColumnHeaderMouseClick);
+            this.dataGridViewButton.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView1_DataError);
             // 
             // kryptonPageFieldInfo
             // 
             this.kryptonPageFieldInfo.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
-            this.kryptonPageFieldInfo.Controls.Add(this.dataGridView2);
+            this.kryptonPageFieldInfo.Controls.Add(this.dataGridViewField);
             this.kryptonPageFieldInfo.Flags = 65534;
             this.kryptonPageFieldInfo.LastVisibleSet = true;
             this.kryptonPageFieldInfo.MinimumSize = new System.Drawing.Size(50, 50);
@@ -227,41 +227,41 @@
             this.kryptonPageFieldInfo.ToolTipTitle = "Page ToolTip";
             this.kryptonPageFieldInfo.UniqueName = "4005A0325384478A20BFEBB7440319BD";
             // 
-            // dataGridView2
+            // dataGridViewField
             // 
-            this.dataGridView2.AllowUserToAddRows = false;
-            this.dataGridView2.AllowUserToDeleteRows = false;
-            this.dataGridView2.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.dataGridView2.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
-            this.dataGridView2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.dataGridViewField.AllowUserToAddRows = false;
+            this.dataGridViewField.AllowUserToDeleteRows = false;
+            this.dataGridViewField.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.dataGridViewField.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
+            this.dataGridViewField.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView2.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridView2.BizInvisibleCols")));
-            this.dataGridView2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridView2.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView2.CustomRowNo = false;
-            this.dataGridView2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView2.EnableFiltering = false;
-            this.dataGridView2.FieldNameList = null;
-            this.dataGridView2.IsShowSumRow = false;
-            this.dataGridView2.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView2.Name = "dataGridView2";
-            this.dataGridView2.NeedSaveColumnsXml = false;
-            this.dataGridView2.RowTemplate.Height = 23;
-            this.dataGridView2.Size = new System.Drawing.Size(647, 589);
-            this.dataGridView2.SumColumns = null;
-            this.dataGridView2.SummaryDescription = "2020-08最新 带有合计列功能;";
-            this.dataGridView2.SumRowCellFormat = "N2";
-            this.dataGridView2.TabIndex = 0;
-            this.dataGridView2.UseBatchEditColumn = false;
-            this.dataGridView2.UseCustomColumnDisplay = true;
-            this.dataGridView2.UseSelectedColumn = false;
-            this.dataGridView2.Use是否使用内置右键功能 = true;
-            this.dataGridView2.XmlFileName = "";
-            this.dataGridView2.CellFormatting += new System.Windows.Forms.DataGridViewCellFormattingEventHandler(this.DataGridView2_CellFormatting);
-            this.dataGridView2.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_ColumnHeaderMouseClick);
-            this.dataGridView2.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView2_DataError);
+            this.dataGridViewField.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridViewField.BizInvisibleCols")));
+            this.dataGridViewField.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dataGridViewField.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewField.CustomRowNo = false;
+            this.dataGridViewField.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewField.EnableFiltering = false;
+            this.dataGridViewField.EnablePagination = false;
+            this.dataGridViewField.FieldNameList = null;
+            this.dataGridViewField.IsShowSumRow = false;
+            this.dataGridViewField.Location = new System.Drawing.Point(0, 0);
+            this.dataGridViewField.Name = "dataGridViewField";
+            this.dataGridViewField.NeedSaveColumnsXml = false;
+            this.dataGridViewField.RowTemplate.Height = 23;
+            this.dataGridViewField.Size = new System.Drawing.Size(647, 589);
+            this.dataGridViewField.SumColumns = null;
+            this.dataGridViewField.SummaryDescription = "2020-08最新 带有合计列功能;";
+            this.dataGridViewField.SumRowCellFormat = "N2";
+            this.dataGridViewField.TabIndex = 0;
+            this.dataGridViewField.UseBatchEditColumn = false;
+            this.dataGridViewField.UseCustomColumnDisplay = true;
+            this.dataGridViewField.UseSelectedColumn = false;
+            this.dataGridViewField.Use是否使用内置右键功能 = true;
+            this.dataGridViewField.XmlFileName = "";
+            this.dataGridViewField.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView2_ColumnHeaderMouseClick);
+            this.dataGridViewField.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.dataGridView2_DataError);
             // 
             // kryptonPageRowAuthPolicy
             // 
@@ -302,8 +302,8 @@
             this.newSumDataGridViewRowAuthPolicy.AllowUserToAddRows = false;
             this.newSumDataGridViewRowAuthPolicy.AllowUserToDeleteRows = false;
             this.newSumDataGridViewRowAuthPolicy.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle3.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridViewRowAuthPolicy.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridViewRowAuthPolicy.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.newSumDataGridViewRowAuthPolicy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -312,6 +312,7 @@
             this.newSumDataGridViewRowAuthPolicy.CustomRowNo = false;
             this.newSumDataGridViewRowAuthPolicy.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridViewRowAuthPolicy.EnableFiltering = false;
+            this.newSumDataGridViewRowAuthPolicy.EnablePagination = false;
             this.newSumDataGridViewRowAuthPolicy.FieldNameList = null;
             this.newSumDataGridViewRowAuthPolicy.IsShowSumRow = false;
             this.newSumDataGridViewRowAuthPolicy.Location = new System.Drawing.Point(0, 0);
@@ -504,10 +505,10 @@
             this.kryptonNavigator1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageBtn)).EndInit();
             this.kryptonPageBtn.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewButton)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageFieldInfo)).EndInit();
             this.kryptonPageFieldInfo.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPageRowAuthPolicy)).EndInit();
             this.kryptonPageRowAuthPolicy.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer2.Panel1)).EndInit();
@@ -537,8 +538,8 @@
         private Krypton.Navigator.KryptonNavigator kryptonNavigator1;
         private Krypton.Navigator.KryptonPage kryptonPageBtn;
         private Krypton.Navigator.KryptonPage kryptonPageFieldInfo;
-        private UControls.NewSumDataGridView dataGridView1;
-        private UControls.NewSumDataGridView dataGridView2;
+        private UControls.NewSumDataGridView dataGridViewButton;
+        private UControls.NewSumDataGridView dataGridViewField;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.BindingSource bindingSource2;
         internal System.Windows.Forms.ToolStrip BaseToolStrip;

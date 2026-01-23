@@ -16,6 +16,7 @@ using RUINORERP.Model.Base;
 using RUINORERP.Model.Models;
 using RUINORERP.UI.UControls;
 using RUINORERP.Global.EnumExt;
+using System.Linq;
 
 namespace RUINORERP.UI.Common
 {
@@ -41,7 +42,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 用于存储外键映射
         /// </summary>
-        protected HashSet<ReferenceKeyMapping> ReferenceKeyMappings { get; set; } = new HashSet<ReferenceKeyMapping>();
+        protected List<ReferenceKeyMapping> ReferenceKeyMappings { get; set; } = new List<ReferenceKeyMapping>();
         
         /// <summary>
         /// 用于存储外键表的列表信息
@@ -86,23 +87,25 @@ namespace RUINORERP.UI.Common
                 ReferenceKeyMappings.Add(mapping);
             }
         }
-        
+
         /// <summary>
         /// 手动添加外键关联指向
+        /// 优先插入到ReferenceKeyMappings集合的前面
         /// </summary>
         /// <typeparam name="source">源实体类型</typeparam>
         /// <typeparam name="target">目标实体类型</typeparam>
         /// <param name="SourceField">源字段表达式</param>
         /// <param name="TargetField">目标字段表达式</param>
         /// <param name="CustomDisplaySourceField">自定义显示字段表达式</param>
-        public void AddReferenceKeyMapping<source, target>(Expression<Func<source, object>> SourceField, Expression<Func<target, object>> TargetField, Expression<Func<source, object>> CustomDisplaySourceField = null)
+        public void AddReferenceKeyMapping<source, target>(Expression<Func<source, object>> SourceField,
+            Expression<Func<target, object>> TargetField, Expression<Func<source, object>> CustomDisplaySourceField = null)
         {
             MemberInfo Sourceinfo = SourceField.GetMemberInfo();
             MemberInfo Targetinfo = TargetField.GetMemberInfo();
 
             if (ReferenceKeyMappings == null)
             {
-                ReferenceKeyMappings = new HashSet<ReferenceKeyMapping>();
+                ReferenceKeyMappings = new List<ReferenceKeyMapping>();
             }
             
             ReferenceKeyMapping mapping = new ReferenceKeyMapping(typeof(source).Name, Sourceinfo.Name, typeof(target).Name, Targetinfo.Name);
@@ -122,14 +125,19 @@ namespace RUINORERP.UI.Common
                 MemberInfo CustomDisplayColInfo = CustomDisplaySourceField.GetMemberInfo();
                 mapping.CustomDisplayColumnName = CustomDisplayColInfo.Name;
             }
-            
-            // 检查是否已存在相同的映射，如果存在则先移除再添加
             if (displayHelper.ReferenceKeyMappings.Contains(mapping))
             {
-                displayHelper.ReferenceKeyMappings.Remove(mapping);
+                return;
             }
-            // 添加新映射（无论是新增还是更新）
-            displayHelper.ReferenceKeyMappings.Add(mapping);
+            // 有CustomDisplayColumnName的插入到前面
+            if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
+            {
+                displayHelper.ReferenceKeyMappings.Insert(0, mapping);
+            }
+            else
+            {
+                displayHelper.ReferenceKeyMappings.Add(mapping);
+            }
         }
         
         /// <summary>

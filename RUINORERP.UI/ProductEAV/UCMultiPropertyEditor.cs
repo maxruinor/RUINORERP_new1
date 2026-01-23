@@ -513,10 +513,9 @@ namespace RUINORERP.UI.ProductEAV
                 columnCount = 4;
             }
 
-            // 设置TileListView的列数，TileListView会自动显示滚动条
-            listView1.Size = new Size(listView1.Width / columnCount - 10, 30);
-            // 设置TileListView为多列布局并启用滚动条
-            listView1.AutoScroll = true;
+            // TileListView内部使用FlowLayoutPanel自动换行，强制重新布局即可
+            // 移除错误的Size设置
+            listView1.PerformLayout();
         }
 
         private async void CheckBox_CheckStateChanged(object sender, EventArgs e)

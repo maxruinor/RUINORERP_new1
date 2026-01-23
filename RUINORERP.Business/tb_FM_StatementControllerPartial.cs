@@ -45,7 +45,10 @@ namespace RUINORERP.Business
         /// 2. 检查是否存在已支付的收付款单，如有则不允许反审
         /// 3. 删除相关的未审核收付款单
         /// 4. 回退应收付款单的已对账金额并允许其重新加入对账单
-        /// 5. 更新对账单状态为已发送
+        ///    - 反审核是审核的反向操作，完全逆向审核时的逻辑
+        ///    - 同类型组合: 审核时+金额, 反审时-金额
+        ///    - 异类型组合: 审核时+(-金额), 反审时-(-金额) 即+金额
+        /// 5. 更新对账单状态为新建
         /// </summary>
         /// <param name="ObjectEntity">对账单实体</param>
         /// <returns>操作结果</returns>
@@ -100,17 +103,48 @@ namespace RUINORERP.Business
                 }
 
                 // 回退应收付款单的已对账金额并允许其重新加入对账单
+                // 反审核是审核的反向操作,需要完全逆向审核时的逻辑
                 foreach (var detail in entity.tb_FM_StatementDetails)
                 {
                     var arap = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
                         .Where(a => a.ARAPId == detail.ARAPId)
                         .FirstAsync();
 
-                    // 根据单据类型回退已对账金额
-                    // 注意：无论是收款还是付款类型，回退操作都是减去之前添加的金额
-                    // 但付款类型的金额通常为负数，所以实际效果会是增加其绝对值
-                    arap.LocalReconciledAmount -= detail.IncludedLocalAmount;
-                    arap.ForeignReconciledAmount -= detail.IncludedForeignAmount;
+                    // 根据对账单类型和明细类型回退已对账金额
+                    // 反审核逻辑:与审核逻辑完全相反
+                    // 审核时: 同类型+=正值, 异类型+=负值
+                    // 反审时: 同类型-=正值, 异类型-=负值
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                    {
+                        if (detail.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                        {
+                            // 付款对账单包含收款明细: 审核时加了负数,反审时需要减去负数(即加正数)
+                            arap.LocalReconciledAmount -= -detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount -= -detail.IncludedForeignAmount;
+                        }
+                        else
+                        {
+                            // 付款对账单包含付款明细: 审核时加了正数,反审时需要减去正数
+                            arap.LocalReconciledAmount -= detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount -= detail.IncludedForeignAmount;
+                        }
+                    }
+                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    {
+                        if (detail.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                        {
+                            // 收款对账单包含付款明细: 审核时加了负数,反审时需要减去负数(即加正数)
+                            arap.LocalReconciledAmount -= -detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount -= -detail.IncludedForeignAmount;
+                        }
+                        else
+                        {
+                            // 收款对账单包含收款明细: 审核时加了正数,反审时需要减去正数
+                            arap.LocalReconciledAmount -= detail.IncludedLocalAmount;
+                            arap.ForeignReconciledAmount -= detail.IncludedForeignAmount;
+                        }
+                    }
+
                     arap.AllowAddToStatement = true;
 
                     // 不强制将金额设为非负，以支持负数场景（如退货）
@@ -160,7 +194,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 对账单审核方法
+        /// 对账单审核方法11
         /// 1. 验证对账单状态是否为已发送
         /// 2. 验证付款对账单是否有收款信息
         /// 3. 检查是否存在重复对账的应收付款单
@@ -293,30 +327,35 @@ namespace RUINORERP.Business
                         .Where(a => a.ARAPId == detail.ARAPId)
                         .FirstAsync();
 
-                    // 根据单据类型更新已对账金额
-                    // 根据对账类型来添加负号
+                    // 根据对账单类型和明细类型更新已对账金额
+                    // 核心逻辑: 同类型相加,异类型相减
+                    // 例如: 付款对账单包含收款明细,表示要抵减应收款,所以加负数
                     if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款)
                     {
                         if (detail.ReceivePaymentType == (int)ReceivePaymentType.收款)
                         {
+                            // 付款对账单包含收款明细: 同方向,需要加负数抵消
                             arap.LocalReconciledAmount += -detail.IncludedLocalAmount;
                             arap.ForeignReconciledAmount += -detail.IncludedForeignAmount;
                         }
                         else
                         {
+                            // 付款对账单包含付款明细: 同方向,直接相加
                             arap.LocalReconciledAmount += detail.IncludedLocalAmount;
                             arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
                         }
                     }
-                    if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
+                    else if (entity.ReceivePaymentType == (int)ReceivePaymentType.收款)
                     {
                         if (detail.ReceivePaymentType == (int)ReceivePaymentType.付款)
                         {
+                            // 收款对账单包含付款明细: 反方向,需要加负数抵消
                             arap.LocalReconciledAmount += -detail.IncludedLocalAmount;
                             arap.ForeignReconciledAmount += -detail.IncludedForeignAmount;
                         }
                         else
                         {
+                            // 收款对账单包含收款明细: 同方向,直接相加
                             arap.LocalReconciledAmount += detail.IncludedLocalAmount;
                             arap.ForeignReconciledAmount += detail.IncludedForeignAmount;
                         }
@@ -328,7 +367,7 @@ namespace RUINORERP.Business
                     if (Math.Abs(arap.LocalReconciledAmount) > Math.Abs(arap.LocalBalanceAmount) ||
                         Math.Abs(arap.ForeignReconciledAmount) > Math.Abs(arap.ForeignBalanceAmount))
                     {
-                        throw new Exception($"应收付款单{arap.ARAPNo}的已对账金额超过未核销金额，请检查数据");
+                        throw new Exception($"应收付款单{arap.ARAPNo}的已对账金额超过未核销金额,请检查数据");
                     }
 
                     await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();

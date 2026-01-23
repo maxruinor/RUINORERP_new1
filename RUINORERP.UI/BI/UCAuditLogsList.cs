@@ -189,11 +189,24 @@ namespace RUINORERP.UI.BI
 
                             if (entity.ContainsProperty(nameof(ReceivePaymentType)))
                             {
-                                string Flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
-                                RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                                List<tb_MenuInfo> menus = new List<tb_MenuInfo>();
+                                menus = MainForm.Instance.MenuList.Where(m => m.IsVisble
                              && m.EntityName == objType.Name
-                             && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
-                                 .FirstOrDefault();
+                             && m.BIBaseForm == "BaseBillEditGeneric`2")
+                                 .ToList();
+                                if (menus.Count == 1)
+                                {
+                                    RelatedMenuInfo = menus[0];
+                                }
+                                else if (menus.Count > 1)
+                                {
+                                    string Flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
+                                    RelatedMenuInfo = MainForm.Instance.MenuList.Where(m => m.IsVisble
+                                 && m.EntityName == objType.Name
+                                 && m.BIBaseForm == "BaseBillEditGeneric`2" && m.UIPropertyIdentifier == Flag)
+                                     .FirstOrDefault();
+                                }
+
                             }
                             else
                             {
@@ -216,7 +229,7 @@ namespace RUINORERP.UI.BI
                         }
 
                     }
- 
+
                     #endregion
                 }
             }

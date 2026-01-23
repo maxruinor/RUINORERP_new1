@@ -1360,7 +1360,7 @@ namespace RUINORERP.UI.ProductEAV
         private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
 
         /// <summary>
-        /// 加载树形控件中的节点
+        /// 加载树形控件中的节点,加载的是产品明细列表，树节点就是产品特性关系数据
         /// </summary>
         /// <param name="prod"></param>
         private void LoadTreeGridItems(tb_Prod prod)

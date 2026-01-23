@@ -42,6 +42,7 @@ using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using static OfficeOpenXml.ExcelErrorValue;
@@ -405,9 +406,22 @@ namespace RUINORERP.UI.ProductEAV
                 TileGroup tileGroup = listView1.AddGroup(ppv.Property_ID.ToString(), ppv.PropertyName.Trim());
                 tileGroup.BusinessData = ppv;
 
+                // 获取当前产品中该属性已使用的属性值ID列表
+                var usedPropertyValueIds = EditEntity.tb_Prod_Attr_Relations
+                    .Where(c => c.Property_ID == ppv.Property_ID && c.PropertyValueID.HasValue)
+                    .Select(c => c.PropertyValueID.Value)
+                    .ToHashSet();
+
+                // 排序属性值：已使用的在前，未使用的在后
+                var sortedPropertyValues = listOptionValue
+                    .Where(w => w.Property_ID == ppv.Property_ID)
+                    .OrderByDescending(w => usedPropertyValueIds.Contains(w.PropertyValueID))
+                    .ThenBy(w => w.SortOrder)
+                    .ToList();
+
                 string keys = string.Empty;
                 string names = string.Empty;
-                foreach (var item in listOptionValue.Where(w => w.Property_ID == ppv.Property_ID).ToList())
+                foreach (var item in sortedPropertyValues)
                 {
                     keys += item.PropertyValueID + ",";
                     names += item.PropertyValueName + ",";
@@ -464,6 +478,45 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
             }
+
+            // 优化布局：当属性值较多时，自动调整列数
+            OptimizeCheckBoxLayout();
+        }
+
+        /// <summary>
+        /// 优化CheckBox布局，根据属性值数量动态调整列数
+        /// </summary>
+        private void OptimizeCheckBoxLayout()
+        {
+            int maxItemsInGroup = 0;
+            foreach (var group in listView1.Groups)
+            {
+                int itemCount = group.Items.Count;
+                if (itemCount > maxItemsInGroup)
+                {
+                    maxItemsInGroup = itemCount;
+                }
+            }
+
+            // 根据属性值数量设置合适的列数
+            int columnCount = 1;
+            if (maxItemsInGroup > 3 && maxItemsInGroup <= 6)
+            {
+                columnCount = 2;
+            }
+            else if (maxItemsInGroup > 6 && maxItemsInGroup <= 9)
+            {
+                columnCount = 3;
+            }
+            else if (maxItemsInGroup > 9)
+            {
+                columnCount = 4;
+            }
+
+            // 设置TileListView的列数，TileListView会自动显示滚动条
+            listView1.Size = new Size(listView1.Width / columnCount - 10, 30);
+            // 设置TileListView为多列布局并启用滚动条
+            listView1.AutoScroll = true;
         }
 
         private async void CheckBox_CheckStateChanged(object sender, EventArgs e)
@@ -573,11 +626,11 @@ namespace RUINORERP.UI.ProductEAV
                     // 判断是否有临时产品详情（使用MultiPropertyEditorSEQ标记）
                     // 或者产品本身是新产品（ProductID == 0）
                     //bool hasTempDetails = EditEntity.tb_ProdDetails.Any(d => !string.IsNullOrEmpty(d.MultiPropertyEditorSEQ));
-            
+
 
                     // 按需生成：让用户选择需要添加的组合
                     // 条件：有新组合需要添加 且 不是取消全部勾选
-                    if (combinationsToAdd.Count > 0 && (hasTempDetails))
+                    if (combinationsToAdd.Count > 0)
                     {
                         // 打开选择对话框
                         using (var selectForm = new frmSelectCombinations(combinationsToAdd))
@@ -1460,6 +1513,10 @@ namespace RUINORERP.UI.ProductEAV
 
         private void btnClear_Click(object sender, EventArgs e)
         {
+            if (cmbPropertyType.SelectedValue == null)
+            {
+                return;
+            }
             listView1.Clear();
             //attrGoupsByName.Clear();
             contextMenuStrip1.Items.Clear();

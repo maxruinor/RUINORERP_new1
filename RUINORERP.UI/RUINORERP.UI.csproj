@@ -2368,6 +2368,12 @@
     <Compile Include="ProductEAV\Core\ProductValidationService.cs" />
     <Compile Include="ProductEAV\Core\PropertyCombinationService.cs" />
     <Compile Include="ProductEAV\Core\SkuGenerationService.cs" />
+    <Compile Include="ProductEAV\frmSelectCombinations.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\frmSelectCombinations.Designer.cs">
+      <DependentUpon>frmSelectCombinations.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProductEAV\UCProductAttrRelationEdit.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -4406,6 +4412,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\frmSelectClassNo.resx">
       <DependentUpon>frmSelectClassNo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\frmSelectCombinations.resx">
+      <DependentUpon>frmSelectCombinations.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCMultiPropertyEditor.resx">
       <DependentUpon>UCMultiPropertyEditor.cs</DependentUpon>

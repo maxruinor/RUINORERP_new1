@@ -500,12 +500,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 判断是否是添加全新属性
                 bool isAddingNewProperty = selectedGroupIds.Except(existingGroupIds).Any();
 
-                // 检查是否是单属性转多属性的特殊场景
-                bool isSingleToMultiAttribute = EditEntity != null &&
-                                               EditEntity.PropertyType == (int)ProductAttributeType.单属性 &&
-                                               (ProductAttributeType)cmbPropertyType.SelectedValue == ProductAttributeType.可配置多属性;
-
-                // 生成属性组合
+                // 生成所有可能的属性组合
                 List<AttributeCombination> newCombinations = GenerateAttributeCombinations(selectedAttributeGroups);
 
                 // 使用AttributeCombinationComparer来比较组合
@@ -530,14 +525,41 @@ namespace RUINORERP.UI.ProductEAV
                     combinationsToRemove = existingCombinations.Except(newCombinations, comparer).ToList();
                 }
 
-                // 处理需要删除的组合 只删除了临时的，数据库的已经有的没有删除
-                HandleCombinationsToRemove(combinationsToRemove);
+                // 检查是否有需要处理的组合
+                if (combinationsToAdd.Count > 0 || combinationsToRemove.Count > 0)
+                {
+                    // 如果有需要添加的组合，打开选择对话框让用户选择
+                    List<AttributeCombination> userSelectedCombinations = combinationsToAdd;
 
-                // 处理需要添加的组合 - 异步等待完成
-                await HandleCombinationsToAdd(combinationsToAdd);
+                    if (combinationsToAdd.Count > 0)
+                    {
+                        // 打开选择对话框
+                        using (var selectForm = new frmSelectCombinations(combinationsToAdd))
+                        {
+                            var dialogResult = selectForm.ShowDialog(this);
+                            if (dialogResult == DialogResult.OK)
+                            {
+                                // 用户选择了部分组合
+                                userSelectedCombinations = selectForm.SelectedCombinations;
+                            }
+                            else
+                            {
+                                // 用户取消了选择，不执行任何操作
+                                // 需要恢复CheckBox的选中状态（这里简化处理，不恢复）
+                                return;
+                            }
+                        }
+                    }
 
-                treeGridView1.Refresh();
-                this.btnOk.Enabled = true;
+                    // 处理需要删除的组合 只删除了临时的，数据库的已经有的没有删除
+                    HandleCombinationsToRemove(combinationsToRemove);
+
+                    // 处理需要添加的组合 - 异步等待完成
+                    await HandleCombinationsToAdd(userSelectedCombinations);
+
+                    treeGridView1.Refresh();
+                    this.btnOk.Enabled = true;
+                }
             }
             catch (Exception ex)
             {
@@ -658,8 +680,13 @@ namespace RUINORERP.UI.ProductEAV
                 return combinations;
             }
 
+            // 先按属性ID排序属性组，确保生成顺序一致
+            var sortedGroups = attributeGroups
+                .OrderBy(g => g.Property?.Property_ID)
+                .ToList();
+
             // 初始化第一个属性组的组合
-            foreach (var value in attributeGroups[0].SelectedValues)
+            foreach (var value in sortedGroups[0].SelectedValues)
             {
                 var combination = new AttributeCombination
                 {
@@ -667,26 +694,22 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         new AttributeValuePair
                         {
-                            Property = attributeGroups[0].Property,
+                            Property = sortedGroups[0].Property,
                             PropertyValue = value
                         }
                     }
                 };
-                // 排序属性列表
-                combination.Properties = combination.Properties
-                    .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
-                    .ToList();
                 combinations.Add(combination);
             }
 
             // 处理后续属性组，生成所有组合
-            for (int i = 1; i < attributeGroups.Count; i++)
+            for (int i = 1; i < sortedGroups.Count; i++)
             {
                 var tempCombinations = new List<AttributeCombination>();
 
                 foreach (var existingCombination in combinations)
                 {
-                    foreach (var value in attributeGroups[i].SelectedValues)
+                    foreach (var value in sortedGroups[i].SelectedValues)
                     {
                         var newCombination = new AttributeCombination
                         {
@@ -695,14 +718,9 @@ namespace RUINORERP.UI.ProductEAV
 
                         newCombination.Properties.Add(new AttributeValuePair
                         {
-                            Property = attributeGroups[i].Property,
+                            Property = sortedGroups[i].Property,
                             PropertyValue = value
                         });
-
-                        // 排序属性列表
-                        newCombination.Properties = newCombination.Properties
-                            .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
-                            .ToList();
 
                         tempCombinations.Add(newCombination);
                     }
@@ -711,11 +729,20 @@ namespace RUINORERP.UI.ProductEAV
                 combinations = tempCombinations;
             }
 
+            // 确保所有组合的属性都按固定顺序排列
+            foreach (var combination in combinations)
+            {
+                combination.Properties = combination.Properties
+                    .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
+                    .ThenBy(p => p.PropertyValue != null ? p.PropertyValue.PropertyValueID : long.MinValue)
+                    .ToList();
+            }
+
             return combinations;
         }
 
         /// <summary>
-        /// 获取当前已有的属性组合
+        /// 获取当前已有的属性组合（按固定顺序排列）
         /// </summary>
         /// <returns>已有的属性组合列表</returns>
         private List<AttributeCombination> GetExistingAttributeCombinations()
@@ -736,7 +763,9 @@ namespace RUINORERP.UI.ProductEAV
                     // 遍历产品详情的所有属性关系
                     foreach (TreeGridNode subNode in node.Nodes)
                     {
-                        if (subNode.Tag is tb_Prod_Attr_Relation relation)
+                        if (subNode.Tag is tb_Prod_Attr_Relation relation &&
+                            relation.Property_ID != null &&
+                            relation.PropertyValueID != null)
                         {
                             combination.Properties.Add(new AttributeValuePair
                             {
@@ -749,17 +778,18 @@ namespace RUINORERP.UI.ProductEAV
                     // 如果组合有属性，则添加到结果列表
                     if (combination.Properties.Count > 0)
                     {
-                        // 排序属性列表
+                        // 按固定顺序排列属性列表
                         combination.Properties = combination.Properties
-                            .OrderBy(p => p.Property != null ? p.Property.Property_ID : long.MinValue)
+                            .Where(p => p.Property != null && p.PropertyValue != null)
+                            .OrderBy(p => p.Property.Property_ID)
+                            .ThenBy(p => p.PropertyValue.PropertyValueID)
                             .ToList();
 
-                        //属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
-                        if (combination.Properties.Where(c => c.Property != null).ToList().Count > 0)
+                        // 属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
+                        if (combination.Properties.Count > 0)
                         {
                             existingCombinations.Add(combination);
                         }
-
                     }
                 }
             }
@@ -799,6 +829,8 @@ namespace RUINORERP.UI.ProductEAV
                         // 如果是已存在的产品详情，则处理关系子节点 即属性值的节点
                         else
                         {
+                            // 检查该产品详情是否被其他业务表引用
+                            bool hasBusinessReferences = CheckBusinessReferences(combination.ProductDetail);
 
                             foreach (var Prop in combination.Properties)
                             {
@@ -810,29 +842,115 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     if (SubNode.Tag is tb_Prod_Attr_Relation attr_Relation)
                                     {
-                                        if (attr_Relation.ActionStatus == ActionStatus.新增)
+                                        // 检查该属性值是否被其他产品引用
+                                        bool isPropertyValueUsedElsewhere = IsPropertyValueUsedElsewhere(
+                                            attr_Relation.PropertyValueID,
+                                            combination.ProductDetail.ProdDetailID);
+
+                                        if (isPropertyValueUsedElsewhere || hasBusinessReferences)
                                         {
-                                            nodeToRemove.Nodes.Remove(SubNode);
-                                            combination.ProductDetail.tb_Prod_Attr_Relations.Remove(attr_Relation);
-                                        }
-                                        else
-                                        {
-                                            //重置
+                                            // 如果属性值被其他产品使用或有业务引用，标记为逻辑删除
                                             attr_Relation.tb_prodproperty = null;
                                             attr_Relation.tb_prodpropertyvalue = null;
                                         }
+                                        else
+                                        {
+                                            // 完全删除属性关系
+                                            if (attr_Relation.ActionStatus == ActionStatus.新增)
+                                            {
+                                                nodeToRemove.Nodes.Remove(SubNode);
+                                                combination.ProductDetail.tb_Prod_Attr_Relations.Remove(attr_Relation);
+                                            }
+                                            else
+                                            {
+                                                attr_Relation.tb_prodproperty = null;
+                                                attr_Relation.tb_prodpropertyvalue = null;
+                                            }
+                                        }
                                     }
-                                    else
-                                    {
-                                        combination.ProductDetail.ActionStatus = ActionStatus.删除;
-                                        nodeToRemove.Cells[6].Value = "删除";
-                                        nodeToRemove.ImageIndex = 3; // 删除图标
-                                    }
+                                }
+                            }
+
+                            // 如果所有属性都被删除，标记产品详情为删除
+                            if (nodeToRemove.Nodes.Count == 0 || !nodeToRemove.Nodes.Any(n => (n.Tag as tb_Prod_Attr_Relation)?.PropertyValueID != null))
+                            {
+                                if (!hasBusinessReferences)
+                                {
+                                    combination.ProductDetail.ActionStatus = ActionStatus.删除;
+                                    nodeToRemove.Cells[6].Value = "删除";
+                                    nodeToRemove.ImageIndex = 3; // 删除图标
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 检查产品明细是否有业务引用
+        /// 简化版本：只检查库存表，因为所有业务都需要有库存记录才能引用产品
+        /// </summary>
+        /// <param name="prodDetail">产品明细</param>
+        /// <returns>是否有业务引用</returns>
+        private bool CheckBusinessReferences(tb_ProdDetail prodDetail)
+        {
+            try
+            {
+                if (prodDetail == null || prodDetail.ProdDetailID <= 0)
+                {
+                    return false;
+                }
+
+                // 只检查库存表，所有业务都需要有库存记录才能引用该产品
+                long detailId = prodDetail.ProdDetailID;
+                var db = MainForm.Instance.AppContext.Db.CopyNew();
+
+                bool hasInventory = db.Queryable<tb_Inventory>()
+                    .Where(i => i.ProdDetailID == detailId)
+                    .Any();
+
+                return hasInventory;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"检查业务引用时发生错误: {ex.Message}");
+                // 发生错误时保守处理，认为有引用
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// 检查属性值是否被其他产品明细引用
+        /// </summary>
+        /// <param name="propertyValueID">属性值ID</param>
+        /// <param name="excludeDetailId">排除的产品明细ID（当前编辑的）</param>
+        /// <returns>是否被其他产品引用</returns>
+        private bool IsPropertyValueUsedElsewhere(long? propertyValueID, long excludeDetailId)
+        {
+            try
+            {
+                if (!propertyValueID.HasValue || propertyValueID <= 0)
+                {
+                    return false;
+                }
+
+                var db = MainForm.Instance.AppContext.Db.CopyNew();
+
+                // 查询包含该属性值的产品明细关系数量（排除当前产品明细）
+                int count = db.Queryable<tb_Prod_Attr_Relation>()
+                    .Where(r => r.PropertyValueID == propertyValueID
+                        && r.ProdDetailID != excludeDetailId
+                        && !r.isdeleted)
+                    .Count();
+
+                return count > 0;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"检查属性值引用时发生错误: {ex.Message}");
+                // 发生错误时保守处理，认为被引用
+                return true;
             }
         }
 
@@ -1141,13 +1259,27 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 根据属性组合生成显示文本
+        /// 根据属性组合生成显示文本（按固定顺序生成）
         /// </summary>
         /// <param name="combination">属性组合</param>
         /// <returns>显示文本</returns>
         private string GetPropertiesText(AttributeCombination combination)
         {
-            return string.Join(",", combination.Properties.Select(p => p.PropertyValue.PropertyValueName));
+            if (combination == null || combination.Properties == null)
+            {
+                return string.Empty;
+            }
+
+            // 按固定顺序排列属性值对
+            var sortedProperties = combination.Properties
+                .Where(p => p.Property != null && p.PropertyValue != null)
+                .OrderBy(p => p.Property.Property_ID)
+                .ThenBy(p => p.PropertyValue.PropertyValueID)
+                .ToList();
+
+            // 生成显示文本：只显示属性值名称（按顺序）
+            return string.Join(",", sortedProperties.Select(p =>
+                p.PropertyValue.PropertyValueName));
         }
 
 
@@ -1180,10 +1312,56 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
             }
-            // 按照 PropertyValueID 进行排序 方便后面比较
+            // 按照 Property_ID 进行排序 方便后面比较
             prodDetails_relation = prodDetails_relation.OrderBy(p => p.Property_ID).ToList();
 
             return prodDetails_relation;
+        }
+
+        /// <summary>
+        /// 生成属性组合的规范化字符串，用于比较和识别重复
+        /// 按固定顺序生成：PropertyID1|PropertyValueID1,PropertyID2|PropertyValueID2,...
+        /// </summary>
+        /// <param name="relations">属性关系列表</param>
+        /// <returns>规范化字符串</returns>
+        private string GenerateNormalizedCombinationString(List<tb_Prod_Attr_Relation> relations)
+        {
+            if (relations == null || relations.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // 按属性ID和属性值ID排序，确保顺序一致
+            var sortedRelations = relations
+                .Where(r => r.Property_ID != null && r.PropertyValueID != null)
+                .OrderBy(r => r.Property_ID)
+                .ThenBy(r => r.PropertyValueID)
+                .Select(r => $"{r.Property_ID}|{r.PropertyValueID}");
+
+            return string.Join(",", sortedRelations);
+        }
+
+        /// <summary>
+        /// 生成属性组合的规范化字符串，用于比较和识别重复
+        /// 按固定顺序生成：PropertyID1|PropertyValueID1,PropertyID2|PropertyValueID2,...
+        /// </summary>
+        /// <param name="combination">属性组合</param>
+        /// <returns>规范化字符串</returns>
+        private string GenerateNormalizedCombinationString(AttributeCombination combination)
+        {
+            if (combination == null || combination.Properties == null || combination.Properties.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // 按属性ID和属性值ID排序，确保顺序一致
+            var sortedProperties = combination.Properties
+                .Where(p => p.Property != null && p.PropertyValue != null)
+                .OrderBy(p => p.Property.Property_ID)
+                .ThenBy(p => p.PropertyValue.PropertyValueID)
+                .Select(p => $"{p.Property.Property_ID}|{p.PropertyValue.PropertyValueID}");
+
+            return string.Join(",", sortedProperties);
         }
 
 
@@ -1553,45 +1731,59 @@ namespace RUINORERP.UI.ProductEAV
 
             #region 判断是否有重复的属性值。将属性值添加到列表，按一定规则排序，然后判断是否有重复
 
-            List<string> DuplicateAttributes = new List<string>();
-            string sortedDaString = string.Empty;
+            // 使用规范化字符串来检查重复
+            Dictionary<long?, string> normalizedStrings = new Dictionary<long?, string>();
             foreach (var item in existDetails)
             {
-                // da 是一个 string 数组
-                string[] da = attr_Relations
-                .Where(c => c.ProdDetailID == item.Key)
-                .ToList()
-                .Select(c => c.tb_prodpropertyvalue.PropertyValueName)
-                .ToArray();
+                var relations = attr_Relations
+                    .Where(c => c.ProdDetailID == item.Key)
+                    .ToList();
 
-                // 将 da 转换为排序后的列表
-                List<string> sortedDa = da.OrderBy(x => x).ToList();
-
-                // 将排序后的列表转换为字符串
-                sortedDaString = string.Join(", ", sortedDa);
-
-                // 添加到 DuplicateAttributes 集合中
-                DuplicateAttributes.Add(sortedDaString);
+                // 生成规范化字符串
+                string normalizedStr = GenerateNormalizedCombinationString(relations);
+                normalizedStrings[item.Key] = normalizedStr;
             }
 
-            // 找出 DuplicateAttributes 中的重复值
-            var duplicates = DuplicateAttributes
-                .GroupBy(s => s)
+            // 找出重复的规范化字符串
+            var duplicates = normalizedStrings
+                .GroupBy(kvp => kvp.Value)
                 .Where(g => g.Count() > 1)
-                .Select(g => g.Key)
+                .Select(g => new { NormalizedString = g.Key, Count = g.Count() })
                 .ToList();
 
             if (duplicates.Count > 0)
             {
-                // 输出重复的值
+                // 输出重复的组合
                 foreach (var dup in duplicates)
                 {
-                    MainForm.Instance.PrintInfoLog("属性值重复:" + dup);
+                    MainForm.Instance.PrintInfoLog($"属性组合重复: {dup.NormalizedString} (出现{dup.Count}次)");
                 }
-                MessageBox.Show("产品明细中，属性值重复,保存失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                // 生成更友好的提示信息
+                StringBuilder message = new StringBuilder();
+                message.AppendLine("产品明细中存在重复的属性组合，保存失败，请重试。");
+                message.AppendLine();
+                message.AppendLine("重复的组合:");
+                var duplicateRelations = normalizedStrings
+                    .Where(kvp => duplicates.Any(d => d.NormalizedString == kvp.Value))
+                    .ToList();
+
+                foreach (var relation in duplicateRelations)
+                {
+                    var detailRelations = attr_Relations
+                        .Where(c => c.ProdDetailID == relation.Key)
+                        .OrderBy(c => c.Property_ID)
+                        .ToList();
+
+                    string propDesc = string.Join(",",
+                        detailRelations.Select(r => $"{r.tb_prodproperty?.PropertyName}:{r.tb_prodpropertyvalue?.PropertyValueName}"));
+
+                    message.AppendLine($"- SKU: {detailRelations.FirstOrDefault()?.ProdDetailID}, 组合: {propDesc}");
+                }
+
+                MessageBox.Show(message.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
 
             #endregion
 
@@ -1767,38 +1959,58 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (dataGridViewProd.CurrentRow != null)
                 {
-                    //EditEntity = null;
                     oldOjb = null;
                     if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
                     {
                         if (treeGridView1.CurrentRow.Tag is tb_Prod_Attr_Relation Prod_Attr_Relation)
                         {
-                            //var RAR_ID = treeGridView1.CurrentRow.NodeName;
-                            //var Prod_Attr_Relation = Prod.tb_Prod_Attr_Relations.FirstOrDefault(c => c.RAR_ID == RAR_ID);
                             if (Prod_Attr_Relation != null)
                             {
-                                if (Prod_Attr_Relation.RAR_ID > 0)
+                                // 检查该属性值是否被其他产品引用
+                                bool isUsedElsewhere = IsPropertyValueUsedElsewhere(
+                                    Prod_Attr_Relation.PropertyValueID,
+                                    Prod_Attr_Relation.ProdDetailID ?? 0);
+
+                                // 获取产品明细用于检查业务引用
+                                tb_ProdDetail detail = Prod.tb_ProdDetails.FirstOrDefault(
+                                    d => d.ProdDetailID == Prod_Attr_Relation.ProdDetailID);
+                                bool hasBusinessReferences = CheckBusinessReferences(detail);
+
+                                string message = "确定删除该SKU对应的属性值吗？";
+
+                                if (isUsedElsewhere)
                                 {
-                                    //删除
-                                    if (MessageBox.Show("确定删除该SKU对应的属性值吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                    message += "\n\n注意：该属性值已被其他产品使用，删除后可能导致数据不一致。";
+                                }
+
+                                if (hasBusinessReferences)
+                                {
+                                    message += "\n\n注意：该产品明细已被业务表引用，删除后可能影响历史数据。";
+                                }
+
+                                if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                {
+                                    if (Prod_Attr_Relation.RAR_ID > 0)
                                     {
+                                        // 删除数据库中的记录
                                         int counter = await MainForm.Instance.AppContext.Db.Deleteable(Prod_Attr_Relation).ExecuteCommandAsync();
                                         if (counter > 0)
                                         {
-                                            //如果有外键引用了。会出错。这里删除没有问题。
-                                            //刷新
-                                            //LoadProdDetail();
-                                            treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                            // 刷新显示
+                                            LoadProdDetail();
                                             MainForm.Instance.ShowStatusText("成功删除该SKU对应的属性值。");
                                         }
                                     }
-                                }
-                                else
-                                {
-                                    //新增式 生成的组合有错误时。这里可以手动删除指定的行，其实就是树的节点
-                                    if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_Prod_Attr_Relation)
+                                    else
                                     {
-                                        treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                        // 新增式生成的组合有错误时，这里可以手动删除指定的行，其实就是树的节点
+                                        if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_Prod_Attr_Relation)
+                                        {
+                                            // 从集合中移除
+                                            detail?.tb_Prod_Attr_Relations.Remove(Prod_Attr_Relation);
+                                            treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                            MainForm.Instance.ShowStatusText("成功删除该SKU对应的属性值。");
+                                        }
                                     }
                                 }
                             }
@@ -1814,7 +2026,6 @@ namespace RUINORERP.UI.ProductEAV
             {
                 if (dataGridViewProd.CurrentRow != null)
                 {
-                    //EditEntity = null;
                     oldOjb = null;
                     if (dataGridViewProd.CurrentRow.DataBoundItem is tb_Prod Prod)
                     {
@@ -1824,29 +2035,66 @@ namespace RUINORERP.UI.ProductEAV
                         {
                             if (detail.ProdDetailID > 0)
                             {
-                                //删除
-                                if (MessageBox.Show("确定删除该SKU明细吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                                // 检查该产品明细是否被业务表引用
+                                bool hasBusinessReferences = CheckBusinessReferences(detail);
+
+                                // 检查该产品明细的属性值是否被其他产品引用
+                                bool hasPropertyValueReferences = false;
+                                foreach (var relation in detail.tb_Prod_Attr_Relations)
                                 {
-                                    bool counter = await MainForm.Instance.AppContext.Db.DeleteNav<tb_ProdDetail>(detail)
-                                        .Include(c => c.tb_Prod_Attr_Relations)
-                                        .ExecuteCommandAsync(); ;
-                                    if (counter)
+                                    if (IsPropertyValueUsedElsewhere(relation.PropertyValueID, detail.ProdDetailID))
                                     {
-                                        //如果有外键引用了。会出错。这里删除没有问题。
-                                        //刷新
-                                        LoadProdDetail();
-                                        MainForm.Instance.ShowStatusText("删除SKU明细成功。");
+                                        hasPropertyValueReferences = true;
+                                        break;
+                                    }
+                                }
+
+                                string message = "确定删除该SKU明细吗？";
+
+                                if (hasBusinessReferences)
+                                {
+                                    message += "\n\n警告：该产品明细已被业务表（如订单、库存等）引用，删除后可能影响历史数据！";
+                                }
+
+                                if (hasPropertyValueReferences)
+                                {
+                                    message += "\n\n注意：该产品明细包含的属性值已被其他产品使用，删除后不会删除属性值定义。";
+                                }
+
+                                // 如果有业务引用，需要更严格的确认
+                                var icon = hasBusinessReferences ? MessageBoxIcon.Warning : MessageBoxIcon.Question;
+                                if (MessageBox.Show(message, "提示", MessageBoxButtons.YesNo, icon) == DialogResult.Yes)
+                                {
+                                    try
+                                    {
+                                        bool counter = await MainForm.Instance.AppContext.Db.DeleteNav<tb_ProdDetail>(detail)
+                                            .Include(c => c.tb_Prod_Attr_Relations)
+                                            .ExecuteCommandAsync();
+                                        if (counter)
+                                        {
+                                            // 刷新
+                                            LoadProdDetail();
+                                            MainForm.Instance.ShowStatusText("删除SKU明细成功。");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"删除SKU明细失败: {ex.Message}");
+                                        MessageBox.Show($"删除失败：{ex.Message}\n\n可能存在外键约束冲突，请检查业务数据。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            //新增式 生成的组合有错误时。这里可以手动删除指定的行，其实就是树的节点
-
+                            // 新增式生成的组合有错误时，这里可以手动删除指定的行，其实就是树的节点
                             if (treeGridView1.CurrentNode != null && treeGridView1.CurrentNode.Tag is tb_ProdDetail)
                             {
+                                var tempDetail = treeGridView1.CurrentNode.Tag as tb_ProdDetail;
+                                // 从集合中移除
+                                Prod.tb_ProdDetails.Remove(tempDetail);
                                 treeGridView1.Nodes.Remove(treeGridView1.CurrentNode);
+                                MainForm.Instance.ShowStatusText("删除临时SKU明细成功。");
                             }
                         }
                     }
@@ -2034,6 +2282,64 @@ namespace RUINORERP.UI.ProductEAV
                 MainForm.Instance.uclog.AddLog($"编辑属性关系失败: {ex.Message}");
                 MessageBox.Show($"编辑属性关系失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+    }
+
+    /// <summary>
+    /// 属性组合比较器，用于比较两个属性组合是否相同
+    /// </summary>
+    public class AttributeCombinationComparer : IEqualityComparer<AttributeCombination>
+    {
+        /// <summary>
+        /// 判断两个属性组合是否相等
+        /// </summary>
+        /// <param name="x">第一个属性组合</param>
+        /// <param name="y">第二个属性组合</param>
+        /// <returns>是否相等</returns>
+        public bool Equals(AttributeCombination x, AttributeCombination y)
+        {
+            if (x == null || y == null)
+                return x == y;
+
+            // 比较属性数量
+            if (x.Properties.Count != y.Properties.Count)
+                return false;
+
+            // 先按属性ID排序，确保比较顺序一致
+            var xSorted = x.Properties.OrderBy(p => p.Property?.Property_ID).ToList();
+            var ySorted = y.Properties.OrderBy(p => p.Property?.Property_ID).ToList();
+
+            // 逐个比较属性值对
+            for (int i = 0; i < xSorted.Count; i++)
+            {
+                // 比较属性ID
+                if (xSorted[i].Property?.Property_ID != ySorted[i].Property?.Property_ID)
+                    return false;
+
+                // 比较属性值ID
+                if (xSorted[i].PropertyValue?.PropertyValueID != ySorted[i].PropertyValue?.PropertyValueID)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 获取属性组合的哈希码
+        /// </summary>
+        /// <param name="obj">属性组合</param>
+        /// <returns>哈希码</returns>
+        public int GetHashCode(AttributeCombination obj)
+        {
+            if (obj == null || obj.Properties == null)
+                return 0;
+
+            // 按属性ID排序后生成哈希码
+            var sortedProperties = obj.Properties
+                .OrderBy(p => p.Property?.Property_ID)
+                .Select(p => $"{p.Property?.Property_ID}_{p.PropertyValue?.PropertyValueID}");
+
+            return string.Join("_", sortedProperties).GetHashCode();
         }
     }
 

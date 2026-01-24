@@ -3641,6 +3641,7 @@
     <Content Include="ResourceFile\copy.png" />
     <None Include="ResourceFile\guanlianchaxun.png" />
     <Content Include="ResourceFile\menulist_16x16.png" />
+    <Content Include="ResourceFile\Minus.gif" />
     <Content Include="ResourceFile\money-rmb.png" />
     <None Include="ResourceFile\人民币 -32.png" />
     <None Include="ResourceFile\search history_16x16.ico" />
@@ -3649,6 +3650,7 @@
     <None Include="ResourceFile\toolbarmenu.png" />
     <None Include="ResourceFile\toolbarmenulist.png" />
     <None Include="ResourceFile\transferbill.png" />
+    <Content Include="ResourceFile\Plus.gif" />
     <Content Include="ResourceFile\unlockbill.png" />
     <None Include="ResourceFile\user-available.png" />
     <Content Include="ResourceFile\人民币.png" />

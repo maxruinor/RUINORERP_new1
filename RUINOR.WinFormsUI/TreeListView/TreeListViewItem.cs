@@ -788,6 +788,12 @@ namespace System.Windows.Forms
 		#endregion
 
 		#region DrawPlusMinus
+		/// <summary>
+		/// 绘制加号减号图标
+		/// </summary>
+		/// <remarks>
+		/// 在没有提供Graphics对象的情况下，从TreeListView句柄获取Graphics对象并调用重载方法
+		/// </remarks>
 		internal void DrawPlusMinus()
 		{
 			if(!IsInATreeListView) return;
@@ -796,24 +802,41 @@ namespace System.Windows.Forms
 			DrawPlusMinus(g);
 			g.Dispose();
 		}
+		/// <summary>
+		/// 绘制加号减号图标
+		/// </summary>
+		/// <param name="g">用于绘制的Graphics对象</param>
+		/// <remarks>
+		/// 绘制加号或减号图标，根据节点是否展开选择不同的图标
+		/// </remarks>
 		internal void DrawPlusMinus(Graphics g)
 		{
 			if(!IsInATreeListView) return;
 			if(TreeListView._updating) return;
 			Debug.Assert(!TreeListView.InvokeRequired);
 			if(Items.Count == 0 || TreeListView.Columns.Count == 0) return;
+			if(!TreeListView.ShowPlusMinus) return;
+
 			Drawing.Imaging.ImageAttributes attr = new Drawing.Imaging.ImageAttributes();
 			attr.SetColorKey(Color.Transparent, Color.Transparent);
-			if(TreeListView.Columns[0].Width > (Level + 1) * SystemInformation.SmallIconSize.Width)
+			if (TreeListView.Columns[0].Width > (Level + 1) * SystemInformation.SmallIconSize.Width)
+			{
 				g.DrawImage(
 					TreeListView.plusMinusImageList.Images[IsExpanded ? 1 : 0],
 					GetBounds(TreeListViewItemBoundsPortion.PlusMinus),
 					0, 0, SystemInformation.SmallIconSize.Width, SystemInformation.SmallIconSize.Height,
 					GraphicsUnit.Pixel, attr);
-			attr.Dispose();
+				attr.Dispose();
+			}
 		}
 		#endregion
 		#region DrawPlusMinusLines
+		/// <summary>
+		/// 绘制加号减号线条
+		/// </summary>
+		/// <remarks>
+		/// 在没有提供Graphics对象的情况下，从TreeListView句柄获取Graphics对象并调用重载方法
+		/// </remarks>
 		internal void DrawPlusMinusLines()
 		{
 			if(!IsInATreeListView) return;
@@ -822,6 +845,13 @@ namespace System.Windows.Forms
 			DrawPlusMinusLines(g);
 			g.Dispose();
 		}
+		/// <summary>
+		/// 绘制加号减号线条
+		/// </summary>
+		/// <param name="g">用于绘制的Graphics对象</param>
+		/// <remarks>
+		/// 绘制树节点之间的连接线，包括垂直线、水平线和不同级别的连接线
+		/// </remarks>
 		internal void DrawPlusMinusLines(Graphics g)
 		{
 			if(!IsInATreeListView) return;
@@ -870,6 +900,11 @@ namespace System.Windows.Forms
 			pen.Dispose();
 			hb.Dispose();
 		}
+		/// <summary>
+		/// 检查在当前项之后是否有指定级别的项
+		/// </summary>
+		/// <param name="level">要检查的级别</param>
+		/// <returns>如果有指定级别的项则返回true，否则返回false</returns>
 		internal bool HasLevelAfterItem(int level)
 		{
 			if(TreeListView == null) return false;
@@ -884,6 +919,11 @@ namespace System.Windows.Forms
 			}
 			return false;
 		}
+		/// <summary>
+		/// 检查在当前项之前是否有指定级别的项
+		/// </summary>
+		/// <param name="level">要检查的级别</param>
+		/// <returns>如果有指定级别的项则返回true，否则返回false</returns>
 		internal bool HasLevelBeforeItem(int level)
 		{
 			if(TreeListView == null) return false;
@@ -969,6 +1009,9 @@ namespace System.Windows.Forms
 		}
 		#endregion
 		#region DrawIntermediateState
+		/// <summary>
+		/// 绘制中间状态（用于递归复选框的不确定状态）
+		/// </summary>
 		internal void DrawIntermediateState()
 		{
 			if(!IsInATreeListView) return;
@@ -977,6 +1020,11 @@ namespace System.Windows.Forms
 			DrawIntermediateState(g);
 			g.Dispose();
 		}
+
+		/// <summary>
+		/// 绘制中间状态（用于递归复选框的不确定状态）
+		/// </summary>
+		/// <param name="g">用于绘制的Graphics对象</param>
 		internal void DrawIntermediateState(Graphics g)
 		{
 			if(!IsInATreeListView) return;

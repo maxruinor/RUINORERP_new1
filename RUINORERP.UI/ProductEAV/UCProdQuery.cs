@@ -1,4 +1,4 @@
-﻿using FastReport.DevComponents.DotNetBar;
+using FastReport.DevComponents.DotNetBar;
 using FastReport.DevComponents.DotNetBar.Controls;
 using FastReport.Table;
 using Krypton.Navigator;
@@ -529,7 +529,8 @@ namespace RUINORERP.UI.ProductEAV
             typeSorter.TypePriority = typePriority;
             typeSorter.SetSort(5, SortOrder.Ascending);  // "类型"列索引为5
             this.treeListView1.ListViewItemSorter = typeSorter;
-            this.treeListView1.Sort();
+            // 移除排序调用，避免破坏树形结构
+             this.treeListView1.Sort();
 
 
             // 原文链接：https://blog.csdn.net/m0_53104033/article/details/129006538
@@ -601,6 +602,7 @@ namespace RUINORERP.UI.ProductEAV
             if (bOM_S != null && bOM_S.tb_BOM_SDetails != null)
             {
                 listViewItem.ImageIndex = 1;//如果有配方，则图标不一样
+                
                 foreach (var BOM_SDetail in bOM_S.tb_BOM_SDetails)
                 {
                     TreeListViewItem itemSub = new TreeListViewItem(BOM_SDetail.view_ProdInfo.CNName, 0);

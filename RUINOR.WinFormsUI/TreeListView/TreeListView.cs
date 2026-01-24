@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Data;
 using System.Windows.Forms;
 using RUINOR.Runtime.InteropServices.APIs;
@@ -55,25 +57,25 @@ namespace System.Windows.Forms
 			#endregion
 			#region On???
 			/// <summary>
-			/// Raises the AfterLabelEdit event.
+			/// 引发AfterLabelEdit事件
 			/// </summary>
-			/// <param name="e"></param>
+			/// <param name="e">包含事件数据的TreeListViewLabelEditEventArgs</param>
 			protected virtual void OnAfterLabelEdit(TreeListViewLabelEditEventArgs e)
 			{
 				if(AfterLabelEdit != null) AfterLabelEdit(this, e);
 			}
 			/// <summary>
-			/// Please use OnAfterLabelEdit(TreeListViewLabelEditEventArgs e)
+			/// 请使用OnAfterLabelEdit(TreeListViewLabelEditEventArgs e)替代此方法
 			/// </summary>
-			/// <param name="e"></param>
+			/// <param name="e">LabelEditEventArgs事件参数</param>
 			protected override void OnAfterLabelEdit(LabelEditEventArgs e)
 			{
 				throw(new Exception("Please use OnAfterLabelEdit(TreeListViewLabelEditEventArgs e)"));
 			}
 			/// <summary>
-			/// Raises the BeforeLabelEdit event.
+			/// 引发BeforeLabelEdit事件
 			/// </summary>
-			/// <param name="e"></param>
+			/// <param name="e">包含事件数据的TreeListViewBeforeLabelEditEventArgs</param>
 			protected virtual void OnBeforeLabelEdit(TreeListViewBeforeLabelEditEventArgs e)
 			{
 				if(BeforeLabelEdit != null) BeforeLabelEdit(this, e);
@@ -120,27 +122,43 @@ namespace System.Windows.Forms
 			}
 			#endregion
 			#region Internal calls
+			/// <summary>
+			/// 内部方法，用于引发BeforeExpand事件
+			/// </summary>
+			/// <param name="e">包含事件数据的TreeListViewCancelEventArgs</param>
 			internal void RaiseBeforeExpand(TreeListViewCancelEventArgs e)
 			{
 				OnBeforeExpand(e);
 			}
 			/// <summary>
-			/// Raises the MouseDown event
+			/// 引发MouseDown事件
 			/// </summary>
-			/// <param name="e">A MouseEventArgs that contains the event data</param>
+			/// <param name="e">包含事件数据的MouseEventArgs</param>
 			protected override void OnMouseDown(MouseEventArgs e)
 			{
 				if(!_skipMouseDownEvent)
 					base.OnMouseDown(e);
 			}
+			/// <summary>
+			/// 内部方法，用于引发BeforeCollapse事件
+			/// </summary>
+			/// <param name="e">包含事件数据的TreeListViewCancelEventArgs</param>
 			internal void RaiseBeforeCollapse(TreeListViewCancelEventArgs e)
 			{
 				OnBeforeCollapse(e);
 			}
+			/// <summary>
+			/// 内部方法，用于引发AfterExpand事件
+			/// </summary>
+			/// <param name="e">包含事件数据的TreeListViewEventArgs</param>
 			internal void RaiseAfterExpand(TreeListViewEventArgs e)
 			{
 				OnAfterExpand(e);
 			}
+			/// <summary>
+			/// 内部方法，用于引发AfterCollapse事件
+			/// </summary>
+			/// <param name="e">包含事件数据的TreeListViewEventArgs</param>
 			internal void RaiseAfterCollapse(TreeListViewEventArgs e)
 			{
 				OnAfterCollapse(e);
@@ -522,8 +540,11 @@ namespace System.Windows.Forms
 
 		#region Constructor
 		/// <summary>
-		/// Create a new instance of a TreeListView
+		/// 创建TreeListView的新实例
 		/// </summary>
+		/// <remarks>
+		/// 初始化控件，创建必要的对象和设置扩展样式，确保加号减号图像列表包含至少2个图像
+		/// </remarks>
 		public TreeListView()
 		{
 			InitializeComponent();
@@ -535,13 +556,40 @@ namespace System.Windows.Forms
 			int style = APIsUser32.SendMessage(Handle, (int) APIsEnums.ListViewMessages.GETEXTENDEDLISTVIEWSTYLE, 0, 0);
 			style |= (int) (APIsEnums.ListViewExtendedStyles.INFOTIP | APIsEnums.ListViewExtendedStyles.LABELTIP);
 			APIsUser32.SendMessage(Handle, (int) APIsEnums.ListViewMessages.SETEXTENDEDLISTVIEWSTYLE, 0, style);
+
+			// 确保plusMinusImageList包含至少2个图像（加号和减号）
+			if(plusMinusImageList.Images.Count < 2)
+			{
+				// 手动创建加号和减号图像
+				Bitmap plusImage = new Bitmap(16, 16);
+				using(Graphics g = Graphics.FromImage(plusImage))
+				{
+					g.Clear(Color.Transparent);
+					g.DrawLine(Pens.Black, 8, 4, 8, 12); // 垂直线
+					g.DrawLine(Pens.Black, 4, 8, 12, 8); // 水平线
+				}
+
+				Bitmap minusImage = new Bitmap(16, 16);
+				using(Graphics g = Graphics.FromImage(minusImage))
+				{
+					g.Clear(Color.Transparent);
+					g.DrawLine(Pens.Black, 4, 8, 12, 8); // 水平线
+				}
+
+			plusMinusImageList.Images.Clear();
+			plusMinusImageList.Images.Add(plusImage);
+			plusMinusImageList.Images.Add(minusImage);
+			}
 		}
 		#endregion
 		#region WndProc
 		/// <summary>
-		/// WndProc
+		/// 处理窗口消息
 		/// </summary>
-		/// <param name="m"></param>
+		/// <param name="m">包含窗口消息信息的Message对象</param>
+		/// <remarks>
+		/// 处理各种窗口消息，包括鼠标点击、双击、键盘按键、绘制等消息
+		/// </remarks>
 		protected override void WndProc(ref System.Windows.Forms.Message m)
 		{
 			#region View messages
@@ -1062,6 +1110,13 @@ namespace System.Windows.Forms
 		#endregion
 		#region Draw
 			#region CustomDraw
+			/// <summary>
+			/// 自定义绘制处理
+			/// </summary>
+			/// <param name="m">包含自定义绘制消息信息的Message对象</param>
+			/// <remarks>
+			/// 处理控件的自定义绘制，包括绘制行、子项、焦点提示、加号减号图标和连接线
+			/// </remarks>
 			private void CustomDraw(ref Message m)
 			{
 				int iRow, iCol; bool bSelected;
@@ -1126,7 +1181,7 @@ namespace System.Windows.Forms
 				foreach(TreeListViewItem temp in items)
 					temp.DrawFocusCues();
 			}
-			internal void DrawPlusMinusItems()
+			public void DrawPlusMinusItems()
 			{
 				if(_updating) return;
 				Graphics g = Graphics.FromHwnd(Handle);
@@ -1388,6 +1443,21 @@ namespace System.Windows.Forms
 				catch{}
 				if(FocusedItem != null) FocusedItem.EnsureVisible();
 				EndUpdate();
+
+				// 如果 CheckBoxes 启用，CUSTOMDRAW 会被禁用，需要手动绘制 +/- 图标
+				if(CheckBoxes != CheckBoxesTypes.None && ShowPlusMinus)
+				{
+					Application.Idle += new EventHandler(OnApplicationIdleDrawPlusMinus);
+				}
+			}
+
+			private void OnApplicationIdleDrawPlusMinus(object sender, EventArgs e)
+			{
+				Application.Idle -= OnApplicationIdleDrawPlusMinus;
+				if(!IsDisposed && IsHandleCreated)
+				{
+					DrawPlusMinusItems();
+				}
 			}
 			#endregion
 			#region GetItemAt
@@ -1450,7 +1520,7 @@ namespace System.Windows.Forms
 			#endregion
 			#region Dispose
 			/// <summary>
-			/// Nettoyage des ressources utilis�es.
+			/// Nettoyage des ressources utilises.
 			/// </summary>
 			protected override void Dispose( bool disposing )
 			{
@@ -1476,34 +1546,43 @@ namespace System.Windows.Forms
 			{
 				_updating = false;
 				base.EndUpdate();
+
+				// 如果 CheckBoxes 启用，CUSTOMDRAW 会被禁用，需要手动绘制 +/- 图标
+				if(CheckBoxes != CheckBoxesTypes.None && ShowPlusMinus && IsHandleCreated)
+				{
+					Application.Idle += new EventHandler(OnApplicationIdleDrawPlusMinus);
+				}
 			}
 			#endregion
 		#endregion
 		#region Component Designer generated code
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(TreeListView));
-			this.imageList1 = new System.Windows.Forms.ImageList(this.components);
-			this.plusMinusImageList = new System.Windows.Forms.ImageList(this.components);
-			// 
-			// imageList1
-			// 
-			this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
-			this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
-			this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// plusMinusImageList
-			// 
-			this.plusMinusImageList.ColorDepth = System.Windows.Forms.ColorDepth.Depth32Bit;
-			this.plusMinusImageList.ImageSize = new System.Drawing.Size(16, 16);
-			this.plusMinusImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("plusMinusImageList.ImageStream")));
-			this.plusMinusImageList.TransparentColor = System.Drawing.Color.Transparent;
-			// 
-			// TreeListView
-			// 
-			this.FullRowSelect = true;
-			this.View = System.Windows.Forms.View.Details;
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TreeListView));
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.plusMinusImageList = new System.Windows.Forms.ImageList(this.components);
+            this.SuspendLayout();
+            // 
+            // imageList1
+            // 
+            this.imageList1.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("imageList1.ImageStream")));
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            this.imageList1.Images.SetKeyName(0, "Minus.gif");
+            this.imageList1.Images.SetKeyName(1, "Plus.gif");
+            // 
+            // plusMinusImageList
+            // 
+            this.plusMinusImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("plusMinusImageList.ImageStream")));
+            this.plusMinusImageList.TransparentColor = System.Drawing.Color.Transparent;
+            this.plusMinusImageList.Images.SetKeyName(0, "");
+            this.plusMinusImageList.Images.SetKeyName(1, "");
+            // 
+            // TreeListView
+            // 
+            this.FullRowSelect = true;
+            this.View = System.Windows.Forms.View.Details;
+            this.ResumeLayout(false);
 
 		}
 		#endregion

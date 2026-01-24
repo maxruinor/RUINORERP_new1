@@ -56,8 +56,6 @@ namespace RUINORERP.UI.PSI.INV
 
         private void UCInventorySnapshotQuery_Load(object sender, EventArgs e)
         {
-            // 添加扩展按钮
-            AddExtendButton(CurMenuInfo);
         }
 
         #region 扩展功能按钮

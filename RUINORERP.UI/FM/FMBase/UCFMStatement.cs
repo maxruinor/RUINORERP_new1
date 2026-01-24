@@ -772,8 +772,6 @@ namespace RUINORERP.UI.FM
 
         private void UCFMStatement_Load(object sender, EventArgs e)
         {
-            AddExtendButton(CurMenuInfo);
-
             #region
             switch (PaymentType)
             {
@@ -798,7 +796,6 @@ namespace RUINORERP.UI.FM
             }
 
             #endregion
-
 
             if (CurMenuInfo != null)
             {
@@ -1025,29 +1022,6 @@ namespace RUINORERP.UI.FM
                 }
 
                 EditEntity.tb_FM_StatementDetails = details;
-
-
-                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
-                //if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
-                //{
-                //    tb_FM_Account bizcatch = _cacheManager.GetEntity<tb_FM_Account>(EditEntity.Account_id);
-                //    if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
-                //    {
-                //        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
-                //        return false;
-                //    }
-                //}
-
-
-                //如果主表的总金额和明细金额加总后不相等，则提示
-                //if (NeedValidated && EditEntity.TotalPayableLocalAmount != details.Sum(c => c.LocalPayableAmount) + EditEntity.ShippingFee)
-                //{
-                //    if (MessageBox.Show("总金额和明细金额总计不相等，你确定要保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) == DialogResult.No)
-                //    {
-                //        return false;
-                //    }
-                //}
-
 
 
                 //没有经验通过下面先不计算

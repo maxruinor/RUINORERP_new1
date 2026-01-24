@@ -58,7 +58,6 @@ namespace RUINORERP.UI.PSI.INV
             //表格显示时DataGridView1_CellFormatting 取外键类型
             ColDisplayTypes.Add(typeof(tb_Prod));
             ColDisplayTypes.Add(typeof(tb_ProdDetail));
-            AddExtendButton(CurMenuInfo);
         }
 
         #region 添加成本确认
@@ -67,7 +66,7 @@ namespace RUINORERP.UI.PSI.INV
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             ToolStripButton toolStripButton成本确认 = new System.Windows.Forms.ToolStripButton();
             toolStripButton成本确认.Text = "成本确认";

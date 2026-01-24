@@ -54,8 +54,6 @@ namespace RUINORERP.UI.PSI.INV
 
         private void UCInventoryTransactionQuery_Load(object sender, EventArgs e)
         {
-            // 添加扩展按钮
-            AddExtendButton(CurMenuInfo);
         }
 
         #region 扩展功能按钮
@@ -65,7 +63,7 @@ namespace RUINORERP.UI.PSI.INV
         /// </summary>
         /// <param name="menuInfo">菜单信息</param>
         /// <returns>扩展按钮数组</returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] {  };
             this.BaseToolStrip.Items.AddRange(extendButtons);

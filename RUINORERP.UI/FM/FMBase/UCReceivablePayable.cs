@@ -861,7 +861,7 @@ namespace RUINORERP.UI.FM
             {
                 return;
             }
-            AddExtendButton(CurMenuInfo);
+
             #region
             switch (PaymentType)
             {
@@ -962,7 +962,7 @@ namespace RUINORERP.UI.FM
         /// 添加回收
         /// </summary>
         /// <returns></returns>
-        public ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             toolStripButton坏账处理.Text = "坏账处理";
             toolStripButton坏账处理.Image = global::RUINORERP.UI.Properties.Resources.Assignment;

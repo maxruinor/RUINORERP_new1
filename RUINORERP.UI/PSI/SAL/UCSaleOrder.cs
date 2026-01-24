@@ -711,7 +711,6 @@ namespace RUINORERP.UI.PSI.SAL
         List<View_ProdDetail> list = new List<View_ProdDetail>();
         private void UcSaleOrderEdit_Load(object sender, EventArgs e)
         {
-            AddExtendButton(CurMenuInfo);
             var sw = new Stopwatch();
             sw.Start();
 

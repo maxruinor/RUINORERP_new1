@@ -290,6 +290,11 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        /// <summary>
+        /// 子类只要执行此方法即可添加扩展按钮，但不要调用，基类会调用此方法。不然会执行两次
+        /// </summary>
+        /// <param name="menuInfo"></param>
+        /// <returns></returns>
         public virtual ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
@@ -757,7 +762,8 @@ namespace RUINORERP.UI.BaseForm
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
 
-                AddExtendButton(CurMenuInfo);                if (!this.DesignMode)
+         
+                if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
 
@@ -834,6 +840,9 @@ namespace RUINORERP.UI.BaseForm
                 _integratedLockService = Startup.GetFromFac<ClientLockManagementService>();
                 _clientCommunicationService = Startup.GetFromFac<ClientCommunicationService>();
                 _lockStatusNotificationService = Startup.GetFromFac<LockStatusNotificationService>();
+
+                AddExtendButton(CurMenuInfo);
+
             }
         }
 
@@ -5000,7 +5009,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 根据是否有可转换选项设置按钮可见性
-                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
+                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;11
                 toolStripbtnConvertDocuments.Text = "联动";
 
                 MainForm.Instance.uclog.AddLog($"共加载了 {toolStripbtnConvertDocuments.DropDownItems.Count} 个转换选项", Global.UILogType.普通消息);

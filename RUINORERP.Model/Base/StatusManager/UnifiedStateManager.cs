@@ -50,18 +50,8 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 初始化所有规则
-            InitializeAllRules();
-        }
-
-        /// <summary>
-        /// 初始化所有规则
-        /// </summary>
-        private void InitializeAllRules()
-        {
-            GlobalStateRulesManager.Instance.InitializeAllRules();
-            // 初始化退款状态转换规则
-            GlobalStateRulesManager.Instance.InitializeRefundStatusTransitionRules();
+            // 不在构造函数中初始化规则，避免与Autofac冲突
+            // 规则初始化由GlobalStateInitializer在DI注册时完成
         }
 
         #endregion
@@ -288,7 +278,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             try
             {
-                // 生成缓存键
+                // 生成缓存键 - 使用typeof(T)而非fromStatus?.GetType()确保缓存键一致性
                 string cacheKey = $"{typeof(T).FullName}:{fromStatus}:{toStatus}";
 
                 // 检查缓存 - 使用状态缓存管理器
@@ -729,7 +719,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     // 对于修改操作，还需要检查提交后修改规则
                     if (action == MenuItemEnums.修改)
                     {
-                        var modifyCheck = CanModifyWithMessage(entity, currentStatus, statusType);
+                        var modifyCheck = CanModifyWithMessage(entity);
                         return modifyCheck.CanExecute ? (true, conditionMessage) : modifyCheck;
                     }
 
@@ -796,7 +786,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 验证修改操作权限
         /// </summary>
-        private (bool CanExecute, string Message) CanModifyWithMessage(BaseEntity entity, object currentStatus, Type statusType)
+        private (bool CanExecute, string Message) CanModifyWithMessage(BaseEntity entity)
         {
             // 检查是否为终态状态
             bool isFinalStatus = IsFinalStatus(entity);
@@ -811,38 +801,6 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");
-        }
-
-        /// <summary>
-        /// 验证删除操作权限
-        /// </summary>
-        private (bool CanExecute, string Message) CanDeleteWithMessage(BaseEntity entity, object currentStatus, Type statusType)
-        {
-            // 检查是否为终态状态
-            bool isFinalStatus = IsFinalStatus(entity);
-            if (isFinalStatus)
-                return (false, "终态状态下不允许删除");
-
-            // 检查是否允许删除
-            //var canDelete = CanExecuteAction(entity, MenuItemEnums.删除);
-
-            //可以修改才允许删除
-            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
-
-            return canModify ? (true, "可以删除当前记录") : (false, "当前状态下不允许删除");
-        }
-
-        /// <summary>
-        /// 验证保存操作权限
-        /// </summary>
-        private (bool CanExecute, string Message) CanSaveWithMessage(BaseEntity entity, object currentStatus, Type statusType)
-        {
-            // 检查是否为终态状态
-            bool isFinalStatus = IsFinalStatus(entity);
-            if (isFinalStatus)
-                return (false, "终态状态下不允许保存");
-
-            return (true, "可以保存当前记录");
         }
 
         /// <summary>

@@ -1388,10 +1388,12 @@ namespace RUINORERP.UI
 
 
             var dalAssemble = Assembly.Load(new AssemblyName("RUINORERP.Model"));
+            // 排除GlobalStateRulesManager，因为它使用单例模式，已经通过AddGlobalStateRules单独注册
             builder.RegisterAssemblyTypes(dalAssemble)
-             .AsImplementedInterfaces().AsSelf()
-             .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
-             .PropertiesAutowired();//允许属性注入
+                .Where(t => t != typeof(RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager))
+                .AsImplementedInterfaces().AsSelf()
+                .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
+                .PropertiesAutowired();//允许属性注入
 
 
             Type[] tempModelTypes = dalAssemble.GetTypes();

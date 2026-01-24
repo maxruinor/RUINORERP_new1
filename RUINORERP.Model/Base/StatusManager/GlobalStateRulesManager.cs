@@ -61,30 +61,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _isInitialized = false;
         }
 
-        /// <summary>
-        /// 构造函数，用于测试等特殊场景
-        /// </summary>
-        /// <param name="useSingleton">是否使用单例模式</param>
-        public GlobalStateRulesManager(bool useSingleton)
-        {
-            if (useSingleton)
-            {
-                // 如果使用单例模式，直接使用已存在的实例
-                var instance = Instance;
-                _stateTransitionRules = instance._stateTransitionRules;
-                _uiButtonRules = instance._uiButtonRules;
-                _actionPermissionRules = instance._actionPermissionRules;
-                _isInitialized = instance._isInitialized;
-            }
-            else
-            {
-                // 初始化新实例（仅用于测试等特殊场景）
-                _stateTransitionRules = new Dictionary<Type, Dictionary<object, List<object>>>();
-                _uiButtonRules = new Dictionary<Type, Dictionary<object, Dictionary<string, bool>>>();
-                _actionPermissionRules = new Dictionary<Type, Dictionary<object, List<MenuItemEnums>>>();
-                _isInitialized = false;
-            }
-        }
+
 
         #endregion
 

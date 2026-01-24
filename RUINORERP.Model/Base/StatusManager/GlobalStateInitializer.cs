@@ -35,35 +35,22 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 初始化全局状态规则
         /// 确保规则只初始化一次，通常在应用启动时调用
         /// </summary>
-        public static void InitializeGlobalRules()
+        /// <param name="serviceProvider">服务提供者（可选），用于设置提交修改模式</param>
+        public static void InitializeGlobalRules(IServiceProvider serviceProvider = null)
         {
             try
             {
                 // 获取全局规则管理器实例并初始化规则
                 var rulesManager = GlobalStateRulesManager.Instance;
-                if (Context.ApplicationContext.Current != null && Context.ApplicationContext.Current.SystemGlobalConfig != null)
+
+                // 如果提供了服务提供者且存在应用上下文，则设置提交修改模式
+                if (serviceProvider != null &&
+                    Context.ApplicationContext.Current != null &&
+                    Context.ApplicationContext.Current.SystemGlobalConfig != null)
                 {
                     rulesManager.submitModifyRuleMode = Context.ApplicationContext.Current.SystemGlobalConfig.单据修改模式;
-                    rulesManager.InitializeAllRules();
                 }
 
-            }
-            catch (Exception)
-            {
-                // 忽略异常，避免应用启动失败
-            }
-        }
-
-        /// <summary>
-        /// 初始化全局状态规则（带服务提供者参数）
-        /// </summary>
-        /// <param name="serviceProvider">服务提供者</param>
-        public static void InitializeGlobalRules(IServiceProvider serviceProvider)
-        {
-            try
-            {
-                // 获取全局规则管理器实例并初始化规则
-                var rulesManager = GlobalStateRulesManager.Instance;
                 rulesManager.InitializeAllRules();
             }
             catch (Exception)
@@ -99,8 +86,10 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>容器构建器</returns>
         public static Autofac.ContainerBuilder AddGlobalStateRules(this Autofac.ContainerBuilder builder)
         {
-            // 注册全局规则管理器实例 - 使用Register方法而不是RegisterInstance
-            builder.Register(c => GlobalStateRulesManager.Instance).SingleInstance();
+            // 注册全局规则管理器实例 - 使用委托方式直接返回单例实例
+            builder.Register(c => GlobalStateRulesManager.Instance)
+                   .SingleInstance()
+                   .ExternallyOwned();
 
             // 确保规则已初始化
             GlobalStateInitializer.InitializeGlobalRules();
@@ -116,14 +105,16 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>容器构建器</returns>
         public static Autofac.ContainerBuilder AddStateManagerWithGlobalRules(this Autofac.ContainerBuilder builder)
         {
-            // 注册状态管理服务
+            // 先注册全局状态规则管理器（不依赖其他服务）
+            builder.AddGlobalStateRules();
+
+            // 注册状态缓存管理器
             builder.RegisterType<StatusCacheManager>().SingleInstance();
+
+            // 注册统一状态管理器（可能依赖缓存和规则）
             builder.RegisterType<UnifiedStateManager>()
                    .As<IUnifiedStateManager>()
                    .SingleInstance();
-
-            // 注册全局状态规则管理器
-            builder.AddGlobalStateRules();
 
             return builder;
         }

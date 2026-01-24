@@ -151,7 +151,7 @@ namespace RUINORERP.UI.PSI.SAL
 
 
         /// <summary>
-        /// 
+        /// 销售订单预收货款功能
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>

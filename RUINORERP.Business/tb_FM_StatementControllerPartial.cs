@@ -238,8 +238,11 @@ namespace RUINORERP.Business
                 }
 
                 // 完善余额模式逻辑检查
-                // 余额模式:允许正负数对冲使总金额为零
-                // 非余额模式:禁止总金额为零的情况
+                // 业务规则说明：
+                // 1. 总金额为0的情况: 允许审核通过,但不能生成收付款单,只能通过"红蓝单对冲核销"完成
+                // 2. 总金额不为0的情况: 允许审核通过,收付款单由财务手工生成(支持部分付款或全额支付)
+                // 3. 余额对账模式: 允许正负数明细对冲使总金额为零
+                // 4. 非余额模式: 通常总金额不为零,如果为零需要检查是否有业务异常
                 bool isBalanceStatement = (StatementType)entity.StatementType == StatementType.余额对账;
                 bool isTotalAmountZero = Math.Abs(entity.ClosingBalanceLocalAmount) < 0.01m;
 
@@ -745,7 +748,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 红蓝单对冲核销方法
-        /// 余额对账的方式时，对账最后总金额为0，则使用这个功能
+        /// 余额对账的方式时，对账最后总金额为0，则使用这个功能1
         /// 执行红蓝单对冲核销流程,将对账单中的正负金额明细相互抵消
         /// </summary>
         /// <param name="statement">对账单实体</param>
@@ -808,6 +811,14 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     return rmrs;
                 }
+
+                // 记录对冲前数据(用于审计)
+                var positiveDetails = statement.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount > 0).ToList();
+                var negativeDetails = statement.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount < 0).ToList();
+                decimal positiveTotal = positiveDetails.Sum(d => d.IncludedLocalAmount);
+                decimal negativeTotal = negativeDetails.Sum(d => d.IncludedLocalAmount);
+
+                _logger.LogInformation($"开始执行红蓝单对冲核销:对账单号={statement.StatementNo},正数明细={positiveDetails.Count}条({positiveTotal:N2}),负数明细={negativeDetails.Count}条({negativeTotal:N2})");
 
                 // 开启事务
                 _unitOfWorkManage.BeginTran();
@@ -885,6 +896,10 @@ namespace RUINORERP.Business
                 }
 
                 _unitOfWorkManage.CommitTran();
+
+                // 记录核销成功日志
+                _logger.LogInformation($"红蓝单对冲核销成功完成:对账单号={statement.StatementNo},状态变更为{((StatementStatus)statement.StatementStatus)},已核销明细={statement.tb_FM_StatementDetails.Count}条");
+
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = statement;
 

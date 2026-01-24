@@ -143,8 +143,37 @@ namespace RUINORERP.UI.FM
                 return;
             }
 
+            // 验证明细中是否包含正负数
+            if (EditEntity.tb_FM_StatementDetails == null || EditEntity.tb_FM_StatementDetails.Count == 0)
+            {
+                MessageBox.Show("对账单明细为空,无法执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            bool hasPositive = EditEntity.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount > 0);
+            bool hasNegative = EditEntity.tb_FM_StatementDetails.Any(d => d.IncludedLocalAmount < 0);
+
+            if (!hasPositive || !hasNegative)
+            {
+                MessageBox.Show("红蓝单对冲核销必须同时包含正数和负数明细。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 显示对冲明细信息
+            var positiveDetails = EditEntity.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount > 0).ToList();
+            var negativeDetails = EditEntity.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount < 0).ToList();
+
+            decimal positiveTotal = positiveDetails.Sum(d => d.IncludedLocalAmount);
+            decimal negativeTotal = negativeDetails.Sum(d => d.IncludedLocalAmount);
+
+            string message = $"确定要对账单【{EditEntity.StatementNo}】执行红蓝单对冲核销吗?\n\n" +
+                           $"正数明细数量: {positiveDetails.Count}, 总金额: {positiveTotal:N2}\n" +
+                           $"负数明细数量: {negativeDetails.Count}, 总金额: {negativeTotal:N2}\n" +
+                           $"对冲后余额: {EditEntity.ClosingBalanceLocalAmount:N2}\n\n" +
+                           $"此操作将核销对账单中的所有应收应付明细,操作后不可撤销。";
+
             // 确认操作
-            if (MessageBox.Show($"确定要对账单【{EditEntity.StatementNo}】执行红蓝单对冲核销吗?\n此操作将核销对账单中的所有应收应付明细。", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            if (MessageBox.Show(message, "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
             {
                 return;
             }

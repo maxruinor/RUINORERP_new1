@@ -125,7 +125,7 @@ namespace RUINORERP.UI.FM
             // 验证对账单条件
             if (EditEntity.StatementStatus != (int)StatementStatus.确认)
             {
-                MessageBox.Show("只有审核通过的对账单才能执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("只有为【审核】且通过的对账单才能执行红蓝单对冲核销。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
@@ -165,7 +165,11 @@ namespace RUINORERP.UI.FM
 
             decimal positiveTotal = positiveDetails.Sum(d => d.IncludedLocalAmount);
             decimal negativeTotal = negativeDetails.Sum(d => d.IncludedLocalAmount);
-
+            if (positiveTotal !=negativeTotal)
+            {
+                MessageBox.Show("红蓝单对冲核销必须正负金额相等。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             string message = $"确定要对账单【{EditEntity.StatementNo}】执行红蓝单对冲核销吗?\n\n" +
                            $"正数明细数量: {positiveDetails.Count}, 总金额: {positiveTotal:N2}\n" +
                            $"负数明细数量: {negativeDetails.Count}, 总金额: {negativeTotal:N2}\n" +
@@ -1164,8 +1168,6 @@ namespace RUINORERP.UI.FM
                 {
                     if (!string.IsNullOrWhiteSpace(btninfo.Tag.ToString()))
                     {
-                        //tb_FM_PayeeInfo payeeInfo = btninfo.Tag as tb_FM_PayeeInfo;
-
                         #region 显示收款详情信息
 
                         object frm = Activator.CreateInstance(typeof(UCFMPayeeInfoEdit));
@@ -1187,18 +1189,6 @@ namespace RUINORERP.UI.FM
                             }
                         }
                         #endregion
-                        //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        //try
-                        //{
-                        //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
-                        //    frmPictureViewer pictureViewer = new frmPictureViewer();
-                        //    pictureViewer.PictureBoxViewer.Image = ImageHelper.byteArrayToImage(img);
-                        //    pictureViewer.ShowDialog();
-                        //}
-                        //catch (Exception ex)
-                        //{
-                        //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                        //}
                     }
 
                 }

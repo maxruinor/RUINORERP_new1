@@ -1634,8 +1634,8 @@ namespace RUINORERP.UI.BaseForm
 
             #region 单据联动
 
-            // 调用LoadConvertDocToDropDownItemsAsync加载单据联动选项
-            LoadConvertDocToDropDownItemsAsync();
+            // 调用LoadConvertDocToDropDownItemsAsync加载单据联动选项(异步执行,避免UI卡顿)
+            _ = Task.Run(async () => await LoadConvertDocToDropDownItemsAsync());
 
             #endregion
 
@@ -4951,21 +4951,23 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 加载单据联动选项到下拉菜单
         /// </summary>
-        protected virtual void LoadConvertDocToDropDownItemsAsync()
+        protected virtual async Task LoadConvertDocToDropDownItemsAsync()
         {
-            // 清空现有菜单项
-            toolStripbtnConvertDocuments.DropDownItems.Clear();
+            // 获取所有可转换的目标单据类型(在后台线程执行,避免UI卡顿)
+            List<ToolStripMenuItem> menuItems = null;
+            string errorMessage = null;
 
             try
             {
                 // 获取当前单据类型
                 var sourceDocType = typeof(T);
 
-                // 获取所有可转换的目标单据类型
+                // 获取所有可转换的目标单据类型(可能耗时,在后台执行)
                 var actionManager = Startup.GetFromFac<RUINORERP.Business.Document.ActionManager>();
                 var availableActions = actionManager.GetAvailableActions<T>(EditEntity);
 
                 // 为每种可转换类型创建菜单项
+                menuItems = new List<ToolStripMenuItem>();
                 foreach (var actionOption in availableActions)
                 {
                     if (!actionOption.IsVisible)
@@ -5002,21 +5004,66 @@ namespace RUINORERP.UI.BaseForm
                             MessageBox.Show("执行单据联动时发生错误: " + ex.Message, "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     };
-                    toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
+                    menuItems.Add(menuItem);
 
                     // 记录转换选项加载日志
                     MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName}", Global.UILogType.普通消息);
                 }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                MainForm.Instance.uclog.AddLog("加载单据联动选项失败: " + ex.Message, Global.UILogType.错误);
+            }
+
+            // 在UI线程上更新菜单(确保UI操作在UI线程执行)
+            if (this.InvokeRequired)
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    UpdateConvertDocMenu(menuItems, errorMessage);
+                });
+            }
+            else
+            {
+                UpdateConvertDocMenu(menuItems, errorMessage);
+            }
+        }
+
+        /// <summary>
+        /// 更新单据联动菜单(UI线程调用)
+        /// </summary>
+        private void UpdateConvertDocMenu(List<ToolStripMenuItem> menuItems, string errorMessage)
+        {
+            try
+            {
+                // 清空现有菜单项
+                toolStripbtnConvertDocuments.DropDownItems.Clear();
+
+                if (errorMessage != null)
+                {
+                    toolStripbtnConvertDocuments.Visible = false;
+                    return;
+                }
+
+                // 添加新菜单项
+                if (menuItems != null && menuItems.Count > 0)
+                {
+                    foreach (var menuItem in menuItems)
+                    {
+                        toolStripbtnConvertDocuments.DropDownItems.Add(menuItem);
+                    }
+                }
 
                 // 根据是否有可转换选项设置按钮可见性
-                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;11
+                toolStripbtnConvertDocuments.Visible = toolStripbtnConvertDocuments.DropDownItems.Count > 0;
                 toolStripbtnConvertDocuments.Text = "联动";
 
                 MainForm.Instance.uclog.AddLog($"共加载了 {toolStripbtnConvertDocuments.DropDownItems.Count} 个转换选项", Global.UILogType.普通消息);
             }
             catch (Exception ex)
             {
-                MainForm.Instance.uclog.AddLog("加载单据联动选项失败: " + ex.Message, Global.UILogType.错误);
+                MainForm.Instance.uclog.AddLog("更新单据联动菜单失败: " + ex.Message, Global.UILogType.错误);
                 toolStripbtnConvertDocuments.Visible = false;
             }
         }

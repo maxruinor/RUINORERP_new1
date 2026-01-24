@@ -52,7 +52,7 @@ namespace RUINORERP.UI.SysConfig
 {
 
     /// <summary>
-    /// 比用户授权角色简单，那个是行记录存在性控制， 这里是默认每个角色都有。通过关系表中的字段来控制的
+    /// 比用户授权角色简单，那个是行记录存在性控制， 这里是默认每个角色都有。通过关系表中的字段来控制的1
     /// </summary>
     [MenuAttrAssemblyInfo("角色授权", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.权限管理)]
     public partial class UCRoleAuthorization : UserControl, IContextMenuInfoAuth
@@ -73,6 +73,12 @@ namespace RUINORERP.UI.SysConfig
         // DataGridView配置状态缓存
         private bool _dataGridView1Configured = false;
         private bool _dataGridView2Configured = false;
+
+        /// <summary>
+        /// 异步初始化任务的缓存，避免重复初始化同一菜单
+        /// Key: MenuID, Value: 正在执行的Task
+        /// </summary>
+        private readonly ConcurrentDictionary<long, Task> _initializationTasks = new ConcurrentDictionary<long, Task>();
 
         public GridViewDisplayTextResolver DisplayTextResolver;
         public GridViewDisplayTextResolver DisplayTextResolverForField;
@@ -1340,53 +1346,66 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 初始化菜单下的按钮权限（优化版本）
+        /// 优化内容：使用更优雅的异步模式、增强错误处理、避免重复初始化
         /// </summary>
         /// <param name="CurrentRole">当前角色</param>
         /// <param name="SelectedMenuInfo">菜单下有默认的按钮数据</param>
         /// <param name="selected">是否选中</param>
-        /// <returns></returns>
+        /// <returns>按钮权限列表</returns>
         public async Task<List<tb_P4Button>> InitBtnByRole(tb_RoleInfo CurrentRole, tb_MenuInfo SelectedMenuInfo, bool selected = false)
         {
-            // 检查菜单信息是否为空
+            // 参数验证
             if (SelectedMenuInfo == null)
             {
+                MainForm.Instance.logger?.LogWarning("菜单信息为空，无法初始化按钮权限");
+                return new List<tb_P4Button>();
+            }
+
+            if (CurrentRole == null)
+            {
+                MainForm.Instance.logger?.LogWarning("角色信息为空，无法初始化按钮权限");
                 return new List<tb_P4Button>();
             }
 
             // 确保菜单按钮信息已初始化
             SelectedMenuInfo.tb_ButtonInfos ??= new List<tb_ButtonInfo>();
 
-            // 查找菜单属性信息并初始化菜单项（异步但不阻塞UI）
-            MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == SelectedMenuInfo.ClassPath);
-            if (mai != null)
-            {
-                // 使用后台任务初始化菜单项，避免阻塞UI
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        // 在UI线程上下文中获取服务实例（InitModuleMenu构造函数需要STA线程）
-                        InitModuleMenu imm = null;
-                        await Task.Factory.StartNew(() =>
-                        {
-                            imm = Startup.GetFromFac<InitModuleMenu>();
-                        }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+            var menuId = SelectedMenuInfo.MenuID;
 
-                        if (imm != null)
-                        {
-                            await imm.InitToolStripItemAsync(mai, SelectedMenuInfo);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger.Error("初始化菜单项时出错", ex);
-                    }
-                });
+            // 检查是否已有正在执行的初始化任务（避免重复初始化）
+            if (_initializationTasks.TryGetValue(menuId, out var existingTask))
+            {
+                MainForm.Instance.logger?.LogDebug($"菜单 {SelectedMenuInfo.CaptionCN} (ID:{menuId}) 正在初始化中，等待完成...");
+                try
+                {
+                    await existingTask;
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogError(ex, $"等待菜单 {menuId} 初始化时发生错误");
+                    _initializationTasks.TryRemove(menuId, out _);
+                }
+                return CurrentRole.tb_P4Buttons
+                    .Where(c => c.RoleID == CurrentRole.RoleID && c.MenuID == menuId)
+                    .ToList();
+            }
+
+            // 创建新的初始化任务
+            var initTask = InitializeMenuButtonsAsync(SelectedMenuInfo, selected);
+            _initializationTasks.TryAdd(menuId, initTask);
+
+            try
+            {
+                await initTask;
+            }
+            finally
+            {
+                // 任务完成后移除缓存
+                _initializationTasks.TryRemove(menuId, out _);
             }
 
             // 优化去重逻辑 - 使用更高效的查询
             var currentRoleId = CurrentRole.RoleID;
-            var menuId = SelectedMenuInfo.MenuID;
 
             // 检查并清理重复数据
             var duplicateButtons = CurrentRole.tb_P4Buttons
@@ -1418,50 +1437,75 @@ namespace RUINORERP.UI.SysConfig
             var updatedButtons = new List<tb_P4Button>();
 
             // 处理按钮信息 - 优化循环
-            foreach (var buttonInfo in SelectedMenuInfo.tb_ButtonInfos)
+            try
             {
-                if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button))
+                foreach (var buttonInfo in SelectedMenuInfo.tb_ButtonInfos)
                 {
-                    // 创建新按钮权限
-                    button = new tb_P4Button
+                    try
                     {
-                        Notes = buttonInfo.BtnText,
-                        RoleID = currentRoleId,
-                        ButtonInfo_ID = buttonInfo.ButtonInfo_ID,
-                        MenuID = menuId,
-                        ButtonType = buttonInfo.ButtonType
-                    };
-
-                    BusinessHelper.Instance.InitEntity(button);
-                    SetButtonSelection(button, selected);
-                    newButtons.Add(button);
-                }
-                else
-                {
-                    // 更新现有按钮权限状态
-                    if (!button.IsVisble && selected)
-                    {
-                        if (SetButtonSelection(button, true))
+                        if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button))
                         {
-                            updatedButtons.Add(button);
+                            // 创建新按钮权限
+                            button = new tb_P4Button
+                            {
+                                Notes = buttonInfo.BtnText,
+                                RoleID = currentRoleId,
+                                ButtonInfo_ID = buttonInfo.ButtonInfo_ID,
+                                MenuID = menuId,
+                                ButtonType = buttonInfo.ButtonType
+                            };
+
+                            BusinessHelper.Instance.InitEntity(button);
+                            SetButtonSelection(button, selected);
+                            newButtons.Add(button);
                         }
+                        else
+                        {
+                            // 更新现有按钮权限状态
+                            if (!button.IsVisble && selected)
+                            {
+                                if (SetButtonSelection(button, true))
+                                {
+                                    updatedButtons.Add(button);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger?.LogError(ex, $"处理按钮信息失败: {buttonInfo.BtnText} (ID:{buttonInfo.ButtonInfo_ID})");
                     }
                 }
             }
-
-            // 批量操作优化
-            if (newButtons.Count > 0)
+            catch (Exception ex)
             {
-                var ids = await ctrPBut.AddAsync(newButtons);
-                if (ids?.Count > 0)
-                {
-                    CurrentRole.tb_P4Buttons.AddRange(newButtons);
-                }
+                MainForm.Instance.logger?.LogError(ex, $"遍历菜单按钮信息时发生错误: 菜单ID={menuId}");
+                throw;
             }
 
-            if (updatedButtons.Count > 0)
+            // 批量操作优化
+            try
             {
-                await MainForm.Instance.AppContext.Db.Updateable(updatedButtons).ExecuteCommandAsync();
+                if (newButtons.Count > 0)
+                {
+                    var ids = await ctrPBut.AddAsync(newButtons);
+                    if (ids?.Count > 0)
+                    {
+                        CurrentRole.tb_P4Buttons.AddRange(newButtons);
+                        MainForm.Instance.logger?.LogInformation($"为角色 {CurrentRole.RoleName} 添加了 {newButtons.Count} 个新按钮权限");
+                    }
+                }
+
+                if (updatedButtons.Count > 0)
+                {
+                    await MainForm.Instance.AppContext.Db.Updateable(updatedButtons).ExecuteCommandAsync();
+                    MainForm.Instance.logger?.LogInformation($"更新了 {updatedButtons.Count} 个按钮权限");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "批量保存按钮权限到数据库失败");
+                throw;
             }
 
             // 返回更新后的按钮权限列表
@@ -1474,9 +1518,9 @@ namespace RUINORERP.UI.SysConfig
         /// <summary>
         /// 这个方法只设置，将没选，改为勾选。 选中方式不在这里处理。
         /// </summary>
-        /// <param name="button"></param>
-        /// <param name="selected"></param>
-        /// <returns></returns>
+        /// <param name="button">按钮权限对象</param>
+        /// <param name="selected">是否选中</param>
+        /// <returns>是否有变化</returns>
         private bool SetButtonSelection(tb_P4Button button, bool selected)
         {
             bool hasChanged = false;
@@ -1494,6 +1538,50 @@ namespace RUINORERP.UI.SysConfig
             }
 
             return hasChanged;
+        }
+
+        /// <summary>
+        /// 异步初始化菜单按钮的辅助方法
+        /// </summary>
+        /// <param name="menuInfo">菜单信息</param>
+        /// <param name="selected">默认选中状态</param>
+        private async Task InitializeMenuButtonsAsync(tb_MenuInfo menuInfo, bool selected)
+        {
+            try
+            {
+                MainForm.Instance.logger?.LogInformation($"开始初始化菜单按钮: {menuInfo.CaptionCN} (ID:{menuInfo.MenuID})");
+
+                // 查找菜单属性信息
+                MenuAttrAssemblyInfo mai = MenuAssemblylist.FirstOrDefault(e => e.ClassPath == menuInfo.ClassPath);
+                if (mai == null)
+                {
+                    MainForm.Instance.logger?.LogWarning($"未找到菜单属性信息: {menuInfo.ClassPath}");
+                    return;
+                }
+
+                // 获取InitModuleMenu服务并初始化按钮
+                InitModuleMenu imm = null;
+                await Task.Run(() =>
+                {
+                    imm = Startup.GetFromFac<InitModuleMenu>();
+                });
+
+                if (imm != null)
+                {
+                    // 使用缓存机制初始化按钮（useCache: true）
+                    var buttons = await imm.InitToolStripItemAsync(mai, menuInfo, InsertToDb: true, useCache: true);
+                    MainForm.Instance.logger?.LogInformation($"菜单 {menuInfo.CaptionCN} 初始化完成，按钮数: {buttons?.Count ?? 0}");
+                }
+                else
+                {
+                    MainForm.Instance.logger?.LogError("无法获取InitModuleMenu服务实例");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, $"初始化菜单按钮失败: {menuInfo.CaptionCN} (路径:{menuInfo.ClassPath})");
+                // 不抛出异常，避免影响主流程
+            }
         }
 
 
@@ -2965,8 +3053,53 @@ namespace RUINORERP.UI.SysConfig
         {
 
         }
-    }
 
+        #region 资源清理
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        private void DisposeResources()
+        {
+            // 取消所有正在执行的初始化任务
+            if (_loadingCancellationTokenSource != null)
+            {
+                _loadingCancellationTokenSource.Cancel();
+                _loadingCancellationTokenSource.Dispose();
+                _loadingCancellationTokenSource = null;
+            }
+
+            // 清理异步初始化任务缓存
+            foreach (var task in _initializationTasks.Values)
+            {
+                try
+                {
+                    if (!task.IsCompleted && !task.IsCanceled)
+                    {
+                        // 不等待任务完成，只是记录日志
+                        MainForm.Instance.logger?.LogWarning("窗体关闭时仍有未完成的按钮初始化任务");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger?.LogWarning(ex, "清理异步初始化任务时发生错误");
+                }
+            }
+            _initializationTasks.Clear();
+
+            // 清理菜单树缓存
+            _menuTreeCache = null;
+
+            // 清理策略缓存
+            if (_policyCache != null)
+            {
+                _policyCache.Clear();
+            }
+        }
+
+        #endregion
+
+    }
 
 
 }

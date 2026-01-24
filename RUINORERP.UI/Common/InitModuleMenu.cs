@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web.WebSockets;
 using System.Windows.Forms;
@@ -34,6 +35,7 @@ namespace RUINORERP.UI.Common
 
     /// <summary>
     /// 初始化模块菜单和权限的服务类
+    /// 优化版本：添加窗体实例缓存、增强错误处理和异步初始化
     /// </summary>
     public class InitModuleMenu
     {
@@ -42,6 +44,22 @@ namespace RUINORERP.UI.Common
         private List<MenuAttrAssemblyInfo> _menuAssemblyList = new List<MenuAttrAssemblyInfo>();
         private List<string> _typeNames = new List<string>();
         private Type[] _modelTypes;
+
+        /// <summary>
+        /// 窗体实例缓存，避免重复创建
+        /// Key: ClassPath, Value: Control实例
+        /// </summary>
+        private readonly ConcurrentDictionary<string, (Control instance, DateTime createdTime)> _formInstanceCache = new ConcurrentDictionary<string, (Control, DateTime)>();
+
+        /// <summary>
+        /// 缓存过期时间（分钟），默认10分钟
+        /// </summary>
+        private const int CACHE_EXPIRATION_MINUTES = 10;
+
+        /// <summary>
+        /// 缓存清理定时器（每小时清理一次）
+        /// </summary>
+        private readonly System.Threading.Timer _cacheCleanupTimer;
 
         public List<MenuAttrAssemblyInfo> MenuAssemblyList { get => _menuAssemblyList; set => _menuAssemblyList = value; }
 
@@ -65,6 +83,9 @@ namespace RUINORERP.UI.Common
                     MenuAssemblyList = UIHelper.RegisterForm();
                 }
             }
+
+            // 启动缓存清理定时器（每小时清理一次过期缓存）
+            _cacheCleanupTimer = new System.Threading.Timer(CleanupExpiredCache, null, (long)TimeSpan.FromMinutes(60).TotalMilliseconds, (long)TimeSpan.FromMinutes(60).TotalMilliseconds);
         }
 
         #region 系统级初始化菜单
@@ -522,25 +543,49 @@ namespace RUINORERP.UI.Common
 
         /// <summary>
         /// 初始化工具栏按钮和右键菜单按钮信息
+        /// 优化版本：使用窗体实例缓存，增强错误处理和日志
         /// </summary>
+        /// <param name="info">菜单组件信息</param>
+        /// <param name="menuInfo">菜单信息</param>
         /// <param name="InsertToDb">是否保存到数据库。有时只想检测是否属于指定窗体。因为编程中有变动。后期固定了才不会。</param>
-        public async Task<List<tb_ButtonInfo>> InitToolStripItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo, bool InsertToDb = true)
+        /// <param name="useCache">是否使用窗体实例缓存</param>
+        /// <returns>按钮信息列表</returns>
+        public async Task<List<tb_ButtonInfo>> InitToolStripItemAsync(MenuAttrAssemblyInfo info, tb_MenuInfo menuInfo, bool InsertToDb = true, bool useCache = true)
         {
+            if (info == null)
+            {
+                _logger.LogWarning("菜单组件信息为空，无法初始化按钮");
+                return null;
+            }
+
+            if (menuInfo == null)
+            {
+                _logger.LogWarning("菜单信息为空，无法初始化按钮");
+                return null;
+            }
+
             try
             {
-                // 创建并获取窗体实例
-                var c = Startup.ServiceProvider.GetService(info.ClassType) as Control;
+                // 使用缓存机制获取窗体实例
+                var c = GetOrCreateFormInstance(info.ClassPath, info.ClassType, useCache);
                 if (c == null)
                 {
-                    _logger.LogWarning($"无法获取类型 {info.ClassType} 的实例");
+                    _logger.LogError($"无法获取窗体实例: {info.ClassPath} (类型: {info.ClassType?.Name})");
                     return null;
                 }
 
                 // 获取按钮控制器
                 var btnController = Startup.GetFromFac<tb_ButtonInfoController<tb_ButtonInfo>>();
+                if (btnController == null)
+                {
+                    _logger.LogError("无法获取按钮控制器服务");
+                    return null;
+                }
 
                 // 确保菜单的按钮集合已初始化
                 menuInfo.tb_ButtonInfos ??= new List<tb_ButtonInfo>();
+
+                _logger.LogInformation($"开始初始化按钮: 菜单={menuInfo.CaptionCN}, 窗体={info.ClassPath}");
 
                 // 查找窗体上的所有工具栏
                 var toolStrips = FindControls<ToolStrip>(c);
@@ -589,29 +634,51 @@ namespace RUINORERP.UI.Common
                 // 处理扩展按钮
                 if (c is IToolStripMenuInfoAuth formAuth)
                 {
-                    var stripItems = formAuth.AddExtendButton(menuInfo);
-                    foreach (var tsitem in stripItems)
+                    try
                     {
-                        if (!string.IsNullOrWhiteSpace(tsitem.Text))
+                        var stripItems = formAuth.AddExtendButton(menuInfo);
+                        if (stripItems != null && stripItems.Length > 0)
                         {
-                            AddButtonIfNotExists(tsitem.Text, tsitem.Name, ButtonType.Toolbar);
+                            foreach (var tsitem in stripItems)
+                            {
+                                if (!string.IsNullOrWhiteSpace(tsitem.Text))
+                                {
+                                    AddButtonIfNotExists(tsitem.Text, tsitem.Name, ButtonType.Toolbar);
+                                }
+                            }
+                            _logger.LogDebug($"处理扩展按钮: {stripItems.Length} 个");
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"处理扩展按钮失败: {info.ClassPath}");
                     }
                 }
 
                 // 处理右键菜单
                 if (c is IContextMenuInfoAuth contextMenuAuth)
                 {
-                    var contextMenuItems = contextMenuAuth.AddContextMenu();
-                    foreach (var menuItem in contextMenuItems)
+                    try
                     {
-                        if (!string.IsNullOrWhiteSpace(menuItem.MenuText))
+                        var contextMenuItems = contextMenuAuth.AddContextMenu();
+                        if (contextMenuItems != null && contextMenuItems.Count > 0)
                         {
-                            AddButtonIfNotExists(
-                                menuItem.MenuText,
-                                menuItem.MenuText,
-                                ButtonType.ContextMenu);
+                            foreach (var menuItem in contextMenuItems)
+                            {
+                                if (!string.IsNullOrWhiteSpace(menuItem.MenuText))
+                                {
+                                    AddButtonIfNotExists(
+                                        menuItem.MenuText,
+                                        menuItem.MenuText,
+                                        ButtonType.ContextMenu);
+                                }
+                            }
+                            _logger.LogDebug($"处理右键菜单按钮: {contextMenuItems.Count} 个");
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"处理右键菜单按钮失败: {info.ClassPath}");
                     }
                 }
 
@@ -630,17 +697,34 @@ namespace RUINORERP.UI.Common
                 {
                     if (InsertToDb)
                     {
-                        var buttonIds = await _appContext.Db
-                                             .Insertable(newButtonInfos)
-                                             .ExecuteReturnSnowflakeIdListAsync();
+                        try
+                        {
+                            var buttonIds = await _appContext.Db
+                                .CopyNew()
+                                .Insertable(newButtonInfos)
+                                .ExecuteReturnSnowflakeIdListAsync();
+
+                            // 确保ID正确分配给实体
+                            for (int i = 0; i < newButtonInfos.Count && i < buttonIds.Count; i++)
+                            {
+                                newButtonInfos[i].ButtonInfo_ID = buttonIds[i];
+                            }
+
+                            _logger.LogInformation($"成功插入 {newButtonInfos.Count} 个新按钮到数据库");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"插入按钮到数据库失败: 菜单={menuInfo.CaptionCN}");
+                            throw;
+                        }
                     }
-                    // 确保ID正确分配给实体
-                    //for (int i = 0; i < newButtonInfos.Count; i++)
-                    //{
-                    //    newButtonInfos[i].ButtonInfo_ID = buttonIds[i];
-                    //}
                     // 添加到菜单的按钮集合中
                     menuInfo.tb_ButtonInfos.AddRange(newButtonInfos);
+                    _logger.LogInformation($"菜单 {menuInfo.CaptionCN} 的按钮总数: {menuInfo.tb_ButtonInfos.Count}");
+                }
+                else
+                {
+                    _logger.LogDebug($"菜单 {menuInfo.CaptionCN} 没有新按钮需要添加");
                 }
 
                 // 局部函数：添加按钮（如果不存在）
@@ -698,8 +782,8 @@ namespace RUINORERP.UI.Common
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"初始化工具栏按钮时发生错误: {info.ClassPath}");
-                MainForm.Instance.uclog.AddLog($"初始化工具栏按钮失败: {ex.Message}", UILogType.错误);
+                _logger.LogError(ex, $"初始化工具栏按钮时发生错误: 菜单={menuInfo.CaptionCN}, 窗体={info.ClassPath}");
+                MainForm.Instance.uclog?.AddLog($"初始化工具栏按钮失败: {ex.Message}", UILogType.错误);
             }
             return menuInfo.tb_ButtonInfos;
         }
@@ -951,6 +1035,191 @@ namespace RUINORERP.UI.Common
 
             return null;
         }
+
+        #region 窗体实例缓存管理
+
+        /// <summary>
+        /// 获取或创建窗体实例（带缓存）
+        /// </summary>
+        /// <param name="classPath">窗体类路径</param>
+        /// <param name="classType">窗体类型</param>
+        /// <param name="useCache">是否使用缓存</param>
+        /// <returns>窗体实例</returns>
+        private Control GetOrCreateFormInstance(string classPath, Type classType, bool useCache = true)
+        {
+            try
+            {
+                // 如果不使用缓存，直接创建新实例
+                if (!useCache)
+                {
+                    return CreateFormInstance(classPath, classType);
+                }
+
+                // 尝试从缓存获取
+                if (_formInstanceCache.TryGetValue(classPath, out var cached))
+                {
+                    // 检查缓存是否过期
+                    if ((DateTime.Now - cached.createdTime).TotalMinutes < CACHE_EXPIRATION_MINUTES)
+                    {
+                        _logger.LogDebug($"使用缓存的窗体实例: {classPath}");
+                        return cached.instance;
+                    }
+                    else
+                    {
+                        // 缓存过期，移除旧缓存
+                        _formInstanceCache.TryRemove(classPath, out _);
+                        _logger.LogDebug($"窗体实例缓存已过期: {classPath}");
+                    }
+                }
+
+                // 创建新实例并缓存
+                var instance = CreateFormInstance(classPath, classType);
+                if (instance != null)
+                {
+                    _formInstanceCache.TryAdd(classPath, (instance, DateTime.Now));
+                    _logger.LogDebug($"创建并缓存窗体实例: {classPath}, 当前缓存数: {_formInstanceCache.Count}");
+                }
+
+                return instance;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"获取或创建窗体实例失败: {classPath}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 创建窗体实例
+        /// </summary>
+        /// <param name="classPath">窗体类路径</param>
+        /// <param name="classType">窗体类型</param>
+        /// <returns>窗体实例</returns>
+        private Control CreateFormInstance(string classPath, Type classType)
+        {
+            try
+            {
+                var instance = Startup.ServiceProvider.GetService(classType) as Control;
+                if (instance == null)
+                {
+                    _logger.LogWarning($"无法创建窗体实例: {classPath} (类型: {classType?.Name})");
+                    return null;
+                }
+                return instance;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"创建窗体实例异常: {classPath}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 清理过期的窗体实例缓存
+        /// </summary>
+        /// <param name="state">定时器状态</param>
+        private void CleanupExpiredCache(object state)
+        {
+            try
+            {
+                var expirationThreshold = DateTime.Now.AddMinutes(-CACHE_EXPIRATION_MINUTES);
+                var expiredKeys = _formInstanceCache
+                    .Where(kvp => kvp.Value.createdTime < expirationThreshold)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+
+                foreach (var key in expiredKeys)
+                {
+                    if (_formInstanceCache.TryRemove(key, out var cached))
+                    {
+                        try
+                        {
+                            // 释放窗体资源
+                            cached.instance?.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, $"释放窗体资源失败: {key}");
+                        }
+                    }
+                }
+
+                if (expiredKeys.Any())
+                {
+                    _logger.LogInformation($"清理了 {expiredKeys.Count} 个过期的窗体实例缓存, 剩余缓存数: {_formInstanceCache.Count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清理窗体实例缓存失败");
+            }
+        }
+
+        /// <summary>
+        /// 手动清除指定窗体的缓存
+        /// </summary>
+        /// <param name="classPath">窗体类路径</param>
+        /// <returns>是否成功清除</returns>
+        public bool ClearFormCache(string classPath)
+        {
+            try
+            {
+                if (_formInstanceCache.TryRemove(classPath, out var cached))
+                {
+                    cached.instance?.Dispose();
+                    _logger.LogInformation($"手动清除窗体缓存: {classPath}");
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"清除窗体缓存失败: {classPath}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 清除所有窗体实例缓存
+        /// </summary>
+        public void ClearAllFormCache()
+        {
+            try
+            {
+                foreach (var kvp in _formInstanceCache)
+                {
+                    try
+                    {
+                        kvp.Value.instance?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"释放窗体资源失败: {kvp.Key}");
+                    }
+                }
+                var count = _formInstanceCache.Count;
+                _formInstanceCache.Clear();
+                _logger.LogInformation($"清除了所有窗体实例缓存, 共 {count} 个");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "清除所有窗体实例缓存失败");
+            }
+        }
+
+        /// <summary>
+        /// 获取缓存统计信息
+        /// </summary>
+        /// <returns>缓存统计信息</returns>
+        public string GetCacheStatistics()
+        {
+            var now = DateTime.Now;
+            var expiredCount = _formInstanceCache.Count(kvp => (now - kvp.Value.createdTime).TotalMinutes >= CACHE_EXPIRATION_MINUTES);
+            var activeCount = _formInstanceCache.Count - expiredCount;
+
+            return $"窗体实例缓存统计: 总数={_formInstanceCache.Count}, 有效={activeCount}, 过期={expiredCount}, 过期时间={CACHE_EXPIRATION_MINUTES}分钟";
+        }
+        #endregion
         #endregion
     }
 
@@ -1512,6 +1781,7 @@ namespace RUINORERP.UI.Common
 
             if (c is BaseBillEdit)
             {
+                //
                 BaseBillEdit baseBillEdit = c as BaseBillEdit;
                 if (baseBillEdit != null)
                 {

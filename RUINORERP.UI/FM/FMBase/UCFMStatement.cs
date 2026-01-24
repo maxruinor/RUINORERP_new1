@@ -82,11 +82,15 @@ namespace RUINORERP.UI.FM
             base.AddExcludeMenuList(MenuItemEnums.结案);
         }
 
-        /// <summary>
-        /// 初始化红蓝单对冲核销按钮
-        /// </summary>
-        private void InitRedBlueBillWriteOffButton()
+
+  
+        #region 红蓝单对冲核销
+
+        ToolStripButton toolStripButton红蓝单对冲核销 = new System.Windows.Forms.ToolStripButton();
+
+        public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
+
             toolStripButton红蓝单对冲核销.Text = "红蓝单对冲核销";
             toolStripButton红蓝单对冲核销.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
             toolStripButton红蓝单对冲核销.ImageTransparentColor = System.Drawing.Color.Magenta;
@@ -95,6 +99,22 @@ namespace RUINORERP.UI.FM
             UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton红蓝单对冲核销);
             toolStripButton红蓝单对冲核销.ToolTipText = "执行红蓝单对冲核销操作,将正负金额相互抵消。";
             toolStripButton红蓝单对冲核销.Click += new System.EventHandler(this.toolStripButton红蓝单对冲核销_Click);
+
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
+            { toolStripButton红蓝单对冲核销};
+
+            this.BaseToolStrip.Items.AddRange(extendButtons);
+            return extendButtons;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 初始化红蓝单对冲核销按钮
+        /// </summary>
+        private void InitRedBlueBillWriteOffButton()
+        {
+           
         }
 
         /// <summary>
@@ -730,7 +750,7 @@ namespace RUINORERP.UI.FM
         private void UCFMStatement_Load(object sender, EventArgs e)
         {
             AddExtendButton(CurMenuInfo);
-            InitRedBlueBillWriteOffButton();
+
             #region
             switch (PaymentType)
             {
@@ -813,11 +833,7 @@ namespace RUINORERP.UI.FM
             }
             UIBizService.SynchronizeColumnOrder(sgd, listCols.Select(c => c.DisplayController).ToList());
         }
-        #region 红蓝单对冲核销
 
-        ToolStripButton toolStripButton红蓝单对冲核销 = new System.Windows.Forms.ToolStripButton();
-
-        #endregion
 
         #region 坏账处理
 

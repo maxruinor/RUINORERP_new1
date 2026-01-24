@@ -137,8 +137,18 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         private HelpSystemIntegration<T, C> _helpSystemIntegration;
 
+        /// <summary>
+        /// 重写帮助系统初始化，传递泛型实体类型
+        /// 添加设计时检查，避免设计器加载时出现泛型约束错误
+        /// </summary>
         protected override void InitializeHelpSystem()
         {
+            // 设计时不初始化帮助系统，避免泛型约束检查错误
+            if (this.DesignMode || System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             _helpSystemIntegration ??= new HelpSystemIntegration<T, C>(this, logger);
             _helpSystemIntegration.Initialize();
         }
@@ -805,8 +815,16 @@ namespace RUINORERP.UI.BaseForm
 
 
                     // 使用EntityMappingHelper代替BizTypeMapper
-                    CurrentBizType = EntityMappingHelper.GetBizType(typeof(T).Name);
-                    CurrentBizTypeName = CurrentBizType.ToString();
+                    // 添加设计时检查，避免泛型约束错误
+                    try
+                    {
+                        CurrentBizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+                        CurrentBizTypeName = CurrentBizType.ToString();
+                    }
+                    catch
+                    {
+                        // 设计时可能无法解析泛型，忽略
+                    }
                 }
 
 

@@ -827,65 +827,118 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        /// <summary>
+        /// 删除单据数据
+        /// 使用状态管理体系统一判断删除权限，支持多种状态类型的单据
+        /// </summary>
+        /// <param name="Datas">要删除的数据列表</param>
+        /// <returns>是否删除成功</returns>
         protected async virtual Task<bool> Delete(List<M> Datas)
         {
             if (Datas == null || Datas.Count == 0)
             {
-                //提示一下删除成功
                 MainForm.Instance.uclog.AddLog("提示", "没有要删除的数据");
                 return false;
             }
 
-            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+            // 系统不建议删除单据资料
+            if (MessageBox.Show("系统不建议删除单据资料\r\n确定删除吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) != DialogResult.Yes)
             {
-                int counter = 0;
-                foreach (var item in Datas)
+                return false;
+            }
+
+            int counter = 0;
+            List<string> errorMessages = new List<string>();
+
+            foreach (var item in Datas)
+            {
+                try
                 {
-                    //https://www.runoob.com/w3cnote/csharp-enum.html C# 枚举与位枚举
-                    var dataStatus = (DataStatus)(item.GetPropertyValue(typeof(DataStatus).Name).ToInt());
-                    if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
+                    BaseEntity baseEntity = item as BaseEntity;
+                    if (baseEntity == null)
                     {
-                        BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-                        string PKColName = UIHelper.GetPrimaryKeyColName(typeof(M));
-                        object PKValue = item.GetPropertyValue(PKColName);
-                        bool rs = false;
-                        //这个表特殊当时没有命名好
-                        if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
-                        {
-                            rs = await ctr.BaseDeleteByNavAsync(item as M);
-                        }
-                        else
-                        {
-                            rs = await ctr.BaseDeleteAsync(item as M);
-                        }
-                        if (rs)
-                        {
-                            //删除远程图片及本地图片
-                            await DeleteImages(item as M);
-                            MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("删除", item);
-                            counter++;
+                        errorMessages.Add($"数据{counter + 1}不是有效的实体类型");
+                        continue;
+                    }
 
-                            for (global::System.Int32 i = 0; i < this._UCBillMasterQuery.bindingSourceMaster.Count; i++)
-                            {
-                                if (this._UCBillMasterQuery.bindingSourceMaster[i] is M && this._UCBillMasterQuery.bindingSourceMaster[i].GetPropertyValue(PKColName).ToString() == PKValue.ToString())
-                                {
-                                    this._UCBillMasterQuery.bindingSourceMaster.Remove(this._UCBillMasterQuery.bindingSourceMaster[i]);
-                                }
-                            }
-
+                    // 使用状态管理体系检查删除权限
+                    if (StateManager != null)
+                    {
+                        var (canDelete, message) = StateManager.CanExecuteActionWithMessage(baseEntity, MenuItemEnums.删除);
+                        if (!canDelete)
+                        {
+                            errorMessages.Add($"数据{counter + 1}：{message ?? "当前状态不允许删除"}");
+                            continue;
                         }
+                    }
+
+                    // 获取Controller和主键信息
+                    BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+                    string PKColName = UIHelper.GetPrimaryKeyColName(typeof(M));
+                    object PKValue = item.GetPropertyValue(PKColName);
+
+                    if (PKValue == null)
+                    {
+                        errorMessages.Add($"数据{counter + 1}：无法获取主键值");
+                        continue;
+                    }
+
+                    // 执行删除操作
+                    bool rs = false;
+                    // 特殊处理：明细表或特殊表使用导航删除
+                    if (typeof(C).Name.Contains("Detail") || typeof(C).Name.Contains("tb_ProductionDemand"))
+                    {
+                        rs = await ctr.BaseDeleteByNavAsync(item as M);
                     }
                     else
                     {
-                        //
-                        MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
-                        return false;
+                        rs = await ctr.BaseDeleteAsync(item as M);
+                    }
+
+                    if (rs)
+                    {
+                        // 删除远程图片及本地图片
+                        await DeleteImages(item as M);
+                        MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("删除", item);
+
+                        // 从界面绑定源中移除
+                        for (global::System.Int32 i = 0; i < this._UCBillMasterQuery.bindingSourceMaster.Count; i++)
+                        {
+                            if (this._UCBillMasterQuery.bindingSourceMaster[i] is M &&
+                                this._UCBillMasterQuery.bindingSourceMaster[i].GetPropertyValue(PKColName).ToString() == PKValue.ToString())
+                            {
+                                this._UCBillMasterQuery.bindingSourceMaster.Remove(this._UCBillMasterQuery.bindingSourceMaster[i]);
+                                break;
+                            }
+                        }
+
+                        counter++;
+                    }
+                    else
+                    {
+                        errorMessages.Add($"数据{counter + 1}：删除失败");
                     }
                 }
-                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
-
+                catch (Exception ex)
+                {
+                    errorMessages.Add($"数据{counter + 1}：{ex.Message}");
+                }
             }
-            return true;
+
+            // 显示删除结果
+            if (counter > 0)
+            {
+                MainForm.Instance.uclog.AddLog("提示", $"成功删除数据：{counter}条.");
+            }
+
+            // 显示错误信息
+            if (errorMessages.Count > 0)
+            {
+                string errorMsg = string.Join("\r\n", errorMessages);
+                MessageBox.Show($"部分数据删除失败：\r\n{errorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            return counter > 0;
         }
 
 

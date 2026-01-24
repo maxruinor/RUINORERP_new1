@@ -976,7 +976,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 添加PrePaymentStatus操作权限规则
+        /// 添加PrePaymentStatus操作权限规则1
         /// 应用submitModifyRuleMode模式不同的权限配置
         /// </summary>
         private void AddPrePaymentStatusActionPermissionRules()
@@ -1175,14 +1175,18 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = typeof(T);
             var statusName = Enum.GetName(statusType, status);
 
+            // 检查是否允许执行该操作
+            bool canExecute = CanExecuteNonStateTransitionAction(status, action);
+
+            // 根据操作权限返回不同的提示信息
             switch (action)
             {
                 case MenuItemEnums.修改:
-                    return $"状态为【{statusName}】的单据可以修改";
+                    return canExecute ? $"状态为【{statusName}】的单据可以修改" : $"状态为【{statusName}】的单据不允许修改";
                 case MenuItemEnums.删除:
-                    return $"状态为【{statusName}】的单据可以删除";
+                    return canExecute ? $"状态为【{statusName}】的单据可以删除" : $"状态为【{statusName}】的单据不允许删除";
                 case MenuItemEnums.保存:
-                    return $"状态为【{statusName}】的单据可以保存";
+                    return canExecute ? $"状态为【{statusName}】的单据可以保存" : $"状态为【{statusName}】的单据不允许保存";
                 case MenuItemEnums.新增:
                     return "随时可以新增单据";
                 case MenuItemEnums.查询:
@@ -1192,7 +1196,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 case MenuItemEnums.导出:
                     return "所有状态的单据都可以导出";
                 default:
-                    return $"当前状态【{statusName}】不支持{action}操作";
+                    return canExecute ? $"当前状态【{statusName}】支持{action}操作" : $"当前状态【{statusName}】不支持{action}操作";
             }
         }
 
@@ -1208,22 +1212,26 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = typeof(T);
             var statusName = Enum.GetName(statusType, status);
 
+            // 检查是否允许执行该操作
+            bool canExecute = CanExecuteStateTransitionAction(status, action);
+
+            // 根据操作权限返回不同的提示信息
             switch (action)
             {
                 case MenuItemEnums.提交:
-                    return $"状态为【{statusName}】的单据可以提交审核";
+                    return canExecute ? $"状态为【{statusName}】的单据可以提交审核" : $"状态为【{statusName}】的单据不能提交审核";
                 case MenuItemEnums.审核:
-                    return $"状态为【{statusName}】的单据可以审核通过";
+                    return canExecute ? $"状态为【{statusName}】的单据可以审核通过" : $"状态为【{statusName}】的单据不能审核通过";
                 case MenuItemEnums.反审:
-                    return $"状态为【{statusName}】的单据可以取消审核";
+                    return canExecute ? $"状态为【{statusName}】的单据可以取消审核" : $"状态为【{statusName}】的单据不能取消审核";
                 case MenuItemEnums.结案:
-                    return $"状态为【{statusName}】的单据可以结案";
+                    return canExecute ? $"状态为【{statusName}】的单据可以结案" : $"状态为【{statusName}】的单据不能结案";
                 case MenuItemEnums.反结案:
-                    return $"状态为【{statusName}】的单据可以取消结案";
+                    return canExecute ? $"状态为【{statusName}】的单据可以取消结案" : $"状态为【{statusName}】的单据不能取消结案";
                 case MenuItemEnums.作废:
-                    return $"状态为【{statusName}】的单据可以作废";
+                    return canExecute ? $"状态为【{statusName}】的单据可以作废" : $"状态为【{statusName}】的单据不能作废";
                 default:
-                    return $"当前状态【{statusName}】不支持{action}操作";
+                    return canExecute ? $"当前状态【{statusName}】支持{action}操作" : $"当前状态【{statusName}】不支持{action}操作";
             }
         }
 

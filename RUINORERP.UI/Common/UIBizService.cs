@@ -17,6 +17,7 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
+using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
 
 
@@ -60,7 +61,7 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 缓存实体类型的FKRelations，避免重复创建实例
         /// </summary>
-        private static ConcurrentDictionary<Type, List<FKRelation>> _fkRelationsCache = new ConcurrentDictionary<Type, List<FKRelation>>();
+        private static ConcurrentDictionary<Type, List<FKRelationInfo>> _fkRelationsCache = new ConcurrentDictionary<Type, List<FKRelationInfo>>();
 
         /// <summary>
         /// 获取缓存管理器实例

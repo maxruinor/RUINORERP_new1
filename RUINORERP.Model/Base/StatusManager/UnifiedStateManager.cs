@@ -795,9 +795,17 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 检查是否允许修改
             var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
-            
+            if (!canModify)
+            {
+                // 获取状态类型和当前状态，用于生成错误消息
+                var statusType = GetStatusType(entity);
+                var currentStatus = GetBusinessStatus(entity, statusType);
+                var statusName = currentStatus?.ToString() ?? "未知状态";
+                return (false, $"状态为【{statusName}】的单据不允许修改");
+            }
+
             // 检查提交后是否允许修改
-            if (canModify && !AllowModifyAfterSubmit(canModify))
+            if (!AllowModifyAfterSubmit(canModify))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");
@@ -1062,9 +1070,17 @@ namespace RUINORERP.Model.Base.StatusManager
                 return (false, "终态状态下不允许修改");
 
             var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
+            if (!canModify)
+            {
+                // 获取状态类型和当前状态，用于生成错误消息
+                var statusType = GetStatusType(entity);
+                var currentStatus = GetBusinessStatus(entity, statusType);
+                var statusName = currentStatus?.ToString() ?? "未知状态";
+                return (false, $"状态为【{statusName}】的单据不允许修改");
+            }
 
             // 检查提交后是否允许修改
-            if (canModify && !AllowModifyAfterSubmit(canModify))
+            if (!AllowModifyAfterSubmit(canModify))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");

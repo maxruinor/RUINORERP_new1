@@ -18,6 +18,7 @@ using RUINORERP.Model.ReminderModel.ReminderRules;
 using RUINORERP.Server.Workflow.WFReminder;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Server.Workflow.WFScheduled;
+using RUINORERP.Server.Configuration;
 
 namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
 {
@@ -500,7 +501,7 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
         }
 
         /// <summary>
-        /// 启动安全库存计算工作流（每天固定时间执行）
+        /// 启动安全库存计算工作流（执行时间从配置文件读取）
         /// </summary>
         public static async Task<bool> ScheduleDailySafetyStockCalculation(IWorkflowHost host)
         {
@@ -509,18 +510,16 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                 // 注册工作流
                 host.RegisterWorkflow<SafetyStockWorkflow, SafetyStockData>();
 
-                // 配置执行时间（默认为凌晨2点，可配置）
-                var executionTime = new TimeSpan(2, 0, 0); // 凌晨2点
-                
-                // 计算下次执行时间
-                var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 
-                    executionTime.Hours, executionTime.Minutes, executionTime.Seconds);
-                if (nextRunTime <= now)
-                    nextRunTime = nextRunTime.AddDays(1);
+                // 检查任务是否启用
+                if (!ScheduledTaskHelper.IsTaskEnabled(ScheduledTaskHelper.SafetyStockCalculationTask))
+                {
+                    frmMainNew.Instance?.PrintInfoLog("安全库存计算任务已禁用");
+                    return true;
+                }
 
-                // 计算时间间隔
-                var interval = nextRunTime - now;
+                // 从配置文件获取执行时间
+                var nextRunTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.SafetyStockCalculationTask);
+                var interval = nextRunTime - DateTime.Now;
 
                 // 首次延迟执行
                 var timer = new System.Timers.Timer(interval.TotalMilliseconds);
@@ -548,8 +547,9 @@ namespace RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies
                         System.Diagnostics.Debug.WriteLine($"工作流执行错误: {ex.Message}");
                     }
 
-                    // 改为每天执行一次
-                    timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+                    // 重新计算下次执行时间
+                    var nextTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.SafetyStockCalculationTask);
+                    timer.Interval = (nextTime - DateTime.Now).TotalMilliseconds;
                 };
                 timer.Start();
 

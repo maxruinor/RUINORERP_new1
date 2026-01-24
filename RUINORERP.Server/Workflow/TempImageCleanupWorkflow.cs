@@ -10,6 +10,7 @@ using WorkflowCore.Models;
 using RUINORERP.Business;
 using RUINORERP.Model;
 using RUINORERP.Server.Helpers;
+using RUINORERP.Server.Configuration;
 using SqlSugar;
 using Autofac;
 using System.Timers;
@@ -379,7 +380,7 @@ namespace RUINORERP.Server.Workflow
         }
 
         /// <summary>
-        /// 启动临时图片清理工作流（每天凌晨2点执行）
+        /// 启动临时图片清理工作流（执行时间从配置文件读取）
         /// </summary>
         public static async Task<bool> ScheduleTempImageCleanup(IWorkflowHost host)
         {
@@ -388,14 +389,16 @@ namespace RUINORERP.Server.Workflow
                 // 注册工作流
                 host.RegisterWorkflow<TempImageCleanupWorkflow, TempImageCleanupData>();
 
-                // 计算下次执行时间
-                var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 2, 0, 0);
-                if (nextRunTime <= now)
-                    nextRunTime = nextRunTime.AddDays(1);
+                // 检查任务是否启用
+                if (!ScheduledTaskHelper.IsTaskEnabled(ScheduledTaskHelper.TempImageCleanupTask))
+                {
+                    frmMainNew.Instance?.PrintInfoLog("临时图片清理任务已禁用");
+                    return true;
+                }
 
-                // 计算时间间隔
-                var interval = nextRunTime - now;
+                // 从配置文件获取执行时间
+                var nextRunTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.TempImageCleanupTask);
+                var interval = nextRunTime - DateTime.Now;
 
                 // 首次延迟执行
                 _timer = new System.Timers.Timer(interval.TotalMilliseconds);
@@ -412,8 +415,9 @@ namespace RUINORERP.Server.Workflow
                         System.Diagnostics.Debug.WriteLine($"临时图片清理工作流执行错误: {ex.Message}");
                     }
 
-                    // 改为每天执行一次
-                    _timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+                    // 重新计算下次执行时间
+                    var nextTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.TempImageCleanupTask);
+                    _timer.Interval = (nextTime - DateTime.Now).TotalMilliseconds;
                 };
                 _timer.Start();
 

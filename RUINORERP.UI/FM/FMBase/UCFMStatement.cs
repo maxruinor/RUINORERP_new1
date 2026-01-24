@@ -109,13 +109,7 @@ namespace RUINORERP.UI.FM
 
         #endregion
 
-        /// <summary>
-        /// 初始化红蓝单对冲核销按钮
-        /// </summary>
-        private void InitRedBlueBillWriteOffButton()
-        {
-           
-        }
+
 
         /// <summary>
         /// 红蓝单对冲核销按钮点击事件

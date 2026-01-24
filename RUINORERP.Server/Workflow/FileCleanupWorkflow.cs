@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Configuration;
 using System.Linq;
 
 namespace RUINORERP.Server.Workflow
@@ -295,7 +296,7 @@ namespace RUINORERP.Server.Workflow
     #region 工作流定义
     /// <summary>
     /// 文件清理工作流
-    /// 每天凌晨2点自动清理过期和孤立文件
+    /// 每天凌晨3点自动清理过期和孤立文件（时间从配置文件读取）
     /// </summary>
     public class FileCleanupWorkflow : IWorkflow<FileCleanupWorkflowData>
     {
@@ -342,7 +343,7 @@ namespace RUINORERP.Server.Workflow
         }
 
         /// <summary>
-        /// 启动文件清理工作流(每天凌晨2点执行)
+        /// 启动文件清理工作流(执行时间从配置文件读取)
         /// </summary>
         public static async Task<bool> ScheduleFileCleanup(IWorkflowHost host)
         {
@@ -351,14 +352,17 @@ namespace RUINORERP.Server.Workflow
                 // 注册工作流
                 host.RegisterWorkflow<FileCleanupWorkflow, FileCleanupWorkflowData>();
 
-                // 计算下次执行时间
-                var now = DateTime.Now;
-                var nextRunTime = new DateTime(now.Year, now.Month, now.Day, 2, 0, 0);
-                if (nextRunTime <= now)
-                    nextRunTime = nextRunTime.AddDays(1);
+                // 检查任务是否启用
+                if (!ScheduledTaskHelper.IsTaskEnabled(ScheduledTaskHelper.FileCleanupTask))
+                {
+                    frmMainNew.Instance?.PrintInfoLog("文件清理任务已禁用");
+                    return true;
+                }
 
-                // 计算时间间隔
-                var interval = nextRunTime - now;
+                // 从配置文件获取执行时间
+                var nextRunTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.FileCleanupTask);
+                var interval = nextRunTime - DateTime.Now;
+
 
                 // 首次延迟执行
                 _timer = new System.Timers.Timer(interval.TotalMilliseconds);
@@ -375,8 +379,9 @@ namespace RUINORERP.Server.Workflow
                         System.Diagnostics.Debug.WriteLine($"文件清理工作流执行错误: {ex.Message}");
                     }
 
-                    // 改为每天执行一次
-                    _timer.Interval = TimeSpan.FromDays(1).TotalMilliseconds;
+                    // 重新计算下次执行时间
+                    var nextTime = ScheduledTaskHelper.CalculateNextExecutionTime(ScheduledTaskHelper.FileCleanupTask);
+                    _timer.Interval = (nextTime - DateTime.Now).TotalMilliseconds;
                 };
                 _timer.Start();
 

@@ -101,7 +101,6 @@ using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
-using RUINORERP.Common.Helper;
 using RUINORERP.UI.BaseForm.Helpers;
 
 namespace RUINORERP.UI.BaseForm
@@ -758,9 +757,7 @@ namespace RUINORERP.UI.BaseForm
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
 
-                AddExcludeMenuList();
-                AddExtendButton(CurMenuInfo);
-                if (!this.DesignMode)
+                AddExtendButton(CurMenuInfo);                if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
 

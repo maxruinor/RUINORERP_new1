@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Model;
 using RUINORERP.Server.SmartReminder.Strategies.SafetyStockStrategies;
+using RUINORERP.Server.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -99,9 +100,10 @@ namespace RUINORERP.Server.Workflow
     public static class InventorySnapshotWorkflowConfig
     {
         /// <summary>
-        /// 库存快照执行时间配置（默认凌晨1点，可配置为方便调试的时间）
+        /// 库存快照执行时间配置（从配置文件读取，默认凌晨3点）
         /// </summary>
-        public static TimeSpan DailyExecutionTime = new TimeSpan(1, 0, 0); // 默认凌晨1点
+        public static TimeSpan DailyExecutionTime =>
+            ScheduledTaskHelper.GetTaskExecutionTime(ScheduledTaskHelper.InventorySnapshotTask);
 
         /// <summary>
         /// 是否启用调试模式（调试模式下可立即执行）

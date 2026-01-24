@@ -1244,6 +1244,7 @@ namespace RUINORERP.UI.BaseForm
                             }
 
                             AddExcludeMenuList();
+                   
                             foreach (var item in BaseToolStrip.Items)
                             {
                                 //给按钮tag给个值。有什么意义？ 就为了后面注册状态用？用Text直接判断就可以了。

@@ -747,9 +747,21 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 红蓝单对冲核销方法1
-        /// 余额对账的方式时，对账最后总金额为0，则使用这个功能1
+        /// 红蓝单对冲核销方法
+        /// 余额对账的方式时，对账最后总金额为0，则使用这个功能
         /// 执行红蓝单对冲核销流程,将对账单中的正负金额明细相互抵消
+        /// 
+        /// 业务规则说明：
+        /// 1. 余额对账模式下，对账单包含收款单和付款单两种类型
+        /// 2. 收款类型在对账单明细中应为正数(IncludedLocalAmount > 0)
+        /// 3. 付款类型在对账单明细中应为负数(IncludedLocalAmount < 0)
+        /// 4. 核销时不生成收付款单，直接互相抵消
+        /// 5. 核销金额计算规则：
+        ///    - 收款单：核销金额 = Math.Abs(对账明细金额)，增加已收金额，减少应收余额
+        ///    - 付款单：核销金额 = Math.Abs(对账明细金额)，增加已付金额，减少应付余额
+        /// 6. 核销状态判断：
+        ///    - LocalBalanceAmount = 0 时，状态更新为【已冲销】
+        ///    - LocalBalanceAmount ≠ 0 时，保持原状态或更新为【部分支付】
         /// </summary>
         /// <param name="statement">对账单实体</param>
         /// <returns>操作结果</returns>
@@ -812,6 +824,24 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                // 验证明细类型与金额符号的匹配性
+                foreach (var detail in statement.tb_FM_StatementDetails)
+                {
+                    var arapType = (ReceivePaymentType)detail.ReceivePaymentType;
+                    if (arapType == ReceivePaymentType.收款 && detail.IncludedLocalAmount <= 0)
+                    {
+                        rmrs.ErrorMsg = $"收款类型的对账明细{detail.ARAPNo}金额应为正数，当前为{detail.IncludedLocalAmount:N2}";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                    if (arapType == ReceivePaymentType.付款 && detail.IncludedLocalAmount >= 0)
+                    {
+                        rmrs.ErrorMsg = $"付款类型的对账明细{detail.ARAPNo}金额应为负数，当前为{detail.IncludedLocalAmount:N2}";
+                        rmrs.Succeeded = false;
+                        return rmrs;
+                    }
+                }
+
                 // 记录对冲前数据(用于审计)
                 var positiveDetails = statement.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount > 0).ToList();
                 var negativeDetails = statement.tb_FM_StatementDetails.Where(d => d.IncludedLocalAmount < 0).ToList();
@@ -838,28 +868,38 @@ namespace RUINORERP.Business
                         return rmrs;
                     }
 
-                    // 核销金额
-                    decimal writeOffAmount = detail.IncludedLocalAmount;
+                    // 根据应收应付单类型和对账明细金额计算核销金额
+                    // 核销金额始终取绝对值，表示实际核销的金额量
+                    decimal writeOffAmount = Math.Abs(detail.IncludedLocalAmount);
+                    decimal writeOffForeignAmount = Math.Abs(detail.IncludedForeignAmount);
 
                     // 更新核销金额
                     arap.LocalPaidAmount += writeOffAmount;
-                    arap.ForeignPaidAmount += detail.IncludedForeignAmount;
+                    arap.ForeignPaidAmount += writeOffForeignAmount;
 
                     // 更新余额
+                    // 收款单：减少应收余额
+                    // 付款单：减少应付余额
                     arap.LocalBalanceAmount -= writeOffAmount;
-                    arap.ForeignBalanceAmount -= detail.IncludedForeignAmount;
+                    arap.ForeignBalanceAmount -= writeOffForeignAmount;
 
                     // 更新核销状态
+                    // 当应收应付单余额为0时，表示全额核销，状态更新为【已冲销】
                     if (Math.Abs(arap.LocalBalanceAmount) < 0.01m)
                     {
                         arap.ARAPStatus = (int)ARAPStatus.已冲销;
-                        arap.Remark += "（红蓝单对冲核销已完成）";
-                        //arap. = (int)ARAPWriteOffStatus.全额核销;
+                        arap.Remark += $"（红蓝单对冲核销已完成，核销金额：{writeOffAmount:N2}）";
+                    }
+                    else
+                    {
+                        // 如果还有余额，更新为【部分支付】状态
+                        arap.ARAPStatus = (int)ARAPStatus.部分支付;
+                        arap.Remark += $"（红蓝单对冲部分核销，已核销：{writeOffAmount:N2}，剩余：{arap.LocalBalanceAmount:N2}）";
                     }
 
                     // 更新明细核销金额
-                    detail.WrittenOffLocalAmount = detail.IncludedLocalAmount;
-                    detail.WrittenOffForeignAmount = detail.IncludedForeignAmount;
+                    detail.WrittenOffLocalAmount = writeOffAmount;
+                    detail.WrittenOffForeignAmount = writeOffForeignAmount;
                     detail.RemainingLocalAmount = 0;
                     detail.RemainingForeignAmount = 0;
                     detail.ARAPWriteOffStatus = (int)ARAPWriteOffStatus.全额核销;
@@ -867,6 +907,9 @@ namespace RUINORERP.Business
 
                     // 保存应收应付单
                     await _unitOfWorkManage.GetDbClient().Updateable(arap).ExecuteCommandAsync();
+
+                    // 记录每条明细的核销日志
+                    _logger.LogInformation($"核销应收应付单:单号={arap.ARAPNo},类型={((ReceivePaymentType)arap.ReceivePaymentType)},核销金额={writeOffAmount:N2},核销后余额={arap.LocalBalanceAmount:N2},状态={((ARAPStatus)arap.ARAPStatus)}");
                 }
 
                 // 更新对账单状态为已结清
@@ -902,7 +945,6 @@ namespace RUINORERP.Business
 
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = statement;
-
 
                 return rmrs;
             }

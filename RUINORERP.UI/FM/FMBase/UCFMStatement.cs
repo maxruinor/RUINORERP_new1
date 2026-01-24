@@ -83,7 +83,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-  
+
         #region 红蓝单对冲核销
 
         ToolStripButton toolStripButton红蓝单对冲核销 = new System.Windows.Forms.ToolStripButton();
@@ -165,7 +165,7 @@ namespace RUINORERP.UI.FM
 
             decimal positiveTotal = positiveDetails.Sum(d => d.IncludedLocalAmount);
             decimal negativeTotal = negativeDetails.Sum(d => d.IncludedLocalAmount);
-            if (positiveTotal !=negativeTotal)
+            if (Math.Abs(positiveTotal) != Math.Abs(negativeTotal))
             {
                 MessageBox.Show("红蓝单对冲核销必须正负金额相等。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;

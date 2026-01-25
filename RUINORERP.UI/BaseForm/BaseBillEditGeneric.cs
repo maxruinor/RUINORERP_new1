@@ -3265,14 +3265,8 @@ namespace RUINORERP.UI.BaseForm
 
                 }
             }
-
         }
-
-        /// <summary>
-        /// 检查并锁定单据
-        /// </summary>
-        /// <returns>锁定是否成功</returns>
-
+ 
 
         /// <summary>
         /// 解锁单据
@@ -3465,11 +3459,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-
-
-
-
-
+ 
 
 
         /// <summary>
@@ -3551,7 +3541,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else
                         {
-                            MainForm.Instance.LoginWebServer();
+                          await  MainForm.Instance.LoginWebServer();
                         }
                     }
 
@@ -3560,7 +3550,7 @@ namespace RUINORERP.UI.BaseForm
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    await MainForm.Instance.auditLogHelper.CreateAuditLog<T>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -4265,8 +4255,6 @@ namespace RUINORERP.UI.BaseForm
         {
             if (frm.ShowDialog() == DialogResult.OK)
             {
-                //保存属性
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("属性", EditEntity);
             }
             base.Property();
         }
@@ -5140,11 +5128,8 @@ namespace RUINORERP.UI.BaseForm
                 NewEditEntity = EditEntity.DeepCloneByjson();
                 //复制性新增 时  PK要清空，单据编号类的,还有他的关联性子集
 
-
                 // 获取忽略属性配置
                 var ignoreConfig = ConfigureIgnoreProperties();
-
-
 
                 // 重置需要忽略的属性
                 ResetIgnoredProperties(NewEditEntity, ignoreConfig);
@@ -5566,8 +5551,6 @@ namespace RUINORERP.UI.BaseForm
                     ReflectionHelper.SetPropertyValue(entity, typeof(ActionStatus).Name, (int)ActionStatus.加载);
                 }
 
-
-
                 MainForm.Instance.uclog.AddLog("更新式保存成功");
                 MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("更新式保存成功", rmr.ReturnObject);
             }
@@ -5787,11 +5770,6 @@ namespace RUINORERP.UI.BaseForm
                 return (false, true, null);
             }
         }
-
-        /// <summary>
-        /// 禁用重要操作按钮
-        /// 当单据被其他用户锁定时，限制用户执行重要操作
-
 
         /// <summary>
         /// 更新锁定UI显示（优化版）
@@ -6434,85 +6412,6 @@ namespace RUINORERP.UI.BaseForm
             await Task.CompletedTask;
             return true;
         }
-
-
-        /// <summary>提交单据</summary>
-        protected async Task<bool> Submit<TStatus>(TStatus targetStatus)
-            where TStatus : Enum
-        {
-            if (EditEntity == null) return false;
-
-            StateTransitionResult stateTransitionResult = await StateManager.ValidateActionTransitionAsync(EditEntity, MenuItemEnums.提交);
-            if (!stateTransitionResult.IsSuccess)
-            {
-                MessageBox.Show($"提交失败: {stateTransitionResult.ErrorMessage}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            // 回退到旧的状态管理系统
-            // 获取当前状态
-            var statusProperty = typeof(TStatus).Name;
-            var currentStatus = (TStatus)Enum.ToObject(
-                typeof(TStatus),
-                EditEntity.GetPropertyValue(statusProperty)
-            );
-
-            // 验证状态转换
-            try
-            {
-                var transitionResult = EditEntity.StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, targetStatus);
-                if (!transitionResult.IsSuccess)
-                {
-                    MainForm.Instance.uclog.AddLog($"提交失败: {transitionResult.ErrorMessage}");
-                    return false;
-                }
-            }
-            catch (InvalidOperationException ex)
-            {
-                MainForm.Instance.uclog.AddLog($"提交失败: {ex.Message}");
-                return false;
-            }
-
-            if (!EditEntity.StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.提交).CanExecute)
-            {
-                MainForm.Instance.uclog.AddLog("单据非草稿状态，提交失败");
-                toolStripbtnSubmit.Enabled = false;
-                return false;
-            }
-
-
-            // 保存实体
-            var ctr = Startup.GetFromFacByName<BaseController<T>>($"{typeof(T).Name}Controller");
-            ReturnResults<T> result = await ctr.SubmitAsync(EditEntity, true);
-            if (result.Succeeded)
-            {
-                if (EditEntity is BaseEntity baseEntity)
-                {
-                    baseEntity.AcceptChanges();
-                }
-                MainForm.Instance.uclog.AddLog("提交成功");
-                // await ToolBarEnabledControl(EditEntity);
-
-                //// 记录审计日志
-                //MainForm.Instance.AuditLogHelper.CreateAuditLog<T>(
-                //    "提交",
-                //    result.ReturnObject,
-                //    $"状态变更: {EditEntity.StatusContext?.CurrentStatus} → {targetStatus}"
-                //);
-
-                return true;
-            }
-            else
-            {
-                //单据保存后再提交
-                MessageBox.Show("提交失败，请重试;或联系管理员。\r\n 错误信息：" + result.ErrorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            MainForm.Instance.uclog.AddLog($"提交失败: {result.ErrorMsg}", UILogType.错误);
-            return false;
-        }
-
 
         /// <summary>
         /// 优化后的查询条件
@@ -7232,7 +7131,6 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 // 单据都会有 录入表格 SourceGridHelper 在 Grid_HandleDestroyed 中执行了。这样就不管关闭还是x
-
                 #region  关闭时解锁
                 try
                 {

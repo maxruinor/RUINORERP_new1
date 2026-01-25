@@ -3905,6 +3905,12 @@ namespace RUINORERP.UI.BaseForm
                 "Approver_at"
             };
 
+            // 保存原始状态，用于失败时恢复
+            object originalStatus = null;
+            if (StateManager != null && EditEntity is BaseEntity)
+            {
+                originalStatus = StateManager.GetBusinessStatus(EditEntity as BaseEntity);
+            }
 
             ApprovalEntity ae = new ApprovalEntity();
             if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
@@ -3916,6 +3922,18 @@ namespace RUINORERP.UI.BaseForm
                     )
                 {
                     MainForm.Instance.uclog.AddLog("【未审核】或【驳回】的单据才能再次审核。");
+                    return reviewResult;
+                }
+            }
+
+            // 使用StateManager进行二次验证，防止并发操作
+            if (StateManager != null && EditEntity is BaseEntity)
+            {
+                var (canExecute, message) = StateManager.CanExecuteActionWithMessage(EditEntity as BaseEntity, MenuItemEnums.审核);
+                if (!canExecute)
+                {
+                    MainForm.Instance.uclog.AddLog(message);
+                    MessageBox.Show($"审核失败: {message}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return reviewResult;
                 }
             }
@@ -3967,6 +3985,15 @@ namespace RUINORERP.UI.BaseForm
                     //CloneHelper.SetValues<T>(EditEntity, oldobj);
                     // 只恢复指定的字段
                     RestoreSpecificFields(EditEntity, originalFieldValues);
+                    // 恢复原始状态
+                    if (StateManager != null && EditEntity is BaseEntity && originalStatus != null)
+                    {
+                        var statusType = StateManager.GetStatusType(EditEntity as BaseEntity);
+                        if (statusType != null)
+                        {
+                            ReflectionHelper.SetPropertyValue(EditEntity, statusType.Name, originalStatus);
+                        }
+                    }
                 };
 
                 if (ae.ApprovalResults == false)
@@ -4038,10 +4065,17 @@ namespace RUINORERP.UI.BaseForm
                 rmr = await ctr.ApprovalAsync(EditEntity);
                 if (rmr.Succeeded)
                 {
-                    reviewResult.Succeeded = rmr.Succeeded;
-                    var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+                    // 业务处理成功后，才更新状态为"确认"
+                    if (StateManager != null && EditEntity is BaseEntity)
+                    {
+                        await StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity as BaseEntity, DataStatus.确认);
+                    }
+                    else if (ReflectionHelper.ExistPropertyName<T>(nameof(DataStatus)))
+                    {
+                        EditEntity.SetPropertyValue(nameof(DataStatus), (int)DataStatus.确认);
+                    }
 
-                    string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
+                    reviewResult.Succeeded = true;
 
                     // 统一状态同步 - 审核操作
                     var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
@@ -4325,6 +4359,13 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
+            // 保存原始状态，用于失败时恢复
+            object originalStatus = null;
+            if (StateManager != null && EditEntity is BaseEntity)
+            {
+                originalStatus = StateManager.GetBusinessStatus(EditEntity as BaseEntity);
+            }
+
             //使用StateManager检查是否可以反审
             var (canReReview, reReviewMessage) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.反审);
             if (!canReReview)
@@ -4354,6 +4395,15 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //Undo操作会执行到的代码 意思是如果取消反审，内存中反审核的数据要变为空白（之前的样子）
                     CloneHelper.SetValues<T>(EditEntity, oldobj);
+                    // 恢复原始状态
+                    if (StateManager != null && EditEntity is BaseEntity && originalStatus != null)
+                    {
+                        var statusType = StateManager.GetStatusType(EditEntity as BaseEntity);
+                        if (statusType != null)
+                        {
+                            ReflectionHelper.SetPropertyValue(EditEntity, statusType.Name, originalStatus);
+                        }
+                    }
                 };
 
                 ReturnResults<T> rmr = new ReturnResults<T>();
@@ -4409,7 +4459,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    //审核失败 要恢复之前的值
+                    //审核失败 要恢复之前的值（包括状态）
                     command.Undo();
                     rs = false;
                     await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("反审失败", EditEntity, $"反审原因{ae.ApprovalOpinions},{rmr.ErrorMsg}");

@@ -214,7 +214,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 集成式锁管理服务 v2.0.0
-        /// 推荐使用新的集成式服务，提供心跳集成、智能缓存和异常恢复功能
+        /// 推荐使用新的集成式服务、智能缓存和异常恢复功能
         /// </summary>
         private ClientLockManagementService _integratedLockService;
         private CancellationTokenSource _lockRefreshTokenSource;

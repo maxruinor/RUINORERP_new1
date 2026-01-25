@@ -1072,6 +1072,7 @@
     <Compile Include="BaseForm\BaseBillEditGeneric.Designer.cs">
       <DependentUpon>BaseBillEditGeneric.cs</DependentUpon>
     </Compile>
+    <Compile Include="BaseForm\BillLockHelper.cs" />
     <Compile Include="BaseForm\BaseBillQuery.cs">
       <SubType>UserControl</SubType>
     </Compile>

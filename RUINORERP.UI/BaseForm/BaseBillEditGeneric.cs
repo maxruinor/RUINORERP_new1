@@ -715,36 +715,6 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 检查操作可执行性 - 使用UIControlRules统一管理
-        /// </summary>
-        /// <param name="action">操作类型</param>
-        /// <param name="entity">实体对象</param>
-        /// <returns>是否可执行</returns>
-        protected virtual bool CanExecuteAction(MenuItemEnums action, T entity)
-        {
-            if (entity == null)
-                return false;
-            try
-            {
-                // 遵循终态不可修改原则：如果是终态，所有修改操作都不允许
-                if (StateManager.IsFinalStatus(entity))
-                {
-                    // 终态只允许查询和打印等只读操作
-                    return action == MenuItemEnums.查询 || action == MenuItemEnums.打印 || action == MenuItemEnums.导出;
-                }
-
-                // 其他操作直接使用StateManager检查
-                return StateManager?.CanExecuteActionWithMessage(entity, action).CanExecute ?? false;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "检查操作可执行性失败: {Action}, {Error}", action, ex.Message);
-                return false; // 出错时默认不允许操作
-            }
-
-        }
-
-        /// <summary>
         /// 将操作转换为按钮名称 - 统一的转换方法
         /// </summary>
         /// <param name="action">操作类型</param>
@@ -2890,9 +2860,13 @@ namespace RUINORERP.UI.BaseForm
                         return;
                     }
 
-                    if (!CanExecuteAction(menuItem, EditEntity))
+                    // 使用状态管理架构检查提交权限
+                    var canSubmit = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                    if (canSubmit == null || !canSubmit.Value.CanExecute)
                     {
-                        MainForm.Instance.uclog.AddLog($"当前状态下无法提交单据");
+                        var message = canSubmit?.Message ?? "无法检查提交权限";
+                        MainForm.Instance.uclog.AddLog($"当前状态下无法提交单据：{message}");
+                        return;
                     }
 
                     try
@@ -5908,7 +5882,6 @@ namespace RUINORERP.UI.BaseForm
                     if (ReflectionHelper.ExistPropertyName<T>(typeof(DataStatus).Name))
                     {
                         await StateManager.SetBusinessStatusAsync<DataStatus>(editEntity, DataStatus.草稿, "保存时将新建状态重置为草稿");
-                        //ReflectionHelper.SetPropertyValue(EditEntity, typeof(DataStatus).Name, (int)DataStatus.草稿);
                     }
                 }
             }
@@ -6473,11 +6446,6 @@ namespace RUINORERP.UI.BaseForm
                     if (rs)
                     {
                         MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("删除", editEntity);
-                        if (MainForm.Instance.AppContext.SysConfig.IsDebug)
-                        {
-                            //MainForm.Instance.logger.Debug($"单据显示中删除:{typeof(T).Name}，主键值：{PKValue.ToString()} "); //如果要生效 要将配置文件中 <add key="log4net.Internal.Debug" value="true " /> 也许是：logn4net.config <log4net debug="false"> 改为true
-                        }
-
                         bindingSourceSub.Clear();
 
                         //删除远程图片及本地图片
@@ -6498,7 +6466,6 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    //
                     MainForm.Instance.uclog.AddLog("提示", "已【确认】【审核】的生效单据无法删除");
                 }
             }

@@ -89,7 +89,7 @@ namespace RUINORERP.UI
             // btncancel
             // 
             this.btncancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btncancel.Location = new System.Drawing.Point(264, 236);
+            this.btncancel.Location = new System.Drawing.Point(286, 241);
             this.btncancel.Name = "btncancel";
             this.btncancel.Size = new System.Drawing.Size(73, 35);
             this.btncancel.TabIndex = 11;
@@ -98,7 +98,7 @@ namespace RUINORERP.UI
             // 
             // btnok
             // 
-            this.btnok.Location = new System.Drawing.Point(159, 236);
+            this.btnok.Location = new System.Drawing.Point(181, 241);
             this.btnok.Name = "btnok";
             this.btnok.Size = new System.Drawing.Size(73, 35);
             this.btnok.TabIndex = 10;
@@ -112,7 +112,7 @@ namespace RUINORERP.UI
             this.txtPassWord.Location = new System.Drawing.Point(157, 148);
             this.txtPassWord.Name = "txtPassWord";
             this.txtPassWord.PasswordChar = '*';
-            this.txtPassWord.Size = new System.Drawing.Size(178, 21);
+            this.txtPassWord.Size = new System.Drawing.Size(208, 21);
             this.txtPassWord.TabIndex = 8;
             this.txtPassWord.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtPassWord_KeyPress);
             // 
@@ -124,7 +124,7 @@ namespace RUINORERP.UI
             this.txtUserName.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
             this.txtUserName.Location = new System.Drawing.Point(157, 110);
             this.txtUserName.Name = "txtUserName";
-            this.txtUserName.Size = new System.Drawing.Size(178, 21);
+            this.txtUserName.Size = new System.Drawing.Size(208, 21);
             this.txtUserName.TabIndex = 7;
             this.txtUserName.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.txtUserName_KeyPress);
             // 
@@ -137,7 +137,7 @@ namespace RUINORERP.UI
             // 
             this.pictureBox1.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(52, -3);
+            this.pictureBox1.Location = new System.Drawing.Point(74, 1);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(360, 103);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -177,7 +177,7 @@ namespace RUINORERP.UI
             // chkSelectServer
             // 
             this.chkSelectServer.AutoSize = true;
-            this.chkSelectServer.Location = new System.Drawing.Point(365, 308);
+            this.chkSelectServer.Location = new System.Drawing.Point(371, 308);
             this.chkSelectServer.Name = "chkSelectServer";
             this.chkSelectServer.Size = new System.Drawing.Size(84, 16);
             this.chkSelectServer.TabIndex = 18;
@@ -235,7 +235,7 @@ namespace RUINORERP.UI
             this.gbIPPort.Controls.Add(this.lblPort);
             this.gbIPPort.Controls.Add(this.txtServerIP);
             this.gbIPPort.Controls.Add(this.lblIP);
-            this.gbIPPort.Location = new System.Drawing.Point(43, 285);
+            this.gbIPPort.Location = new System.Drawing.Point(49, 285);
             this.gbIPPort.Name = "gbIPPort";
             this.gbIPPort.Size = new System.Drawing.Size(316, 49);
             this.gbIPPort.TabIndex = 25;
@@ -253,7 +253,7 @@ namespace RUINORERP.UI
             this.panelAnnouncement.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panelAnnouncement.Location = new System.Drawing.Point(0, 351);
             this.panelAnnouncement.Name = "panelAnnouncement";
-            this.panelAnnouncement.Size = new System.Drawing.Size(476, 54);
+            this.panelAnnouncement.Size = new System.Drawing.Size(532, 54);
             this.panelAnnouncement.TabIndex = 26;
             this.panelAnnouncement.Visible = false;
             // 
@@ -265,7 +265,7 @@ namespace RUINORERP.UI
             this.btnCloseAnnouncement.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnCloseAnnouncement.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.btnCloseAnnouncement.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
-            this.btnCloseAnnouncement.Location = new System.Drawing.Point(451, 2);
+            this.btnCloseAnnouncement.Location = new System.Drawing.Point(507, 2);
             this.btnCloseAnnouncement.Name = "btnCloseAnnouncement";
             this.btnCloseAnnouncement.Size = new System.Drawing.Size(20, 20);
             this.btnCloseAnnouncement.TabIndex = 2;
@@ -292,7 +292,7 @@ namespace RUINORERP.UI
             this.lblAnnouncementTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(139)))), ((int)(((byte)(69)))), ((int)(((byte)(19)))));
             this.lblAnnouncementTitle.Location = new System.Drawing.Point(8, 8);
             this.lblAnnouncementTitle.Name = "lblAnnouncementTitle";
-            this.lblAnnouncementTitle.Size = new System.Drawing.Size(77, 12);
+            this.lblAnnouncementTitle.Size = new System.Drawing.Size(25, 12);
             this.lblAnnouncementTitle.TabIndex = 0;
             this.lblAnnouncementTitle.Text = "📢 ";
             // 
@@ -302,7 +302,7 @@ namespace RUINORERP.UI
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
             this.CancelButton = this.btncancel;
-            this.ClientSize = new System.Drawing.Size(476, 405);
+            this.ClientSize = new System.Drawing.Size(532, 405);
             this.ControlBox = false;
             this.Controls.Add(this.panelAnnouncement);
             this.Controls.Add(this.gbIPPort);

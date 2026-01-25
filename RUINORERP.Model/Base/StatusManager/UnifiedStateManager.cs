@@ -666,6 +666,21 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 return (false, "实体不能为空");
 
+            // 遵循终态不可修改原则：如果是终态，所有修改操作都不允许
+            if (IsFinalStatus(entity))
+            {
+                // 终态只允许查询和打印等只读操作
+                var readonlyActions = new[] { MenuItemEnums.查询, MenuItemEnums.打印, MenuItemEnums.导出 };
+                if (readonlyActions.Contains(action))
+                {
+                    return (true, $"终态的单据可以执行{action}操作");
+                }
+                else
+                {
+                    return (false, $"单据已达到终态，不允许执行{action}操作");
+                }
+            }
+
             // 获取状态类型和当前状态
             var statusType = GetStatusType(entity);
             var currentStatus = GetBusinessStatus(entity, statusType);

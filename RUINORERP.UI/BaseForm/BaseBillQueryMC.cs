@@ -1360,14 +1360,14 @@ namespace RUINORERP.UI.BaseForm
 
                 if (rmr.Succeeded)
                 {
-                    // 业务处理成功后，才更新状态为"确认"
+                    // 业务处理成功后，使用状态管理架构自动设置状态为"确认"
                     if (StateManager != null && EditEntity is BaseEntity)
                     {
-                        await StateManager.SetBusinessStatusAsync<DataStatus>(EditEntity as BaseEntity, DataStatus.确认);
-                    }
-                    else
-                    {
-                        EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.确认);
+                        var statusResult = await StateManager.SetStatusByActionAsync(EditEntity as BaseEntity, MenuItemEnums.审核, "审核通过");
+                        if (!statusResult.IsSuccess)
+                        {
+                            MainForm.Instance.logger.LogError($"审核状态设置失败: {statusResult.ErrorMessage}");
+                        }
                     }
 
                     //ToolBarEnabledControl(MenuItemEnums.反审);

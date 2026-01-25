@@ -589,7 +589,8 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
-            bool result = await Submit(PrePaymentStatus.待审核);
+            // 使用基类无参数的Submit方法,由状态管理架构自动处理状态转换
+            bool result = await base.Submit();
             if (result)
             {
                 UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
@@ -599,7 +600,7 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
                 }
             }
-            return true;
+            return result;
         }
 
 

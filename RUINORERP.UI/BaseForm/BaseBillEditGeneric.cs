@@ -346,84 +346,104 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 更新状态显示
         /// </summary>
+        /// <summary>
+        /// 更新状态显示 (优化版 - V2.0)
+        /// 统一使用StateManager获取状态信息,提高代码一致性和可维护性
+        /// </summary>
+        /// <param name="entity">实体对象</param>
         protected virtual void UpdateStateDisplay(BaseEntity entity)
         {
-            if (entity == null) return;
+            if (entity == null || StateManager == null) return;
 
             try
             {
-                // 使用V3状态管理系统获取当前状态描述
-                if (entity is BaseEntity baseEntity)
-                {
-                    // 获取状态描述
-                    string statusDesc = string.Empty;
-                    // GetCurrentStatusDescription();
-                    var currentStatus = entity.GetCurrentStatus();
-                    statusDesc = currentStatus.GetDescription();
-                    // 更新状态标签（如果存在）
-                    var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as KryptonLabel;
-                    if (lblDataStatus != null && !string.IsNullOrEmpty(statusDesc))
-                    {
-                        //因为具体的子类中绑定了Text显示的值是枚举值，不是描述
-                        //                        lblDataStatus.Text = statusDesc;
-                        lblDataStatus.Text = currentStatus.ToString();
-                    }
+                // 统一使用StateManager获取状态信息
+                var statusType = StateManager.GetStatusType(entity);
+                var currentStatus = StateManager.GetBusinessStatus(entity);
 
-                    // 更新审核状态显示
-                    if (entity.ContainsProperty(nameof(ApprovalStatus)))
-                    {
-                        try
-                        {
-                            var approvalStatus = EditEntity.GetPropertyValue(nameof(ApprovalStatus));
-                            if (approvalStatus != null)
-                            {
-                                var lblReview = this.Controls.Find("lblReview", true).FirstOrDefault() as KryptonLabel;
-                                if (lblReview != null)
-                                {
-                                    // 安全转换审核状态，如果转换失败则显示默认值
-                                    if (Enum.IsDefined(typeof(ApprovalStatus), approvalStatus))
-                                    {
-                                        lblReview.Text = ((ApprovalStatus)approvalStatus).ToString();
-                                    }
-                                    else if (approvalStatus is string statusStr && Enum.TryParse<ApprovalStatus>(statusStr, out var parsedStatus))
-                                    {
-                                        lblReview.Text = parsedStatus.ToString();
-                                    }
-                                    else
-                                    {
-                                        lblReview.Text = approvalStatus.ToString();
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger?.LogError(ex, "更新审核状态显示失败: {ex.Message}", ex);
-                        }
-                    }
-                }
+                if (currentStatus == null) return;
+
+                // 1. 更新数据状态标签
+                UpdateDataStatusLabel(entity, currentStatus, statusType);
+
+                // 2. 更新审核状态标签
+                UpdateApprovalStatusLabel(entity);
+
+                // 3. 更新状态栏标签
+                UpdateStatusLabel(currentStatus, statusType);
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新状态显示失败");
             }
+        }
 
+        /// <summary>
+        /// 更新数据状态标签(lblDataStatus)
+        /// </summary>
+        private void UpdateDataStatusLabel(BaseEntity entity, Enum currentStatus, Type statusType)
+        {
+            var lblDataStatus = this.Controls.Find("lblDataStatus", true).FirstOrDefault() as KryptonLabel;
+            if (lblDataStatus != null)
+            {
+                // 直接显示状态值
+                lblDataStatus.Text = currentStatus.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 更新审核状态标签(lblReview)
+        /// </summary>
+        private void UpdateApprovalStatusLabel(BaseEntity entity)
+        {
+            if (!entity.ContainsProperty(nameof(ApprovalStatus))) return;
 
             try
             {
-                // 尝试查找并更新状态标签
-                var statusLabel = this.Controls.Find("lblStatus", true).FirstOrDefault() as KryptonLabel;
-                var currentStatus = StateManager.GetBusinessStatus(entity);
-                var statusType = StateManager.GetStatusType(entity);
-                if (statusLabel != null && statusType.Name == nameof(DataStatus))
+                var approvalStatus = entity.GetPropertyValue(nameof(ApprovalStatus));
+                if (approvalStatus == null) return;
+
+                var lblReview = this.Controls.Find("lblReview", true).FirstOrDefault() as KryptonLabel;
+                if (lblReview == null) return;
+
+                // 安全转换审核状态
+                if (Enum.IsDefined(typeof(ApprovalStatus), approvalStatus))
                 {
-                    // 使用Description属性获取显示名称，因为DataStatus没有GetDisplayName方法
-                    var fieldInfo = typeof(DataStatus).GetField(currentStatus.ToString());
-                    var descriptionAttribute = Attribute.GetCustomAttribute(fieldInfo, typeof(DescriptionAttribute)) as DescriptionAttribute;
-                    string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
-                    statusLabel.Text = $"状态: {displayName}";
-                    //statusLabel.ForeColor = GetStatusColor(currentStatus);
+                    lblReview.Text = ((ApprovalStatus)approvalStatus).ToString();
                 }
+                else if (approvalStatus is string statusStr && Enum.TryParse<ApprovalStatus>(statusStr, out var parsedStatus))
+                {
+                    lblReview.Text = parsedStatus.ToString();
+                }
+                else
+                {
+                    lblReview.Text = approvalStatus.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新审核状态显示失败");
+            }
+        }
+
+        /// <summary>
+        /// 更新状态栏标签(lblStatus)
+        /// </summary>
+        private void UpdateStatusLabel(Enum currentStatus, Type statusType)
+        {
+            if (statusType.Name != nameof(DataStatus)) return;
+
+            var statusLabel = this.Controls.Find("lblStatus", true).FirstOrDefault() as KryptonLabel;
+            if (statusLabel == null) return;
+
+            try
+            {
+                // 获取描述
+                var fieldInfo = statusType.GetField(currentStatus.ToString());
+                var descriptionAttribute = fieldInfo?.GetCustomAttribute<DescriptionAttribute>();
+                string displayName = descriptionAttribute?.Description ?? currentStatus.ToString();
+
+                statusLabel.Text = $"状态: {displayName}";
             }
             catch (Exception ex)
             {
@@ -434,8 +454,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 统一更新所有UI状态（优化版）
-        /// 简化状态获取和更新逻辑，提升性能
+        /// 统一更新所有UI状态 (优化版 - V2.0)
+        /// 简化状态获取和更新逻辑,充分利用StateManager
         /// </summary>
         /// <param name="entity">实体对象</param>
         public override void UpdateAllUIStates(BaseEntity entity)
@@ -446,28 +466,26 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 _isUpdatingUIStates = true;
-                // 暂停布局更新，减少闪烁
+
+                // 暂停布局更新,减少闪烁
                 this.SuspendLayout();
-                var CurrentStatusType = StateManager.GetStatusType(entity);
-                // 优化版：直接从状态管理器获取当前状态
-                var currentStatus = StateManager.GetBusinessStatus(entity);
-                if (currentStatus == null) return; // 如果状态获取失败，提前退出
 
                 // 1. 统一更新所有按钮状态 - 优先处理
-                UpdateAllButtonStates(currentStatus, CurrentStatusType);
+                UpdateAllButtonStates(entity);
 
-                // 3. 更新状态显示
+                // 2. 更新状态显示
                 UpdateStateDisplay(entity);
-                // 4. 更新打印状态显示
+
+                // 3. 更新打印状态显示
                 UpdatePrintStatusDisplay(entity);
 
-                //6.权限控制
+                // 4. 权限控制
                 if (CurMenuInfo != null)
                 {
                     UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
                 }
 
-                //7.字段显示权限控制
+                // 5. 字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
             }
             catch (Exception ex)
@@ -479,6 +497,35 @@ namespace RUINORERP.UI.BaseForm
                 // 恢复布局更新
                 this.ResumeLayout();
                 _isUpdatingUIStates = false;
+            }
+        }
+
+        /// <summary>
+        /// 内部方法: 更新所有按钮状态
+        /// </summary>
+        private void UpdateAllButtonStates(BaseEntity entity)
+        {
+            if (entity == null || StateManager == null) return;
+
+            try
+            {
+                var statusType = StateManager.GetStatusType(entity);
+                var currentStatus = StateManager.GetBusinessStatus(entity);
+
+                if (currentStatus == null) return;
+
+                // 直接获取UI控件状态
+                var buttonStates = StateManager.GetUIControlStates(entity);
+                if (buttonStates == null || buttonStates.Count == 0) return;
+
+                // 批量更新按钮状态
+                UpdateToolStripButtons(buttonStates);
+                // UpdateContextMenuButtons(buttonStates); // 暂时注释,等待BaseContextMenu和FindContextMenuItemByName方法实现
+                UpdateOtherControls(buttonStates);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新按钮状态失败");
             }
         }
 
@@ -500,7 +547,8 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 更新按钮状态 - 简化版，直接在一个方法中处理所有逻辑
+        /// 更新按钮状态 (优化版 - V2.0)
+        /// 统一使用StateManager获取按钮状态,简化代码逻辑
         /// </summary>
         /// <param name="currentStatus">当前状态</param>
         /// <param name="CurrentStatusType">当前状态类型</param>
@@ -515,55 +563,102 @@ namespace RUINORERP.UI.BaseForm
                 // 直接从StateManager获取所有按钮状态
                 var buttonStates = StateManager.GetUIControlStates(entity);
 
-                // 直接更新按钮状态
+                // 快速更新按钮状态
                 if (buttonStates != null && buttonStates.Count > 0)
                 {
-                    foreach (var buttonState in buttonStates)
-                    {
-                        var buttonName = buttonState.Key;
-                        var enabled = buttonState.Value;
-
-                        try
-                        {
-                            // 查找控件并更新状态
-                            var control = this.Controls.Find(buttonName, true).FirstOrDefault();
-                            if (control != null)
-                            {
-                                control.Enabled = enabled;
-                                continue;
-                            }
-
-                            // 查找ToolStripButton控件
-                            var toolStripButton = FindToolStripButtonByName(buttonName);
-                            if (toolStripButton != null)
-                            {
-                                toolStripButton.Enabled = enabled;
-                                continue;
-                            }
-
-                            // 使用反射获取按钮字段并更新状态
-                            var buttonField = this.GetType().GetField(buttonName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                            if (buttonField != null)
-                            {
-                                var button = buttonField.GetValue(this);
-                                if (button != null)
-                                {
-                                    var enabledProperty = button.GetType().GetProperty("Enabled");
-                                    enabledProperty?.SetValue(button, enabled);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            logger?.LogError(ex, "更新按钮状态失败: {ButtonName}", buttonName);
-                        }
-                    }
+                    UpdateToolStripButtons(buttonStates);
+                    // UpdateContextMenuButtons(buttonStates); // 暂时注释,等待BaseContextMenu和FindContextMenuItemByName方法实现
+                    UpdateOtherControls(buttonStates);
                 }
             }
             catch (Exception ex)
             {
                 logger?.LogError(ex, "更新按钮状态失败: {Message}", ex.Message);
                 DisableAllButtons();
+            }
+        }
+
+        /// <summary>
+        /// 批量更新工具栏按钮状态
+        /// </summary>
+        private void UpdateToolStripButtons(Dictionary<string, bool> buttonStates)
+        {
+            if (this.BaseToolStrip == null) return;
+
+            foreach (var kvp in buttonStates)
+            {
+                try
+                {
+                    var button = FindToolStripButtonByName(kvp.Key);
+                    if (button != null)
+                    {
+                        button.Enabled = kvp.Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "更新工具栏按钮失败: {ButtonName}", kvp.Key);
+                }
+            }
+        }
+
+        // /// <summary>
+        // /// 批量更新上下文菜单按钮状态
+        // /// </summary>
+        // private void UpdateContextMenuButtons(Dictionary<string, bool> buttonStates)
+        // {
+        //     if (this.BaseContextMenu == null) return;
+        //
+        //     foreach (var kvp in buttonStates)
+        //     {
+        //         try
+        //         {
+        //             var menuItem = FindContextMenuItemByName(kvp.Key);
+        //             if (menuItem != null)
+        //             {
+        //                 menuItem.Enabled = kvp.Value;
+        //             }
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             logger?.LogError(ex, "更新上下文菜单按钮失败: {ButtonName}", kvp.Key);
+        //         }
+        //     }
+        // }
+
+        /// <summary>
+        /// 更新其他控件状态
+        /// </summary>
+        private void UpdateOtherControls(Dictionary<string, bool> buttonStates)
+        {
+            foreach (var kvp in buttonStates)
+            {
+                try
+                {
+                    // 查找控件并更新状态
+                    var control = this.Controls.Find(kvp.Key, true).FirstOrDefault();
+                    if (control != null)
+                    {
+                        control.Enabled = kvp.Value;
+                        continue;
+                    }
+
+                    // 使用反射获取按钮字段并更新状态
+                    var buttonField = this.GetType().GetField(kvp.Key, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                    if (buttonField != null)
+                    {
+                        var button = buttonField.GetValue(this);
+                        if (button != null)
+                        {
+                            var enabledProperty = button.GetType().GetProperty("Enabled");
+                            enabledProperty?.SetValue(button, kvp.Value);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogError(ex, "更新控件状态失败: {ButtonName}", kvp.Key);
+                }
             }
         }
 

@@ -240,6 +240,16 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否允许修改</returns>
         bool AllowModifyAfterSubmit(bool isSubmittedStatus);
 
+        /// <summary>
+        /// 处理审核驳回操作
+        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿，财务状态转为草稿）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="reason">驳回原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        Task<StateTransitionResult> HandleApprovalRejectAsync(BaseEntity entity, string reason = null, string userId = null);
+
 
     }
 }

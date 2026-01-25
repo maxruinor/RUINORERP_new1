@@ -495,6 +495,24 @@ namespace RUINORERP.UI.BaseForm
                     }
                     try
                     {
+                        // 批量操作状态验证
+                        var (canSubmit, validEntities) = await ValidateBatchOperationAsync(
+                            selectlist,
+                            MenuItemEnums.提交,
+                            StateManager,
+                            BatchOperationOption.RequireAllValid);
+
+                        if (!canSubmit)
+                        {
+                            break;
+                        }
+
+                        // 更新selectlist为有效的实体列表
+                        if (validEntities.Count != selectlist.Count)
+                        {
+                            selectlist = validEntities;
+                        }
+
                         Submit();
                         // 添加同步代码
                         await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
@@ -515,6 +533,24 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
+                        // 批量操作状态验证
+                        var (canReview, validEntities) = await ValidateBatchOperationAsync(
+                            selectlist,
+                            MenuItemEnums.审核,
+                            StateManager,
+                            BatchOperationOption.RequireAllValid);
+
+                        if (!canReview)
+                        {
+                            break;
+                        }
+
+                        // 更新selectlist为有效的实体列表
+                        if (validEntities.Count != selectlist.Count)
+                        {
+                            selectlist = validEntities;
+                        }
+
                         var btnReview = FindToolStripButtonByName("审核");
                         if (btnReview != null)
                         {
@@ -541,6 +577,18 @@ namespace RUINORERP.UI.BaseForm
                 case MenuItemEnums.反审:
                     if (selectlist.Count > 0)
                     {
+                        // 批量操作状态验证（反审只支持单行，但为了统一验证逻辑仍进行验证）
+                        var (canReReview, validEntities) = await ValidateBatchOperationAsync(
+                            selectlist.Take(1).ToList(),
+                            MenuItemEnums.反审,
+                            StateManager,
+                            BatchOperationOption.RequireAllValid);
+
+                        if (!canReReview)
+                        {
+                            break;
+                        }
+
                         var btnReverseReview = FindToolStripButtonByName("反审");
                         if (btnReverseReview != null)
                         {
@@ -550,9 +598,9 @@ namespace RUINORERP.UI.BaseForm
                         try
                         {
                             //只操作批一行
-                            ApprovalEntity ae = await ReReview(selectlist[0]);
+                            ApprovalEntity ae = await ReReview(validEntities[0] as M);
                             // 添加同步代码
-                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已反审");
+                            await SyncTodoUpdatesToServer(validEntities.Cast<M>().ToList(), TodoUpdateType.StatusChanged, "单据已反审");
                         }
                         finally
                         {
@@ -568,6 +616,24 @@ namespace RUINORERP.UI.BaseForm
                     // List<M> selectlist = GetSelectResult();
                     if (selectlist.Count > 0)
                     {
+                        // 批量操作状态验证
+                        var (canCloseCase, validEntities) = await ValidateBatchOperationAsync(
+                            selectlist,
+                            MenuItemEnums.结案,
+                            StateManager,
+                            BatchOperationOption.RequireAllValid);
+
+                        if (!canCloseCase)
+                        {
+                            break;
+                        }
+
+                        // 更新selectlist为有效的实体列表
+                        if (validEntities.Count != selectlist.Count)
+                        {
+                            selectlist = validEntities;
+                        }
+
                         var btnCloseCase = FindToolStripButtonByName("结案");
                         if (btnCloseCase != null)
                         {
@@ -1212,16 +1278,14 @@ namespace RUINORERP.UI.BaseForm
             {
                 return null;
             }
-            //检查是不是可以正常审核  如果驳回了。就要修改为未审核的情况
-            if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+
+            //使用StateManager检查是否可以审核
+            if (StateManager != null && EditEntity is BaseEntity baseEntity)
             {
-                //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
-                    && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                    )
+                var (canExecute, message) = StateManager.CanExecuteActionWithMessage(baseEntity, MenuItemEnums.审核);
+                if (!canExecute)
                 {
-                    MainForm.Instance.uclog.AddLog("提示", "【未审核】或【驳回】的单据才能审核。");
+                    MainForm.Instance.uclog.AddLog("提示", message);
                     return ae;
                 }
             }
@@ -1277,15 +1341,16 @@ namespace RUINORERP.UI.BaseForm
             }
             else
             {
-                //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                //审核驳回: 使用StateManager统一处理状态转换
                 if (StateManager != null && EditEntity is BaseEntity baseEntity)
                 {
-                    await StateManager.SetBusinessStatusAsync<DataStatus>(baseEntity, DataStatus.新建);
+                    var rejectResult = await StateManager.HandleApprovalRejectAsync(baseEntity, ae.ApprovalOpinions);
+                    if (!rejectResult.IsSuccess)
+                    {
+                        MainForm.Instance.logger.LogError($"审核驳回状态转换失败: {rejectResult.ErrorMessage}");
+                    }
                 }
-                else
-                {
-                    EditEntity.SetPropertyValue(typeof(DataStatus).Name, (int)DataStatus.新建);
-                }
+
                 if (ReflectionHelper.ExistPropertyName<M>("ApprovalOpinions"))
                 {
                     EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
@@ -1372,25 +1437,17 @@ namespace RUINORERP.UI.BaseForm
         {
             if (EditEntity == null)
             {
-
-
                 return null;
             }
             ApprovalEntity ae = new ApprovalEntity();
-            #region 审核状态
-            if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
-            {
-                //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
-                    && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                    )
-                {
 
-                }
-                else
+            //使用StateManager检查是否可以反审
+            if (StateManager != null && EditEntity is BaseEntity baseEntity)
+            {
+                var (canExecute, message) = StateManager.CanExecuteActionWithMessage(baseEntity, MenuItemEnums.反审);
+                if (!canExecute)
                 {
-                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
+                    MainForm.Instance.uclog.AddLog(message);
                     return ae;
                 }
             }
@@ -1450,9 +1507,9 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
+    
             }
             return ae;
-            #endregion
         }
 
 
@@ -3849,5 +3906,305 @@ namespace RUINORERP.UI.BaseForm
 
             return false;
         }
+
+        #region 批量操作状态验证辅助类
+
+        /// <summary>
+        /// 批量操作验证结果
+        /// </summary>
+        public class BatchOperationValidationResult
+        {
+            /// <summary>
+            /// 是否允许执行批量操作
+            /// </summary>
+            public bool CanExecute { get; set; }
+
+            /// <summary>
+            /// 允许操作的单据列表
+            /// </summary>
+            public List<object> ValidEntities { get; set; } = new List<object>();
+
+            /// <summary>
+            /// 不允许操作的单据列表及原因
+            /// </summary>
+            public List<InvalidEntityInfo> InvalidEntities { get; set; } = new List<InvalidEntityInfo>();
+
+            /// <summary>
+            /// 完整的验证消息
+            /// </summary>
+            public string FullMessage { get; set; }
+
+            /// <summary>
+            /// 是否所有单据都允许操作
+            /// </summary>
+            public bool AllValid => InvalidEntities.Count == 0;
+
+            /// <summary>
+            /// 是否没有有效的单据
+            /// </summary>
+            public bool NoValid => ValidEntities.Count == 0;
+
+            /// <summary>
+            /// 生成用户友好的验证消息
+            /// </summary>
+            /// <returns>格式化的消息文本</returns>
+            public string GetUserFriendlyMessage()
+            {
+                if (AllValid)
+                {
+                    return "所有选中的单据都可以执行该操作。";
+                }
+
+                var sb = new StringBuilder();
+
+                if (NoValid)
+                {
+                    sb.AppendLine("没有可以操作的单据：");
+                }
+                else
+                {
+                    sb.AppendLine($"共{ValidEntities.Count + InvalidEntities.Count}个单据，其中{ValidEntities.Count}个可以操作，{InvalidEntities.Count}个不能操作：");
+                }
+
+                // 按原因分组显示
+                var groupedByReason = InvalidEntities
+                    .GroupBy(e => e.Reason)
+                    .OrderByDescending(g => g.Count());
+
+                foreach (var group in groupedByReason)
+                {
+                    sb.AppendLine($"\n【{group.Key}】({group.Count()}个):");
+                    foreach (var entityInfo in group.Take(5)) // 最多显示5个
+                    {
+                        if (entityInfo.Entity != null)
+                        {
+                            var entityTypeInfo = EntityMappingHelper.GetEntityInfoByTableName(entityInfo.Entity.GetType().Name);
+                            sb.AppendLine($"  - {entityTypeInfo.BizType} (编号:{entityInfo.Entity.GetPropertyValue(entityTypeInfo.NoField)})");
+                        }
+                    }
+
+                    if (group.Count() > 5)
+                    {
+                        sb.AppendLine($"  ...还有{group.Count() - 5}个单据");
+                    }
+                }
+
+                if (!NoValid)
+                {
+                    sb.AppendLine($"\n是否继续对{ValidEntities.Count}个有效单据执行操作？");
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 无效实体信息
+        /// </summary>
+        public class InvalidEntityInfo
+        {
+            /// <summary>
+            /// 实体对象
+            /// </summary>
+            public object Entity { get; set; }
+
+            /// <summary>
+            /// 不允许操作的原因
+            /// </summary>
+            public string Reason { get; set; }
+
+            /// <summary>
+            /// 当前状态
+            /// </summary>
+            public object CurrentStatus { get; set; }
+        }
+
+        /// <summary>
+        /// 批量操作验证选项
+        /// </summary>
+        public enum BatchOperationOption
+        {
+            /// <summary>
+            /// 全部通过才允许执行
+            /// </summary>
+            RequireAllValid,
+
+            /// <summary>
+            /// 只要有一个有效就允许执行，提示无效项
+            /// </summary>
+            AllowPartialValid,
+
+            /// <summary>
+            /// 只对有效项执行，自动过滤无效项
+            /// </summary>
+            AutoFilterInvalid
+        }
+
+        /// <summary>
+        /// 批量操作状态验证辅助方法
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="entities">实体列表</param>
+        /// <param name="action">操作类型</param>
+        /// <param name="stateManager">状态管理器</param>
+        /// <param name="option">验证选项</param>
+        /// <returns>是否允许继续执行操作和有效实体列表</returns>
+        protected async Task<(bool CanExecute, List<T> ValidEntities)> ValidateBatchOperationAsync<T>(
+            List<T> entities,
+            MenuItemEnums action,
+            IUnifiedStateManager stateManager,
+            BatchOperationOption option = BatchOperationOption.RequireAllValid) where T : class
+        {
+            if (entities == null || entities.Count == 0)
+            {
+                MessageBox.Show("请先选择要操作的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return (false, new List<T>());
+            }
+
+            if (stateManager == null)
+            {
+                MessageBox.Show("状态管理器未初始化。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return (false, new List<T>());
+            }
+
+            var result = new BatchOperationValidationResult();
+
+            // 验证每个实体
+            foreach (var entity in entities)
+            {
+                if (entity == null)
+                    continue;
+
+                var (canExecute, message) = stateManager.CanExecuteActionWithMessage(entity as BaseEntity, action);
+
+                if (canExecute)
+                {
+                    result.ValidEntities.Add(entity);
+                }
+                else
+                {
+                    result.InvalidEntities.Add(new InvalidEntityInfo
+                    {
+                        Entity = entity,
+                        Reason = message,
+                        CurrentStatus = stateManager.GetBusinessStatus(entity as BaseEntity)
+                    });
+                }
+            }
+
+            // 根据选项决定是否允许执行
+            switch (option)
+            {
+                case BatchOperationOption.RequireAllValid:
+                    result.CanExecute = result.AllValid;
+                    break;
+
+                case BatchOperationOption.AllowPartialValid:
+                    result.CanExecute = !result.NoValid;
+                    break;
+
+                case BatchOperationOption.AutoFilterInvalid:
+                    result.CanExecute = !result.NoValid;
+                    break;
+            }
+
+            result.FullMessage = result.GetUserFriendlyMessage();
+
+            // 显示验证结果对话框
+            var actionName = GetActionDisplayName(action);
+            var dialogResult = ShowValidationDialog(result, actionName);
+
+            if (dialogResult != DialogResult.Yes && dialogResult != DialogResult.OK)
+            {
+                return (false, new List<T>());
+            }
+
+            // 根据选项返回有效实体
+            if (option == BatchOperationOption.AutoFilterInvalid)
+            {
+                // 从验证结果中提取有效实体并转换回原类型
+                var validOriginal = entities
+                    .Where(e => result.ValidEntities.Any(ve => ve == (object)e))
+                    .ToList();
+                return (true, validOriginal);
+            }
+            else
+            {
+                return (true, entities);
+            }
+        }
+
+        /// <summary>
+        /// 显示批量操作验证结果对话框
+        /// </summary>
+        /// <param name="validationResult">验证结果</param>
+        /// <param name="actionName">操作名称</param>
+        /// <returns>用户确认结果</returns>
+        private DialogResult ShowValidationDialog(
+            BatchOperationValidationResult validationResult,
+            string actionName)
+        {
+            if (validationResult.AllValid)
+            {
+                // 全部有效，直接询问是否继续
+                string message = $"共{validationResult.ValidEntities.Count}个单据，是否确定{actionName}？";
+                return MessageBox.Show(
+                    message,
+                    "批量操作确认",
+                    MessageBoxButtons.OKCancel,
+                    MessageBoxIcon.Question);
+            }
+            else if (validationResult.NoValid)
+            {
+                // 全部无效，显示原因
+                MessageBox.Show(
+                    validationResult.FullMessage,
+                    "批量操作验证失败",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return DialogResult.Cancel;
+            }
+            else
+            {
+                // 部分有效，显示详细信息
+                return MessageBox.Show(
+                    validationResult.FullMessage,
+                    $"批量{actionName} - 验证结果",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+            }
+        }
+
+        /// <summary>
+        /// 获取操作显示名称
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>操作显示名称</returns>
+        private string GetActionDisplayName(MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.提交:
+                    return "提交";
+                case MenuItemEnums.审核:
+                    return "审核";
+                case MenuItemEnums.反审:
+                    return "反审核";
+                case MenuItemEnums.结案:
+                    return "结案";
+                case MenuItemEnums.反结案:
+                    return "反结案";
+                case MenuItemEnums.作废:
+                    return "作废";
+                case MenuItemEnums.删除:
+                    return "删除";
+                case MenuItemEnums.修改:
+                    return "修改";
+                default:
+                    return action.ToString();
+            }
+        }
+
+        #endregion
     }
 }

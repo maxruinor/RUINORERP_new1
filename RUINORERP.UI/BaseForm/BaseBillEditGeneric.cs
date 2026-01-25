@@ -546,6 +546,8 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+
+
         /// <summary>
         /// 更新按钮状态 (优化版 - V2.0)
         /// 统一使用StateManager获取按钮状态,简化代码逻辑
@@ -3793,19 +3795,16 @@ namespace RUINORERP.UI.BaseForm
                 {
                     EditEntity.SetPropertyValue("CloseCaseOpinions", frm.txtOpinion.Text);
                 }
-                //已经审核的并且通过的情况才能结案
-                if (ReflectionHelper.ExistPropertyName<T>("DataStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+
+                //使用StateManager检查是否可以结案
+                var (canCloseCase, closeCaseMessage) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.结案);
+                if (!canCloseCase)
                 {
-                    // 确认状态下 已经审核并且通过
-                    if (EditEntity.GetPropertyValue("DataStatus").ToInt() == (int)DataStatus.确认
-                        && EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
-                        && EditEntity.GetPropertyValue("ApprovalResults") != null
-                        && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                        )
-                    {
-                        needCloseCases.Add(EditEntity);
-                    }
+                    KryptonMessageBox.Show(closeCaseMessage, "结案", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Warning);
+                    return false;
                 }
+
+                needCloseCases.Add(EditEntity);
 
                 if (needCloseCases.Count == 0)
                 {
@@ -3972,9 +3971,8 @@ namespace RUINORERP.UI.BaseForm
 
                 if (ae.ApprovalResults == false)
                 {
-                    //审核了。驳回 时数据状态要更新为新建。要再次修改后提交
+                    //审核驳回: 使用StateManager统一处理状态转换
                     #region UI驳回直接保存返回。不用进入审核流程了。
-
 
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalOpinions"))
                     {
@@ -3987,6 +3985,15 @@ namespace RUINORERP.UI.BaseForm
                     if (ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
                     {
                         EditEntity.SetPropertyValue("ApprovalResults", false);
+                    }
+                    // 审核驳回时,使用StateManager统一处理状态转换
+                    if (StateManager != null && EditEntity is BaseEntity entityForStatus)
+                    {
+                        var rejectResult = await StateManager.HandleApprovalRejectAsync(entityForStatus, ae.ApprovalOpinions);
+                        if (!rejectResult.IsSuccess)
+                        {
+                            MainForm.Instance.logger.LogError($"审核驳回状态转换失败: {rejectResult.ErrorMessage}");
+                        }
                     }
                     BusinessHelper.Instance.ApproverEntity(EditEntity);
                     BaseController<T> ctrBase = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
@@ -4318,24 +4325,14 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
 
-
-
-            if (ReflectionHelper.ExistPropertyName<T>("ApprovalStatus") && ReflectionHelper.ExistPropertyName<T>("ApprovalResults"))
+            //使用StateManager检查是否可以反审
+            var (canReReview, reReviewMessage) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.反审);
+            if (!canReReview)
             {
-                //反审，要审核过，并且通过了，才能反审。
-                if (EditEntity.GetPropertyValue("ApprovalStatus").ToInt() == (int)ApprovalStatus.审核通过
-                    && EditEntity.GetPropertyValue("ApprovalResults") != null
-                    && EditEntity.GetPropertyValue("ApprovalResults").ToBool() == true
-                    )
-                {
-                    ae.ApprovalResults = true;
-                }
-                else
-                {
-                    MainForm.Instance.uclog.AddLog("已经审核,且【同意】的单据才能反审。");
-                    return rs;
-                }
+                KryptonMessageBox.Show(reReviewMessage, "反审", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Warning);
+                return rs;
             }
+            ae.ApprovalResults = true;
 
 
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();

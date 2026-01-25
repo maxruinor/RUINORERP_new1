@@ -758,9 +758,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (targetStatus == null)
                     return (false, $"无法映射操作类型 '{action}' 到状态值");
                 
-                // 如果目标状态为当前状态，返回提示
+                // 如果目标状态为当前状态，不允许重复执行该操作
                 if (Equals(currentStatus, targetStatus))
-                    return (true, GetSuccessMessage(action));
+                {
+                    var statusName = currentStatus?.ToString() ?? "未知状态";
+                    var actionName = GetActionName(action);
+                    return (false, $"当前单据已为【{statusName}】状态,无需重复{actionName}");
+                }
                 
                 // 验证状态转换
                 var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
@@ -905,6 +909,32 @@ namespace RUINORERP.Model.Base.StatusManager
                     return "可以导出当前记录";
                 default:
                     return "操作成功";
+            }
+        }
+
+        /// <summary>
+        /// 获取操作名称
+        /// </summary>
+        /// <param name="action">操作类型</param>
+        /// <returns>操作名称</returns>
+        private string GetActionName(MenuItemEnums action)
+        {
+            switch (action)
+            {
+                case MenuItemEnums.提交:
+                    return "提交";
+                case MenuItemEnums.审核:
+                    return "审核";
+                case MenuItemEnums.反审:
+                    return "取消审核";
+                case MenuItemEnums.结案:
+                    return "结案";
+                case MenuItemEnums.反结案:
+                    return "取消结案";
+                case MenuItemEnums.作废:
+                    return "作废";
+                default:
+                    return action.ToString();
             }
         }
 
@@ -1171,6 +1201,71 @@ namespace RUINORERP.Model.Base.StatusManager
             // 严格模式：提交后不允许修改
             // 灵活模式：提交后允许修改
             return GlobalStateRulesManager.Instance.submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+        }
+
+        /// <summary>
+        /// 处理审核驳回操作
+        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿，财务状态转为草稿）
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="reason">驳回原因</param>
+        /// <param name="userId">用户ID</param>
+        /// <returns>状态转换结果</returns>
+        public async Task<StateTransitionResult> HandleApprovalRejectAsync(BaseEntity entity, string reason = null, string userId = null)
+        {
+            var statusType = GetStatusType(entity);
+            if (statusType == null)
+            {
+                return new StateTransitionResult
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "无法获取实体的状态类型"
+                };
+            }
+
+            // 根据状态类型决定驳回后的目标状态
+            object targetStatus = null;
+            
+            if (statusType == typeof(DataStatus))
+            {
+                // 业务单据：驳回后回到草稿
+                targetStatus = DataStatus.草稿;
+            }
+            else if (statusType == typeof(PaymentStatus))
+            {
+                targetStatus = PaymentStatus.草稿;
+            }
+            else if (statusType == typeof(PrePaymentStatus))
+            {
+                targetStatus = PrePaymentStatus.草稿;
+            }
+            else if (statusType == typeof(ARAPStatus))
+            {
+                targetStatus = ARAPStatus.草稿;
+            }
+            else if (statusType == typeof(StatementStatus))
+            {
+                targetStatus = StatementStatus.草稿;
+            }
+            else
+            {
+                // 未知状态类型，尝试通过反射获取"草稿"状态值
+                var draftStatusValue = statusType.GetEnumValues().Cast<object>()
+                    .FirstOrDefault(v => v.ToString().Contains("草稿") || v.ToString().Equals("Draft", StringComparison.OrdinalIgnoreCase));
+                
+                if (draftStatusValue == null)
+                {
+                    return new StateTransitionResult
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = $"状态类型 {statusType.Name} 未定义草稿状态"
+                    };
+                }
+                targetStatus = draftStatusValue;
+            }
+
+            // 设置状态
+            return await SetBusinessStatusAsync(entity, statusType, targetStatus, reason ?? "审核驳回", userId);
         }
 
         #endregion

@@ -297,7 +297,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
                 [PaymentStatus.草稿] = new List<object> { PaymentStatus.待审核, PaymentStatus.草稿 },
-                [PaymentStatus.待审核] = new List<object> { PaymentStatus.已支付, PaymentStatus.草稿 },
+                [PaymentStatus.待审核] = new List<object> { PaymentStatus.已支付, PaymentStatus.草稿 }, // 审核驳回时可以回到草稿
                 [PaymentStatus.已支付] = new List<object> { }
             };
         }
@@ -311,7 +311,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
                 [PrePaymentStatus.草稿] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.草稿 },
-                [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 },
+                [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 }, // 审核驳回时可以回到草稿
                 [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销 },
                 [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
                 [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
@@ -330,7 +330,7 @@ namespace RUINORERP.Model.Base.StatusManager
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
                 [ARAPStatus.草稿] = new List<object> { ARAPStatus.待审核, ARAPStatus.草稿 },
-                [ARAPStatus.待审核] = new List<object> { ARAPStatus.待支付, ARAPStatus.草稿 },
+                [ARAPStatus.待审核] = new List<object> { ARAPStatus.待支付, ARAPStatus.草稿 }, // 审核驳回时可以回到草稿
                 [ARAPStatus.待支付] = new List<object> { ARAPStatus.待审核, ARAPStatus.部分支付, ARAPStatus.全部支付, ARAPStatus.坏账 },
                 [ARAPStatus.部分支付] = new List<object> { ARAPStatus.全部支付, ARAPStatus.坏账, ARAPStatus.已冲销 },
                 [ARAPStatus.全部支付] = new List<object> { ARAPStatus.已冲销 },
@@ -1494,6 +1494,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 内部状态映射逻辑
         /// 根据状态类型和操作类型返回目标状态值
         /// UI上的操作后将会变成的状态值
+        /// 注意：审核驳回（ApprovalResults=false）不通过此方法映射，而是在审核逻辑中直接设置状态为草稿
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="currentStatus">当前状态值</param>

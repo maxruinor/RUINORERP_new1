@@ -39,8 +39,9 @@ namespace RUINORERP.UI.BI
             base.EditForm = typeof(UCCurrencyEdit);
 
         }
-        protected override async Task Add()
+        protected override async Task<object> Add()
         {
+            object result = null;
             if (ListDataSoure.Count == 0)
             {
                 //弹出提示框：系统将默认为您添加人民币和美元币别。
@@ -75,15 +76,16 @@ namespace RUINORERP.UI.BI
                 }
                 List<long> ids = await MainForm.Instance.AppContext.Db.Insertable<tb_Currency>(list).ExecuteReturnSnowflakeIdListAsync();
                 QueryAsync();
-                await base.Add();
+                result = await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
             {
                 //非第一次添加付款方式时。正常处理
-                await base.Add();
+                result = await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
+            return result;
         }
 
         /// <summary>

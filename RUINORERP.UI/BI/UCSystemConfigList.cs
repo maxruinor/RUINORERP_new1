@@ -29,11 +29,12 @@ namespace RUINORERP.UI.BI
     public partial class UCSystemConfigList : BaseForm.BaseListGeneric<tb_SystemConfig>
     {
 
-        protected override async Task Add()
+        protected override async Task<object> Add()
         {
+            object result = null;
             if (ListDataSoure.Count == 0)
             {
-              await  base.Add();
+              result = await  base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
@@ -41,6 +42,7 @@ namespace RUINORERP.UI.BI
                 base.toolStripButtonModify.Enabled = false;
                 base.toolStripButtonAdd.Enabled = false;
             }
+            return result;
         }
         /// <summary>
         /// 要保留一条记录

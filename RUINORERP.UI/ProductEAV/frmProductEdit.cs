@@ -6,17 +6,22 @@ using Krypton.Toolkit;
 using Microsoft.International.Converters.PinYinConverter;
 using Netron.GraphLib;
 using ObjectsComparer;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Model;
 using RUINORERP.Model.ProductAttribute;
+using RUINORERP.Model.ReminderModel.ReminderRules;
+using RUINORERP.PacketSpec.Models.FileManagement;
+using RUINORERP.SecurityTool;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
@@ -49,9 +54,7 @@ namespace RUINORERP.UI.ProductEAV
         List<tb_ProdPropertyValue> prodpropValueList = new List<tb_ProdPropertyValue>();
         tb_ProdController<tb_Prod> mcProdBase = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
         tb_ProdDetailController<tb_ProdDetail> mcDetail = Startup.GetFromFac<tb_ProdDetailController<tb_ProdDetail>>();
-        tb_ProdPropertyController<tb_ProdProperty> mcProperty = Startup.GetFromFac<tb_ProdPropertyController<tb_ProdProperty>>();
         tb_ProdPropertyValueController<tb_ProdPropertyValue> mcPropertyValue = Startup.GetFromFac<tb_ProdPropertyValueController<tb_ProdPropertyValue>>();
-        tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
 
         tb_BoxRulesController<tb_BoxRules> ctrBoxRules = Startup.GetFromFac<tb_BoxRulesController<tb_BoxRules>>();
 
@@ -108,12 +111,12 @@ namespace RUINORERP.UI.ProductEAV
         /// 加载状态标志，用于跟踪异步数据是否已加载完成
         /// </summary>
         private bool _isDataLoaded = false;
-        
+
         /// <summary>
         /// 用于同步异步加载完成事件
         /// </summary>
         private readonly TaskCompletionSource<bool> _dataLoadedTcs = new TaskCompletionSource<bool>();
-        
+
         public frmProductEdit()
         {
             InitializeComponent();
@@ -122,14 +125,19 @@ namespace RUINORERP.UI.ProductEAV
                 // 初始化属性列表，避免空引用异常
                 prodpropList = new List<tb_ProdProperty>();
                 prodpropValueList = new List<tb_ProdPropertyValue>();
-                categorylist = new List<tb_ProdCategories>();
-                
+                Categorylist = new List<tb_ProdCategories>();
+                Categorylist = _cacheManager.GetEntityList<tb_ProdCategories>();
+                if (Categorylist == null || Categorylist.Count == 0)
+                {
+                    Categorylist = MainForm.Instance.AppContext.Db.Queryable<tb_ProdCategories>().ToList();
+                }
+
                 // 绑定表单Load事件
                 this.Load += async (sender, e) => await UCProductEdit_LoadAsync(sender, e);
-                
+
                 // 异步加载数据
                 LoadDataAsync();
-                
+
                 kryptonNavigator1.Button.ButtonDisplayLogic = ButtonDisplayLogic.None;
                 kryptonPageMain.ClearFlags(KryptonPageFlags.All);
                 kryptonPage2.ClearFlags(KryptonPageFlags.All);
@@ -144,18 +152,13 @@ namespace RUINORERP.UI.ProductEAV
                 DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_ProdDetail>();
                 DisplayTextResolver.Initialize(dataGridView1);
             }
-            //this.AllowDrop = true; // 允许窗体接受拖放
-            //pictureBox1.AllowDrop = true; // 允许PictureBox接受拖放
-            //this.DragEnter += new DragEventHandler(MainForm_DragEnter);
-            //this.DragDrop += new DragEventHandler(MainForm_DragDrop);
-            //pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
-            //pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+
             pictureBox1.AllowDrop = true;
             pictureBox1.DragEnter += new DragEventHandler(pictureBox1_DragEnter);
             pictureBox1.DragDrop += new DragEventHandler(pictureBox1_DragDrop);
 
         }
-        
+
         /// <summary>
         /// 异步加载数据
         /// </summary>
@@ -163,15 +166,19 @@ namespace RUINORERP.UI.ProductEAV
         {
             try
             {
-                // 异步加载数据
-                categorylist = await mca.QueryAsync();
-                prodpropValueList = await mcPropertyValue.QueryByNavAsync(c => true);
-                prodpropList = await mcProperty.QueryAsync();
-                
+                prodpropList = await MainForm.Instance.AppContext.Db.Queryable<tb_ProdProperty>()
+                    .Includes(c => c.tb_ProdPropertyValues)
+                    .Includes(c => c.tb_ProdPropertyValues, a => a.tb_prodproperty)
+                    .ToListAsync();
+
+                foreach (var item in prodpropList)
+                {
+                    prodpropValueList.AddRange(item.tb_ProdPropertyValues);
+                }
                 // 设置加载状态为完成
                 _isDataLoaded = true;
                 _dataLoadedTcs.TrySetResult(true);
-                
+
                 // 数据加载完成后，更新UI
                 if (EditEntity != null)
                 {
@@ -273,11 +280,11 @@ namespace RUINORERP.UI.ProductEAV
         {
             // 等待数据加载完成
             await _dataLoadedTcs.Task;
-            UIProdCateHelper.BindToTreeViewNoRootNode(categorylist, txtcategory_ID.TreeView);
+            UIProdCateHelper.BindToTreeViewNoRootNode(Categorylist, txtcategory_ID.TreeView);
             // AddTopPage();
             // Do not allow the document pages to be closed or made auto hidden/docked
             kryptonNavigator1.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-            UIProdCateHelper.BindToTreeView(categorylist, kryptonTreeView1, false);
+            UIProdCateHelper.BindToTreeView(Categorylist, kryptonTreeView1, false);
             ExpandOrCollapseNodes(true);
             this.chkexpandAll.CheckedChanged += new System.EventHandler(this.chkexpandAll_CheckedChanged);
         }
@@ -298,7 +305,7 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
- 
+
 
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -307,7 +314,7 @@ namespace RUINORERP.UI.ProductEAV
             this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        private void btnOk_Click(object sender, EventArgs e)
+        private async void btnOk_Click(object sender, EventArgs e)
         {
 
             //比方 暂时没有供应商  又是外键，则是如何处理的？
@@ -412,6 +419,17 @@ namespace RUINORERP.UI.ProductEAV
             bindingSourceEdit.EndEdit();
 
             //要先保存再修改才起作用
+
+            // 检查是否有图片需要上传或删除
+            if (HasImagesToUpload())
+            {
+                bool imageUploadSuccess = await UploadImagesIfNeeded();
+                if (!imageUploadSuccess)
+                {
+                    MessageBox.Show("图片处理失败，请重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
 
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -551,7 +569,7 @@ namespace RUINORERP.UI.ProductEAV
             return details;
         }
 
- 
+
 
         /// <summary>
         /// 将SKU表格中显示的明细转换为属性关系
@@ -608,6 +626,8 @@ namespace RUINORERP.UI.ProductEAV
         public tb_Prod EditEntity { get => _EditEntity; set => _EditEntity = value; }
 
         List<tb_ProdCategories> categorylist = new List<tb_ProdCategories>(0);
+
+        public List<tb_ProdCategories> Categorylist { get => categorylist; set => categorylist = value; }
 
         tb_Prod oldOjb = null;
 
@@ -697,7 +717,22 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                //显示图片
+                // 显示图片
+                // 使用现有的pictureBox1控件显示单张图片
+                if (_EditEntity.Images != null && _EditEntity.Images.Length > 0)
+                {
+                    try
+                    {
+                        using (var ms = new MemoryStream(_EditEntity.Images))
+                        {
+                            pictureBox1.Image = Image.FromStream(ms);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}", UILogType.错误);
+                    }
+                }
             }
 
             #region 类别
@@ -741,6 +776,21 @@ namespace RUINORERP.UI.ProductEAV
             //DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
             DataBindingHelper.BindData4Cmb<tb_Location>(entity, k => k.Location_ID, v => v.Name, txtLocation_ID);
             DataBindingHelper.BindData4Cmb<tb_ProductType>(entity, k => k.Type_ID, v => v.TypeName, cmbType_ID);
+
+            #region 产品基本图片加载
+            // 下载并加载产品基本图片到 magicPictureBox产品基本图片
+            if (_EditEntity.ProdBaseID > 0)
+            {
+                try
+                {
+                    await DownloadProductImagesAsync(_EditEntity, magicPictureBox产品基本图片);
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.uclog.AddLog($"下载产品基本图片失败: {ex.Message}", Global.UILogType.错误);
+                }
+            }
+            #endregion
             DataBindingHelper.BindData4CmbByEntity<tb_StorageRack>(entity, k => k.Rack_ID, cmbRack_ID);
             DataBindingHelper.BindData4Cmb<tb_Department>(entity, k => k.DepartmentID, v => v.DepartmentName, cmbDepartmentID);
 
@@ -766,10 +816,10 @@ namespace RUINORERP.UI.ProductEAV
             }
             base.BindData(entity);
             dataGridView1.NeedSaveColumnsXml = true;
-            
+
             // 等待数据加载完成，然后再加载SKU列表
             await _dataLoadedTcs.Task;
-            
+
             // 数据加载完成后，执行依赖数据的操作
             LoadBaseInfoSKUList(_EditEntity);
             listView1.UpdateUI();
@@ -957,11 +1007,11 @@ namespace RUINORERP.UI.ProductEAV
             }
             else
             {
-                tb_ProdCategories entity = categorylist.Find(t => t.Category_name == cevent.Value.ToString());
+                tb_ProdCategories entity = Categorylist.Find(t => t.Category_name == cevent.Value.ToString());
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
-                 
+
                 }
                 else
                 {
@@ -1217,15 +1267,15 @@ namespace RUINORERP.UI.ProductEAV
                 BindToSkulistGrid(new List<tb_ProdDetail>());
                 bindingSourceList.ListChanged += BindingSourceList_ListChanged;
             }
-            
+
             // 清空现有数据，避免重复加载
             bindingSourceList.Clear();
-            
+
             //显示表格内容 根据sku更新
             LoadRelationToEavSku(entityProdBase);
             #endregion
 
-       
+
         }
 
 
@@ -2068,7 +2118,7 @@ namespace RUINORERP.UI.ProductEAV
             //重构？
             dataGridView1.XmlFileName = tableName;
             this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
-            
+
             //同样为dataGridView1添加PropertyGroupName属性
             if (typeof(T) == typeof(tb_ProdDetail))
             {
@@ -2235,8 +2285,6 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-
-
         /// <summary>
         /// 初始化列表数据
         /// </summary>
@@ -2373,6 +2421,211 @@ namespace RUINORERP.UI.ProductEAV
                 }
             }
         }
+
+        #region 图片管理功能
+
+        /// <summary>
+        /// 检查是否有图片需要上传或删除
+        /// </summary>
+        /// <returns>如果有图片需要上传或删除返回true，否则返回false</returns>
+        private bool HasImagesToUpload()
+        {
+            // 检查产品图片控件是否有需要上传的图片
+            if (magicPictureBox产品基本图片 != null)
+            {
+                var updatedImages = magicPictureBox产品基本图片.GetImagesNeedingUpdate();
+                var deletedImages = magicPictureBox产品基本图片.GetDeletedImages();
+
+                // 检查是否有需要上传的图片或需要删除的图片
+                return (updatedImages != null && updatedImages.Count > 0) ||
+                       (deletedImages != null && deletedImages.Count > 0);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 上传或删除图片（如果需要）
+        /// 实现产品基本图片的上传和删除逻辑
+        /// </summary>
+        /// <returns>操作是否成功</returns>
+        private async Task<bool> UploadImagesIfNeeded()
+        {
+            try
+            {
+                // 检查实体是否已保存（必须有主键ID）
+                if (EditEntity == null || EditEntity.ProdBaseID <= 0)
+                {
+                    MainForm.Instance.uclog.AddLog("产品尚未保存，无法操作图片");
+                    return false;
+                }
+
+                if (magicPictureBox产品基本图片 != null)
+                {
+                    var updatedImages = magicPictureBox产品基本图片.GetImagesNeedingUpdate();
+                    var deletedImages = magicPictureBox产品基本图片.GetDeletedImages();
+
+                    // 第一步：处理需要删除的图片
+                    if (deletedImages != null && deletedImages.Count > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"检测到 {deletedImages.Count} 张图片需要删除");
+
+                        // 删除图片
+                        foreach (var deletedImage in deletedImages)
+                        {
+                            // 只有有FileId的图片才是已上传到服务器的，需要删除
+                            if (deletedImage != null && deletedImage.FileId > 0)
+                            {
+                                try
+                                {
+                                    var fileService = Startup.GetFromFac<FileManagementService>();
+                                    var deleteRequest = new FileDeleteRequest();
+                                    deleteRequest.BusinessNo = EditEntity.ProductNo ?? EditEntity.ProdBaseID.ToString();
+                                    deleteRequest.BusinessId = EditEntity.ProdBaseID;
+                                    deleteRequest.BusinessType = (int)BizType.产品档案;
+                                    deleteRequest.PhysicalDelete = false;
+
+                                    var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                                    var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
+                                    if (fileStorageInfo != null)
+                                    {
+                                        deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                                    }
+
+                                    var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+                                    if (deleteResponse.IsSuccess)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"图片删除成功：{deletedImage.OriginalFileName}", UILogType.普通消息);
+                                    }
+                                    else
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"图片删除失败：{deletedImage.OriginalFileName}，原因：{deleteResponse.ErrorMessage}", UILogType.错误);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MainForm.Instance.uclog.AddLog($"删除图片出错：{deletedImage.OriginalFileName}，{ex.Message}", UILogType.错误);
+                                }
+                            }
+                        }
+
+                        // 删除成功后清空删除列表
+                        magicPictureBox产品基本图片.ClearDeletedImagesList();
+                    }
+
+                    // 第二步：处理需要上传的图片
+                    if (updatedImages != null && updatedImages.Count > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"检测到 {updatedImages.Count} 张图片需要上传");
+
+                        var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                        int successCount = 0;
+
+                        foreach (var imageDataWithInfo in updatedImages)
+                        {
+                            byte[] imageData = imageDataWithInfo.Item1;
+                            var imageInfo = imageDataWithInfo.Item2;
+
+                            if (imageData == null || imageData.Length == 0)
+                            {
+                                continue;
+                            }
+
+                            // 准备参数
+                            long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
+
+                            // 上传图片
+                            var response = await ctrpay.UploadImageAsync(EditEntity, imageInfo.OriginalFileName, imageData, "ImagesPath", existingFileId);
+
+                            if (response != null && response.IsSuccess)
+                            {
+                                successCount++;
+                                MainForm.Instance.uclog.AddLog($"产品图片上传成功：{imageInfo.OriginalFileName}");
+                                imageInfo.IsUpdated = false;
+                                imageInfo.IsDeleted = false;
+                            }
+                            else
+                            {
+                                MainForm.Instance.uclog.AddLog($"产品图片上传失败：{imageInfo.OriginalFileName}，原因：{response?.Message ?? "未知错误"}", UILogType.错误);
+                            }
+                        }
+
+                        if (successCount > 0)
+                        {
+                            MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张产品图片");
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 下载并显示产品基本图片到MagicPictureBox
+        /// </summary>
+        /// <param name="entity">产品实体</param>
+        /// <param name="magicPicBox">MagicPictureBox控件</param>
+        private async Task DownloadProductImagesAsync(tb_Prod entity, RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPicBox)
+        {
+            magicPicBox.MultiImageSupport = true;
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            try
+            {
+                // 下载ImagesPath字段关联的图片
+                var list = await ctrpay.DownloadImageAsync(entity, "ImagesPath");
+
+                if (list == null || list.Count == 0)
+                {
+                    return;
+                }
+
+                // 简化处理逻辑，直接处理文件存储信息
+                List<byte[]> imageDataList = new List<byte[]>();
+                List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> imageInfos = new List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>();
+
+                foreach (var downloadResponse in list)
+                {
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    {
+                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        {
+                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
+                            {
+                                imageDataList.Add(fileStorageInfo.FileData);
+                                imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                            }
+                        }
+                    }
+                }
+
+                if (imageDataList.Count > 0)
+                {
+                    try
+                    {
+                        // 使用统一的LoadImages方法，自动处理单张和多张图片
+                        magicPicBox.LoadImages(imageDataList, imageInfos, true);
+                        MainForm.Instance.uclog.AddLog($"成功加载 {imageDataList.Count} 张产品基本图片");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}", Global.UILogType.错误);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"下载产品图片出错：{ex.Message}", Global.UILogType.错误);
+            }
+        }
+
+        #endregion
 
     }
 }

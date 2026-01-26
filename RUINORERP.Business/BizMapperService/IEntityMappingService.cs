@@ -17,9 +17,6 @@ namespace RUINORERP.Business.BizMapperService
         /// 此方法仅检查初始化状态，实际的实体映射注册通过InitializeMappings方法完成
         /// </summary>
         void Initialize();
-        
-
-        
         BizEntityInfo GetEntityInfo(BizType bizType);
         BizEntityInfo GetEntityInfo(Type entityType);
 

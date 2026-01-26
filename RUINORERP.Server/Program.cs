@@ -181,6 +181,7 @@ namespace RUINORERP.Server
             {
                 // 记录异常信息
                 Console.Error.WriteLine($"启动服务时发生未处理异常: {ex}");
+                System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}");
                 // 可以添加日志记录
             }
             finally
@@ -384,6 +385,7 @@ namespace RUINORERP.Server
                     MessageBox.Show(s);
                     MessageBox.Show(ex.StackTrace);
                     Console.Write(ex.StackTrace);
+                    System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}\r\n{ex.InnerException}");
                 }
 
                 // IHostBuilder ihostbuilder= starter.CslaDIPort();

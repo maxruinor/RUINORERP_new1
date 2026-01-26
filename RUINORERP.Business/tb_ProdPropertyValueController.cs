@@ -30,7 +30,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 产品属性值表
     /// </summary>
-    public partial class tb_ProdPropertyValueController<T>:BaseController<T> where T : class
+    public partial class tb_ProdPropertyValueController<T> : BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -38,30 +38,30 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_ProdPropertyValueServices _tb_ProdPropertyValueServices { get; set; }
-        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
-       // private readonly ApplicationContext _appContext;
-       
-        public tb_ProdPropertyValueController(ILogger<tb_ProdPropertyValueController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_ProdPropertyValueServices tb_ProdPropertyValueServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager;
+        // private readonly ApplicationContext _appContext;
+
+        public tb_ProdPropertyValueController(ILogger<tb_ProdPropertyValueController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_ProdPropertyValueServices tb_ProdPropertyValueServices, EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-           _tb_ProdPropertyValueServices = tb_ProdPropertyValueServices;
-           _appContext = appContext;
-           _eventDrivenCacheManager = eventDrivenCacheManager;
+            _unitOfWorkManage = unitOfWorkManage;
+            _tb_ProdPropertyValueServices = tb_ProdPropertyValueServices;
+            _appContext = appContext;
+            _eventDrivenCacheManager = eventDrivenCacheManager;
         }
-      
-        
+
+
         public ValidationResult Validator(tb_ProdPropertyValue info)
         {
 
-           // tb_ProdPropertyValueValidator validator = new tb_ProdPropertyValueValidator();
-           tb_ProdPropertyValueValidator validator = _appContext.GetRequiredService<tb_ProdPropertyValueValidator>();
+            // tb_ProdPropertyValueValidator validator = new tb_ProdPropertyValueValidator();
+            tb_ProdPropertyValueValidator validator = _appContext.GetRequiredService<tb_ProdPropertyValueValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-        
+
         #region 扩展方法
-        
+
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -71,8 +71,8 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-      
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -111,14 +111,14 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-        
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_ProdPropertyValue entity = model as tb_ProdPropertyValue;
@@ -137,7 +137,7 @@ namespace RUINORERP.Business
                 }
                 else
                 {
-                    Returnobj = await _tb_ProdPropertyValueServices.AddReEntityAsync(entity) as T ;
+                    Returnobj = await _tb_ProdPropertyValueServices.AddReEntityAsync(entity) as T;
                     _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
                 }
 
@@ -152,8 +152,8 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
+
+        public async override Task<List<T>> BaseQueryAsync(string wheresql)
         {
             List<T> list = await _tb_ProdPropertyValueServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -164,11 +164,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 _eventDrivenCacheManager.UpdateEntityList<T>(list);
-             }
+            }
             return list;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync() 
+
+        public async override Task<List<T>> BaseQueryAsync()
         {
             List<T> list = await _tb_ProdPropertyValueServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -179,11 +179,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 _eventDrivenCacheManager.UpdateEntityList<T>(list);
-             }
+            }
             return list;
         }
-        
-        
+
+
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_ProdPropertyValue entity = model as tb_ProdPropertyValue;
@@ -195,42 +195,42 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-        
+
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs=false;
+            bool rs = false;
             List<tb_ProdPropertyValue> entitys = models as List<tb_ProdPropertyValue>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_ProdPropertyValue>(entitys).ExecuteCommandAsync();
-            if (c>0)
+            if (c > 0)
             {
-                rs=true;
+                rs = true;
                 _eventDrivenCacheManager.DeleteEntityList<tb_ProdPropertyValue>(entitys);
             }
             return rs;
         }
-        
+
         public override ValidationResult BaseValidator(T info)
         {
             //tb_ProdPropertyValueValidator validator = new tb_ProdPropertyValueValidator();
-           tb_ProdPropertyValueValidator validator = _appContext.GetRequiredService<tb_ProdPropertyValueValidator>();
+            tb_ProdPropertyValueValidator validator = _appContext.GetRequiredService<tb_ProdPropertyValueValidator>();
             ValidationResult results = validator.Validate(info as tb_ProdPropertyValue);
             return results;
         }
-        
-        
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
+
+
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
         {
-            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
-        
+
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-                             //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -240,29 +240,29 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                       // 开启事务，保证数据一致性
+                // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
-            if (entity.PropertyValueID > 0)
-            {
-            
-                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdPropertyValue>(entity as tb_ProdPropertyValue)
-                        .Include(m => m.tb_Prod_Attr_Relations)
-                    .ExecuteCommandAsync();
-                 }
-        else    
-        {
-                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdPropertyValue>(entity as tb_ProdPropertyValue)
-                .Include(m => m.tb_Prod_Attr_Relations)
-         
-                .ExecuteCommandAsync();
-                                          
-                     
-        }
-        
+
+                if (entity.PropertyValueID > 0)
+                {
+
+                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_ProdPropertyValue>(entity as tb_ProdPropertyValue)
+               .Include(m => m.tb_Prod_Attr_Relations)
+           .ExecuteCommandAsync();
+                }
+                else
+                {
+                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_ProdPropertyValue>(entity as tb_ProdPropertyValue)
+            .Include(m => m.tb_Prod_Attr_Relations)
+
+            .ExecuteCommandAsync();
+
+
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T ;
+                rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.PropertyValueID;
                 rsms.Succeeded = rs;
             }
@@ -278,167 +278,167 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-        
+
         #endregion
-        
-        
+
+
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>()
                                 .Includes(m => m.tb_Prod_Attr_Relations)
-                                        .WhereCustom(useLike, dto);;
-            return await querySqlQueryable.ToListAsync()as List<T>;
+                                        .WhereCustom(useLike, dto); ;
+            return await querySqlQueryable.ToListAsync() as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model) 
+        public async override Task<bool> BaseDeleteByNavAsync(T model)
         {
             tb_ProdPropertyValue entity = model as tb_ProdPropertyValue;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdPropertyValue>(m => m.PropertyValueID== entity.PropertyValueID)
-                                .Include(m => m.tb_Prod_Attr_Relations)
-                                        .ExecuteCommandAsync();
+            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_ProdPropertyValue>(m => m.PropertyValueID == entity.PropertyValueID)
+                               .Include(m => m.tb_Prod_Attr_Relations)
+                                       .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                 _eventDrivenCacheManager.DeleteEntity<T>(model);
+                _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
         #endregion
-        
-        
-        
+
+
+
         public tb_ProdPropertyValue AddReEntity(tb_ProdPropertyValue entity)
         {
-            tb_ProdPropertyValue AddEntity =  _tb_ProdPropertyValueServices.AddReEntity(entity);
-     
-             _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(AddEntity);
+            tb_ProdPropertyValue AddEntity = _tb_ProdPropertyValueServices.AddReEntity(entity);
+
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
-         public async Task<tb_ProdPropertyValue> AddReEntityAsync(tb_ProdPropertyValue entity)
+
+        public async Task<tb_ProdPropertyValue> AddReEntityAsync(tb_ProdPropertyValue entity)
         {
             tb_ProdPropertyValue AddEntity = await _tb_ProdPropertyValueServices.AddReEntityAsync(entity);
             _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
+
         public async Task<long> AddAsync(tb_ProdPropertyValue entity)
         {
             long id = await _tb_ProdPropertyValueServices.Add(entity);
-            if(id>0)
+            if (id > 0)
             {
-                 _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
+                _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
             }
             return id;
         }
-        
+
         public async Task<List<long>> AddAsync(List<tb_ProdPropertyValue> infos)
         {
             List<long> ids = await _tb_ProdPropertyValueServices.Add(infos);
-            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
+            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
             {
-                 _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(infos);
+                _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(infos);
             }
             return ids;
         }
-        
-        
+
+
         public async Task<bool> DeleteAsync(tb_ProdPropertyValue entity)
         {
             bool rs = await _tb_ProdPropertyValueServices.Delete(entity);
             if (rs)
             {
                 _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(entity);
-                
+
             }
             return rs;
         }
-        
+
         public async Task<bool> UpdateAsync(tb_ProdPropertyValue entity)
         {
             bool rs = await _tb_ProdPropertyValueServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-        
+
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_ProdPropertyValueServices.DeleteById(id);
             if (rs)
             {
-               _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(id);
+                _eventDrivenCacheManager.DeleteEntity<tb_ProdPropertyValue>(id);
             }
             return rs;
         }
-        
-         public async Task<bool> DeleteAsync(long[] ids)
+
+        public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_ProdPropertyValueServices.DeleteByIds(ids);
             if (rs)
             {
-            
-                   _eventDrivenCacheManager.DeleteEntities<tb_ProdPropertyValue>(ids.Cast<object>().ToArray());
+
+                _eventDrivenCacheManager.DeleteEntities<tb_ProdPropertyValue>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
-        
+
         public virtual async Task<List<tb_ProdPropertyValue>> QueryAsync()
         {
-            List<tb_ProdPropertyValue> list = await  _tb_ProdPropertyValueServices.QueryAsync();
+            List<tb_ProdPropertyValue> list = await _tb_ProdPropertyValueServices.QueryAsync();
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-     
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
+
         public virtual List<tb_ProdPropertyValue> Query()
         {
-            List<tb_ProdPropertyValue> list =  _tb_ProdPropertyValueServices.Query();
+            List<tb_ProdPropertyValue> list = _tb_ProdPropertyValueServices.Query();
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-    
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
+
         public virtual List<tb_ProdPropertyValue> Query(string wheresql)
         {
-            List<tb_ProdPropertyValue> list =  _tb_ProdPropertyValueServices.Query(wheresql);
+            List<tb_ProdPropertyValue> list = _tb_ProdPropertyValueServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-  
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
-        public virtual async Task<List<tb_ProdPropertyValue>> QueryAsync(string wheresql) 
+
+        public virtual async Task<List<tb_ProdPropertyValue>> QueryAsync(string wheresql)
         {
             List<tb_ProdPropertyValue> list = await _tb_ProdPropertyValueServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
- 
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
+
 
 
         /// <summary>
@@ -453,31 +453,31 @@ namespace RUINORERP.Business
             {
                 item.AcceptChanges();
             }
-   
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
-        
-        
+
+
+
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_ProdPropertyValue>> QueryByNavAsync()
+        public virtual async Task<List<tb_ProdPropertyValue>> QueryByNavAsync()
         {
             List<tb_ProdPropertyValue> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>()
-                               .Includes(t => t.tb_prodproperty )
-                                            .Includes(t => t.tb_Prod_Attr_Relations )
+                               .Includes(t => t.tb_prodproperty)
+                                            .Includes(t => t.tb_Prod_Attr_Relations)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
- 
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
 
@@ -486,54 +486,54 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_ProdPropertyValue>> QueryByNavAsync(Expression<Func<tb_ProdPropertyValue, bool>> exp)
+        public virtual async Task<List<tb_ProdPropertyValue>> QueryByNavAsync(Expression<Func<tb_ProdPropertyValue, bool>> exp)
         {
             List<tb_ProdPropertyValue> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().Where(exp)
-                               .Includes(t => t.tb_prodproperty )
-                                            .Includes(t => t.tb_Prod_Attr_Relations )
+                               .Includes(t => t.tb_prodproperty)
+                                            .Includes(t => t.tb_Prod_Attr_Relations)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
-  
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
-        
+
+
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_ProdPropertyValue> QueryByNav(Expression<Func<tb_ProdPropertyValue, bool>> exp)
+        public virtual List<tb_ProdPropertyValue> QueryByNav(Expression<Func<tb_ProdPropertyValue, bool>> exp)
         {
             List<tb_ProdPropertyValue> list = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().Where(exp)
-                            .Includes(t => t.tb_prodproperty )
-                                        .Includes(t => t.tb_Prod_Attr_Relations )
+                            .Includes(t => t.tb_prodproperty)
+                                        .Includes(t => t.tb_Prod_Attr_Relations)
                         .ToList();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
-     
-             _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_ProdPropertyValue>(list);
             return list;
         }
-        
-        
+
+
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_ProdPropertyValue>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_ProdPropertyValue>> QueryByAdvancedAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().WhereCustom(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -544,32 +544,32 @@ namespace RUINORERP.Business
             T entity = await _tb_ProdPropertyValueServices.QueryByIdAsync(id) as T;
             return entity;
         }
-        
-        
-        
+
+
+
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_ProdPropertyValue entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_ProdPropertyValue>().Where(w => w.PropertyValueID == (long)id)
-                             .Includes(t => t.tb_prodproperty )
-                        
+                             .Includes(t => t.tb_prodproperty)
 
-                                            .Includes(t => t.tb_Prod_Attr_Relations )
+
+                                            .Includes(t => t.tb_Prod_Attr_Relations)
                                 .FirstAsync();
-            if(entity!=null)
+            if (entity != null)
             {
                 entity.AcceptChanges();
             }
 
-         
-             _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
+
+            _eventDrivenCacheManager.UpdateEntity<tb_ProdPropertyValue>(entity);
             return entity as T;
         }
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
     }
 }
 

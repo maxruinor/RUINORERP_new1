@@ -32,8 +32,9 @@ namespace RUINORERP.UI.BI
 
         }
 
-        protected override async Task Add()
+        protected override async Task<object> Add()
         {
+            object result = null;
             if (ListDataSoure.Count == 0)
             {
                 //第一次添加付款方式时，添加系统默认的值先
@@ -50,15 +51,16 @@ namespace RUINORERP.UI.BI
                 }
                 await MainForm.Instance.AppContext.Db.Insertable<tb_PaymentMethod>(list).ExecuteReturnSnowflakeIdListAsync();
                 QueryAsync();
-                base.Add();
+                result = await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
             {
                 //非第一次添加付款方式时。正常处理
-                base.Add();
+                result = await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
+            return result;
         }
 
 

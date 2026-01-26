@@ -1794,8 +1794,8 @@ namespace RUINORERP.Server
                 //// var debugExecutionTime = now.AddMinutes(2);
                 //// InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(debugExecutionTime.Hour, debugExecutionTime.Minute, debugExecutionTime.Second);
                 //#else
-                //// 生产模式：默认凌晨1点执行
-                InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(1, 0, 0);
+                //// 生产模式：DailyExecutionTime 已从配置文件读取，无需在此赋值
+                //// InventorySnapshotWorkflowConfig.DailyExecutionTime = new TimeSpan(1, 0, 0);
                 //#endif
 
                 // 调度工作流

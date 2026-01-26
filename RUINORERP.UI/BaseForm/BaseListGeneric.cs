@@ -578,8 +578,6 @@ namespace RUINORERP.UI.BaseForm
         public Type EditForm { get => _EditForm; set => _EditForm = value; }
 
 
-
-
         /// <summary>
         /// 不同情况，显示不同的可用情况
         /// </summary>
@@ -776,10 +774,10 @@ namespace RUINORERP.UI.BaseForm
 
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
-            
+
             // 记录操作
             _guardService.RecordOperation(menuItem, this.GetType().Name);
-            
+
             switch (menuItem)
             {
                 case MenuItemEnums.新增:
@@ -982,9 +980,15 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        protected virtual Task Add()
+
+        /// <summary>
+        /// 返回的是新增的对象
+        /// </summary>
+        /// <returns></returns>
+        protected virtual Task<object> Add()
         {
             object frm = Activator.CreateInstance(EditForm);
+            object result = null;
             if (frm.GetType().BaseType.Name.Contains("BaseEditGeneric"))
             {
                 #region 泛型情况
@@ -1005,10 +1009,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     frmadd.BindData(obj as BaseEntity);
                 }
-
+                
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);
+                    result = obj;
                 }
                 else
                 {
@@ -1024,9 +1029,11 @@ namespace RUINORERP.UI.BaseForm
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object obj = frmadd.bindingSourceEdit.AddNew();
                 frmadd.BindData(obj as BaseEntity, ActionStatus.新增);
+                result = frmadd;
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);
+                    result = obj;
                 }
                 else
                 {
@@ -1034,8 +1041,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 #endregion
             }
-
-            return Task.CompletedTask;
+            return Task.FromResult(result);
         }
 
 
@@ -1696,7 +1702,7 @@ namespace RUINORERP.UI.BaseForm
                 List<T> list = new List<T>();
 
                 // 获取行级权限策略
-                var rowAuthPolicies =await MainForm.Instance.GetRowAuthPolicies();
+                var rowAuthPolicies = await MainForm.Instance.GetRowAuthPolicies();
 
                 if (UseAutoNavQuery)
                 {

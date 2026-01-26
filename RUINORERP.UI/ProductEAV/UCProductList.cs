@@ -37,32 +37,43 @@ namespace RUINORERP.UI.ProductEAV
     public partial class UCProductList : BaseForm.BaseListGeneric<tb_Prod>
     {
 
+        private List<tb_ProdCategories> _categorylist = new List<tb_ProdCategories>();
+
         public UCProductList()
         {
             InitializeComponent();
-            base.EditForm = typeof(frmProductEdit);
-            //显示时目前只缓存了基础数据。单据也可以考虑id显示编号。后面来实现。如果缓存优化好了
-            DisplayTextResolver.Initialize(dataGridView1);
-            #region 准备枚举值在列表中显示
-            System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
-            expr = (p) => p.SourceType;
-            base.ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));
-            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.SourceType, typeof(GoodsSource));
-            #endregion
+            bool isDesignMode = this.DesignMode || System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime;
 
-            #region 准备枚举值在列表中显示
-            System.Linq.Expressions.Expression<Func<tb_Prod, int?>> exprP;
-            exprP = (p) => p.PropertyType;
-            base.ColNameDataDictionary.TryAdd(exprP.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ProductAttributeType)));
+            if (!isDesignMode)
+            {
+                base.EditForm = typeof(frmProductEdit);
+                //显示时目前只缓存了基础数据。单据也可以考虑id显示编号。后面来实现。如果缓存优化好了
+                DisplayTextResolver.Initialize(dataGridView1);
+                #region 准备枚举值在列表中显示
+                System.Linq.Expressions.Expression<Func<tb_Prod, int?>> expr;
+                expr = (p) => p.SourceType;
+                base.ColNameDataDictionary.TryAdd(expr.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(GoodsSource)));
+                DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.SourceType, typeof(GoodsSource));
+                #endregion
 
-            DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.PropertyType, typeof(ProductAttributeType));
-            #endregion
+                #region 准备枚举值在列表中显示
+                System.Linq.Expressions.Expression<Func<tb_Prod, int?>> exprP;
+                exprP = (p) => p.PropertyType;
+                base.ColNameDataDictionary.TryAdd(exprP.GetMemberInfo().Name, CommonHelper.Instance.GetKeyValuePairs(typeof(ProductAttributeType)));
 
-            // 配置图片列显示（显示缩略图，双击可查看原图）
-            DisplayTextResolver.AddColumnDisplayType<tb_Prod>(p => p.Images, ColumnDisplayTypeEnum.Image);
+                DisplayTextResolver.AddFixedDictionaryMappingByEnum<tb_Prod>(t => t.PropertyType, typeof(ProductAttributeType));
+                #endregion
 
-            dataGridView1.CustomRowNo = true;
-            dataGridView1.CellPainting += dataGridView1_CellPainting;
+                // 配置图片列显示（显示缩略图，双击可查看原图）
+                DisplayTextResolver.AddColumnDisplayType<tb_Prod>(p => p.Images, ColumnDisplayTypeEnum.Image);
+
+                dataGridView1.CustomRowNo = true;
+                dataGridView1.CellPainting += dataGridView1_CellPainting;
+
+            }
+
+
+
         }
 
 
@@ -153,20 +164,19 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 产品编辑特别，修改要保存后进行。不可以新建后就修改
         /// </summary>
-        protected override async Task Add()
+        protected override async Task<object> Add()
         {
-            await base.Add();
             base.toolStripButtonModify.Enabled = false;
+            object obj = await base.Add();
+            return obj;
         }
 
 
-
         IList<tb_Prod> oldList;
-
         tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
+        tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
 
-
-
+  
         protected async override Task<bool> Delete()
         {
             bool rs = false;
@@ -257,6 +267,10 @@ namespace RUINORERP.UI.ProductEAV
             base.toolStripButtonModify.Enabled = true;
             return list;
         }
-        
+
+        private void UCProductList_Load(object sender, EventArgs e)
+        {
+            
+        }
     }
 }

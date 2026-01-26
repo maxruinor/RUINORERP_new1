@@ -160,6 +160,7 @@ namespace RUINORERP.Business.BizMapperService
 
                 // 包装信息
                 SafeRegister<tb_Packing>(BizType.包装信息, e => e.Pack_ID, e => e.PackagingName);
+                SafeRegister<tb_Prod>(BizType.产品档案, e => e.ProdBaseID, e => e.CNName);
                 SafeRegister<tb_EOP_WaterStorage>(BizType.蓄水订单, e => e.WSR_ID, e => e.WSRNo);
 
                 _logger.Debug("普通实体映射注册完成，成功：{SuccessCount}，失败：{ErrorCount}", successCount, errorCount);

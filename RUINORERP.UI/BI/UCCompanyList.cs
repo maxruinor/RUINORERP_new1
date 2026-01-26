@@ -32,15 +32,14 @@ namespace RUINORERP.UI.BI
             InitializeComponent();
             base.EditForm = typeof(UCCompanyEdit);
         }
-
-
     
 
-        protected override async Task Add()
+        protected override async Task<object> Add()
         {
+            object result = null;
             if (ListDataSoure.Count == 0)
             {
-                await base.Add();
+                result = await base.Add();
                 base.toolStripButtonModify.Enabled = false;
             }
             else
@@ -49,7 +48,7 @@ namespace RUINORERP.UI.BI
                 {
                     if (MessageBox.Show("您确定多公司模式运营吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
                     {
-                        base.Add();
+                        result = await base.Add();
                         base.toolStripButtonModify.Enabled = false;
                     }
                 }
@@ -61,6 +60,7 @@ namespace RUINORERP.UI.BI
                     base.toolStripButtonAdd.Enabled = false;
                 }
             }
+            return result;
         }
 
         /// <summary>

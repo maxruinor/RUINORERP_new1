@@ -191,6 +191,9 @@ namespace RUINORERP.Server
         /// 注册当前程序集的所有类成员
         // 通用注册放在前面，确保特殊注册可以覆盖它们
         builder.RegisterAssemblyTypes(System.Reflection.Assembly.GetExecutingAssembly())
+            .Where(t => !t.IsAbstract && !t.IsInterface
+                && t != typeof(RUINORERP.Server.Configuration.ScheduledTaskConfiguration) // 排除ScheduledTaskConfiguration单例类
+                && t != typeof(RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager)) // 排除GlobalStateRulesManager单例类
             .AsImplementedInterfaces()
             .AsSelf()
             .SingleInstance();
@@ -637,6 +640,8 @@ namespace RUINORERP.Server
 
             var dalAssemble = Assembly.Load(new AssemblyName("RUINORERP.Model"));
             builder.RegisterAssemblyTypes(dalAssemble)
+             .Where(t => !t.IsAbstract && !t.IsInterface
+                && t != typeof(RUINORERP.Model.Base.StatusManager.GlobalStateRulesManager)) // 排除GlobalStateRulesManager单例类
              .AsImplementedInterfaces().AsSelf()
              .InstancePerDependency() //默认模式，每次调用，都会重新实例化对象；每次请求都创建一个新的对象；
              .PropertiesAutowired();//允许属性注入

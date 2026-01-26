@@ -1,4 +1,5 @@
 using AutoMapper;
+using FastReport.DevComponents.DotNetBar.Controls;
 using FluentValidation;
 using Krypton.Navigator;
 using Krypton.Toolkit;
@@ -252,8 +253,6 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-
-
         List<tb_ProdDetail> removeSkuList = new List<tb_ProdDetail>();
 
         private void DataGridView1_删除选中行(object sender, EventArgs e)
@@ -299,96 +298,8 @@ namespace RUINORERP.UI.ProductEAV
 
         }
 
+ 
 
-
-
-
-        private KryptonPage NewPage(string name, int image, Control content)
-        {
-            // Create new page with title and image
-            KryptonPage p = new KryptonPage();
-            p.Text = name + _count.ToString();
-            p.TextTitle = name + _count.ToString();
-            p.TextDescription = name + _count.ToString();
-            p.UniqueName = p.Text;
-
-
-            // Add the control for display inside the page
-            content.Dock = DockStyle.Fill;
-            p.Controls.Add(content);
-
-            _count++;
-            return p;
-        }
-        private KryptonPage NewDocument()
-        {
-            KryptonPage page = NewPage("Document ", 0, new UControls.UCLocList());
-
-            // Do not allow the document pages to be closed or made auto hidden/docked
-            page.ClearFlags(KryptonPageFlags.DockingAllowAutoHidden |
-                            KryptonPageFlags.DockingAllowDocked |
-                            KryptonPageFlags.DockingAllowClose);
-            page.AllowDrop = false;
-            return page;
-        }
-
-        private void AddEmbeddedNavigator(KryptonPage page)
-        {
-            // Create a navigator to embed inside the page
-            KryptonNavigator nav = new KryptonNavigator();
-
-            // We want the navigator to fill the entire page area
-            nav.Dock = DockStyle.Fill;
-
-            // Remove the close and context buttons
-            nav.Button.CloseButtonDisplay = ButtonDisplay.Hide;
-            nav.Button.ButtonDisplayLogic = ButtonDisplayLogic.None;
-
-            // Set the required tab and bar settings
-            nav.Bar.BarOrientation = VisualOrientation.Right;
-            nav.Bar.ItemOrientation = ButtonOrientation.FixedTop;
-            nav.Bar.ItemSizing = BarItemSizing.SameWidthAndHeight;
-            nav.Bar.TabBorderStyle = TabBorderStyle.RoundedEqualSmall;
-            nav.Bar.TabStyle = TabStyle.StandardProfile;
-
-            // Do not draw the bar area background, let parent page show through
-            nav.StateCommon.Panel.Draw = InheritBool.False;
-
-            // Use same font for all tab states and we want text aligned to near
-            nav.StateCommon.Tab.Content.ShortText.Font = SystemFonts.IconTitleFont;
-            nav.StateCommon.Tab.Content.ShortText.TextH = PaletteRelativeAlign.Near;
-
-            // Set the page colors
-            nav.StateCommon.Tab.Content.Padding = new Padding(4);
-            nav.StateNormal.Tab.Back.ColorStyle = PaletteColorStyle.Linear;
-            nav.StateNormal.Tab.Back.Color1 = _select[_count % _select.Length];
-            nav.StateNormal.Tab.Back.Color2 = Color.White;
-            nav.StateNormal.Tab.Back.ColorAngle = 270;
-            nav.StateSelected.Tab.Back.ColorStyle = PaletteColorStyle.Linear;
-            nav.StateSelected.Tab.Back.Color2 = _hotEmbedSelected;
-            nav.StateSelected.Tab.Back.ColorAngle = 270;
-            nav.StateTracking.Tab.Back.ColorStyle = PaletteColorStyle.Solid;
-            nav.StateTracking.Tab.Back.Color1 = _hotEmbedTracking;
-            nav.StatePressed.Tab.Back.ColorStyle = PaletteColorStyle.Solid;
-            nav.StatePressed.Tab.Back.Color1 = _hotEmbedTracking;
-
-            // Add a random number of pages
-            Random rand = new Random();
-            int numPages = 3 + rand.Next(5);
-
-            for (int i = 0; i < numPages; i++)
-                nav.Pages.Add(NewEmbeddedPage(_titleEmbedded[rand.Next(_titleEmbedded.Length - 1)]));
-
-            page.Controls.Add(nav);
-        }
-
-        private KryptonPage NewEmbeddedPage(string title)
-        {
-            KryptonPage page = new KryptonPage();
-            page.Text = title;
-            page.ImageSmall = null;
-            return page;
-        }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -463,8 +374,6 @@ namespace RUINORERP.UI.ProductEAV
 
             if (isEqual)
             {
-                //MessageBox.Show("数据未修改");
-                //如果主表没动，sku详情变也。也需要将主表设置为修改状态
                 #region 
 
                 foreach (var item in EditEntity.tb_Prod_Attr_Relations)
@@ -486,7 +395,6 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 #endregion
-
             }
             else
             {
@@ -508,80 +416,6 @@ namespace RUINORERP.UI.ProductEAV
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
-
-
-        /// <summary>
-        /// 得到关系列表
-        /// </summary>
-        /// <param name="removeList">如果有删除的行，则标识出来为删除状态</param>
-        /// <returns></returns>
-        /// <summary>
-        /// 获取产品属性关系列表
-        /// 直接使用产品详情的属性关系列表，确保包含完整的属性信息
-        /// </summary>
-        /// <param name="removeList">需要删除的产品详情列表</param>
-        /// <returns>属性关系列表</returns>
-        private List<tb_Prod_Attr_Relation> GetRelations(List<tb_ProdDetail> removeList)
-        {
-            List<tb_Prod_Attr_Relation> relationList = new List<tb_Prod_Attr_Relation>();
-
-            // 处理所有产品详情的属性关系
-            foreach (var item in bindingSourceList)
-            {
-                if (item is tb_ProdDetail detail)
-                {
-                    // 直接使用产品详情中的属性关系列表
-                    foreach (var relation in detail.tb_Prod_Attr_Relations)
-                    {
-                        // 确保属性关系包含完整的属性信息
-                        if (relation.Property_ID > 0 && relation.PropertyValueID > 0)
-                        {
-                            // 如果属性或属性值对象未加载，从缓存中获取
-                            if (relation.tb_prodproperty == null)
-                            {
-                                relation.tb_prodproperty = prodpropList.FirstOrDefault(p => p.Property_ID == relation.Property_ID);
-                            }
-                            if (relation.tb_prodpropertyvalue == null)
-                            {
-                                relation.tb_prodpropertyvalue = prodpropValueList.FirstOrDefault(pv => pv.PropertyValueID == relation.PropertyValueID);
-                            }
-
-                            // 设置关系的操作状态
-                            relation.ActionStatus = detail.ActionStatus;
-                            relationList.Add(relation);
-                        }
-                    }
-                }
-            }
-
-            // 处理需要删除的产品详情的属性关系
-            foreach (var item in removeList)
-            {
-                foreach (var relation in item.tb_Prod_Attr_Relations)
-                {
-                    // 确保属性关系包含完整的属性信息
-                    if (relation.Property_ID > 0 && relation.PropertyValueID > 0)
-                    {
-                        // 如果属性或属性值对象未加载，从缓存中获取
-                        if (relation.tb_prodproperty == null)
-                        {
-                            relation.tb_prodproperty = prodpropList.FirstOrDefault(p => p.Property_ID == relation.Property_ID);
-                        }
-                        if (relation.tb_prodpropertyvalue == null)
-                        {
-                            relation.tb_prodpropertyvalue = prodpropValueList.FirstOrDefault(pv => pv.PropertyValueID == relation.PropertyValueID);
-                        }
-
-                        // 设置关系为删除状态
-                        relation.ActionStatus = ActionStatus.删除;
-                        relationList.Add(relation);
-                    }
-                }
-            }
-
-            return relationList;
-        }
-
 
 
         /// <summary>
@@ -717,36 +551,7 @@ namespace RUINORERP.UI.ProductEAV
             return details;
         }
 
-
-        /// <summary>
-        /// 得到SKU明细
-        /// </summary>
-        /// <returns></returns>
-        private List<tb_ProdDetail> GetDetails(List<tb_ProdDetail> removeList)
-        {
-            List<tb_ProdDetail> details = new List<tb_ProdDetail>();
-            foreach (var item in bindingSourceList)
-            {
-                if (item is tb_ProdDetail)
-                {
-                    tb_ProdDetail detail = new tb_ProdDetail();
-                    tb_ProdDetail epd = item as tb_ProdDetail;
-
-                    //为null的不需要，不然会覆盖
-                    detail = MainForm.Instance.mapper.Map<tb_ProdDetail>(epd);
-                    details.Add(detail);
-                }
-            }
-
-            //多属性才可能被删除一些明细
-            foreach (var item in removeList)
-            {
-                tb_ProdDetail epd = item as tb_ProdDetail;
-                epd.ActionStatus = ActionStatus.删除;
-                details.Add(epd);
-            }
-            return details;
-        }
+ 
 
         /// <summary>
         /// 将SKU表格中显示的明细转换为属性关系
@@ -1139,26 +944,13 @@ namespace RUINORERP.UI.ProductEAV
             else
             {
                 cevent.Value = _cacheManager.GetEntity<tb_ProdCategories>(cevent.Value.ToString()).Category_name;
-                //cevent.Value = _cacheManager.GetValue<tb_ProductCategories>(cevent.Value);
-
-                //显示名称
-                //tb_ProductCategories entity = list.Find(t => t.category_ID.ToString() == cevent.Value.ToString());
-                //if (entity != null)
-                //{
-                //    cevent.Value = entity.Category_name;
-                //}
-                //else
-                //{
-                //    cevent.Value = 0;
-                //}
             }
 
         }
 
         private async void ControlToDataSource(object sender, ConvertEventArgs cevent)
         {
-            // The method converts back to decimal type only. 
-            //if (cevent.DesiredType != typeof(decimal)) return;
+
             if (string.IsNullOrEmpty(cevent.Value.ToString()) || cevent.Value.ToString() == "类目根结节")
             {
                 cevent.Value = null;
@@ -1169,29 +961,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (entity != null)
                 {
                     cevent.Value = entity.Category_ID;
-                    //// 使用新的BizCodeService生成产品编号
-                    //try
-                    //{
-                    //    var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-                    //    if (bizCodeService != null)
-                    //    {
-                    //        EditEntity.Category_ID = entity.Category_ID;
-                    //        EditEntity.tb_prodcategories = entity;
-                    //        txtNo.Text = await bizCodeService.GenerateProductRelatedCodeAsync(BaseInfoType.ProductNo, EditEntity);
-                    //    }
-                    //    else
-                    //    {
-                    //        // 降级方案：如果服务不可用，使用原来的方法
-                    //        // txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
-                    //        MessageBox.Show("警告：无法使用服务器生成产品编码，已使用本地生成方式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    //    }
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    // 异常处理：发生错误时使用本地生成方式作为备用
-                    //    //txtNo.Text = BNRFactory.Default.Create("{CN:" + entity.Category_name + "}");
-                    //    MessageBox.Show($"生成产品编码时发生错误：{ex.Message}\n已使用本地生成方式作为备用", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    //}
+                 
                 }
                 else
                 {
@@ -1281,42 +1051,6 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        private Image SetImageToEntityOld(string pathName)
-        {
-            System.Drawing.Image img = System.Drawing.Image.FromFile(pathName);
-            //将图像读入到字节数组
-            System.IO.FileStream fs = new System.IO.FileStream(pathName, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-            byte[] buffByte = new byte[fs.Length];
-            fs.Read(buffByte, 0, (int)fs.Length);
-            fs.Close();
-            fs = null;
-            // 判断图片大小是否超过 200KB
-            if (buffByte.Length > 200 * 1024)
-            {
-                // 压缩图片
-                ImageCodecInfo jpegCodec = GetEncoderInfo(ImageFormat.Jpeg);
-                EncoderParameters encoderParams = new EncoderParameters(1);
-                encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 50L);
-                img = (Image)new Bitmap(img, new Size(800, 600));
-                img.Save("compressed.jpg", jpegCodec, encoderParams);
-
-                // 重新读取压缩后的图片
-                img = System.Drawing.Image.FromFile("compressed.jpg");
-                //this.pictureBox1.Image = img;
-
-                MessageBox.Show("图片大小超过 200KB，已自动压缩。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                // 将压缩后的图片转换为 byte[] 数组
-                byte[] compressedImageBytes = File.ReadAllBytes("compressed.jpg");
-
-                // 在这里将 compressedImageBytes 保存到数据库中
-                _EditEntity.Images = compressedImageBytes;
-            }
-            else
-            {
-                _EditEntity.Images = buffByte;
-            }
-            return img;
-        }
         private Image SetImageToEntity(string pathName)
         {
             // 先读取原始图片字节
@@ -1401,12 +1135,6 @@ namespace RUINORERP.UI.ProductEAV
                     btnAddProperty.Enabled = true;
                     btnClear.Enabled = true;
 
-                    //  listView1.Height = 80 * PropertyCounter;
-
-
-
-                    //  kryptonGroupBoxDataGridView.Width = flowLayoutPanel1.Width;
-                    //  kryptonGroupBoxDataGridView.Height = flowLayoutPanel1.Height - kryptonGroupBoxListView.Height;
 
                     if (action == ActionStatus.加载)
                     {
@@ -1460,7 +1188,6 @@ namespace RUINORERP.UI.ProductEAV
                 MainForm.Instance.uclog.AddLog("消息", tips);
             }
 
-            //显示属性  加载勾选框
             #region 属性UI处理
             foreach (var item in attrs)
             {
@@ -1498,10 +1225,7 @@ namespace RUINORERP.UI.ProductEAV
             LoadRelationToEavSku(entityProdBase);
             #endregion
 
-            //加载也能编辑
-
-
-
+       
         }
 
 
@@ -1920,7 +1644,6 @@ namespace RUINORERP.UI.ProductEAV
             //ucskulist.bindingSourceList.DataSource = propGroups;
             //ucskulist.dataGridView1.DataSource = ucskulist.bindingSourceList;
             //ucskulist.dataGridView1.ColumnDisplayControl(ucskulist.FieldNameList);
-
             dataGridView1.RowHeadersVisible = false;
             bindingSourceList.DataSource = propGroups;
             dataGridView1.DataSource = bindingSourceList;
@@ -2358,6 +2081,9 @@ namespace RUINORERP.UI.ProductEAV
             List<Expression<Func<tb_ProdDetail, object>>> ExpInvisibleCols = new List<Expression<Func<tb_ProdDetail, object>>>();
             ExpInvisibleCols.Add(c => c.ProdBaseID);
             ExpInvisibleCols.Add(c => c.ProdDetailID);
+            ExpInvisibleCols.Add(c => c.Image);
+            ExpInvisibleCols.Add(c => c.Images);
+            ExpInvisibleCols.Add(c => c.DataStatus);
             //如果不启用条码。则不显示
             if (!MainForm.Instance.AppContext.SysConfig.UseBarCode)
             {

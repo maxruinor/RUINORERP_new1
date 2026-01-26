@@ -208,7 +208,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPage3,
             this.kryptonPageImage,
             this.kryptonPage2});
-            this.kryptonNavigator1.SelectedIndex = 0;
+            this.kryptonNavigator1.SelectedIndex = 2;
             this.kryptonNavigator1.Size = new System.Drawing.Size(1024, 614);
             this.kryptonNavigator1.TabIndex = 0;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
@@ -786,6 +786,7 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridView1.CustomRowNo = false;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.EnableFiltering = false;
+            this.dataGridView1.EnablePagination = false;
             this.dataGridView1.FieldNameList = null;
             this.dataGridView1.IsShowSumRow = false;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
@@ -859,9 +860,9 @@ namespace RUINORERP.UI.ProductEAV
             // pictureBox1
             // 
             this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
-            this.pictureBox1.Location = new System.Drawing.Point(237, 38);
+            this.pictureBox1.Location = new System.Drawing.Point(24, 16);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(519, 423);
+            this.pictureBox1.Size = new System.Drawing.Size(417, 430);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
@@ -1069,7 +1070,6 @@ namespace RUINORERP.UI.ProductEAV
             this.ClientSize = new System.Drawing.Size(1024, 678);
             this.Controls.Add(this.kryptonSplitContainerBig);
             this.Name = "frmProductEdit";
-         
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).EndInit();
             this.kryptonNavigator1.ResumeLayout(false);

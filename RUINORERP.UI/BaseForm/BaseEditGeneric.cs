@@ -165,33 +165,8 @@ namespace RUINORERP.UI.BaseForm
             entity.AcceptChanges();
         }
 
-        //public virtual void BindData(T entity, ActionStatus actionStatus = ActionStatus.无操作)
-        //{
-
-        //}
-        //public virtual void BindData(T entity)
-        //{
-
-        //}
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        //public virtual void BindData<T>(BaseEntity entity)
-        //{
-
-        //}
-
 
         public System.Threading.Timer _timeoutTimer4tips;
-
-        //public delegate void ShowHelp();
-
-        //[System.ComponentModel.Description("提示帮助事件")]
-        //public event ShowHelp OnShowHelp;
-
-
-
 
         /// <summary>
         /// esc退出窗体
@@ -730,7 +705,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
         /// <summary>
         /// 有些功能会在UI加载完后才生效
         /// </summary>
@@ -740,7 +714,6 @@ namespace RUINORERP.UI.BaseForm
             {
                 UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
             }
-
         }
 
         private void BaseEditGeneric_Shown(object sender, EventArgs e)

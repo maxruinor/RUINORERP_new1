@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
-using RUINORERP.Common.Extensions;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -15,7 +16,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class DynamicExcelParser
     {
         /// <summary>
-        /// 解析Excel文件为DataTable
+        /// 解析Excel文件为DataTable（默认第一个Sheet）
         /// </summary>
         /// <param name="filePath">Excel文件路径</param>
         /// <returns>解析后的DataTable</returns>
@@ -23,6 +24,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <exception cref="ArgumentException">当文件格式不支持时抛出</exception>
         /// <exception cref="Exception">当解析过程中发生错误时抛出</exception>
         public DataTable ParseExcelToDataTable(string filePath)
+        {
+            return ParseExcelToDataTable(filePath, 0);
+        }
+
+        /// <summary>
+        /// 解析Excel文件的指定Sheet为DataTable
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="sheetIndex">Sheet索引（从0开始）</param>
+        /// <returns>解析后的DataTable</returns>
+        /// <exception cref="FileNotFoundException">当文件不存在时抛出</exception>
+        /// <exception cref="ArgumentException">当文件格式不支持时抛出</exception>
+        /// <exception cref="Exception">当解析过程中发生错误时抛出</exception>
+        public DataTable ParseExcelToDataTable(string filePath, int sheetIndex)
+        {
+            return ParseExcelToDataTable(filePath, sheetIndex, -1);
+        }
+
+        /// <summary>
+        /// 解析Excel文件的指定Sheet为DataTable（支持预览行数限制）
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="sheetIndex">Sheet索引（从0开始）</param>
+        /// <param name="maxPreviewRows">预览最大行数，-1表示全部加载</param>
+        /// <returns>解析后的DataTable</returns>
+        /// <exception cref="FileNotFoundException">当文件不存在时抛出</exception>
+        /// <exception cref="ArgumentException">当文件格式不支持时抛出</exception>
+        /// <exception cref="Exception">当解析过程中发生错误时抛出</exception>
+        public DataTable ParseExcelToDataTable(string filePath, int sheetIndex, int maxPreviewRows)
         {
             if (!File.Exists(filePath))
             {
@@ -48,59 +78,79 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         throw new ArgumentException("不支持的文件格式，仅支持.xls和.xlsx格式的Excel文件");
                 }
 
-                // 获取第一个工作表
-                ISheet sheet = workbook.GetSheetAt(0);
+                // 检查Sheet索引是否有效
+                if (sheetIndex < 0 || sheetIndex >= workbook.NumberOfSheets)
+                {
+                    throw new Exception($"Sheet索引 {sheetIndex} 无效，Excel文件中共有 {workbook.NumberOfSheets} 个工作表");
+                }
+
+                // 获取指定的工作表
+                ISheet sheet = workbook.GetSheetAt(sheetIndex);
                 if (sheet == null)
                 {
-                    throw new Exception("Excel文件中没有工作表");
+                    throw new Exception($"Excel文件中没有工作表 {sheetIndex}");
                 }
 
                 // 将工作表转换为DataTable
-                dataTable = SheetToDataTable(sheet);
+                dataTable = SheetToDataTable(sheet, maxPreviewRows);
             }
 
             return dataTable;
         }
 
         /// <summary>
-        /// 将Excel工作表转换为DataTable
+        /// 将Excel工作表转换为DataTable（性能优化版本）
         /// </summary>
         /// <param name="sheet">Excel工作表</param>
+        /// <param name="maxPreviewRows">预览最大行数，-1表示全部加载</param>
         /// <returns>转换后的DataTable</returns>
-        private DataTable SheetToDataTable(ISheet sheet)
+        private DataTable SheetToDataTable(ISheet sheet, int maxPreviewRows = -1)
         {
             DataTable dataTable = new DataTable();
             IRow headerRow = sheet.GetRow(0);
+            if (headerRow == null)
+            {
+                throw new Exception("Excel工作表没有标题行");
+            }
+
             int cellCount = headerRow.LastCellNum;
+            var columnNames = new List<string>();
 
             // 创建DataTable的列
             for (int i = headerRow.FirstCellNum; i < cellCount; i++)
             {
                 ICell cell = headerRow.GetCell(i);
+                string columnName;
+
                 if (cell != null)
                 {
-                    string columnName = cell.ToString();
+                    columnName = cell.ToString().Trim();
                     // 如果列名重复，添加序号后缀
-                    if (dataTable.Columns.Contains(columnName))
+                    if (columnNames.Contains(columnName))
                     {
                         int suffix = 1;
-                        while (dataTable.Columns.Contains($"{columnName}_{suffix}"))
+                        while (columnNames.Contains($"{columnName}_{suffix}"))
                         {
                             suffix++;
                         }
                         columnName = $"{columnName}_{suffix}";
                     }
-                    dataTable.Columns.Add(columnName);
                 }
                 else
                 {
                     // 处理空列名
-                    dataTable.Columns.Add($"Column_{i + 1}");
+                    columnName = $"Column_{i + 1}";
                 }
+
+                columnNames.Add(columnName);
+                dataTable.Columns.Add(columnName);
             }
 
+            // 确定要读取的行数
+            int lastRowToRead = maxPreviewRows > 0 ? Math.Min(maxPreviewRows + 1, sheet.LastRowNum + 1) : sheet.LastRowNum + 1;
+
             // 填充DataTable的数据行
-            for (int i = 1; i <= sheet.LastRowNum; i++)
+            for (int i = 1; i < lastRowToRead; i++)
             {
                 IRow row = sheet.GetRow(i);
                 if (row != null)
@@ -159,7 +209,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 case CellType.Numeric:
                     if (DateUtil.IsCellDateFormatted(cell))
                     {
-                        cellValue = cell.DateCellValue.ToString("yyyy-MM-dd HH:mm:ss");
+                        // 将NPOI的Java Date类型转换为.NET DateTime类型
+                        DateTime dateTime = DateTime.FromOADate(cell.NumericCellValue);
+                        cellValue = dateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
                     }
                     else
                     {

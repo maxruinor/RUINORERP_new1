@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Krypton.Toolkit;
 using RUINORERP.Model;
+using RUINORERP.UI.Common;
 using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
@@ -23,12 +24,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// Excel数据表格
         /// </summary>
         public DataTable ExcelData { get; set; }
-        
+
         /// <summary>
-        /// 导入目标表名
+        /// 导入目标实体类型
         /// </summary>
-        public string TargetTableName { get; set; }
-        
+        public Type TargetEntityType { get; set; }
+
         /// <summary>
         /// 列映射配置集合
         /// </summary>
@@ -90,16 +91,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 从数据库获取目标表的字段信息
-                ISqlSugarClient db = MainForm.Instance.AppContext.Db;
-                DataTable dtFields = db.Ado.GetDataTable(
-                    "SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.columns WHERE table_name = @table_name",
-                    new { table_name = TargetTableName });
-                
-                listBoxSystemFields.Items.Clear();
-                foreach (DataRow row in dtFields.Rows)
+                if (TargetEntityType == null)
                 {
-                    string fieldInfo = $"{row["COLUMN_NAME"]} ({row["DATA_TYPE"]})";
+                    MessageBox.Show("未设置目标实体类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 使用UIHelper获取实体的字段信息
+                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+
+                listBoxSystemFields.Items.Clear();
+                foreach (var field in fieldNameList)
+                {
+                    string fieldInfo = $"{field.Key} - {field.Value}";
                     listBoxSystemFields.Items.Add(fieldInfo);
                 }
             }
@@ -146,8 +150,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             
             string excelColumn = listBoxExcelColumns.SelectedItem.ToString();
             string systemFieldInfo = listBoxSystemFields.SelectedItem.ToString();
-            string systemField = systemFieldInfo.Split('(')[0].Trim();
-            string dataType = systemFieldInfo.Split('(')[1].TrimEnd(')');
+            string systemField = systemFieldInfo.Split('-')[0].Trim();
+            string dataType = systemFieldInfo.Split('-')[1].Trim();
             
             // 检查是否已存在映射
             if (ColumnMappings.Any(m => m.ExcelColumn == excelColumn || m.SystemField == systemField))
@@ -198,9 +202,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show("无效的映射格式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            
+
             string excelColumn = mappingParts[0];
-            string systemField = mappingParts[1].Split('(')[0].Trim();
+            string systemField = mappingParts[1].Split('-')[0].Trim();
             
             // 查找并删除映射
             var mappingToRemove = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
@@ -244,7 +248,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (mappingParts.Length == 2)
             {
                 string excelColumn = mappingParts[0];
-                string systemField = mappingParts[1].Split('(')[0].Trim();
+                string systemField = mappingParts[1].Split('-')[0].Trim();
                 
                 var mappingToSet = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
                 if (mappingToSet != null)
@@ -318,7 +322,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         {
                             ExcelColumn = excelColumn,
                             SystemField = systemField,
-                            DataType = systemFieldInfo.Split('(')[1].TrimEnd(')'),
+                            DataType = systemFieldInfo.Split('-')[1].Trim(),
                             IsUniqueKey = false,
                             CreateTime = DateTime.Now,
                             UpdateTime = DateTime.Now

@@ -90,12 +90,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                 else
                 {
                     SaleOrderList = await MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_SaleOrder>()
-                  //.Includes(c => c.tb_employee)
                   .Includes(c => c.tb_SaleOrderDetails)
-                  //.Includes(c => c.tb_projectgroup)
-                  //.Includes(c => c.tb_customervendor)
-                  //.Includes(c => c.tb_OrderPackings)
-                  //.Includes(c => c.tb_paymentmethod)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurOrderDetails)
                   .Includes(c => c.tb_PurOrders, d => d.tb_PurEntries, f => f.tb_PurEntryDetails)
                   .Includes(c => c.tb_SaleOuts, d => d.tb_SaleOutRes, f => f.tb_SaleOutReDetails)

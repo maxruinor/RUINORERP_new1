@@ -43,6 +43,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string MappingName { get; set; }
 
         /// <summary>
+        /// 目标实体类型名称
+        /// </summary>
+        public string EntityType { get; set; }
+
+        /// <summary>
         /// 创建时间
         /// </summary>
         public DateTime CreateTime { get; set; }

@@ -2407,10 +2407,13 @@
     </Compile>
     <Compile Include="Startup.cs" />
     <Compile Include="SysConfig\BasicDataImport\CategoryImporter.cs" />
+    <Compile Include="SysConfig\BasicDataImport\CategoryImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMapping.cs" />
     <Compile Include="SysConfig\BasicDataImport\ColumnMappingManager.cs" />
     <Compile Include="SysConfig\BasicDataImport\DataValidator.cs" />
+    <Compile Include="SysConfig\BasicDataImport\DynamicDataValidator.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
+    <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
@@ -2465,6 +2468,12 @@
     </Compile>
     <Compile Include="MRP\PPROC\UCMaterialRequisitionStatistics.Designer.cs">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCManufacturingOrderStatistics.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MRP\PPROC\UCManufacturingOrderStatistics.Designer.cs">
+      <DependentUpon>UCManufacturingOrderStatistics.cs</DependentUpon>
     </Compile>
     <Compile Include="MRP\PQC\UCMRPReworkEntry.cs">
       <SubType>UserControl</SubType>
@@ -4362,6 +4371,9 @@
     <EmbeddedResource Include="MRP\PPROC\UCMaterialRequisitionStatistics.resx">
       <DependentUpon>UCMaterialRequisitionStatistics.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="MRP\PPROC\UCManufacturingOrderStatistics.resx">
+      <DependentUpon>UCManufacturingOrderStatistics.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MRP\PQC\UCMRPReworkEntry.resx">
       <DependentUpon>UCMRPReworkEntry.cs</DependentUpon>
     </EmbeddedResource>
@@ -5378,7 +5390,7 @@
   <Import Project="..\packages\HarfBuzzSharp.NativeAssets.macOS.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.macOS.targets" Condition="Exists('..\packages\HarfBuzzSharp.NativeAssets.macOS.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.macOS.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用“NuGet 程序包还原”可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
+      <ErrorText>这台计算机上缺少此项目引用的 NuGet 程序包。使用"NuGet 程序包还原"可下载这些程序包。有关更多信息，请参见 http://go.microsoft.com/fwlink/?LinkID=322105。缺少的文件是 {0}。</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\HarfBuzzSharp.NativeAssets.macOS.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.macOS.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\HarfBuzzSharp.NativeAssets.macOS.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.macOS.targets'))" />
     <Error Condition="!Exists('..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\HarfBuzzSharp.NativeAssets.Win32.7.3.0.3\build\net462\HarfBuzzSharp.NativeAssets.Win32.targets'))" />

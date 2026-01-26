@@ -35,9 +35,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="mappings">列映射配置集合</param>
         /// <param name="mappingName">映射配置名称</param>
+        /// <param name="entityType">实体类型名称</param>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
         /// <exception cref="Exception">当保存过程中发生错误时抛出</exception>
-        public void SaveMapping(ColumnMappingCollection mappings, string mappingName)
+        public void SaveMapping(ColumnMappingCollection mappings, string mappingName, string entityType = null)
         {
             if (string.IsNullOrEmpty(mappingName))
             {
@@ -50,6 +51,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 foreach (var mapping in mappings)
                 {
                     mapping.MappingName = mappingName;
+                    mapping.EntityType = entityType;
                     mapping.UpdateTime = DateTime.Now;
                     if (mapping.CreateTime == DateTime.MinValue)
                     {
@@ -57,7 +59,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                // 保存到XML文件
+                // 保存到XML文件（包含实体类型信息）
                 string filePath = Path.Combine(_configPath, $"{mappingName}.xml");
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {

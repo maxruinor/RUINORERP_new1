@@ -1,13 +1,25 @@
-using System;using System.Collections.Generic;using System.ComponentModel;using System.Data;using System.Drawing;using System.IO;using System.Linq;using System.Text;using System.Threading.Tasks;
-using System.Windows.Forms;
+using Krypton.Navigator;
+using Krypton.Toolkit;
 using RUINORERP.Model;
+using RUINORERP.UI.Common;
 using SqlSugar;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
     /// 基础数据导入UI组件
     /// 用于产品数据的导入操作
+    [MenuAttrAssemblyInfo("基础数据导入", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
     /// </summary>
     public partial class UCBasicDataImport : UserControl
     {
@@ -78,8 +90,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    txtFilePath.Text = openFileDialog.FileName;
-                    btnParse.Enabled = true;
+                    ktxtFilePath.Text = openFileDialog.FileName;
+                    kbtnParse.Enabled = true;
                 }
             }
         }
@@ -94,7 +106,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 // 解析Excel文件
-                _importData = _excelParser.ParseExcel(txtFilePath.Text);
+                _importData = _excelParser.ParseExcel(ktxtFilePath.Text);
                 
                 // 验证数据
                 _importData = _dataValidator.ValidateProducts(_importData);
@@ -106,10 +118,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 int successCount = _importData.Count(p => p.ImportStatus);
                 int failedCount = _importData.Count(p => !p.ImportStatus);
                 
-                lblStatus.Text = $"解析完成，共 {_importData.Count} 条记录，有效记录 {successCount} 条，无效记录 {failedCount} 条";
-                
                 // 启用导入按钮
-                btnImport.Enabled = _importData.Count > 0;
+                kbtnImport.Enabled = _importData.Count > 0;
                 
                 // 显示无效记录
                 if (failedCount > 0)
@@ -152,9 +162,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 
                 // 开始导入
-                btnImport.Enabled = false;
-                btnBrowse.Enabled = false;
-                btnParse.Enabled = false;
+                kbtnImport.Enabled = false;
+                kbtnBrowse.Enabled = false;
+                kbtnParse.Enabled = false;
                 
                 Application.DoEvents();
                 
@@ -180,6 +190,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 
                 MessageBox.Show(message.ToString(), "导入结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 
+                // 更新导入结果页面
+                klblTotalCount.Text = result.TotalCount.ToString();
+                klblSuccessCount.Text = result.SuccessCount.ToString();
+                klblFailedCount.Text = result.FailedCount.ToString();
+                klblElapsedTime.Text = $"{result.ElapsedMilliseconds} 毫秒";
+                
+                // 切换到结果页面
+                kryptonNavigator1.SelectedPage = kryptonPageResult;
+                
                 // 重置状态
                 ResetControls();
             }
@@ -195,9 +214,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void ResetControls()
         {
-            btnImport.Enabled = true;
-            btnBrowse.Enabled = true;
-            btnParse.Enabled = !string.IsNullOrEmpty(txtFilePath.Text);
+            kbtnImport.Enabled = true;
+            kbtnBrowse.Enabled = true;
+            kbtnParse.Enabled = !string.IsNullOrEmpty(ktxtFilePath.Text);
         }
         
         /// <summary>

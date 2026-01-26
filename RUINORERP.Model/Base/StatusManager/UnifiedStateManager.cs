@@ -38,6 +38,23 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         public event EventHandler<StateTransitionEventArgs> StatusChanged;
 
+        /// <summary>
+        /// 反射方法缓存 - 用于缓存GlobalStateRulesManager的MethodInfo
+        /// Key: 方法名称, Value: MethodInfo
+        /// </summary>
+        private static readonly Dictionary<string, MethodInfo> _methodCache = new Dictionary<string, MethodInfo>();
+
+        /// <summary>
+        /// 泛型方法缓存 - 用于缓存已构造的泛型方法
+        /// Key: 方法名称 + 状态类型全名, Value: MethodInfo
+        /// </summary>
+        private static readonly Dictionary<string, MethodInfo> _genericMethodCache = new Dictionary<string, MethodInfo>();
+
+        /// <summary>
+        /// 缓存锁对象
+        /// </summary>
+        private static readonly object _cacheLock = new object();
+
         #endregion
 
         #region 构造函数
@@ -84,13 +101,13 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (entity.ContainsProperty(typeof(StatementStatus).Name))
                     return typeof(StatementStatus);
 
-                // 默认返回DataStatus类型
-                return typeof(DataStatus);
+                // 实体不包含任何状态属性时，记录警告并返回null
+                return null;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"获取状态类型失败: {ex.Message}");
-                return typeof(DataStatus);
+                _logger?.LogError(ex, "获取实体 {EntityType} 状态类型时发生异常", entity?.GetType().Name ?? "Unknown");
+                return null;
             }
         }
 
@@ -230,20 +247,22 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (toStatus == null)
                     return StateTransitionResult.Denied("目标状态不能为空");
 
-                // 状态相同检查 - 避免不必要的验证
-                if (fromStatus.Equals(toStatus))
+                // 状态相同检查 - 避免不必要的验证（确保toStatus不为null）
+                if (toStatus != null && fromStatus.Equals(toStatus))
                     return StateTransitionResult.Allowed();
 
                 // 验证两个枚举类型是否一致
                 if (fromStatus.GetType() != toStatus.GetType())
                     return StateTransitionResult.Denied($"源状态类型和目标状态类型不一致");
 
-                // 动态检查状态转换是否有效
+                // 动态检查状态转换是否有效（使用缓存优化性能）
                 Type statusType = fromStatus.GetType();
-                bool isAllowed = (bool)typeof(GlobalStateRulesManager)
-                    .GetMethod("IsValidTransition")
-                    .MakeGenericMethod(statusType)
-                    .Invoke(GlobalStateRulesManager.Instance, new object[] { fromStatus, toStatus });
+                var isValidTransitionMethod = GetCachedGenericMethod("IsValidTransition", statusType);
+                if (isValidTransitionMethod == null)
+                {
+                    return StateTransitionResult.Denied("无法获取状态转换验证方法");
+                }
+                bool isAllowed = (bool)isValidTransitionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { fromStatus, toStatus });
 
                 StateTransitionResult result;
                 if (isAllowed)
@@ -265,6 +284,80 @@ namespace RUINORERP.Model.Base.StatusManager
                 return StateTransitionResult.Denied("验证状态转换时发生异常");
             }
         }
+
+        #region 反射方法缓存辅助方法
+
+        /// <summary>
+        /// 获取缓存的MethodInfo（非泛型方法）
+        /// </summary>
+        /// <param name="methodName">方法名称</param>
+        /// <returns>MethodInfo</returns>
+        private MethodInfo GetCachedMethod(string methodName)
+        {
+            if (_methodCache.TryGetValue(methodName, out var method))
+            {
+                return method;
+            }
+
+            lock (_cacheLock)
+            {
+                // 双重检查锁定
+                if (_methodCache.TryGetValue(methodName, out method))
+                {
+                    return method;
+                }
+
+                method = typeof(GlobalStateRulesManager).GetMethod(methodName);
+                if (method == null)
+                {
+                    _logger?.LogError("未找到方法：{MethodName}", methodName);
+                    return null;
+                }
+
+                _methodCache[methodName] = method;
+                return method;
+            }
+        }
+
+        /// <summary>
+        /// 获取缓存的泛型MethodInfo
+        /// </summary>
+        /// <param name="methodName">方法名称</param>
+        /// <param name="statusType">状态类型</param>
+        /// <returns>构造后的泛型MethodInfo</returns>
+        private MethodInfo GetCachedGenericMethod(string methodName, Type statusType)
+        {
+            if (statusType == null)
+                return null;
+
+            string cacheKey = $"{methodName}_{statusType.FullName}";
+
+            if (_genericMethodCache.TryGetValue(cacheKey, out var genericMethod))
+            {
+                return genericMethod;
+            }
+
+            lock (_cacheLock)
+            {
+                // 双重检查锁定
+                if (_genericMethodCache.TryGetValue(cacheKey, out genericMethod))
+                {
+                    return genericMethod;
+                }
+
+                var method = GetCachedMethod(methodName);
+                if (method == null)
+                {
+                    return null;
+                }
+
+                genericMethod = method.MakeGenericMethod(statusType);
+                _genericMethodCache[cacheKey] = genericMethod;
+                return genericMethod;
+            }
+        }
+
+        #endregion
 
 
         /// <summary>
@@ -719,15 +812,19 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 使用反射调用GlobalStateRulesManager的泛型方法
-                var method = typeof(GlobalStateRulesManager).GetMethod("CanExecuteNonStateTransitionAction");
-                var genericMethod = method.MakeGenericMethod(statusType);
-                var canExecute = (bool)genericMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+                // 使用反射调用GlobalStateRulesManager的泛型方法（使用缓存优化性能）
+                var canExecuteMethod = GetCachedGenericMethod("CanExecuteNonStateTransitionAction", statusType);
+                if (canExecuteMethod == null)
+                {
+                    return (false, "无法获取操作权限验证方法");
+                }
+                bool canExecute = (bool)canExecuteMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
 
-                // 获取执行条件说明
-                var conditionMethod = typeof(GlobalStateRulesManager).GetMethod("GetNonStateTransitionActionCondition");
-                var genericConditionMethod = conditionMethod.MakeGenericMethod(statusType);
-                var conditionMessage = (string)genericConditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action });
+                // 获取执行条件说明（使用缓存优化性能）
+                var conditionMethod = GetCachedGenericMethod("GetNonStateTransitionActionCondition", statusType);
+                string conditionMessage = conditionMethod != null
+                    ? (string)conditionMethod.Invoke(GlobalStateRulesManager.Instance, new object[] { currentStatus, action })
+                    : string.Empty;
 
                 if (canExecute)
                 {
@@ -1406,6 +1503,33 @@ namespace RUINORERP.Model.Base.StatusManager
 
             // 设置状态
             return await SetBusinessStatusAsync(entity, statusType, targetStatus, reason ?? "审核驳回", userId);
+        }
+
+        #endregion
+
+        #region 缓存管理
+
+        /// <summary>
+        /// 清除所有缓存
+        /// 用于全局规则变更（如提交修改模式变更）时强制刷新缓存
+        /// </summary>
+        public void ClearAllCache()
+        {
+            _statusCacheManager?.ClearAllCache();
+            _logger?.LogDebug("已清除所有状态管理缓存");
+        }
+
+        /// <summary>
+        /// 清除指定状态类型的缓存
+        /// </summary>
+        /// <param name="statusType">状态类型</param>
+        public void ClearCacheByStatusType(Type statusType)
+        {
+            if (statusType != null)
+            {
+                _statusCacheManager?.ClearCacheByStatusType(statusType);
+                _logger?.LogDebug("已清除状态类型 {StatusType} 的缓存", statusType.Name);
+            }
         }
 
         #endregion

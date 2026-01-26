@@ -77,6 +77,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 设置提交修改模式
         /// 设置后需要重新初始化规则以应用新的模式设置
+        /// 注意：调用此方法后，UnifiedStateManager需要清除缓存以确保新模式生效
         /// </summary>
         /// <param name="mode">新的提交修改模式</param>
         public void SetSubmitModifyRuleMode(SubmitModifyRuleMode mode)
@@ -671,8 +672,12 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 添加付款状态按钮规则
             AddStandardButtonRules(PaymentStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 修改待审核状态的删除按钮权限，已审核的单据不允许直接删除
-            AddStandardButtonRules(PaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+
+            // 根据全局提交修改模式设置待审核状态的按钮规则
+            // 灵活模式：允许修改；严格模式：不允许修改
+            bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+            AddStandardButtonRules(PaymentStatus.待审核, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: allowModifyInSubmittedState, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+
             AddStandardButtonRules(PaymentStatus.已支付, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
@@ -683,8 +688,12 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 添加预付款状态按钮规则
             AddStandardButtonRules(PrePaymentStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
-            AddStandardButtonRules(PrePaymentStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+
+            // 根据全局提交修改模式设置待审核状态的按钮规则
+            // 灵活模式：允许修改；严格模式：不允许修改
+            bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+            AddStandardButtonRules(PrePaymentStatus.待审核, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: allowModifyInSubmittedState, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+
             AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.部分核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
@@ -700,8 +709,11 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 添加应收应付状态按钮规则
             AddStandardButtonRules(ARAPStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true);
-            // 修改待审核状态的删除按钮权限，已提交审核的单据不允许直接删除
-            AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true);
+
+            // 根据全局提交修改模式设置待审核状态的按钮规则
+            // 灵活模式：允许修改；严格模式：不允许修改
+            bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
+            AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: allowModifyInSubmittedState, submitEnabled: false, reviewEnabled: true);
             // 待支付状态：允许查看和打印，不允许修改原始数据，但允许反审核操作
             AddStandardButtonRules(ARAPStatus.待支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             // 部分支付状态：允许查看和打印，不允许修改原始数据

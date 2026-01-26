@@ -753,7 +753,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="reviewEnabled">审核按钮是否启用</param>
         /// <param name="reverseReviewEnabled">反审核按钮是否启用</param>
         /// <summary>
-        /// 添加标准按钮规则1
+        /// 添加标准按钮规则
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="status">状态值</param>

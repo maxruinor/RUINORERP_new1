@@ -45,6 +45,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPagePreview = new Krypton.Navigator.KryptonPage();
             this.dgvImportData = new RUINORERP.UI.UControls.NewSumDataGridView();
             this.kryptonPageResult = new Krypton.Navigator.KryptonPage();
+            this.kryptonPageDynamicImport = new Krypton.Navigator.KryptonPage();
             this.kryptonPanel3 = new Krypton.Toolkit.KryptonPanel();
             this.klblSuccessCount = new Krypton.Toolkit.KryptonLabel();
             this.klblFailedCount = new Krypton.Toolkit.KryptonLabel();
@@ -228,10 +229,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonNavigator1.NavigatorMode = Krypton.Navigator.NavigatorMode.BarTabGroup;
             this.kryptonNavigator1.Pages.AddRange(new Krypton.Navigator.KryptonPage[] {
             this.kryptonPagePreview,
-            this.kryptonPageResult});
+            this.kryptonPageResult,
+            this.kryptonPageDynamicImport});
             this.kryptonNavigator1.SelectedIndex = 0;
             this.kryptonNavigator1.Size = new System.Drawing.Size(796, 320);
             this.kryptonNavigator1.TabIndex = 0;
+            this.kryptonPanel2.Controls.Add(this.kryptonNavigator1);
             // 
             // kryptonPagePreview
             // 
@@ -253,7 +256,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvImportData.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvImportData.BizInvisibleCols")));
+            this.dgvImportData.BizInvisibleCols = new System.Collections.Generic.HashSet<string>();
             this.dgvImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvImportData.ContextMenuStrip = this.contextMenuStrip1;
@@ -289,6 +292,172 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPageResult.Size = new System.Drawing.Size(794, 289);
             this.kryptonPageResult.Text = "导入结果";
             this.kryptonPageResult.TextDescription = "导入结果统计";
+            // 
+            // kryptonPageDynamicImport
+            // 
+            this.kryptonPageDynamicImport.AutoHiddenSlideSize = new System.Drawing.Size(200, 200);
+            this.kryptonPageDynamicImport.Controls.Add(this.kryptonGroupBoxDynamicImport);
+            this.kryptonPageDynamicImport.Flags = 65534;
+            this.kryptonPageDynamicImport.LastVisibleSet = true;
+            this.kryptonPageDynamicImport.MinimumSize = new System.Drawing.Size(50, 50);
+            this.kryptonPageDynamicImport.Name = "kryptonPageDynamicImport";
+            this.kryptonPageDynamicImport.Size = new System.Drawing.Size(794, 289);
+            this.kryptonPageDynamicImport.Text = "动态导入";
+            this.kryptonPageDynamicImport.TextDescription = "动态Excel文件导入";
+            // 
+            // kryptonGroupBoxDynamicImport
+            // 
+            this.kryptonGroupBoxDynamicImport.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonGroupBoxDynamicImport.Location = new System.Drawing.Point(0, 0);
+            this.kryptonGroupBoxDynamicImport.Name = "kryptonGroupBoxDynamicImport";
+            // 
+            // kryptonGroupBoxDynamicImport.Panel
+            // 
+            this.kryptonGroupBoxDynamicImport.Panel.Controls.Add(this.kryptonPanel4);
+            this.kryptonGroupBoxDynamicImport.Size = new System.Drawing.Size(794, 289);
+            this.kryptonGroupBoxDynamicImport.TabIndex = 0;
+            this.kryptonGroupBoxDynamicImport.Values.Heading = "动态Excel导入";
+            // 
+            // kryptonPanel4
+            // 
+            this.kryptonPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonPanel4.Location = new System.Drawing.Point(0, 0);
+            this.kryptonPanel4.Name = "kryptonPanel4";
+            this.kryptonPanel4.Size = new System.Drawing.Size(790, 264);
+            this.kryptonPanel4.TabIndex = 0;
+            // 
+            // kryptonPanel5
+            // 
+            this.kryptonPanel5.Location = new System.Drawing.Point(10, 10);
+            this.kryptonPanel5.Name = "kryptonPanel5";
+            this.kryptonPanel5.Size = new System.Drawing.Size(770, 60);
+            this.kryptonPanel5.TabIndex = 0;
+            this.kryptonPanel4.Controls.Add(this.kryptonPanel5);
+            // 
+            // klblDynamicFilePath
+            // 
+            this.klblDynamicFilePath.Location = new System.Drawing.Point(10, 10);
+            this.klblDynamicFilePath.Name = "klblDynamicFilePath";
+            this.klblDynamicFilePath.Size = new System.Drawing.Size(70, 20);
+            this.klblDynamicFilePath.TabIndex = 0;
+            this.klblDynamicFilePath.Values.Text = "文件路径:";
+            this.kryptonPanel5.Controls.Add(this.klblDynamicFilePath);
+            // 
+            // ktxtDynamicFilePath
+            // 
+            this.ktxtDynamicFilePath.Location = new System.Drawing.Point(90, 10);
+            this.ktxtDynamicFilePath.Name = "ktxtDynamicFilePath";
+            this.ktxtDynamicFilePath.Size = new System.Drawing.Size(450, 23);
+            this.ktxtDynamicFilePath.TabIndex = 1;
+            this.kryptonPanel5.Controls.Add(this.ktxtDynamicFilePath);
+            // 
+            // kbtnDynamicBrowse
+            // 
+            this.kbtnDynamicBrowse.Location = new System.Drawing.Point(550, 10);
+            this.kbtnDynamicBrowse.Name = "kbtnDynamicBrowse";
+            this.kbtnDynamicBrowse.Size = new System.Drawing.Size(80, 25);
+            this.kbtnDynamicBrowse.TabIndex = 2;
+            this.kbtnDynamicBrowse.Values.Text = "浏览";
+            this.kryptonPanel5.Controls.Add(this.kbtnDynamicBrowse);
+            // 
+            // klblDynamicSheetName
+            // 
+            this.klblDynamicSheetName.Location = new System.Drawing.Point(10, 40);
+            this.klblDynamicSheetName.Name = "klblDynamicSheetName";
+            this.klblDynamicSheetName.Size = new System.Drawing.Size(70, 20);
+            this.klblDynamicSheetName.TabIndex = 3;
+            this.klblDynamicSheetName.Values.Text = "工作表:";
+            this.kryptonPanel5.Controls.Add(this.klblDynamicSheetName);
+            // 
+            // kcmbDynamicSheetName
+            // 
+            this.kcmbDynamicSheetName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbDynamicSheetName.Location = new System.Drawing.Point(90, 40);
+            this.kcmbDynamicSheetName.Name = "kcmbDynamicSheetName";
+            this.kcmbDynamicSheetName.Size = new System.Drawing.Size(200, 23);
+            this.kcmbDynamicSheetName.TabIndex = 4;
+            this.kryptonPanel5.Controls.Add(this.kcmbDynamicSheetName);
+            // 
+            // klblDynamicMappingName
+            // 
+            this.klblDynamicMappingName.Location = new System.Drawing.Point(300, 40);
+            this.klblDynamicMappingName.Name = "klblDynamicMappingName";
+            this.klblDynamicMappingName.Size = new System.Drawing.Size(70, 20);
+            this.klblDynamicMappingName.TabIndex = 5;
+            this.klblDynamicMappingName.Values.Text = "映射配置:";
+            this.kryptonPanel5.Controls.Add(this.klblDynamicMappingName);
+            // 
+            // kcmbDynamicMappingName
+            // 
+            this.kcmbDynamicMappingName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbDynamicMappingName.Location = new System.Drawing.Point(380, 40);
+            this.kcmbDynamicMappingName.Name = "kcmbDynamicMappingName";
+            this.kcmbDynamicMappingName.Size = new System.Drawing.Size(170, 23);
+            this.kcmbDynamicMappingName.TabIndex = 6;
+            this.kryptonPanel5.Controls.Add(this.kcmbDynamicMappingName);
+            // 
+            // kbtnDynamicParse
+            // 
+            this.kbtnDynamicParse.Enabled = false;
+            this.kbtnDynamicParse.Location = new System.Drawing.Point(560, 40);
+            this.kbtnDynamicParse.Name = "kbtnDynamicParse";
+            this.kbtnDynamicParse.Size = new System.Drawing.Size(80, 25);
+            this.kbtnDynamicParse.TabIndex = 7;
+            this.kbtnDynamicParse.Values.Text = "解析";
+            this.kryptonPanel5.Controls.Add(this.kbtnDynamicParse);
+            // 
+            // kbtnDynamicMap
+            // 
+            this.kbtnDynamicMap.Enabled = false;
+            this.kbtnDynamicMap.Location = new System.Drawing.Point(650, 10);
+            this.kbtnDynamicMap.Name = "kbtnDynamicMap";
+            this.kbtnDynamicMap.Size = new System.Drawing.Size(80, 25);
+            this.kbtnDynamicMap.TabIndex = 8;
+            this.kbtnDynamicMap.Values.Text = "映射配置";
+            this.kryptonPanel5.Controls.Add(this.kbtnDynamicMap);
+            // 
+            // kbtnDynamicImport
+            // 
+            this.kbtnDynamicImport.Enabled = false;
+            this.kbtnDynamicImport.Location = new System.Drawing.Point(650, 40);
+            this.kbtnDynamicImport.Name = "kbtnDynamicImport";
+            this.kbtnDynamicImport.Size = new System.Drawing.Size(80, 25);
+            this.kbtnDynamicImport.TabIndex = 9;
+            this.kbtnDynamicImport.Values.Text = "导入";
+            this.kryptonPanel5.Controls.Add(this.kbtnDynamicImport);
+            // 
+            // dgvDynamicImportData
+            // 
+            this.dgvDynamicImportData.AllowUserToAddRows = false;
+            this.dgvDynamicImportData.AllowUserToDeleteRows = false;
+            this.dgvDynamicImportData.AllowUserToOrderColumns = true;
+            this.dgvDynamicImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvDynamicImportData.BizInvisibleCols = new System.Collections.Generic.HashSet<string>();
+            this.dgvDynamicImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgvDynamicImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvDynamicImportData.ContextMenuStrip = this.contextMenuStrip1;
+            this.dgvDynamicImportData.CustomRowNo = false;
+            this.dgvDynamicImportData.EnableFiltering = false;
+            this.dgvDynamicImportData.EnablePagination = false;
+            this.dgvDynamicImportData.FieldNameList = null;
+            this.dgvDynamicImportData.IsShowSumRow = false;
+            this.dgvDynamicImportData.Location = new System.Drawing.Point(10, 80);
+            this.dgvDynamicImportData.Name = "dgvDynamicImportData";
+            this.dgvDynamicImportData.NeedSaveColumnsXml = true;
+            this.dgvDynamicImportData.RowTemplate.Height = 23;
+            this.dgvDynamicImportData.Size = new System.Drawing.Size(770, 174);
+            this.dgvDynamicImportData.SumColumns = null;
+            this.dgvDynamicImportData.SummaryDescription = "动态导入数据预览";
+            this.dgvDynamicImportData.SumRowCellFormat = "N2";
+            this.dgvDynamicImportData.TabIndex = 10;
+            this.dgvDynamicImportData.UseBatchEditColumn = false;
+            this.dgvDynamicImportData.UseCustomColumnDisplay = true;
+            this.dgvDynamicImportData.UseSelectedColumn = false;
+            this.dgvDynamicImportData.Use是否使用内置右键功能 = true;
+            this.dgvDynamicImportData.XmlFileName = "UCBasicDataImport_Dynamic";
+            this.kryptonPanel4.Controls.Add(this.dgvDynamicImportData);
             // 
             // kryptonPanel3
             // 
@@ -466,5 +635,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem selectAll;
         private System.Windows.Forms.ToolStripMenuItem selectNoAll;
+        private Krypton.Navigator.KryptonPage kryptonPageDynamicImport;
+        private Krypton.Toolkit.KryptonPanel kryptonPanel4;
+        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxDynamicImport;
+        private Krypton.Toolkit.KryptonPanel kryptonPanel5;
+        private Krypton.Toolkit.KryptonButton kbtnDynamicBrowse;
+        private Krypton.Toolkit.KryptonButton kbtnDynamicParse;
+        private Krypton.Toolkit.KryptonButton kbtnDynamicMap;
+        private Krypton.Toolkit.KryptonButton kbtnDynamicImport;
+        private Krypton.Toolkit.KryptonLabel klblDynamicFilePath;
+        private Krypton.Toolkit.KryptonTextBox ktxtDynamicFilePath;
+        private Krypton.Toolkit.KryptonLabel klblDynamicSheetName;
+        private Krypton.Toolkit.KryptonComboBox kcmbDynamicSheetName;
+        private Krypton.Toolkit.KryptonLabel klblDynamicMappingName;
+        private Krypton.Toolkit.KryptonComboBox kcmbDynamicMappingName;
+        private Krypton.Toolkit.KryptonButton kbtnSaveMapping;
+        private Krypton.Toolkit.KryptonButton kbtnLoadMapping;
+        private Krypton.Toolkit.KryptonButton kbtnDeleteMapping;
+        private RUINORERP.UI.UControls.NewSumDataGridView dgvDynamicImportData;
     }
 }

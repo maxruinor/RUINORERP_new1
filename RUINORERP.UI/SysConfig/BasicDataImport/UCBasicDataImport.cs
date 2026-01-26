@@ -32,6 +32,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         
         private List<ProductImportModel> _importData;
         
+        // 动态导入相关字段
+        private DynamicExcelParser _dynamicExcelParser;
+        private ColumnMappingManager _columnMappingManager;
+        private ColumnMappingCollection _currentMappings;
+        private DataTable _dynamicImportData;
+        
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -39,6 +45,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             InitializeComponent();
             InitializeData();
+            InitializeDynamicImport();
         }
         
         /// <summary>
@@ -60,6 +67,53 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 初始化其他组件
             _excelParser = new ExcelDataParser();
             _dataValidator = new DataValidator();
+        }
+        
+        /// <summary>
+        /// 初始化动态导入功能
+        /// </summary>
+        private void InitializeDynamicImport()
+        {
+            // 初始化动态导入组件
+            _dynamicExcelParser = new DynamicExcelParser();
+            _columnMappingManager = new ColumnMappingManager();
+            _currentMappings = new ColumnMappingCollection();
+            _dynamicImportData = new DataTable();
+            
+            // 初始化数据网格视图
+            dgvDynamicImportData.AutoGenerateColumns = true;
+            dgvDynamicImportData.DataSource = _dynamicImportData;
+            
+            // 加载映射配置列表
+            LoadMappingConfigs();
+            
+            // 绑定事件
+            kbtnDynamicBrowse.Click += KbtnDynamicBrowse_Click;
+            kbtnDynamicParse.Click += KbtnDynamicParse_Click;
+            kbtnDynamicMap.Click += KbtnDynamicMap_Click;
+            kbtnDynamicImport.Click += KbtnDynamicImport_Click;
+        }
+        
+        /// <summary>
+        /// 加载映射配置列表
+        /// </summary>
+        private void LoadMappingConfigs()
+        {
+            try
+            {
+                var mappingNames = _columnMappingManager.GetAllMappingNames();
+                kcmbDynamicMappingName.Items.Clear();
+                kcmbDynamicMappingName.Items.Add("请选择");
+                foreach (var name in mappingNames)
+                {
+                    kcmbDynamicMappingName.Items.Add(name);
+                }
+                kcmbDynamicMappingName.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载映射配置列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         /// <summary>
@@ -236,5 +290,141 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"导出模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        
+        #region 动态导入事件处理
+        
+        /// <summary>
+        /// 动态导入-浏览文件按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void KbtnDynamicBrowse_Click(object sender, EventArgs e)
+        {
+            using (var openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Filter = "Excel文件|*.xls;*.xlsx";
+                openFileDialog.Title = "选择动态导入的Excel文件";
+                
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    ktxtDynamicFilePath.Text = openFileDialog.FileName;
+                    kbtnDynamicParse.Enabled = true;
+                    
+                    // 加载工作表名称
+                    LoadSheetNames(openFileDialog.FileName);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 加载Excel文件的工作表名称
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        private void LoadSheetNames(string filePath)
+        {
+            try
+            {
+                string[] sheetNames = _dynamicExcelParser.GetSheetNames(filePath);
+                kcmbDynamicSheetName.Items.Clear();
+                
+                foreach (var sheetName in sheetNames)
+                {
+                    kcmbDynamicSheetName.Items.Add(sheetName);
+                }
+                
+                if (kcmbDynamicSheetName.Items.Count > 0)
+                {
+                    kcmbDynamicSheetName.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载工作表名称失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 动态导入-解析文件按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void KbtnDynamicParse_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 解析Excel文件
+                _dynamicImportData = _dynamicExcelParser.ParseExcelToDataTable(ktxtDynamicFilePath.Text);
+                
+                // 绑定到数据网格视图
+                dgvDynamicImportData.DataSource = _dynamicImportData;
+                
+                // 启用映射配置按钮
+                kbtnDynamicMap.Enabled = true;
+                
+                MessageBox.Show($"解析完成，共 {_dynamicImportData.Rows.Count} 行数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"解析Excel文件失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 动态导入-映射配置按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void KbtnDynamicMap_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                using (var frmMapping = new frmColumnMappingConfig())
+                {
+                    // 设置参数
+                    frmMapping.ExcelData = _dynamicImportData;
+                    frmMapping.TargetTableName = "tbProduct";
+                    frmMapping.ColumnMappings = _currentMappings;
+                    
+                    // 显示映射配置窗体
+                    if (frmMapping.ShowDialog() == DialogResult.OK)
+                    {
+                        // 更新映射配置
+                        _currentMappings = frmMapping.ColumnMappings;
+                        
+                        // 启用导入按钮
+                        kbtnDynamicImport.Enabled = true;
+                        
+                        MessageBox.Show("列映射配置已保存", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"打开映射配置界面失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 动态导入-导入数据按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void KbtnDynamicImport_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 加载数据库连接
+                LoadDbConnection();
+                
+                // 这里将在后续实现动态导入逻辑
+                MessageBox.Show("动态导入功能将在后续版本中实现", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        #endregion
     }
 }

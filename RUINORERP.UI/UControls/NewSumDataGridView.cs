@@ -1841,7 +1841,10 @@ namespace RUINORERP.UI.UControls
 
 
                         #region 将没有中文字段 比方ID，或对象集合这种都不启动
-
+                        if (FieldNameList==null)
+                        {
+                            FieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
+                        }
                         List<string> FieldNames = FieldNameList.Select(kv => kv.Key).ToList();
                         List<string> ColNamesDispays = ColumnDisplays.Select(c => c.ColName).ToList();
                         // 将 A 中不存于 B 中的元素存储到一个新的 List<A> 中

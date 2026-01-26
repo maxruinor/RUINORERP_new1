@@ -731,7 +731,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
                 if (canExecute)
                 {
-                    // 对于修改操作，还需要检查提交后修改规则
+                    // 对于修改操作，还需要检查提交后修改规则11
                     if (action == MenuItemEnums.修改)
                     {
                         var modifyCheck = CanModifyWithMessage(entity);
@@ -807,24 +807,25 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private (bool CanExecute, string Message) CanModifyWithMessage(BaseEntity entity)
         {
-            // 检查是否为终态状态
+            // 获取状态类型和当前状态
+            var statusType = GetStatusType(entity);
+            var currentStatus = GetBusinessStatus(entity, statusType);
+            var statusName = currentStatus?.ToString() ?? "未知状态";
+
+            // 1. 检查是否为终态状态
             bool isFinalStatus = IsFinalStatus(entity);
             if (isFinalStatus)
                 return (false, "终态状态下不允许修改");
 
-            // 检查是否允许修改
-            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
-            if (!canModify)
-            {
-                // 获取状态类型和当前状态，用于生成错误消息
-                var statusType = GetStatusType(entity);
-                var currentStatus = GetBusinessStatus(entity, statusType);
-                var statusName = currentStatus?.ToString() ?? "未知状态";
+            // 2. 检查是否为审核后状态（审核后的状态不允许修改）
+            bool isApprovedStatus = IsApprovedStatus(entity);
+            if (isApprovedStatus)
                 return (false, $"状态为【{statusName}】的单据不允许修改");
-            }
 
-            // 检查提交后是否允许修改
-            if (!AllowModifyAfterSubmit(canModify))
+            // 3. 检查提交后是否允许修改（灵活/严格模式）
+            // 获取是否为已提交状态（非草稿状态视为已提交）
+            bool isSubmittedStatus = !IsDraftStatus(entity);
+            if (!AllowModifyAfterSubmit(isSubmittedStatus))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");
@@ -842,22 +843,30 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = GetStatusType(entity);
             if (statusType == null)
                 return true;
-                
+
             // 获取当前状态
             var currentStatus = GetBusinessStatus(entity, statusType);
-            
-            // 获取目标状态
+
+            // 修改操作特殊处理：修改操作不改变状态，只要不是终态状态就应该允许
+            if (action == MenuItemEnums.修改)
+            {
+                // 检查是否为终态状态，终态不允许修改
+                bool isFinalStatus = IsFinalStatus(entity);
+                return !isFinalStatus;
+            }
+
+            // 获取目标状态,只有提交，审核，反审核，结案，反结案这些才有目标状态。因为他们才是会改变状态的操作。其它没有目标状态！
             var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
             if (targetStatus == null)
                 return false;
-            
+
             // 如果目标状态为当前状态，返回false
             if (Equals(currentStatus, targetStatus))
                 return false;
-            
+
             // 验证状态转换
             var validationResult = ValidateBusinessStatusTransitionAsync(currentStatus as Enum, targetStatus as Enum);
-            
+
             return validationResult.IsSuccess;
         }
 
@@ -1099,6 +1108,120 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
+        /// 判断实体是否为审核后状态
+        /// 审核后的状态（如确认、已生效）不允许修改
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否为审核后状态</returns>
+        public bool IsApprovedStatus<TEntity>(TEntity entity) where TEntity : BaseEntity
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            try
+            {
+                // 获取实体的状态类型
+                Type statusType = GetStatusType(entity);
+                if (statusType == null)
+                    return false;
+
+                // 获取实体的业务状态值
+                object businessStatus = GetBusinessStatus(entity, statusType);
+                if (businessStatus == null)
+                    return false;
+
+                // 针对不同状态类型进行审核后状态判断
+                if (statusType == typeof(DataStatus))
+                {
+                    DataStatus dataStatus = (DataStatus)businessStatus;
+                    return dataStatus == DataStatus.确认;
+                }
+                else if (statusType == typeof(PaymentStatus))
+                {
+                    PaymentStatus paymentStatus = (PaymentStatus)businessStatus;
+                    return paymentStatus == PaymentStatus.已支付;
+                }
+                else if (statusType == typeof(PrePaymentStatus))
+                {
+                    PrePaymentStatus prepayStatus = (PrePaymentStatus)businessStatus;
+                    return prepayStatus == PrePaymentStatus.已生效;
+                }
+                else if (statusType == typeof(ARAPStatus))
+                {
+                    ARAPStatus arapStatus = (ARAPStatus)businessStatus;
+                    return arapStatus == ARAPStatus.已冲销;
+                }
+                else if (statusType == typeof(RefundStatus))
+                {
+                    RefundStatus refundStatus = (RefundStatus)businessStatus;
+                    return refundStatus == RefundStatus.已退款已退货 || refundStatus == RefundStatus.已退款未退货 || refundStatus == RefundStatus.部分退款退货;
+                }
+                else if (statusType == typeof(StatementStatus))
+                {
+                    StatementStatus statementStatus = (StatementStatus)businessStatus;
+                    return statementStatus == StatementStatus.确认 || statementStatus == StatementStatus.全部结清;
+                }
+
+                // 默认情况下，不是审核后状态
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "判断实体状态是否为审核后状态时发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断实体是否为草稿状态
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <returns>是否为草稿状态</returns>
+        public bool IsDraftStatus<TEntity>(TEntity entity) where TEntity : BaseEntity
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            try
+            {
+                // 获取实体的状态类型
+                Type statusType = GetStatusType(entity);
+                if (statusType == null)
+                    return false;
+
+                // 获取实体的业务状态值
+                object businessStatus = GetBusinessStatus(entity, statusType);
+                if (businessStatus == null)
+                    return false;
+
+                // 针对不同状态类型进行草稿状态判断
+                if (statusType == typeof(DataStatus))
+                {
+                    DataStatus dataStatus = (DataStatus)businessStatus;
+                    return dataStatus == DataStatus.草稿;
+                }
+                else if (statusType == typeof(PaymentStatus))
+                {
+                    PaymentStatus paymentStatus = (PaymentStatus)businessStatus;
+                    return paymentStatus == PaymentStatus.草稿;
+                }
+                else if (statusType == typeof(PrePaymentStatus))
+                {
+                    PrePaymentStatus prepayStatus = (PrePaymentStatus)businessStatus;
+                    return prepayStatus == PrePaymentStatus.草稿;
+                }
+
+                // 其他状态类型默认不是草稿
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "判断实体状态是否为草稿状态时发生异常");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 判断指定实体是否可以修改，并返回详细消息
         /// </summary>
         /// <typeparam name="TEntity">实体类型</typeparam>
@@ -1109,23 +1232,25 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            // 检查是否为终态状态
+            // 获取状态类型和当前状态
+            var statusType = GetStatusType(entity);
+            var currentStatus = GetBusinessStatus(entity, statusType);
+            var statusName = currentStatus?.ToString() ?? "未知状态";
+
+            // 1. 检查是否为终态状态
             bool isFinalStatus = IsFinalStatus<TEntity>(entity);
             if (isFinalStatus)
                 return (false, "终态状态下不允许修改");
 
-            var canModify = CanExecuteAction(entity, MenuItemEnums.修改);
-            if (!canModify)
-            {
-                // 获取状态类型和当前状态，用于生成错误消息
-                var statusType = GetStatusType(entity);
-                var currentStatus = GetBusinessStatus(entity, statusType);
-                var statusName = currentStatus?.ToString() ?? "未知状态";
+            // 2. 检查是否为审核后状态（审核后的状态不允许修改）
+            bool isApprovedStatus = IsApprovedStatus(entity);
+            if (isApprovedStatus)
                 return (false, $"状态为【{statusName}】的单据不允许修改");
-            }
 
-            // 检查提交后是否允许修改
-            if (!AllowModifyAfterSubmit(canModify))
+            // 3. 检查提交后是否允许修改（灵活/严格模式）
+            // 获取是否为已提交状态（非草稿状态视为已提交）
+            bool isSubmittedStatus = !IsDraftStatus(entity);
+            if (!AllowModifyAfterSubmit(isSubmittedStatus))
                 return (false, "已提交状态下不允许修改");
 
             return (true, "可以修改当前记录");

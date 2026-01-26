@@ -44,7 +44,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
         public UCMRP()
         {
             InitializeComponent();
-             GridRelated = new GridViewRelated();
+            GridRelated = new GridViewRelated();
             GridRelated.SetRelatedInfo<tb_ProductionPlan>(c => c.PPNo);
             GridRelated.SetRelatedInfo<tb_ManufacturingOrder>(c => c.MONO);
             GridRelated.SetRelatedInfo<tb_MaterialRequisition>(c => c.MaterialRequisitionNO);
@@ -102,14 +102,13 @@ namespace RUINORERP.UI.UserCenter.DataParts
                   .Includes(c => c.tb_employee)
                   .Includes(c => c.tb_department)
                    .Includes(c => c.tb_projectgroup)
-                    //  .Includes(c => c.tb_ProductionPlanDetails,d=>d.tb_proddetail,e=>e.tb_prod)
                     .Includes(c => c.tb_ProductionPlanDetails)
-                  .Includes(c => c.tb_ProductionDemands, d => d.tb_ProductionDemandTargetDetails)
+                  .Includes(c => c.tb_ProductionDemands.Where(cc => cc.DataStatus > (int)DataStatus.新建).ToList(), d => d.tb_ProductionDemandTargetDetails)
                   .AsNavQueryable()
-                  .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, e => e.tb_FinishedGoodsInvs, f => f.tb_FinishedGoodsInvDetails)
+                  .Includes(c => c.tb_ProductionDemands.Where(cc => cc.DataStatus > (int)DataStatus.新建).ToList(), d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, e => e.tb_FinishedGoodsInvs.Where(cc => cc.DataStatus > (int)DataStatus.新建).ToList(), f => f.tb_FinishedGoodsInvDetails)
                   .AsNavQueryable()
-                  .Includes(c => c.tb_ProductionDemands, d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
-                  .Where(c => (c.DataStatus == 2 || c.DataStatus == (int)DataStatus.确认))
+                  .Includes(c => c.tb_ProductionDemands.Where(cc => cc.DataStatus > (int)DataStatus.新建).ToList(), d => d.tb_ProduceGoodsRecommendDetails, f => f.tb_ManufacturingOrders, c => c.tb_MaterialRequisitions)
+                  .Where(c => c.DataStatus == (int)DataStatus.确认)
                   .Where(t => t.ApprovalStatus.HasValue && t.ApprovalStatus.Value == (int)ApprovalStatus.审核通过)
                   .Where(t => t.ApprovalResults.HasValue && t.ApprovalResults.Value == true && t.isdeleted == false)
                   .OrderBy(c => c.RequirementDate)
@@ -143,7 +142,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
                     foreach (var item in kryptonTreeGridView1.GridNodes)
                     {
-            
+
                         //如果他是来自于订单。特殊标记一下
 
                         //找到计划单号：
@@ -252,7 +251,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error(ex,"MRP查询数据出错");
+                MainForm.Instance.logger.Error(ex, "MRP查询数据出错");
             }
             if (PURList.Count > 3)
             {

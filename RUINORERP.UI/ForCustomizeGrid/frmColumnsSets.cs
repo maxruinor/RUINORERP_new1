@@ -333,8 +333,6 @@ namespace RUINORERP.UI.ForCustomizeGrid
                         listView1.Items.Add(lvi);
                     }
                 }
-
-          
  
             }
             catch (Exception ex)

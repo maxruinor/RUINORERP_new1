@@ -2406,6 +2406,18 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
+    <Compile Include="SysConfig\BasicDataImport\CategoryImporter.cs" />
+    <Compile Include="SysConfig\BasicDataImport\DataValidator.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ProductImporter.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ProductImportModel.cs" />
+    <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.designer.cs">
+      <DependentUpon>UCBasicDataImport.cs</DependentUpon>
+    </Compile>
     <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->
     <!-- <Compile Include="StateManagement\Core\StatusTransitionContext.cs" /> -->
     <Compile Include="SysConfig\UCClientLockManage.cs">

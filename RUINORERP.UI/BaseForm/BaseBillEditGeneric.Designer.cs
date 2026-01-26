@@ -45,6 +45,32 @@ namespace RUINORERP.UI.BaseForm
                     // 忽略取消订阅时的异常，避免影响正常的Dispose流程
                     System.Diagnostics.Debug.WriteLine($"取消订阅锁状态变化失败: {ex.Message}");
                 }
+
+                // 取消订阅实体PropertyChanged事件
+                try
+                {
+                    // 通过反射调用HandlePropertyChangedSubscription方法取消订阅
+                    var disposeMethod = typeof(BaseBillEditGeneric<T, C>).GetMethod("HandlePropertyChangedSubscription",
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    
+                    if (disposeMethod != null)
+                    {
+                        // 获取EditEntity属性的值
+                        var editEntityProperty = typeof(BaseBillEditGeneric<T, C>).GetProperty("EditEntity",
+                            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                        var editEntity = editEntityProperty?.GetValue(this);
+                        
+                        if (editEntity is Model.BaseEntity entity)
+                        {
+                            disposeMethod.Invoke(this, new object[] { entity, false });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 忽略取消订阅时的异常，避免影响正常的Dispose流程
+                    System.Diagnostics.Debug.WriteLine($"取消订阅PropertyChanged事件失败: {ex.Message}");
+                }
             }
             base.Dispose(disposing);
         }

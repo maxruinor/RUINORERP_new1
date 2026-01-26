@@ -1600,22 +1600,24 @@ namespace RUINORERP.UI.BaseForm
                 // 1. 统一使用基类的HandleEntityStatusSubscription移除旧实体的事件订阅
                 HandleEntityStatusSubscription(EditEntity as BaseEntity, false);
 
-                // 移除可能存在的PropertyChanged事件订阅（保持注释，不直接使用PropertyChanged事件）
-                //if (EditEntity != null && EditEntity != entity)
-                //{
-                //    EditEntity.PropertyChanged -= Entity_PropertyChanged;
-                //}
+                // 移除旧实体的PropertyChanged事件订阅
+                HandlePropertyChangedSubscription(EditEntity as BaseEntity, false);
 
                 // 2. 设置当前编辑实体
                 EditEntity = entity; // 避免不必要的类型转换
                 base.BindEntity(entity);
 
                 // 3. 统一使用HandleEntityStatusSubscription订阅新实体的StatusChanged事件
-                // 不再直接订阅PropertyChanged事件，避免重复事件处理
                 if (EditEntity is BaseEntity newEntity)
                 {
                     HandleEntityStatusSubscription(newEntity, true);
+
+                    // 4. 订阅新实体的PropertyChanged事件，实现保存按钮动态状态控制
+                    HandlePropertyChangedSubscription(newEntity, true);
                 }
+
+                // 5. 数据绑定完成后，初始化保存按钮状态为禁用
+                toolStripButtonSave.Enabled = false;
             }
             catch (Exception ex)
             {
@@ -2499,17 +2501,23 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
+                        // 根据保存结果和状态管理系统恢复按钮状态
                         var btnSave = FindToolStripButtonByName("toolStripButtonSave");
                         if (btnSave != null)
                         {
-                            // 如果保存失败但实体有变化，保持保存按钮启用
-                            if (!rsSave && EditEntity != null && EditEntity.HasChanged)
+                            if (rsSave)
                             {
+                                // 保存成功，立即重置保存按钮为禁用状态
+                                toolStripButtonSave.Enabled = false;
+                            }
+                            else if (EditEntity != null && EditEntity.HasChanged)
+                            {
+                                // 保存失败但实体有变化，保持保存按钮启用
                                 btnSave.Enabled = true;
                             }
                             else
                             {
+                                // 其他情况，根据状态管理系统设置按钮状态
                                 btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
                             }
                             MainForm.Instance?.ShowStatusText(string.Empty);
@@ -3728,6 +3736,154 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
+        #endregion
+
+        #region 保存按钮动态状态控制
+
+        /// <summary>
+        /// 是否正在处理属性变更事件，防止重复触发
+        /// </summary>
+        private bool _isProcessingPropertyChanged = false;
+
+        /// <summary>
+        /// 标记是否需要更新保存按钮状态
+        /// </summary>
+        private bool _needUpdateSaveButtonState = false;
+
+        /// <summary>
+        /// 订阅实体属性变更事件，实现保存按钮动态状态控制
+        /// </summary>
+        /// <param name="entity">要订阅的实体</param>
+        /// <param name="subscribe">true为订阅，false为取消订阅</param>
+        private void HandlePropertyChangedSubscription(BaseEntity entity, bool subscribe)
+        {
+            if (entity == null) return;
+
+            try
+            {
+                if (subscribe)
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.Invoke(new Action(() => HandlePropertyChangedSubscription(entity, true)));
+                        return;
+                    }
+
+                    // 订阅PropertyChanged事件
+                    entity.PropertyChanged -= Entity_PropertyChanged;
+                    entity.PropertyChanged += Entity_PropertyChanged;
+
+                    logger?.LogDebug("已订阅实体 {EntityType} 的PropertyChanged事件", entity.GetType().Name);
+                }
+                else
+                {
+                    // 取消订阅PropertyChanged事件
+                    entity.PropertyChanged -= Entity_PropertyChanged;
+
+                    logger?.LogDebug("已取消订阅实体 {EntityType} 的PropertyChanged事件", entity.GetType().Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理PropertyChanged事件订阅失败");
+            }
+        }
+
+        /// <summary>
+        /// 实体属性变更事件处理程序
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">属性变更事件参数</param>
+        private void Entity_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // 防止重复处理
+            if (_isProcessingPropertyChanged)
+            {
+                return;
+            }
+
+            try
+            {
+                _isProcessingPropertyChanged = true;
+
+                // 忽略ActionStatus属性的变化，因为它只是UI操作意图，不是实际数据变更
+                if (e.PropertyName == nameof(BaseEntity.ActionStatus))
+                {
+                    return;
+                }
+
+                // 确保在UI线程中更新保存按钮状态
+                if (this.InvokeRequired)
+                {
+                    this.Invoke(new Action(() => Entity_PropertyChanged(sender, e)));
+                    return;
+                }
+
+                // 检查实体是否有变更
+                if (EditEntity != null && EditEntity.HasChanged)
+                {
+                    UpdateSaveButtonStateBasedOnChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "处理PropertyChanged事件时发生异常");
+            }
+            finally
+            {
+                _isProcessingPropertyChanged = false;
+            }
+        }
+
+        /// <summary>
+        /// 根据数据变更情况更新保存按钮状态
+        /// </summary>
+        private void UpdateSaveButtonStateBasedOnChanges()
+        {
+            try
+            {
+                if (EditEntity == null)
+                {
+                    return;
+                }
+
+                // 获取保存按钮
+                var btnSave = FindToolStripButtonByName("toolStripButtonSave");
+                if (btnSave == null)
+                {
+                    return;
+                }
+
+                // 检查数据是否已变更
+                bool hasChanges = EditEntity.HasChanged;
+
+                if (!hasChanges)
+                {
+                    // 数据未变更，保存按钮保持禁用
+                    btnSave.Enabled = false;
+                    return;
+                }
+
+                // 数据已变更，检查是否有保存权限和状态是否允许修改
+                var permissionResult = StateManager?.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.保存);
+                if (permissionResult.HasValue && permissionResult.Value.CanExecute)
+                {
+                    // 有权限且状态允许修改，启用保存按钮
+                    btnSave.Enabled = true;
+                }
+                else
+                {
+                    // 无权限或状态不允许修改，禁用保存按钮
+                    btnSave.Enabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "更新保存按钮状态时发生异常");
+            }
+        }
+
+
         #endregion
 
         private T editEntity;

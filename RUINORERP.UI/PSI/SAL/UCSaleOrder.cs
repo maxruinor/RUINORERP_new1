@@ -71,7 +71,10 @@ namespace RUINORERP.UI.PSI.SAL
         {
             InitializeComponent();
             //InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SaleOrder>(typeof(Priority), e => e.OrderPriority, cmbOrderPriority, false);
-            if (!this.DesignMode)
+            // 检查是否在设计模式下（使用两种方式检测以提高兼容性）
+            bool isDesignMode = this.DesignMode || System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime;
+
+            if (!isDesignMode)
             {
                 // ✅ 关键配置: 设置窗体帮助键
                 // 这个键将用于定位帮助文件: HelpContent/Forms/UCSaleOrder.md

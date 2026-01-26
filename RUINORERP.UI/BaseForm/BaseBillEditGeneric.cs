@@ -757,7 +757,6 @@ namespace RUINORERP.UI.BaseForm
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
             {
 
-
                 if (!this.DesignMode)
                 {
                     frm = new frmFormProperty();
@@ -776,11 +775,9 @@ namespace RUINORERP.UI.BaseForm
 
                     KryptonContextMenuItems kryptonContextMenuItems1 = new KryptonContextMenuItems();
 
-                    kcm加载最新数据.Items.AddRange(new KryptonContextMenuItemBase[] {
-            kryptonContextMenuItems1});
+                    kcm加载最新数据.Items.AddRange(new KryptonContextMenuItemBase[] { kryptonContextMenuItems1 });
 
-                    kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] {
-            menuItem选择要加载的数据});
+                    kryptonContextMenuItems1.Items.AddRange(new KryptonContextMenuItemBase[] { menuItem选择要加载的数据 });
 
                     KryptonDropButton button加载最新数据 = new KryptonDropButton();
                     button加载最新数据.Text = "加载数据";
@@ -823,20 +820,18 @@ namespace RUINORERP.UI.BaseForm
                     {
                         // 设计时可能无法解析泛型，忽略
                     }
+
+                    menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
+                    _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
+
+                    // 通过依赖注入获取缓存管理器
+                    _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
+                    _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+                    _lockStatusNotificationService = Startup.GetFromFac<LockStatusNotificationService>();
+                    _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
+
+                    AddExtendButton(CurMenuInfo);
                 }
-
-
-                menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-                _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
-
-                // 通过依赖注入获取缓存管理器
-                _cacheManager = Startup.GetFromFac<IEntityCacheManager>();
-                _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
-                _lockStatusNotificationService = Startup.GetFromFac<LockStatusNotificationService>();
-                _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
-
-                AddExtendButton(CurMenuInfo);
-
             }
         }
 
@@ -1999,7 +1994,7 @@ namespace RUINORERP.UI.BaseForm
                 toolTipBase.Show(tipTxt, ActiveControl);
                 #endregion
             }
- 
+
         }
 
 
@@ -2866,7 +2861,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 直接调用 EntityLoader.LoadEntityInternal 加载实体
                 var entity = entityLoader.LoadEntityInternal(entityType, billId);
-                
+
                 return entity;
             }
             catch (Exception ex)
@@ -2893,7 +2888,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
- 
+
         /// <summary>
         /// 锁定单据方法，支持直接传入参数或从EditEntity获取
         /// </summary>

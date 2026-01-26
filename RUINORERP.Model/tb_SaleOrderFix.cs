@@ -22,7 +22,7 @@ namespace RUINORERP.Model
     /// <summary>
     /// 销售订单
     /// </summary>
-    public partial class tb_SaleOrder : BaseEntity, ICloneable
+    public partial class tb_SaleOrder
     {
         /// <summary>
         /// 重写ToDataContent方法，只记录销售订单的关键数据

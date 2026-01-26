@@ -118,6 +118,7 @@ namespace RUINORERP.UI.ProductEAV
             this.openFileDialog4Img = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.bindingSourceList = new System.Windows.Forms.BindingSource(this.components);
+            this.magicPictureBox产品基本图片 = new RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonNavigator1)).BeginInit();
             this.kryptonNavigator1.SuspendLayout();
@@ -179,6 +180,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonSplitContainerBig.Panel2.SuspendLayout();
             this.kryptonSplitContainerBig.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox产品基本图片)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonNavigator1
@@ -847,6 +849,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonSplitContainer2.Panel1
             // 
+            this.kryptonSplitContainer2.Panel1.Controls.Add(this.magicPictureBox产品基本图片);
             this.kryptonSplitContainer2.Panel1.Controls.Add(this.pictureBox1);
             // 
             // kryptonSplitContainer2.Panel2
@@ -1063,6 +1066,21 @@ namespace RUINORERP.UI.ProductEAV
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
+            // magicPictureBox产品基本图片
+            // 
+            this.magicPictureBox产品基本图片.AllowDrop = true;
+            this.magicPictureBox产品基本图片.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.magicPictureBox产品基本图片.ImagePaths = "";
+            this.magicPictureBox产品基本图片.InfoPanelDisplayTime = 3000;
+            this.magicPictureBox产品基本图片.Location = new System.Drawing.Point(499, 17);
+            this.magicPictureBox产品基本图片.MultiImageSupport = true;
+            this.magicPictureBox产品基本图片.Name = "magicPictureBox产品基本图片";
+            this.magicPictureBox产品基本图片.RowImage = ((RUINORERP.Global.Model.DataRowImage)(resources.GetObject("magicPictureBox产品基本图片.RowImage")));
+            this.magicPictureBox产品基本图片.ShowImageInfo = true;
+            this.magicPictureBox产品基本图片.Size = new System.Drawing.Size(444, 429);
+            this.magicPictureBox产品基本图片.TabIndex = 198;
+            this.magicPictureBox产品基本图片.TabStop = false;
+            // 
             // frmProductEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1135,6 +1153,7 @@ namespace RUINORERP.UI.ProductEAV
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainerBig)).EndInit();
             this.kryptonSplitContainerBig.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceList)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.magicPictureBox产品基本图片)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1226,5 +1245,6 @@ namespace RUINORERP.UI.ProductEAV
         private System.Windows.Forms.SplitContainer splitContainer1;
         internal Krypton.Toolkit.KryptonTreeView kryptonTreeView1;
         private Krypton.Toolkit.KryptonCheckBox chkexpandAll;
+        private RUINOR.WinFormsUI.CustomPictureBox.MagicPictureBox magicPictureBox产品基本图片;
     }
 }

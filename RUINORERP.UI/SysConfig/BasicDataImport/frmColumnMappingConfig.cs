@@ -196,7 +196,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 // 设置配置文件路径
-                _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfigFiles", "ColumnMappings");
+                _configFilePath = ColumnMappingConstants.GetConfigFilePath();
 
                 // 确保目录存在
                 if (!Directory.Exists(_configFilePath))

@@ -962,8 +962,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 string mappingName = kcmbDynamicMappingName.SelectedItem.ToString();
                 _currentMappings = _columnMappingManager.LoadMapping(mappingName);
-
-                MessageBox.Show($"已加载映射配置：{mappingName}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {

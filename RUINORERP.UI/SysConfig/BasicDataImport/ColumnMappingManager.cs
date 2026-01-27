@@ -20,7 +20,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ColumnMappingManager()
         {
             // 设置配置文件保存路径
-            _configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ColumnMappingConfigs");
+            _configPath = ColumnMappingConstants.GetConfigFilePath();
             if (!Directory.Exists(_configPath))
             {
                 Directory.CreateDirectory(_configPath);

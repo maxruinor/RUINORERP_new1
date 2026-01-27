@@ -2416,6 +2416,8 @@
     <Compile Include="SysConfig\BasicDataImport\DynamicExcelParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
+    <Compile Include="SysConfig\BasicDataImport\FieldMetadata.cs" />
+    <Compile Include="SysConfig\BasicDataImport\FieldMetadataService.cs" />
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>

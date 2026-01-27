@@ -23,9 +23,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string ExcelColumn { get; set; }
 
         /// <summary>
-        /// 系统字段名
+        /// 系统字段名（实际数据库列名）
         /// </summary>
         public string SystemField { get; set; }
+
+        /// <summary>
+        /// 系统字段中文名称
+        /// </summary>
+        public string SystemFieldDisplayName { get; set; }
+
+        /// <summary>
+        /// 字段元信息（包含完整的字段定义）
+        /// 注：此属性不序列化到XML配置文件中，仅用于运行时使用
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnore]
+        public FieldMetadata FieldMetadata { get; set; }
 
 
         /// <summary>
@@ -99,6 +111,109 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 更新时间
         /// </summary>
         public DateTime UpdateTime { get; set; }
+
+        /// <summary>
+        /// 根据字段元信息初始化字段属性
+        /// </summary>
+        /// <param name="metadata">字段元信息</param>
+        public void InitializeFromMetadata(FieldMetadata metadata)
+        {
+            if (metadata == null)
+            {
+                return;
+            }
+
+            SystemField = metadata.FieldName;
+            SystemFieldDisplayName = metadata.DisplayName;
+            DataType = metadata.DataTypeName;
+            IsForeignKey = metadata.IsForeignKey;
+            IsSystemGenerated = metadata.IsIdentity || metadata.IsPrimaryKey;
+            RelatedTableName = metadata.ForeignTable;
+            
+            if (string.IsNullOrEmpty(DefaultValue))
+            {
+                DefaultValue = metadata.DefaultValue;
+            }
+        }
+
+        /// <summary>
+        /// 验证字段值
+        /// </summary>
+        /// <param name="value">要验证的值</param>
+        /// <param name="errorMessage">错误信息输出</param>
+        /// <returns>是否验证通过</returns>
+        public bool ValidateValue(object value, out string errorMessage)
+        {
+            if (FieldMetadata != null)
+            {
+                return FieldMetadata.ValidateValue(value, out errorMessage);
+            }
+
+            // 如果没有元信息，进行基础验证
+            errorMessage = string.Empty;
+            
+            if (IsRequired && (value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())))
+            {
+                errorMessage = $"字段【{SystemFieldDisplayName ?? SystemField}】不能为空";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 转换字段值到目标类型
+        /// </summary>
+        /// <param name="value">原始值</param>
+        /// <returns>转换后的值</returns>
+        public object ConvertValue(object value)
+        {
+            if (FieldMetadata != null)
+            {
+                return FieldMetadata.ConvertValue(value);
+            }
+
+            // 如果有默认值且值为空，返回默认值
+            if ((value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())) 
+                && !string.IsNullOrEmpty(DefaultValue))
+            {
+                return DefaultValue;
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// 是否必填字段
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnore]
+        public bool IsRequired
+        {
+            get
+            {
+                if (FieldMetadata != null)
+                {
+                    return FieldMetadata.IsRequired;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 最大长度
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnore]
+        public int MaxLength
+        {
+            get
+            {
+                if (FieldMetadata != null)
+                {
+                    return FieldMetadata.MaxLength;
+                }
+                return 0;
+            }
+        }
     }
 
     /// <summary>

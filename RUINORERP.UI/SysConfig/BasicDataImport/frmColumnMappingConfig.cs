@@ -1,4 +1,7 @@
+using Krypton.Toolkit;
+using RUINORERP.UI.Common;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
@@ -6,8 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using Krypton.Toolkit;
-using RUINORERP.UI.Common;
 using System.Xml.Serialization;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
@@ -112,7 +113,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 不存在映射，创建新映射并配置属性
-            CreateAndConfigureMapping(systemField, null);
+            CreateAndConfigureMapping(systemFieldDisplay,systemField, null);
         }
 
         /// <summary>
@@ -120,7 +121,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="systemField">系统字段名</param>
         /// <param name="excelColumn">Excel列名（可选）</param>
-        private void CreateAndConfigureMapping(string systemField, string excelColumn)
+        private void CreateAndConfigureMapping(string systemFieldDisplay, string systemField, string excelColumn)
         {
             // 验证：如果两边都选择了，必须都选择
             bool hasExcelColumn = !string.IsNullOrEmpty(excelColumn);
@@ -133,6 +134,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     ExcelColumn = excelColumn,
                     SystemField = systemField,
+                    SystemFieldDisplayName=systemFieldDisplay,
                     MappingName = textBoxMappingName.Text,
                     EntityType = TargetEntityType?.Name,
                     CreateTime = DateTime.Now,
@@ -161,6 +163,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     ExcelColumn = string.Empty,
                     SystemField = systemField,
+                    SystemFieldDisplayName=systemFieldDisplay,
                     MappingName = textBoxMappingName.Text,
                     EntityType = TargetEntityType?.Name,
                     CreateTime = DateTime.Now,
@@ -303,11 +306,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 获取字段信息
-                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+                FieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
 
                 // 清空并添加字段到列表框
                 listBoxSystemFields.Items.Clear();
-                foreach (var field in fieldNameList)
+                foreach (var field in FieldNameList)
                 {
                     // 检查是否为必填字段
                     bool isRequired = IsFieldRequired(field.Key);
@@ -429,6 +432,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 列的显示，unitName,<单位,true>
+        /// 列名，列中文，是否显示1
+        /// </summary>
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+        public ConcurrentDictionary<string, string> FieldNameList { get; set; } = new ConcurrentDictionary<string, string>();
+
+
+        /// <summary>
         /// 添加映射
         /// </summary>
         private void kbtnAddMapping_Click(object sender, EventArgs e)
@@ -449,11 +460,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
 
-            // 去掉必填标识，获取实际字段名
-            string systemField = systemFieldDisplay.StartsWith("* ")
-                ? systemFieldDisplay.Substring(2)
-                : systemFieldDisplay;
+            // 去掉必填标识，获取实际显示字段名
+            systemFieldDisplay = systemFieldDisplay.StartsWith("* ")
+               ? systemFieldDisplay.Substring(2)
+               : systemFieldDisplay;
 
+            //获取实际显示字段名
+            string systemField = FieldNameList.FirstOrDefault(c => c.Value == systemFieldDisplay).Key;
             // 检查是否已存在该系统字段的映射
             if (ColumnMappings.GetMappingBySystemField(systemField) != null)
             {
@@ -475,7 +488,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 创建并配置新映射
-            CreateAndConfigureMapping(systemField, excelColumn);
+            CreateAndConfigureMapping(systemFieldDisplay, systemField, excelColumn);
         }
 
         /// <summary>
@@ -756,6 +769,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             {
                                 ExcelColumn = excelColumn,
                                 SystemField = systemField,
+                                SystemFieldDisplayName=systemFieldDisplay,
                                 MappingName = textBoxMappingName.Text,
                                 EntityType = TargetEntityType?.Name,
                                 CreateTime = DateTime.Now,

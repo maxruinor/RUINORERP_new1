@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualBasic;
+using RUINORERP.Business.BizMapperService;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -30,7 +31,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private CategoryImporter _categoryImporter;
         private ProductImporter _productImporter;
         private ImageProcessor _imageProcessor;
-
+        private IEntityMappingService _entityInfoService;
         private List<ProductImportModel> _importData;
 
         // 动态导入相关字段
@@ -49,6 +50,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public UCBasicDataImport()
         {
             InitializeComponent();
+            _entityInfoService = Startup.GetFromFac<IEntityMappingService>();
             InitializeData();
             InitializeDynamicImport();
         }
@@ -104,7 +106,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 绑定事件
             kbtnDynamicBrowse.Click += KbtnDynamicBrowse_Click;
             kbtnDynamicParse.Click += KbtnDynamicParse_Click;
- 
+
             kcmbDynamicSheetName.SelectedIndexChanged += KcmbDynamicSheetName_SelectedIndexChanged;
             kcmbDynamicEntityType.SelectedIndexChanged += KcmbDynamicEntityType_SelectedIndexChanged;
             kcmbDynamicMappingName.SelectedIndexChanged += KcmbDynamicMappingName_SelectedIndexChanged;
@@ -1174,7 +1176,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 Application.DoEvents();
 
                 // 初始化导入器
-                _dynamicImporter = new DynamicImporter(_db);
+                _dynamicImporter = new DynamicImporter(_db, _entityInfoService);
 
                 // 执行导入
                 var importResult = _dynamicImporter.Import(fullParsedData, _currentMappings, _selectedEntityType);
@@ -1271,6 +1273,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
-    
+
     }
 }

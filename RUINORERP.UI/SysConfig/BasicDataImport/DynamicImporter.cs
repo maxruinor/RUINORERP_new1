@@ -1,10 +1,11 @@
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Model;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using RUINORERP.Model;
-using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -78,13 +79,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             public Dictionary<string, object> Data { get; set; }
         }
 
+        private readonly IEntityMappingService _entityInfoService;
+
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="db">SqlSugar数据库客户端</param>
-        public DynamicImporter(ISqlSugarClient db)
+        public DynamicImporter(ISqlSugarClient db, IEntityMappingService entityInfoService)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _entityInfoService = entityInfoService;
         }
 
         /// <summary>
@@ -115,7 +119,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             var result = new ImportResult();
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var entityList = new List<object>();
+            var entityList = new List<BaseEntity>();
             var uniqueKeyMapping = mappings.GetUniqueKeyMapping();
 
             try
@@ -145,7 +149,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             continue;
                         }
 
-                        entityList.Add(entity);
+                        entityList.Add(entity as BaseEntity);
                     }
                     catch (Exception ex)
                     {
@@ -337,7 +341,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     return result.Rows[0]["ID"];
                 }
-                
+
                 // 如果没有找到，返回null
                 return null;
             }
@@ -543,23 +547,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 批量导入实体到数据库
+        /// 批量导入实体到数据库11
         /// </summary>
         /// <param name="entityList">实体列表</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="result">导入结果</param>
         /// <param name="uniqueKeyMapping">唯一键映射配置</param>
-        private void BatchImportEntities(List<object> entityList, Type entityType, ImportResult result, ColumnMapping uniqueKeyMapping)
+        private void BatchImportEntities(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMapping uniqueKeyMapping)
         {
             try
             {
+
+                var entityInfo = _entityInfoService.GetEntityInfoByTableName(entityType.Name);
+                string uniquePKFieldName = entityInfo.IdField;
                 // 开启事务
                 _db.Ado.BeginTran();
 
                 // 获取ID属性
-                PropertyInfo idProperty = entityType.GetProperty("ID") ??
-                                       entityType.GetProperty("Id") ??
-                                       entityType.GetProperty("ID_PK");
+                PropertyInfo idProperty = entityType.GetProperty(uniquePKFieldName);
 
                 // 批量插入或更新
                 foreach (var entity in entityList)
@@ -581,13 +586,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         if (isUpdate)
                         {
                             // 更新现有记录
-                            _db.UpdateableByObject(entity).ExecuteCommand();
+                            _db.UpdateableByObject(entity).ExecuteCommandAsync();
                             result.UpdatedCount++;
                         }
                         else
                         {
                             // 新增记录
-                            _db.InsertableByObject(entity).ExecuteCommand();
+                            _db.InsertableByObject(entity).ExecuteReturnSnowflakeIdAsync();
                             result.InsertedCount++;
                         }
                     }

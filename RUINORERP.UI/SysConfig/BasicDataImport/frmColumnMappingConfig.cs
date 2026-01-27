@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using Krypton.Toolkit;
-using RUINORERP.Model;
 using RUINORERP.UI.Common;
+using System.Xml.Serialization;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -19,32 +19,42 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public partial class frmColumnMappingConfig : KryptonForm
     {
         /// <summary>
-        /// 映射配置管理器
+        /// 映射配置文件路径
         /// </summary>
-        private ColumnMappingManager _mappingManager;
+        private string _configFilePath;
 
         /// <summary>
-        /// Excel数据表格
-        /// </summary>
-        public DataTable ExcelData { get; set; }
-
-        /// <summary>
-        /// 导入目标实体类型
+        /// 目标实体类型
         /// </summary>
         public Type TargetEntityType { get; set; }
 
         /// <summary>
-        /// 列映射配置集合
+        /// Excel数据（用于预览）
+        /// </summary>
+        public DataTable ExcelData { get; set; }
+
+        /// <summary>
+        /// 列映射集合
         /// </summary>
         public ColumnMappingCollection ColumnMappings { get; set; }
 
         /// <summary>
-        /// 映射配置保存成功事件
+        /// 是否为编辑模式
+        /// </summary>
+        public bool IsEditMode { get; set; }
+
+        /// <summary>
+        /// 原始映射配置名称
+        /// </summary>
+        public string OriginalMappingName { get; set; }
+
+        /// <summary>
+        /// 映射配置保存事件
         /// </summary>
         public event EventHandler MappingSaved;
 
         /// <summary>
-        /// 最后保存的映射配置名称
+        /// 已保存的映射配置名称
         /// </summary>
         public string SavedMappingName { get; private set; }
 
@@ -54,50 +64,80 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public frmColumnMappingConfig()
         {
             InitializeComponent();
-            _mappingManager = new ColumnMappingManager();
+            ColumnMappings = new ColumnMappingCollection();
         }
-        
+
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="entityType">目标实体类型</param>
+        public frmColumnMappingConfig(Type entityType) : this()
+        {
+            TargetEntityType = entityType;
+        }
+
+        /// <summary>
+        /// 带参数的构造函数
+        /// </summary>
+        /// <param name="entityType">目标实体类型</param>
+        /// <param name="excelData">Excel数据</param>
+        public frmColumnMappingConfig(Type entityType, DataTable excelData) : this(entityType)
+        {
+            ExcelData = excelData;
+        }
+
         /// <summary>
         /// 窗体加载事件
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void frmColumnMappingConfig_Load(object sender, EventArgs e)
         {
-            // 初始化映射配置集合
-            if (ColumnMappings == null)
+            try
             {
-                ColumnMappings = new ColumnMappingCollection();
+                // 设置配置文件路径
+                _configFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SysConfigFiles", "ColumnMappings");
+
+                // 确保目录存在
+                if (!Directory.Exists(_configFilePath))
+                {
+                    Directory.CreateDirectory(_configFilePath);
+                }
+
+                // 加载系统字段
+                LoadSystemFields();
+
+                // 如果有Excel数据，加载Excel列
+                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                {
+                    LoadExcelColumns();
+                }
+
+                // 加载已保存的映射配置
+                LoadSavedMappings();
+
+                // 设置窗口标题
+                SetWindowTitle();
             }
-            
-            // 加载Excel列名
-            LoadExcelColumns();
-            
-            // 加载系统字段
-            LoadSystemFields();
-            
-            // 加载现有映射配置
-            LoadExistingMappings();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"初始化窗体失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
-        
+
         /// <summary>
-        /// 加载Excel列名
+        /// 设置窗口标题
         /// </summary>
-        private void LoadExcelColumns()
+        private void SetWindowTitle()
         {
-            if (ExcelData == null || ExcelData.Columns.Count == 0)
+            if (IsEditMode && !string.IsNullOrEmpty(OriginalMappingName))
             {
-                MessageBox.Show("Excel数据为空，无法加载列名", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                this.Text = $"编辑列映射配置 - {OriginalMappingName}";
             }
-            
-            listBoxExcelColumns.Items.Clear();
-            foreach (DataColumn column in ExcelData.Columns)
+            else
             {
-                listBoxExcelColumns.Items.Add(column.ColumnName);
+                this.Text = "新建列映射配置";
             }
         }
-        
+
         /// <summary>
         /// 加载系统字段
         /// </summary>
@@ -111,21 +151,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 使用UIHelper获取实体的字段信息
+                // 获取字段信息
                 var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
 
+                // 清空并添加字段到列表框
                 listBoxSystemFields.Items.Clear();
                 foreach (var field in fieldNameList)
                 {
-                    // 只显示中文描述，不显示英文字段名
-                    if (!string.IsNullOrEmpty(field.Value))
-                    {
-                        listBoxSystemFields.Items.Add(field.Value);
-                    }
-                    else
-                    {
-                        listBoxSystemFields.Items.Add(field.Key);
-                    }
+                    // 检查是否为必填字段
+                    bool isRequired = IsFieldRequired(field.Key);
+                    string displayText = isRequired ? $"* {field.Value}" : field.Value;
+                    listBoxSystemFields.Items.Add(displayText);
                 }
             }
             catch (Exception ex)
@@ -133,109 +169,192 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"加载系统字段失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
-        /// 加载现有映射配置
+        /// 检查字段是否必填
         /// </summary>
-        private void LoadExistingMappings()
+        /// <param name="fieldName">字段名</param>
+        /// <returns>是否必填</returns>
+        private bool IsFieldRequired(string fieldName)
         {
-            if (ColumnMappings == null || ColumnMappings.Count == 0)
+            try
             {
-                return;
-            }
-            
-            listBoxMappings.Items.Clear();
-            foreach (var mapping in ColumnMappings)
-            {
-                // 获取系统字段的中文描述
-                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
-                var field = fieldNameList.FirstOrDefault(f => f.Key == mapping.SystemField);
-                string systemFieldDesc = field.Value ?? mapping.SystemField;
+                if (TargetEntityType == null || string.IsNullOrEmpty(fieldName))
+                {
+                    return false;
+                }
+
+                // 获取属性
+                PropertyInfo property = TargetEntityType.GetProperty(fieldName);
+                if (property == null)
+                {
+                    return false;
+                }
+
+                // 检查是否有RequiredAttribute
+                bool hasRequiredAttribute = property.GetCustomAttributes(typeof(RequiredAttribute), false).Length > 0;
+
+                // 检查是否有SugarColumnAttribute且IsNullable为false
+                bool isNullable = true;
+                var sugarColumnAttribute = property.GetCustomAttributes(false)
+                    .FirstOrDefault(attr => attr.GetType().Name == "SugarColumnAttribute");
                 
-                string mappingInfo = $"{mapping.ExcelColumn} → {systemFieldDesc}";
-                if (mapping.IsForeignKey)
+                if (sugarColumnAttribute != null)
                 {
-                    mappingInfo += " (外键)";
+                    try
+                    {
+                        var isNullableProperty = sugarColumnAttribute.GetType().GetProperty("IsNullable");
+                        if (isNullableProperty != null)
+                        {
+                            isNullable = (bool)isNullableProperty.GetValue(sugarColumnAttribute);
+                        }
+                    }
+                    catch
+                    {
+                        // 如果获取失败，默认为可空
+                    }
                 }
-                if (mapping.IsUniqueKey)
-                {
-                    mappingInfo += " (唯一键)";
-                }
-                listBoxMappings.Items.Add(mappingInfo);
+
+                // 有RequiredAttribute或IsNullable为false则为必填
+                return hasRequiredAttribute || !isNullable;
+            }
+            catch
+            {
+                return false;
             }
         }
-        
+
         /// <summary>
-        /// 添加映射按钮点击事件
+        /// 加载Excel列
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void kbtnAddMapping_Click(object sender, EventArgs e)
+        private void LoadExcelColumns()
         {
-            if (listBoxExcelColumns.SelectedItem == null || listBoxSystemFields.SelectedItem == null)
+            try
             {
-                MessageBox.Show("请选择要映射的Excel列和系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            
-            string excelColumn = listBoxExcelColumns.SelectedItem.ToString();
-            string systemFieldDesc = listBoxSystemFields.SelectedItem.ToString();
-            
-            // 获取实体字段信息，根据中文描述找到对应的字段名
-            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
-            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
-            if (field.Key == null)
-            {
-                // 如果没有找到对应的字段名，尝试使用描述作为字段名
-                field = fieldNameList.FirstOrDefault(f => f.Key == systemFieldDesc);
-                if (field.Key == null)
+                listBoxExcelColumns.Items.Clear();
+                if (ExcelData != null)
                 {
-                    MessageBox.Show("无法找到对应的系统字段", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    foreach (DataColumn column in ExcelData.Columns)
+                    {
+                        listBoxExcelColumns.Items.Add(column.ColumnName);
+                    }
                 }
             }
-            
-            string systemField = field.Key;
-            string dataType = "string";
-            
-            // 检查是否已存在映射
-            if (ColumnMappings.Any(m => m.ExcelColumn == excelColumn || m.SystemField == systemField))
+            catch (Exception ex)
             {
-                MessageBox.Show("该Excel列或系统字段已存在映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"加载Excel列失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 加载已保存的映射配置
+        /// </summary>
+        private void LoadSavedMappings()
+        {
+            try
+            {
+                comboBoxSavedMappings.Items.Clear();
+                comboBoxSavedMappings.Items.Add("-- 新建映射 --");
+
+                if (!Directory.Exists(_configFilePath))
+                {
+                    return;
+                }
+
+                // 获取所有配置文件
+                var configFiles = Directory.GetFiles(_configFilePath, "*.xml");
+                foreach (var file in configFiles)
+                {
+                    string mappingName = Path.GetFileNameWithoutExtension(file);
+                    comboBoxSavedMappings.Items.Add(mappingName);
+                }
+
+                comboBoxSavedMappings.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载已保存的映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 添加映射
+        /// </summary>
+        private void kbtnAddMapping_Click(object sender, EventArgs e)
+        {
+            if (listBoxExcelColumns.SelectedItem == null)
+            {
+                MessageBox.Show("请选择Excel列", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            
-            // 创建映射配置
+
+            if (listBoxSystemFields.SelectedItem == null)
+            {
+                MessageBox.Show("请选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            string excelColumn = listBoxExcelColumns.SelectedItem.ToString();
+            string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
+
+            // 去掉必填标识
+            string systemField = systemFieldDisplay.StartsWith("* ") 
+                ? systemFieldDisplay.Substring(2) 
+                : systemFieldDisplay;
+
+            // 检查是否已存在该映射
+            if (ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
+            {
+                MessageBox.Show("该Excel列已映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 创建映射
             var mapping = new ColumnMapping
             {
                 ExcelColumn = excelColumn,
                 SystemField = systemField,
-                DataType = dataType,
-                IsUniqueKey = false,
-                DefaultValue = string.Empty,
-                IsForeignKey = false,
-                RelatedTableName = string.Empty,
-                RelatedTableField = string.Empty,
+                MappingName = textBoxMappingName.Text,
+                EntityType = TargetEntityType?.Name,
                 CreateTime = DateTime.Now,
                 UpdateTime = DateTime.Now
             };
-            
+
+            // 添加到集合
             ColumnMappings.Add(mapping);
-            
-            // 更新映射列表
-            string mappingInfo = $"{mapping.ExcelColumn} → {systemFieldDesc}";
-            listBoxMappings.Items.Add(mappingInfo);
-            
-            // 从列表中移除已映射的项
-            listBoxExcelColumns.Items.Remove(excelColumn);
-            listBoxSystemFields.Items.Remove(systemFieldDesc);
+
+            // 更新映射列表显示
+            UpdateMappingsList();
         }
-        
+
         /// <summary>
-        /// 删除映射按钮点击事件
+        /// 更新映射列表显示
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
+        private void UpdateMappingsList()
+        {
+            listBoxMappings.Items.Clear();
+            foreach (var mapping in ColumnMappings)
+            {
+                string displayText = $"{mapping.ExcelColumn} -> {mapping.SystemField}";
+                
+                // 添加属性标识
+                List<string> flags = new List<string>();
+                if (mapping.IsForeignKey) flags.Add("外键");
+                if (mapping.IsUniqueValue) flags.Add("唯一");
+                if (mapping.IsSystemGenerated) flags.Add("系统生成");
+                
+                if (flags.Count > 0)
+                {
+                    displayText += $" ({string.Join(", ", flags)})";
+                }
+
+                listBoxMappings.Items.Add(displayText);
+            }
+        }
+
+        /// <summary>
+        /// 删除映射
+        /// </summary>
         private void kbtnRemoveMapping_Click(object sender, EventArgs e)
         {
             if (listBoxMappings.SelectedItem == null)
@@ -243,279 +362,254 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show("请选择要删除的映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            
-            string selectedMapping = listBoxMappings.SelectedItem.ToString();
-            string[] mappingParts = selectedMapping.Split(new string[] { " → " }, StringSplitOptions.None);
-            if (mappingParts.Length != 2)
-            {
-                MessageBox.Show("无效的映射格式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
 
-            string excelColumn = mappingParts[0];
-            string systemFieldDesc = mappingParts[1];
-            
-            // 获取实体字段信息，根据中文描述找到对应的字段名
-            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
-            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
-            if (field.Key == null)
-            {
-                // 如果没有找到对应的字段名，尝试使用描述作为字段名
-                field = fieldNameList.FirstOrDefault(f => f.Key == systemFieldDesc);
-                if (field.Key == null)
-                {
-                    MessageBox.Show("无法找到对应的系统字段", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-            }
-            
-            string systemField = field.Key;
-            
-            // 查找并删除映射
-            var mappingToRemove = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
-            if (mappingToRemove != null)
-            {
-                ColumnMappings.Remove(mappingToRemove);
-                
-                // 更新列表
-                listBoxMappings.Items.Remove(selectedMapping);
-                
-                // 将项添加回原始列表
-                listBoxExcelColumns.Items.Add(excelColumn);
-                
-                // 重新加载系统字段，因为可能需要重新获取字段信息
-                LoadSystemFields();
-            }
+            int selectedIndex = listBoxMappings.SelectedIndex;
+            ColumnMappings.RemoveAt(selectedIndex);
+            UpdateMappingsList();
         }
-        
+
         /// <summary>
-        /// 设置唯一键按钮点击事件
+        /// 设置列属性
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void kbtnSetUniqueKey_Click(object sender, EventArgs e)
-        {
-            if (listBoxMappings.SelectedItem == null)
-            {
-                MessageBox.Show("请选择要设置为唯一键的映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-            
-            // 清除所有唯一键标记
-            foreach (var mapping in ColumnMappings)
-            {
-                mapping.IsUniqueKey = false;
-            }
-            
-            // 设置选中项为唯一键
-            string selectedMapping = listBoxMappings.SelectedItem.ToString();
-            string[] mappingParts = selectedMapping.Split(new string[] { " → " }, StringSplitOptions.None);
-            if (mappingParts.Length == 2)
-            {
-                string excelColumn = mappingParts[0];
-                string systemField = mappingParts[1].Split('-')[0].Trim();
-                
-                var mappingToSet = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
-                if (mappingToSet != null)
-                {
-                    mappingToSet.IsUniqueKey = true;
-                }
-            }
-            
-            // 更新映射列表
-            LoadExistingMappings();
-        }
-        
-        /// <summary>
-        /// 设置外键按钮点击事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void kbtnSetForeignKey_Click(object sender, EventArgs e)
         {
+            OpenPropertyDialog();
+        }
+
+        /// <summary>
+        /// 双击映射列表
+        /// </summary>
+        private void listBoxMappings_DoubleClick(object sender, EventArgs e)
+        {
+            OpenPropertyDialog();
+        }
+
+        /// <summary>
+        /// 打开属性配置对话框
+        /// </summary>
+        private void OpenPropertyDialog()
+        {
+            var mapping = GetSelectedMapping();
+            if (mapping == null)
+            {
+                MessageBox.Show("请选择要配置的映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var propertyDialog = new FrmColumnPropertyConfig
+            {
+                CurrentMapping = mapping,
+                TargetEntityType = TargetEntityType
+            })
+            {
+                if (propertyDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // 更新映射属性
+                    mapping.IsForeignKey = propertyDialog.IsForeignKey;
+                    mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
+                    mapping.DefaultValue = propertyDialog.DefaultValue;
+                    mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
+                    mapping.RelatedTableName = propertyDialog.RelatedTableName;
+                    mapping.RelatedTableField = propertyDialog.RelatedTableField;
+                    mapping.RelatedTableFieldName = propertyDialog.RelatedTableFieldName;
+                    mapping.UpdateTime = DateTime.Now;
+
+                    // 更新显示
+                    UpdateMappingsList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取当前选中的映射
+        /// </summary>
+        /// <returns>选中的映射，如果没有选中则返回null</returns>
+        private ColumnMapping GetSelectedMapping()
+        {
             if (listBoxMappings.SelectedItem == null)
             {
-                MessageBox.Show("请选择要设置为外键的映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return null;
             }
-            
-            // 获取选中的映射
-            string selectedMapping = listBoxMappings.SelectedItem.ToString();
-            string[] mappingParts = selectedMapping.Split(new string[] { " → " }, StringSplitOptions.None);
-            if (mappingParts.Length != 2)
+
+            int selectedIndex = listBoxMappings.SelectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= ColumnMappings.Count)
             {
-                MessageBox.Show("无效的映射格式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                return null;
             }
-            
-            string excelColumn = mappingParts[0];
-            string systemFieldDesc = mappingParts[1].Split('(')[0].Trim();
-            
-            // 获取系统字段名
-            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
-            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
-            string systemField = field.Key ?? systemFieldDesc;
-            
-            var mappingToSet = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
-            if (mappingToSet == null)
-            {
-                MessageBox.Show("未找到对应的映射配置", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            
-            // 打开外键配置对话框
-            using (var fkDialog = new FrmForeignKeyConfig())
-            {
-                fkDialog.CurrentMapping = mappingToSet;
-                
-                if (fkDialog.ShowDialog() == DialogResult.OK)
-                {
-                    // 更新映射配置
-                    mappingToSet.IsForeignKey = fkDialog.IsForeignKey;
-                    mappingToSet.RelatedTableName = fkDialog.RelatedTableName;
-                    mappingToSet.RelatedTableField = fkDialog.RelatedTableField;
-                    
-                    // 更新映射列表
-                    LoadExistingMappings();
-                    
-                    MessageBox.Show("外键配置已保存", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
+
+            return ColumnMappings[selectedIndex];
         }
-        
+
         /// <summary>
-        /// 保存按钮点击事件
+        /// 保存映射配置
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void kbtnSave_Click(object sender, EventArgs e)
+        private void kbtnSaveMapping_Click(object sender, EventArgs e)
         {
+            string mappingName = textBoxMappingName.Text.Trim();
+            if (string.IsNullOrEmpty(mappingName))
+            {
+                MessageBox.Show("请输入映射配置名称", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (ColumnMappings.Count == 0)
             {
-                MessageBox.Show("请至少配置一个映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("请添加至少一个映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // 检查是否设置了唯一键
-            if (!ColumnMappings.Any(m => m.IsUniqueKey))
-            {
-                if (MessageBox.Show("尚未设置唯一键，这可能导致数据重复导入。是否继续？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                {
-                    return;
-                }
-            }
-
-            // 询问是否保存配置
-            if (MessageBox.Show("是否保存当前映射配置，以便下次使用？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                SaveMappingToFile();
-            }
-
-            this.DialogResult = DialogResult.OK;
-            this.Close();
-        }
-
-        /// <summary>
-        /// 保存映射配置到文件
-        /// </summary>
-        private void SaveMappingToFile()
-        {
             try
             {
-                string mappingName = Microsoft.VisualBasic.Interaction.InputBox("请输入映射配置名称", "保存映射配置", "");
-                if (string.IsNullOrWhiteSpace(mappingName))
+                // 更新映射名称
+                foreach (var mapping in ColumnMappings)
                 {
-                    return;
+                    mapping.MappingName = mappingName;
+                    mapping.UpdateTime = DateTime.Now;
                 }
 
-                // 检查配置是否已存在
-                if (_mappingManager.MappingExists(mappingName))
+                // 保存到文件
+                string filePath = Path.Combine(_configFilePath, $"{mappingName}.xml");
+                var serializer = new XmlSerializer(typeof(ColumnMappingCollection));
+                using (var writer = new StreamWriter(filePath))
                 {
-                    if (MessageBox.Show($"配置名称 \"{mappingName}\" 已存在，是否覆盖？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                    {
-                        return;
-                    }
+                    serializer.Serialize(writer, ColumnMappings);
                 }
 
-                // 保存配置
-                _mappingManager.SaveMapping(ColumnMappings, mappingName, TargetEntityType?.Name);
                 SavedMappingName = mappingName;
+                MessageBox.Show("映射配置保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // 触发映射配置保存成功事件
+                // 触发保存事件
                 MappingSaved?.Invoke(this, EventArgs.Empty);
 
-                MessageBox.Show($"映射配置 \"{mappingName}\" 保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 刷新已保存映射列表
+                LoadSavedMappings();
+
+                // 选中新保存的映射
+                comboBoxSavedMappings.SelectedIndex = comboBoxSavedMappings.Items.IndexOf(mappingName);
+
+                // 关闭窗体
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"保存映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
-        /// 取消按钮点击事件
+        /// 加载已保存的映射配置
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
+        private void comboBoxSavedMappings_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxSavedMappings.SelectedIndex <= 0)
+            {
+                // 新建映射
+                textBoxMappingName.Text = string.Empty;
+                ColumnMappings.Clear();
+                UpdateMappingsList();
+                IsEditMode = false;
+                OriginalMappingName = null;
+                SetWindowTitle();
+                return;
+            }
+
+            try
+            {
+                string mappingName = comboBoxSavedMappings.SelectedItem.ToString();
+                string filePath = Path.Combine(_configFilePath, $"{mappingName}.xml");
+
+                if (!File.Exists(filePath))
+                {
+                    MessageBox.Show($"映射配置文件不存在: {mappingName}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var serializer = new XmlSerializer(typeof(ColumnMappingCollection));
+                using (var reader = new StreamReader(filePath))
+                {
+                    ColumnMappings = (ColumnMappingCollection)serializer.Deserialize(reader);
+                }
+
+                textBoxMappingName.Text = mappingName;
+                UpdateMappingsList();
+                
+                IsEditMode = true;
+                OriginalMappingName = mappingName;
+                SetWindowTitle();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 关闭窗体
+        /// </summary>
         private void kbtnCancel_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
             this.Close();
         }
-        
+
         /// <summary>
-        /// 自动匹配按钮点击事件
+        /// 自动匹配映射
         /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
         private void kbtnAutoMatch_Click(object sender, EventArgs e)
         {
-            // 自动匹配列名相同的Excel列和系统字段
-            List<string> matchedExcelColumns = new List<string>();
-            List<string> matchedSystemFields = new List<string>();
-            
-            foreach (string excelColumn in listBoxExcelColumns.Items)
+            try
             {
-                foreach (string systemFieldInfo in listBoxSystemFields.Items)
+                if (listBoxExcelColumns.Items.Count == 0 || listBoxSystemFields.Items.Count == 0)
                 {
-                    string systemField = systemFieldInfo.Split('(')[0].Trim();
-                    
-                    if (string.Equals(excelColumn, systemField, StringComparison.OrdinalIgnoreCase))
+                    MessageBox.Show("没有可匹配的列或字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 清空现有映射
+                ColumnMappings.Clear();
+
+                // 自动匹配列名和字段名
+                foreach (var excelColumnItem in listBoxExcelColumns.Items)
+                {
+                    string excelColumn = excelColumnItem.ToString();
+
+                    // 查找匹配的系统字段
+                    foreach (var systemFieldItem in listBoxSystemFields.Items)
                     {
-                        // 创建映射配置
-                        var mapping = new ColumnMapping
+                        string systemFieldDisplay = systemFieldItem.ToString();
+                        string systemField = systemFieldDisplay.StartsWith("* ")
+                            ? systemFieldDisplay.Substring(2)
+                            : systemFieldDisplay;
+
+                        // 简单的字符串匹配（忽略大小写和空格）
+                        if (string.Equals(excelColumn.Replace(" ", ""), systemField.Replace(" ", ""), StringComparison.OrdinalIgnoreCase))
                         {
-                            ExcelColumn = excelColumn,
-                            SystemField = systemField,
-                            DataType = systemFieldInfo.Split('-')[1].Trim(),
-                            IsUniqueKey = false,
-                            CreateTime = DateTime.Now,
-                            UpdateTime = DateTime.Now
-                        };
-                        
-                        ColumnMappings.Add(mapping);
-                        matchedExcelColumns.Add(excelColumn);
-                        matchedSystemFields.Add(systemFieldInfo);
-                        break;
+                            // 创建映射
+                            var mapping = new ColumnMapping
+                            {
+                                ExcelColumn = excelColumn,
+                                SystemField = systemField,
+                                MappingName = textBoxMappingName.Text,
+                                EntityType = TargetEntityType?.Name,
+                                CreateTime = DateTime.Now,
+                                UpdateTime = DateTime.Now
+                            };
+
+                            ColumnMappings.Add(mapping);
+                            break;
+                        }
                     }
                 }
+
+                // 更新映射列表显示
+                UpdateMappingsList();
+
+                MessageBox.Show($"自动匹配完成，共找到 {ColumnMappings.Count} 个映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-            
-            // 移除已匹配的项
-            foreach (string excelColumn in matchedExcelColumns)
+            catch (Exception ex)
             {
-                listBoxExcelColumns.Items.Remove(excelColumn);
+                MessageBox.Show($"自动匹配失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
-            foreach (string systemFieldInfo in matchedSystemFields)
-            {
-                listBoxSystemFields.Items.Remove(systemFieldInfo);
-            }
-            
-            // 更新映射列表
-            LoadExistingMappings();
-            
-            MessageBox.Show($"自动匹配完成，共匹配 {matchedExcelColumns.Count} 个字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

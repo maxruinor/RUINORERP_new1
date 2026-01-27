@@ -951,6 +951,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
+                // 判断是编辑模式还是新增模式
+                bool isEditMode = kcmbDynamicMappingName.SelectedIndex > 0;
+                string mappingName = isEditMode ? kcmbDynamicMappingName.SelectedItem.ToString() : string.Empty;
+
+                // 如果是编辑模式，先加载选中的配置
+                if (isEditMode)
+                {
+                    LoadSelectedMapping();
+                }
+
                 // 使用原始Excel数据进行映射配置
                 using (var frmMapping = new frmColumnMappingConfig())
                 {
@@ -958,9 +968,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     frmMapping.ExcelData = _rawExcelData;
                     frmMapping.TargetEntityType = _selectedEntityType;
                     frmMapping.ColumnMappings = _currentMappings;
+                    frmMapping.IsEditMode = isEditMode;
+                    frmMapping.OriginalMappingName = mappingName;
 
                     // 订阅映射配置保存成功事件
-                    frmMapping.MappingSaved += (s, e) =>
+                    frmMapping.MappingSaved += (s, args) =>
                     {
                         // 刷新映射配置下拉列表
                         LoadMappingConfigsForEntityType();
@@ -985,7 +997,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 更新按钮状态
                         UpdateMappingControlStates();
 
-                        MessageBox.Show("列映射配置已保存，可以点击\"解析\"按钮进行数据转换",
+                        string operationType = isEditMode ? "编辑" : "新增";
+                        MessageBox.Show($"列映射配置已{operationType}，可以点击\"解析\"按钮进行数据转换",
                             "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }

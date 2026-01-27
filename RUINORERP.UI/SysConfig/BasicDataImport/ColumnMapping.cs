@@ -27,10 +27,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         public string SystemField { get; set; }
 
+
         /// <summary>
-        /// 是否为唯一标识列
+        /// 是否值唯一
         /// </summary>
-        public bool IsUniqueKey { get; set; }
+        public bool IsUniqueValue { get; set; }
 
         /// <summary>
         /// 数据类型
@@ -58,14 +59,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsForeignKey { get; set; }
 
         /// <summary>
-        /// 关联表名
+        /// 是否系统生成
+        /// </summary>
+        public bool IsSystemGenerated { get; set; }
+
+        /// <summary>
+        /// 关联表名（外键关联的表）
         /// </summary>
         public string RelatedTableName { get; set; }
 
         /// <summary>
-        /// 关联表字段
+        /// 关联表字段（中文名称，用于显示）
         /// </summary>
         public string RelatedTableField { get; set; }
+
+        /// <summary>
+        /// 关联表字段（实际字段名）
+        /// </summary>
+        public string RelatedTableFieldName { get; set; }
 
         /// <summary>
         /// 创建时间
@@ -109,7 +120,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>唯一标识列映射配置</returns>
         public ColumnMapping GetUniqueKeyMapping()
         {
-            return this.FirstOrDefault(m => m.IsUniqueKey);
+            return this.FirstOrDefault(m => m.IsUniqueValue);
         }
     }
 }

@@ -80,6 +80,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.klblDynamicMappingName = new Krypton.Toolkit.KryptonLabel();
             this.kcmbDynamicMappingName = new Krypton.Toolkit.KryptonComboBox();
             this.kbtnDynamicParse = new Krypton.Toolkit.KryptonButton();
+            this.kbtnManageConfigs = new Krypton.Toolkit.KryptonButton();
             this.kbtnDynamicMap = new Krypton.Toolkit.KryptonButton();
             this.kbtnDynamicImport = new Krypton.Toolkit.KryptonButton();
             this.kryptonNavigatorDynamic = new Krypton.Navigator.KryptonNavigator();

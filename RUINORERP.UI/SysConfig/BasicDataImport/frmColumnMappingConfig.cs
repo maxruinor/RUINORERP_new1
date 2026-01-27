@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
-using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -20,6 +18,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public partial class frmColumnMappingConfig : KryptonForm
     {
+        /// <summary>
+        /// 映射配置管理器
+        /// </summary>
+        private ColumnMappingManager _mappingManager;
+
         /// <summary>
         /// Excel数据表格
         /// </summary>
@@ -34,13 +37,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 列映射配置集合
         /// </summary>
         public ColumnMappingCollection ColumnMappings { get; set; }
-        
+
+        /// <summary>
+        /// 映射配置保存成功事件
+        /// </summary>
+        public event EventHandler MappingSaved;
+
+        /// <summary>
+        /// 最后保存的映射配置名称
+        /// </summary>
+        public string SavedMappingName { get; private set; }
+
         /// <summary>
         /// 构造函数
         /// </summary>
         public frmColumnMappingConfig()
         {
             InitializeComponent();
+            _mappingManager = new ColumnMappingManager();
         }
         
         /// <summary>
@@ -273,7 +287,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show("请至少配置一个映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            
+
             // 检查是否设置了唯一键
             if (!ColumnMappings.Any(m => m.IsUniqueKey))
             {
@@ -282,9 +296,52 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
             }
-            
+
+            // 询问是否保存配置
+            if (MessageBox.Show("是否保存当前映射配置，以便下次使用？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                SaveMappingToFile();
+            }
+
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        /// <summary>
+        /// 保存映射配置到文件
+        /// </summary>
+        private void SaveMappingToFile()
+        {
+            try
+            {
+                string mappingName = Microsoft.VisualBasic.Interaction.InputBox("请输入映射配置名称", "保存映射配置", "");
+                if (string.IsNullOrWhiteSpace(mappingName))
+                {
+                    return;
+                }
+
+                // 检查配置是否已存在
+                if (_mappingManager.MappingExists(mappingName))
+                {
+                    if (MessageBox.Show($"配置名称 \"{mappingName}\" 已存在，是否覆盖？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+                    {
+                        return;
+                    }
+                }
+
+                // 保存配置
+                _mappingManager.SaveMapping(ColumnMappings, mappingName, TargetEntityType?.Name);
+                SavedMappingName = mappingName;
+
+                // 触发映射配置保存成功事件
+                MappingSaved?.Invoke(this, EventArgs.Empty);
+
+                MessageBox.Show($"映射配置 \"{mappingName}\" 保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"保存映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         /// <summary>

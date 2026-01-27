@@ -111,14 +111,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnCancel.TabIndex = 7;
             this.kbtnCancel.Values.Text = "取消";
             this.kbtnCancel.Click += new System.EventHandler(this.kbtnCancel_Click);
-            // 
+            //
             // kbtnSave
-            // 
+            //
             this.kbtnSave.Location = new System.Drawing.Point(590, 540);
             this.kbtnSave.Name = "kbtnSave";
-            this.kbtnSave.Size = new System.Drawing.Size(80, 30);
+            this.kbtnSave.Size = new System.Drawing.Size(120, 30);
             this.kbtnSave.TabIndex = 6;
-            this.kbtnSave.Values.Text = "保存";
+            this.kbtnSave.Values.Text = "确定并保存";
             this.kbtnSave.Click += new System.EventHandler(this.kbtnSave_Click);
             // 
             // listBoxMappings

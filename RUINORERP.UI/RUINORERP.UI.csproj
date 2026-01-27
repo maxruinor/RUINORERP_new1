@@ -4682,6 +4682,9 @@
     <EmbeddedResource Include="SS\SysInit.resx">
       <DependentUpon>SysInit.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SysConfig\BasicDataImport\UCBasicDataImport.resx">
+      <DependentUpon>UCBasicDataImport.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SysConfig\UCButtonInfoEdit.resx">
       <DependentUpon>UCButtonInfoEdit.cs</DependentUpon>
     </EmbeddedResource>

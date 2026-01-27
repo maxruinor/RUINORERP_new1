@@ -39,7 +39,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DynamicImporter _dynamicImporter;
         private DynamicDataValidator _dynamicDataValidator;
         private ColumnMappingCollection _currentMappings;
-        private DataTable _dynamicImportData;
+        private DataTable _rawExcelData;           // 原始Excel数据（预览用）
+        private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
         
         /// <summary>
@@ -83,12 +84,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _columnMappingManager = new ColumnMappingManager();
             _dynamicDataValidator = new DynamicDataValidator();
             _currentMappings = new ColumnMappingCollection();
-            _dynamicImportData = new DataTable();
+            _rawExcelData = new DataTable();
+            _parsedImportData = new DataTable();
 
             // 初始化数据网格视图
-            dgvDynamicImportData.AutoGenerateColumns = true;
-            dgvDynamicImportData.DataSource = _dynamicImportData;
+            dgvRawExcelData.AutoGenerateColumns = true;
+            dgvRawExcelData.DataSource = _rawExcelData;
+            dgvRawExcelData.UseCustomColumnDisplay = false;
 
+            dgvParsedImportData.AutoGenerateColumns = true;
+            dgvParsedImportData.DataSource = _parsedImportData;
+            dgvParsedImportData.UseCustomColumnDisplay = false;
             // 初始化实体类型选择下拉框
             InitializeEntityTypes();
 
@@ -197,14 +203,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (kcmbDynamicMappingName.SelectedIndex <= 0)
                 {
+                    _currentMappings = new ColumnMappingCollection();
+                    UpdateMappingControlStates();
                     return;
                 }
 
                 // 加载选中的映射配置
                 LoadSelectedMapping();
 
-                // 启用映射配置按钮
-                kbtnDynamicMap.Enabled = true;
+                // 更新映射配置按钮状态（选中配置后应该可以直接编辑或查看）
+                UpdateMappingControlStates();
             }
             catch (Exception ex)
             {
@@ -218,10 +226,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void UpdateMappingControlStates()
         {
             bool hasEntityType = _selectedEntityType != null;
-            bool hasData = _dynamicImportData != null && _dynamicImportData.Rows.Count > 0;
+            bool hasRawData = _rawExcelData != null && _rawExcelData.Rows.Count > 0;
+            bool hasMappingSelected = kcmbDynamicMappingName.SelectedIndex > 0;
 
-            // 映射配置按钮需要：已选择实体类型 且 已解析数据
-            kbtnDynamicMap.Enabled = hasEntityType && hasData;
+            // 映射配置按钮启用条件：
+            // 1. 已选择实体类型，且（已加载原始数据 OR 已选择映射配置）
+            kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
+
+            // 解析按钮需要：有原始数据、选择了实体类型、有映射配置
+            bool hasMappingConfig = _currentMappings != null && _currentMappings.Count > 0;
+            kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
         }
         
         /// <summary>
@@ -458,18 +472,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 openFileDialog.Filter = "Excel文件|*.xls;*.xlsx";
                 openFileDialog.Title = "选择动态导入的Excel文件";
-                
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     ktxtDynamicFilePath.Text = openFileDialog.FileName;
-                    kbtnDynamicParse.Enabled = true;
-                    
+
                     // 加载工作表名称
                     LoadSheetNames(openFileDialog.FileName);
                 }
             }
         }
-        
+
         /// <summary>
         /// 加载Excel文件的工作表名称
         /// </summary>
@@ -480,12 +493,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 string[] sheetNames = _dynamicExcelParser.GetSheetNames(filePath);
                 kcmbDynamicSheetName.Items.Clear();
-                
+
                 foreach (var sheetName in sheetNames)
                 {
                     kcmbDynamicSheetName.Items.Add(sheetName);
                 }
-                
+
                 if (kcmbDynamicSheetName.Items.Count > 0)
                 {
                     kcmbDynamicSheetName.SelectedIndex = 0;
@@ -499,6 +512,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         
         /// <summary>
         /// 动态导入-解析文件按钮点击事件
+        /// 根据映射配置解析Excel数据
         /// </summary>
         /// <param name="sender">事件发送者</param>
         /// <param name="e">事件参数</param>
@@ -509,25 +523,95 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 检查是否选择了工作表
                 if (kcmbDynamicSheetName.SelectedIndex < 0)
                 {
-                    MessageBox.Show("请选择要解析的工作表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("请先选择要解析的工作表", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 性能优化：先读取前100行用于预览（减少内存占用）
-                // 实际导入时会读取全部数据
-                _dynamicImportData = _dynamicExcelParser.ParseExcelToDataTable(ktxtDynamicFilePath.Text, kcmbDynamicSheetName.SelectedIndex, 100);
+                // 检查是否选择了实体类型
+                if (_selectedEntityType == null)
+                {
+                    MessageBox.Show("请先选择数据类型", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                // 绑定到数据网格视图
-                dgvDynamicImportData.DataSource = _dynamicImportData;
+                // 检查是否配置了映射
+                if (_currentMappings == null || _currentMappings.Count == 0)
+                {
+                    MessageBox.Show("请先配置列映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-                // 更新映射配置相关控件状态
-                UpdateMappingControlStates();
+                // 读取全部数据（不再限制行数）
+                DataTable fullData = _dynamicExcelParser.ParseExcelToDataTable(
+                    ktxtDynamicFilePath.Text,
+                    kcmbDynamicSheetName.SelectedIndex,
+                    0); // 0表示读取全部数据
 
-                MessageBox.Show($"解析完成，预览显示前 {_dynamicImportData.Rows.Count} 行数据\n实际导入时会读取全部数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                // 根据映射配置转换数据
+                _parsedImportData = ApplyColumnMapping(fullData, _currentMappings);
+
+                // 绑定到解析后数据表格
+                dgvParsedImportData.DataSource = _parsedImportData;
+
+                // 切换到解析数据预览页面
+                kryptonNavigatorDynamic.SelectedPage = kryptonPageParsedData;
+
+                // 启用导入按钮
+                kbtnDynamicImport.Enabled = true;
+
+                MessageBox.Show($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"解析Excel文件失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 应用列映射配置转换数据
+        /// </summary>
+        /// <param name="sourceData">源数据表格</param>
+        /// <param name="mappings">列映射配置集合</param>
+        /// <returns>转换后的数据表格</returns>
+        private DataTable ApplyColumnMapping(DataTable sourceData, ColumnMappingCollection mappings)
+        {
+            DataTable result = new DataTable();
+
+            try
+            {
+                // 创建结果表结构（使用SystemField作为列名）
+                foreach (var mapping in mappings.Where(m => !string.IsNullOrEmpty(m.ExcelColumn)))
+                {
+                    result.Columns.Add(mapping.SystemField, typeof(string));
+                }
+
+                // 转换数据行
+                foreach (DataRow sourceRow in sourceData.Rows)
+                {
+                    DataRow targetRow = result.NewRow();
+
+                    foreach (var mapping in mappings.Where(m => !string.IsNullOrEmpty(m.ExcelColumn)))
+                    {
+                        if (sourceData.Columns.Contains(mapping.ExcelColumn))
+                        {
+                            targetRow[mapping.SystemField] = sourceRow[mapping.ExcelColumn]?.ToString() ?? "";
+                        }
+                        else
+                        {
+                            targetRow[mapping.SystemField] = "";
+                        }
+                    }
+
+                    result.Rows.Add(targetRow);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"应用列映射失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return result;
             }
         }
 
@@ -538,8 +622,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="e">事件参数</param>
         private void KcmbDynamicSheetName_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // 当用户选择了Sheet后，启用解析按钮
-            kbtnDynamicParse.Enabled = kcmbDynamicSheetName.SelectedIndex >= 0;
+            try
+            {
+                // 当用户选择了Sheet后，立即加载原始数据到预览表格
+                if (kcmbDynamicSheetName.SelectedIndex < 0)
+                {
+                    return;
+                }
+
+                // 读取前100行用于预览（性能优化）
+                _rawExcelData = _dynamicExcelParser.ParseExcelToDataTable(
+                    ktxtDynamicFilePath.Text,
+                    kcmbDynamicSheetName.SelectedIndex,
+                    100); // 限制预览行数
+
+                // 绑定到原始数据预览表格
+                dgvRawExcelData.DataSource = _rawExcelData;
+
+                // 启用解析按钮
+                kbtnDynamicParse.Enabled = true;
+
+                // 更新映射配置按钮状态
+                UpdateMappingControlStates();
+
+                MessageBox.Show($"已加载工作表数据，预览显示前 {_rawExcelData.Rows.Count} 行数据",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载工作表数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         
         /// <summary>
@@ -558,12 +670,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
+                // 使用原始Excel数据进行映射配置
                 using (var frmMapping = new frmColumnMappingConfig())
                 {
                     // 设置参数
-                    frmMapping.ExcelData = _dynamicImportData;
+                    frmMapping.ExcelData = _rawExcelData;
                     frmMapping.TargetEntityType = _selectedEntityType;
                     frmMapping.ColumnMappings = _currentMappings;
+
+                    // 订阅映射配置保存成功事件
+                    frmMapping.MappingSaved += (s, e) =>
+                    {
+                        // 刷新映射配置下拉列表
+                        LoadMappingConfigsForEntityType();
+
+                        // 自动选中刚保存的配置
+                        if (!string.IsNullOrEmpty(frmMapping.SavedMappingName))
+                        {
+                            int index = kcmbDynamicMappingName.FindStringExact(frmMapping.SavedMappingName);
+                            if (index > 0)
+                            {
+                                kcmbDynamicMappingName.SelectedIndex = index;
+                            }
+                        }
+                    };
 
                     // 显示映射配置窗体
                     if (frmMapping.ShowDialog() == DialogResult.OK)
@@ -571,10 +701,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 更新映射配置
                         _currentMappings = frmMapping.ColumnMappings;
 
-                        // 启用导入按钮
-                        kbtnDynamicImport.Enabled = true;
+                        // 更新按钮状态
+                        UpdateMappingControlStates();
 
-                        MessageBox.Show("列映射配置已保存", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("列映射配置已保存，可以点击\"解析\"按钮进行数据转换",
+                            "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 }
             }
@@ -606,36 +737,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
         
         #endregion
-
-        /// <summary>
-        /// 保存当前映射配置
-        /// </summary>
-        private void SaveCurrentMapping()
-        {
-            try
-            {
-                if (_currentMappings == null || _currentMappings.Count == 0)
-                {
-                    MessageBox.Show("没有可保存的映射配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                string mappingName = Microsoft.VisualBasic.Interaction.InputBox("请输入映射配置名称", "保存映射配置", "");
-                if (string.IsNullOrEmpty(mappingName))
-                {
-                    return;
-                }
-
-                _columnMappingManager.SaveMapping(_currentMappings, mappingName, _selectedEntityType?.Name);
-                LoadMappingConfigsForEntityType();
-
-                MessageBox.Show("映射配置保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"保存映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
         /// <summary>
         /// 加载选中的映射配置
@@ -681,19 +782,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 检查是否有数据
-                if (_dynamicImportData == null || _dynamicImportData.Rows.Count == 0)
+                // 检查是否有解析后的数据
+                if (_parsedImportData == null || _parsedImportData.Rows.Count == 0)
                 {
-                    MessageBox.Show("没有可导入的数据，请先解析Excel文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("没有可导入的数据，请先点击\"解析\"按钮转换数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 重要：在导入前重新读取全部数据（预览时只读取了前100行）
-                MessageBox.Show("正在读取全部数据...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DataTable fullData = _dynamicExcelParser.ParseExcelToDataTable(ktxtDynamicFilePath.Text, kcmbDynamicSheetName.SelectedIndex);
+                // 重要：在导入前重新读取全部数据并应用映射
+                MessageBox.Show("正在读取全部数据并应用映射...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DataTable fullRawData = _dynamicExcelParser.ParseExcelToDataTable(
+                    ktxtDynamicFilePath.Text,
+                    kcmbDynamicSheetName.SelectedIndex,
+                    0); // 0表示读取全部数据
+
+                DataTable fullParsedData = ApplyColumnMapping(fullRawData, _currentMappings);
 
                 // 数据验证
-                var validationErrors = _dynamicDataValidator.Validate(fullData, _currentMappings, _selectedEntityType);
+                var validationErrors = _dynamicDataValidator.Validate(fullParsedData, _currentMappings, _selectedEntityType);
                 if (validationErrors.Count > 0)
                 {
                     string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
@@ -720,7 +826,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 显示确认对话框
-                if (MessageBox.Show($"确定要导入 {fullData.Rows.Count} 条数据到 {_selectedEntityType.Name} 吗？", "确认导入", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                if (MessageBox.Show($"确定要导入 {fullParsedData.Rows.Count} 条数据到 {_selectedEntityType.Name} 吗？",
+                    "确认导入", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 {
                     return;
                 }
@@ -736,8 +843,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化导入器
                 _dynamicImporter = new DynamicImporter(_db);
 
-                // 执行导入（使用全部数据）
-                var result = _dynamicImporter.Import(fullData, _currentMappings, _selectedEntityType);
+                // 执行导入（使用解析后的数据）
+                var result = _dynamicImporter.Import(fullParsedData, _currentMappings, _selectedEntityType);
 
                 // 显示导入结果
                 StringBuilder message = new StringBuilder();

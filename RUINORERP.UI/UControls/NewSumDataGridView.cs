@@ -603,11 +603,10 @@ namespace RUINORERP.UI.UControls
 
         private void SetSelectedColumn(bool _UseSelectedColumns)
         {
-            if (this.Columns["Selected"] == null)
+            if (!_UseSelectedColumns)
             {
                 return;
             }
-
 
             // 创建一个新的 DataGridViewCheckBoxColumn
             DataGridViewCheckBoxColumn checkBoxColumn = new DataGridViewCheckBoxColumn();
@@ -615,22 +614,10 @@ namespace RUINORERP.UI.UControls
             checkBoxColumn.ValueType = typeof(Boolean);
             checkBoxColumn.DataPropertyName = "Selected";
 
-
-
             checkBoxColumn.HeaderText = "选择";
             checkBoxColumn.Visible = _UseSelectedColumns;
 
-            //if (_UseSelectedColumns)
-            //{
-            //    var colSelected = this.Columns["Selected"];
-            //    colSelected = new DataGridViewCheckBoxColumn(true);
-            //    colSelected.Name = "Selected";
-            //    colSelected.DataPropertyName="Selected";
-            //}
-            //else
-            //{
-            //    this.Columns["Selected"].ReadOnly = false;
-            //}
+
             if (_UseSelectedColumns)
             {
                 checkBoxColumn.ReadOnly = false;
@@ -651,11 +638,13 @@ namespace RUINORERP.UI.UControls
             dgc.Alignment = DataGridViewContentAlignment.MiddleCenter;
             checkBoxColumn.DefaultCellStyle = dgc;
 
-            //this.Columns["Selected"].Frozen = true;
             // 找到对应于 Selected 列的 DataGridViewColumn
-            DataGridViewColumn selectedColumn = this.Columns["Selected"];
-            // 将 CheckBoxColumn 替换为原来的列
-            this.Columns.Remove(selectedColumn);
+            if (this.Columns["Selected"] != null)
+            {
+                DataGridViewColumn selectedColumn = this.Columns["Selected"];
+                // 将 CheckBoxColumn 替换为原来的列
+                this.Columns.Remove(selectedColumn);
+            }
             this.Columns.Add(checkBoxColumn);
             checkBoxColumn.HeaderCell.ContextMenuStrip = CreateSelectedAllContextMenuStrip();
             //打开了多选开关才显示
@@ -672,8 +661,10 @@ namespace RUINORERP.UI.UControls
                     kvselected = new KeyValuePair<string, bool>("选择", _UseSelectedColumns);
                 }
 
-
             }
+
+
+
 
         }
 
@@ -1639,47 +1630,54 @@ namespace RUINORERP.UI.UControls
             this.SuspendLayout();
             try
             {
-                // 处理特殊列
+
+                #region 处理特殊列 Selected
+
                 var selectedColumn = Columns["Selected"];
                 if (selectedColumn != null)
                 {
                     selectedColumn.Visible = UseSelectedColumn;
                     selectedColumn.ReadOnly = !UseSelectedColumn;
-                }
-                ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
-                ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
-                if (cdc != null)
-                {
-                    cdc.Disable = !UseSelectedColumn;
-                    cdc.Visible = UseSelectedColumn;
-                    if (UseSelectedColumn)
+                    ColumnDisplays.Where(c => c.Disable).ToList().ForEach(f => f.ColDisplayIndex = 1000);
+                    ColDisplayController cdc = ColumnDisplays.Where(c => c.ColName == "Selected").FirstOrDefault();
+                    if (cdc != null)
                     {
-                        this.ReadOnly = false;
-                        Columns[cdc.ColName].ReadOnly = false;
+                        cdc.Disable = !UseSelectedColumn;
+                        cdc.Visible = UseSelectedColumn;
+                        if (UseSelectedColumn)
+                        {
+                            this.ReadOnly = false;
+                            Columns[cdc.ColName].ReadOnly = false;
+                        }
+                        else
+                        {
+                            if (Columns[cdc.ColName] != null)
+                            {
+                                Columns[cdc.ColName].ReadOnly = true;
+                            }
+                        }
                     }
                     else
                     {
-                        if (Columns[cdc.ColName] != null)
+                        if (UseSelectedColumn)
                         {
-                            Columns[cdc.ColName].ReadOnly = true;
+                            ColumnDisplays.Add(new ColDisplayController()
+                            {
+                                ColName = "Selected",
+                                ColDisplayIndex = 0,
+                                ColDisplayText = "选择",
+                                ColWidth = 50,
+                                Disable = !UseSelectedColumn,
+                                Visible = UseSelectedColumn
+                            });
                         }
                     }
                 }
-                else
-                {
-                    if (UseSelectedColumn)
-                    {
-                        ColumnDisplays.Add(new ColDisplayController()
-                        {
-                            ColName = "Selected",
-                            ColDisplayIndex = 0,
-                            ColDisplayText = "选择",
-                            ColWidth = 50,
-                            Disable = !UseSelectedColumn,
-                            Visible = UseSelectedColumn
-                        });
-                    }
-                }
+
+
+
+                #endregion
+
                 //加载列样式
                 foreach (ColDisplayController displayController in ColumnDisplays)
                 {
@@ -1842,7 +1840,7 @@ namespace RUINORERP.UI.UControls
 
 
                         #region 将没有中文字段 比方ID，或对象集合这种都不启动
-                        if (FieldNameList==null)
+                        if (FieldNameList == null)
                         {
                             FieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
                         }
@@ -2573,7 +2571,7 @@ namespace RUINORERP.UI.UControls
             }
             if (this.DataSource is BindingSource bs)
             {
-                
+
             }
 
             customizeGrid.SetColumns(customizeGrid.LoadColumnsListByCdc(true));

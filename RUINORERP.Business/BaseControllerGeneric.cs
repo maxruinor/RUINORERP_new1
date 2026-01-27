@@ -947,15 +947,14 @@ namespace RUINORERP.Business
             // 使用try-catch捕获DataReader关闭异常,避免短时间查询导致连接问题
             try
             {
+                System.Diagnostics.Debug.WriteLine($"BaseQuerySimpleByAdvancedNavWithConditionsAsync:{dto.GetType().Name}");
                 return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("FieldCount") || ex.Message.Contains("阅读器关闭"))
             {
                 _logger.LogError(ex, $"DataReader已关闭,尝试重新查询。实体类型: {typeof(T).Name}");
-
                 // 等待一小段时间后重试,可能是连接池繁忙
                 await Task.Delay(100);
-
                 // 重新创建查询并执行
                 using (var newScope = _unitOfWorkManage.GetDbClient())
                 {

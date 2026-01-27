@@ -21,8 +21,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string DisplayName { get; set; }
 
         /// <summary>
-        /// 字段数据类型
+        /// 字段数据类型（运行时使用）
+        /// 注：此属性不序列化到XML配置文件中，仅用于运行时使用
         /// </summary>
+        [System.Xml.Serialization.XmlIgnore]
         public Type DataType { get; set; }
 
         /// <summary>

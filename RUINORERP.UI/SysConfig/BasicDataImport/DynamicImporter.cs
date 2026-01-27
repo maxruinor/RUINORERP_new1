@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -92,7 +93,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 动态导入数据
+        /// 动态导入数据（异步）
         /// </summary>
         /// <param name="dataTable">Excel数据表格</param>
         /// <param name="mappings">列映射配置</param>
@@ -100,7 +101,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>导入结果</returns>
         /// <exception cref="ArgumentNullException">参数为空时抛出</exception>
         /// <exception cref="ArgumentException">映射配置无效时抛出</exception>
-        public ImportResult Import(DataTable dataTable, ColumnMappingCollection mappings, Type entityType)
+        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType)
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
             {
@@ -168,7 +169,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     try
                     {
-                        BatchImportEntities(entityList, entityType, result, uniqueKeyMapping);
+                        await BatchImportEntitiesAsync(entityList, entityType, result, mappings);
                     }
                     catch (Exception batchEx)
                     {
@@ -547,84 +548,106 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 批量导入实体到数据库11
+        /// 批量导入实体到数据库
+        /// 使用Storageable进行批量插入和更新操作，提升性能
         /// </summary>
         /// <param name="entityList">实体列表</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="result">导入结果</param>
-        /// <param name="uniqueKeyMapping">唯一键映射配置</param>
-        private void BatchImportEntities(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMapping uniqueKeyMapping)
+        /// <param name="mappings">列映射配置</param>
+        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings)
         {
             try
             {
+                // 从映射配置或FieldMetadata获取主键字段信息
+                string primaryKeyName = GetPrimaryKeyFieldName(entityType);
+                
+                // 使用反射调用泛型的Storageable方法
+                var method = typeof(DynamicImporter).GetMethod(nameof(BatchImportEntitiesInternalAsync), 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                var genericMethod = method.MakeGenericMethod(entityType);
+                
+                await (System.Threading.Tasks.Task)genericMethod.Invoke(this, new object[] { entityList, primaryKeyName, result });
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"批量导入失败: {ex.Message}", ex);
+            }
+        }
 
-                var entityInfo = _entityInfoService.GetEntityInfoByTableName(entityType.Name);
-                string uniquePKFieldName = entityInfo.IdField;
+        /// <summary>
+        /// 获取实体类型的主键字段名
+        /// 优先从映射配置获取，其次从FieldMetadata获取
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>主键字段名</returns>
+        private string GetPrimaryKeyFieldName(Type entityType)
+        {
+            // 从FieldMetadata获取主键字段
+            var metadata = FieldMetadataService.GetFieldMetadata(entityType);
+            var primaryKeyMetadata = metadata.Values.FirstOrDefault(m => m.IsPrimaryKey);
+            
+            if (primaryKeyMetadata != null)
+            {
+                return primaryKeyMetadata.FieldName;
+            }
+
+            // 如果没有找到，尝试从entityInfo获取
+            var entityInfo = _entityInfoService.GetEntityInfoByTableName(entityType.Name);
+            return entityInfo?.IdField ?? "ID";
+        }
+
+        /// <summary>
+        /// 批量导入实体内部实现（泛型方法）
+        /// 使用Storageable进行批量插入和更新，主键>0时更新，主键<=0时插入
+        /// </summary>
+        /// <typeparam name="T">实体类型</typeparam>
+        /// <param name="entityList">实体列表</param>
+        /// <param name="primaryKeyName">主键字段名</param>
+        /// <param name="result">导入结果</param>
+        private async System.Threading.Tasks.Task BatchImportEntitiesInternalAsync<T>(List<BaseEntity> entityList, string primaryKeyName, ImportResult result) where T : BaseEntity, new()
+        {
+            try
+            {
+                // 将BaseEntity列表转换为强类型列表
+                var typedList = entityList.Cast<T>().ToList();
+
+                // 导入前处理特殊字段
+                foreach (var entity in typedList)
+                {
+                    EntityImportHelper.PreProcessEntity(typeof(T), entity, _db);
+                }
+
                 // 开启事务
                 _db.Ado.BeginTran();
 
-                // 获取ID属性
-                PropertyInfo idProperty = entityType.GetProperty(uniquePKFieldName);
-
-                // 批量插入或更新
-                foreach (var entity in entityList)
-                {
-                    try
-                    {
-                        bool isUpdate = false;
-
-                        // 检查是否需要更新（如果设置了唯一键且ID有值）
-                        if (uniqueKeyMapping != null && idProperty != null)
-                        {
-                            object idValue = idProperty.GetValue(entity);
-                            if (idValue != null && !IsDefaultValue(idValue))
-                            {
-                                isUpdate = true;
-                            }
-                        }
-
-                        if (isUpdate)
-                        {
-                            // 更新现有记录
-                            _db.UpdateableByObject(entity).ExecuteCommandAsync();
-                            result.UpdatedCount++;
-                        }
-                        else
-                        {
-                            // 新增记录
-                            _db.InsertableByObject(entity).ExecuteReturnSnowflakeIdAsync();
-                            result.InsertedCount++;
-                        }
-                    }
-                    catch (Exception saveEx)
-                    {
-                        // 单个实体导入失败，记录错误但继续处理下一个
-                        var failedRecord = new FailedRecord
-                        {
-                            RowNumber = result.InsertedCount + result.UpdatedCount + 2, // 估算行号
-                            ErrorMessage = $"保存到数据库失败: {saveEx.Message}",
-                            Data = EntityToDictionary(entity)
-                        };
-
-                        result.FailedRecords.Add(failedRecord);
-                        result.FailedCount++;
-                        result.SuccessCount--; // 调整成功计数
-                    }
-                }
-
-                // 提交事务
-                _db.Ado.CommitTran();
-            }
-            catch (Exception tranEx)
-            {
-                // 回滚事务
                 try
                 {
-                    _db.Ado.RollbackTran();
-                }
-                catch { }
+                    // 使用Storageable进行批量操作
+                    // 根据主键值判断：主键>0时更新，主键<=0时插入
+                    var storage = await _db.Storageable(typedList).ToStorageAsync();
 
-                throw new Exception($"批量导入失败: {tranEx.Message}", tranEx);
+                    // 执行插入操作（主键<=0的记录），返回雪花ID列表
+                    List<long> insertedIds = await storage.AsInsertable.ExecuteReturnSnowflakeIdListAsync();
+                    result.InsertedCount += insertedIds.Count;
+
+                    // 执行更新操作（主键>0的记录）
+                    int updatedCount = await storage.AsUpdateable.ExecuteCommandAsync();
+                    result.UpdatedCount += updatedCount;
+
+                    // 提交事务
+                    _db.Ado.CommitTran();
+                }
+                catch
+                {
+                    // 回滚事务
+                    _db.Ado.RollbackTran();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"批量导入实体失败: {ex.Message}", ex);
             }
         }
 

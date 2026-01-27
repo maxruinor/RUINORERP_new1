@@ -76,11 +76,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 加载列映射配置
         /// </summary>
         /// <param name="mappingName">映射配置名称</param>
+        /// <param name="entityType">目标实体类型（可选，用于运行时获取字段元信息）</param>
         /// <returns>加载的列映射配置集合</returns>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
         /// <exception cref="FileNotFoundException">当配置文件不存在时抛出</exception>
         /// <exception cref="Exception">当加载过程中发生错误时抛出</exception>
-        public ColumnMappingCollection LoadMapping(string mappingName)
+        public ColumnMappingCollection LoadMapping(string mappingName, Type entityType = null)
         {
             if (string.IsNullOrEmpty(mappingName))
             {
@@ -95,10 +96,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                using (StreamReader reader = new StreamReader(filePath))
-                {
-                    return (ColumnMappingCollection)_serializer.Deserialize(reader);
-                }
+                using StreamReader reader = new StreamReader(filePath);
+                return (ColumnMappingCollection)_serializer.Deserialize(reader);
             }
             catch (Exception ex)
             {

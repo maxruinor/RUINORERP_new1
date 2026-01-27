@@ -29,6 +29,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
             this.kbtnAutoMatch = new Krypton.Toolkit.KryptonButton();
             this.kbtnDeleteMapping = new Krypton.Toolkit.KryptonButton();
             this.kbtnSetColumnProperty = new Krypton.Toolkit.KryptonButton();
@@ -46,7 +47,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.comboBoxSavedMappings = new Krypton.Toolkit.KryptonComboBox();
             this.textBoxMappingName = new Krypton.Toolkit.KryptonTextBox();
-            this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).BeginInit();
@@ -77,6 +77,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(944, 600);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // chkRemoveDuplicates
+            // 
+            this.chkRemoveDuplicates.Checked = true;
+            this.chkRemoveDuplicates.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkRemoveDuplicates.Location = new System.Drawing.Point(515, 550);
+            this.chkRemoveDuplicates.Name = "chkRemoveDuplicates";
+            this.chkRemoveDuplicates.Size = new System.Drawing.Size(75, 20);
+            this.chkRemoveDuplicates.TabIndex = 36;
+            this.chkRemoveDuplicates.Values.Text = "去重复值";
             // 
             // kbtnAutoMatch
             // 
@@ -224,23 +234,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.textBoxMappingName.Size = new System.Drawing.Size(156, 23);
             this.textBoxMappingName.TabIndex = 14;
             // 
-            // chkRemoveDuplicates
-            // 
-            this.chkRemoveDuplicates.Checked = true;
-            this.chkRemoveDuplicates.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRemoveDuplicates.Location = new System.Drawing.Point(515, 550);
-            this.chkRemoveDuplicates.Name = "chkRemoveDuplicates";
-            this.chkRemoveDuplicates.Size = new System.Drawing.Size(75, 20);
-            this.chkRemoveDuplicates.TabIndex = 36;
-            this.chkRemoveDuplicates.Values.Text = "去重复值";
-            // 
             // frmColumnMappingConfig
             // 
+            this.AcceptButton = this.kbtnSaveMapping;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.kbtnCancel;
             this.ClientSize = new System.Drawing.Size(944, 600);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmColumnMappingConfig";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "列映射配置";
             this.Load += new System.EventHandler(this.frmColumnMappingConfig_Load);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();

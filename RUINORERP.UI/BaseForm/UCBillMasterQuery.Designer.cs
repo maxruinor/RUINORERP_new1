@@ -50,7 +50,6 @@
             this.newSumDataGridViewMaster.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewMaster.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewMaster.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewMaster.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewMaster.FieldNameList")));
             this.newSumDataGridViewMaster.IsShowSumRow = false;
             this.newSumDataGridViewMaster.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridViewMaster.Name = "newSumDataGridViewMaster";

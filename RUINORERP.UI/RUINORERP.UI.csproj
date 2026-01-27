@@ -2421,12 +2421,16 @@
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.Designer.cs">
       <DependentUpon>frmColumnMappingConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmForeignKeyConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmForeignKeyConfig.Designer.cs">
+      <DependentUpon>FrmForeignKeyConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ProductImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\ProductImportModel.cs" />
-    <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs" />
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.designer.cs">
       <DependentUpon>UCBasicDataImport.cs</DependentUpon>
     </Compile>

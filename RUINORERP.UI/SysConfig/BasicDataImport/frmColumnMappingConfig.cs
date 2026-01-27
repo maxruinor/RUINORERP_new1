@@ -117,8 +117,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 listBoxSystemFields.Items.Clear();
                 foreach (var field in fieldNameList)
                 {
-                    string fieldInfo = $"{field.Key} - {field.Value}";
-                    listBoxSystemFields.Items.Add(fieldInfo);
+                    // 只显示中文描述，不显示英文字段名
+                    if (!string.IsNullOrEmpty(field.Value))
+                    {
+                        listBoxSystemFields.Items.Add(field.Value);
+                    }
+                    else
+                    {
+                        listBoxSystemFields.Items.Add(field.Key);
+                    }
                 }
             }
             catch (Exception ex)
@@ -140,7 +147,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             listBoxMappings.Items.Clear();
             foreach (var mapping in ColumnMappings)
             {
-                string mappingInfo = $"{mapping.ExcelColumn} → {mapping.SystemField}";
+                // 获取系统字段的中文描述
+                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+                var field = fieldNameList.FirstOrDefault(f => f.Key == mapping.SystemField);
+                string systemFieldDesc = field.Value ?? mapping.SystemField;
+                
+                string mappingInfo = $"{mapping.ExcelColumn} → {systemFieldDesc}";
+                if (mapping.IsForeignKey)
+                {
+                    mappingInfo += " (外键)";
+                }
                 if (mapping.IsUniqueKey)
                 {
                     mappingInfo += " (唯一键)";
@@ -163,9 +179,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             
             string excelColumn = listBoxExcelColumns.SelectedItem.ToString();
-            string systemFieldInfo = listBoxSystemFields.SelectedItem.ToString();
-            string systemField = systemFieldInfo.Split('-')[0].Trim();
-            string dataType = systemFieldInfo.Split('-')[1].Trim();
+            string systemFieldDesc = listBoxSystemFields.SelectedItem.ToString();
+            
+            // 获取实体字段信息，根据中文描述找到对应的字段名
+            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
+            if (field.Key == null)
+            {
+                // 如果没有找到对应的字段名，尝试使用描述作为字段名
+                field = fieldNameList.FirstOrDefault(f => f.Key == systemFieldDesc);
+                if (field.Key == null)
+                {
+                    MessageBox.Show("无法找到对应的系统字段", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            
+            string systemField = field.Key;
+            string dataType = "string";
             
             // 检查是否已存在映射
             if (ColumnMappings.Any(m => m.ExcelColumn == excelColumn || m.SystemField == systemField))
@@ -181,6 +212,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 SystemField = systemField,
                 DataType = dataType,
                 IsUniqueKey = false,
+                DefaultValue = string.Empty,
+                IsForeignKey = false,
+                RelatedTableName = string.Empty,
+                RelatedTableField = string.Empty,
                 CreateTime = DateTime.Now,
                 UpdateTime = DateTime.Now
             };
@@ -188,12 +223,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ColumnMappings.Add(mapping);
             
             // 更新映射列表
-            string mappingInfo = $"{mapping.ExcelColumn} → {mapping.SystemField}";
+            string mappingInfo = $"{mapping.ExcelColumn} → {systemFieldDesc}";
             listBoxMappings.Items.Add(mappingInfo);
             
             // 从列表中移除已映射的项
             listBoxExcelColumns.Items.Remove(excelColumn);
-            listBoxSystemFields.Items.Remove(systemFieldInfo);
+            listBoxSystemFields.Items.Remove(systemFieldDesc);
         }
         
         /// <summary>
@@ -218,7 +253,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             string excelColumn = mappingParts[0];
-            string systemField = mappingParts[1].Split('-')[0].Trim();
+            string systemFieldDesc = mappingParts[1];
+            
+            // 获取实体字段信息，根据中文描述找到对应的字段名
+            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
+            if (field.Key == null)
+            {
+                // 如果没有找到对应的字段名，尝试使用描述作为字段名
+                field = fieldNameList.FirstOrDefault(f => f.Key == systemFieldDesc);
+                if (field.Key == null)
+                {
+                    MessageBox.Show("无法找到对应的系统字段", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            
+            string systemField = field.Key;
             
             // 查找并删除映射
             var mappingToRemove = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
@@ -273,6 +324,63 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             
             // 更新映射列表
             LoadExistingMappings();
+        }
+        
+        /// <summary>
+        /// 设置外键按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kbtnSetForeignKey_Click(object sender, EventArgs e)
+        {
+            if (listBoxMappings.SelectedItem == null)
+            {
+                MessageBox.Show("请选择要设置为外键的映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            // 获取选中的映射
+            string selectedMapping = listBoxMappings.SelectedItem.ToString();
+            string[] mappingParts = selectedMapping.Split(new string[] { " → " }, StringSplitOptions.None);
+            if (mappingParts.Length != 2)
+            {
+                MessageBox.Show("无效的映射格式", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            
+            string excelColumn = mappingParts[0];
+            string systemFieldDesc = mappingParts[1].Split('(')[0].Trim();
+            
+            // 获取系统字段名
+            var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+            var field = fieldNameList.FirstOrDefault(f => f.Value == systemFieldDesc);
+            string systemField = field.Key ?? systemFieldDesc;
+            
+            var mappingToSet = ColumnMappings.FirstOrDefault(m => m.ExcelColumn == excelColumn && m.SystemField == systemField);
+            if (mappingToSet == null)
+            {
+                MessageBox.Show("未找到对应的映射配置", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
+            // 打开外键配置对话框
+            using (var fkDialog = new FrmForeignKeyConfig())
+            {
+                fkDialog.CurrentMapping = mappingToSet;
+                
+                if (fkDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // 更新映射配置
+                    mappingToSet.IsForeignKey = fkDialog.IsForeignKey;
+                    mappingToSet.RelatedTableName = fkDialog.RelatedTableName;
+                    mappingToSet.RelatedTableField = fkDialog.RelatedTableField;
+                    
+                    // 更新映射列表
+                    LoadExistingMappings();
+                    
+                    MessageBox.Show("外键配置已保存", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
         }
         
         /// <summary>

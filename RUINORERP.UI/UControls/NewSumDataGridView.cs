@@ -52,9 +52,10 @@ namespace RUINORERP.UI.UControls
     {
         /// <summary>
         /// 保存不可见的列 ,业务性的。由程序硬编码控制了
-        /// 系统设置为不可用，或程序中控制了不可见的列
+        /// 系统设置为不可用，或程序中控制了不可见的列1
         /// add by  watson2025-6-11
         /// </summary>
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public HashSet<string> BizInvisibleCols { get; set; } = new HashSet<string>();
 
 
@@ -3956,6 +3957,7 @@ namespace RUINORERP.UI.UControls
         /// 列的显示，unitName,<单位,true>
         /// 列名，列中文，是否显示1
         /// </summary>
+        [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public ConcurrentDictionary<string, KeyValuePair<string, bool>> FieldNameList { get => _FieldNameList; set => _FieldNameList = value; }
 
         #region 列隐藏显示控制方法

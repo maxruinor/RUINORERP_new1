@@ -149,14 +149,12 @@
             this.newSumDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridView1.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridView1.BizInvisibleCols")));
             this.newSumDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView1.ContextMenuStrip = this.contextMenuStrip1;
             this.newSumDataGridView1.CustomRowNo = false;
             this.newSumDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridView1.EnableFiltering = false;
-            this.newSumDataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridView1.FieldNameList")));
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridView1.Name = "newSumDataGridView1";

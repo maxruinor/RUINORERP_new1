@@ -18,6 +18,71 @@ using Microsoft.VisualBasic;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
+    /// 导入任务类
+    /// 用于管理多步骤导入的单个任务
+    /// </summary>
+    public class ImportTask
+    {
+        /// <summary>
+        /// 任务名称
+        /// </summary>
+        public string TaskName { get; set; }
+
+        /// <summary>
+        /// Excel文件路径
+        /// </summary>
+        public string FilePath { get; set; }
+
+        /// <summary>
+        /// 工作表名称
+        /// </summary>
+        public string SheetName { get; set; }
+
+        /// <summary>
+        /// 目标实体类型
+        /// </summary>
+        public Type EntityType { get; set; }
+
+        /// <summary>
+        /// 列映射配置
+        /// </summary>
+        public ColumnMappingCollection Mappings { get; set; }
+
+        /// <summary>
+        /// 任务状态
+        /// </summary>
+        public TaskStatus Status { get; set; }
+
+        /// <summary>
+        /// 导入结果
+        /// </summary>
+        public DynamicImporter.ImportResult Result { get; set; }
+    }
+
+    /// <summary>
+    /// 任务状态枚举
+    /// </summary>
+    public enum TaskStatus
+    {
+        /// <summary>
+        /// 待执行
+        /// </summary>
+        Pending,
+        /// <summary>
+        /// 执行中
+        /// </summary>
+        Running,
+        /// <summary>
+        /// 执行成功
+        /// </summary>
+        Success,
+        /// <summary>
+        /// 执行失败
+        /// </summary>
+        Failed
+    }
+
+    /// <summary>
     /// 基础数据导入UI组件
     /// 用于产品数据的导入操作
     [MenuAttrAssemblyInfo("基础数据导入", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
@@ -42,6 +107,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
+        
+        // 多步骤导入相关字段
+        private List<ImportTask> _importTasks;
+        private int _currentTaskIndex;
         
         /// <summary>
         /// 构造函数
@@ -86,6 +155,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _currentMappings = new ColumnMappingCollection();
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
+            _importTasks = new List<ImportTask>();
+            _currentTaskIndex = 0;
 
             // 初始化数据网格视图
             dgvRawExcelData.AutoGenerateColumns = true;
@@ -106,6 +177,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kbtnDynamicParse.Click += KbtnDynamicParse_Click;
             kbtnDynamicMap.Click += KbtnDynamicMap_Click;
             kbtnDynamicImport.Click += KbtnDynamicImport_Click;
+            kbtnManageConfigs.Click += KbtnManageConfigs_Click;
             kcmbDynamicSheetName.SelectedIndexChanged += KcmbDynamicSheetName_SelectedIndexChanged;
             kcmbDynamicEntityType.SelectedIndexChanged += KcmbDynamicEntityType_SelectedIndexChanged;
             kcmbDynamicMappingName.SelectedIndexChanged += KcmbDynamicMappingName_SelectedIndexChanged;
@@ -124,13 +196,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbDynamicEntityType.Items.Clear();
                 kcmbDynamicEntityType.Items.Add("请选择");
 
-                // 添加支持的实体类型
-                kcmbDynamicEntityType.Items.Add("产品信息 (tb_Prod)");
-                kcmbDynamicEntityType.Items.Add("产品类目 (tb_ProdCategories)");
-                kcmbDynamicEntityType.Items.Add("产品属性类型 (tb_ProdPropertyType)");
-                kcmbDynamicEntityType.Items.Add("产品属性 (tb_ProdProperty)");
-                kcmbDynamicEntityType.Items.Add("产品属性值 (tb_ProdPropertyValue)");
-                kcmbDynamicEntityType.Items.Add("产品明细 (tb_ProdDetail)");
+                // 添加支持的实体类型（仅显示中文描述）
+                kcmbDynamicEntityType.Items.Add("供应商表");
+                kcmbDynamicEntityType.Items.Add("产品类目表");
+                kcmbDynamicEntityType.Items.Add("产品基本信息表");
+                kcmbDynamicEntityType.Items.Add("产品详情信息表");
+                kcmbDynamicEntityType.Items.Add("产品属性表");
+                kcmbDynamicEntityType.Items.Add("产品属性值表");
 
                 kcmbDynamicEntityType.SelectedIndex = 0;
             }
@@ -160,23 +232,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string selectedText = kcmbDynamicEntityType.SelectedItem.ToString();
                 switch (selectedText)
                 {
-                    case "产品信息 (tb_Prod)":
-                        _selectedEntityType = typeof(tb_Prod);
+                    case "供应商表":
+                        _selectedEntityType = typeof(tb_CustomerVendor);
                         break;
-                    case "产品类目 (tb_ProdCategories)":
+                    case "产品类目表":
                         _selectedEntityType = typeof(tb_ProdCategories);
                         break;
-                    case "产品属性类型 (tb_ProdPropertyType)":
-                        _selectedEntityType = typeof(tb_ProdPropertyType);
+                    case "产品基本信息表":
+                        _selectedEntityType = typeof(tb_Prod);
                         break;
-                    case "产品属性 (tb_ProdProperty)":
+                    case "产品详情信息表":
+                        _selectedEntityType = typeof(tb_ProdDetail);
+                        break;
+                    case "产品属性表":
                         _selectedEntityType = typeof(tb_ProdProperty);
                         break;
-                    case "产品属性值 (tb_ProdPropertyValue)":
+                    case "产品属性值表":
                         _selectedEntityType = typeof(tb_ProdPropertyValue);
-                        break;
-                    case "产品明细 (tb_ProdDetail)":
-                        _selectedEntityType = typeof(tb_ProdDetail);
                         break;
                 }
 
@@ -217,6 +289,215 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 MessageBox.Show($"加载映射配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 管理映射配置
+        /// </summary>
+        private void ManageMappingConfigs()
+        {
+            try
+            {
+                // 获取所有映射配置名称
+                var mappingNames = _columnMappingManager.GetAllMappingNames();
+                if (mappingNames.Count == 0)
+                {
+                    MessageBox.Show("没有保存的映射配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 显示配置管理对话框
+                StringBuilder configList = new StringBuilder();
+                configList.AppendLine("映射配置管理：\n");
+
+                for (int i = 0; i < mappingNames.Count; i++)
+                {
+                    configList.AppendLine($"{i + 1}. {mappingNames[i]}");
+                }
+
+                configList.AppendLine("\n请选择操作：");
+                configList.AppendLine("1. 修改配置");
+                configList.AppendLine("2. 删除配置");
+                configList.AppendLine("3. 取消");
+
+                string input = Interaction.InputBox(configList.ToString(), "配置管理", "3");
+                int choice;
+                if (!int.TryParse(input, out choice) || choice < 1 || choice > 3)
+                {
+                    return;
+                }
+
+                switch (choice)
+                {
+                    case 1:
+                        // 修改配置
+                        ModifyMappingConfig();
+                        break;
+                    case 2:
+                        // 删除配置
+                        DeleteMappingConfig();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"管理配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 修改映射配置
+        /// </summary>
+        private void ModifyMappingConfig()
+        {
+            try
+            {
+                // 获取所有映射配置名称
+                var mappingNames = _columnMappingManager.GetAllMappingNames();
+                if (mappingNames.Count == 0)
+                {
+                    MessageBox.Show("没有保存的映射配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 让用户选择要修改的配置
+                StringBuilder configList = new StringBuilder();
+                configList.AppendLine("请选择要修改的映射配置：\n");
+
+                for (int i = 0; i < mappingNames.Count; i++)
+                {
+                    configList.AppendLine($"{i + 1}. {mappingNames[i]}");
+                }
+
+                string input = Interaction.InputBox(configList.ToString(), "修改配置", "1");
+                int choice;
+                if (!int.TryParse(input, out choice) || choice < 1 || choice > mappingNames.Count)
+                {
+                    return;
+                }
+
+                string selectedConfig = mappingNames[choice - 1];
+
+                // 加载配置
+                _currentMappings = _columnMappingManager.LoadMapping(selectedConfig);
+
+                // 显示映射配置对话框
+                using (var frmMapping = new frmColumnMappingConfig())
+                {
+                    frmMapping.ExcelData = _rawExcelData;
+                    frmMapping.TargetEntityType = _selectedEntityType;
+                    frmMapping.ColumnMappings = _currentMappings;
+
+                    // 订阅映射配置保存成功事件
+                    frmMapping.MappingSaved += (s, e) =>
+                    {
+                        // 刷新映射配置下拉列表
+                        LoadMappingConfigsForEntityType();
+
+                        // 自动选中刚修改的配置
+                        if (!string.IsNullOrEmpty(frmMapping.SavedMappingName))
+                        {
+                            int index = kcmbDynamicMappingName.FindStringExact(frmMapping.SavedMappingName);
+                            if (index > 0)
+                            {
+                                kcmbDynamicMappingName.SelectedIndex = index;
+                            }
+                        }
+                    };
+
+                    // 显示映射配置窗体
+                    if (frmMapping.ShowDialog() == DialogResult.OK)
+                    {
+                        // 更新映射配置
+                        _currentMappings = frmMapping.ColumnMappings;
+
+                        // 更新按钮状态
+                        UpdateMappingControlStates();
+
+                        MessageBox.Show("映射配置已修改", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"修改配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 删除映射配置
+        /// </summary>
+        private void DeleteMappingConfig()
+        {
+            try
+            {
+                // 获取所有映射配置名称
+                var mappingNames = _columnMappingManager.GetAllMappingNames();
+                if (mappingNames.Count == 0)
+                {
+                    MessageBox.Show("没有保存的映射配置", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 让用户选择要删除的配置
+                StringBuilder configList = new StringBuilder();
+                configList.AppendLine("请选择要删除的映射配置：\n");
+
+                for (int i = 0; i < mappingNames.Count; i++)
+                {
+                    configList.AppendLine($"{i + 1}. {mappingNames[i]}");
+                }
+
+                string input = Interaction.InputBox(configList.ToString(), "删除配置", "1");
+                int choice;
+                if (!int.TryParse(input, out choice) || choice < 1 || choice > mappingNames.Count)
+                {
+                    return;
+                }
+
+                string selectedConfig = mappingNames[choice - 1];
+
+                // 确认删除
+                if (MessageBox.Show($"确定要删除映射配置 '{selectedConfig}' 吗？\n\n此操作不可恢复", "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    // 删除配置
+                    _columnMappingManager.DeleteMapping(selectedConfig);
+
+                    // 刷新映射配置下拉列表
+                    LoadMappingConfigsForEntityType();
+
+                    // 如果删除的是当前选中的配置，重置当前映射
+                    if (kcmbDynamicMappingName.SelectedItem != null && kcmbDynamicMappingName.SelectedItem.ToString() == selectedConfig)
+                    {
+                        kcmbDynamicMappingName.SelectedIndex = 0;
+                        _currentMappings = new ColumnMappingCollection();
+                    }
+
+                    MessageBox.Show($"映射配置 '{selectedConfig}' 已删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 管理配置按钮点击事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void KbtnManageConfigs_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 调用管理映射配置方法
+                ManageMappingConfigs();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"管理配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -789,6 +1070,74 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
+                // 询问是否添加到多步骤导入任务
+                if (MessageBox.Show("是否将此导入添加到多步骤导入任务中？\n\n选择'是'：将此导入添加到任务列表，可与其他导入任务一起顺序执行\n选择'否'：立即执行此导入", "多步骤导入", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    // 添加到导入任务列表
+                    AddToImportTask();
+                }
+                else
+                {
+                    // 立即执行导入
+                    ExecuteSingleImport();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                kbtnDynamicImport.Enabled = true;
+                kbtnDynamicBrowse.Enabled = true;
+                kbtnDynamicParse.Enabled = true;
+                kbtnDynamicMap.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 添加到导入任务列表
+        /// </summary>
+        private void AddToImportTask()
+        {
+            try
+            {
+                // 获取任务名称
+                string taskName = Interaction.InputBox("请输入任务名称", "添加导入任务", $"导入{_selectedEntityType.Name}");
+                if (string.IsNullOrWhiteSpace(taskName))
+                {
+                    return;
+                }
+
+                // 创建导入任务
+                var task = new ImportTask
+                {
+                    TaskName = taskName,
+                    FilePath = ktxtDynamicFilePath.Text,
+                    SheetName = kcmbDynamicSheetName.SelectedItem.ToString(),
+                    EntityType = _selectedEntityType,
+                    Mappings = _currentMappings,
+                    Status = TaskStatus.Pending
+                };
+
+                // 添加到任务列表
+                _importTasks.Add(task);
+
+                // 显示任务列表
+                ShowImportTaskList();
+
+                MessageBox.Show($"导入任务 '{taskName}' 已添加到任务列表", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"添加导入任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 执行单个导入任务
+        /// </summary>
+        private void ExecuteSingleImport()
+        {
+            try
+            {
                 // 重要：在导入前重新读取全部数据并应用映射
                 MessageBox.Show("正在读取全部数据并应用映射...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 DataTable fullRawData = _dynamicExcelParser.ParseExcelToDataTable(
@@ -886,6 +1235,147 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kbtnDynamicBrowse.Enabled = true;
                 kbtnDynamicParse.Enabled = true;
                 kbtnDynamicMap.Enabled = true;
+            }
+        }
+
+        /// <summary>
+        /// 显示导入任务列表
+        /// </summary>
+        private void ShowImportTaskList()
+        {
+            try
+            {
+                StringBuilder taskList = new StringBuilder();
+                taskList.AppendLine("导入任务列表：\n");
+
+                for (int i = 0; i < _importTasks.Count; i++)
+                {
+                    var task = _importTasks[i];
+                    taskList.AppendLine($"{i + 1}. {task.TaskName}");
+                    taskList.AppendLine($"   状态：{task.Status}");
+                    taskList.AppendLine($"   目标表：{task.EntityType.Name}");
+                    taskList.AppendLine($"   文件：{Path.GetFileName(task.FilePath)}");
+                    taskList.AppendLine($"   工作表：{task.SheetName}");
+                    taskList.AppendLine();
+                }
+
+                // 询问是否执行所有任务
+                if (_importTasks.Count > 0)
+                {
+                    taskList.AppendLine("是否执行所有任务？");
+                    if (MessageBox.Show(taskList.ToString(), "导入任务列表", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        // 执行所有导入任务
+                        ExecuteAllImportTasks();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"显示任务列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 执行所有导入任务
+        /// </summary>
+        private void ExecuteAllImportTasks()
+        {
+            try
+            {
+                if (_importTasks.Count == 0)
+                {
+                    MessageBox.Show("导入任务列表为空", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 加载数据库连接
+                LoadDbConnection();
+
+                // 显示开始执行提示
+                MessageBox.Show($"开始执行 {_importTasks.Count} 个导入任务，请耐心等待...", "执行任务", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 执行所有任务
+                _currentTaskIndex = 0;
+                foreach (var task in _importTasks)
+                {
+                    _currentTaskIndex++;
+                    try
+                    {
+                        // 更新任务状态
+                        task.Status = TaskStatus.Running;
+
+                        // 显示当前执行的任务
+                        MessageBox.Show($"正在执行任务 {_currentTaskIndex}/{_importTasks.Count}：{task.TaskName}", "执行任务", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        // 读取Excel数据
+                        DataTable rawData = _dynamicExcelParser.ParseExcelToDataTable(
+                            task.FilePath,
+                            task.SheetName,
+                            0);
+
+                        // 应用映射配置
+                        DataTable parsedData = ApplyColumnMapping(rawData, task.Mappings);
+
+                        // 数据验证
+                        var validationErrors = _dynamicDataValidator.Validate(parsedData, task.Mappings, task.EntityType);
+                        if (validationErrors.Count > 0)
+                        {
+                            string errorSummary = $"任务 {task.TaskName} 发现 {validationErrors.Count} 个数据验证错误：\n\n";
+                            errorSummary += "是否继续导入（跳过有错误的记录）？";
+
+                            if (MessageBox.Show(errorSummary, "数据验证警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                            {
+                                task.Status = TaskStatus.Failed;
+                                continue;
+                            }
+                        }
+
+                        // 执行导入
+                        _dynamicImporter = new DynamicImporter(_db);
+                        task.Result = _dynamicImporter.Import(parsedData, task.Mappings, task.EntityType);
+
+                        // 更新任务状态
+                        task.Status = task.Result.FailedCount == 0 ? TaskStatus.Success : TaskStatus.Failed;
+
+                        // 显示任务执行结果
+                        StringBuilder resultMessage = new StringBuilder();
+                        resultMessage.AppendLine($"任务 {task.TaskName} 执行完成！");
+                        resultMessage.AppendLine($"总记录数：{task.Result.TotalCount}");
+                        resultMessage.AppendLine($"成功记录数：{task.Result.SuccessCount}");
+                        resultMessage.AppendLine($"失败记录数：{task.Result.FailedCount}");
+                        resultMessage.AppendLine($"新增记录数：{task.Result.InsertedCount}");
+                        resultMessage.AppendLine($"更新记录数：{task.Result.UpdatedCount}");
+                        resultMessage.AppendLine($"耗时：{task.Result.ElapsedMilliseconds} 毫秒");
+
+                        MessageBox.Show(resultMessage.ToString(), "任务执行结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        task.Status = TaskStatus.Failed;
+                        MessageBox.Show($"任务 {task.TaskName} 执行失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+
+                // 显示所有任务执行完成
+                StringBuilder finalMessage = new StringBuilder();
+                finalMessage.AppendLine("所有导入任务执行完成！\n");
+
+                int successCount = _importTasks.Count(t => t.Status == TaskStatus.Success);
+                int failedCount = _importTasks.Count(t => t.Status == TaskStatus.Failed);
+
+                finalMessage.AppendLine($"成功任务数：{successCount}");
+                finalMessage.AppendLine($"失败任务数：{failedCount}");
+                finalMessage.AppendLine($"总任务数：{_importTasks.Count}");
+
+                MessageBox.Show(finalMessage.ToString(), "执行完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 清空任务列表
+                _importTasks.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"执行任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

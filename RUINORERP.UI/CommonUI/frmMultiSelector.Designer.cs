@@ -113,7 +113,6 @@
             this.newSumDataGridViewSelectorLines.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewSelectorLines.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewSelectorLines.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewSelectorLines.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewChild.FieldNameList")));
             this.newSumDataGridViewSelectorLines.IsShowSumRow = false;
             this.newSumDataGridViewSelectorLines.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridViewSelectorLines.Name = "newSumDataGridViewChild";

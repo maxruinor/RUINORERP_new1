@@ -181,7 +181,6 @@
             this.newSumDataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView1.CustomRowNo = false;
-            this.newSumDataGridView1.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridView1.FieldNameList")));
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(12, 175);
             this.newSumDataGridView1.Name = "newSumDataGridView1";
@@ -397,7 +396,6 @@
             this.newSumDataGridViewDetail.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewDetail.CustomRowNo = false;
             this.newSumDataGridViewDetail.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewDetail.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewDetail.FieldNameList")));
             this.newSumDataGridViewDetail.IsShowSumRow = false;
             this.newSumDataGridViewDetail.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridViewDetail.Name = "newSumDataGridViewDetail";

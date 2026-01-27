@@ -183,7 +183,6 @@
             this.dgvDepartments.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.dgvDepartments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvDepartments.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvDepartments.BizInvisibleCols")));
             this.dgvDepartments.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvDepartments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDepartments.CustomRowNo = false;
@@ -233,7 +232,6 @@
             this.dgvRoles.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
             this.dgvRoles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvRoles.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvRoles.BizInvisibleCols")));
             this.dgvRoles.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvRoles.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvRoles.CustomRowNo = false;
@@ -283,7 +281,6 @@
             this.dgvUsers.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle3;
             this.dgvUsers.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvUsers.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvUsers.BizInvisibleCols")));
             this.dgvUsers.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvUsers.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvUsers.CustomRowNo = false;
@@ -477,7 +474,6 @@
             this.dgvDocTypes.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle4;
             this.dgvDocTypes.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvDocTypes.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvDocTypes.BizInvisibleCols")));
             this.dgvDocTypes.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvDocTypes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDocTypes.CustomRowNo = false;

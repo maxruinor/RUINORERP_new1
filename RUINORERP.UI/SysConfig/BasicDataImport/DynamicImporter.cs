@@ -198,17 +198,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 try
                 {
                     // 获取Excel列的值
-                    if (!dataTableContainsColumn(row.Table, mapping.ExcelColumn))
+                    object cellValue = null;
+                    if (dataTableContainsColumn(row.Table, mapping.ExcelColumn))
                     {
-                        continue;
+                        cellValue = row[mapping.ExcelColumn];
                     }
 
-                    object cellValue = row[mapping.ExcelColumn];
-
-                    // 如果值为空，跳过
+                    // 如果值为空，检查是否有默认值
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
-                        continue;
+                        if (!string.IsNullOrEmpty(mapping.DefaultValue))
+                        {
+                            cellValue = mapping.DefaultValue;
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
 
                     // 获取实体属性
@@ -216,6 +222,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (property == null)
                     {
                         continue;
+                    }
+
+                    // 处理外键字段
+                    if (mapping.IsForeignKey && !string.IsNullOrEmpty(mapping.RelatedTableName) && !string.IsNullOrEmpty(mapping.RelatedTableField))
+                    {
+                        // 查找关联表中的对应值
+                        object foreignKeyId = GetForeignKeyId(cellValue.ToString(), mapping.RelatedTableName, mapping.RelatedTableField);
+                        if (foreignKeyId != null)
+                        {
+                            cellValue = foreignKeyId;
+                        }
+                        else
+                        {
+                            throw new Exception($"行 {rowNumber} 外键值 '{cellValue}' 在关联表 {mapping.RelatedTableName} 中未找到对应记录");
+                        }
                     }
 
                     // 类型转换
@@ -232,6 +253,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             return entity;
+        }
+
+        /// <summary>
+        /// 获取外键ID
+        /// </summary>
+        /// <param name="foreignKeyValue">外键值</param>
+        /// <param name="relatedTableName">关联表名</param>
+        /// <param name="relatedTableField">关联表字段</param>
+        /// <returns>外键ID</returns>
+        private object GetForeignKeyId(string foreignKeyValue, string relatedTableName, string relatedTableField)
+        {
+            try
+            {
+                // 构建查询SQL，假设关联表的主键字段为ID
+                string sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} = @value";
+                var parameters = new { value = foreignKeyValue };
+
+                // 执行查询
+                var result = _db.Ado.GetDataTable(sql, parameters);
+                if (result != null && result.Rows.Count > 0)
+                {
+                    return result.Rows[0]["ID"];
+                }
+                
+                // 如果没有找到，返回null
+                return null;
+            }
+            catch
+            {
+                // 如果查询失败，返回null
+                return null;
+            }
         }
 
         /// <summary>

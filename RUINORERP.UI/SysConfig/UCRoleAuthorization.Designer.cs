@@ -195,7 +195,6 @@
             this.dataGridViewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridViewButton.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridViewButton.BizInvisibleCols")));
             this.dataGridViewButton.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridViewButton.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewButton.CustomRowNo = false;
@@ -244,7 +243,6 @@
             this.dataGridViewField.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridViewField.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridViewField.BizInvisibleCols")));
             this.dataGridViewField.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridViewField.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewField.CustomRowNo = false;
@@ -314,7 +312,6 @@
             this.newSumDataGridViewRowAuthPolicy.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridViewRowAuthPolicy.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridViewRowAuthPolicy.BizInvisibleCols")));
             this.newSumDataGridViewRowAuthPolicy.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewRowAuthPolicy.CustomRowNo = false;
             this.newSumDataGridViewRowAuthPolicy.Dock = System.Windows.Forms.DockStyle.Fill;

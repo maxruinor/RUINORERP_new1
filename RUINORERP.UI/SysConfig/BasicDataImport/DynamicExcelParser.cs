@@ -99,6 +99,56 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 解析Excel文件的指定名称的Sheet为DataTable（支持预览行数限制）
+        /// </summary>
+        /// <param name="filePath">Excel文件路径</param>
+        /// <param name="sheetName">Sheet名称</param>
+        /// <param name="maxPreviewRows">预览最大行数，-1表示全部加载</param>
+        /// <returns>解析后的DataTable</returns>
+        /// <exception cref="FileNotFoundException">当文件不存在时抛出</exception>
+        /// <exception cref="ArgumentException">当文件格式不支持时抛出</exception>
+        /// <exception cref="Exception">当解析过程中发生错误时抛出</exception>
+        public DataTable ParseExcelToDataTable(string filePath, string sheetName, int maxPreviewRows)
+        {
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException("指定的Excel文件不存在", filePath);
+            }
+
+            string fileExtension = Path.GetExtension(filePath).ToLower();
+            IWorkbook workbook = null;
+            DataTable dataTable = null;
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                // 根据文件扩展名创建对应的Workbook对象
+                switch (fileExtension)
+                {
+                    case ".xls":
+                        workbook = new HSSFWorkbook(fs);
+                        break;
+                    case ".xlsx":
+                        workbook = new XSSFWorkbook(fs);
+                        break;
+                    default:
+                        throw new ArgumentException("不支持的文件格式，仅支持.xls和.xlsx格式的Excel文件");
+                }
+
+                // 根据名称获取工作表
+                ISheet sheet = workbook.GetSheet(sheetName);
+                if (sheet == null)
+                {
+                    throw new Exception($"Excel文件中没有名称为 '{sheetName}' 的工作表");
+                }
+
+                // 将工作表转换为DataTable
+                dataTable = SheetToDataTable(sheet, maxPreviewRows);
+            }
+
+            return dataTable;
+        }
+
+        /// <summary>
         /// 将Excel工作表转换为DataTable（性能优化版本）
         /// </summary>
         /// <param name="sheet">Excel工作表</param>

@@ -246,7 +246,6 @@ namespace RUINORERP.UI.ProductEAV
             this.dataGridViewProd.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridViewProd.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dataGridViewProd.BizInvisibleCols")));
             this.dataGridViewProd.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridViewProd.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewProd.CustomRowNo = false;

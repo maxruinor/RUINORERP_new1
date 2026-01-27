@@ -48,7 +48,6 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.newSumDataGridViewChild.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewChild.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.newSumDataGridViewChild.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewChild.FieldNameList")));
             this.newSumDataGridViewChild.IsShowSumRow = false;
             this.newSumDataGridViewChild.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridViewChild.Name = "newSumDataGridViewChild";

@@ -85,6 +85,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnSetUniqueKey.Values.Text = "设置唯一键";
             this.kbtnSetUniqueKey.Click += new System.EventHandler(this.kbtnSetUniqueKey_Click);
             // 
+            // kbtnSetForeignKey
+            // 
+            this.kbtnSetForeignKey.Location = new System.Drawing.Point(550, 280);
+            this.kbtnSetForeignKey.Name = "kbtnSetForeignKey";
+            this.kbtnSetForeignKey.Size = new System.Drawing.Size(100, 25);
+            this.kbtnSetForeignKey.TabIndex = 12;
+            this.kbtnSetForeignKey.Values.Text = "设置外键";
+            this.kbtnSetForeignKey.Click += new System.EventHandler(this.kbtnSetForeignKey_Click);
+            // 
             // kbtnRemoveMapping
             // 
             this.kbtnRemoveMapping.Location = new System.Drawing.Point(660, 250);
@@ -196,6 +205,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnAddMapping;
         private Krypton.Toolkit.KryptonButton kbtnRemoveMapping;
         private Krypton.Toolkit.KryptonButton kbtnSetUniqueKey;
+        private Krypton.Toolkit.KryptonButton kbtnSetForeignKey;
         private Krypton.Toolkit.KryptonButton kbtnAutoMatch;
     }
 }

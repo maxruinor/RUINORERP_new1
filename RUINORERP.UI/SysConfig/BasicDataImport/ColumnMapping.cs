@@ -48,6 +48,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string EntityType { get; set; }
 
         /// <summary>
+        /// 默认值
+        /// </summary>
+        public string DefaultValue { get; set; }
+
+        /// <summary>
+        /// 是否为外键
+        /// </summary>
+        public bool IsForeignKey { get; set; }
+
+        /// <summary>
+        /// 关联表名
+        /// </summary>
+        public string RelatedTableName { get; set; }
+
+        /// <summary>
+        /// 关联表字段
+        /// </summary>
+        public string RelatedTableField { get; set; }
+
+        /// <summary>
         /// 创建时间
         /// </summary>
         public DateTime CreateTime { get; set; }

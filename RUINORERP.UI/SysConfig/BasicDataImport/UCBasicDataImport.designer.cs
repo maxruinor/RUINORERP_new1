@@ -323,7 +323,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvImportData.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvImportData.BizInvisibleCols")));
+            this.dgvImportData.BizInvisibleCols = new System.Collections.Generic.HashSet<string>();
             this.dgvImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvImportData.ContextMenuStrip = this.contextMenuStrip1;
@@ -479,13 +479,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvRawExcelData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvRawExcelData.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvRawExcelData.BizInvisibleCols")));
             this.dgvRawExcelData.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvRawExcelData.CustomRowNo = false;
             this.dgvRawExcelData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvRawExcelData.EnableFiltering = false;
             this.dgvRawExcelData.EnablePagination = false;
-            this.dgvRawExcelData.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("dgvRawExcelData.FieldNameList")));
             this.dgvRawExcelData.IsShowSumRow = false;
             this.dgvRawExcelData.Location = new System.Drawing.Point(0, 0);
             this.dgvRawExcelData.Name = "dgvRawExcelData";
@@ -606,6 +604,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel5.Controls.Add(this.klblDynamicMappingName);
             this.kryptonPanel5.Controls.Add(this.kcmbDynamicMappingName);
             this.kryptonPanel5.Controls.Add(this.kbtnDynamicParse);
+            this.kryptonPanel5.Controls.Add(this.kbtnManageConfigs);
             this.kryptonPanel5.Controls.Add(this.kbtnDynamicMap);
             this.kryptonPanel5.Controls.Add(this.kbtnDynamicImport);
             this.kryptonPanel5.Dock = System.Windows.Forms.DockStyle.Top;
@@ -700,6 +699,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnDynamicParse.TabIndex = 7;
             this.kbtnDynamicParse.Values.Text = "解析";
             // 
+            // kbtnManageConfigs
+            // 
+            this.kbtnManageConfigs.Location = new System.Drawing.Point(650, 10);
+            this.kbtnManageConfigs.Name = "kbtnManageConfigs";
+            this.kbtnManageConfigs.Size = new System.Drawing.Size(80, 25);
+            this.kbtnManageConfigs.TabIndex = 12;
+            this.kbtnManageConfigs.Values.Text = "管理配置";
+            // 
             // kbtnDynamicMap
             // 
             this.kbtnDynamicMap.Enabled = false;
@@ -772,13 +779,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvParsedImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvParsedImportData.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvParsedImportData.BizInvisibleCols")));
             this.dgvParsedImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvParsedImportData.CustomRowNo = false;
             this.dgvParsedImportData.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvParsedImportData.EnableFiltering = false;
             this.dgvParsedImportData.EnablePagination = false;
-            this.dgvParsedImportData.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("dgvParsedImportData.FieldNameList")));
             this.dgvParsedImportData.IsShowSumRow = false;
             this.dgvParsedImportData.Location = new System.Drawing.Point(0, 0);
             this.dgvParsedImportData.Name = "dgvParsedImportData";
@@ -804,7 +809,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.dgvDynamicImportData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dgvDynamicImportData.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("dgvDynamicImportData.BizInvisibleCols")));
             this.dgvDynamicImportData.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgvDynamicImportData.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvDynamicImportData.ContextMenuStrip = this.contextMenuStrip1;
@@ -949,6 +953,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnDynamicParse;
         private Krypton.Toolkit.KryptonButton kbtnDynamicMap;
         private Krypton.Toolkit.KryptonButton kbtnDynamicImport;
+        private Krypton.Toolkit.KryptonButton kbtnManageConfigs;
         private Krypton.Toolkit.KryptonLabel klblDynamicFilePath;
         private Krypton.Toolkit.KryptonTextBox ktxtDynamicFilePath;
         private Krypton.Toolkit.KryptonLabel klblDynamicSheetName;

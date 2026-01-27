@@ -674,7 +674,6 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridView产品.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridView产品.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridView产品.BizInvisibleCols")));
             this.newSumDataGridView产品.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView产品.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView产品.CustomRowNo = false;
@@ -726,13 +725,11 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridViewMain.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridViewMain.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridViewMain.BizInvisibleCols")));
             this.newSumDataGridViewMain.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewMain.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewMain.CustomRowNo = false;
             this.newSumDataGridViewMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridViewMain.EnableFiltering = false;
-            this.newSumDataGridViewMain.FieldNameList = ((System.Collections.Concurrent.ConcurrentDictionary<string, System.Collections.Generic.KeyValuePair<string, bool>>)(resources.GetObject("newSumDataGridViewMain.FieldNameList")));
             this.newSumDataGridViewMain.IsShowSumRow = false;
             this.newSumDataGridViewMain.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridViewMain.Name = "newSumDataGridViewMain";
@@ -774,7 +771,6 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridView产品组合.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridView产品组合.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridView产品组合.BizInvisibleCols")));
             this.newSumDataGridView产品组合.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridView产品组合.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridView产品组合.CustomRowNo = false;
@@ -812,7 +808,6 @@ namespace RUINORERP.UI.MRP.BOM
             this.newSumDataGridViewBOM.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.newSumDataGridViewBOM.BizInvisibleCols = ((System.Collections.Generic.HashSet<string>)(resources.GetObject("newSumDataGridViewBOM.BizInvisibleCols")));
             this.newSumDataGridViewBOM.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.newSumDataGridViewBOM.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.newSumDataGridViewBOM.CustomRowNo = false;

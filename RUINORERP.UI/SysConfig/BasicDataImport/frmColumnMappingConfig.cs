@@ -87,6 +87,108 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 系统字段列表双击事件
+        /// </summary>
+        private void listBoxSystemFields_DoubleClick(object sender, EventArgs e)
+        {
+            if (listBoxSystemFields.SelectedItem == null)
+            {
+                return;
+            }
+
+            // 获取选中的系统字段
+            string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
+            string systemField = systemFieldDisplay.StartsWith("* ")
+                ? systemFieldDisplay.Substring(2)
+                : systemFieldDisplay;
+
+            // 检查是否已存在该系统字段的映射
+            var existingMapping = ColumnMappings.GetMappingBySystemField(systemField);
+            if (existingMapping != null)
+            {
+                // 已存在映射，打开属性配置进行编辑
+                ConfigureMappingProperty(existingMapping);
+                return;
+            }
+
+            // 不存在映射，创建新映射并配置属性
+            CreateAndConfigureMapping(systemField, null);
+        }
+
+        /// <summary>
+        /// 创建并配置新映射
+        /// </summary>
+        /// <param name="systemField">系统字段名</param>
+        /// <param name="excelColumn">Excel列名（可选）</param>
+        private void CreateAndConfigureMapping(string systemField, string excelColumn)
+        {
+            // 创建新映射
+            var mapping = new ColumnMapping
+            {
+                ExcelColumn = excelColumn ?? string.Empty,
+                SystemField = systemField,
+                MappingName = textBoxMappingName.Text,
+                EntityType = TargetEntityType?.Name,
+                CreateTime = DateTime.Now,
+                UpdateTime = DateTime.Now
+            };
+
+            // 打开属性配置对话框
+            if (ConfigureMappingProperty(mapping))
+            {
+                // 如果用户确认了配置，添加到集合
+                ColumnMappings.Add(mapping);
+
+                // 如果Excel列为空（用户未选择Excel列），使用特殊标记
+                if (string.IsNullOrEmpty(excelColumn))
+                {
+                    if (mapping.IsSystemGenerated)
+                    {
+                        mapping.ExcelColumn = $"[系统生成] {systemField}";
+                    }
+                    else if (!string.IsNullOrEmpty(mapping.DefaultValue))
+                    {
+                        mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
+                    }
+                }
+
+                // 更新映射列表显示
+                UpdateMappingsList();
+            }
+        }
+
+        /// <summary>
+        /// 配置映射属性
+        /// </summary>
+        /// <param name="mapping">要配置的映射</param>
+        /// <returns>是否确认配置</returns>
+        private bool ConfigureMappingProperty(ColumnMapping mapping)
+        {
+            using (var propertyDialog = new FrmColumnPropertyConfig
+            {
+                CurrentMapping = mapping,
+                TargetEntityType = TargetEntityType
+            })
+            {
+                if (propertyDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // 保存用户配置的属性
+                    mapping.IsForeignKey = propertyDialog.IsForeignKey;
+                    mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
+                    mapping.DefaultValue = propertyDialog.DefaultValue;
+                    mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
+                    mapping.RelatedTableName = propertyDialog.RelatedTableName;
+                    mapping.RelatedTableField = propertyDialog.RelatedTableField;
+                    mapping.RelatedTableFieldName = propertyDialog.RelatedTableFieldName;
+                    mapping.UpdateTime = DateTime.Now;
+
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 窗体加载事件
         /// </summary>
         private void frmColumnMappingConfig_Load(object sender, EventArgs e)
@@ -282,49 +384,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnAddMapping_Click(object sender, EventArgs e)
         {
-            if (listBoxExcelColumns.SelectedItem == null)
-            {
-                MessageBox.Show("请选择Excel列", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
             if (listBoxSystemFields.SelectedItem == null)
             {
                 MessageBox.Show("请选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            string excelColumn = listBoxExcelColumns.SelectedItem.ToString();
             string systemFieldDisplay = listBoxSystemFields.SelectedItem.ToString();
 
-            // 去掉必填标识
-            string systemField = systemFieldDisplay.StartsWith("* ") 
-                ? systemFieldDisplay.Substring(2) 
+            // 去掉必填标识，获取实际字段名
+            string systemField = systemFieldDisplay.StartsWith("* ")
+                ? systemFieldDisplay.Substring(2)
                 : systemFieldDisplay;
 
-            // 检查是否已存在该映射
-            if (ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
+            // 检查是否已存在该系统字段的映射
+            if (ColumnMappings.GetMappingBySystemField(systemField) != null)
             {
-                MessageBox.Show("该Excel列已映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"系统字段 \"{systemField}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // 创建映射
-            var mapping = new ColumnMapping
+            // 获取用户选择的Excel列（可选）
+            string excelColumn = listBoxExcelColumns.SelectedItem?.ToString();
+
+            // 如果选择了Excel列，检查是否已被映射
+            if (!string.IsNullOrEmpty(excelColumn))
             {
-                ExcelColumn = excelColumn,
-                SystemField = systemField,
-                MappingName = textBoxMappingName.Text,
-                EntityType = TargetEntityType?.Name,
-                CreateTime = DateTime.Now,
-                UpdateTime = DateTime.Now
-            };
+                if (ColumnMappings.GetMappingByExcelColumn(excelColumn) != null)
+                {
+                    MessageBox.Show($"Excel列 \"{excelColumn}\" 已被映射", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
 
-            // 添加到集合
-            ColumnMappings.Add(mapping);
-
-            // 更新映射列表显示
-            UpdateMappingsList();
+            // 创建并配置新映射
+            CreateAndConfigureMapping(systemField, excelColumn);
         }
 
         /// <summary>
@@ -397,27 +491,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            using (var propertyDialog = new FrmColumnPropertyConfig
+            // 使用统一的配置方法
+            if (ConfigureMappingProperty(mapping))
             {
-                CurrentMapping = mapping,
-                TargetEntityType = TargetEntityType
-            })
-            {
-                if (propertyDialog.ShowDialog() == DialogResult.OK)
-                {
-                    // 更新映射属性
-                    mapping.IsForeignKey = propertyDialog.IsForeignKey;
-                    mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
-                    mapping.DefaultValue = propertyDialog.DefaultValue;
-                    mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
-                    mapping.RelatedTableName = propertyDialog.RelatedTableName;
-                    mapping.RelatedTableField = propertyDialog.RelatedTableField;
-                    mapping.RelatedTableFieldName = propertyDialog.RelatedTableFieldName;
-                    mapping.UpdateTime = DateTime.Now;
-
-                    // 更新显示
-                    UpdateMappingsList();
-                }
+                // 更新显示
+                UpdateMappingsList();
             }
         }
 

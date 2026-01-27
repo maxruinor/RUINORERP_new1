@@ -149,11 +149,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.listBoxMappings.DoubleClick += new System.EventHandler(this.listBoxMappings_DoubleClick);
             // 
             // listBoxSystemFields
-            // 
+            //
             this.listBoxSystemFields.Location = new System.Drawing.Point(460, 50);
             this.listBoxSystemFields.Name = "listBoxSystemFields";
             this.listBoxSystemFields.Size = new System.Drawing.Size(320, 180);
             this.listBoxSystemFields.TabIndex = 4;
+            this.listBoxSystemFields.DoubleClick += new System.EventHandler(this.listBoxSystemFields_DoubleClick);
             // 
             // listBoxExcelColumns
             // 
@@ -195,12 +196,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel2.Values.Text = "系统字段:";
             // 
             // kryptonLabel1
-            // 
+            //
             this.kryptonLabel1.Location = new System.Drawing.Point(10, 25);
             this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(53, 20);
+            this.kryptonLabel1.Size = new System.Drawing.Size(150, 20);
             this.kryptonLabel1.TabIndex = 0;
-            this.kryptonLabel1.Values.Text = "Excel列:";
+            this.kryptonLabel1.Values.Text = "Excel列 (可选):";
             // 
             // comboBoxSavedMappings
             // 

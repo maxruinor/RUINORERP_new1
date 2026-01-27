@@ -873,7 +873,7 @@ namespace RUINORERP.Business
                 QueryConditionFilter.FilterLimitExpressions.Clear();
                 QueryConditionFilter.FilterLimitExpressions.Add(expression);
 
-              
+
             }
 
 
@@ -916,7 +916,7 @@ namespace RUINORERP.Business
                        //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
                        .WhereAdv(useLike, queryConditions, dto)
                        .WhereIF(whereLambda != null, whereLambda)
-                       .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
+                       .WhereIF(dto.ContainsProperty(isdeleted), "isdeleted=@isdeleted", new { isdeleted = 0 });
             }
             else
             {
@@ -963,7 +963,7 @@ namespace RUINORERP.Business
                     // 重新应用查询条件
                     retryQuery = retryQuery
                         .WhereIF(whereLambda != null, whereLambda)
-                        .Where("isdeleted=@isdeleted", new { isdeleted = 0 });
+                        .WhereIF(dto.ContainsProperty(isdeleted), "isdeleted=@isdeleted", new { isdeleted = 0 });
 
                     if (UseAutoNavQuery)
                     {

@@ -275,7 +275,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="e">事件参数</param>
         private void kbtnOK_Click(object sender, EventArgs e)
         {
-            // 验证输入
+            // 如果是外键，验证关联表和字段
             if (kchkIsForeignKey.Checked)
             {
                 if (kcmbRelatedTable.SelectedIndex <= 0)
@@ -316,6 +316,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             IsUniqueValue = kchkIsUniqueValue.Checked;
             DefaultValue = ktxtDefaultValue.Text.Trim();
             IsSystemGenerated = kchkIsSystemGenerated.Checked;
+
+            // 验证：如果既不是系统生成，又没有设置默认值，也没有外键，需要提示
+            if (!IsSystemGenerated && !IsForeignKey && string.IsNullOrWhiteSpace(DefaultValue))
+            {
+                var result = MessageBox.Show(
+                    "该字段既不是系统生成的，也没有设置默认值。\n" +
+                    "如果没有Excel数据源，该字段将为空。\n\n" +
+                    "确定要继续吗？",
+                    "提示",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+                
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
 
             // 如果是系统生成，清空默认值
             if (IsSystemGenerated)

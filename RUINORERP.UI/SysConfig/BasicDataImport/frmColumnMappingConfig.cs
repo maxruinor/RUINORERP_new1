@@ -122,26 +122,67 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="excelColumn">Excel列名（可选）</param>
         private void CreateAndConfigureMapping(string systemField, string excelColumn)
         {
-            // 创建新映射
-            var mapping = new ColumnMapping
-            {
-                ExcelColumn = excelColumn ?? string.Empty,
-                SystemField = systemField,
-                MappingName = textBoxMappingName.Text,
-                EntityType = TargetEntityType?.Name,
-                CreateTime = DateTime.Now,
-                UpdateTime = DateTime.Now
-            };
+            // 验证：如果两边都选择了，必须都选择
+            bool hasExcelColumn = !string.IsNullOrEmpty(excelColumn);
+            bool hasSystemField = !string.IsNullOrEmpty(systemField);
 
-            // 打开属性配置对话框
-            if (ConfigureMappingProperty(mapping))
+            if (hasExcelColumn && hasSystemField)
             {
-                // 如果用户确认了配置，添加到集合
-                ColumnMappings.Add(mapping);
-
-                // 如果Excel列为空（用户未选择Excel列），使用特殊标记
-                if (string.IsNullOrEmpty(excelColumn))
+                // 两边都选择了，创建映射
+                var mapping = new ColumnMapping
                 {
+                    ExcelColumn = excelColumn,
+                    SystemField = systemField,
+                    MappingName = textBoxMappingName.Text,
+                    EntityType = TargetEntityType?.Name,
+                    CreateTime = DateTime.Now,
+                    UpdateTime = DateTime.Now
+                };
+
+                // 打开属性配置对话框
+                if (ConfigureMappingProperty(mapping))
+                {
+                    // 如果用户确认了配置，添加到集合
+                    ColumnMappings.Add(mapping);
+
+                    // 从两个列表中移除已选择的项
+                    RemoveFromExcelColumns(excelColumn);
+                    RemoveFromSystemFields(systemField);
+
+                    // 更新映射列表显示
+                    UpdateMappingsList();
+                }
+            }
+            else if (!hasExcelColumn && hasSystemField)
+            {
+                // 只选择了系统字段，Excel中没有指定列
+                // 创建新映射
+                var mapping = new ColumnMapping
+                {
+                    ExcelColumn = string.Empty,
+                    SystemField = systemField,
+                    MappingName = textBoxMappingName.Text,
+                    EntityType = TargetEntityType?.Name,
+                    CreateTime = DateTime.Now,
+                    UpdateTime = DateTime.Now
+                };
+
+                // 打开属性配置对话框
+                if (ConfigureMappingProperty(mapping))
+                {
+                    // 如果用户确认了配置，添加到集合
+                    ColumnMappings.Add(mapping);
+
+                    // 验证必须设置属性（系统生成或默认值）
+                    if (!mapping.IsSystemGenerated && string.IsNullOrEmpty(mapping.DefaultValue))
+                    {
+                        MessageBox.Show("由于Excel中没有指定列，必须设置\"系统生成\"或\"默认值\"属性。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        // 不添加到集合
+                        ColumnMappings.RemoveAt(ColumnMappings.Count - 1);
+                        return;
+                    }
+
+                    // 根据属性设置显示的Excel列
                     if (mapping.IsSystemGenerated)
                     {
                         mapping.ExcelColumn = $"[系统生成] {systemField}";
@@ -150,10 +191,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
                     }
-                }
 
-                // 更新映射列表显示
-                UpdateMappingsList();
+                    // 从系统字段列表中移除
+                    RemoveFromSystemFields(systemField);
+
+                    // 更新映射列表显示
+                    UpdateMappingsList();
+                }
+            }
+            else
+            {
+                MessageBox.Show("必须选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -384,9 +432,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void kbtnAddMapping_Click(object sender, EventArgs e)
         {
+            // 验证：必须选择系统字段
             if (listBoxSystemFields.SelectedItem == null)
             {
-                MessageBox.Show("请选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("必须选择系统字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 验证：如果Excel列列表不为空，必须选择Excel列
+            if (listBoxExcelColumns.Items.Count > 0 && listBoxExcelColumns.SelectedItem == null)
+            {
+                MessageBox.Show("Excel列列表中有数据，必须选择Excel列。如果不使用Excel列，请删除或清空Excel数据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -404,7 +460,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            // 获取用户选择的Excel列（可选）
+            // 获取用户选择的Excel列
             string excelColumn = listBoxExcelColumns.SelectedItem?.ToString();
 
             // 如果选择了Excel列，检查是否已被映射
@@ -458,6 +514,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             int selectedIndex = listBoxMappings.SelectedIndex;
+            var mapping = ColumnMappings[selectedIndex];
+
+            // 删除前，将Excel列和系统字段恢复到对应的列表中
+            RestoreExcelColumn(mapping);
+            RestoreSystemField(mapping);
+
+            // 从集合中删除
             ColumnMappings.RemoveAt(selectedIndex);
             UpdateMappingsList();
         }
@@ -583,10 +646,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             if (comboBoxSavedMappings.SelectedIndex <= 0)
             {
-                // 新建映射
+                // 新建映射 - 重新加载所有列表
                 textBoxMappingName.Text = string.Empty;
                 ColumnMappings.Clear();
                 UpdateMappingsList();
+
+                // 重新加载Excel列和系统字段列表
+                LoadSystemFields();
+                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                {
+                    LoadExcelColumns();
+                }
+
                 IsEditMode = false;
                 OriginalMappingName = null;
                 SetWindowTitle();
@@ -611,8 +682,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 textBoxMappingName.Text = mappingName;
+
+                // 重新加载Excel列和系统字段列表
+                LoadSystemFields();
+                if (ExcelData != null && ExcelData.Rows.Count > 0)
+                {
+                    LoadExcelColumns();
+                }
+
+                // 从列表中移除已映射的项
+                foreach (var mapping in ColumnMappings)
+                {
+                    RemoveFromExcelColumns(mapping.ExcelColumn);
+                    RemoveFromSystemFields(mapping.SystemField);
+                }
+
                 UpdateMappingsList();
-                
+
                 IsEditMode = true;
                 OriginalMappingName = mappingName;
                 SetWindowTitle();
@@ -675,6 +761,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             };
 
                             ColumnMappings.Add(mapping);
+
+                            // 从两个列表中移除已选择的项
+                            RemoveFromExcelColumns(excelColumn);
+                            RemoveFromSystemFields(systemField);
+
                             break;
                         }
                     }
@@ -751,6 +842,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             OriginalMappingName = null;
             textBoxMappingName.Text = string.Empty;
 
+            // 重新加载Excel列和系统字段列表
+            LoadSystemFields();
+            if (ExcelData != null && ExcelData.Rows.Count > 0)
+            {
+                LoadExcelColumns();
+            }
+
             // 清空映射列表显示
             UpdateMappingsList();
 
@@ -759,6 +857,133 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 更新窗口标题
             SetWindowTitle();
+        }
+
+        /// <summary>
+        /// 从Excel列列表中移除指定的列
+        /// </summary>
+        /// <param name="excelColumn">要移除的Excel列名</param>
+        private void RemoveFromExcelColumns(string excelColumn)
+        {
+            if (string.IsNullOrEmpty(excelColumn))
+            {
+                return;
+            }
+
+            // 检查是否是系统生成或默认值的情况，这些不需要从Excel列表中移除
+            if (excelColumn.StartsWith("[系统生成]") || excelColumn.StartsWith("[默认值"))
+            {
+                return;
+            }
+
+            // 查找并移除对应的项
+            for (int i = 0; i < listBoxExcelColumns.Items.Count; i++)
+            {
+                if (listBoxExcelColumns.Items[i].ToString() == excelColumn)
+                {
+                    listBoxExcelColumns.Items.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 从系统字段列表中移除指定的字段
+        /// </summary>
+        /// <param name="systemField">要移除的系统字段名</param>
+        private void RemoveFromSystemFields(string systemField)
+        {
+            if (string.IsNullOrEmpty(systemField))
+            {
+                return;
+            }
+
+            // 查找并移除对应的项（考虑是否有必填标识）
+            for (int i = 0; i < listBoxSystemFields.Items.Count; i++)
+            {
+                string displayText = listBoxSystemFields.Items[i].ToString();
+                string fieldName = displayText.StartsWith("* ")
+                    ? displayText.Substring(2)
+                    : displayText;
+
+                if (fieldName == systemField)
+                {
+                    listBoxSystemFields.Items.RemoveAt(i);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将Excel列恢复到Excel列列表中
+        /// </summary>
+        /// <param name="mapping">包含Excel列信息的映射</param>
+        private void RestoreExcelColumn(ColumnMapping mapping)
+        {
+            // 检查是否是系统生成或默认值的情况
+            if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
+                (mapping.ExcelColumn.StartsWith("[系统生成]") || mapping.ExcelColumn.StartsWith("[默认值")))
+            {
+                // 这些情况不需要恢复到Excel列表
+                return;
+            }
+
+            // 如果有原始的Excel列名，恢复到列表中
+            if (!string.IsNullOrEmpty(mapping.ExcelColumn) && !string.IsNullOrEmpty(mapping.SystemField))
+            {
+                // 检查Excel列是否已经在列表中
+                bool alreadyExists = false;
+                foreach (var item in listBoxExcelColumns.Items)
+                {
+                    if (item.ToString() == mapping.ExcelColumn)
+                    {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+
+                // 如果不存在，添加到列表中
+                if (!alreadyExists)
+                {
+                    listBoxExcelColumns.Items.Add(mapping.ExcelColumn);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将系统字段恢复到系统字段列表中
+        /// </summary>
+        /// <param name="mapping">包含系统字段信息的映射</param>
+        private void RestoreSystemField(ColumnMapping mapping)
+        {
+            if (string.IsNullOrEmpty(mapping.SystemField))
+            {
+                return;
+            }
+
+            // 检查字段是否已经在列表中
+            bool alreadyExists = false;
+            foreach (var item in listBoxSystemFields.Items)
+            {
+                string displayText = item.ToString();
+                string fieldName = displayText.StartsWith("* ")
+                    ? displayText.Substring(2)
+                    : displayText;
+
+                if (fieldName == mapping.SystemField)
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            // 如果不存在，添加到列表中（检查是否必填）
+            if (!alreadyExists)
+            {
+                bool isRequired = IsFieldRequired(mapping.SystemField);
+                string displayText = isRequired ? $"* {mapping.SystemField}" : mapping.SystemField;
+                listBoxSystemFields.Items.Add(displayText);
+            }
         }
     }
 }

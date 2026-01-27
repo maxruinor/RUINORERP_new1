@@ -28,10 +28,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kbtnAutoMatch = new Krypton.Toolkit.KryptonButton();
-            this.kbtnSetForeignKey = new Krypton.Toolkit.KryptonButton();
+            this.kbtnDeleteMapping = new Krypton.Toolkit.KryptonButton();
+            this.kbtnSetColumnProperty = new Krypton.Toolkit.KryptonButton();
             this.kbtnRemoveMapping = new Krypton.Toolkit.KryptonButton();
             this.kbtnAddMapping = new Krypton.Toolkit.KryptonButton();
             this.kbtnCancel = new Krypton.Toolkit.KryptonButton();
@@ -48,12 +48,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.textBoxMappingName = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
             this.kryptonPanel1.Controls.Add(this.kbtnAutoMatch);
-            this.kryptonPanel1.Controls.Add(this.kbtnSetForeignKey);
+            this.kryptonPanel1.Controls.Add(this.kbtnDeleteMapping);
+            this.kryptonPanel1.Controls.Add(this.kbtnSetColumnProperty);
             this.kryptonPanel1.Controls.Add(this.kbtnRemoveMapping);
             this.kryptonPanel1.Controls.Add(this.kbtnAddMapping);
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
@@ -82,19 +84,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnAutoMatch.TabIndex = 11;
             this.kbtnAutoMatch.Values.Text = "自动匹配";
             this.kbtnAutoMatch.Click += new System.EventHandler(this.kbtnAutoMatch_Click);
-            //
-            // kbtnSetForeignKey
-            //
-            this.kbtnSetForeignKey.Location = new System.Drawing.Point(803, 50);
-            this.kbtnSetForeignKey.Name = "kbtnSetForeignKey";
-            this.kbtnSetForeignKey.Size = new System.Drawing.Size(100, 25);
-            this.kbtnSetForeignKey.TabIndex = 12;
-            this.kbtnSetForeignKey.Values.Text = "设置列属性";
-            this.kbtnSetForeignKey.Click += new System.EventHandler(this.kbtnSetForeignKey_Click);
+            // 
+            // kbtnDeleteMapping
+            // 
+            this.kbtnDeleteMapping.Location = new System.Drawing.Point(96, 576);
+            this.kbtnDeleteMapping.Name = "kbtnDeleteMapping";
+            this.kbtnDeleteMapping.Size = new System.Drawing.Size(80, 21);
+            this.kbtnDeleteMapping.TabIndex = 14;
+            this.kbtnDeleteMapping.Values.Text = "删除配置";
+            this.kbtnDeleteMapping.Click += new System.EventHandler(this.kbtnDeleteMapping_Click);
+            // 
+            // kbtnSetColumnProperty
+            // 
+            this.kbtnSetColumnProperty.Location = new System.Drawing.Point(786, 300);
+            this.kbtnSetColumnProperty.Name = "kbtnSetColumnProperty";
+            this.kbtnSetColumnProperty.Size = new System.Drawing.Size(100, 25);
+            this.kbtnSetColumnProperty.TabIndex = 12;
+            this.kbtnSetColumnProperty.Values.Text = "设置列属性";
+            this.kbtnSetColumnProperty.Click += new System.EventHandler(this.kbtnSetColumnProperty_Click);
             // 
             // kbtnRemoveMapping
             // 
-            this.kbtnRemoveMapping.Location = new System.Drawing.Point(803, 300);
+            this.kbtnRemoveMapping.Location = new System.Drawing.Point(786, 497);
             this.kbtnRemoveMapping.Name = "kbtnRemoveMapping";
             this.kbtnRemoveMapping.Size = new System.Drawing.Size(100, 25);
             this.kbtnRemoveMapping.TabIndex = 9;
@@ -113,16 +124,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kbtnCancel
             // 
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.kbtnCancel.Location = new System.Drawing.Point(680, 540);
+            this.kbtnCancel.Location = new System.Drawing.Point(700, 539);
             this.kbtnCancel.Name = "kbtnCancel";
             this.kbtnCancel.Size = new System.Drawing.Size(80, 30);
             this.kbtnCancel.TabIndex = 7;
             this.kbtnCancel.Values.Text = "取消";
             this.kbtnCancel.Click += new System.EventHandler(this.kbtnCancel_Click);
-            //
+            // 
             // kbtnSaveMapping
-            //
-            this.kbtnSaveMapping.Location = new System.Drawing.Point(530, 540);
+            // 
+            this.kbtnSaveMapping.Location = new System.Drawing.Point(561, 540);
             this.kbtnSaveMapping.Name = "kbtnSaveMapping";
             this.kbtnSaveMapping.Size = new System.Drawing.Size(120, 30);
             this.kbtnSaveMapping.TabIndex = 6;
@@ -130,7 +141,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnSaveMapping.Click += new System.EventHandler(this.kbtnSaveMapping_Click);
             // 
             // listBoxMappings
-            //
+            // 
             this.listBoxMappings.Location = new System.Drawing.Point(10, 300);
             this.listBoxMappings.Name = "listBoxMappings";
             this.listBoxMappings.Size = new System.Drawing.Size(770, 222);
@@ -150,23 +161,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.listBoxExcelColumns.Name = "listBoxExcelColumns";
             this.listBoxExcelColumns.Size = new System.Drawing.Size(320, 180);
             this.listBoxExcelColumns.TabIndex = 3;
-            //
+            // 
             // kryptonLabel5
-            //
-            this.kryptonLabel5.Location = new System.Drawing.Point(803, 250);
+            // 
+            this.kryptonLabel5.Location = new System.Drawing.Point(12, 550);
             this.kryptonLabel5.Name = "kryptonLabel5";
-            this.kryptonLabel5.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel5.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel5.TabIndex = 13;
             this.kryptonLabel5.Values.Text = "已保存配置:";
-            //
+            // 
             // kryptonLabel4
-            //
-            this.kryptonLabel4.Location = new System.Drawing.Point(803, 230);
+            // 
+            this.kryptonLabel4.Location = new System.Drawing.Point(269, 549);
             this.kryptonLabel4.Name = "kryptonLabel4";
-            this.kryptonLabel4.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel4.TabIndex = 12;
             this.kryptonLabel4.Values.Text = "配置名称:";
-            //
+            // 
             // kryptonLabel3
             // 
             this.kryptonLabel3.Location = new System.Drawing.Point(10, 280);
@@ -190,23 +201,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1.Size = new System.Drawing.Size(53, 20);
             this.kryptonLabel1.TabIndex = 0;
             this.kryptonLabel1.Values.Text = "Excel列:";
-            //
+            // 
             // comboBoxSavedMappings
-            //
+            // 
             this.comboBoxSavedMappings.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxSavedMappings.DropDownWidth = 130;
             this.comboBoxSavedMappings.FormattingEnabled = true;
             this.comboBoxSavedMappings.IntegralHeight = false;
-            this.comboBoxSavedMappings.Location = new System.Drawing.Point(803, 270);
+            this.comboBoxSavedMappings.Location = new System.Drawing.Point(96, 549);
             this.comboBoxSavedMappings.Name = "comboBoxSavedMappings";
             this.comboBoxSavedMappings.Size = new System.Drawing.Size(130, 21);
             this.comboBoxSavedMappings.TabIndex = 15;
             this.comboBoxSavedMappings.SelectedIndexChanged += new System.EventHandler(this.comboBoxSavedMappings_SelectedIndexChanged);
-            //
+            // 
             // textBoxMappingName
-            //
-            this.textBoxMappingName.Location = new System.Drawing.Point(803, 250);
+            // 
+            this.textBoxMappingName.Location = new System.Drawing.Point(353, 547);
             this.textBoxMappingName.Name = "textBoxMappingName";
-            this.textBoxMappingName.Size = new System.Drawing.Size(130, 21);
+            this.textBoxMappingName.Size = new System.Drawing.Size(156, 23);
             this.textBoxMappingName.TabIndex = 14;
             // 
             // frmColumnMappingConfig
@@ -221,11 +233,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).BeginInit();
-            this.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
-            this.kryptonPanel1.ResumeLayout(false);
-            this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -245,8 +253,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonButton kbtnCancel;
         private Krypton.Toolkit.KryptonButton kbtnAddMapping;
         private Krypton.Toolkit.KryptonButton kbtnRemoveMapping;
-        private Krypton.Toolkit.KryptonButton kbtnSetForeignKey;
+        private Krypton.Toolkit.KryptonButton kbtnSetColumnProperty;
         private Krypton.Toolkit.KryptonButton kbtnAutoMatch;
+        private Krypton.Toolkit.KryptonButton kbtnDeleteMapping;
         private Krypton.Toolkit.KryptonComboBox comboBoxSavedMappings;
         private Krypton.Toolkit.KryptonTextBox textBoxMappingName;
     }

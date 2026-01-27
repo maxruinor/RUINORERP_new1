@@ -18,71 +18,6 @@ using Microsoft.VisualBasic;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
-    /// 导入任务类
-    /// 用于管理多步骤导入的单个任务
-    /// </summary>
-    public class ImportTask
-    {
-        /// <summary>
-        /// 任务名称
-        /// </summary>
-        public string TaskName { get; set; }
-
-        /// <summary>
-        /// Excel文件路径
-        /// </summary>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// 工作表名称
-        /// </summary>
-        public string SheetName { get; set; }
-
-        /// <summary>
-        /// 目标实体类型
-        /// </summary>
-        public Type EntityType { get; set; }
-
-        /// <summary>
-        /// 列映射配置
-        /// </summary>
-        public ColumnMappingCollection Mappings { get; set; }
-
-        /// <summary>
-        /// 任务状态
-        /// </summary>
-        public TaskStatus Status { get; set; }
-
-        /// <summary>
-        /// 导入结果
-        /// </summary>
-        public DynamicImporter.ImportResult Result { get; set; }
-    }
-
-    /// <summary>
-    /// 任务状态枚举
-    /// </summary>
-    public enum TaskStatus
-    {
-        /// <summary>
-        /// 待执行
-        /// </summary>
-        Pending,
-        /// <summary>
-        /// 执行中
-        /// </summary>
-        Running,
-        /// <summary>
-        /// 执行成功
-        /// </summary>
-        Success,
-        /// <summary>
-        /// 执行失败
-        /// </summary>
-        Failed
-    }
-
-    /// <summary>
     /// 基础数据导入UI组件
     /// 用于产品数据的导入操作
     [MenuAttrAssemblyInfo("基础数据导入", ModuleMenuDefine.模块定义.系统设置, ModuleMenuDefine.系统设置.系统工具)]
@@ -177,7 +112,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kbtnDynamicParse.Click += KbtnDynamicParse_Click;
             kbtnDynamicMap.Click += KbtnDynamicMap_Click;
             kbtnDynamicImport.Click += KbtnDynamicImport_Click;
-            kbtnManageConfigs.Click += KbtnManageConfigs_Click;
             kcmbDynamicSheetName.SelectedIndexChanged += KcmbDynamicSheetName_SelectedIndexChanged;
             kcmbDynamicEntityType.SelectedIndexChanged += KcmbDynamicEntityType_SelectedIndexChanged;
             kcmbDynamicMappingName.SelectedIndexChanged += KcmbDynamicMappingName_SelectedIndexChanged;
@@ -480,24 +414,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             catch (Exception ex)
             {
                 MessageBox.Show($"删除配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
-        /// 管理配置按钮点击事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void KbtnManageConfigs_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // 调用管理映射配置方法
-                ManageMappingConfigs();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"管理配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -1391,5 +1307,70 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"执行任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+    }
+
+    /// <summary>
+    /// 导入任务类
+    /// 用于管理多步骤导入的单个任务
+    /// </summary>
+    public class ImportTask
+    {
+        /// <summary>
+        /// 任务名称
+        /// </summary>
+        public string TaskName { get; set; }
+
+        /// <summary>
+        /// Excel文件路径
+        /// </summary>
+        public string FilePath { get; set; }
+
+        /// <summary>
+        /// 工作表名称
+        /// </summary>
+        public string SheetName { get; set; }
+
+        /// <summary>
+        /// 目标实体类型
+        /// </summary>
+        public Type EntityType { get; set; }
+
+        /// <summary>
+        /// 列映射配置
+        /// </summary>
+        public ColumnMappingCollection Mappings { get; set; }
+
+        /// <summary>
+        /// 任务状态
+        /// </summary>
+        public TaskStatus Status { get; set; }
+
+        /// <summary>
+        /// 导入结果
+        /// </summary>
+        public DynamicImporter.ImportResult Result { get; set; }
+    }
+
+    /// <summary>
+    /// 任务状态枚举
+    /// </summary>
+    public enum TaskStatus
+    {
+        /// <summary>
+        /// 待执行
+        /// </summary>
+        Pending,
+        /// <summary>
+        /// 执行中
+        /// </summary>
+        Running,
+        /// <summary>
+        /// 执行成功
+        /// </summary>
+        Success,
+        /// <summary>
+        /// 执行失败
+        /// </summary>
+        Failed
     }
 }

@@ -371,7 +371,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 设置列属性
         /// </summary>
-        private void kbtnSetForeignKey_Click(object sender, EventArgs e)
+        private void kbtnSetColumnProperty_Click(object sender, EventArgs e)
         {
             OpenPropertyDialog();
         }
@@ -386,6 +386,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 打开属性配置对话框
+        /// 是对指定的目标表字段进行属性配置，不是对映射好后面的列来配置
         /// </summary>
         private void OpenPropertyDialog()
         {
@@ -610,6 +611,76 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 MessageBox.Show($"自动匹配失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 删除配置
+        /// </summary>
+        private void kbtnDeleteMapping_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // 只有在编辑模式下才能删除配置
+                if (!IsEditMode || string.IsNullOrEmpty(OriginalMappingName))
+                {
+                    MessageBox.Show("只有编辑已保存的配置时才能删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认删除
+                var result = MessageBox.Show(
+                    $"确定要删除配置 \"{OriginalMappingName}\" 吗？此操作不可撤销。",
+                    "确认删除",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 删除配置文件
+                string filePath = Path.Combine(_configFilePath, $"{OriginalMappingName}.xml");
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                MessageBox.Show($"配置 \"{OriginalMappingName}\" 已删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 加载全新的初始化配置
+                InitializeNewMapping();
+
+                // 刷新已保存映射列表
+                LoadSavedMappings();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"删除配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 初始化新的映射配置
+        /// </summary>
+        private void InitializeNewMapping()
+        {
+            // 清空当前映射
+            ColumnMappings.Clear();
+
+            // 重置编辑模式
+            IsEditMode = false;
+            OriginalMappingName = null;
+            textBoxMappingName.Text = string.Empty;
+
+            // 清空映射列表显示
+            UpdateMappingsList();
+
+            // 重置已保存配置选择
+            comboBoxSavedMappings.SelectedIndex = 0;
+
+            // 更新窗口标题
+            SetWindowTitle();
         }
     }
 }

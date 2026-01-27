@@ -98,10 +98,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="dataTable">Excel数据表格</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">目标实体类型</param>
+        /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
         /// <returns>导入结果</returns>
         /// <exception cref="ArgumentNullException">参数为空时抛出</exception>
         /// <exception cref="ArgumentException">映射配置无效时抛出</exception>
-        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType)
+        public async System.Threading.Tasks.Task<ImportResult> ImportAsync(DataTable dataTable, ColumnMappingCollection mappings, Type entityType, string importType = null)
         {
             if (dataTable == null || dataTable.Rows.Count == 0)
             {
@@ -136,8 +137,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 创建实体对象
                         var entity = CreateEntityFromRow(row, mappings, entityType, i + 2); // +2 因为Excel从第2行开始（第1行是标题）
 
-                        // 使用Controller进行业务验证
-                        string validationError = ValidateEntityWithController(entity, entityType);
+                        // 使用Validator进行业务验证
+                        string validationError = ValidateEntityWithValidator(entity, entityType);
                         if (!string.IsNullOrEmpty(validationError))
                         {
                             result.FailedRecords.Add(new FailedRecord
@@ -169,7 +170,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     try
                     {
-                        await BatchImportEntitiesAsync(entityList, entityType, result, mappings);
+                        await BatchImportEntitiesAsync(entityList, entityType, result, mappings, importType);
                     }
                     catch (Exception batchEx)
                     {
@@ -424,90 +425,82 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 使用Controller进行业务验证
+        /// 使用Validator进行业务验证
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="entityType">实体类型</param>
         /// <returns>错误消息，如果验证通过则返回空字符串</returns>
-        private string ValidateEntityWithController(object entity, Type entityType)
+        private string ValidateEntityWithValidator(object entity, Type entityType)
         {
             try
             {
-                // 基础验证：检查必填字段
                 Type actualEntityType = entity.GetType();
 
-                // 尝试通过反射获取Controller
-                string controllerName = actualEntityType.Name + "Controller";
-                Type controllerType = Type.GetType($"RUINORERP.Controllers.{controllerName}") ??
-                                    Type.GetType($"RUINORERP.Business.{controllerName}");
+                // 根据命名规则构造验证器类型名: 实体名 + Validator
+                string validatorName = actualEntityType.Name + "Validator";
+                
+                // 在 RUINORERP.Business.Validator 命名空间下查找验证器
+                Type validatorType = Type.GetType($"RUINORERP.Business.Validator.{validatorName}");
 
-                if (controllerType != null)
+                if (validatorType != null)
                 {
-                    // 使用反射调用Controller的BaseValidator方法
-                    MethodInfo baseValidatorMethod = controllerType.GetMethod("BaseValidator",
-                        BindingFlags.Public | BindingFlags.Instance);
-
-                    if (baseValidatorMethod != null)
+                    try
                     {
-                        try
+                        // 创建验证器实例
+                        // 验证器构造函数需要 ApplicationContext 参数，传 null 使用默认值
+                        var validatorInstance = Activator.CreateInstance(validatorType, new object[] { null });
+
+                        // 获取验证器的 Validate 方法
+                        MethodInfo validateMethod = validatorType.GetMethod("Validate",
+                            BindingFlags.Public | BindingFlags.Instance);
+
+                        if (validateMethod != null)
                         {
-                            // 获取Controller实例（通过依赖注入容器）
-                            var controller = GetControllerInstance(controllerType);
-                            if (controller != null)
+                            // 调用验证方法
+                            var validationResult = validateMethod.Invoke(validatorInstance, new[] { entity });
+
+                            // 处理验证结果
+                            if (validationResult != null)
                             {
-                                // 调用BaseValidator方法
-                                var validationResult = baseValidatorMethod.Invoke(controller, new[] { entity });
+                                Type validationResultType = validationResult.GetType();
 
-                                // 处理验证结果
-                                if (validationResult != null)
+                                // 检查是否有验证错误
+                                PropertyInfo errorsProperty = validationResultType.GetProperty("Errors");
+                                if (errorsProperty != null)
                                 {
-                                    // 假设返回的是一个List<ValidationResult>或类似的类型
-                                    Type validationResultType = validationResult.GetType();
-
-                                    // 检查是否有错误
-                                    PropertyInfo countProperty = validationResultType.GetProperty("Count");
-                                    if (countProperty != null)
+                                    var errors = errorsProperty.GetValue(validationResult);
+                                    if (errors != null)
                                     {
-                                        int errorCount = (int)countProperty.GetValue(validationResult);
-                                        if (errorCount > 0)
+                                        Type errorsType = errors.GetType();
+                                        PropertyInfo countProperty = errorsType.GetProperty("Count");
+                                        if (countProperty != null)
                                         {
-                                            // 获取错误信息
-                                            MethodInfo indexer = validationResultType.GetMethod("get_Item");
-                                            if (indexer != null)
+                                            int errorCount = (int)countProperty.GetValue(errors);
+                                            if (errorCount > 0)
                                             {
-                                                var firstError = indexer.Invoke(validationResult, new object[] { 0 });
-                                                PropertyInfo errorMessageProperty = firstError.GetType().GetProperty("ErrorMessage");
-                                                if (errorMessageProperty != null)
+                                                // 获取第一个错误信息
+                                                MethodInfo indexerMethod = errorsType.GetMethod("get_Item");
+                                                if (indexerMethod != null)
                                                 {
-                                                    return errorMessageProperty.GetValue(firstError)?.ToString() ?? "验证失败";
+                                                    var firstError = indexerMethod.Invoke(errors, new object[] { 0 });
+                                                    PropertyInfo errorMessageProperty = firstError.GetType().GetProperty("ErrorMessage");
+                                                    if (errorMessageProperty != null)
+                                                    {
+                                                        return errorMessageProperty.GetValue(firstError)?.ToString() ?? "验证失败";
+                                                    }
                                                 }
+                                                return "验证失败";
                                             }
-                                            return "验证失败";
                                         }
                                     }
                                 }
                             }
                         }
-                        catch (Exception ex)
-                        {
-                            // Controller验证失败，记录日志但不阻止导入
-                            // 可以选择记录日志或返回警告信息
-                        }
                     }
-                }
-
-                // 基础验证：检查唯一键是否为空
-                PropertyInfo idProperty = entityType.GetProperty("ID") ??
-                                       entityType.GetProperty("Id") ??
-                                       entityType.GetProperty("ID_PK");
-
-                if (idProperty != null)
-                {
-                    object idValue = idProperty.GetValue(entity);
-                    if (idValue == null || (idValue is int intValue && intValue == 0))
+                    catch (Exception ex)
                     {
-                        // 新增记录，检查必填字段
-                        // 这里可以添加更多的必填字段检查逻辑
+                        // 验证器调用失败，记录日志但不阻止导入
+                        MainForm.Instance.ShowStatusText($"验证器调用失败: {ex.Message}");
                     }
                 }
 
@@ -520,33 +513,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 获取Controller实例
-        /// </summary>
-        /// <param name="controllerType">Controller类型</param>
-        /// <returns>Controller实例</returns>
-        private object GetControllerInstance(Type controllerType)
-        {
-            try
-            {
-                // 尝试从依赖注入容器获取
-                // 这里需要根据项目的实际DI容器进行调整
-                // 示例：使用Startup.GetFromFacByName
-                MethodInfo getControllerMethod = Type.GetType("RUINORERP.UI.Startup")?.GetMethod("GetFromFacByName");
-                if (getControllerMethod != null)
-                {
-                    var genericMethod = getControllerMethod.MakeGenericMethod(controllerType);
-                    object controller = genericMethod.Invoke(null, new object[] { controllerType.Name });
-                    return controller;
-                }
-
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         /// <summary>
         /// 批量导入实体到数据库
         /// 使用Storageable进行批量插入和更新操作，提升性能
@@ -555,19 +521,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="entityType">实体类型</param>
         /// <param name="result">导入结果</param>
         /// <param name="mappings">列映射配置</param>
-        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings)
+        /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
+        private async System.Threading.Tasks.Task BatchImportEntitiesAsync(List<BaseEntity> entityList, Type entityType, ImportResult result, ColumnMappingCollection mappings, string importType = null)
         {
             try
             {
                 // 从映射配置或FieldMetadata获取主键字段信息
                 string primaryKeyName = GetPrimaryKeyFieldName(entityType);
-                
+
                 // 使用反射调用泛型的Storageable方法
-                var method = typeof(DynamicImporter).GetMethod(nameof(BatchImportEntitiesInternalAsync), 
+                var method = typeof(DynamicImporter).GetMethod(nameof(BatchImportEntitiesInternalAsync),
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                 var genericMethod = method.MakeGenericMethod(entityType);
-                
-                await (System.Threading.Tasks.Task)genericMethod.Invoke(this, new object[] { entityList, primaryKeyName, result });
+
+                await (System.Threading.Tasks.Task)genericMethod.Invoke(this, new object[] { entityList, primaryKeyName, result, importType });
             }
             catch (Exception ex)
             {
@@ -586,7 +553,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 从FieldMetadata获取主键字段
             var metadata = FieldMetadataService.GetFieldMetadata(entityType);
             var primaryKeyMetadata = metadata.Values.FirstOrDefault(m => m.IsPrimaryKey);
-            
+
             if (primaryKeyMetadata != null)
             {
                 return primaryKeyMetadata.FieldName;
@@ -605,7 +572,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="entityList">实体列表</param>
         /// <param name="primaryKeyName">主键字段名</param>
         /// <param name="result">导入结果</param>
-        private async System.Threading.Tasks.Task BatchImportEntitiesInternalAsync<T>(List<BaseEntity> entityList, string primaryKeyName, ImportResult result) where T : BaseEntity, new()
+        private async System.Threading.Tasks.Task BatchImportEntitiesInternalAsync<T>(List<BaseEntity> entityList, string primaryKeyName, ImportResult result, string importType = null) where T : BaseEntity, new()
         {
             try
             {
@@ -615,7 +582,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 导入前处理特殊字段
                 foreach (var entity in typedList)
                 {
-                    EntityImportHelper.PreProcessEntity(typeof(T), entity, _db);
+                    EntityImportHelper.PreProcessEntity(typeof(T), entity, _db, importType);
                 }
 
                 // 开启事务

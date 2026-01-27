@@ -121,12 +121,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 添加支持的实体类型（仅显示中文描述）
                 kcmbDynamicEntityType.Items.Add("供应商表");
+                kcmbDynamicEntityType.Items.Add("客户表");
                 kcmbDynamicEntityType.Items.Add("产品类目表");
                 kcmbDynamicEntityType.Items.Add("产品基本信息表");
                 kcmbDynamicEntityType.Items.Add("产品详情信息表");
                 kcmbDynamicEntityType.Items.Add("产品属性表");
                 kcmbDynamicEntityType.Items.Add("产品属性值表");
-
                 kcmbDynamicEntityType.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -156,6 +156,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 switch (selectedText)
                 {
                     case "供应商表":
+                        _selectedEntityType = typeof(tb_CustomerVendor);
+                        break;
+                    case "客户表":
                         _selectedEntityType = typeof(tb_CustomerVendor);
                         break;
                     case "产品类目表":
@@ -475,12 +478,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void LoadDbConnection()
         {
-            if (_db==null)
+            if (_db == null)
             {
                 _db = MainForm.Instance.AppContext.Db;
             }
         }
- 
+
         #region 动态导入事件处理
 
         /// <summary>
@@ -940,7 +943,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 直接执行导入
-               await ExecuteSingleImport();
+                await ExecuteSingleImport();
             }
             catch (Exception ex)
             {
@@ -964,8 +967,66 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 DataTable fullParsedData = _parsedImportData;
 
+                // 检查是否有勾选的行
+                var selectedRows = GetSelectedRows();
+                if (selectedRows.Rows.Count == 0)
+                {
+                    if (fullParsedData.Rows.Count > 0)
+                    {
+                        MessageBox.Show("请先勾选需要导入的数据行", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show("没有可导入的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+
+                // 使用勾选的行数据
+                DataTable importData = selectedRows;
+
+                // 唯一性检查（在数据验证之前执行）
+                var duplicateErrors = CheckUniqueValues(importData);
+                if (duplicateErrors.Count > 0)
+                {
+                    string duplicateSummary = $"发现 {duplicateErrors.Count} 条数据与数据库中已存在的数据重复：\n\n";
+
+                    // 只显示前10个重复记录
+                    int displayCount = Math.Min(10, duplicateErrors.Count);
+                    for (int i = 0; i < displayCount; i++)
+                    {
+                        var error = duplicateErrors[i];
+                        duplicateSummary += $"行 {error.RowNumber} - {error.FieldName}: {error.ErrorMessage}\n";
+                    }
+
+                    if (duplicateErrors.Count > displayCount)
+                    {
+                        duplicateSummary += $"\n... 还有 {duplicateErrors.Count - displayCount} 条重复记录未显示";
+                    }
+
+                    duplicateSummary += "\n\n是否继续导入（跳过重复的记录）？";
+
+                    if (MessageBox.Show(duplicateSummary, "唯一性检查警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                    {
+                        return;
+                    }
+
+                    // 移除重复的记录
+                    var rowsToRemove = duplicateErrors.Select(e => e.RowNumber).Distinct().ToList();
+                    for (int i = importData.Rows.Count - 1; i >= 0; i--)
+                    {
+                        // Excel行号从1开始，转换为DataTable索引（从0开始）
+                        int rowNumber = i + 1;
+                        if (rowsToRemove.Contains(rowNumber))
+                        {
+                            importData.Rows.RemoveAt(i);
+                        }
+                    }
+                }
+
                 // 数据验证
-                var validationErrors = _dynamicDataValidator.Validate(fullParsedData, _currentMappings, _selectedEntityType);
+                var validationErrors = _dynamicDataValidator.Validate(importData, _currentMappings, _selectedEntityType);
                 if (validationErrors.Count > 0)
                 {
                     string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
@@ -990,11 +1051,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         return;
                     }
                 }
-
-                // 显示确认对话框
-                if (MessageBox.Show($"确定要导入 {fullParsedData.Rows.Count} 条数据到 {_selectedEntityType.Name} 吗？",
-                    "确认导入", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                if (importData.Rows.Count == 0)
                 {
+                    // 显示确认对话框
+                    MessageBox.Show($"导入数据为： {importData.Rows.Count} 条数据到 {_selectedEntityType.Name}！", "导入取消", MessageBoxButtons.OK, MessageBoxIcon.Asterisk);
                     return;
                 }
 
@@ -1009,8 +1069,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化导入器
                 _dynamicImporter = new DynamicImporter(_db, _entityInfoService);
 
+                // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
+                string importType = GetImportType();
+
                 // 执行导入（异步）
-                var importResult = await _dynamicImporter.ImportAsync(fullParsedData, _currentMappings, _selectedEntityType);
+                var importResult = await _dynamicImporter.ImportAsync(importData, _currentMappings, _selectedEntityType, importType);
 
                 // 显示导入结果
                 DisplayImportResult(importResult);
@@ -1029,6 +1092,165 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kbtnDynamicParse.Enabled = true;
                 kbtnDynamicMap.Enabled = true;
             }
+        }
+
+        /// <summary>
+        /// 获取导入类型标识
+        /// 根据用户选择的实体类型返回对应的导入类型标识
+        /// 用于区分客户和供应商等使用相同表的情况
+        /// </summary>
+        /// <returns>导入类型标识</returns>
+        private string GetImportType()
+        {
+            if (kcmbDynamicEntityType.SelectedIndex <= 0)
+            {
+                return null;
+            }
+
+            string selectedText = kcmbDynamicEntityType.SelectedItem.ToString();
+            return selectedText;
+        }
+
+        /// <summary>
+        /// 检查唯一性字段值是否已存在于数据库中
+        /// </summary>
+        /// <param name="dataTable">要检查的数据表</param>
+        /// <returns>重复记录错误列表</returns>
+        private List<ValidationError> CheckUniqueValues(DataTable dataTable)
+        {
+            var duplicateErrors = new List<ValidationError>();
+
+            // 获取配置了唯一性的字段
+            var uniqueMappings = _currentMappings.Where(m => m.IsUniqueValue).ToList();
+            if (uniqueMappings.Count == 0)
+            {
+                return duplicateErrors;
+            }
+
+            try
+            {
+                // 对每个唯一性字段进行检查
+                foreach (var uniqueMapping in uniqueMappings)
+                {
+                    string fieldName = uniqueMapping.SystemField;
+                    if (!dataTable.Columns.Contains(fieldName))
+                    {
+                        continue;
+                    }
+
+                    // 从数据库查询已存在的唯一性字段值
+                    var existingValues = QueryExistingUniqueValues(fieldName);
+
+                    if (existingValues == null || existingValues.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    // 检查导入数据中是否包含已存在的值
+                    for (int i = 0; i < dataTable.Rows.Count; i++)
+                    {
+                        DataRow row = dataTable.Rows[i];
+                        object value = row[fieldName];
+
+                        // 跳过空值
+                        if (value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString()))
+                        {
+                            continue;
+                        }
+
+                        // 检查值是否已存在
+                        string valueStr = value.ToString().Trim();
+                        if (existingValues.Contains(valueStr, StringComparer.OrdinalIgnoreCase))
+                        {
+                            duplicateErrors.Add(new ValidationError
+                            {
+                                RowNumber = i + 1, // Excel行号从1开始
+                                FieldName = fieldName,
+                                ErrorMessage = $"值【{valueStr}】已存在于数据库中，不能重复"
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"唯一性检查失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return duplicateErrors;
+        }
+
+        /// <summary>
+        /// 从数据库查询已存在的唯一性字段值
+        /// </summary>
+        /// <param name="fieldName">字段名</param>
+        /// <returns>已存在的值集合</returns>
+        private HashSet<string> QueryExistingUniqueValues(string fieldName)
+        {
+            var existingValues = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                // 使用反射获取实体类型的主键字段名
+                string tableName = _selectedEntityType.Name;
+
+                // 构建SQL查询语句
+                string sql = $"SELECT DISTINCT [{fieldName}] FROM [{tableName}] WHERE [{fieldName}] IS NOT NULL AND [{fieldName}] <> ''";
+
+                // 执行查询
+                var results = _db.Ado.SqlQuery<string>(sql);
+
+                // 添加到HashSet中（自动去重）
+                foreach (var value in results)
+                {
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        existingValues.Add(value.Trim());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"查询唯一性字段值失败: {ex.Message}");
+            }
+
+            return existingValues;
+        }
+
+        /// <summary>
+        /// 获取勾选的数据行
+        /// </summary>
+        /// <returns>包含勾选行的新数据表格</returns>
+        private DataTable GetSelectedRows()
+        {
+            DataTable selectedData = _parsedImportData.Clone();
+
+            // 遍历DataGridView的每一行
+            foreach (DataGridViewRow dgvRow in dgvParsedImportData.Rows)
+            {
+                // 检查是否为数据行（非新增行）
+                if (dgvRow.IsNewRow)
+                {
+                    continue;
+                }
+
+                // 检查是否勾选
+                if (dgvParsedImportData.Columns.Contains("Selected") &&
+                    dgvRow.Cells["Selected"] != null &&
+                    dgvRow.Cells["Selected"].Value != null &&
+                    dgvRow.Cells["Selected"].Value is bool &&
+                    (bool)dgvRow.Cells["Selected"].Value)
+                {
+                    // 从DataTable中获取对应的行并导入
+                    int rowIndex = dgvRow.Index;
+                    if (rowIndex >= 0 && rowIndex < _parsedImportData.Rows.Count)
+                    {
+                        selectedData.ImportRow(_parsedImportData.Rows[rowIndex]);
+                    }
+                }
+            }
+
+            return selectedData;
         }
 
         /// <summary>

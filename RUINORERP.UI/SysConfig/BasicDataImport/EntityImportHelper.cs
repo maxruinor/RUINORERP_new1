@@ -1,7 +1,9 @@
+using RUINORERP.Global;
+using RUINORERP.Model;
+using RUINORERP.UI.Network.Services;
+using SqlSugar;
 using System;
 using System.Linq;
-using RUINORERP.Model;
-using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -17,7 +19,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="entityType">实体类型</param>
         /// <param name="entity">实体对象</param>
         /// <param name="db">数据库客户端</param>
-        public static void PreProcessEntity(Type entityType, BaseEntity entity, ISqlSugarClient db)
+        /// <param name="importType">导入类型标识（用于区分客户和供应商等使用相同表的情况）</param>
+        public static void PreProcessEntity(Type entityType, BaseEntity entity, ISqlSugarClient db, string importType = null)
         {
             if (entityType == null || entity == null)
             {
@@ -33,13 +36,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     ProcessProdCategories(entity as tb_ProdCategories, db);
                     break;
                 // TODO: 添加其他实体类型的处理
-                // case "tb_Products":
-                //     ProcessProducts(entity as tb_Products, db);
-                //     break;
+                case "tb_CustomerVendor":
+                    // 根据importType区分是客户还是供应商
+                    bool isCustomer = importType == "客户表";
+                    bool isVendor = importType == "供应商表";
+                    CustomerVendor(entity as tb_CustomerVendor, db, isCustomer, isVendor);
+                    break;
                 default:
                     // 默认处理
                     break;
             }
+
+            Business.BusinessHelper.Instance.InitEntity(entity);
         }
 
         /// <summary>
@@ -57,7 +65,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 1. 自动生成分类编码（如果用户未指定）
             if (string.IsNullOrWhiteSpace(category.CategoryCode))
             {
-                category.CategoryCode = GenerateCategoryCode(category.Category_name, db);
+                category.CategoryCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.ProCategories);
             }
 
             // 2. 设置默认启用状态
@@ -85,30 +93,50 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 category.Notes = "通过Excel导入";
             }
+
         }
+
 
         /// <summary>
-        /// 生成分类编码
+        /// 处理产品分类的特殊字段
         /// </summary>
-        /// <param name="categoryName">分类名称</param>
+        /// <param name="category">产品分类实体</param>
         /// <param name="db">数据库客户端</param>
-        /// <returns>分类编码</returns>
-        private static string GenerateCategoryCode(string categoryName, ISqlSugarClient db)
+        private static void CustomerVendor(tb_CustomerVendor customerVendor, ISqlSugarClient db, bool IsCustomer = false, bool IsVendor = false)
         {
-            if (string.IsNullOrWhiteSpace(categoryName))
+            if (customerVendor == null)
             {
-                return $"CAT_{DateTime.Now:yyyyMMddHHmmss}";
+                return;
             }
 
-            // 获取已有分类的最大序号
-            var maxId = db.Queryable<tb_ProdCategories>()
-                .Where(c => c.Category_name.Contains(categoryName) || 
-                           c.CategoryCode.StartsWith("CAT"))
-                .OrderByDescending(c => c.Category_ID)
-                .Select(c => c.Category_ID)
-                .First();
+            // 1. 自动生成分类编码（如果用户未指定）
+            if (string.IsNullOrWhiteSpace(customerVendor.CVCode))
+            {
+                if (IsCustomer)
+                {
+                    customerVendor.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Customer);
+                }
+                else
+                {
+                    customerVendor.CVCode = ClientBizCodeService.GetBaseInfoNo(BaseInfoType.Supplier);
+                }
 
-            return $"CAT{(maxId + 1):D6}";
+            }
+
+            customerVendor.IsVendor = IsVendor;
+            customerVendor.IsCustomer = IsCustomer;
+            // 2. 设置默认启用状态
+            if (!customerVendor.Is_enabled.HasValue)
+            {
+                customerVendor.Is_enabled = true;
+            }
+
+            // 5. 设置默认备注
+            if (string.IsNullOrWhiteSpace(customerVendor.Notes))
+            {
+                customerVendor.Notes = "通过Excel导入";
+            }
         }
+
     }
 }

@@ -53,20 +53,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 验证必填列是否存在
         /// </summary>
-        /// <param name="dataTable">数据表</param>
+        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="errors">错误列表</param>
         private void ValidateRequiredColumns(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
         {
             foreach (var mapping in mappings)
             {
-                if (!dataTable.Columns.Contains(mapping.ExcelColumn))
+                // 跳过系统生成和默认值的映射
+                if (IsSystemGeneratedOrDefaultValueMapping(mapping))
+                {
+                    continue;
+                }
+
+                // 检查映射后的数据表是否包含SystemField列
+                if (!dataTable.Columns.Contains(mapping.SystemField))
                 {
                     errors.Add(new ValidationError
                     {
                         RowNumber = -1,
-                        FieldName = mapping.ExcelColumn,
-                        ErrorMessage = $"Excel文件中不存在列 '{mapping.ExcelColumn}'",
+                        FieldName = mapping.SystemField,
+                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField}'",
                         ErrorType = ErrorType.ColumnNotFound
                     });
                 }
@@ -74,9 +81,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 判断是否为系统生成或默认值的映射
+        /// </summary>
+        /// <param name="mapping">列映射</param>
+        /// <returns>是否为系统生成或默认值映射</returns>
+        private bool IsSystemGeneratedOrDefaultValueMapping(ColumnMapping mapping)
+        {
+            // 检查ExcelColumn是否以特殊标记开头
+            if (string.IsNullOrEmpty(mapping.ExcelColumn))
+            {
+                return false;
+            }
+
+            return mapping.ExcelColumn.StartsWith("[系统生成]") ||
+                   mapping.ExcelColumn.StartsWith("[默认值:");
+        }
+
+        /// <summary>
         /// 验证数据类型是否匹配
         /// </summary>
-        /// <param name="dataTable">数据表</param>
+        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="errors">错误列表</param>
@@ -88,12 +112,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 foreach (var mapping in mappings)
                 {
-                    if (!dataTable.Columns.Contains(mapping.ExcelColumn))
+                    // 跳过系统生成和默认值的映射
+                    if (IsSystemGeneratedOrDefaultValueMapping(mapping))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.ExcelColumn];
+                    // 使用SystemField检查列是否存在
+                    if (!dataTable.Columns.Contains(mapping.SystemField))
+                    {
+                        continue;
+                    }
+
+                    object cellValue = row[mapping.SystemField];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue; // 空值跳过
@@ -113,7 +144,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         errors.Add(new ValidationError
                         {
                             RowNumber = i + 2, // +2 因为Excel从第2行开始
-                            FieldName = mapping.ExcelColumn,
+                            FieldName = mapping.SystemField,
                             ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
                             ErrorType = ErrorType.TypeMismatch,
                             OriginalValue = cellValue
@@ -126,7 +157,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 验证唯一键列
         /// </summary>
-        /// <param name="dataTable">数据表</param>
+        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="errors">错误列表</param>
         private void ValidateUniqueKeys(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
@@ -137,7 +168,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            if (!dataTable.Columns.Contains(uniqueKeyMapping.ExcelColumn))
+            // 使用SystemField检查列是否存在
+            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField))
             {
                 return;
             }
@@ -146,17 +178,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
-                object value = dataTable.Rows[i][uniqueKeyMapping.ExcelColumn];
-                if (value == DBNull.Value || string.IsNullOrEmpty(value?.ToString()))
+                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField];
+
+                // 如果配置了忽略空值，则跳过空值的重复检查
+                bool isEmpty = value == DBNull.Value || string.IsNullOrEmpty(value?.ToString());
+                if (isEmpty)
                 {
-                    errors.Add(new ValidationError
+                    // 如果没有设置忽略空值，空值仍然是错误
+                    if (!uniqueKeyMapping.IgnoreEmptyValue)
                     {
-                        RowNumber = i + 2,
-                        FieldName = uniqueKeyMapping.ExcelColumn,
-                        ErrorMessage = "唯一键列不能为空",
-                        ErrorType = ErrorType.EmptyRequiredField,
-                        OriginalValue = null
-                    });
+                        errors.Add(new ValidationError
+                        {
+                            RowNumber = i + 2,
+                            FieldName = uniqueKeyMapping.SystemField,
+                            ErrorMessage = "唯一键列不能为空",
+                            ErrorType = ErrorType.EmptyRequiredField,
+                            OriginalValue = null
+                        });
+                    }
+                    // 跳过空值的重复检查
                     continue;
                 }
 
@@ -176,7 +216,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     errors.Add(new ValidationError
                     {
                         RowNumber = rowNumber,
-                        FieldName = uniqueKeyMapping.ExcelColumn,
+                        FieldName = uniqueKeyMapping.SystemField,
                         ErrorMessage = $"唯一键列值 '{kvp.Key}' 重复，共出现 {kvp.Value.Count} 次",
                         ErrorType = ErrorType.DuplicateValue,
                         OriginalValue = kvp.Key
@@ -188,7 +228,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 验证数据范围
         /// </summary>
-        /// <param name="dataTable">数据表</param>
+        /// <param name="dataTable">数据表（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="errors">错误列表</param>
@@ -200,12 +240,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 foreach (var mapping in mappings)
                 {
-                    if (!dataTable.Columns.Contains(mapping.ExcelColumn))
+                    // 跳过系统生成和默认值的映射
+                    if (IsSystemGeneratedOrDefaultValueMapping(mapping))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.ExcelColumn];
+                    // 使用SystemField检查列是否存在
+                    if (!dataTable.Columns.Contains(mapping.SystemField))
+                    {
+                        continue;
+                    }
+
+                    object cellValue = row[mapping.SystemField];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue;
@@ -229,7 +276,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             errors.Add(new ValidationError
                             {
                                 RowNumber = i + 2,
-                                FieldName = mapping.ExcelColumn,
+                                FieldName = mapping.SystemField,
                                 ErrorMessage = $"字符串长度 {cellValue.ToString().Length} 超过最大限制 {maxLength}",
                                 ErrorType = ErrorType.LengthExceeded,
                                 OriginalValue = cellValue
@@ -251,7 +298,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     errors.Add(new ValidationError
                                     {
                                         RowNumber = i + 2,
-                                        FieldName = mapping.ExcelColumn,
+                                        FieldName = mapping.SystemField,
                                         ErrorMessage = $"数值 {numValue} 超出有效范围 [{range.Value.Min}, {range.Value.Max}]",
                                         ErrorType = ErrorType.OutOfRange,
                                         OriginalValue = cellValue

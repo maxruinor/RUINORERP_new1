@@ -223,6 +223,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 保存用户配置的属性
                     mapping.IsForeignKey = propertyDialog.IsForeignKey;
                     mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
+                    mapping.IgnoreEmptyValue = propertyDialog.IgnoreEmptyValue;
                     mapping.DefaultValue = propertyDialog.DefaultValue;
                     mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
                     mapping.RelatedTableName = propertyDialog.RelatedTableName;
@@ -348,7 +349,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 bool isNullable = true;
                 var sugarColumnAttribute = property.GetCustomAttributes(false)
                     .FirstOrDefault(attr => attr.GetType().Name == "SugarColumnAttribute");
-                
+
                 if (sugarColumnAttribute != null)
                 {
                     try
@@ -486,13 +487,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             foreach (var mapping in ColumnMappings)
             {
                 string displayText = $"{mapping.ExcelColumn} -> {mapping.SystemField}";
-                
+
                 // 添加属性标识
                 List<string> flags = new List<string>();
                 if (mapping.IsForeignKey) flags.Add("外键");
                 if (mapping.IsUniqueValue) flags.Add("唯一");
                 if (mapping.IsSystemGenerated) flags.Add("系统生成");
-                
+
                 if (flags.Count > 0)
                 {
                     displayText += $" ({string.Join(", ", flags)})";
@@ -607,6 +608,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     mapping.MappingName = mappingName;
                     mapping.UpdateTime = DateTime.Now;
+                    mapping.RemoveDuplicates = chkRemoveDuplicates.Checked;
                 }
 
                 // 保存到文件
@@ -682,7 +684,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 textBoxMappingName.Text = mappingName;
-
+                chkRemoveDuplicates.Checked = ColumnMappings.Count > 0 && ColumnMappings[0].RemoveDuplicates;
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)

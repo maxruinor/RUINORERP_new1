@@ -42,11 +42,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
-        
-        // 多步骤导入相关字段
-        private List<ImportTask> _importTasks;
-        private int _currentTaskIndex;
-        
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -56,7 +52,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             InitializeData();
             InitializeDynamicImport();
         }
-        
+
         /// <summary>
         /// 初始化数据
         /// </summary>
@@ -64,20 +60,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             // 初始化数据列表
             _importData = new List<ProductImportModel>();
-            
+
             // 初始化数据网格视图
             dgvImportData.AutoGenerateColumns = true;
             dgvImportData.DataSource = _importData;
-            
+
             // 设置图片保存路径
             string imageSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ProductImages");
             _imageProcessor = new ImageProcessor(imageSavePath);
-            
+
             // 初始化其他组件
             _excelParser = new ExcelDataParser();
             _dataValidator = new DataValidator();
         }
-        
+
         /// <summary>
         /// 初始化动态导入功能
         /// </summary>
@@ -90,8 +86,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _currentMappings = new ColumnMappingCollection();
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
-            _importTasks = new List<ImportTask>();
-            _currentTaskIndex = 0;
 
             // 初始化数据网格视图
             dgvRawExcelData.AutoGenerateColumns = true;
@@ -110,8 +104,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 绑定事件
             kbtnDynamicBrowse.Click += KbtnDynamicBrowse_Click;
             kbtnDynamicParse.Click += KbtnDynamicParse_Click;
-            kbtnDynamicMap.Click += KbtnDynamicMap_Click;
-            kbtnDynamicImport.Click += KbtnDynamicImport_Click;
+ 
             kcmbDynamicSheetName.SelectedIndexChanged += KcmbDynamicSheetName_SelectedIndexChanged;
             kcmbDynamicEntityType.SelectedIndexChanged += KcmbDynamicEntityType_SelectedIndexChanged;
             kcmbDynamicMappingName.SelectedIndexChanged += KcmbDynamicMappingName_SelectedIndexChanged;
@@ -434,7 +427,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             bool hasMappingConfig = _currentMappings != null && _currentMappings.Count > 0;
             kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
         }
-        
+
         /// <summary>
         /// 加载映射配置列表
         /// </summary>
@@ -480,7 +473,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"加载映射配置列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 加载数据库连接
         /// </summary>
@@ -489,12 +482,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 这里需要根据实际项目的数据库连接方式进行调整
             // 假设项目中已经有获取SqlSugarClient的方法
             _db = MainForm.Instance.AppContext.Db;
-            
+
             // 初始化导入器
             _categoryImporter = new CategoryImporter(_db);
             _productImporter = new ProductImporter(_db, _categoryImporter, _imageProcessor);
         }
-        
+
         /// <summary>
         /// 浏览Excel文件按钮点击事件
         /// </summary>
@@ -506,7 +499,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 openFileDialog.Filter = "Excel文件|*.xls;*.xlsx";
                 openFileDialog.Title = "选择产品数据Excel文件";
-                
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     ktxtFilePath.Text = openFileDialog.FileName;
@@ -514,7 +507,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
             }
         }
-        
+
         /// <summary>
         /// 解析Excel文件按钮点击事件
         /// </summary>
@@ -526,20 +519,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 解析Excel文件
                 _importData = _excelParser.ParseExcel(ktxtFilePath.Text);
-                
+
                 // 验证数据
                 _importData = _dataValidator.ValidateProducts(_importData);
-                
+
                 // 绑定到数据网格视图
                 dgvImportData.DataSource = _importData;
-                
+
                 // 更新状态信息
                 int successCount = _importData.Count(p => p.ImportStatus);
                 int failedCount = _importData.Count(p => !p.ImportStatus);
-                
+
                 // 启用导入按钮
                 kbtnImport.Enabled = _importData.Count > 0;
-                
+
                 // 显示无效记录
                 if (failedCount > 0)
                 {
@@ -553,7 +546,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"解析Excel文件失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 导入数据按钮点击事件
         /// </summary>
@@ -565,7 +558,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 加载数据库连接
                 LoadDbConnection();
-                
+
                 // 获取有效数据
                 var validData = _importData.Where(p => p.ImportStatus).ToList();
                 if (validData.Count == 0)
@@ -573,23 +566,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MessageBox.Show("没有可导入的有效数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                
+
                 // 显示确认对话框
                 if (MessageBox.Show($"确定要导入 {validData.Count} 条产品数据吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 {
                     return;
                 }
-                
+
                 // 开始导入
                 kbtnImport.Enabled = false;
                 kbtnBrowse.Enabled = false;
                 kbtnParse.Enabled = false;
-                
+
                 Application.DoEvents();
-                
+
                 // 执行导入
                 var result = _productImporter.BatchImportProducts(validData);
-                
+
                 // 显示导入结果
                 StringBuilder message = new StringBuilder();
                 message.AppendLine($"导入完成！");
@@ -597,7 +590,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 message.AppendLine($"成功记录数：{result.SuccessCount}");
                 message.AppendLine($"失败记录数：{result.FailedCount}");
                 message.AppendLine($"耗时：{result.ElapsedMilliseconds} 毫秒");
-                
+
                 if (result.FailedCount > 0)
                 {
                     message.AppendLine($"\n失败记录详情：");
@@ -606,18 +599,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         message.AppendLine($"行号 {failedRecord.RowNumber}：{failedRecord.ErrorMessage}");
                     }
                 }
-                
+
                 MessageBox.Show(message.ToString(), "导入结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                
+
                 // 更新导入结果页面
                 klblTotalCount.Text = result.TotalCount.ToString();
                 klblSuccessCount.Text = result.SuccessCount.ToString();
                 klblFailedCount.Text = result.FailedCount.ToString();
                 klblElapsedTime.Text = $"{result.ElapsedMilliseconds} 毫秒";
-                
+
                 // 切换到结果页面
                 kryptonNavigator1.SelectedPage = kryptonPageResult;
-                
+
                 // 重置状态
                 ResetControls();
             }
@@ -627,7 +620,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ResetControls();
             }
         }
-        
+
         /// <summary>
         /// 重置控件状态
         /// </summary>
@@ -637,7 +630,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kbtnBrowse.Enabled = true;
             kbtnParse.Enabled = !string.IsNullOrEmpty(ktxtFilePath.Text);
         }
-        
+
         /// <summary>
         /// 导出模板按钮点击事件
         /// </summary>
@@ -655,9 +648,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"导出模板失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         #region 动态导入事件处理
-        
+
         /// <summary>
         /// 动态导入-浏览文件按钮点击事件
         /// </summary>
@@ -706,7 +699,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"加载工作表名称失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 动态导入-解析文件按钮点击事件
         /// 根据映射配置解析Excel数据
@@ -747,6 +740,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 根据映射配置转换数据
                 _parsedImportData = ApplyColumnMapping(fullData, _currentMappings);
 
+                // 应用去重复逻辑（如果配置了RemoveDuplicates）
+                if (_currentMappings.IsRemoveDuplicatesEnabled())
+                {
+                    var removeDuplicatesResult = ApplyRemoveDuplicates(_parsedImportData, _currentMappings);
+                    _parsedImportData = removeDuplicatesResult.removedData;
+                    int originalCount = removeDuplicatesResult.originalCount;
+                    int duplicateCount = removeDuplicatesResult.duplicateCount;
+
+                    if (duplicateCount > 0)
+                    {
+                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，原始数据 {originalCount} 行，去重后 {_parsedImportData.Rows.Count} 行（移除 {duplicateCount} 行重复数据）");
+                    }
+                    else
+                    {
+                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据（无重复数据）");
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.ShowStatusText($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据");
+                }
+
                 // 绑定到解析后数据表格
                 dgvParsedImportData.DataSource = _parsedImportData;
 
@@ -755,9 +770,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 启用导入按钮
                 kbtnDynamicImport.Enabled = true;
-
-                MessageBox.Show($"根据映射配置解析完成，共 {_parsedImportData.Rows.Count} 行数据",
-                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -773,12 +785,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>转换后的数据表格</returns>
         private DataTable ApplyColumnMapping(DataTable sourceData, ColumnMappingCollection mappings)
         {
-            DataTable result = new DataTable();
+            DataTable result = new DataTable(mappings[0].EntityType);
 
             try
             {
                 // 创建结果表结构（使用SystemField作为列名）
-                foreach (var mapping in mappings.Where(m => !string.IsNullOrEmpty(m.ExcelColumn)))
+                foreach (var mapping in mappings)
                 {
                     result.Columns.Add(mapping.SystemField, typeof(string));
                 }
@@ -788,15 +800,58 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     DataRow targetRow = result.NewRow();
 
-                    foreach (var mapping in mappings.Where(m => !string.IsNullOrEmpty(m.ExcelColumn)))
+                    foreach (var mapping in mappings)
                     {
-                        if (sourceData.Columns.Contains(mapping.ExcelColumn))
+                        // 判断是否为系统生成或默认值的映射
+                        bool isSystemGenerated = mapping.ExcelColumn.StartsWith("[系统生成]");
+                        bool isDefaultValue = mapping.ExcelColumn.StartsWith("[默认值:");
+
+                        if (isSystemGenerated)
                         {
-                            targetRow[mapping.SystemField] = sourceRow[mapping.ExcelColumn]?.ToString() ?? "";
+                            // 系统生成的值，暂时留空或使用特殊标记
+                            targetRow[mapping.SystemField] = "[系统生成]";
+                        }
+                        else if (isDefaultValue)
+                        {
+                            // 默认值映射，提取默认值
+                            // 格式：[默认值:值] 字段名
+                            int startIndex = mapping.ExcelColumn.IndexOf('[') + 1;
+                            int endIndex = mapping.ExcelColumn.IndexOf(']');
+                            if (startIndex > 0 && endIndex > startIndex)
+                            {
+                                string defaultValuePart = mapping.ExcelColumn.Substring(startIndex, endIndex - startIndex);
+                                // 提取冒号后面的值
+                                int colonIndex = defaultValuePart.IndexOf(':');
+                                if (colonIndex > -1)
+                                {
+                                    targetRow[mapping.SystemField] = defaultValuePart.Substring(colonIndex + 1).Trim();
+                                }
+                            }
                         }
                         else
                         {
-                            targetRow[mapping.SystemField] = "";
+                            // 正常的Excel列映射
+                            if (sourceData.Columns.Contains(mapping.ExcelColumn))
+                            {
+                                object cellValue = sourceRow[mapping.ExcelColumn];
+
+                                // 检查是否为空值
+                                bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
+
+                                // 如果配置了忽略空值且值为空，则不处理该字段
+                                if (mapping.IgnoreEmptyValue && isEmpty)
+                                {
+                                    targetRow[mapping.SystemField] = DBNull.Value;
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField] = cellValue?.ToString() ?? "";
+                                }
+                            }
+                            else
+                            {
+                                targetRow[mapping.SystemField] = "";
+                            }
                         }
                     }
 
@@ -809,6 +864,82 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 MessageBox.Show($"应用列映射失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return result;
+            }
+        }
+
+        /// <summary>
+        /// 应用去重复逻辑
+        /// 根据配置的RemoveDuplicates字段对数据进行去重
+        /// </summary>
+        /// <param name="data">数据表格</param>
+        /// <param name="mappings">列映射配置集合</param>
+        /// <returns>去重复结果，包含去重后的数据、原始行数、重复行数</returns>
+        private (DataTable removedData, int originalCount, int duplicateCount) ApplyRemoveDuplicates(DataTable data, ColumnMappingCollection mappings)
+        {
+            DataTable uniqueData = null;
+            int originalCount = data.Rows.Count;
+            int duplicateCount = 0;
+
+            try
+            {
+                // 获取启用去重复的字段映射
+                var removeDuplicatesMapping = mappings.GetRemoveDuplicatesMapping();
+                if (removeDuplicatesMapping == null)
+                {
+                    // 没有配置去重复字段，直接返回原数据
+                    uniqueData = data.Copy();
+                    duplicateCount = 0;
+                    return (uniqueData, originalCount, duplicateCount);
+                }
+
+                string keyField = removeDuplicatesMapping.SystemField;
+
+                // 检查数据表中是否存在该字段
+                if (!data.Columns.Contains(keyField))
+                {
+                    // 字段不存在，直接返回原数据
+                    uniqueData = data.Copy();
+                    duplicateCount = 0;
+                    return (uniqueData, originalCount, duplicateCount);
+                }
+
+                // 创建新的DataTable存储去重后的数据
+                uniqueData = data.Clone();
+
+                // 使用HashSet记录已存在的键值
+                HashSet<string> uniqueKeys = new HashSet<string>();
+
+                // 遍历数据行，保留第一次出现的记录
+                foreach (DataRow row in data.Rows)
+                {
+                    object keyValue = row[keyField];
+                    string keyString = keyValue?.ToString() ?? string.Empty;
+
+                    if (string.IsNullOrEmpty(keyString))
+                    {
+                        // 键值为空，跳过或保留第一条空值记录
+                        continue;
+                    }
+
+                    if (!uniqueKeys.Contains(keyString))
+                    {
+                        // 第一次出现，保留
+                        uniqueKeys.Add(keyString);
+                        uniqueData.ImportRow(row);
+                    }
+                    // 重复的记录不保留
+                }
+
+                duplicateCount = originalCount - uniqueData.Rows.Count;
+                return (uniqueData, originalCount, duplicateCount);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"去重复处理失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 发生错误时返回原数据
+                uniqueData = data.Copy();
+                duplicateCount = 0;
+                return (uniqueData, originalCount, duplicateCount);
             }
         }
 
@@ -841,16 +972,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 更新映射配置按钮状态
                 UpdateMappingControlStates();
-
-                MessageBox.Show($"已加载工作表数据，预览显示前 {_rawExcelData.Rows.Count} 行数据",
-                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MainForm.Instance.ShowStatusText($"已加载工作表数据，预览显示前 {_rawExcelData.Rows.Count} 行数据");
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"加载工作表数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
+
         /// <summary>
         /// 动态导入-映射配置按钮点击事件
         /// </summary>
@@ -924,28 +1053,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 MessageBox.Show($"打开映射配置界面失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        
-        /// <summary>
-        /// 动态导入-导入数据按钮点击事件
-        /// </summary>
-        /// <param name="sender">事件发送者</param>
-        /// <param name="e">事件参数</param>
-        private void KbtnDynamicImport_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // 加载数据库连接
-                LoadDbConnection();
 
-                // 执行动态导入
-                ExecuteDynamicImport();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-        
+
+
         #endregion
 
         /// <summary>
@@ -997,17 +1107,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                // 询问是否添加到多步骤导入任务
-                if (MessageBox.Show("是否将此导入添加到多步骤导入任务中？\n\n选择'是'：将此导入添加到任务列表，可与其他导入任务一起顺序执行\n选择'否'：立即执行此导入", "多步骤导入", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    // 添加到导入任务列表
-                    AddToImportTask();
-                }
-                else
-                {
-                    // 立即执行导入
-                    ExecuteSingleImport();
-                }
+                // 直接执行导入
+                ExecuteSingleImport();
             }
             catch (Exception ex)
             {
@@ -1020,59 +1121,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 添加到导入任务列表
-        /// </summary>
-        private void AddToImportTask()
-        {
-            try
-            {
-                // 获取任务名称
-                string taskName = Interaction.InputBox("请输入任务名称", "添加导入任务", $"导入{_selectedEntityType.Name}");
-                if (string.IsNullOrWhiteSpace(taskName))
-                {
-                    return;
-                }
-
-                // 创建导入任务
-                var task = new ImportTask
-                {
-                    TaskName = taskName,
-                    FilePath = ktxtDynamicFilePath.Text,
-                    SheetName = kcmbDynamicSheetName.SelectedItem.ToString(),
-                    EntityType = _selectedEntityType,
-                    Mappings = _currentMappings,
-                    Status = TaskStatus.Pending
-                };
-
-                // 添加到任务列表
-                _importTasks.Add(task);
-
-                // 显示任务列表
-                ShowImportTaskList();
-
-                MessageBox.Show($"导入任务 '{taskName}' 已添加到任务列表", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"添加导入任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
         /// 执行单个导入任务
         /// </summary>
         private void ExecuteSingleImport()
         {
             try
             {
-                // 重要：在导入前重新读取全部数据并应用映射
-                MessageBox.Show("正在读取全部数据并应用映射...", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DataTable fullRawData = _dynamicExcelParser.ParseExcelToDataTable(
-                    ktxtDynamicFilePath.Text,
-                    kcmbDynamicSheetName.SelectedIndex,
-                    0); // 0表示读取全部数据
-
-                DataTable fullParsedData = ApplyColumnMapping(fullRawData, _currentMappings);
+                // 直接使用解析后已经去重好的数据，不再重新读取Excel
+                // _parsedImportData 已经在解析时完成了映射和去重处理
+                DataTable fullParsedData = _parsedImportData;
 
                 // 数据验证
                 var validationErrors = _dynamicDataValidator.Validate(fullParsedData, _currentMappings, _selectedEntityType);
@@ -1119,35 +1176,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化导入器
                 _dynamicImporter = new DynamicImporter(_db);
 
-                // 执行导入（使用解析后的数据）
-                var result = _dynamicImporter.Import(fullParsedData, _currentMappings, _selectedEntityType);
+                // 执行导入
+                var importResult = _dynamicImporter.Import(fullParsedData, _currentMappings, _selectedEntityType);
 
                 // 显示导入结果
-                StringBuilder message = new StringBuilder();
-                message.AppendLine("动态导入完成！");
-                message.AppendLine($"总记录数：{result.TotalCount}");
-                message.AppendLine($"成功记录数：{result.SuccessCount}");
-                message.AppendLine($"失败记录数：{result.FailedCount}");
-                message.AppendLine($"新增记录数：{result.InsertedCount}");
-                message.AppendLine($"更新记录数：{result.UpdatedCount}");
-                message.AppendLine($"耗时：{result.ElapsedMilliseconds} 毫秒");
-
-                if (result.FailedCount > 0)
-                {
-                    message.AppendLine($"\n失败记录详情：");
-                    int displayCount = Math.Min(10, result.FailedRecords.Count);
-                    for (int i = 0; i < displayCount; i++)
-                    {
-                        message.AppendLine($"行号 {result.FailedRecords[i].RowNumber}：{result.FailedRecords[i].ErrorMessage}");
-                    }
-
-                    if (result.FailedRecords.Count > 10)
-                    {
-                        message.AppendLine($"\n... 还有 {result.FailedRecords.Count - 10} 条失败记录未显示");
-                    }
-                }
-
-                MessageBox.Show(message.ToString(), "导入结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                DisplayImportResult(importResult);
 
                 // 重置状态
                 kbtnDynamicImport.Enabled = true;
@@ -1155,9 +1188,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kbtnDynamicParse.Enabled = kcmbDynamicSheetName.SelectedIndex >= 0;
                 kbtnDynamicMap.Enabled = true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"导入数据失败，请检查数据格式和映射配置。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 kbtnDynamicImport.Enabled = true;
                 kbtnDynamicBrowse.Enabled = true;
                 kbtnDynamicParse.Enabled = true;
@@ -1166,209 +1199,78 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 显示导入任务列表
+        /// 显示导入结果
         /// </summary>
-        private void ShowImportTaskList()
+        /// <param name="result">导入结果</param>
+        private void DisplayImportResult(DynamicImporter.ImportResult result)
+        {
+            StringBuilder message = new StringBuilder();
+            message.AppendLine("动态导入完成！");
+            message.AppendLine($"总记录数：{result.TotalCount}");
+            message.AppendLine($"成功记录数：{result.SuccessCount}");
+            message.AppendLine($"失败记录数：{result.FailedCount}");
+            message.AppendLine($"新增记录数：{result.InsertedCount}");
+            message.AppendLine($"更新记录数：{result.UpdatedCount}");
+            message.AppendLine($"耗时：{result.ElapsedMilliseconds} 毫秒");
+
+            if (result.FailedCount > 0)
+            {
+                message.AppendLine($"\n失败记录详情：");
+                int displayCount = Math.Min(10, result.FailedRecords.Count);
+                for (int i = 0; i < displayCount; i++)
+                {
+                    message.AppendLine($"行号 {result.FailedRecords[i].RowNumber}：{result.FailedRecords[i].ErrorMessage}");
+                }
+
+                if (result.FailedRecords.Count > 10)
+                {
+                    message.AppendLine($"\n... 还有 {result.FailedRecords.Count - 10} 条失败记录未显示");
+                }
+            }
+
+            MessageBox.Show(message.ToString(), "导入结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        /// <summary>
+        /// 根据实体类型获取对应的Controller实例
+        /// </summary>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>Controller实例，如果未找到则返回null</returns>
+        private object GetControllerForEntityType(Type entityType)
         {
             try
             {
-                StringBuilder taskList = new StringBuilder();
-                taskList.AppendLine("导入任务列表：\n");
-
-                for (int i = 0; i < _importTasks.Count; i++)
-                {
-                    var task = _importTasks[i];
-                    taskList.AppendLine($"{i + 1}. {task.TaskName}");
-                    taskList.AppendLine($"   状态：{task.Status}");
-                    taskList.AppendLine($"   目标表：{task.EntityType.Name}");
-                    taskList.AppendLine($"   文件：{Path.GetFileName(task.FilePath)}");
-                    taskList.AppendLine($"   工作表：{task.SheetName}");
-                    taskList.AppendLine();
-                }
-
-                // 询问是否执行所有任务
-                if (_importTasks.Count > 0)
-                {
-                    taskList.AppendLine("是否执行所有任务？");
-                    if (MessageBox.Show(taskList.ToString(), "导入任务列表", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                    {
-                        // 执行所有导入任务
-                        ExecuteAllImportTasks();
-                    }
-                }
+                // 简化实现：只返回null，让调用方回退到直接数据库导入
+                // 在实际使用中，用户需要手动在调用代码中获取正确的Controller实例
+                return null;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"显示任务列表失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
             }
         }
 
         /// <summary>
-        /// 执行所有导入任务
+        /// 动态导入-导入数据按钮点击事件
         /// </summary>
-        private void ExecuteAllImportTasks()
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kbtnDynamicImport_Click(object sender, EventArgs e)
         {
             try
             {
-                if (_importTasks.Count == 0)
-                {
-                    MessageBox.Show("导入任务列表为空", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return;
-                }
-
                 // 加载数据库连接
                 LoadDbConnection();
 
-                // 显示开始执行提示
-                MessageBox.Show($"开始执行 {_importTasks.Count} 个导入任务，请耐心等待...", "执行任务", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // 执行所有任务
-                _currentTaskIndex = 0;
-                foreach (var task in _importTasks)
-                {
-                    _currentTaskIndex++;
-                    try
-                    {
-                        // 更新任务状态
-                        task.Status = TaskStatus.Running;
-
-                        // 显示当前执行的任务
-                        MessageBox.Show($"正在执行任务 {_currentTaskIndex}/{_importTasks.Count}：{task.TaskName}", "执行任务", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        // 读取Excel数据
-                        DataTable rawData = _dynamicExcelParser.ParseExcelToDataTable(
-                            task.FilePath,
-                            task.SheetName,
-                            0);
-
-                        // 应用映射配置
-                        DataTable parsedData = ApplyColumnMapping(rawData, task.Mappings);
-
-                        // 数据验证
-                        var validationErrors = _dynamicDataValidator.Validate(parsedData, task.Mappings, task.EntityType);
-                        if (validationErrors.Count > 0)
-                        {
-                            string errorSummary = $"任务 {task.TaskName} 发现 {validationErrors.Count} 个数据验证错误：\n\n";
-                            errorSummary += "是否继续导入（跳过有错误的记录）？";
-
-                            if (MessageBox.Show(errorSummary, "数据验证警告", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
-                            {
-                                task.Status = TaskStatus.Failed;
-                                continue;
-                            }
-                        }
-
-                        // 执行导入
-                        _dynamicImporter = new DynamicImporter(_db);
-                        task.Result = _dynamicImporter.Import(parsedData, task.Mappings, task.EntityType);
-
-                        // 更新任务状态
-                        task.Status = task.Result.FailedCount == 0 ? TaskStatus.Success : TaskStatus.Failed;
-
-                        // 显示任务执行结果
-                        StringBuilder resultMessage = new StringBuilder();
-                        resultMessage.AppendLine($"任务 {task.TaskName} 执行完成！");
-                        resultMessage.AppendLine($"总记录数：{task.Result.TotalCount}");
-                        resultMessage.AppendLine($"成功记录数：{task.Result.SuccessCount}");
-                        resultMessage.AppendLine($"失败记录数：{task.Result.FailedCount}");
-                        resultMessage.AppendLine($"新增记录数：{task.Result.InsertedCount}");
-                        resultMessage.AppendLine($"更新记录数：{task.Result.UpdatedCount}");
-                        resultMessage.AppendLine($"耗时：{task.Result.ElapsedMilliseconds} 毫秒");
-
-                        MessageBox.Show(resultMessage.ToString(), "任务执行结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    catch (Exception ex)
-                    {
-                        task.Status = TaskStatus.Failed;
-                        MessageBox.Show($"任务 {task.TaskName} 执行失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-
-                // 显示所有任务执行完成
-                StringBuilder finalMessage = new StringBuilder();
-                finalMessage.AppendLine("所有导入任务执行完成！\n");
-
-                int successCount = _importTasks.Count(t => t.Status == TaskStatus.Success);
-                int failedCount = _importTasks.Count(t => t.Status == TaskStatus.Failed);
-
-                finalMessage.AppendLine($"成功任务数：{successCount}");
-                finalMessage.AppendLine($"失败任务数：{failedCount}");
-                finalMessage.AppendLine($"总任务数：{_importTasks.Count}");
-
-                MessageBox.Show(finalMessage.ToString(), "执行完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                // 清空任务列表
-                _importTasks.Clear();
+                // 执行动态导入
+                ExecuteDynamicImport();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"执行任务失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-    }
 
-    /// <summary>
-    /// 导入任务类
-    /// 用于管理多步骤导入的单个任务
-    /// </summary>
-    public class ImportTask
-    {
-        /// <summary>
-        /// 任务名称
-        /// </summary>
-        public string TaskName { get; set; }
-
-        /// <summary>
-        /// Excel文件路径
-        /// </summary>
-        public string FilePath { get; set; }
-
-        /// <summary>
-        /// 工作表名称
-        /// </summary>
-        public string SheetName { get; set; }
-
-        /// <summary>
-        /// 目标实体类型
-        /// </summary>
-        public Type EntityType { get; set; }
-
-        /// <summary>
-        /// 列映射配置
-        /// </summary>
-        public ColumnMappingCollection Mappings { get; set; }
-
-        /// <summary>
-        /// 任务状态
-        /// </summary>
-        public TaskStatus Status { get; set; }
-
-        /// <summary>
-        /// 导入结果
-        /// </summary>
-        public DynamicImporter.ImportResult Result { get; set; }
-    }
-
-    /// <summary>
-    /// 任务状态枚举
-    /// </summary>
-    public enum TaskStatus
-    {
-        /// <summary>
-        /// 待执行
-        /// </summary>
-        Pending,
-        /// <summary>
-        /// 执行中
-        /// </summary>
-        Running,
-        /// <summary>
-        /// 执行成功
-        /// </summary>
-        Success,
-        /// <summary>
-        /// 执行失败
-        /// </summary>
-        Failed
+    
     }
 }

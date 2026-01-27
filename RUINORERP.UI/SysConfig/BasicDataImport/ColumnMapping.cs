@@ -34,6 +34,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsUniqueValue { get; set; }
 
         /// <summary>
+        /// 是否忽略空值（为空时不导入）
+        /// </summary>
+        public bool IgnoreEmptyValue { get; set; }
+
+        /// <summary>
         /// 数据类型
         /// </summary>
         public string DataType { get; set; }
@@ -42,6 +47,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 映射配置名称
         /// </summary>
         public string MappingName { get; set; }
+
+        /// <summary>
+        /// 是否对该字段进行去重复处理
+        /// 启用后，在解析和导入时会根据该字段的值去除重复的数据行
+        /// 只保留第一次出现的记录，后续重复的记录将被过滤掉
+        /// </summary>
+        public bool RemoveDuplicates { get; set; }
 
         /// <summary>
         /// 目标实体类型名称
@@ -121,6 +133,33 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ColumnMapping GetUniqueKeyMapping()
         {
             return this.FirstOrDefault(m => m.IsUniqueValue);
+        }
+
+        /// <summary>
+        /// 获取所有启用忽略空值的映射
+        /// </summary>
+        /// <returns>忽略空值的映射配置列表</returns>
+        public List<ColumnMapping> GetIgnoreEmptyValueMappings()
+        {
+            return this.Where(m => m.IgnoreEmptyValue).ToList();
+        }
+
+        /// <summary>
+        /// 获取启用去重复值的映射配置
+        /// </summary>
+        /// <returns>启用了去重复的映射配置，如果没有则返回null</returns>
+        public ColumnMapping GetRemoveDuplicatesMapping()
+        {
+            return this.FirstOrDefault(m => m.RemoveDuplicates);
+        }
+
+        /// <summary>
+        /// 检查是否需要去重复
+        /// </summary>
+        /// <returns>是否启用去重复</returns>
+        public bool IsRemoveDuplicatesEnabled()
+        {
+            return this.Any(m => m.RemoveDuplicates);
         }
     }
 }

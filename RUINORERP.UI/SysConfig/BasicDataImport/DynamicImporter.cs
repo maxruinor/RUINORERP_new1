@@ -131,8 +131,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // 创建实体对象
                         var entity = CreateEntityFromRow(row, mappings, entityType, i + 2); // +2 因为Excel从第2行开始（第1行是标题）
 
-                        // 验证实体对象
-                        string validationError = ValidateEntity(entity, uniqueKeyMapping);
+                        // 使用Controller进行业务验证
+                        string validationError = ValidateEntityWithController(entity, entityType);
                         if (!string.IsNullOrEmpty(validationError))
                         {
                             result.FailedRecords.Add(new FailedRecord
@@ -162,7 +162,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 批量导入数据到数据库
                 if (entityList.Count > 0)
                 {
-                    BatchImportEntities(entityList, entityType, result, uniqueKeyMapping);
+                    try
+                    {
+                        BatchImportEntities(entityList, entityType, result, uniqueKeyMapping);
+                    }
+                    catch (Exception batchEx)
+                    {
+                        // 批量导入失败，记录错误详情
+                        throw new Exception($"批量导入实体时发生错误: {batchEx.Message}\n详细信息: {batchEx.InnerException?.Message ?? "无"}", batchEx);
+                    }
                 }
 
                 result.SuccessCount = result.TotalCount - result.FailedCount;
@@ -183,7 +191,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 从数据行创建实体对象
         /// </summary>
-        /// <param name="row">数据行</param>
+        /// <param name="row">数据行（已应用映射，列名为SystemField）</param>
         /// <param name="mappings">列映射配置</param>
         /// <param name="entityType">实体类型</param>
         /// <param name="rowNumber">行号</param>
@@ -197,11 +205,33 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 try
                 {
-                    // 获取Excel列的值
+                    // 判断是否为系统生成或默认值的映射
+                    bool isSystemGenerated = mapping.ExcelColumn.StartsWith("[系统生成]");
+                    bool isDefaultValue = mapping.ExcelColumn.StartsWith("[默认值:");
+
+                    // 获取值
                     object cellValue = null;
-                    if (dataTableContainsColumn(row.Table, mapping.ExcelColumn))
+
+                    if (isSystemGenerated)
                     {
-                        cellValue = row[mapping.ExcelColumn];
+                        // 系统生成的值，不从Excel读取，后续可以在导入后处理
+                        cellValue = null; // 暂时设为null，可以在导入后处理
+                    }
+                    else if (isDefaultValue)
+                    {
+                        // 默认值映射，从ExcelColumn中提取默认值
+                        cellValue = ExtractDefaultValue(mapping.ExcelColumn);
+                    }
+                    else if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                    {
+                        // 使用SystemField从映射后的数据表中获取值
+                        cellValue = row[mapping.SystemField];
+
+                        // 如果配置了忽略空值且值为DBNull，则跳过该字段
+                        if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
+                        {
+                            continue;
+                        }
                     }
 
                     // 如果值为空，检查是否有默认值
@@ -213,6 +243,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         }
                         else
                         {
+                            // 非必填字段且值为空，跳过
                             continue;
                         }
                     }
@@ -221,21 +252,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     PropertyInfo property = entityType.GetProperty(mapping.SystemField);
                     if (property == null)
                     {
-                        continue;
+                        throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField}");
                     }
 
                     // 处理外键字段
-                    if (mapping.IsForeignKey && !string.IsNullOrEmpty(mapping.RelatedTableName) && !string.IsNullOrEmpty(mapping.RelatedTableField))
+                    if (mapping.IsForeignKey && !string.IsNullOrEmpty(mapping.RelatedTableName) && !string.IsNullOrEmpty(mapping.RelatedTableFieldName))
                     {
                         // 查找关联表中的对应值
-                        object foreignKeyId = GetForeignKeyId(cellValue.ToString(), mapping.RelatedTableName, mapping.RelatedTableField);
+                        object foreignKeyId = GetForeignKeyId(cellValue.ToString(), mapping.RelatedTableName, mapping.RelatedTableFieldName);
                         if (foreignKeyId != null)
                         {
                             cellValue = foreignKeyId;
                         }
                         else
                         {
-                            throw new Exception($"行 {rowNumber} 外键值 '{cellValue}' 在关联表 {mapping.RelatedTableName} 中未找到对应记录");
+                            throw new Exception($"行 {rowNumber} 外键值 '{cellValue}' 在关联表 {mapping.RelatedTableName} 的字段 {mapping.RelatedTableFieldName} 中未找到对应记录");
                         }
                     }
 
@@ -248,11 +279,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"行 {rowNumber} 列 {mapping.ExcelColumn} 转换失败: {ex.Message}", ex);
+                    throw new Exception($"行 {rowNumber} 字段 {mapping.SystemField} (Excel列: {mapping.ExcelColumn}) 转换失败: {ex.Message}", ex);
                 }
             }
 
             return entity;
+        }
+
+        /// <summary>
+        /// 从ExcelColumn中提取默认值
+        /// 格式：[默认值:值] 字段名
+        /// </summary>
+        /// <param name="excelColumn">Excel列名</param>
+        /// <returns>默认值</returns>
+        private string ExtractDefaultValue(string excelColumn)
+        {
+            try
+            {
+                int startIndex = excelColumn.IndexOf('[') + 1;
+                int endIndex = excelColumn.IndexOf(']');
+                if (startIndex > 0 && endIndex > startIndex)
+                {
+                    string defaultValuePart = excelColumn.Substring(startIndex, endIndex - startIndex);
+                    // 提取冒号后面的值
+                    int colonIndex = defaultValuePart.IndexOf(':');
+                    if (colonIndex > -1)
+                    {
+                        return defaultValuePart.Substring(colonIndex + 1).Trim();
+                    }
+                }
+                return string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>
@@ -358,37 +419,127 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 验证实体对象
+        /// 使用Controller进行业务验证
         /// </summary>
         /// <param name="entity">实体对象</param>
-        /// <param name="uniqueKeyMapping">唯一键映射配置</param>
+        /// <param name="entityType">实体类型</param>
         /// <returns>错误消息，如果验证通过则返回空字符串</returns>
-        private string ValidateEntity(object entity, ColumnMapping uniqueKeyMapping)
+        private string ValidateEntityWithController(object entity, Type entityType)
         {
-            // 基础验证：检查必填字段
-            Type entityType = entity.GetType();
-
-            // 如果设置了唯一键，检查唯一键是否为空
-            if (uniqueKeyMapping != null)
+            try
             {
-                PropertyInfo property = entityType.GetProperty(uniqueKeyMapping.SystemField);
-                if (property != null)
+                // 基础验证：检查必填字段
+                Type actualEntityType = entity.GetType();
+
+                // 尝试通过反射获取Controller
+                string controllerName = actualEntityType.Name + "Controller";
+                Type controllerType = Type.GetType($"RUINORERP.Controllers.{controllerName}") ??
+                                    Type.GetType($"RUINORERP.Business.{controllerName}");
+
+                if (controllerType != null)
                 {
-                    object value = property.GetValue(entity);
-                    if (value == null || string.IsNullOrEmpty(value?.ToString()))
+                    // 使用反射调用Controller的BaseValidator方法
+                    MethodInfo baseValidatorMethod = controllerType.GetMethod("BaseValidator",
+                        BindingFlags.Public | BindingFlags.Instance);
+
+                    if (baseValidatorMethod != null)
                     {
-                        return $"唯一键字段 {uniqueKeyMapping.SystemField} 不能为空";
+                        try
+                        {
+                            // 获取Controller实例（通过依赖注入容器）
+                            var controller = GetControllerInstance(controllerType);
+                            if (controller != null)
+                            {
+                                // 调用BaseValidator方法
+                                var validationResult = baseValidatorMethod.Invoke(controller, new[] { entity });
+
+                                // 处理验证结果
+                                if (validationResult != null)
+                                {
+                                    // 假设返回的是一个List<ValidationResult>或类似的类型
+                                    Type validationResultType = validationResult.GetType();
+
+                                    // 检查是否有错误
+                                    PropertyInfo countProperty = validationResultType.GetProperty("Count");
+                                    if (countProperty != null)
+                                    {
+                                        int errorCount = (int)countProperty.GetValue(validationResult);
+                                        if (errorCount > 0)
+                                        {
+                                            // 获取错误信息
+                                            MethodInfo indexer = validationResultType.GetMethod("get_Item");
+                                            if (indexer != null)
+                                            {
+                                                var firstError = indexer.Invoke(validationResult, new object[] { 0 });
+                                                PropertyInfo errorMessageProperty = firstError.GetType().GetProperty("ErrorMessage");
+                                                if (errorMessageProperty != null)
+                                                {
+                                                    return errorMessageProperty.GetValue(firstError)?.ToString() ?? "验证失败";
+                                                }
+                                            }
+                                            return "验证失败";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Controller验证失败，记录日志但不阻止导入
+                            // 可以选择记录日志或返回警告信息
+                        }
                     }
                 }
-            }
 
-            // 验证基类实体（如果是BaseEntity类型）
-            if (typeof(BaseEntity).IsAssignableFrom(entityType))
+                // 基础验证：检查唯一键是否为空
+                PropertyInfo idProperty = entityType.GetProperty("ID") ??
+                                       entityType.GetProperty("Id") ??
+                                       entityType.GetProperty("ID_PK");
+
+                if (idProperty != null)
+                {
+                    object idValue = idProperty.GetValue(entity);
+                    if (idValue == null || (idValue is int intValue && intValue == 0))
+                    {
+                        // 新增记录，检查必填字段
+                        // 这里可以添加更多的必填字段检查逻辑
+                    }
+                }
+
+                return string.Empty;
+            }
+            catch (Exception ex)
             {
-                // 可以添加更多的验证逻辑
+                return $"验证过程出错: {ex.Message}";
             }
+        }
 
-            return string.Empty;
+        /// <summary>
+        /// 获取Controller实例
+        /// </summary>
+        /// <param name="controllerType">Controller类型</param>
+        /// <returns>Controller实例</returns>
+        private object GetControllerInstance(Type controllerType)
+        {
+            try
+            {
+                // 尝试从依赖注入容器获取
+                // 这里需要根据项目的实际DI容器进行调整
+                // 示例：使用Startup.GetFromFacByName
+                MethodInfo getControllerMethod = Type.GetType("RUINORERP.UI.Startup")?.GetMethod("GetFromFacByName");
+                if (getControllerMethod != null)
+                {
+                    var genericMethod = getControllerMethod.MakeGenericMethod(controllerType);
+                    object controller = genericMethod.Invoke(null, new object[] { controllerType.Name });
+                    return controller;
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -405,113 +556,146 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 开启事务
                 _db.Ado.BeginTran();
 
+                // 获取ID属性
+                PropertyInfo idProperty = entityType.GetProperty("ID") ??
+                                       entityType.GetProperty("Id") ??
+                                       entityType.GetProperty("ID_PK");
+
+                // 批量插入或更新
                 foreach (var entity in entityList)
                 {
                     try
                     {
-                        // 检查是否已存在（如果设置了唯一键）
-                        bool exists = false;
-                        object existingEntity = null;
+                        bool isUpdate = false;
 
-                        if (uniqueKeyMapping != null)
+                        // 检查是否需要更新（如果设置了唯一键且ID有值）
+                        if (uniqueKeyMapping != null && idProperty != null)
                         {
-                            PropertyInfo property = entityType.GetProperty(uniqueKeyMapping.SystemField);
-                            if (property != null)
+                            object idValue = idProperty.GetValue(entity);
+                            if (idValue != null && !IsDefaultValue(idValue))
                             {
-                                object value = property.GetValue(entity);
-                                if (value != null)
-                                {
-                                    // 构建查询条件
-                                    var query = _db.Queryable<object>().AS(entityType.Name)
-                                        .Where($"{uniqueKeyMapping.SystemField} = @value");
-
-                                    // 这里需要使用SqlSugar的动态查询
-                                    // 简化处理：直接插入，依赖数据库唯一约束
-                                }
+                                isUpdate = true;
                             }
                         }
 
-                        if (exists && existingEntity != null)
+                        if (isUpdate)
                         {
                             // 更新现有记录
-                            PropertyInfo idProperty = entityType.GetProperty("ID") ?? entityType.GetProperty("ID_PK") ?? entityType.GetProperty("Id");
-                            if (idProperty != null)
-                            {
-                                object idValue = idProperty.GetValue(existingEntity);
-                                idProperty.SetValue(entity, idValue);
-                                _db.UpdateableByObject(entity).ExecuteCommand();
-                                result.UpdatedCount++;
-                            }
-                            else
-                            {
-                                throw new Exception($"无法更新记录：实体 {entityType.Name} 没有ID属性");
-                            }
+                            _db.UpdateableByObject(entity).ExecuteCommand();
+                            result.UpdatedCount++;
                         }
                         else
                         {
-                            // 插入新记录
+                            // 新增记录
                             _db.InsertableByObject(entity).ExecuteCommand();
                             result.InsertedCount++;
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception saveEx)
                     {
-                        throw new Exception($"导入实体失败: {ex.Message}", ex);
+                        // 单个实体导入失败，记录错误但继续处理下一个
+                        var failedRecord = new FailedRecord
+                        {
+                            RowNumber = result.InsertedCount + result.UpdatedCount + 2, // 估算行号
+                            ErrorMessage = $"保存到数据库失败: {saveEx.Message}",
+                            Data = EntityToDictionary(entity)
+                        };
+
+                        result.FailedRecords.Add(failedRecord);
+                        result.FailedCount++;
+                        result.SuccessCount--; // 调整成功计数
                     }
                 }
 
                 // 提交事务
                 _db.Ado.CommitTran();
             }
-            catch
+            catch (Exception tranEx)
             {
                 // 回滚事务
-                _db.Ado.RollbackTran();
-                throw;
+                try
+                {
+                    _db.Ado.RollbackTran();
+                }
+                catch { }
+
+                throw new Exception($"批量导入失败: {tranEx.Message}", tranEx);
             }
+        }
+
+        /// <summary>
+        /// 检查值是否为默认值
+        /// </summary>
+        /// <param name="value">值</param>
+        /// <returns>是否为默认值</returns>
+        private bool IsDefaultValue(object value)
+        {
+            if (value == null)
+            {
+                return true;
+            }
+
+            Type type = value.GetType();
+
+            if (type == typeof(int) || type == typeof(long) || type == typeof(short))
+            {
+                return Convert.ToInt64(value) == 0;
+            }
+            else if (type == typeof(decimal) || type == typeof(double) || type == typeof(float))
+            {
+                return Convert.ToDouble(value) == 0;
+            }
+            else if (type == typeof(string))
+            {
+                return string.IsNullOrEmpty(value.ToString());
+            }
+            else if (type == typeof(DateTime))
+            {
+                return Convert.ToDateTime(value) == DateTime.MinValue;
+            }
+
+            return false;
         }
 
         /// <summary>
         /// 将数据行转换为字典
         /// </summary>
         /// <param name="row">数据行</param>
-        /// <returns>键值对字典</returns>
+        /// <returns>字典</returns>
         private Dictionary<string, object> RowToDictionary(DataRow row)
         {
             var dict = new Dictionary<string, object>();
-            foreach (DataColumn column in row.Table.Columns)
+            foreach (DataColumn col in row.Table.Columns)
             {
-                dict[column.ColumnName] = row[column];
+                dict[col.ColumnName] = row[col];
             }
             return dict;
         }
 
         /// <summary>
-        /// 检查唯一键是否已存在
+        /// 将实体对象转换为字典
         /// </summary>
-        /// <param name="entityType">实体类型</param>
-        /// <param name="uniqueKeyMapping">唯一键映射配置</param>
-        /// <param name="value">唯一键值</param>
-        /// <returns>是否已存在</returns>
-        private bool CheckUniqueKeyExists(Type entityType, ColumnMapping uniqueKeyMapping, object value)
+        /// <param name="entity">实体对象</param>
+        /// <returns>字典</returns>
+        private Dictionary<string, object> EntityToDictionary(object entity)
         {
-            try
-            {
-                string tableName = entityType.Name;
-                string fieldName = uniqueKeyMapping.SystemField;
+            var dict = new Dictionary<string, object>();
+            Type entityType = entity.GetType();
 
-                // 构建查询SQL
-                string sql = $"SELECT COUNT(1) FROM {tableName} WHERE {fieldName} = @value";
-                var parameters = new { value };
-
-                int count = _db.Ado.GetInt(sql, parameters);
-                return count > 0;
-            }
-            catch
+            foreach (var property in entityType.GetProperties())
             {
-                // 如果查询失败，假设不存在
-                return false;
+                try
+                {
+                    object value = property.GetValue(entity);
+                    dict[property.Name] = value;
+                }
+                catch
+                {
+                    // 忽略无法读取的属性
+                }
             }
+
+            return dict;
         }
     }
 }

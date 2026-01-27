@@ -36,6 +36,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsUniqueValue { get; set; }
 
         /// <summary>
+        /// 是否忽略空值（为空时不导入）
+        /// </summary>
+        public bool IgnoreEmptyValue { get; set; }
+
+        /// <summary>
         /// 默认值
         /// </summary>
         public string DefaultValue { get; set; }
@@ -109,11 +114,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 初始化当前配置
                 kchkIsForeignKey.Checked = CurrentMapping.IsForeignKey;
                 kchkIsUniqueValue.Checked = CurrentMapping.IsUniqueValue;
+                kchkIgnoreEmptyValue.Checked = CurrentMapping.IgnoreEmptyValue;
                 kchkIsSystemGenerated.Checked = CurrentMapping.IsSystemGenerated;
                 ktxtDefaultValue.Text = CurrentMapping.DefaultValue ?? string.Empty;
 
                 IsForeignKey = CurrentMapping.IsForeignKey;
                 IsUniqueValue = CurrentMapping.IsUniqueValue;
+                IgnoreEmptyValue = CurrentMapping.IgnoreEmptyValue;
                 DefaultValue = CurrentMapping.DefaultValue;
                 IsSystemGenerated = CurrentMapping.IsSystemGenerated;
 
@@ -314,6 +321,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             IsForeignKey = kchkIsForeignKey.Checked;
             IsUniqueValue = kchkIsUniqueValue.Checked;
+            IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked;
             DefaultValue = ktxtDefaultValue.Text.Trim();
             IsSystemGenerated = kchkIsSystemGenerated.Checked;
 

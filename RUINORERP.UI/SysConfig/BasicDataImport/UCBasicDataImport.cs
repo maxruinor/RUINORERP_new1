@@ -36,7 +36,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private ColumnMappingManager _columnMappingManager;
         private DynamicImporter _dynamicImporter;
         private DynamicDataValidator _dynamicDataValidator;
-        private ColumnMappingCollection _currentMappings;
+        private DataDeduplicationService _deduplicationService;
+        private ImportConfiguration _currentConfig;
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
         private Type _selectedEntityType;
@@ -79,7 +80,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _dynamicExcelParser = new DynamicExcelParser();
             _columnMappingManager = new ColumnMappingManager();
             _dynamicDataValidator = new DynamicDataValidator();
-            _currentMappings = new ColumnMappingCollection();
+            _deduplicationService = new DataDeduplicationService();
+            _currentConfig = new ImportConfiguration();
             _rawExcelData = new DataTable();
             _parsedImportData = new DataTable();
 
@@ -202,7 +204,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 if (kcmbDynamicMappingName.SelectedIndex <= 0)
                 {
-                    _currentMappings = new ColumnMappingCollection();
+                    _currentConfig = new ImportConfiguration();
                     UpdateMappingControlStates();
                     return;
                 }
@@ -307,14 +309,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string selectedConfig = mappingNames[choice - 1];
 
                 // 加载配置（传递实体类型以加载SugarColumn）
-                _currentMappings = _columnMappingManager.LoadMapping(selectedConfig, _selectedEntityType);
+                _currentConfig = _columnMappingManager.LoadConfiguration(selectedConfig, _selectedEntityType);
 
                 // 显示映射配置对话框
                 using (var frmMapping = new frmColumnMappingConfig())
                 {
                     frmMapping.ExcelData = _rawExcelData;
                     frmMapping.TargetEntityType = _selectedEntityType;
-                    frmMapping.ColumnMappings = _currentMappings;
+                    frmMapping.ImportConfig = _currentConfig;
 
                     // 订阅映射配置保存成功事件
                     frmMapping.MappingSaved += (s, e) =>
@@ -337,7 +339,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (frmMapping.ShowDialog() == DialogResult.OK)
                     {
                         // 更新映射配置
-                        _currentMappings = frmMapping.ColumnMappings;
+                        _currentConfig = frmMapping.ImportConfig;
 
                         // 更新按钮状态
                         UpdateMappingControlStates();
@@ -398,7 +400,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (kcmbDynamicMappingName.SelectedItem != null && kcmbDynamicMappingName.SelectedItem.ToString() == selectedConfig)
                     {
                         kcmbDynamicMappingName.SelectedIndex = 0;
-                        _currentMappings = new ColumnMappingCollection();
+                        _currentConfig = new ImportConfiguration();
                     }
 
                     MessageBox.Show($"映射配置 '{selectedConfig}' 已删除", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -424,7 +426,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kbtnDynamicMap.Enabled = hasEntityType && (hasRawData || hasMappingSelected);
 
             // 解析按钮需要：有原始数据、选择了实体类型、有映射配置
-            bool hasMappingConfig = _currentMappings != null && _currentMappings.Count > 0;
+            bool hasMappingConfig = _currentConfig != null && _currentConfig.ColumnMappings != null && _currentConfig.ColumnMappings.Count > 0;
             kbtnDynamicParse.Enabled = hasRawData && hasEntityType && hasMappingConfig;
         }
 
@@ -443,21 +445,36 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
+                // 保存当前选择的映射名称
+                string currentMappingName = kcmbDynamicMappingName.SelectedIndex > 0
+                    ? kcmbDynamicMappingName.SelectedItem.ToString()
+                    : null;
+
                 var mappingNames = _columnMappingManager.GetAllMappingNames();
                 kcmbDynamicMappingName.Items.Clear();
                 kcmbDynamicMappingName.Items.Add("请选择");
 
                 string entityTypeName = _selectedEntityType?.Name ?? "";
+                int selectedIndex = 0; // 默认选中"请选择"
 
+                int index = 1; // 从索引1开始（索引0是"请选择"）
                 foreach (var name in mappingNames)
                 {
                     try
                     {
                         // 尝试加载映射配置以检查实体类型
-                        var mapping = _columnMappingManager.LoadMapping(name);
-                        if (mapping.Any(m => m.EntityType == entityTypeName) || string.IsNullOrEmpty(entityTypeName))
+                        var config = _columnMappingManager.LoadConfiguration(name);
+                        if (config?.EntityType == entityTypeName || string.IsNullOrEmpty(entityTypeName))
                         {
                             kcmbDynamicMappingName.Items.Add(name);
+
+                            // 如果这个名称与之前选择的名称相同，记录索引
+                            if (currentMappingName != null && name == currentMappingName)
+                            {
+                                selectedIndex = index;
+                            }
+
+                            index++;
                         }
                     }
                     catch
@@ -466,7 +483,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                kcmbDynamicMappingName.SelectedIndex = 0;
+                // 恢复之前的选择（如果还在列表中）
+                kcmbDynamicMappingName.SelectedIndex = selectedIndex;
             }
             catch (Exception ex)
             {
@@ -537,7 +555,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 动态导入-解析文件按钮点击事件1
+        /// 动态导入-解析文件按钮点击事件
         /// 根据映射配置解析Excel数据
         /// </summary>
         /// <param name="sender">事件发送者</param>
@@ -561,7 +579,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 检查是否配置了映射
-                if (_currentMappings == null || _currentMappings.Count == 0)
+                if (_currentConfig == null || _currentConfig.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
                 {
                     MessageBox.Show("请先配置列映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -574,19 +592,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     0); // 0表示读取全部数据
 
                 // 根据映射配置转换数据
-                _parsedImportData = ApplyColumnMapping(fullData, _currentMappings);
+                _parsedImportData = ApplyColumnMapping(fullData, _currentConfig.ColumnMappings);
 
-                // 应用去重复逻辑（如果配置了RemoveDuplicates）
-                if (_currentMappings.IsRemoveDuplicatesEnabled())
+                // 应用去重复逻辑（如果配置了去重）
+                if (_currentConfig.EnableDeduplication)
                 {
-                    var removeDuplicatesResult = ApplyRemoveDuplicates(_parsedImportData, _currentMappings);
-                    _parsedImportData = removeDuplicatesResult.removedData;
-                    int originalCount = removeDuplicatesResult.originalCount;
-                    int duplicateCount = removeDuplicatesResult.duplicateCount;
+                    var deduplicationResult = _deduplicationService.Deduplicate(_parsedImportData, _currentConfig);
 
-                    if (duplicateCount > 0)
+                    // 使用去重后的数据替换原始数据
+                    _parsedImportData = deduplicationResult.DeduplicatedData;
+
+                    if (deduplicationResult.DuplicateCount > 0)
                     {
-                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，原始数据 {originalCount} 行，去重后 {_parsedImportData.Rows.Count} 行（移除 {duplicateCount} 行重复数据）");
+                        MainForm.Instance.ShowStatusText($"根据映射配置解析完成，原始数据 {deduplicationResult.OriginalCount} 行，去重后 {_parsedImportData.Rows.Count} 行（移除 {deduplicationResult.DuplicateCount} 行重复数据）");
                     }
                     else
                     {
@@ -619,9 +637,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="sourceData">源数据表格</param>
         /// <param name="mappings">列映射配置集合</param>
         /// <returns>转换后的数据表格</returns>
-        private DataTable ApplyColumnMapping(DataTable sourceData, ColumnMappingCollection mappings)
+        private DataTable ApplyColumnMapping(DataTable sourceData, List<ColumnMapping> mappings)
         {
-            DataTable result = new DataTable(mappings[0].EntityType);
+            DataTable result = new DataTable(_currentConfig?.EntityType ?? "ImportData");
 
             try
             {
@@ -681,14 +699,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 外键关联
                                 // 在导入时需要通过关联表查询获取值
                                 // 这里暂时使用占位符，实际处理在DynamicImporter中完成
-                                targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.RelatedTableName}.{mapping.RelatedTableField}]";
+                                targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
                                 break;
 
                             case DataSourceType.SelfReference:
                                 // 自身字段引用
                                 // 在导入时需要通过已导入的数据获取值
                                 // 这里暂时使用占位符，实际处理在DynamicImporter中完成
-                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}]";
+                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
                                 break;
                         }
                     }
@@ -702,82 +720,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 MessageBox.Show($"应用列映射失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return result;
-            }
-        }
-
-        /// <summary>
-        /// 应用去重复逻辑
-        /// 根据配置的RemoveDuplicates字段对数据进行去重
-        /// </summary>
-        /// <param name="data">数据表格</param>
-        /// <param name="mappings">列映射配置集合</param>
-        /// <returns>去重复结果，包含去重后的数据、原始行数、重复行数</returns>
-        private (DataTable removedData, int originalCount, int duplicateCount) ApplyRemoveDuplicates(DataTable data, ColumnMappingCollection mappings)
-        {
-            DataTable uniqueData = null;
-            int originalCount = data.Rows.Count;
-            int duplicateCount = 0;
-
-            try
-            {
-                // 获取启用去重复的字段映射
-                var removeDuplicatesMapping = mappings.GetRemoveDuplicatesMapping();
-                if (removeDuplicatesMapping == null)
-                {
-                    // 没有配置去重复字段，直接返回原数据
-                    uniqueData = data.Copy();
-                    duplicateCount = 0;
-                    return (uniqueData, originalCount, duplicateCount);
-                }
-
-                string keyField = removeDuplicatesMapping.SystemField?.Key;
-
-                // 检查数据表中是否存在该字段
-                if (!data.Columns.Contains(keyField))
-                {
-                    // 字段不存在，直接返回原数据
-                    uniqueData = data.Copy();
-                    duplicateCount = 0;
-                    return (uniqueData, originalCount, duplicateCount);
-                }
-
-                // 创建新的DataTable存储去重后的数据
-                uniqueData = data.Clone();
-
-                // 使用HashSet记录已存在的键值
-                HashSet<string> uniqueKeys = new HashSet<string>();
-
-                // 遍历数据行，保留第一次出现的记录
-                foreach (DataRow row in data.Rows)
-                {
-                    object keyValue = row[keyField];
-                    string keyString = keyValue?.ToString() ?? string.Empty;
-
-                    if (string.IsNullOrEmpty(keyString))
-                    {
-                        // 键值为空，跳过或保留第一条空值记录
-                        continue;
-                    }
-
-                    if (!uniqueKeys.Contains(keyString))
-                    {
-                        // 第一次出现，保留
-                        uniqueKeys.Add(keyString);
-                        uniqueData.ImportRow(row);
-                    }
-                    // 重复的记录不保留
-                }
-
-                duplicateCount = originalCount - uniqueData.Rows.Count;
-                return (uniqueData, originalCount, duplicateCount);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"去重复处理失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // 发生错误时返回原数据
-                uniqueData = data.Copy();
-                duplicateCount = 0;
-                return (uniqueData, originalCount, duplicateCount);
             }
         }
 
@@ -850,7 +792,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 设置参数
                     frmMapping.ExcelData = _rawExcelData;
                     frmMapping.TargetEntityType = _selectedEntityType;
-                    frmMapping.ColumnMappings = _currentMappings;
+                    frmMapping.ImportConfig = _currentConfig;
                     frmMapping.IsEditMode = isEditMode;
                     frmMapping.OriginalMappingName = mappingName;
 
@@ -875,7 +817,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (frmMapping.ShowDialog() == DialogResult.OK)
                     {
                         // 更新映射配置
-                        _currentMappings = frmMapping.ColumnMappings;
+                        _currentConfig = frmMapping.ImportConfig;
 
                         // 更新按钮状态
                         UpdateMappingControlStates();
@@ -909,7 +851,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 string mappingName = kcmbDynamicMappingName.SelectedItem.ToString();
-                _currentMappings = _columnMappingManager.LoadMapping(mappingName, _selectedEntityType);
+                _currentConfig = _columnMappingManager.LoadConfiguration(mappingName, _selectedEntityType);
             }
             catch (Exception ex)
             {
@@ -932,7 +874,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 检查是否配置了映射
-                if (_currentMappings == null || _currentMappings.Count == 0)
+                if (_currentConfig == null || _currentConfig.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
                 {
                     MessageBox.Show("请先配置列映射关系", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
@@ -1029,7 +971,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 数据验证
-                var validationErrors = _dynamicDataValidator.Validate(importData, _currentMappings, _selectedEntityType);
+                var validationErrors = _dynamicDataValidator.Validate(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType);
                 if (validationErrors.Count > 0)
                 {
                     string errorSummary = $"发现 {validationErrors.Count} 个数据验证错误：\n\n";
@@ -1076,7 +1018,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string importType = GetImportType();
 
                 // 执行导入（异步）
-                var importResult = await _dynamicImporter.ImportAsync(importData, _currentMappings, _selectedEntityType, importType);
+                var importResult = await _dynamicImporter.ImportAsync(importData, new ColumnMappingCollection(_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()), _selectedEntityType, importType);
 
                 // 显示导入结果
                 DisplayImportResult(importResult);
@@ -1124,7 +1066,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var duplicateErrors = new List<ValidationError>();
 
             // 获取配置了唯一性的字段
-            var uniqueMappings = _currentMappings.Where(m => m.IsUniqueValue).ToList();
+            var uniqueMappings = (_currentConfig?.ColumnMappings ?? new List<ColumnMapping>()).Where(m => m.IsUniqueValue).ToList();
             if (uniqueMappings.Count == 0)
             {
                 return duplicateErrors;

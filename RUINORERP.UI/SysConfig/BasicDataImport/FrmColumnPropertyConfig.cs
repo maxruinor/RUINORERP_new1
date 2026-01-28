@@ -52,19 +52,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsSystemGenerated { get; set; }
 
         /// <summary>
-        /// 关联表名
+        /// 外键表引用
         /// </summary>
-        public string RelatedTableName { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeyTable { get; set; }
 
         /// <summary>
-        /// 关联表字段（中文名）
+        /// 外键字段引用
         /// </summary>
-        public string RelatedTableField { get; set; }
-
-        /// <summary>
-        /// 关联表字段（实际字段名）
-        /// </summary>
-        public string RelatedTableFieldName { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
 
         /// <summary>
         /// 数据来源类型
@@ -72,14 +67,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public DataSourceType SelectedDataSourceType { get; set; }
 
         /// <summary>
-        /// 自身引用字段名
+        /// 自身引用字段
         /// </summary>
-        public string SelfReferenceFieldName { get; set; }
-
-        /// <summary>
-        /// 自身引用字段中文名
-        /// </summary>
-        public string SelfReferenceFieldDisplayName { get; set; }
+        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
 
         /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
@@ -171,13 +161,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 SelectedDataSourceType = CurrentMapping.DataSourceType;
 
                 // 初始化关联表信息
-                if (!string.IsNullOrEmpty(CurrentMapping.RelatedTableName))
+                if (!string.IsNullOrEmpty(CurrentMapping.ForeignKeyTable?.Key))
                 {
                     // 查找对应的显示文本
                     for (int i = 0; i < kcmbRelatedTable.Items.Count; i++)
                     {
                         string itemText = kcmbRelatedTable.Items[i].ToString();
-                        if (itemText.Contains(CurrentMapping.RelatedTableName))
+                        if (itemText.Contains(CurrentMapping.ForeignKeyTable.Key))
                         {
                             kcmbRelatedTable.SelectedIndex = i;
                             break;
@@ -185,18 +175,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
-                RelatedTableName = CurrentMapping.RelatedTableName;
-                RelatedTableField = CurrentMapping.RelatedTableField;
-                ktxtRelatedField.Text = CurrentMapping.RelatedTableField;
+                ForeignKeyTable = CurrentMapping.ForeignKeyTable;
+                ktxtRelatedField.Text = CurrentMapping.ForeignKeyField?.Value;
 
                 // 初始化自身引用字段
                 if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
-                    !string.IsNullOrEmpty(CurrentMapping.SelfReferenceFieldName))
+                    CurrentMapping.SelfReferenceField != null)
                 {
                     LoadSelfReferenceFields();
-                    SelfReferenceFieldName = CurrentMapping.SelfReferenceFieldName;
-                    SelfReferenceFieldDisplayName = CurrentMapping.SelfReferenceFieldDisplayName;
-                    kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceFieldDisplayName;
+                    SelfReferenceField = CurrentMapping.SelfReferenceField;
+                    kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceField?.Value;
                 }
             }
 
@@ -292,9 +280,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 如果有已选中的字段，保持选中状态
-                if (!string.IsNullOrEmpty(RelatedTableField))
+                if (!string.IsNullOrEmpty(ForeignKeyField?.Value))
                 {
-                    int index = ktxtRelatedField.Items.IndexOf(RelatedTableField);
+                    int index = ktxtRelatedField.Items.IndexOf(ForeignKeyField?.Value);
                     if (index >= 0)
                     {
                         ktxtRelatedField.SelectedIndex = index;
@@ -348,7 +336,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 根据中文显示名称获取实际字段名
             string displayName = ktxtRelatedField.SelectedItem.ToString();
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
-            RelatedTableFieldName = field.Key;
+            if (field.Value != null)
+            {
+                ForeignKeyField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+            }
         }
 
         /// <summary>
@@ -380,16 +371,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string selectedTable = kcmbRelatedTable.SelectedItem.ToString();
                 int startIndex = selectedTable.IndexOf('(') + 1;
                 int endIndex = selectedTable.IndexOf(')');
+                string tableName;
                 if (startIndex > 0 && endIndex > startIndex)
                 {
-                    RelatedTableName = selectedTable.Substring(startIndex, endIndex - startIndex);
+                    tableName = selectedTable.Substring(startIndex, endIndex - startIndex);
                 }
                 else
                 {
-                    RelatedTableName = selectedTable;
+                    tableName = selectedTable;
                 }
 
-                RelatedTableField = ktxtRelatedField.SelectedItem?.ToString() ?? ktxtRelatedField.Text;
+                string displayName = ktxtRelatedField.SelectedItem?.ToString() ?? ktxtRelatedField.Text;
+                var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+                if (field.Value != null)
+                {
+                    ForeignKeyTable = new SerializableKeyValuePair<string>(tableName, GetTableDisplayName(tableName));
+                    ForeignKeyField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+                }
             }
             else if (dataSourceType == DataSourceType.SelfReference)
             {
@@ -399,7 +397,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
 
-                SelfReferenceFieldDisplayName = kcmbSelfReferenceField.SelectedItem?.ToString() ?? kcmbSelfReferenceField.Text;
+                string displayName = kcmbSelfReferenceField.SelectedItem?.ToString() ?? kcmbSelfReferenceField.Text;
+                var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+                if (field.Value != null)
+                {
+                    SelfReferenceField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+                }
             }
             else if (dataSourceType == DataSourceType.DefaultValue)
             {
@@ -535,9 +538,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 如果有已选中的字段，保持选中状态
-                if (!string.IsNullOrEmpty(SelfReferenceFieldDisplayName))
+                if (!string.IsNullOrEmpty(SelfReferenceField?.Value))
                 {
-                    int index = kcmbSelfReferenceField.Items.IndexOf(SelfReferenceFieldDisplayName);
+                    int index = kcmbSelfReferenceField.Items.IndexOf(SelfReferenceField?.Value);
                     if (index >= 0)
                     {
                         kcmbSelfReferenceField.SelectedIndex = index;
@@ -567,8 +570,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
             if (field.Value != null)
             {
-                SelfReferenceFieldName = field.Key;
-                SelfReferenceFieldDisplayName = displayName;
+                SelfReferenceField = new SerializableKeyValuePair<string>(field.Key, field.Value);
 
                 // 显示字段信息提示,类似外键关联的处理方式
                 MessageBox.Show(
@@ -580,6 +582,29 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
+        }
+
+        /// <summary>
+        /// 获取表的中文显示名称
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>中文显示名称</returns>
+        private string GetTableDisplayName(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return string.Empty;
+
+            var tableNames = new Dictionary<string, string>
+            {
+                { "tb_CustomerVendor", "客户供应商表" },
+                { "tb_ProdCategories", "产品类目表" },
+                { "tb_Prod", "产品基本信息表" },
+                { "tb_ProdDetail", "产品详情信息表" },
+                { "tb_ProdProperty", "产品属性表" },
+                { "tb_ProdPropertyValue", "产品属性值表" }
+            };
+
+            return tableNames.ContainsKey(tableName) ? tableNames[tableName] : tableName;
         }
     }
 }

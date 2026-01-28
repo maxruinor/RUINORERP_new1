@@ -1,3 +1,4 @@
+using RUINORERP.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,43 +28,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 初始化XmlSerializer
-            _serializer = new XmlSerializer(typeof(ColumnMappingCollection));
+            _serializer = new XmlSerializer(typeof(ImportConfiguration));
         }
 
         /// <summary>
         /// 保存列映射配置
         /// </summary>
-        /// <param name="mappings">列映射配置集合</param>
-        /// <param name="mappingName">映射配置名称</param>
-        /// <param name="entityType">实体类型名称</param>
+        /// <param name="config">导入配置对象</param>
+        /// <exception cref="ArgumentNullException">当配置为空时抛出</exception>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
         /// <exception cref="Exception">当保存过程中发生错误时抛出</exception>
-        public void SaveMapping(ColumnMappingCollection mappings, string mappingName, string entityType = null)
+        public void SaveConfiguration(ImportConfiguration config)
         {
-            if (string.IsNullOrEmpty(mappingName))
+            if (config == null)
+            {
+                throw new ArgumentNullException(nameof(config));
+            }
+
+            if (string.IsNullOrEmpty(config.MappingName))
             {
                 throw new ArgumentException("映射配置名称不能为空");
             }
 
             try
             {
-                // 更新映射配置的元数据
-                foreach (var mapping in mappings)
-                {
-                    mapping.MappingName = mappingName;
-                    mapping.EntityType = entityType;
-                    mapping.UpdateTime = DateTime.Now;
-                    if (mapping.CreateTime == DateTime.MinValue)
-                    {
-                        mapping.CreateTime = DateTime.Now;
-                    }
-                }
+                // 更新时间戳
+                config.UpdateTimestamp();
 
-                // 保存到XML文件（包含实体类型信息）
-                string filePath = Path.Combine(_configPath, $"{mappingName}.xml");
+                // 保存到XML文件
+                string filePath = Path.Combine(_configPath, $"{config.MappingName}.xml");
                 using (StreamWriter writer = new StreamWriter(filePath))
                 {
-                    _serializer.Serialize(writer, mappings);
+                    _serializer.Serialize(writer, config);
                 }
             }
             catch (Exception ex)
@@ -77,11 +73,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="mappingName">映射配置名称</param>
         /// <param name="entityType">目标实体类型（可选，用于运行时获取字段元信息）</param>
-        /// <returns>加载的列映射配置集合</returns>
+        /// <returns>加载的导入配置对象</returns>
         /// <exception cref="ArgumentException">当映射配置名称为空时抛出</exception>
         /// <exception cref="FileNotFoundException">当配置文件不存在时抛出</exception>
         /// <exception cref="Exception">当加载过程中发生错误时抛出</exception>
-        public ColumnMappingCollection LoadMapping(string mappingName, Type entityType = null)
+        public ImportConfiguration LoadConfiguration(string mappingName, Type entityType = null)
         {
             if (string.IsNullOrEmpty(mappingName))
             {
@@ -96,8 +92,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                using StreamReader reader = new StreamReader(filePath);
-                return (ColumnMappingCollection)_serializer.Deserialize(reader);
+                using (StreamReader reader = new StreamReader(filePath))
+                {
+                    var config = (ImportConfiguration)_serializer.Deserialize(reader);
+                    return config;
+                }
             }
             catch (Exception ex)
             {

@@ -26,6 +26,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private string _configFilePath;
 
         /// <summary>
+        /// 列映射配置管理器
+        /// </summary>
+        private ColumnMappingManager _columnMappingManager;
+
+        /// <summary>
         /// 目标实体类型
         /// </summary>
         public Type TargetEntityType { get; set; }
@@ -61,12 +66,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string SavedMappingName { get; private set; }
 
         /// <summary>
+        /// 导入配置对象（包含全局配置和列映射）
+        /// </summary>
+        public ImportConfiguration ImportConfig { get; set; }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public frmColumnMappingConfig()
         {
             InitializeComponent();
             ColumnMappings = new ColumnMappingCollection();
+            ImportConfig = new ImportConfiguration();
+            _columnMappingManager = new ColumnMappingManager();
         }
 
         /// <summary>
@@ -134,11 +146,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 var mapping = new ColumnMapping
                 {
                     ExcelColumn = excelColumn,
-                    SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    MappingName = textBoxMappingName.Text,
-                    EntityType = TargetEntityType?.Name,
-                    CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now
+                    SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay)
                 };
 
                 // 打开属性配置对话框
@@ -162,11 +170,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 var mapping = new ColumnMapping
                 {
                     ExcelColumn = string.Empty,
-                    SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    MappingName = textBoxMappingName.Text,
-                    EntityType = TargetEntityType?.Name,
-                    CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now
+                    SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay)
                 };
 
                 // 打开属性配置对话框
@@ -194,10 +198,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
                             break;
                         case DataSourceType.ForeignKey:
-                            mapping.ExcelColumn = $"[外键关联:{mapping.RelatedTableName}] {systemField}";
+                            mapping.ExcelColumn = $"[外键关联:{mapping.ForeignKeyTable?.Value}] {systemField}";
                             break;
                         case DataSourceType.SelfReference:
-                            mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}] {systemField}";
+                            mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceField?.Value}] {systemField}";
                             break;
                     }
 
@@ -235,13 +239,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.IgnoreEmptyValue = propertyDialog.IgnoreEmptyValue;
                     mapping.DefaultValue = propertyDialog.DefaultValue;
                     mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
-                    mapping.RelatedTableName = propertyDialog.RelatedTableName;
-                    mapping.RelatedTableField = propertyDialog.RelatedTableField;
-                    mapping.RelatedTableFieldName = propertyDialog.RelatedTableFieldName;
+                    mapping.ForeignKeyTable = propertyDialog.ForeignKeyTable;
+                    mapping.ForeignKeyField = propertyDialog.ForeignKeyField;
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
-                    mapping.SelfReferenceFieldName = propertyDialog.SelfReferenceFieldName;
-                    mapping.SelfReferenceFieldDisplayName = propertyDialog.SelfReferenceFieldDisplayName;
-                    mapping.UpdateTime = DateTime.Now;
+                    mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
 
                     return true;
                 }
@@ -497,11 +498,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     ExcelColumn = string.Empty,
                     SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                    MappingName = textBoxMappingName.Text,
-                    EntityType = TargetEntityType?.Name,
-                    DataSourceType = DataSourceType.DefaultValue, // 默认为默认值，让用户在属性设置中修改
-                    CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now
+                    DataSourceType = DataSourceType.DefaultValue // 默认为默认值，让用户在属性设置中修改
                 };
 
                 // 打开属性配置对话框，让用户选择数据来源类型
@@ -675,21 +672,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 更新映射名称
-                foreach (var mapping in ColumnMappings)
-                {
-                    mapping.MappingName = mappingName;
-                    mapping.UpdateTime = DateTime.Now;
-                    mapping.RemoveDuplicates = chkRemoveDuplicates.Checked;
-                }
+                // 更新全局配置
+                ImportConfig.MappingName = mappingName;
+                ImportConfig.EntityType = TargetEntityType?.Name;
+                ImportConfig.ColumnMappings = ColumnMappings.ToList();
+                ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
+                ImportConfig.UpdateTimestamp();
 
-                // 保存到文件
-                string filePath = Path.Combine(_configFilePath, $"{mappingName}.xml");
-                var serializer = new XmlSerializer(typeof(ColumnMappingCollection));
-                using (var writer = new StreamWriter(filePath))
-                {
-                    serializer.Serialize(writer, ColumnMappings);
-                }
+                // 保存配置
+                _columnMappingManager ??= new ColumnMappingManager();
+                _columnMappingManager.SaveConfiguration(ImportConfig);
 
                 SavedMappingName = mappingName;
                 MessageBox.Show("映射配置保存成功", "成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -723,6 +715,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 新建映射 - 重新加载所有列表
                 textBoxMappingName.Text = string.Empty;
                 ColumnMappings.Clear();
+                ImportConfig = new ImportConfiguration();
                 UpdateMappingsList();
 
                 // 重新加载Excel列和系统字段列表
@@ -741,22 +734,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             try
             {
                 string mappingName = comboBoxSavedMappings.SelectedItem.ToString();
-                string filePath = Path.Combine(_configFilePath, $"{mappingName}.xml");
 
-                if (!File.Exists(filePath))
-                {
-                    MessageBox.Show($"映射配置文件不存在: {mappingName}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                _columnMappingManager ??= new ColumnMappingManager();
+                var config = _columnMappingManager.LoadConfiguration(mappingName, TargetEntityType);
 
-                var serializer = new XmlSerializer(typeof(ColumnMappingCollection));
-                using (var reader = new StreamReader(filePath))
-                {
-                    ColumnMappings = (ColumnMappingCollection)serializer.Deserialize(reader);
-                }
+                ImportConfig = config;
+                ColumnMappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
+                textBoxMappingName.Text = config?.MappingName ?? string.Empty;
 
-                textBoxMappingName.Text = mappingName;
-                chkRemoveDuplicates.Checked = ColumnMappings.Count > 0 && ColumnMappings[0].RemoveDuplicates;
+                // 更新去重复选框状态
+                chkRemoveDuplicates.Checked = config?.EnableDeduplication ?? false;
+
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
                 if (ExcelData != null && ExcelData.Rows.Count > 0)
@@ -827,11 +815,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             var mapping = new ColumnMapping
                             {
                                 ExcelColumn = excelColumn,
-                                SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay),
-                                MappingName = textBoxMappingName.Text,
-                                EntityType = TargetEntityType?.Name,
-                                CreateTime = DateTime.Now,
-                                UpdateTime = DateTime.Now
+                                SystemField = new SerializableKeyValuePair<string>(systemField, systemFieldDisplay)
                             };
 
                             ColumnMappings.Add(mapping);

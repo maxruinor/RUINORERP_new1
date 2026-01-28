@@ -88,55 +88,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string DataType { get; set; }
 
         /// <summary>
-        /// 映射配置名称
-        /// </summary>
-        public string MappingName { get; set; }
-
-        /// <summary>
-        /// 是否对该字段进行去重复处理
-        /// 启用后，在解析和导入时会根据该字段的值去除重复的数据行
-        /// 只保留第一次出现的记录，后续重复的记录将被过滤掉
-        /// </summary>
-        public bool RemoveDuplicates { get; set; }
-
-        /// <summary>
-        /// 目标表引用（键值对：Key=英文实体类型名, Value=中文表名）
-        /// </summary>
-        public SerializableKeyValuePair<string> TargetTable { get; set; }
-
-        /// <summary>
-        /// 目标实体类型名称（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string EntityType
-        {
-            get => TargetTable?.Key;
-            set => TargetTable = new SerializableKeyValuePair<string>(value, GetTableDisplayName(value));
-        }
-
-        /// <summary>
-        /// 获取表的中文显示名称（辅助方法）
-        /// </summary>
-        private string GetTableDisplayName(string entityType)
-        {
-            if (string.IsNullOrEmpty(entityType))
-                return string.Empty;
-
-            // 根据实体类型名返回对应的中文表名
-            var tableNames = new Dictionary<string, string>
-            {
-                { "tb_CustomerVendor", "客户供应商表" },
-                { "tb_ProdCategories", "产品类目表" },
-                { "tb_Prod", "产品基本信息表" },
-                { "tb_ProdDetail", "产品详情信息表" },
-                { "tb_ProdProperty", "产品属性表" },
-                { "tb_ProdPropertyValue", "产品属性值表" }
-            };
-
-            return tableNames.ContainsKey(entityType) ? tableNames[entityType] : entityType;
-        }
-
-        /// <summary>
         /// 默认值
         /// </summary>
         public string DefaultValue { get; set; }
@@ -162,44 +113,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
 
         /// <summary>
-        /// 关联表名（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string RelatedTableName
-        {
-            get => ForeignKeyTable?.Key;
-            set => ForeignKeyTable = new SerializableKeyValuePair<string>(value, GetTableDisplayName(value));
-        }
-
-        /// <summary>
-        /// 关联表字段中文名称（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string RelatedTableField
-        {
-            get => ForeignKeyField?.Value;
-            set
-            {
-                if (ForeignKeyField != null)
-                    ForeignKeyField.Value = value;
-            }
-        }
-
-        /// <summary>
-        /// 关联表字段实际字段名（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string RelatedTableFieldName
-        {
-            get => ForeignKeyField?.Key;
-            set
-            {
-                if (ForeignKeyField != null)
-                    ForeignKeyField.Key = value;
-            }
-        }
-
-        /// <summary>
         /// 数据来源类型
         /// 用于标识字段数据的来源方式
         /// </summary>
@@ -211,44 +124,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 存储当前表自身的字段引用（如树结构中的父类ID对应ID字段）
         /// </summary>
         public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
-
-        /// <summary>
-        /// 自身引用字段名（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string SelfReferenceFieldName
-        {
-            get => SelfReferenceField?.Key;
-            set
-            {
-                if (SelfReferenceField != null)
-                    SelfReferenceField.Key = value;
-            }
-        }
-
-        /// <summary>
-        /// 自身引用字段中文名称（保持向后兼容）
-        /// </summary>
-        [XmlIgnore]
-        public string SelfReferenceFieldDisplayName
-        {
-            get => SelfReferenceField?.Value;
-            set
-            {
-                if (SelfReferenceField != null)
-                    SelfReferenceField.Value = value;
-            }
-        }
-
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-        public DateTime CreateTime { get; set; }
-
-        /// <summary>
-        /// 更新时间
-        /// </summary>
-        public DateTime UpdateTime { get; set; }
 
         /// <summary>
         /// 根据字段元信息初始化字段属性
@@ -270,7 +145,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 如果有外键表，初始化外键表引用
             if (!string.IsNullOrEmpty(metadata.ForeignTable))
             {
-                ForeignKeyTable = new SerializableKeyValuePair<string>(metadata.ForeignTable, GetTableDisplayName(metadata.ForeignTable));
+                ForeignKeyTable = new SerializableKeyValuePair<string>(metadata.ForeignTable, GetTableDisplayNameInternal(metadata.ForeignTable));
             }
 
             // 根据属性设置数据来源类型
@@ -371,6 +246,29 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return 0;
             }
         }
+
+        /// <summary>
+        /// 获取表的中文显示名称（内部辅助方法）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <returns>中文显示名称</returns>
+        private string GetTableDisplayNameInternal(string tableName)
+        {
+            if (string.IsNullOrEmpty(tableName))
+                return string.Empty;
+
+            var tableNames = new Dictionary<string, string>
+            {
+                { "tb_CustomerVendor", "客户供应商表" },
+                { "tb_ProdCategories", "产品类目表" },
+                { "tb_Prod", "产品基本信息表" },
+                { "tb_ProdDetail", "产品详情信息表" },
+                { "tb_ProdProperty", "产品属性表" },
+                { "tb_ProdPropertyValue", "产品属性值表" }
+            };
+
+            return tableNames.ContainsKey(tableName) ? tableNames[tableName] : tableName;
+        }
     }
 
     /// <summary>
@@ -378,6 +276,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public class ColumnMappingCollection : List<ColumnMapping>
     {
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public ColumnMappingCollection() : base()
+        {
+        }
+
+        /// <summary>
+        /// 从现有集合初始化
+        /// </summary>
+        /// <param name="collection">列映射集合</param>
+        public ColumnMappingCollection(IEnumerable<ColumnMapping> collection) : base(collection)
+        {
+        }
+
         /// <summary>
         /// 根据Excel列名获取映射配置
         /// </summary>
@@ -416,22 +329,5 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return this.Where(m => m.IgnoreEmptyValue).ToList();
         }
 
-        /// <summary>
-        /// 获取启用去重复值的映射配置
-        /// </summary>
-        /// <returns>启用了去重复的映射配置，如果没有则返回null</returns>
-        public ColumnMapping GetRemoveDuplicatesMapping()
-        {
-            return this.FirstOrDefault(m => m.RemoveDuplicates);
-        }
-
-        /// <summary>
-        /// 检查是否需要去重复
-        /// </summary>
-        /// <returns>是否启用去重复</returns>
-        public bool IsRemoveDuplicatesEnabled()
-        {
-            return this.Any(m => m.RemoveDuplicates);
-        }
     }
 }

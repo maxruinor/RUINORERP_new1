@@ -247,18 +247,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             {
                                 string displayValue = row[mapping.SystemField?.Key]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(mapping.RelatedTableName) &&
-                                    !string.IsNullOrEmpty(mapping.RelatedTableFieldName))
+                                    !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
+                                    !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
                                 {
                                     // 查找关联表中的对应值
-                                    object foreignKeyId = GetForeignKeyId(displayValue, mapping.RelatedTableName, mapping.RelatedTableFieldName);
+                                    object foreignKeyId = GetForeignKeyId(displayValue, mapping.ForeignKeyTable?.Key, mapping.ForeignKeyField?.Key);
                                     if (foreignKeyId != null)
                                     {
                                         cellValue = foreignKeyId;
                                     }
                                     else
                                     {
-                                        throw new Exception($"行 {rowNumber} 外键值 '{displayValue}' 在关联表 {mapping.RelatedTableName} 的字段 {mapping.RelatedTableFieldName} 中未找到对应记录");
+                                        throw new Exception($"行 {rowNumber} 外键值 '{displayValue}' 在关联表 {mapping.ForeignKeyTable?.Key} 的字段 {mapping.ForeignKeyField?.Key} 中未找到对应记录");
                                     }
                                 }
                             }
@@ -271,7 +271,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             {
                                 string displayValue = row[mapping.SystemField?.Key]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(mapping.SelfReferenceFieldName))
+                                    !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
                                 {
                                     // 处理自身引用逻辑（在导入过程中实现）
                                     cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理

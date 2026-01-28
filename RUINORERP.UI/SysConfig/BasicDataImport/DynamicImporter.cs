@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -264,39 +265,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             }
                             break;
 
-                            case DataSourceType.SelfReference:
-                                // 自身字段引用
-                                // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
-                                if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
+                        case DataSourceType.SelfReference:
+                            // 自身字段引用
+                            // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
+                            {
+                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
+                                if (!string.IsNullOrEmpty(displayValue) &&
+                                    !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
                                 {
-                                    string displayValue = row[mapping.SystemField?.Key]?.ToString();
-                                    if (!string.IsNullOrEmpty(displayValue) &&
-                                        !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
+                                    // 处理自身引用逻辑（在导入过程中实现）
+                                    cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
+                                }
+                            }
+                            break;
+
+                        case DataSourceType.FieldCopy:
+                            // 字段复制
+                            // 复制同一记录中另一个字段的值
+                            if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                            {
+                                // 获取被复制字段的映射配置
+                                var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+
+                                if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
+                                {
+                                    // 从当前行中读取被复制字段的值
+                                    if (dataTableContainsColumn(row.Table, copyFromMapping.SystemField.Value))
                                     {
-                                        // 处理自身引用逻辑（在导入过程中实现）
-                                        cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
+                                        cellValue = row[copyFromMapping.SystemField.Value];
                                     }
                                 }
-                                break;
-
-                            case DataSourceType.FieldCopy:
-                                // 字段复制
-                                // 复制同一记录中另一个字段的值
-                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
-                                {
-                                    // 获取被复制字段的映射配置
-                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
-
-                                    if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
-                                    {
-                                        // 从当前行中读取被复制字段的值
-                                        if (dataTableContainsColumn(row.Table, copyFromMapping.SystemField.Value))
-                                        {
-                                            cellValue = row[copyFromMapping.SystemField.Value];
-                                        }
-                                    }
-                                }
-                                break;
+                            }
+                            break;
                     }
 
                     // 如果值为空，检查是否有默认值
@@ -515,7 +516,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 根据命名规则构造验证器类型名: 实体名 + Validator
                 string validatorName = actualEntityType.Name + "Validator";
-                
+
                 // 在 RUINORERP.Business.Validator 命名空间下查找验证器
                 Type validatorType = Type.GetType($"RUINORERP.Business.Validator.{validatorName}");
 
@@ -662,23 +663,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     EntityImportHelper.PreProcessEntity(typeof(T), entity, _db, importType);
                 }
 
-                // 开启事务1
+                // 开启事务
                 _db.Ado.BeginTran();
 
                 try
                 {
-                    // 使用Storageable进行批量操作
-                    // 根据主键值判断：主键>0时更新，主键<=0时插入
-                    var storage = await _db.Storageable(typedList).ToStorageAsync();
-
-                    // 执行插入操作（主键<=0的记录），返回雪花ID列表
-                    List<long> insertedIds = await storage.AsInsertable.ExecuteReturnSnowflakeIdListAsync();
-                    result.InsertedCount += insertedIds.Count;
-
-                    // 执行更新操作（主键>0的记录）
-                    int updatedCount = await storage.AsUpdateable.ExecuteCommandAsync();
-                    result.UpdatedCount += updatedCount;
-
+                    var ids = _db.Insertable(typedList).ExecuteReturnSnowflakeIdList();//多条插入批量返回,比自增好用
+                    //result.UpdatedCount += x.re;
                     // 提交事务
                     _db.Ado.CommitTran();
                 }

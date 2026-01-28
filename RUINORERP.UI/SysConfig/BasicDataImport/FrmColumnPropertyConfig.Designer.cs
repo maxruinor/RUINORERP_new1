@@ -60,7 +60,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
             this.kryptonPanel1.Controls.Add(this.kbtnOK);
             this.kryptonPanel1.Controls.Add(this.kchkIsUniqueValue);
+            this.kryptonPanel1.Controls.Add(this.kcmbCopyFromField);
             this.kryptonPanel1.Controls.Add(this.kcmbSelfReferenceField);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel9);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel7);
             this.kryptonPanel1.Controls.Add(this.kcmbDataSourceType);
             this.kryptonPanel1.Controls.Add(this.kchkIgnoreEmptyValue);
@@ -78,7 +80,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(450, 500);
+            this.kryptonPanel1.Size = new System.Drawing.Size(450, 600);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kbtnCancel
@@ -193,6 +195,24 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbSelfReferenceField.Size = new System.Drawing.Size(280, 21);
             this.kcmbSelfReferenceField.TabIndex = 12;
             //
+            // kryptonLabel9
+            //
+            this.kryptonLabel9.Location = new System.Drawing.Point(30, 420);
+            this.kryptonLabel9.Name = "kryptonLabel9";
+            this.kryptonLabel9.Size = new System.Drawing.Size(80, 20);
+            this.kryptonLabel9.TabIndex = 18;
+            this.kryptonLabel9.Values.Text = "字段复制:";
+            //
+            // kcmbCopyFromField
+            //
+            this.kcmbCopyFromField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbCopyFromField.DropDownWidth = 200;
+            this.kcmbCopyFromField.IntegralHeight = false;
+            this.kcmbCopyFromField.Location = new System.Drawing.Point(120, 420);
+            this.kcmbCopyFromField.Name = "kcmbCopyFromField";
+            this.kcmbCopyFromField.Size = new System.Drawing.Size(280, 21);
+            this.kcmbCopyFromField.TabIndex = 17;
+            //
             // ktxtRelatedField
             //
             this.ktxtRelatedField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -247,12 +267,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1.Size = new System.Drawing.Size(39, 20);
             this.kryptonLabel1.TabIndex = 1;
             this.kryptonLabel1.Values.Text = "外键:";
-            // 
+            //
             // FrmColumnPropertyConfig
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(450, 500);
+            this.ClientSize = new System.Drawing.Size(450, 600);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "FrmColumnPropertyConfig";
             this.Text = "设置列属性";
@@ -264,6 +284,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -290,5 +311,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonComboBox kcmbDataSourceType;
         private Krypton.Toolkit.KryptonLabel kryptonLabel8;
         private Krypton.Toolkit.KryptonComboBox kcmbSelfReferenceField;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel9;
+        private Krypton.Toolkit.KryptonComboBox kcmbCopyFromField;
     }
 }

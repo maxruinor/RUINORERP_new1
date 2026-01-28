@@ -200,9 +200,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         case DataSourceType.ForeignKey:
                             mapping.ExcelColumn = $"[外键关联:{mapping.ForeignKeyTable?.Value}] {systemField}";
                             break;
-                        case DataSourceType.SelfReference:
-                            mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceField?.Value}] {systemField}";
-                            break;
+                    case DataSourceType.SelfReference:
+                        mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceField?.Value}] {systemField}";
+                        break;
+
+                    case DataSourceType.FieldCopy:
+                        mapping.ExcelColumn = $"[字段复制:{mapping.CopyFromField?.Value}] {systemField}";
+                        break;
                     }
 
                     // 从系统字段列表中移除
@@ -243,6 +247,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.ForeignKeyField = propertyDialog.ForeignKeyField;
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
+                    mapping.CopyFromField = propertyDialog.CopyFromField;
 
                     return true;
                 }
@@ -559,6 +564,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     case DataSourceType.SelfReference:
                         flags.Add("自身引用");
                         break;
+
+                    case DataSourceType.FieldCopy:
+                        flags.Add($"复制:{mapping.CopyFromField?.Value}");
+                        break;
                 }
 
                 if (mapping.IsUniqueValue) flags.Add("唯一");
@@ -677,6 +686,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ImportConfig.EntityType = TargetEntityType?.Name;
                 ImportConfig.ColumnMappings = ColumnMappings.ToList();
                 ImportConfig.EnableDeduplication = chkRemoveDuplicates.Checked;
+                ImportConfig.DeduplicateStrategy = (DeduplicateStrategy)kcmbDeduplicateStrategy.SelectedIndex;
                 ImportConfig.UpdateTimestamp();
 
                 // 保存配置
@@ -742,8 +752,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ColumnMappings = new ColumnMappingCollection(config?.ColumnMappings ?? new List<ColumnMapping>());
                 textBoxMappingName.Text = config?.MappingName ?? string.Empty;
 
-                // 更新去重复选框状态
+                // 更新去重复选框状态和策略
                 chkRemoveDuplicates.Checked = config?.EnableDeduplication ?? false;
+                kcmbDeduplicateStrategy.SelectedIndex = (int)(config?.DeduplicateStrategy ?? DeduplicateStrategy.FirstOccurrence);
 
                 // 重新加载Excel列和系统字段列表
                 LoadSystemFields();
@@ -838,6 +849,62 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 MessageBox.Show($"自动匹配失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 去重复选框改变事件
+        /// </summary>
+        private void chkRemoveDuplicates_CheckedChanged(object sender, EventArgs e)
+        {
+            // 根据是否启用去重控制相关控件状态
+            kcmbDeduplicateStrategy.Enabled = chkRemoveDuplicates.Checked;
+            kbtnConfigDeduplicateFields.Enabled = chkRemoveDuplicates.Checked;
+        }
+
+        /// <summary>
+        /// 配置去重字段按钮点击事件
+        /// </summary>
+        private void kbtnConfigDeduplicateFields_Click(object sender, EventArgs e)
+        {
+            // 创建去重字段配置对话框
+            var dialogType = Type.GetType("RUINORERP.UI.SysConfig.BasicDataImport.frmDeduplicateFieldConfig, RUINORERP.UI");
+            if (dialogType == null)
+            {
+                MessageBox.Show("找不到去重字段配置窗体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var deduplicateConfigDialog = System.Activator.CreateInstance(dialogType) as Form;
+            if (deduplicateConfigDialog == null)
+            {
+                MessageBox.Show("无法创建去重字段配置窗体", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 设置可用字段
+            var availableFieldsProperty = dialogType.GetProperty("AvailableFields");
+            availableFieldsProperty?.SetValue(deduplicateConfigDialog, ColumnMappings.Select(m => m.SystemField).ToList());
+
+            // 设置已选字段
+            var selectedFieldsProperty = dialogType.GetProperty("SelectedFields");
+            selectedFieldsProperty?.SetValue(deduplicateConfigDialog, ImportConfig.DeduplicateFields?.ToList() ?? new List<string>());
+
+            // 设置是否忽略空值
+            var ignoreEmptyValuesProperty = dialogType.GetProperty("IgnoreEmptyValues");
+            ignoreEmptyValuesProperty?.SetValue(deduplicateConfigDialog, ImportConfig.IgnoreEmptyValuesInDeduplication);
+
+            if (deduplicateConfigDialog.ShowDialog() == DialogResult.OK)
+            {
+                // 保存去重字段配置
+                ImportConfig.DeduplicateFields = selectedFieldsProperty?.GetValue(deduplicateConfigDialog) as List<string>;
+                ImportConfig.IgnoreEmptyValuesInDeduplication = (bool)(ignoreEmptyValuesProperty?.GetValue(deduplicateConfigDialog) ?? true);
+
+                int selectedCount = (ImportConfig.DeduplicateFields?.Count ?? 0);
+                MessageBox.Show($"去重字段配置已更新，共选择 {selectedCount} 个去重字段",
+                    "配置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            deduplicateConfigDialog.Dispose();
         }
 
         /// <summary>
@@ -982,7 +1049,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             bool isSpecialDataSource = mapping.ExcelColumn.StartsWith("[系统生成]") ||
                                      mapping.ExcelColumn.StartsWith("[默认值") ||
                                      mapping.ExcelColumn.StartsWith("[外键关联]") ||
-                                     mapping.ExcelColumn.StartsWith("[自身引用]");
+                                     mapping.ExcelColumn.StartsWith("[自身引用]") ||
+                                     mapping.ExcelColumn.StartsWith("[字段复制]");
 
             if (!string.IsNullOrEmpty(mapping.ExcelColumn) && isSpecialDataSource)
             {

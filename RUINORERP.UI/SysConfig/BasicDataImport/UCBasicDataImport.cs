@@ -708,6 +708,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 这里暂时使用占位符，实际处理在DynamicImporter中完成
                                 targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceField?.Value}]";
                                 break;
+
+                            case DataSourceType.FieldCopy:
+                                // 字段复制
+                                // 复制同一记录中另一个字段的值
+                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                                {
+                                    // 获取被复制字段的显示名称
+                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+                                    string copyFromDisplayName = copyFromMapping?.SystemField?.Value ?? mapping.CopyFromField?.Value;
+
+                                    // 被复制字段的值
+                                    object copiedValue = sourceRow[copyFromDisplayName];
+                                    targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = "[字段复制:未设置]";
+                                }
+                                break;
                         }
                     }
 

@@ -72,6 +72,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
 
         /// <summary>
+        /// 复制字段
+        /// </summary>
+        public SerializableKeyValuePair<string> CopyFromField { get; set; }
+
+        /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
@@ -88,6 +93,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 手动绑定事件
             kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
             kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
+            kcmbCopyFromField.SelectedIndexChanged += kcmbCopyFromField_SelectedIndexChanged;
         }
 
         /// <summary>
@@ -126,6 +132,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbDataSourceType.Items.Add("系统生成");
                 kcmbDataSourceType.Items.Add("外键关联");
                 kcmbDataSourceType.Items.Add("自身字段引用");
+                kcmbDataSourceType.Items.Add("字段复制");
                 kcmbDataSourceType.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -178,14 +185,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ForeignKeyTable = CurrentMapping.ForeignKeyTable;
                 ktxtRelatedField.Text = CurrentMapping.ForeignKeyField?.Value;
 
-                // 初始化自身引用字段
-                if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
-                    CurrentMapping.SelfReferenceField != null)
-                {
-                    LoadSelfReferenceFields();
-                    SelfReferenceField = CurrentMapping.SelfReferenceField;
-                    kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceField?.Value;
-                }
+            // 初始化自身引用字段
+            if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
+                CurrentMapping.SelfReferenceField != null)
+            {
+                LoadSelfReferenceFields();
+                SelfReferenceField = CurrentMapping.SelfReferenceField;
+                kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceField?.Value;
+            }
+
+            // 初始化字段复制
+            if (CurrentMapping.DataSourceType == DataSourceType.FieldCopy &&
+                CurrentMapping.CopyFromField != null)
+            {
+                LoadCopyFromFields();
+                CopyFromField = CurrentMapping.CopyFromField;
+                kcmbCopyFromField.SelectedItem = CurrentMapping.CopyFromField?.Value;
+            }
             }
 
             // 更新控件状态
@@ -203,6 +219,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             kcmbRelatedTable.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             ktxtRelatedField.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             kcmbSelfReferenceField.Enabled = (dataSourceType == DataSourceType.SelfReference);
+            kcmbCopyFromField.Enabled = (dataSourceType == DataSourceType.FieldCopy);
             ktxtDefaultValue.Enabled = (dataSourceType == DataSourceType.DefaultValue);
 
             // 同步复选框状态
@@ -404,6 +421,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     SelfReferenceField = new SerializableKeyValuePair<string>(field.Key, field.Value);
                 }
             }
+            else if (dataSourceType == DataSourceType.FieldCopy)
+            {
+                if (kcmbCopyFromField.SelectedIndex < 0 && string.IsNullOrWhiteSpace(kcmbCopyFromField.Text))
+                {
+                    MessageBox.Show("请选择要复制的字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string displayName = kcmbCopyFromField.SelectedItem?.ToString() ?? kcmbCopyFromField.Text;
+                var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+                if (field.Value != null)
+                {
+                    CopyFromField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+                }
+            }
             else if (dataSourceType == DataSourceType.DefaultValue)
             {
                 if (string.IsNullOrWhiteSpace(ktxtDefaultValue.Text))
@@ -432,15 +464,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             else if (dataSourceType == DataSourceType.SelfReference)
             {
-                IsForeignKey = false;
-                IsSystemGenerated = false;
-                DefaultValue = string.Empty;
-            }
-            else
-            {
-                IsForeignKey = false;
-                IsSystemGenerated = false;
-            }
+                    IsForeignKey = false;
+                    IsSystemGenerated = false;
+                    DefaultValue = string.Empty;
+                }
+                else if (dataSourceType == DataSourceType.FieldCopy)
+                {
+                    IsForeignKey = false;
+                    IsSystemGenerated = false;
+                    DefaultValue = string.Empty;
+                }
+                else
+                {
+                    IsForeignKey = false;
+                    IsSystemGenerated = false;
+                }
 
             IsUniqueValue = kchkIsUniqueValue.Checked;
             IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked;
@@ -511,6 +549,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 LoadSelfReferenceFields();
             }
+
+            // 如果选择了字段复制，加载当前表的字段列表
+            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.FieldCopy)
+            {
+                LoadCopyFromFields();
+            }
         }
 
         /// <summary>
@@ -579,6 +623,82 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     $"显示名称: {field.Value}\n\n" +
                     $"说明: 当前字段将引用同一条记录的【{field.Value}】字段的值。",
                     "自身引用字段提示",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>
+        /// 加载可复制的字段列表
+        /// </summary>
+        private void LoadCopyFromFields()
+        {
+            try
+            {
+                if (TargetEntityType == null)
+                {
+                    MessageBox.Show("未设置目标实体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 获取字段信息
+                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+                _fieldInfoDict = fieldNameList;
+
+                // 清空并添加字段到下拉框
+                kcmbCopyFromField.Items.Clear();
+                foreach (var field in fieldNameList)
+                {
+                    // 排除当前字段本身
+                    if (field.Key != CurrentMapping?.SystemField?.Key)
+                    {
+                        kcmbCopyFromField.Items.Add(field.Value); // 添加中文名
+                    }
+                }
+
+                // 如果有已选中的字段，保持选中状态
+                if (!string.IsNullOrEmpty(CopyFromField?.Value))
+                {
+                    int index = kcmbCopyFromField.Items.IndexOf(CopyFromField?.Value);
+                    if (index >= 0)
+                    {
+                        kcmbCopyFromField.SelectedIndex = index;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载可复制字段失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 字段复制选择改变事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kcmbCopyFromField_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (kcmbCopyFromField.SelectedIndex < 0 || _fieldInfoDict == null)
+            {
+                return;
+            }
+
+            // 根据中文显示名称获取实际字段名
+            string displayName = kcmbCopyFromField.SelectedItem.ToString();
+            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+            if (field.Value != null)
+            {
+                CopyFromField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+
+                // 显示字段信息提示
+                MessageBox.Show(
+                    $"已选择要复制的字段:\n" +
+                    $"字段名称: {field.Key}\n" +
+                    $"显示名称: {field.Value}\n\n" +
+                    $"说明: 当前字段【{CurrentMapping?.SystemField?.Value}】将复制【{field.Value}】字段的值。\n" +
+                    $"例如: Excel只提供了产品编码,产品名称字段可以复制产品编码的值。",
+                    "字段复制提示",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }

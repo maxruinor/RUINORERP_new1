@@ -29,6 +29,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void InitializeComponent()
         {
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kbtnConfigDeduplicateFields = new Krypton.Toolkit.KryptonButton();
+            this.kryptonLabelDeduplicateStrategy = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbDeduplicateStrategy = new Krypton.Toolkit.KryptonComboBox();
             this.chkRemoveDuplicates = new Krypton.Toolkit.KryptonCheckBox();
             this.kbtnAutoMatch = new Krypton.Toolkit.KryptonButton();
             this.kbtnDeleteMapping = new Krypton.Toolkit.KryptonButton();
@@ -49,11 +52,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.textBoxMappingName = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDeduplicateStrategy)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kbtnConfigDeduplicateFields);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabelDeduplicateStrategy);
+            this.kryptonPanel1.Controls.Add(this.kcmbDeduplicateStrategy);
             this.kryptonPanel1.Controls.Add(this.chkRemoveDuplicates);
             this.kryptonPanel1.Controls.Add(this.kbtnAutoMatch);
             this.kryptonPanel1.Controls.Add(this.kbtnDeleteMapping);
@@ -75,14 +82,44 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(944, 600);
+            this.kryptonPanel1.Size = new System.Drawing.Size(952, 652);
             this.kryptonPanel1.TabIndex = 0;
+            // 
+            // kbtnConfigDeduplicateFields
+            // 
+            this.kbtnConfigDeduplicateFields.Location = new System.Drawing.Point(786, 534);
+            this.kbtnConfigDeduplicateFields.Name = "kbtnConfigDeduplicateFields";
+            this.kbtnConfigDeduplicateFields.Size = new System.Drawing.Size(100, 25);
+            this.kbtnConfigDeduplicateFields.TabIndex = 39;
+            this.kbtnConfigDeduplicateFields.Values.Text = "配置去重字段";
+            // 
+            // kryptonLabelDeduplicateStrategy
+            // 
+            this.kryptonLabelDeduplicateStrategy.Location = new System.Drawing.Point(541, 538);
+            this.kryptonLabelDeduplicateStrategy.Name = "kryptonLabelDeduplicateStrategy";
+            this.kryptonLabelDeduplicateStrategy.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabelDeduplicateStrategy.TabIndex = 38;
+            this.kryptonLabelDeduplicateStrategy.Values.Text = "去重策略:";
+            // 
+            // kcmbDeduplicateStrategy
+            // 
+            this.kcmbDeduplicateStrategy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbDeduplicateStrategy.DropDownWidth = 165;
+            this.kcmbDeduplicateStrategy.FormattingEnabled = true;
+            this.kcmbDeduplicateStrategy.IntegralHeight = false;
+            this.kcmbDeduplicateStrategy.Items.AddRange(new object[] {
+            "保留第一条记录",
+            "保留最后一条记录"});
+            this.kcmbDeduplicateStrategy.Location = new System.Drawing.Point(612, 537);
+            this.kcmbDeduplicateStrategy.Name = "kcmbDeduplicateStrategy";
+            this.kcmbDeduplicateStrategy.Size = new System.Drawing.Size(165, 21);
+            this.kcmbDeduplicateStrategy.TabIndex = 37;
             // 
             // chkRemoveDuplicates
             // 
             this.chkRemoveDuplicates.Checked = true;
             this.chkRemoveDuplicates.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRemoveDuplicates.Location = new System.Drawing.Point(515, 550);
+            this.chkRemoveDuplicates.Location = new System.Drawing.Point(450, 538);
             this.chkRemoveDuplicates.Name = "chkRemoveDuplicates";
             this.chkRemoveDuplicates.Size = new System.Drawing.Size(75, 20);
             this.chkRemoveDuplicates.TabIndex = 36;
@@ -99,7 +136,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kbtnDeleteMapping
             // 
-            this.kbtnDeleteMapping.Location = new System.Drawing.Point(96, 576);
+            this.kbtnDeleteMapping.Location = new System.Drawing.Point(241, 538);
             this.kbtnDeleteMapping.Name = "kbtnDeleteMapping";
             this.kbtnDeleteMapping.Size = new System.Drawing.Size(80, 21);
             this.kbtnDeleteMapping.TabIndex = 14;
@@ -136,18 +173,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // kbtnCancel
             // 
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.kbtnCancel.Location = new System.Drawing.Point(838, 547);
+            this.kbtnCancel.Location = new System.Drawing.Point(570, 600);
             this.kbtnCancel.Name = "kbtnCancel";
-            this.kbtnCancel.Size = new System.Drawing.Size(80, 30);
+            this.kbtnCancel.Size = new System.Drawing.Size(88, 40);
             this.kbtnCancel.TabIndex = 7;
             this.kbtnCancel.Values.Text = "取消";
             this.kbtnCancel.Click += new System.EventHandler(this.kbtnCancel_Click);
             // 
             // kbtnSaveMapping
             // 
-            this.kbtnSaveMapping.Location = new System.Drawing.Point(699, 548);
+            this.kbtnSaveMapping.Location = new System.Drawing.Point(365, 600);
             this.kbtnSaveMapping.Name = "kbtnSaveMapping";
-            this.kbtnSaveMapping.Size = new System.Drawing.Size(120, 30);
+            this.kbtnSaveMapping.Size = new System.Drawing.Size(128, 40);
             this.kbtnSaveMapping.TabIndex = 6;
             this.kbtnSaveMapping.Values.Text = "确定并保存";
             this.kbtnSaveMapping.Click += new System.EventHandler(this.kbtnSaveMapping_Click);
@@ -177,7 +214,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel5
             // 
-            this.kryptonLabel5.Location = new System.Drawing.Point(12, 550);
+            this.kryptonLabel5.Location = new System.Drawing.Point(15, 538);
             this.kryptonLabel5.Name = "kryptonLabel5";
             this.kryptonLabel5.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel5.TabIndex = 13;
@@ -185,7 +222,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel4
             // 
-            this.kryptonLabel4.Location = new System.Drawing.Point(269, 549);
+            this.kryptonLabel4.Location = new System.Drawing.Point(15, 590);
             this.kryptonLabel4.Name = "kryptonLabel4";
             this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel4.TabIndex = 12;
@@ -221,7 +258,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.comboBoxSavedMappings.DropDownWidth = 130;
             this.comboBoxSavedMappings.FormattingEnabled = true;
             this.comboBoxSavedMappings.IntegralHeight = false;
-            this.comboBoxSavedMappings.Location = new System.Drawing.Point(96, 549);
+            this.comboBoxSavedMappings.Location = new System.Drawing.Point(99, 538);
             this.comboBoxSavedMappings.Name = "comboBoxSavedMappings";
             this.comboBoxSavedMappings.Size = new System.Drawing.Size(130, 21);
             this.comboBoxSavedMappings.TabIndex = 15;
@@ -229,7 +266,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // textBoxMappingName
             // 
-            this.textBoxMappingName.Location = new System.Drawing.Point(353, 547);
+            this.textBoxMappingName.Location = new System.Drawing.Point(99, 590);
             this.textBoxMappingName.Name = "textBoxMappingName";
             this.textBoxMappingName.Size = new System.Drawing.Size(156, 23);
             this.textBoxMappingName.TabIndex = 14;
@@ -240,7 +277,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.kbtnCancel;
-            this.ClientSize = new System.Drawing.Size(944, 600);
+            this.ClientSize = new System.Drawing.Size(952, 652);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "frmColumnMappingConfig";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
@@ -249,6 +286,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDeduplicateStrategy)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.comboBoxSavedMappings)).EndInit();
             this.ResumeLayout(false);
 
@@ -275,5 +313,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonComboBox comboBoxSavedMappings;
         private Krypton.Toolkit.KryptonTextBox textBoxMappingName;
         private Krypton.Toolkit.KryptonCheckBox chkRemoveDuplicates;
+        private Krypton.Toolkit.KryptonComboBox kcmbDeduplicateStrategy;
+        private Krypton.Toolkit.KryptonLabel kryptonLabelDeduplicateStrategy;
+        private Krypton.Toolkit.KryptonButton kbtnConfigDeduplicateFields;
     }
 }

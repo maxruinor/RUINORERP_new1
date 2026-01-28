@@ -40,7 +40,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 自身字段引用
         /// 数据来源于当前表自身的其他字段（如树结构中的父类ID）
         /// </summary>
-        SelfReference = 4
+        SelfReference = 4,
+
+        /// <summary>
+        /// 字段复制
+        /// 复制同一记录中另一个字段的值
+        /// 例如：ProductName字段复制ProductCode字段的值
+        /// </summary>
+        FieldCopy = 5
     }
 
     /// <summary>
@@ -124,6 +131,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 存储当前表自身的字段引用（如树结构中的父类ID对应ID字段）
         /// </summary>
         public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
+
+        /// <summary>
+        /// 复制字段（当DataSourceType为FieldCopy时使用）
+        /// 键值对：Key=英文字段名, Value=中文显示名
+        /// 存储当前表中要复制值的另一个字段名
+        /// 例如：ProductName字段复制ProductCode字段的值
+        /// </summary>
+        public SerializableKeyValuePair<string> CopyFromField { get; set; }
 
         /// <summary>
         /// 根据字段元信息初始化字段属性

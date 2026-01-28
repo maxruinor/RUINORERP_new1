@@ -264,20 +264,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             }
                             break;
 
-                        case DataSourceType.SelfReference:
-                            // 自身字段引用
-                            // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
-                            {
-                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
-                                if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
+                            case DataSourceType.SelfReference:
+                                // 自身字段引用
+                                // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
+                                if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
                                 {
-                                    // 处理自身引用逻辑（在导入过程中实现）
-                                    cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
+                                    string displayValue = row[mapping.SystemField?.Key]?.ToString();
+                                    if (!string.IsNullOrEmpty(displayValue) &&
+                                        !string.IsNullOrEmpty(mapping.SelfReferenceField?.Key))
+                                    {
+                                        // 处理自身引用逻辑（在导入过程中实现）
+                                        cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
+                                    }
                                 }
-                            }
-                            break;
+                                break;
+
+                            case DataSourceType.FieldCopy:
+                                // 字段复制
+                                // 复制同一记录中另一个字段的值
+                                if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
+                                {
+                                    if (dataTableContainsColumn(row.Table, mapping.CopyFromField?.Key))
+                                    {
+                                        cellValue = row[mapping.CopyFromField?.Key];
+                                    }
+                                }
+                                break;
                     }
 
                     // 如果值为空，检查是否有默认值

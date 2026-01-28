@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
+using RUINORERP.Common;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -55,19 +55,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public int Id { get; set; }
 
         /// <summary>
-        /// Excel列名
+        /// Excel列名（数据来源标识）
         /// </summary>
         public string ExcelColumn { get; set; }
 
         /// <summary>
-        /// 系统字段名（实际数据库列名）
+        /// 系统字段引用（键值对：Key=英文字段名, Value=中文显示名）
         /// </summary>
-        public string SystemField { get; set; }
-
-        /// <summary>
-        /// 系统字段中文名称
-        /// </summary>
-        public string SystemFieldDisplayName { get; set; }
+        public SerializableKeyValuePair<string> SystemField { get; set; }
 
         /// <summary>
         /// 字段元信息（包含完整的字段定义）
@@ -105,9 +100,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool RemoveDuplicates { get; set; }
 
         /// <summary>
-        /// 目标实体类型名称
+        /// 目标表引用（键值对：Key=英文实体类型名, Value=中文表名）
         /// </summary>
-        public string EntityType { get; set; }
+        public SerializableKeyValuePair<string> TargetTable { get; set; }
+
+        /// <summary>
+        /// 目标实体类型名称（保持向后兼容）
+        /// </summary>
+        [XmlIgnore]
+        public string EntityType
+        {
+            get => TargetTable?.Key;
+            set => TargetTable = new SerializableKeyValuePair<string>(value, GetTableDisplayName(value));
+        }
+
+        /// <summary>
+        /// 获取表的中文显示名称（辅助方法）
+        /// </summary>
+        private string GetTableDisplayName(string entityType)
+        {
+            if (string.IsNullOrEmpty(entityType))
+                return string.Empty;
+
+            // 根据实体类型名返回对应的中文表名
+            var tableNames = new Dictionary<string, string>
+            {
+                { "tb_CustomerVendor", "客户供应商表" },
+                { "tb_ProdCategories", "产品类目表" },
+                { "tb_Prod", "产品基本信息表" },
+                { "tb_ProdDetail", "产品详情信息表" },
+                { "tb_ProdProperty", "产品属性表" },
+                { "tb_ProdPropertyValue", "产品属性值表" }
+            };
+
+            return tableNames.ContainsKey(entityType) ? tableNames[entityType] : entityType;
+        }
 
         /// <summary>
         /// 默认值
@@ -125,19 +152,52 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public bool IsSystemGenerated { get; set; }
 
         /// <summary>
-        /// 关联表名（外键关联的表）
+        /// 外键表引用（键值对：Key=英文表名, Value=中文表名）
         /// </summary>
-        public string RelatedTableName { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeyTable { get; set; }
 
         /// <summary>
-        /// 关联表字段（中文名称，用于显示）
+        /// 外键字段引用（键值对：Key=英文字段名, Value=中文显示名）
         /// </summary>
-        public string RelatedTableField { get; set; }
+        public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
 
         /// <summary>
-        /// 关联表字段（实际字段名）
+        /// 关联表名（保持向后兼容）
         /// </summary>
-        public string RelatedTableFieldName { get; set; }
+        [XmlIgnore]
+        public string RelatedTableName
+        {
+            get => ForeignKeyTable?.Key;
+            set => ForeignKeyTable = new SerializableKeyValuePair<string>(value, GetTableDisplayName(value));
+        }
+
+        /// <summary>
+        /// 关联表字段中文名称（保持向后兼容）
+        /// </summary>
+        [XmlIgnore]
+        public string RelatedTableField
+        {
+            get => ForeignKeyField?.Value;
+            set
+            {
+                if (ForeignKeyField != null)
+                    ForeignKeyField.Value = value;
+            }
+        }
+
+        /// <summary>
+        /// 关联表字段实际字段名（保持向后兼容）
+        /// </summary>
+        [XmlIgnore]
+        public string RelatedTableFieldName
+        {
+            get => ForeignKeyField?.Key;
+            set
+            {
+                if (ForeignKeyField != null)
+                    ForeignKeyField.Key = value;
+            }
+        }
 
         /// <summary>
         /// 数据来源类型
@@ -147,14 +207,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 自身引用字段（当DataSourceType为SelfReference时使用）
-        /// 存储当前表自身的字段名（如树结构中的父类ID对应ID字段）
+        /// 键值对：Key=英文字段名, Value=中文显示名
+        /// 存储当前表自身的字段引用（如树结构中的父类ID对应ID字段）
         /// </summary>
-        public string SelfReferenceFieldName { get; set; }
+        public SerializableKeyValuePair<string> SelfReferenceField { get; set; }
 
         /// <summary>
-        /// 自身引用字段中文名称（用于显示）
+        /// 自身引用字段名（保持向后兼容）
         /// </summary>
-        public string SelfReferenceFieldDisplayName { get; set; }
+        [XmlIgnore]
+        public string SelfReferenceFieldName
+        {
+            get => SelfReferenceField?.Key;
+            set
+            {
+                if (SelfReferenceField != null)
+                    SelfReferenceField.Key = value;
+            }
+        }
+
+        /// <summary>
+        /// 自身引用字段中文名称（保持向后兼容）
+        /// </summary>
+        [XmlIgnore]
+        public string SelfReferenceFieldDisplayName
+        {
+            get => SelfReferenceField?.Value;
+            set
+            {
+                if (SelfReferenceField != null)
+                    SelfReferenceField.Value = value;
+            }
+        }
 
         /// <summary>
         /// 创建时间
@@ -177,12 +261,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 return;
             }
 
-            SystemField = metadata.FieldName;
-            SystemFieldDisplayName = metadata.DisplayName;
+            // 使用统一的SerializableKeyValuePair结构存储字段信息
+            SystemField = new SerializableKeyValuePair<string>(metadata.FieldName, metadata.DisplayName);
             DataType = metadata.DataTypeName;
             IsForeignKey = metadata.IsForeignKey;
             IsSystemGenerated = metadata.IsIdentity || metadata.IsPrimaryKey;
-            RelatedTableName = metadata.ForeignTable;
+
+            // 如果有外键表，初始化外键表引用
+            if (!string.IsNullOrEmpty(metadata.ForeignTable))
+            {
+                ForeignKeyTable = new SerializableKeyValuePair<string>(metadata.ForeignTable, GetTableDisplayName(metadata.ForeignTable));
+            }
 
             // 根据属性设置数据来源类型
             if (IsSystemGenerated)
@@ -222,7 +311,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             
             if (IsRequired && (value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())))
             {
-                errorMessage = $"字段【{SystemFieldDisplayName ?? SystemField}】不能为空";
+                errorMessage = $"字段【{SystemField?.Value ?? SystemField?.Key ?? string.Empty}】不能为空";
                 return false;
             }
 
@@ -306,7 +395,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>列映射配置</returns>
         public ColumnMapping GetMappingBySystemField(string systemField)
         {
-            return this.FirstOrDefault(m => m.SystemField.Equals(systemField, StringComparison.OrdinalIgnoreCase));
+            return this.FirstOrDefault(m => m.SystemField?.Key.Equals(systemField, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         /// <summary>

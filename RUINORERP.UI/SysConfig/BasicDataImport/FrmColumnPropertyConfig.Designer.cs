@@ -103,7 +103,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             //
             // kchkIsUniqueValue
             //
-            this.kchkIsUniqueValue.Location = new System.Drawing.Point(325, 30);
+            this.kchkIsUniqueValue.Location = new System.Drawing.Point(210, 30);
             this.kchkIsUniqueValue.Name = "kchkIsUniqueValue";
             this.kchkIsUniqueValue.Size = new System.Drawing.Size(75, 20);
             this.kchkIsUniqueValue.TabIndex = 13;

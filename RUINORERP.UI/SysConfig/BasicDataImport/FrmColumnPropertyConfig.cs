@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Krypton.Toolkit;
 using RUINORERP.UI.Common;
+using RUINORERP.Common;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {

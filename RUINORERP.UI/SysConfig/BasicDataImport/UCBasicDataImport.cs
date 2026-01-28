@@ -2,6 +2,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
+using RUINORERP.Common;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -536,7 +537,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 动态导入-解析文件按钮点击事件
+        /// 动态导入-解析文件按钮点击事件1
         /// 根据映射配置解析Excel数据
         /// </summary>
         /// <param name="sender">事件发送者</param>
@@ -624,10 +625,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 创建结果表结构（使用SystemFieldDisplayName作为列名）显示给用户看的
+                // 创建结果表结构（使用SystemField.Value作为列名）显示给用户看的
                 foreach (var mapping in mappings)
                 {
-                    result.Columns.Add(mapping.SystemFieldDisplayName, typeof(string));
+                    result.Columns.Add(mapping.SystemField?.Value, typeof(string));
                 }
 
       
@@ -653,41 +654,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     // 如果配置了忽略空值且值为空，则不处理该字段
                                     if (mapping.IgnoreEmptyValue && isEmpty)
                                     {
-                                        targetRow[mapping.SystemFieldDisplayName] = DBNull.Value;
+                                        targetRow[mapping.SystemField?.Value] = DBNull.Value;
                                     }
                                     else
                                     {
-                                        targetRow[mapping.SystemFieldDisplayName] = cellValue?.ToString() ?? "";
+                                        targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
                                     }
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemFieldDisplayName] = "";
+                                    targetRow[mapping.SystemField?.Value] = "";
                                 }
                                 break;
 
                             case DataSourceType.SystemGenerated:
                                 // 系统生成的值，暂时留空或使用特殊标记
-                                targetRow[mapping.SystemFieldDisplayName] = "[系统生成]";
+                                targetRow[mapping.SystemField?.Value] = "[系统生成]";
                                 break;
 
                             case DataSourceType.DefaultValue:
                                 // 默认值映射
-                                targetRow[mapping.SystemFieldDisplayName] = mapping.DefaultValue ?? "";
+                                targetRow[mapping.SystemField?.Value] = mapping.DefaultValue ?? "";
                                 break;
 
                             case DataSourceType.ForeignKey:
                                 // 外键关联
                                 // 在导入时需要通过关联表查询获取值
                                 // 这里暂时使用占位符，实际处理在DynamicImporter中完成
-                                targetRow[mapping.SystemFieldDisplayName] = $"[外键关联:{mapping.RelatedTableName}.{mapping.RelatedTableField}]";
+                                targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.RelatedTableName}.{mapping.RelatedTableField}]";
                                 break;
 
                             case DataSourceType.SelfReference:
                                 // 自身字段引用
                                 // 在导入时需要通过已导入的数据获取值
                                 // 这里暂时使用占位符，实际处理在DynamicImporter中完成
-                                targetRow[mapping.SystemFieldDisplayName] = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}]";
+                                targetRow[mapping.SystemField?.Value] = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}]";
                                 break;
                         }
                     }
@@ -729,7 +730,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return (uniqueData, originalCount, duplicateCount);
                 }
 
-                string keyField = removeDuplicatesMapping.SystemField;
+                string keyField = removeDuplicatesMapping.SystemField?.Key;
 
                 // 检查数据表中是否存在该字段
                 if (!data.Columns.Contains(keyField))
@@ -1134,7 +1135,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 对每个唯一性字段进行检查
                 foreach (var uniqueMapping in uniqueMappings)
                 {
-                    string fieldName = uniqueMapping.SystemField;
+                    string fieldName = uniqueMapping.SystemField?.Key;
                     if (!dataTable.Columns.Contains(fieldName))
                     {
                         continue;

@@ -218,9 +218,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         case DataSourceType.Excel:
                             // Excel数据源
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
                             {
-                                cellValue = row[mapping.SystemField];
+                                cellValue = row[mapping.SystemField?.Key];
 
                                 // 如果配置了忽略空值且值为DBNull，则跳过该字段
                                 if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
@@ -243,9 +243,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         case DataSourceType.ForeignKey:
                             // 外键关联
                             // 从映射后的数据表中获取显示值，然后查询关联表获取ID
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
                             {
-                                string displayValue = row[mapping.SystemField]?.ToString();
+                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
                                     !string.IsNullOrEmpty(mapping.RelatedTableName) &&
                                     !string.IsNullOrEmpty(mapping.RelatedTableFieldName))
@@ -267,9 +267,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         case DataSourceType.SelfReference:
                             // 自身字段引用
                             // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
                             {
-                                string displayValue = row[mapping.SystemField]?.ToString();
+                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
                                     !string.IsNullOrEmpty(mapping.SelfReferenceFieldName))
                                 {
@@ -295,10 +295,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 获取实体属性
-                    PropertyInfo property = entityType.GetProperty(mapping.SystemField);
+                    PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
                     if (property == null)
                     {
-                        throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField}");
+                        throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField?.Key}");
                     }
 
                     // 类型转换

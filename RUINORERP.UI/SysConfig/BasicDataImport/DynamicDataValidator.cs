@@ -67,13 +67,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 检查映射后的数据表是否包含SystemField列
-                if (!dataTable.Columns.Contains(mapping.SystemField))
+                if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
                 {
                     errors.Add(new ValidationError
                     {
                         RowNumber = -1,
-                        FieldName = mapping.SystemField,
-                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField}'",
+                        FieldName = mapping.SystemField?.Key,
+                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Key}'",
                         ErrorType = ErrorType.ColumnNotFound
                     });
                 }
@@ -119,19 +119,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 使用SystemField检查列是否存在
-                    if (!dataTable.Columns.Contains(mapping.SystemField))
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.SystemField];
+                    object cellValue = row[mapping.SystemField?.Key];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue; // 空值跳过
                     }
 
                     // 获取目标属性
-                    PropertyInfo property = entityType.GetProperty(mapping.SystemField);
+                    PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
                     if (property == null)
                     {
                         continue;
@@ -141,14 +141,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                     if (!TryConvertValue(cellValue, targetType, out _))
                     {
-                        errors.Add(new ValidationError
-                        {
-                            RowNumber = i + 2, // +2 因为Excel从第2行开始
-                            FieldName = mapping.SystemField,
-                            ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
-                            ErrorType = ErrorType.TypeMismatch,
-                            OriginalValue = cellValue
-                        });
+                    errors.Add(new ValidationError
+                    {
+                        RowNumber = i + 2, // +2 因为Excel从第2行开始
+                        FieldName = mapping.SystemField?.Key,
+                        ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
+                        ErrorType = ErrorType.TypeMismatch,
+                        OriginalValue = cellValue
+                    });
                     }
                 }
             }
@@ -169,7 +169,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 使用SystemField检查列是否存在
-            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField))
+            if (!dataTable.Columns.Contains(uniqueKeyMapping.SystemField?.Key))
             {
                 return;
             }
@@ -178,7 +178,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             for (int i = 0; i < dataTable.Rows.Count; i++)
             {
-                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField];
+                object value = dataTable.Rows[i][uniqueKeyMapping.SystemField?.Key];
 
                 // 如果配置了忽略空值，则跳过空值的重复检查
                 bool isEmpty = value == DBNull.Value || string.IsNullOrEmpty(value?.ToString());
@@ -190,7 +190,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         errors.Add(new ValidationError
                         {
                             RowNumber = i + 2,
-                            FieldName = uniqueKeyMapping.SystemField,
+                            FieldName = uniqueKeyMapping.SystemField?.Key,
                             ErrorMessage = "唯一键列不能为空",
                             ErrorType = ErrorType.EmptyRequiredField,
                             OriginalValue = null
@@ -216,7 +216,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     errors.Add(new ValidationError
                     {
                         RowNumber = rowNumber,
-                        FieldName = uniqueKeyMapping.SystemField,
+                        FieldName = uniqueKeyMapping.SystemField?.Key,
                         ErrorMessage = $"唯一键列值 '{kvp.Key}' 重复，共出现 {kvp.Value.Count} 次",
                         ErrorType = ErrorType.DuplicateValue,
                         OriginalValue = kvp.Key
@@ -247,19 +247,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 使用SystemField检查列是否存在
-                    if (!dataTable.Columns.Contains(mapping.SystemField))
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.SystemField];
+                    object cellValue = row[mapping.SystemField?.Key];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue;
                     }
 
                     // 获取目标属性
-                    PropertyInfo property = entityType.GetProperty(mapping.SystemField);
+                    PropertyInfo property = entityType.GetProperty(mapping.SystemField?.Key);
                     if (property == null)
                     {
                         continue;
@@ -276,7 +276,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             errors.Add(new ValidationError
                             {
                                 RowNumber = i + 2,
-                                FieldName = mapping.SystemField,
+                                FieldName = mapping.SystemField?.Key,
                                 ErrorMessage = $"字符串长度 {cellValue.ToString().Length} 超过最大限制 {maxLength}",
                                 ErrorType = ErrorType.LengthExceeded,
                                 OriginalValue = cellValue
@@ -298,7 +298,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     errors.Add(new ValidationError
                                     {
                                         RowNumber = i + 2,
-                                        FieldName = mapping.SystemField,
+                                        FieldName = mapping.SystemField?.Key,
                                         ErrorMessage = $"数值 {numValue} 超出有效范围 [{range.Value.Min}, {range.Value.Max}]",
                                         ErrorType = ErrorType.OutOfRange,
                                         OriginalValue = cellValue

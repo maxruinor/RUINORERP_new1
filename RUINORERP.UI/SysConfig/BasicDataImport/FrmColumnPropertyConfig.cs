@@ -449,22 +449,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>表类型</returns>
         private Type GetTableType(string tableName)
         {
-            // 这里需要根据实际的命名空间和类名来获取
-            // 简化处理，使用字符串匹配
-            switch (tableName)
+            // 优先使用UCBasicDataImport中的EntityTypeMappings
+            if (UCBasicDataImport.EntityTypeMappings != null)
             {
-                case "tb_Supplier":
-                    return Type.GetType("RUINORERP.Model.tb_Supplier");
-                case "tb_ProdCategories":
-                    return Type.GetType("RUINORERP.Model.tb_ProdCategories");
-                case "tb_Prod":
-                    return Type.GetType("RUINORERP.Model.tb_Prod");
-                case "tb_ProdProperty":
-                    return Type.GetType("RUINORERP.Model.tb_ProdProperty");
-                case "tb_ProdPropertyValue":
-                    return Type.GetType("RUINORERP.Model.tb_ProdPropertyValue");
-                default:
-                    return null;
+                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                {
+                    if (mapping.Value.Name == tableName)
+                    {
+                        return mapping.Value;
+                    }
+                }
+            }
+
+            // 回退到原来的Type.GetType方法
+            try
+            {
+                return Type.GetType($"RUINORERP.Model.{tableName}");
+            }
+            catch
+            {
+                return null;
             }
         }
 

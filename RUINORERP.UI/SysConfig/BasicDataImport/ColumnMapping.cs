@@ -272,7 +272,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 获取表的中文显示名称（内部辅助方法）11
+        /// 获取表的中文显示名称（内部辅助方法）
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>中文显示名称</returns>
@@ -281,17 +281,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (string.IsNullOrEmpty(tableName))
                 return string.Empty;
 
-            var tableNames = new Dictionary<string, string>
+            // 使用UCBasicDataImport中的EntityTypeMappings获取表的中文显示名称
+            if (UCBasicDataImport.EntityTypeMappings != null)
             {
-                { "tb_CustomerVendor", "客户供应商表" },
-                { "tb_ProdCategories", "产品类目表" },
-                { "tb_Prod", "产品基本信息表" },
-                { "tb_ProdDetail", "产品详情信息表" },
-                { "tb_ProdProperty", "产品属性表" },
-                { "tb_ProdPropertyValue", "产品属性值表" }
-            };
+                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                {
+                    if (mapping.Value.Name == tableName)
+                    {
+                        return mapping.Key;
+                    }
+                }
+            }
 
-            return tableNames.ContainsKey(tableName) ? tableNames[tableName] : tableName;
+            // 回退到表名本身
+            return tableName;
         }
     }
 

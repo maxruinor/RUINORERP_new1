@@ -66,6 +66,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string RelatedTableFieldName { get; set; }
 
         /// <summary>
+        /// 数据来源类型
+        /// </summary>
+        public DataSourceType SelectedDataSourceType { get; set; }
+
+        /// <summary>
+        /// 自身引用字段名
+        /// </summary>
+        public string SelfReferenceFieldName { get; set; }
+
+        /// <summary>
+        /// 自身引用字段中文名
+        /// </summary>
+        public string SelfReferenceFieldDisplayName { get; set; }
+
+        /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
@@ -77,6 +92,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             InitializeComponent();
             LoadRelatedTables();
+            LoadDataSourceTypes();
+
+            // 手动绑定事件
+            kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
+            kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
         }
 
         /// <summary>
@@ -103,6 +123,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 加载数据来源类型列表
+        /// </summary>
+        private void LoadDataSourceTypes()
+        {
+            try
+            {
+                kcmbDataSourceType.Items.Clear();
+                kcmbDataSourceType.Items.Add("Excel数据源");
+                kcmbDataSourceType.Items.Add("默认值");
+                kcmbDataSourceType.Items.Add("系统生成");
+                kcmbDataSourceType.Items.Add("外键关联");
+                kcmbDataSourceType.Items.Add("自身字段引用");
+                kcmbDataSourceType.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载数据来源类型失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 窗体加载事件
         /// </summary>
         /// <param name="sender">事件发送者</param>
@@ -124,6 +165,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 DefaultValue = CurrentMapping.DefaultValue;
                 IsSystemGenerated = CurrentMapping.IsSystemGenerated;
 
+                // 初始化数据来源类型
+                kcmbDataSourceType.SelectedIndex = (int)CurrentMapping.DataSourceType;
+                SelectedDataSourceType = CurrentMapping.DataSourceType;
+
                 // 初始化关联表信息
                 if (!string.IsNullOrEmpty(CurrentMapping.RelatedTableName))
                 {
@@ -142,6 +187,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 RelatedTableName = CurrentMapping.RelatedTableName;
                 RelatedTableField = CurrentMapping.RelatedTableField;
                 ktxtRelatedField.Text = CurrentMapping.RelatedTableField;
+
+                // 初始化自身引用字段
+                if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
+                    !string.IsNullOrEmpty(CurrentMapping.SelfReferenceFieldName))
+                {
+                    LoadSelfReferenceFields();
+                    SelfReferenceFieldName = CurrentMapping.SelfReferenceFieldName;
+                    SelfReferenceFieldDisplayName = CurrentMapping.SelfReferenceFieldDisplayName;
+                    kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceFieldDisplayName;
+                }
             }
 
             // 更新控件状态
@@ -153,12 +208,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void UpdateControlStates()
         {
-            bool isForeignKey = kchkIsForeignKey.Checked;
-            kcmbRelatedTable.Enabled = isForeignKey;
-            ktxtRelatedField.Enabled = isForeignKey;
+            DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
 
-            // 系统生成的字段不能设置默认值
-            ktxtDefaultValue.Enabled = !kchkIsSystemGenerated.Checked;
+            // 根据数据来源类型控制控件状态
+            kcmbRelatedTable.Enabled = (dataSourceType == DataSourceType.ForeignKey);
+            ktxtRelatedField.Enabled = (dataSourceType == DataSourceType.ForeignKey);
+            kcmbSelfReferenceField.Enabled = (dataSourceType == DataSourceType.SelfReference);
+            ktxtDefaultValue.Enabled = (dataSourceType == DataSourceType.DefaultValue);
+
+            // 同步复选框状态
+            kchkIsForeignKey.Enabled = (dataSourceType == DataSourceType.ForeignKey);
+            kchkIsSystemGenerated.Enabled = (dataSourceType == DataSourceType.SystemGenerated);
+
+            // 根据数据来源类型设置复选框
+            if (dataSourceType == DataSourceType.ForeignKey)
+            {
+                kchkIsForeignKey.Checked = true;
+            }
+            else if (dataSourceType == DataSourceType.SystemGenerated)
+            {
+                kchkIsSystemGenerated.Checked = true;
+            }
+            else
+            {
+                kchkIsForeignKey.Checked = false;
+                kchkIsSystemGenerated.Checked = false;
+            }
         }
 
         /// <summary>
@@ -282,8 +357,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="e">事件参数</param>
         private void kbtnOK_Click(object sender, EventArgs e)
         {
-            // 如果是外键，验证关联表和字段
-            if (kchkIsForeignKey.Checked)
+            DataSourceType dataSourceType = (DataSourceType)kcmbDataSourceType.SelectedIndex;
+            SelectedDataSourceType = dataSourceType;
+
+            // 根据数据来源类型进行验证
+            if (dataSourceType == DataSourceType.ForeignKey)
             {
                 if (kcmbRelatedTable.SelectedIndex <= 0)
                 {
@@ -312,40 +390,72 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 RelatedTableField = ktxtRelatedField.SelectedItem?.ToString() ?? ktxtRelatedField.Text;
             }
-            else
+            else if (dataSourceType == DataSourceType.SelfReference)
             {
-                RelatedTableName = string.Empty;
-                RelatedTableField = string.Empty;
-                RelatedTableFieldName = string.Empty;
+                if (kcmbSelfReferenceField.SelectedIndex < 0 && string.IsNullOrWhiteSpace(kcmbSelfReferenceField.Text))
+                {
+                    MessageBox.Show("请选择自身引用字段", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                SelfReferenceFieldDisplayName = kcmbSelfReferenceField.SelectedItem?.ToString() ?? kcmbSelfReferenceField.Text;
+            }
+            else if (dataSourceType == DataSourceType.DefaultValue)
+            {
+                if (string.IsNullOrWhiteSpace(ktxtDefaultValue.Text))
+                {
+                    MessageBox.Show("请输入默认值", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
             }
 
-            IsForeignKey = kchkIsForeignKey.Checked;
+            // 根据数据来源类型设置属性
+            if (dataSourceType == DataSourceType.ForeignKey)
+            {
+                IsForeignKey = true;
+                IsSystemGenerated = false;
+            }
+            else if (dataSourceType == DataSourceType.SystemGenerated)
+            {
+                IsForeignKey = false;
+                IsSystemGenerated = true;
+            }
+            else if (dataSourceType == DataSourceType.DefaultValue)
+            {
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+                DefaultValue = ktxtDefaultValue.Text.Trim();
+            }
+            else if (dataSourceType == DataSourceType.SelfReference)
+            {
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+                DefaultValue = string.Empty;
+            }
+            else
+            {
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+            }
+
             IsUniqueValue = kchkIsUniqueValue.Checked;
             IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked;
-            DefaultValue = ktxtDefaultValue.Text.Trim();
-            IsSystemGenerated = kchkIsSystemGenerated.Checked;
 
-            // 验证：如果既不是系统生成，又没有设置默认值，也没有外键，需要提示
-            if (!IsSystemGenerated && !IsForeignKey && string.IsNullOrWhiteSpace(DefaultValue))
+            // 验证：如果既不是系统生成，又没有设置默认值，也不是外键或自身引用，需要提示
+            if (dataSourceType == DataSourceType.Excel && string.IsNullOrWhiteSpace(DefaultValue))
             {
                 var result = MessageBox.Show(
-                    "该字段既不是系统生成的，也没有设置默认值。\n" +
+                    "该字段既不是系统生成的，也没有设置默认值，也没有特殊来源。\n" +
                     "如果没有Excel数据源，该字段将为空。\n\n" +
                     "确定要继续吗？",
                     "提示",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Question);
-                
+
                 if (result != DialogResult.Yes)
                 {
                     return;
                 }
-            }
-
-            // 如果是系统生成，清空默认值
-            if (IsSystemGenerated)
-            {
-                DefaultValue = string.Empty;
             }
 
             this.DialogResult = DialogResult.OK;
@@ -381,6 +491,94 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void kchkIsSystemGenerated_CheckedChanged(object sender, EventArgs e)
         {
             UpdateControlStates();
+        }
+
+        /// <summary>
+        /// 数据来源类型选择改变事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kcmbDataSourceType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateControlStates();
+
+            // 如果选择了自身引用，加载当前表的字段列表
+            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.SelfReference)
+            {
+                LoadSelfReferenceFields();
+            }
+        }
+
+        /// <summary>
+        /// 加载自身引用字段列表
+        /// </summary>
+        private void LoadSelfReferenceFields()
+        {
+            try
+            {
+                if (TargetEntityType == null)
+                {
+                    MessageBox.Show("未设置目标实体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 获取字段信息
+                var fieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
+                _fieldInfoDict = fieldNameList;
+
+                // 清空并添加字段到下拉框
+                kcmbSelfReferenceField.Items.Clear();
+                foreach (var field in fieldNameList)
+                {
+                    kcmbSelfReferenceField.Items.Add(field.Value); // 添加中文名
+                }
+
+                // 如果有已选中的字段，保持选中状态
+                if (!string.IsNullOrEmpty(SelfReferenceFieldDisplayName))
+                {
+                    int index = kcmbSelfReferenceField.Items.IndexOf(SelfReferenceFieldDisplayName);
+                    if (index >= 0)
+                    {
+                        kcmbSelfReferenceField.SelectedIndex = index;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载自身引用字段失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 自身引用字段选择改变事件
+        /// </summary>
+        /// <param name="sender">事件发送者</param>
+        /// <param name="e">事件参数</param>
+        private void kcmbSelfReferenceField_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (kcmbSelfReferenceField.SelectedIndex < 0 || _fieldInfoDict == null)
+            {
+                return;
+            }
+
+            // 根据中文显示名称获取实际字段名
+            string displayName = kcmbSelfReferenceField.SelectedItem.ToString();
+            var field = _fieldInfoDict.FirstOrDefault(f => f.Value == displayName);
+            if (field.Value != null)
+            {
+                SelfReferenceFieldName = field.Key;
+                SelfReferenceFieldDisplayName = displayName;
+
+                // 显示字段信息提示,类似外键关联的处理方式
+                MessageBox.Show(
+                    $"已选择自身引用字段:\n" +
+                    $"字段名称: {field.Key}\n" +
+                    $"显示名称: {field.Value}\n\n" +
+                    $"说明: 当前字段将引用同一条记录的【{field.Value}】字段的值。",
+                    "自身引用字段提示",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
         }
     }
 }

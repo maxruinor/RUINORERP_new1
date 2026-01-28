@@ -7,6 +7,43 @@ using System.Threading.Tasks;
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
+    /// 数据来源类型枚举
+    /// 用于标识字段数据的来源方式
+    /// </summary>
+    public enum DataSourceType
+    {
+        /// <summary>
+        /// Excel数据源（默认）
+        /// 数据来源于Excel文件的对应列
+        /// </summary>
+        Excel = 0,
+
+        /// <summary>
+        /// 默认值
+        /// 数据来源于配置的默认值
+        /// </summary>
+        DefaultValue = 1,
+
+        /// <summary>
+        /// 系统生成
+        /// 数据由系统自动生成（如自增ID、时间戳等）
+        /// </summary>
+        SystemGenerated = 2,
+
+        /// <summary>
+        /// 外键关联
+        /// 数据来源于其他表的外键关联字段
+        /// </summary>
+        ForeignKey = 3,
+
+        /// <summary>
+        /// 自身字段引用
+        /// 数据来源于当前表自身的其他字段（如树结构中的父类ID）
+        /// </summary>
+        SelfReference = 4
+    }
+
+    /// <summary>
     /// 列映射配置模型
     /// 用于存储Excel列与系统字段的映射关系
     /// </summary>
@@ -103,6 +140,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string RelatedTableFieldName { get; set; }
 
         /// <summary>
+        /// 数据来源类型
+        /// 用于标识字段数据的来源方式
+        /// </summary>
+        public DataSourceType DataSourceType { get; set; } = DataSourceType.Excel;
+
+        /// <summary>
+        /// 自身引用字段（当DataSourceType为SelfReference时使用）
+        /// 存储当前表自身的字段名（如树结构中的父类ID对应ID字段）
+        /// </summary>
+        public string SelfReferenceFieldName { get; set; }
+
+        /// <summary>
+        /// 自身引用字段中文名称（用于显示）
+        /// </summary>
+        public string SelfReferenceFieldDisplayName { get; set; }
+
+        /// <summary>
         /// 创建时间
         /// </summary>
         public DateTime CreateTime { get; set; }
@@ -129,7 +183,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             IsForeignKey = metadata.IsForeignKey;
             IsSystemGenerated = metadata.IsIdentity || metadata.IsPrimaryKey;
             RelatedTableName = metadata.ForeignTable;
-            
+
+            // 根据属性设置数据来源类型
+            if (IsSystemGenerated)
+            {
+                DataSourceType = DataSourceType.SystemGenerated;
+            }
+            else if (IsForeignKey)
+            {
+                DataSourceType = DataSourceType.ForeignKey;
+            }
+            else if (!string.IsNullOrEmpty(metadata.DefaultValue))
+            {
+                DataSourceType = DataSourceType.DefaultValue;
+            }
+
             if (string.IsNullOrEmpty(DefaultValue))
             {
                 DefaultValue = metadata.DefaultValue;

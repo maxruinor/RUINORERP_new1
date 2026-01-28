@@ -43,10 +43,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel3 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonLabel7 = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbDataSourceType = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbSelfReferenceField = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
@@ -54,6 +60,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
             this.kryptonPanel1.Controls.Add(this.kbtnOK);
             this.kryptonPanel1.Controls.Add(this.kchkIsUniqueValue);
+            this.kryptonPanel1.Controls.Add(this.kcmbSelfReferenceField);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel7);
+            this.kryptonPanel1.Controls.Add(this.kcmbDataSourceType);
             this.kryptonPanel1.Controls.Add(this.kchkIgnoreEmptyValue);
             this.kryptonPanel1.Controls.Add(this.kchkIsSystemGenerated);
             this.kryptonPanel1.Controls.Add(this.ktxtDefaultValue);
@@ -69,26 +78,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(450, 420);
+            this.kryptonPanel1.Size = new System.Drawing.Size(450, 500);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kbtnCancel
             //
             this.kbtnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.kbtnCancel.Location = new System.Drawing.Point(280, 370);
+            this.kbtnCancel.Location = new System.Drawing.Point(280, 450);
             this.kbtnCancel.Name = "kbtnCancel";
             this.kbtnCancel.Size = new System.Drawing.Size(80, 30);
-            this.kbtnCancel.TabIndex = 15;
+            this.kbtnCancel.TabIndex = 17;
             this.kbtnCancel.Values.Text = "取消";
             this.kbtnCancel.Click += new System.EventHandler(this.kbtnCancel_Click);
             //
             // kbtnOK
             //
             this.kbtnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.kbtnOK.Location = new System.Drawing.Point(180, 370);
+            this.kbtnOK.Location = new System.Drawing.Point(180, 450);
             this.kbtnOK.Name = "kbtnOK";
             this.kbtnOK.Size = new System.Drawing.Size(80, 30);
-            this.kbtnOK.TabIndex = 14;
+            this.kbtnOK.TabIndex = 16;
             this.kbtnOK.Values.Text = "确定";
             this.kbtnOK.Click += new System.EventHandler(this.kbtnOK_Click);
             //
@@ -147,13 +156,49 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel4.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel4.TabIndex = 7;
             this.kryptonLabel4.Values.Text = "系统生成:";
-            // 
+            //
+            // kryptonLabel7
+            //
+            this.kryptonLabel7.Location = new System.Drawing.Point(30, 120);
+            this.kryptonLabel7.Name = "kryptonLabel7";
+            this.kryptonLabel7.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel7.TabIndex = 15;
+            this.kryptonLabel7.Values.Text = "数据来源:";
+            //
+            // kcmbDataSourceType
+            //
+            this.kcmbDataSourceType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbDataSourceType.DropDownWidth = 200;
+            this.kcmbDataSourceType.IntegralHeight = false;
+            this.kcmbDataSourceType.Location = new System.Drawing.Point(120, 120);
+            this.kcmbDataSourceType.Name = "kcmbDataSourceType";
+            this.kcmbDataSourceType.Size = new System.Drawing.Size(280, 21);
+            this.kcmbDataSourceType.TabIndex = 14;
+            //
+            // kryptonLabel8
+            //
+            this.kryptonLabel8.Location = new System.Drawing.Point(30, 370);
+            this.kryptonLabel8.Name = "kryptonLabel8";
+            this.kryptonLabel8.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel8.TabIndex = 13;
+            this.kryptonLabel8.Values.Text = "自身引用:";
+            //
+            // kcmbSelfReferenceField
+            //
+            this.kcmbSelfReferenceField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbSelfReferenceField.DropDownWidth = 200;
+            this.kcmbSelfReferenceField.IntegralHeight = false;
+            this.kcmbSelfReferenceField.Location = new System.Drawing.Point(120, 370);
+            this.kcmbSelfReferenceField.Name = "kcmbSelfReferenceField";
+            this.kcmbSelfReferenceField.Size = new System.Drawing.Size(280, 21);
+            this.kcmbSelfReferenceField.TabIndex = 12;
+            //
             // ktxtRelatedField
             //
             this.ktxtRelatedField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ktxtRelatedField.DropDownWidth = 200;
             this.ktxtRelatedField.IntegralHeight = false;
-            this.ktxtRelatedField.Location = new System.Drawing.Point(120, 300);
+            this.ktxtRelatedField.Location = new System.Drawing.Point(120, 330);
             this.ktxtRelatedField.Name = "ktxtRelatedField";
             this.ktxtRelatedField.Size = new System.Drawing.Size(280, 21);
             this.ktxtRelatedField.TabIndex = 6;
@@ -164,7 +209,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbRelatedTable.DropDownWidth = 200;
             this.kcmbRelatedTable.IntegralHeight = false;
-            this.kcmbRelatedTable.Location = new System.Drawing.Point(120, 260);
+            this.kcmbRelatedTable.Location = new System.Drawing.Point(120, 290);
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(280, 21);
             this.kcmbRelatedTable.TabIndex = 5;
@@ -207,7 +252,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(450, 420);
+            this.ClientSize = new System.Drawing.Size(450, 500);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "FrmColumnPropertyConfig";
             this.Text = "设置列属性";
@@ -217,6 +262,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -239,5 +286,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonLabel kryptonLabel3;
         private Krypton.Toolkit.KryptonLabel kryptonLabel2;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel7;
+        private Krypton.Toolkit.KryptonComboBox kcmbDataSourceType;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel8;
+        private Krypton.Toolkit.KryptonComboBox kcmbSelfReferenceField;
     }
 }

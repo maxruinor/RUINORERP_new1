@@ -624,12 +624,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 创建结果表结构（使用SystemField作为列名）
+                // 创建结果表结构（使用SystemFieldDisplayName作为列名）显示给用户看的
                 foreach (var mapping in mappings)
                 {
-                    result.Columns.Add(mapping.SystemField, typeof(string));
+                    result.Columns.Add(mapping.SystemFieldDisplayName, typeof(string));
                 }
 
+      
                 // 转换数据行
                 foreach (DataRow sourceRow in sourceData.Rows)
                 {
@@ -637,56 +638,57 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                     foreach (var mapping in mappings)
                     {
-                        // 判断是否为系统生成或默认值的映射
-                        bool isSystemGenerated = mapping.ExcelColumn.StartsWith("[系统生成]");
-                        bool isDefaultValue = mapping.ExcelColumn.StartsWith("[默认值:");
-
-                        if (isSystemGenerated)
+                        // 根据数据来源类型处理
+                        switch (mapping.DataSourceType)
                         {
-                            // 系统生成的值，暂时留空或使用特殊标记
-                            targetRow[mapping.SystemField] = "[系统生成]";
-                        }
-                        else if (isDefaultValue)
-                        {
-                            // 默认值映射，提取默认值
-                            // 格式：[默认值:值] 字段名
-                            int startIndex = mapping.ExcelColumn.IndexOf('[') + 1;
-                            int endIndex = mapping.ExcelColumn.IndexOf(']');
-                            if (startIndex > 0 && endIndex > startIndex)
-                            {
-                                string defaultValuePart = mapping.ExcelColumn.Substring(startIndex, endIndex - startIndex);
-                                // 提取冒号后面的值
-                                int colonIndex = defaultValuePart.IndexOf(':');
-                                if (colonIndex > -1)
+                            case DataSourceType.Excel:
+                                // Excel数据源
+                                if (sourceData.Columns.Contains(mapping.ExcelColumn))
                                 {
-                                    targetRow[mapping.SystemField] = defaultValuePart.Substring(colonIndex + 1).Trim();
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // 正常的Excel列映射
-                            if (sourceData.Columns.Contains(mapping.ExcelColumn))
-                            {
-                                object cellValue = sourceRow[mapping.ExcelColumn];
+                                    object cellValue = sourceRow[mapping.ExcelColumn];
 
-                                // 检查是否为空值
-                                bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
+                                    // 检查是否为空值
+                                    bool isEmpty = cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString());
 
-                                // 如果配置了忽略空值且值为空，则不处理该字段
-                                if (mapping.IgnoreEmptyValue && isEmpty)
-                                {
-                                    targetRow[mapping.SystemField] = DBNull.Value;
+                                    // 如果配置了忽略空值且值为空，则不处理该字段
+                                    if (mapping.IgnoreEmptyValue && isEmpty)
+                                    {
+                                        targetRow[mapping.SystemFieldDisplayName] = DBNull.Value;
+                                    }
+                                    else
+                                    {
+                                        targetRow[mapping.SystemFieldDisplayName] = cellValue?.ToString() ?? "";
+                                    }
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemField] = cellValue?.ToString() ?? "";
+                                    targetRow[mapping.SystemFieldDisplayName] = "";
                                 }
-                            }
-                            else
-                            {
-                                targetRow[mapping.SystemField] = "";
-                            }
+                                break;
+
+                            case DataSourceType.SystemGenerated:
+                                // 系统生成的值，暂时留空或使用特殊标记
+                                targetRow[mapping.SystemFieldDisplayName] = "[系统生成]";
+                                break;
+
+                            case DataSourceType.DefaultValue:
+                                // 默认值映射
+                                targetRow[mapping.SystemFieldDisplayName] = mapping.DefaultValue ?? "";
+                                break;
+
+                            case DataSourceType.ForeignKey:
+                                // 外键关联
+                                // 在导入时需要通过关联表查询获取值
+                                // 这里暂时使用占位符，实际处理在DynamicImporter中完成
+                                targetRow[mapping.SystemFieldDisplayName] = $"[外键关联:{mapping.RelatedTableName}.{mapping.RelatedTableField}]";
+                                break;
+
+                            case DataSourceType.SelfReference:
+                                // 自身字段引用
+                                // 在导入时需要通过已导入的数据获取值
+                                // 这里暂时使用占位符，实际处理在DynamicImporter中完成
+                                targetRow[mapping.SystemFieldDisplayName] = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}]";
+                                break;
                         }
                     }
 

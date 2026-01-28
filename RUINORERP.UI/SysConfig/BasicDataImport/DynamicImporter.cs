@@ -211,33 +211,73 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 try
                 {
-                    // 判断是否为系统生成或默认值的映射
-                    bool isSystemGenerated = mapping.ExcelColumn.StartsWith("[系统生成]");
-                    bool isDefaultValue = mapping.ExcelColumn.StartsWith("[默认值:");
-
-                    // 获取值
+                    // 根据数据来源类型获取值
                     object cellValue = null;
 
-                    if (isSystemGenerated)
+                    switch (mapping.DataSourceType)
                     {
-                        // 系统生成的值，不从Excel读取，后续可以在导入后处理
-                        cellValue = null; // 暂时设为null，可以在导入后处理
-                    }
-                    else if (isDefaultValue)
-                    {
-                        // 默认值映射，从ExcelColumn中提取默认值
-                        cellValue = ExtractDefaultValue(mapping.ExcelColumn);
-                    }
-                    else if (dataTableContainsColumn(row.Table, mapping.SystemField))
-                    {
-                        // 使用SystemField从映射后的数据表中获取值
-                        cellValue = row[mapping.SystemField];
+                        case DataSourceType.Excel:
+                            // Excel数据源
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            {
+                                cellValue = row[mapping.SystemField];
 
-                        // 如果配置了忽略空值且值为DBNull，则跳过该字段
-                        if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
-                        {
-                            continue;
-                        }
+                                // 如果配置了忽略空值且值为DBNull，则跳过该字段
+                                if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
+                                {
+                                    continue;
+                                }
+                            }
+                            break;
+
+                        case DataSourceType.SystemGenerated:
+                            // 系统生成的值，不从Excel读取，后续可以在导入后处理
+                            cellValue = null;
+                            break;
+
+                        case DataSourceType.DefaultValue:
+                            // 默认值映射
+                            cellValue = mapping.DefaultValue;
+                            break;
+
+                        case DataSourceType.ForeignKey:
+                            // 外键关联
+                            // 从映射后的数据表中获取显示值，然后查询关联表获取ID
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            {
+                                string displayValue = row[mapping.SystemField]?.ToString();
+                                if (!string.IsNullOrEmpty(displayValue) &&
+                                    !string.IsNullOrEmpty(mapping.RelatedTableName) &&
+                                    !string.IsNullOrEmpty(mapping.RelatedTableFieldName))
+                                {
+                                    // 查找关联表中的对应值
+                                    object foreignKeyId = GetForeignKeyId(displayValue, mapping.RelatedTableName, mapping.RelatedTableFieldName);
+                                    if (foreignKeyId != null)
+                                    {
+                                        cellValue = foreignKeyId;
+                                    }
+                                    else
+                                    {
+                                        throw new Exception($"行 {rowNumber} 外键值 '{displayValue}' 在关联表 {mapping.RelatedTableName} 的字段 {mapping.RelatedTableFieldName} 中未找到对应记录");
+                                    }
+                                }
+                            }
+                            break;
+
+                        case DataSourceType.SelfReference:
+                            // 自身字段引用
+                            // 从映射后的数据表中获取显示值，然后从已导入的数据中查找对应的引用值
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField))
+                            {
+                                string displayValue = row[mapping.SystemField]?.ToString();
+                                if (!string.IsNullOrEmpty(displayValue) &&
+                                    !string.IsNullOrEmpty(mapping.SelfReferenceFieldName))
+                                {
+                                    // 处理自身引用逻辑（在导入过程中实现）
+                                    cellValue = displayValue; // 暂时使用显示值，后续在导入过程中处理
+                                }
+                            }
+                            break;
                     }
 
                     // 如果值为空，检查是否有默认值
@@ -259,21 +299,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (property == null)
                     {
                         throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField}");
-                    }
-
-                    // 处理外键字段
-                    if (mapping.IsForeignKey && !string.IsNullOrEmpty(mapping.RelatedTableName) && !string.IsNullOrEmpty(mapping.RelatedTableFieldName))
-                    {
-                        // 查找关联表中的对应值
-                        object foreignKeyId = GetForeignKeyId(cellValue.ToString(), mapping.RelatedTableName, mapping.RelatedTableFieldName);
-                        if (foreignKeyId != null)
-                        {
-                            cellValue = foreignKeyId;
-                        }
-                        else
-                        {
-                            throw new Exception($"行 {rowNumber} 外键值 '{cellValue}' 在关联表 {mapping.RelatedTableName} 的字段 {mapping.RelatedTableFieldName} 中未找到对应记录");
-                        }
                     }
 
                     // 类型转换
@@ -342,6 +367,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (result != null && result.Rows.Count > 0)
                 {
                     return result.Rows[0]["ID"];
+                }
+
+                // 如果没有找到，返回null
+                return null;
+            }
+            catch
+            {
+                // 如果查询失败，返回null
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取自身引用字段的值
+        /// 从已导入的数据中查找引用值
+        /// </summary>
+        /// <param name="displayValue">显示值</param>
+        /// <param name="tableName">表名</param>
+        /// <param name="selfReferenceField">自身引用字段</param>
+        /// <returns>自身引用值</returns>
+        private object GetSelfReferenceValue(string displayValue, string tableName, string selfReferenceField)
+        {
+            try
+            {
+                // 构建查询SQL
+                string sql = $"SELECT {selfReferenceField} FROM {tableName} WHERE ID = @value";
+                var parameters = new { value = displayValue };
+
+                // 执行查询
+                var result = _db.Ado.GetDataTable(sql, parameters);
+                if (result != null && result.Rows.Count > 0)
+                {
+                    return result.Rows[0][selfReferenceField];
                 }
 
                 // 如果没有找到，返回null

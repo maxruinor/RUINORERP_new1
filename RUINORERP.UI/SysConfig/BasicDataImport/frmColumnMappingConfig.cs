@@ -176,23 +176,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     // 如果用户确认了配置，添加到集合
                     ColumnMappings.Add(mapping);
 
-                    // 验证必须设置属性（系统生成或默认值）
-                    if (!mapping.IsSystemGenerated && string.IsNullOrEmpty(mapping.DefaultValue))
+                    // 验证必须设置特殊数据来源
+                    if (mapping.DataSourceType == DataSourceType.Excel)
                     {
-                        MessageBox.Show("由于Excel中没有指定列，必须设置\"系统生成\"或\"默认值\"属性。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("由于Excel中没有指定列，必须设置数据来源类型为：默认值、系统生成、外键关联或自身字段引用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         // 不添加到集合
                         ColumnMappings.RemoveAt(ColumnMappings.Count - 1);
                         return;
                     }
 
-                    // 根据属性设置显示的Excel列
-                    if (mapping.IsSystemGenerated)
+                    // 根据数据来源类型设置显示的Excel列
+                    switch (mapping.DataSourceType)
                     {
-                        mapping.ExcelColumn = $"[系统生成] {systemField}";
-                    }
-                    else if (!string.IsNullOrEmpty(mapping.DefaultValue))
-                    {
-                        mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
+                        case DataSourceType.SystemGenerated:
+                            mapping.ExcelColumn = $"[系统生成] {systemField}";
+                            break;
+                        case DataSourceType.DefaultValue:
+                            mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
+                            break;
+                        case DataSourceType.ForeignKey:
+                            mapping.ExcelColumn = $"[外键关联:{mapping.RelatedTableName}] {systemField}";
+                            break;
+                        case DataSourceType.SelfReference:
+                            mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceFieldDisplayName}] {systemField}";
+                            break;
                     }
 
                     // 从系统字段列表中移除
@@ -232,6 +239,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.RelatedTableName = propertyDialog.RelatedTableName;
                     mapping.RelatedTableField = propertyDialog.RelatedTableField;
                     mapping.RelatedTableFieldName = propertyDialog.RelatedTableFieldName;
+                    mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
+                    mapping.SelfReferenceFieldName = propertyDialog.SelfReferenceFieldName;
+                    mapping.SelfReferenceFieldDisplayName = propertyDialog.SelfReferenceFieldDisplayName;
                     mapping.UpdateTime = DateTime.Now;
 
                     return true;
@@ -499,13 +509,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             listBoxMappings.Items.Clear();
             foreach (var mapping in ColumnMappings)
             {
-                string displayText = $"{mapping.ExcelColumn} -> {mapping.SystemField}";
+                string displayText = $"{mapping.ExcelColumn} -> {mapping.SystemFieldDisplayName}";
 
                 // 添加属性标识
                 List<string> flags = new List<string>();
-                if (mapping.IsForeignKey) flags.Add("外键");
+
+                // 根据数据来源类型添加标识
+                switch (mapping.DataSourceType)
+                {
+                    case DataSourceType.Excel:
+                        // Excel数据源不显示额外标识
+                        break;
+                    case DataSourceType.DefaultValue:
+                        flags.Add("默认值");
+                        break;
+                    case DataSourceType.SystemGenerated:
+                        flags.Add("系统生成");
+                        break;
+                    case DataSourceType.ForeignKey:
+                        flags.Add("外键");
+                        break;
+                    case DataSourceType.SelfReference:
+                        flags.Add("自身引用");
+                        break;
+                }
+
                 if (mapping.IsUniqueValue) flags.Add("唯一");
-                if (mapping.IsSystemGenerated) flags.Add("系统生成");
 
                 if (flags.Count > 0)
                 {
@@ -936,9 +965,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <param name="mapping">包含Excel列信息的映射</param>
         private void RestoreExcelColumn(ColumnMapping mapping)
         {
-            // 检查是否是系统生成或默认值的情况
-            if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                (mapping.ExcelColumn.StartsWith("[系统生成]") || mapping.ExcelColumn.StartsWith("[默认值")))
+            // 检查是否是特殊数据来源的情况
+            bool isSpecialDataSource = mapping.ExcelColumn.StartsWith("[系统生成]") ||
+                                     mapping.ExcelColumn.StartsWith("[默认值") ||
+                                     mapping.ExcelColumn.StartsWith("[外键关联]") ||
+                                     mapping.ExcelColumn.StartsWith("[自身引用]");
+
+            if (!string.IsNullOrEmpty(mapping.ExcelColumn) && isSpecialDataSource)
             {
                 // 这些情况不需要恢复到Excel列表
                 return;

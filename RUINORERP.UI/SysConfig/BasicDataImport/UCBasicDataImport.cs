@@ -43,6 +43,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Type _selectedEntityType;
 
         /// <summary>
+        /// 实体类型映射字典
+        /// 存储中文描述到实体类型的映射关系
+        /// </summary>
+        public static Dictionary<string, Type> EntityTypeMappings { get; private set; }
+
+        /// <summary>
+        /// 静态构造函数
+        /// 初始化实体类型映射关系
+        /// </summary>
+        static UCBasicDataImport()
+        {
+            EntityTypeMappings = new Dictionary<string, Type>
+            {
+                { "供应商表", typeof(tb_CustomerVendor) },
+                { "客户表", typeof(tb_CustomerVendor) },
+                { "产品类目表", typeof(tb_ProdCategories) },
+                { "产品基本信息表", typeof(tb_Prod) },
+                { "产品详情信息表", typeof(tb_ProdDetail) },
+                { "产品属性表", typeof(tb_ProdProperty) },
+                { "产品属性值表", typeof(tb_ProdPropertyValue) }
+            };
+        }
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public UCBasicDataImport()
@@ -156,29 +180,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 根据选择获取实体类型
                 string selectedText = kcmbDynamicEntityType.SelectedItem.ToString();
-                switch (selectedText)
+                if (EntityTypeMappings.ContainsKey(selectedText))
                 {
-                    case "供应商表":
-                        _selectedEntityType = typeof(tb_CustomerVendor);
-                        break;
-                    case "客户表":
-                        _selectedEntityType = typeof(tb_CustomerVendor);
-                        break;
-                    case "产品类目表":
-                        _selectedEntityType = typeof(tb_ProdCategories);
-                        break;
-                    case "产品基本信息表":
-                        _selectedEntityType = typeof(tb_Prod);
-                        break;
-                    case "产品详情信息表":
-                        _selectedEntityType = typeof(tb_ProdDetail);
-                        break;
-                    case "产品属性表":
-                        _selectedEntityType = typeof(tb_ProdProperty);
-                        break;
-                    case "产品属性值表":
-                        _selectedEntityType = typeof(tb_ProdPropertyValue);
-                        break;
+                    _selectedEntityType = EntityTypeMappings[selectedText];
+                }
+                else
+                {
+                    _selectedEntityType = null;
                 }
 
                 // 加载对应的映射配置
@@ -698,8 +706,26 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             case DataSourceType.ForeignKey:
                                 // 外键关联
                                 // 在导入时需要通过关联表查询获取值
-                                // 这里暂时使用占位符，实际处理在DynamicImporter中完成
-                                targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
+                                // 显示外键来源列的值和关联信息
+                                string foreignKeySourceValue = "";
+                                string sourceColumn = mapping.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
+                                string sourceColumnDisplay = mapping.ForeignKeySourceColumn?.Value ?? sourceColumn;
+
+                                if (!string.IsNullOrEmpty(sourceColumn) &&
+                                    !sourceColumn.StartsWith("[") &&
+                                    sourceData.Columns.Contains(sourceColumn))
+                                {
+                                    foreignKeySourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
+                                }
+
+                                if (!string.IsNullOrEmpty(foreignKeySourceValue))
+                                {
+                                    targetRow[mapping.SystemField?.Value] = $"[外键:{sourceColumnDisplay}:{foreignKeySourceValue}->{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
+                                }
                                 break;
 
                             case DataSourceType.SelfReference:

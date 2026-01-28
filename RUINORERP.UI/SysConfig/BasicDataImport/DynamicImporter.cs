@@ -243,25 +243,74 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                         case DataSourceType.ForeignKey:
                             // 外键关联
-                            // 从映射后的数据表中获取显示值，然后查询关联表获取ID
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
+                            // 从Excel原始列或映射后的数据表中获取代码值，然后查询关联表获取ID
+                            string foreignKeyValue = null;
+                            string sourceColumnName = null;
+                            string sourceColumnDisplayName = null;
+
+                            // 优先从指定的外键来源列获取（Excel列）
+                            if (mapping.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(mapping.ForeignKeySourceColumn.Key))
                             {
-                                string displayValue = row[mapping.SystemField?.Value]?.ToString();
-                                if (!string.IsNullOrEmpty(displayValue) &&
-                                    !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
-                                    !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
+                                // 使用配置的外键来源列（如"供应商"列）
+                                sourceColumnName = mapping.ForeignKeySourceColumn.Key;
+                                sourceColumnDisplayName = mapping.ForeignKeySourceColumn.Value ?? sourceColumnName;
+                                if (dataTableContainsColumn(row.Table, sourceColumnName))
                                 {
-                                    // 查找关联表中的对应值
-                                    object foreignKeyId = GetForeignKeyId(displayValue, mapping.ForeignKeyTable?.Key, mapping.ForeignKeyField?.Key);
-                                    if (foreignKeyId != null)
-                                    {
-                                        cellValue = foreignKeyId;
-                                    }
-                                    else
-                                    {
-                                        throw new Exception($"行 {rowNumber} 外键值 '{displayValue}' 在关联表 {mapping.ForeignKeyTable?.Key} 的字段 {mapping.ForeignKeyField?.Key} 中未找到对应记录");
-                                    }
+                                    foreignKeyValue = row[sourceColumnName]?.ToString();
                                 }
+                            }
+                            else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
+                                     !mapping.ExcelColumn.StartsWith("[") &&
+                                     !mapping.ExcelColumn.StartsWith("("))
+                            {
+                                // 如果没有指定外键来源列，但映射有Excel列，尝试使用映射的Excel列
+                                sourceColumnName = mapping.ExcelColumn;
+                                sourceColumnDisplayName = mapping.ExcelColumn;
+                                if (dataTableContainsColumn(row.Table, sourceColumnName))
+                                {
+                                    foreignKeyValue = row[sourceColumnName]?.ToString();
+                                }
+                            }
+                            else
+                            {
+                                // 尝试从系统字段列获取（映射后的列名）
+                                sourceColumnName = mapping.SystemField?.Value;
+                                sourceColumnDisplayName = mapping.SystemField?.Value;
+                                if (dataTableContainsColumn(row.Table, sourceColumnName))
+                                {
+                                    foreignKeyValue = row[sourceColumnName]?.ToString();
+                                }
+                            }
+
+                            // 如果获取到了值，查询关联表获取主键ID
+                            if (!string.IsNullOrEmpty(foreignKeyValue) &&
+                                !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
+                                !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
+                            {
+                                // 查找关联表中的对应值（通过代码字段）
+                                object foreignKeyId = GetForeignKeyId(foreignKeyValue, mapping.ForeignKeyTable?.Key, mapping.ForeignKeyField?.Key);
+                                if (foreignKeyId != null)
+                                {
+                                    cellValue = foreignKeyId;
+                                }
+                                else
+                                {
+                                    string errorMsg = $"行 {rowNumber} 外键值 '{foreignKeyValue}' (来源列: {sourceColumnDisplayName ?? sourceColumnName}) " +
+                                        $"在关联表 {mapping.ForeignKeyTable?.Key} 的字段 {mapping.ForeignKeyField?.Key} 中未找到对应记录。";
+
+                                    // 如果是供应商表，提供额外提示
+                                    if (mapping.ForeignKeyTable?.Key == "tb_CustomerVendor")
+                                    {
+                                        errorMsg += "\n\n提示：请确保供应商名称在供应商表中已存在，或者先导入供应商数据。";
+                                    }
+
+                                    throw new Exception(errorMsg);
+                                }
+                            }
+                            else if (mapping.IsRequired)
+                            {
+                                // 如果是必填字段但没有获取到外键值
+                                throw new Exception($"行 {rowNumber} 字段 {mapping.SystemField?.Value} 是必填字段，但无法从列 '{sourceColumnDisplayName ?? sourceColumnName}' 获取有效的外键值");
                             }
                             break;
 
@@ -370,31 +419,75 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 获取外键ID
         /// </summary>
-        /// <param name="foreignKeyValue">外键值</param>
-        /// <param name="relatedTableName">关联表名</param>
-        /// <param name="relatedTableField">关联表字段</param>
-        /// <returns>外键ID</returns>
+        /// <param name="foreignKeyValue">外键代码值（如类目编码、供应商名称）</param>
+        /// <param name="relatedTableName">关联表名（如 tb_ProdCategories、tb_CustomerVendor）</param>
+        /// <param name="relatedTableField">关联表字段名（如 CategoryCode、VendorName）</param>
+        /// <returns>外键主键ID</returns>
         private object GetForeignKeyId(string foreignKeyValue, string relatedTableName, string relatedTableField)
         {
             try
             {
-                // 构建查询SQL，假设关联表的主键字段为ID
+                if (string.IsNullOrEmpty(foreignKeyValue) ||
+                    string.IsNullOrEmpty(relatedTableName) ||
+                    string.IsNullOrEmpty(relatedTableField))
+                {
+                    return null;
+                }
+
+                // 构建查询SQL，通过代码字段查询主键ID
+                // 例如：SELECT ID FROM tb_ProdCategories WHERE CategoryCode = 'CATEGORY001'
+                // 例如：SELECT ID FROM tb_CustomerVendor WHERE VendorName = '供应商A'
                 string sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} = @value";
-                var parameters = new { value = foreignKeyValue };
+
+                // 使用参数化查询防止SQL注入
+                var parameters = new { value = foreignKeyValue.Trim() };
 
                 // 执行查询
                 var result = _db.Ado.GetDataTable(sql, parameters);
+
                 if (result != null && result.Rows.Count > 0)
                 {
+                    // 检查是否有多个匹配记录（唯一性验证）
+                    if (result.Rows.Count > 1)
+                    {
+                        // 对于供应商表等需要唯一性验证的表，记录警告
+                        System.Diagnostics.Debug.WriteLine(
+                            $"警告：外键查询返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}，匹配数：{result.Rows.Count}");
+
+                        // 如果启用了严格模式，可以抛出异常
+                        // throw new Exception($"外键值 '{foreignKeyValue}' 在表 {relatedTableName} 中不唯一，找到 {result.Rows.Count} 条记录");
+                    }
+
                     return result.Rows[0]["ID"];
+                }
+
+                // 如果没有找到，尝试模糊匹配（对于供应商名称等可能包含空格的情况）
+                if (relatedTableField.ToLower().Contains("name") ||
+                    relatedTableField.ToLower().Contains("vendor") ||
+                    relatedTableField.ToLower().Contains("supplier"))
+                {
+                    sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} LIKE @value";
+                    parameters = new { value = $"%{foreignKeyValue.Trim()}%" };
+                    result = _db.Ado.GetDataTable(sql, parameters);
+
+                    if (result != null && result.Rows.Count > 0)
+                    {
+                        if (result.Rows.Count > 1)
+                        {
+                            System.Diagnostics.Debug.WriteLine(
+                                $"警告：模糊匹配返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}");
+                        }
+                        return result.Rows[0]["ID"];
+                    }
                 }
 
                 // 如果没有找到，返回null
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
-                // 如果查询失败，返回null
+                // 记录错误信息
+                System.Diagnostics.Debug.WriteLine($"查询外键ID失败: {ex.Message}");
                 return null;
             }
         }

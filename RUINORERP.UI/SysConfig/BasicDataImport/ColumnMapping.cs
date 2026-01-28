@@ -116,8 +116,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 外键字段引用（键值对：Key=英文字段名, Value=中文显示名）
+        /// 用于指定关联表中用于匹配的字段（通常是编码字段，如CategoryCode）
         /// </summary>
         public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
+
+        /// <summary>
+        /// 外键来源列（Excel中的列名）
+        /// 指定Excel中作为外键关联依据的来源列（如"供应商名称"列）
+        /// 用于通过代码值查询关联表获取主键ID
+        /// Key: Excel列名, Value: 显示名称/映射描述
+        /// </summary>
+        public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
 
         /// <summary>
         /// 数据来源类型
@@ -263,7 +272,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 获取表的中文显示名称（内部辅助方法）
+        /// 获取表的中文显示名称（内部辅助方法）11
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>中文显示名称</returns>

@@ -77,9 +77,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> CopyFromField { get; set; }
 
         /// <summary>
+        /// 外键来源列（Excel中的列名）
+        /// 用于指定Excel中作为外键关联依据的来源列（如"供应商名称"列）
+        /// Key: Excel列名, Value: 显示名称/映射描述
+        /// </summary>
+        public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
+
+        /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
+
+        /// <summary>
+        /// Excel列列表（用于外键来源列选择）
+        /// Key: Excel列名, Value: 显示名称/描述
+        /// </summary>
+        public Dictionary<string, string> ExcelColumns { get; set; }
 
         /// <summary>
         /// 构造函数
@@ -106,11 +119,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 添加支持的关联表
                 kcmbRelatedTable.Items.Clear();
                 kcmbRelatedTable.Items.Add("请选择");
-                kcmbRelatedTable.Items.Add("供应商表 (tb_Supplier)");
-                kcmbRelatedTable.Items.Add("产品类目表 (tb_ProdCategories)");
-                kcmbRelatedTable.Items.Add("产品信息表 (tb_Prod)");
-                kcmbRelatedTable.Items.Add("产品属性表 (tb_ProdProperty)");
-                kcmbRelatedTable.Items.Add("产品属性值表 (tb_ProdPropertyValue)");
+
+                // 使用UCBasicDataImport中的EntityTypeMappings加载关联表
+                if (UCBasicDataImport.EntityTypeMappings != null)
+                {
+                    // 去重后添加到下拉框
+                    var uniqueTables = new Dictionary<string, Type>();
+                    foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                    {
+                        if (!uniqueTables.ContainsValue(mapping.Value))
+                        {
+                            uniqueTables.Add(mapping.Key, mapping.Value);
+                        }
+                    }
+
+                    // 添加到下拉框
+                    foreach (var table in uniqueTables)
+                    {
+                        kcmbRelatedTable.Items.Add($"{table.Key} ({table.Value.Name})");
+                    }
+                }
+                else
+                {
+                    // 回退到硬编码方式
+                    kcmbRelatedTable.Items.Add("供应商表 (tb_CustomerVendor)");
+                    kcmbRelatedTable.Items.Add("产品类目表 (tb_ProdCategories)");
+                    kcmbRelatedTable.Items.Add("产品基本信息表 (tb_Prod)");
+                    kcmbRelatedTable.Items.Add("产品详情信息表 (tb_ProdDetail)");
+                    kcmbRelatedTable.Items.Add("产品属性表 (tb_ProdProperty)");
+                    kcmbRelatedTable.Items.Add("产品属性值表 (tb_ProdPropertyValue)");
+                }
+
                 kcmbRelatedTable.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -185,23 +224,51 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ForeignKeyTable = CurrentMapping.ForeignKeyTable;
                 ktxtRelatedField.Text = CurrentMapping.ForeignKeyField?.Value;
 
-            // 初始化自身引用字段
-            if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
-                CurrentMapping.SelfReferenceField != null)
-            {
-                LoadSelfReferenceFields();
-                SelfReferenceField = CurrentMapping.SelfReferenceField;
-                kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceField?.Value;
-            }
+                // 初始化外键来源列
+                SerializableKeyValuePair<string> fkSourceColumn = null;
+                if (CurrentMapping.ForeignKeySourceColumn != null)
+                {
+                    fkSourceColumn = new SerializableKeyValuePair<string>(
+                        CurrentMapping.ForeignKeySourceColumn.Key,
+                        CurrentMapping.ForeignKeySourceColumn.Value);
+                    ForeignKeySourceColumn = fkSourceColumn;
+                }
+                LoadForeignKeySourceColumns();
+                if (fkSourceColumn != null && !string.IsNullOrEmpty(fkSourceColumn.Key))
+                {
+                    // 查找匹配的项
+                    string searchText = string.IsNullOrEmpty(fkSourceColumn.Value)
+                        ? fkSourceColumn.Key
+                        : $"{fkSourceColumn.Value} ({fkSourceColumn.Key})";
 
-            // 初始化字段复制
-            if (CurrentMapping.DataSourceType == DataSourceType.FieldCopy &&
-                CurrentMapping.CopyFromField != null)
-            {
-                LoadCopyFromFields();
-                CopyFromField = CurrentMapping.CopyFromField;
-                kcmbCopyFromField.SelectedItem = CurrentMapping.CopyFromField?.Value;
-            }
+                    for (int i = 0; i < kcmbForeignKeySourceColumn.Items.Count; i++)
+                    {
+                        if (kcmbForeignKeySourceColumn.Items[i].ToString() == searchText ||
+                            kcmbForeignKeySourceColumn.Items[i].ToString() == fkSourceColumn.Key)
+                        {
+                            kcmbForeignKeySourceColumn.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // 初始化自身引用字段
+                if (CurrentMapping.DataSourceType == DataSourceType.SelfReference &&
+                    CurrentMapping.SelfReferenceField != null)
+                {
+                    LoadSelfReferenceFields();
+                    SelfReferenceField = CurrentMapping.SelfReferenceField;
+                    kcmbSelfReferenceField.SelectedItem = CurrentMapping.SelfReferenceField?.Value;
+                }
+
+                // 初始化字段复制
+                if (CurrentMapping.DataSourceType == DataSourceType.FieldCopy &&
+                    CurrentMapping.CopyFromField != null)
+                {
+                    LoadCopyFromFields();
+                    CopyFromField = CurrentMapping.CopyFromField;
+                    kcmbCopyFromField.SelectedItem = CurrentMapping.CopyFromField?.Value;
+                }
             }
 
             // 更新控件状态
@@ -218,6 +285,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 根据数据来源类型控制控件状态
             kcmbRelatedTable.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             ktxtRelatedField.Enabled = (dataSourceType == DataSourceType.ForeignKey);
+            kcmbForeignKeySourceColumn.Enabled = (dataSourceType == DataSourceType.ForeignKey);
             kcmbSelfReferenceField.Enabled = (dataSourceType == DataSourceType.SelfReference);
             kcmbCopyFromField.Enabled = (dataSourceType == DataSourceType.FieldCopy);
             ktxtDefaultValue.Enabled = (dataSourceType == DataSourceType.DefaultValue);
@@ -257,10 +325,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 获取选中的表名
             string selectedTable = kcmbRelatedTable.SelectedItem.ToString();
-            int startIndex = selectedTable.IndexOf('(') + 1;
-            int endIndex = selectedTable.IndexOf(')');
             string tableName = string.Empty;
 
+            // 提取表名（从括号中）
+            int startIndex = selectedTable.IndexOf('(') + 1;
+            int endIndex = selectedTable.IndexOf(')');
             if (startIndex > 0 && endIndex > startIndex)
             {
                 tableName = selectedTable.Substring(startIndex, endIndex - startIndex);
@@ -271,6 +340,46 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
+        /// 加载外键来源列（Excel列）
+        /// </summary>
+        private void LoadForeignKeySourceColumns()
+        {
+            try
+            {
+                kcmbForeignKeySourceColumn.Items.Clear();
+                kcmbForeignKeySourceColumn.Items.Add("请选择Excel列（可选）");
+
+                // 如果有传入Excel列字典，则加载
+                if (ExcelColumns != null && ExcelColumns.Count > 0)
+                {
+                    foreach (var column in ExcelColumns)
+                    {
+                        // 显示格式：显示名称 (Excel列名)
+                        string displayText = string.IsNullOrEmpty(column.Value)
+                            ? column.Key
+                            : $"{column.Value} ({column.Key})";
+                        kcmbForeignKeySourceColumn.Items.Add(displayText);
+                    }
+                }
+                else if (CurrentMapping != null && !string.IsNullOrEmpty(CurrentMapping.ExcelColumn))
+                {
+                    // 如果没有传入Excel列列表，但当前映射有Excel列，则使用该列
+                    // 并检查是否是特殊标记的列
+                    if (!CurrentMapping.ExcelColumn.StartsWith("[") && !CurrentMapping.ExcelColumn.StartsWith("("))
+                    {
+                        kcmbForeignKeySourceColumn.Items.Add(CurrentMapping.ExcelColumn);
+                    }
+                }
+
+                kcmbForeignKeySourceColumn.SelectedIndex = 0;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载外键来源列失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
         /// 加载表的字段列表
         /// </summary>
         /// <param name="tableName">表名</param>
@@ -278,7 +387,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                Type tableType = GetTableType(tableName);
+                Type tableType = null;
+                
+                // 优先使用UCBasicDataImport中的EntityTypeMappings
+                if (UCBasicDataImport.EntityTypeMappings != null)
+                {
+                    // 查找对应的中文描述
+                    foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
+                    {
+                        if (mapping.Value.Name == tableName)
+                        {
+                            tableType = mapping.Value;
+                            break;
+                        }
+                    }
+                }
+                
+                // 如果在EntityTypeMappings中找不到，使用原来的GetTableType方法
+                if (tableType == null)
+                {
+                    tableType = GetTableType(tableName);
+                }
+                
                 if (tableType == null)
                 {
                     MessageBox.Show($"无法找到表类型: {tableName}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -286,7 +416,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 获取字段信息
-                var fieldNameList = UIHelper.GetFieldNameList(false, tableType);
+                var fieldNameList = UIHelper.GetFieldNameList(true, tableType);
                 _fieldInfoDict = fieldNameList;
 
                 // 清空并添加字段到下拉框
@@ -404,6 +534,37 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     ForeignKeyTable = new SerializableKeyValuePair<string>(tableName, GetTableDisplayName(tableName));
                     ForeignKeyField = new SerializableKeyValuePair<string>(field.Key, field.Value);
+                }
+
+                // 获取外键来源列
+                if (kcmbForeignKeySourceColumn.SelectedIndex > 0)
+                {
+                    string selectedColumnText = kcmbForeignKeySourceColumn.SelectedItem.ToString();
+
+                    // 解析选择的文本，格式可能是："显示名称 (Excel列名)" 或只是 "Excel列名"
+                    string excelColumnName;
+                    string columnDisplayName = string.Empty;
+
+                    int columnStartIndex = selectedColumnText.LastIndexOf('(');
+                    int columnEndIndex = selectedColumnText.LastIndexOf(')');
+
+                    if (columnStartIndex > 0 && columnEndIndex > columnStartIndex)
+                    {
+                        // 格式："显示名称 (Excel列名)"
+                        columnDisplayName = selectedColumnText.Substring(0, columnStartIndex).Trim();
+                        excelColumnName = selectedColumnText.Substring(columnStartIndex + 1, columnEndIndex - columnStartIndex - 1);
+                    }
+                    else
+                    {
+                        // 格式：只是 "Excel列名"
+                        excelColumnName = selectedColumnText;
+                    }
+
+                    ForeignKeySourceColumn = new SerializableKeyValuePair<string>(excelColumnName, columnDisplayName);
+                }
+                else
+                {
+                    ForeignKeySourceColumn = null;
                 }
             }
             else if (dataSourceType == DataSourceType.SelfReference)

@@ -1324,10 +1324,21 @@ namespace RUINORERP.UI.Common
         /// <returns>是否有效</returns>
         private static bool IsValidColumn(SugarColumn sugarColumn, bool includePrimaryKey, bool isBrowsable)
         {
-            // 检查基本条件
-            if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+            if (includePrimaryKey)
             {
-                return false;
+                if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+                {
+                    sugarColumn.ColumnDescription = "主键";
+                }
+                return true;
+            }
+            else
+            {
+                // 检查基本条件
+                if (string.IsNullOrEmpty(sugarColumn.ColumnDescription?.Trim()))
+                {
+                    return false;
+                }
             }
 
             // 排除自增字段
@@ -1455,10 +1466,10 @@ namespace RUINORERP.UI.Common
         public static List<ColDisplayController> GetColumnDisplayList(params Type[] types)
         {
             List<ColDisplayController> columnDisplayControllers = new List<ColDisplayController>();
- 
+
             foreach (var type in types)
             {
-                if (type==null)
+                if (type == null)
                 {
                     continue;
                 }

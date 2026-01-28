@@ -232,7 +232,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             using (var propertyDialog = new FrmColumnPropertyConfig
             {
                 CurrentMapping = mapping,
-                TargetEntityType = TargetEntityType
+                TargetEntityType = TargetEntityType,
+                ExcelColumns = GetExcelColumnsList()
             })
             {
                 if (propertyDialog.ShowDialog() == DialogResult.OK)
@@ -245,6 +246,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
                     mapping.ForeignKeyTable = propertyDialog.ForeignKeyTable;
                     mapping.ForeignKeyField = propertyDialog.ForeignKeyField;
+                    mapping.ForeignKeySourceColumn = propertyDialog.ForeignKeySourceColumn;
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
                     mapping.CopyFromField = propertyDialog.CopyFromField;
@@ -253,6 +255,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 获取Excel列列表
+        /// </summary>
+        /// <returns>Excel列名字典（Key: 列名, Value: 显示名称）</returns>
+        private Dictionary<string, string> GetExcelColumnsList()
+        {
+            var columns = new Dictionary<string, string>();
+            if (ExcelData != null)
+            {
+                foreach (DataColumn col in ExcelData.Columns)
+                {
+                    // 默认情况下，Key和Value相同（列名）
+                    // 可以根据需要扩展，从配置中读取显示名称
+                    columns[col.ColumnName] = col.ColumnName;
+                }
+            }
+            return columns;
         }
 
         /// <summary>

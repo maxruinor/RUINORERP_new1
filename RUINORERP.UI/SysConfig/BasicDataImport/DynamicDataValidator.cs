@@ -137,19 +137,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         continue;
                     }
-
-                    // 验证数据类型
-                    Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
-                    if (!TryConvertValue(cellValue, targetType, out _))
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
-                        errors.Add(new ValidationError
+                        //他的值需要根据这个配置中是否有关系的外键关联类型，找到对应的表再去数据库查询，再去找他的主键的值。后面具体用哪个主键值则通过excel中的指定的列的值去这个结果中去找
+                    }
+                    else
+                    {
+                        // 验证数据类型
+                        Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+                        if (!TryConvertValue(cellValue, targetType, out _))
                         {
-                            RowNumber = i + 2, // +2 因为Excel从第2行开始
-                            FieldName = mapping.SystemField?.Key,
-                            ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
-                            ErrorType = ErrorType.TypeMismatch,
-                            OriginalValue = cellValue
-                        });
+                            errors.Add(new ValidationError
+                            {
+                                RowNumber = i + 2, // +2 因为Excel从第2行开始
+                                FieldName = mapping.SystemField?.Key,
+                                ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
+                                ErrorType = ErrorType.TypeMismatch,
+                                OriginalValue = cellValue
+                            });
+                        }
                     }
                 }
             }

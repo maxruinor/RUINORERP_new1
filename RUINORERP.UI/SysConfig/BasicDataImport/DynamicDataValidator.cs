@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using RUINORERP.Model;
+using SqlSugar;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -12,6 +14,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public class DynamicDataValidator
     {
+        private readonly ForeignKeyService _foreignKeyService;
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="db">SqlSugar数据库客户端</param>
+        public DynamicDataValidator(ISqlSugarClient db)
+        {
+            _foreignKeyService = new ForeignKeyService(db);
+        }
+
         /// <summary>
         /// 验证数据表
         /// </summary>
@@ -46,6 +59,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             // 检查数据范围
             ValidateDataRanges(dataTable, mappings, entityType, errors);
+
+            // 检查外键
+            ValidateForeignKeys(dataTable, mappings, errors);
 
             return errors;
         }
@@ -139,7 +155,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                     if (mapping.DataSourceType == DataSourceType.ForeignKey)
                     {
-                        //他的值需要根据这个配置中是否有关系的外键关联类型，找到对应的表再去数据库查询，再去找他的主键的值。后面具体用哪个主键值则通过excel中的指定的列的值去这个结果中去找
+                        // 外键验证
+                        string foreignKeyError;
+                        if (!_foreignKeyService.ValidateForeignKey(row, mapping, i + 2, out foreignKeyError))
+                        {
+                            errors.Add(new ValidationError
+                            {
+                                RowNumber = i + 2, // +2 因为Excel从第2行开始
+                                FieldName = mapping.SystemField?.Key,
+                                ErrorMessage = foreignKeyError,
+                                ErrorType = ErrorType.ForeignKeyValidationFailed,
+                                OriginalValue = cellValue
+                            });
+                        }
                     }
                     else
                     {
@@ -449,6 +477,45 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             return null;
         }
+
+        /// <summary>
+        /// 验证外键
+        /// </summary>
+        /// <param name="dataTable">数据表</param>
+        /// <param name="mappings">列映射配置</param>
+        /// <param name="errors">错误列表</param>
+        private void ValidateForeignKeys(DataTable dataTable, ColumnMappingCollection mappings, List<ValidationError> errors)
+        {
+            // 筛选出所有外键映射
+            var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
+            if (!foreignKeyMappings.Any())
+            {
+                return;
+            }
+
+            // 遍历所有数据行
+            for (int i = 0; i < dataTable.Rows.Count; i++)
+            {
+                DataRow row = dataTable.Rows[i];
+                int rowNumber = i + 2; // +2 因为Excel从第2行开始
+
+                // 遍历所有外键映射
+                foreach (var mapping in foreignKeyMappings)
+                {
+                    string foreignKeyError;
+                    if (!_foreignKeyService.ValidateForeignKey(row, mapping, rowNumber, out foreignKeyError))
+                    {
+                        errors.Add(new ValidationError
+                        {
+                            RowNumber = rowNumber,
+                            FieldName = mapping.SystemField?.Key,
+                            ErrorMessage = foreignKeyError,
+                            ErrorType = ErrorType.ForeignKeyValidationFailed
+                        });
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -483,43 +550,48 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     /// <summary>
-    /// 错误类型
-    /// </summary>
-    public enum ErrorType
-    {
-        /// <summary>
-        /// 数据表为空
+        /// 错误类型
         /// </summary>
-        EmptyData,
+        public enum ErrorType
+        {
+            /// <summary>
+            /// 数据表为空
+            /// </summary>
+            EmptyData,
 
-        /// <summary>
-        /// 列不存在
-        /// </summary>
-        ColumnNotFound,
+            /// <summary>
+            /// 列不存在
+            /// </summary>
+            ColumnNotFound,
 
-        /// <summary>
-        /// 类型不匹配
-        /// </summary>
-        TypeMismatch,
+            /// <summary>
+            /// 类型不匹配
+            /// </summary>
+            TypeMismatch,
 
-        /// <summary>
-        /// 必填字段为空
-        /// </summary>
-        EmptyRequiredField,
+            /// <summary>
+            /// 必填字段为空
+            /// </summary>
+            EmptyRequiredField,
 
-        /// <summary>
-        /// 重复值
-        /// </summary>
-        DuplicateValue,
+            /// <summary>
+            /// 重复值
+            /// </summary>
+            DuplicateValue,
 
-        /// <summary>
-        /// 长度超出限制
-        /// </summary>
-        LengthExceeded,
+            /// <summary>
+            /// 长度超出限制
+            /// </summary>
+            LengthExceeded,
 
-        /// <summary>
-        /// 数值超出范围
-        /// </summary>
-        OutOfRange
-    }
+            /// <summary>
+            /// 数值超出范围
+            /// </summary>
+            OutOfRange,
+
+            /// <summary>
+            /// 外键验证失败
+            /// </summary>
+            ForeignKeyValidationFailed
+        }
 }

@@ -554,29 +554,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        // /// <summary>
-        // /// 批量更新上下文菜单按钮状态
-        // /// </summary>
-        // private void UpdateContextMenuButtons(Dictionary<string, bool> buttonStates)
-        // {
-        //     if (this.BaseContextMenu == null) return;
-        //
-        //     foreach (var kvp in buttonStates)
-        //     {
-        //         try
-        //         {
-        //             var menuItem = FindContextMenuItemByName(kvp.Key);
-        //             if (menuItem != null)
-        //             {
-        //                 menuItem.Enabled = kvp.Value;
-        //             }
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             logger?.LogError(ex, "更新上下文菜单按钮失败: {ButtonName}", kvp.Key);
-        //         }
-        //     }
-        // }
+       
 
         /// <summary>
         /// 更新其他控件状态

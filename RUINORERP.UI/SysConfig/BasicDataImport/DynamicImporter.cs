@@ -18,6 +18,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class DynamicImporter
     {
         private readonly ISqlSugarClient _db;
+        private readonly ForeignKeyService _foreignKeyService;
 
         /// <summary>
         /// 导入结果统计
@@ -87,10 +88,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 构造函数
         /// </summary>
         /// <param name="db">SqlSugar数据库客户端</param>
+        /// <param name="entityInfoService">实体映射服务</param>
         public DynamicImporter(ISqlSugarClient db, IEntityMappingService entityInfoService)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _entityInfoService = entityInfoService;
+            _foreignKeyService = new ForeignKeyService(db);
         }
 
         /// <summary>
@@ -243,75 +246,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                         case DataSourceType.ForeignKey:
                             // 外键关联
-                            // 从Excel原始列或映射后的数据表中获取代码值，然后查询关联表获取ID
-                            string foreignKeyValue = null;
-                            string sourceColumnName = null;
-                            string sourceColumnDisplayName = null;
-
-                            // 优先从指定的外键来源列获取（Excel列）
-                            if (mapping.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(mapping.ForeignKeySourceColumn.Key))
+                            // 使用ForeignKeyService获取外键值
+                            string foreignKeyError;
+                            object foreignKeyId = _foreignKeyService.GetForeignKeyValue(row, mapping, rowNumber, out foreignKeyError);
+                            if (!string.IsNullOrEmpty(foreignKeyError))
                             {
-                                // 使用配置的外键来源列（如"供应商"列）
-                                sourceColumnName = mapping.ForeignKeySourceColumn.Key;
-                                sourceColumnDisplayName = mapping.ForeignKeySourceColumn.Value ?? sourceColumnName;
-                                if (dataTableContainsColumn(row.Table, sourceColumnName))
-                                {
-                                    foreignKeyValue = row[sourceColumnName]?.ToString();
-                                }
+                                throw new Exception(foreignKeyError);
                             }
-                            else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                                     !mapping.ExcelColumn.StartsWith("[") &&
-                                     !mapping.ExcelColumn.StartsWith("("))
-                            {
-                                // 如果没有指定外键来源列，但映射有Excel列，尝试使用映射的Excel列
-                                sourceColumnName = mapping.ExcelColumn;
-                                sourceColumnDisplayName = mapping.ExcelColumn;
-                                if (dataTableContainsColumn(row.Table, sourceColumnName))
-                                {
-                                    foreignKeyValue = row[sourceColumnName]?.ToString();
-                                }
-                            }
-                            else
-                            {
-                                // 尝试从系统字段列获取（映射后的列名）
-                                sourceColumnName = mapping.SystemField?.Value;
-                                sourceColumnDisplayName = mapping.SystemField?.Value;
-                                if (dataTableContainsColumn(row.Table, sourceColumnName))
-                                {
-                                    foreignKeyValue = row[sourceColumnName]?.ToString();
-                                }
-                            }
-
-                            // 如果获取到了值，查询关联表获取主键ID
-                            if (!string.IsNullOrEmpty(foreignKeyValue) &&
-                                !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
-                                !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
-                            {
-                                // 查找关联表中的对应值（通过代码字段）
-                                object foreignKeyId = GetForeignKeyId(foreignKeyValue, mapping.ForeignKeyTable?.Key, mapping.ForeignKeyField?.Key);
-                                if (foreignKeyId != null)
-                                {
-                                    cellValue = foreignKeyId;
-                                }
-                                else
-                                {
-                                    string errorMsg = $"行 {rowNumber} 外键值 '{foreignKeyValue}' (来源列: {sourceColumnDisplayName ?? sourceColumnName}) " +
-                                        $"在关联表 {mapping.ForeignKeyTable?.Key} 的字段 {mapping.ForeignKeyField?.Key} 中未找到对应记录。";
-
-                                    // 如果是供应商表，提供额外提示
-                                    if (mapping.ForeignKeyTable?.Key == "tb_CustomerVendor")
-                                    {
-                                        errorMsg += "\n\n提示：请确保供应商名称在供应商表中已存在，或者先导入供应商数据。";
-                                    }
-
-                                    throw new Exception(errorMsg);
-                                }
-                            }
-                            else if (mapping.IsRequired)
-                            {
-                                // 如果是必填字段但没有获取到外键值
-                                throw new Exception($"行 {rowNumber} 字段 {mapping.SystemField?.Value} 是必填字段，但无法从列 '{sourceColumnDisplayName ?? sourceColumnName}' 获取有效的外键值");
-                            }
+                            cellValue = foreignKeyId;
                             break;
 
                         case DataSourceType.SelfReference:

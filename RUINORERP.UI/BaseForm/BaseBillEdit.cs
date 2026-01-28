@@ -1247,17 +1247,6 @@ namespace RUINORERP.UI.BaseForm
                    
                             foreach (var item in BaseToolStrip.Items)
                             {
-                                //给按钮tag给个值。有什么意义？ 就为了后面注册状态用？用Text直接判断就可以了。
-                                //foreach (MenuItemEnums menuItem in Enum.GetValues(typeof(MenuItemEnums)))
-                                //{
-                                //    var button = new ToolStripButton
-                                //    {
-                                //        Text = item.ToString(),
-                                //        Tag = item // 关键：设置Tag属性为枚举值
-                                //    };
-                                //}
-
-
                                 if (item is ToolStripButton)
                                 {
                                     ToolStripButton subItem = item as ToolStripButton;

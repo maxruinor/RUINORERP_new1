@@ -100,10 +100,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         private void InitializeDynamicImport()
         {
+            // 初始化数据库连接
+            LoadDbConnection();
+
             // 初始化动态导入组件
             _dynamicExcelParser = new DynamicExcelParser();
             _columnMappingManager = new ColumnMappingManager();
-            _dynamicDataValidator = new DynamicDataValidator();
+            _dynamicDataValidator = new DynamicDataValidator(_db);
             _deduplicationService = new DataDeduplicationService();
             _currentConfig = new ImportConfiguration();
             _rawExcelData = new DataTable();
@@ -953,6 +956,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     MessageBox.Show("没有可导入的数据，请先点击\"解析\"按钮转换数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+
+                // 初始化DynamicImporter
+                _dynamicImporter = new DynamicImporter(_db, _entityInfoService);
 
                 // 直接执行导入
                 await ExecuteSingleImport();

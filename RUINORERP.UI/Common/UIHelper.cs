@@ -1702,6 +1702,8 @@ namespace RUINORERP.UI.Common
             //超级管理员不管控
             if (MainForm.Instance.AppContext.IsSuperUser)
             {
+                btnItem.Visible = true;
+                btnItem.Enabled = true;
                 return;
             }
             if (ExcludeMenuList != null && ExcludeMenuList.Any(c => c.ToString() == btnItem.Text))

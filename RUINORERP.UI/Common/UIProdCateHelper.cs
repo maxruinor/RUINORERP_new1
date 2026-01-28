@@ -74,7 +74,7 @@ namespace RUINORERP.UI.Common
             }
         }
 
-        //递归方法
+        //递归方法1
         private static void Bind(TreeNode parNode, List<tb_ProdCategories> list, long nodeId)
         {
             var childList = list.FindAll(t => t.Parent_id == nodeId).OrderBy(t => t.Sort);

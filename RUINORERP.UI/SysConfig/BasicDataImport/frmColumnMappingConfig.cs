@@ -867,44 +867,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private void kbtnConfigDeduplicateFields_Click(object sender, EventArgs e)
         {
             // 创建去重字段配置对话框
-            var dialogType = Type.GetType("RUINORERP.UI.SysConfig.BasicDataImport.frmDeduplicateFieldConfig, RUINORERP.UI");
-            if (dialogType == null)
+            using (var deduplicateConfigDialog = new frmDeduplicateFieldConfig())
             {
-                MessageBox.Show("找不到去重字段配置窗体类型", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                // 设置可用字段
+                deduplicateConfigDialog.AvailableFields = ColumnMappings.Select(m => m.SystemField).ToList();
+
+                // 设置已选字段
+                deduplicateConfigDialog.SelectedFields = ImportConfig.DeduplicateFields?.ToList() ?? new List<string>();
+
+                // 设置是否忽略空值
+                deduplicateConfigDialog.IgnoreEmptyValues = ImportConfig.IgnoreEmptyValuesInDeduplication;
+
+                if (deduplicateConfigDialog.ShowDialog() == DialogResult.OK)
+                {
+                    // 保存去重字段配置
+                    ImportConfig.DeduplicateFields = deduplicateConfigDialog.SelectedFields;
+                    ImportConfig.IgnoreEmptyValuesInDeduplication = deduplicateConfigDialog.IgnoreEmptyValues;
+
+                    int selectedCount = (ImportConfig.DeduplicateFields?.Count ?? 0);
+                    MessageBox.Show($"去重字段配置已更新，共选择 {selectedCount} 个去重字段",
+                        "配置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
-
-            var deduplicateConfigDialog = System.Activator.CreateInstance(dialogType) as Form;
-            if (deduplicateConfigDialog == null)
-            {
-                MessageBox.Show("无法创建去重字段配置窗体", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            // 设置可用字段
-            var availableFieldsProperty = dialogType.GetProperty("AvailableFields");
-            availableFieldsProperty?.SetValue(deduplicateConfigDialog, ColumnMappings.Select(m => m.SystemField).ToList());
-
-            // 设置已选字段
-            var selectedFieldsProperty = dialogType.GetProperty("SelectedFields");
-            selectedFieldsProperty?.SetValue(deduplicateConfigDialog, ImportConfig.DeduplicateFields?.ToList() ?? new List<string>());
-
-            // 设置是否忽略空值
-            var ignoreEmptyValuesProperty = dialogType.GetProperty("IgnoreEmptyValues");
-            ignoreEmptyValuesProperty?.SetValue(deduplicateConfigDialog, ImportConfig.IgnoreEmptyValuesInDeduplication);
-
-            if (deduplicateConfigDialog.ShowDialog() == DialogResult.OK)
-            {
-                // 保存去重字段配置
-                ImportConfig.DeduplicateFields = selectedFieldsProperty?.GetValue(deduplicateConfigDialog) as List<string>;
-                ImportConfig.IgnoreEmptyValuesInDeduplication = (bool)(ignoreEmptyValuesProperty?.GetValue(deduplicateConfigDialog) ?? true);
-
-                int selectedCount = (ImportConfig.DeduplicateFields?.Count ?? 0);
-                MessageBox.Show($"去重字段配置已更新，共选择 {selectedCount} 个去重字段",
-                    "配置成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-
-            deduplicateConfigDialog.Dispose();
         }
 
         /// <summary>

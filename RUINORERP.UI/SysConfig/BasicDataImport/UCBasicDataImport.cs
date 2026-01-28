@@ -714,13 +714,35 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 复制同一记录中另一个字段的值
                                 if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
                                 {
-                                    // 获取被复制字段的显示名称
+                                    // 获取被复制字段的映射配置
                                     var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
-                                    string copyFromDisplayName = copyFromMapping?.SystemField?.Value ?? mapping.CopyFromField?.Value;
 
-                                    // 被复制字段的值
-                                    object copiedValue = sourceRow[copyFromDisplayName];
-                                    targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                    if (copyFromMapping != null)
+                                    {
+                                        // 优先从已处理的 targetRow 中读取（如果该字段已被处理）
+                                        if (targetRow.Table.Columns.Contains(copyFromMapping.SystemField?.Value) &&
+                                            targetRow[copyFromMapping.SystemField?.Value] != DBNull.Value &&
+                                            !string.IsNullOrEmpty(targetRow[copyFromMapping.SystemField?.Value]?.ToString()))
+                                        {
+                                            object copiedValue = targetRow[copyFromMapping.SystemField?.Value];
+                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                        }
+                                        // 如果 targetRow 中还没有该值，尝试从 sourceRow 的 Excel 列中读取
+                                        else if (!string.IsNullOrEmpty(copyFromMapping.ExcelColumn) &&
+                                                sourceData.Columns.Contains(copyFromMapping.ExcelColumn))
+                                        {
+                                            object copiedValue = sourceRow[copyFromMapping.ExcelColumn];
+                                            targetRow[mapping.SystemField?.Value] = copiedValue?.ToString() ?? "";
+                                        }
+                                        else
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = "[字段复制:源数据为空]";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        targetRow[mapping.SystemField?.Value] = "[字段复制:找不到源字段]";
+                                    }
                                 }
                                 else
                                 {

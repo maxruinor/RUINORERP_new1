@@ -47,12 +47,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbDataSourceType = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.kcmbSelfReferenceField = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbCopyFromField = new Krypton.Toolkit.KryptonComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1

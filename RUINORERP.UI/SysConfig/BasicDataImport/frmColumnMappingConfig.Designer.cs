@@ -92,6 +92,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kbtnConfigDeduplicateFields.Size = new System.Drawing.Size(100, 25);
             this.kbtnConfigDeduplicateFields.TabIndex = 39;
             this.kbtnConfigDeduplicateFields.Values.Text = "配置去重字段";
+            this.kbtnConfigDeduplicateFields.Click += new System.EventHandler(this.kbtnConfigDeduplicateFields_Click);
             // 
             // kryptonLabelDeduplicateStrategy
             // 

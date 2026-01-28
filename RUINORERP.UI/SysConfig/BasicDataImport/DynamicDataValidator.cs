@@ -119,12 +119,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
 
                     // 使用SystemField检查列是否存在
-                    if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
+                    //应该是验证显示名称
+                    if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
                     {
                         continue;
                     }
 
-                    object cellValue = row[mapping.SystemField?.Key];
+                    object cellValue = row[mapping.SystemField?.Value];
                     if (cellValue == DBNull.Value || string.IsNullOrEmpty(cellValue?.ToString()))
                     {
                         continue; // 空值跳过
@@ -141,14 +142,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     Type targetType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
                     if (!TryConvertValue(cellValue, targetType, out _))
                     {
-                    errors.Add(new ValidationError
-                    {
-                        RowNumber = i + 2, // +2 因为Excel从第2行开始
-                        FieldName = mapping.SystemField?.Key,
-                        ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
-                        ErrorType = ErrorType.TypeMismatch,
-                        OriginalValue = cellValue
-                    });
+                        errors.Add(new ValidationError
+                        {
+                            RowNumber = i + 2, // +2 因为Excel从第2行开始
+                            FieldName = mapping.SystemField?.Key,
+                            ErrorMessage = $"值 '{cellValue}' 无法转换为类型 {targetType.Name}",
+                            ErrorType = ErrorType.TypeMismatch,
+                            OriginalValue = cellValue
+                        });
                     }
                 }
             }

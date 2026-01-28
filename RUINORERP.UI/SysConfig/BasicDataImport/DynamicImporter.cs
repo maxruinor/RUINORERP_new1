@@ -284,9 +284,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 复制同一记录中另一个字段的值
                                 if (!string.IsNullOrEmpty(mapping.CopyFromField?.Key))
                                 {
-                                    if (dataTableContainsColumn(row.Table, mapping.CopyFromField?.Key))
+                                    // 获取被复制字段的映射配置
+                                    var copyFromMapping = mappings.FirstOrDefault(m => m.SystemField?.Key == mapping.CopyFromField?.Key);
+
+                                    if (copyFromMapping != null && !string.IsNullOrEmpty(copyFromMapping.SystemField?.Value))
                                     {
-                                        cellValue = row[mapping.CopyFromField?.Key];
+                                        // 从当前行中读取被复制字段的值
+                                        if (dataTableContainsColumn(row.Table, copyFromMapping.SystemField.Value))
+                                        {
+                                            cellValue = row[copyFromMapping.SystemField.Value];
+                                        }
                                     }
                                 }
                                 break;

@@ -218,9 +218,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     {
                         case DataSourceType.Excel:
                             // Excel数据源
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
                             {
-                                cellValue = row[mapping.SystemField?.Key];
+                                cellValue = row[mapping.SystemField?.Value];
 
                                 // 如果配置了忽略空值且值为DBNull，则跳过该字段
                                 if (cellValue == DBNull.Value && mapping.IgnoreEmptyValue)
@@ -243,9 +243,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         case DataSourceType.ForeignKey:
                             // 外键关联
                             // 从映射后的数据表中获取显示值，然后查询关联表获取ID
-                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Key))
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
                             {
-                                string displayValue = row[mapping.SystemField?.Key]?.ToString();
+                                string displayValue = row[mapping.SystemField?.Value]?.ToString();
                                 if (!string.IsNullOrEmpty(displayValue) &&
                                     !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
                                     !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
@@ -662,7 +662,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     EntityImportHelper.PreProcessEntity(typeof(T), entity, _db, importType);
                 }
 
-                // 开启事务
+                // 开启事务1
                 _db.Ado.BeginTran();
 
                 try

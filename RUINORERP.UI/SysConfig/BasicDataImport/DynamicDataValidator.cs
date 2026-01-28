@@ -67,13 +67,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 // 检查映射后的数据表是否包含SystemField列
-                if (!dataTable.Columns.Contains(mapping.SystemField?.Key))
+                if (!dataTable.Columns.Contains(mapping.SystemField?.Value))
                 {
                     errors.Add(new ValidationError
                     {
                         RowNumber = -1,
                         FieldName = mapping.SystemField?.Key,
-                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Key}'",
+                        ErrorMessage = $"映射后的数据表中不存在列 '{mapping.SystemField?.Value}'",
                         ErrorType = ErrorType.ColumnNotFound
                     });
                 }

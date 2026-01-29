@@ -1035,6 +1035,12 @@ namespace RUINORERP.UI.PSI.SAL
                     }
 
                 }
+                // 如果用户退货时。不是选自出库单。但又手动填写入出库单号时提示出错。
+                if (NeedValidated && !string.IsNullOrWhiteSpace(EditEntity.SaleOut_NO) && !EditEntity.SaleOut_MainID.HasValue)
+                {
+                    System.Windows.Forms.MessageBox.Show("根据销售出库单退货号，必须引用式转自销售出库单，不能手动填写出库单号!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
                 //没有经验通过下面先不计算
                 if (NeedValidated && !base.Validator(EditEntity))

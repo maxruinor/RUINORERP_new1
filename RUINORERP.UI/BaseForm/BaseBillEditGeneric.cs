@@ -532,6 +532,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 批量更新工具栏按钮状态
+        /// 优化：确保状态管理考虑权限设置，权限是基础，状态是在权限基础上的进一步限制
         /// </summary>
         private void UpdateToolStripButtons(Dictionary<string, bool> buttonStates)
         {
@@ -544,7 +545,15 @@ namespace RUINORERP.UI.BaseForm
                     var button = FindToolStripButtonByName(kvp.Key);
                     if (button != null)
                     {
-                        button.Enabled = kvp.Value;
+                        // 状态管理不应该覆盖权限设置
+                        // 只有在按钮有权限的情况下，才根据状态设置是否启用
+                        // 按钮的权限状态已经在 BaseBillEdit_Load 中由 UIHelper.ControlButton 设置
+                        // 这里只需要根据状态在权限基础上进行调整
+                        if (button.Enabled) // 如果按钮已经有权限
+                        {
+                            button.Enabled = kvp.Value; // 再根据状态设置是否启用
+                        }
+                        // 如果按钮没有权限，保持禁用状态
                     }
                 }
                 catch (Exception ex)
@@ -596,19 +605,32 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 禁用所有按钮
+        /// 优化：考虑权限设置，只禁用有权限的按钮，没有权限的按钮保持原状态
         /// </summary>
         private void DisableAllButtons()
         {
             try
             {
-                toolStripbtnModify.Enabled = false;
-                toolStripButtonSave.Enabled = false;
-                toolStripbtnSubmit.Enabled = false;
-                toolStripbtnReview.Enabled = false;
-                toolStripBtnReverseReview.Enabled = false;
-                toolStripButtonCaseClosed.Enabled = false;
-                toolStripButtonCaseClosed.Visible = false;
-                toolStripbtnDelete.Enabled = false;
+                // 只在按钮有权限的情况下才禁用
+                // 这样可以避免覆盖权限设置
+                if (toolStripbtnModify != null && toolStripbtnModify.Enabled)
+                    toolStripbtnModify.Enabled = false;
+                if (toolStripButtonSave != null && toolStripButtonSave.Enabled)
+                    toolStripButtonSave.Enabled = false;
+                if (toolStripbtnSubmit != null && toolStripbtnSubmit.Enabled)
+                    toolStripbtnSubmit.Enabled = false;
+                if (toolStripbtnReview != null && toolStripbtnReview.Enabled)
+                    toolStripbtnReview.Enabled = false;
+                if (toolStripBtnReverseReview != null && toolStripBtnReverseReview.Enabled)
+                    toolStripBtnReverseReview.Enabled = false;
+                if (toolStripButtonCaseClosed != null)
+                {
+                    if (toolStripButtonCaseClosed.Enabled)
+                        toolStripButtonCaseClosed.Enabled = false;
+                    toolStripButtonCaseClosed.Visible = false;
+                }
+                if (toolStripbtnDelete != null && toolStripbtnDelete.Enabled)
+                    toolStripbtnDelete.Enabled = false;
             }
             catch (Exception ex)
             {

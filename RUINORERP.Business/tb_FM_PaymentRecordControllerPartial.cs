@@ -1810,15 +1810,18 @@ namespace RUINORERP.Business
                         if (saleOutRe.RefundStatus == (int)RefundStatus.未退款已退货)
                         {
                             saleOutRe.RefundStatus = (int)RefundStatus.已退款已退货;
-                            if (saleOutRe.TotalAmount == saleOutRe.tb_saleout.TotalAmount)
+                            if (saleOutRe.tb_saleout != null)
                             {
-                                saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.已退款已退货;
+                                if (saleOutRe.TotalAmount == saleOutRe.tb_saleout.TotalAmount)
+                                {
+                                    saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.已退款已退货;
+                                }
+                                else
+                                {
+                                    saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.部分退款退货;
+                                }
+                                saleOutUpdateList.Add(saleOutRe.tb_saleout);
                             }
-                            else
-                            {
-                                saleOutRe.tb_saleout.RefundStatus = (int)RefundStatus.部分退款退货;
-                            }
-                            saleOutUpdateList.Add(saleOutRe.tb_saleout);
                         }
 
                         saleOutReUpdateList.Add(saleOutRe);

@@ -101,60 +101,9 @@ namespace RUINORERP.UI.FM
         /// <returns></returns>
         public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
-            ToolStripButton toolStripButton生成对账单 = new System.Windows.Forms.ToolStripButton();
-            toolStripButton生成对账单.Text = "生成对账单";
-            toolStripButton生成对账单.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
-            toolStripButton生成对账单.ImageTransparentColor = System.Drawing.Color.Magenta;
-            toolStripButton生成对账单.Name = "生成对账单MakesureCost";
-            toolStripButton生成对账单.Visible = false;//默认隐藏
-            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton生成对账单);
-            toolStripButton生成对账单.ToolTipText = "生成对账单。";
-            toolStripButton生成对账单.Click += new System.EventHandler(this.toolStripButton生成对账单_Click);
-
-            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { toolStripButton生成对账单 };
+            System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[] { };
             this.BaseToolStrip.Items.AddRange(extendButtons);
             return extendButtons;
-
-        }
-
-        private void toolStripButton生成对账单_Click(object sender, EventArgs e)
-        {
-            /*后面再设计一个对账功能菜单？生成的回写一下？ 搞一个对账的表？*/
-            /*
-            if (base.bindingSourceList.Current != null && dataGridView1.CurrentCell != null)
-            {
-                //  弹出提示说：您确定将这个公司回收投入到公海吗？
-                if (bindingSourceList.Current is View_Inventory ViewInventory)
-                {
-                    var amountRule = new AmountValidationRule();
-                    using (var inputForm = new frmInputObject(amountRule))
-                    {
-                        inputForm.DefaultTitle = "请输入成本价格";
-                        tb_Inventory Inventory = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>().Where(c => c.Inventory_ID == ViewInventory.Inventory_ID).SingleAsync();
-                        if (inputForm.ShowDialog() == DialogResult.OK)
-                        {
-                            if (MessageBox.Show($"确定将产品:【{ViewInventory.SKU + "-" + ViewInventory.CNName}】库存成本设为：{inputForm.InputContent}吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.OK)
-                            {
-                                Inventory.CostFIFO = inputForm.InputContent.ToDecimal();
-                                Inventory.CostMonthlyWA = inputForm.InputContent.ToDecimal();
-                                Inventory.CostMovingWA = inputForm.InputContent.ToDecimal();
-                                Inventory.Inv_AdvCost = inputForm.InputContent.ToDecimal();
-                                Inventory.Inv_Cost = inputForm.InputContent.ToDecimal();
-
-                                int result = await MainForm.Instance.AppContext.Db.Updateable<tb_Inventory>(Inventory).UpdateColumns(t => new { t.CostFIFO, t.CostMonthlyWA, t.CostMovingWA, t.Inv_AdvCost, t.Inv_Cost }).ExecuteCommandAsync();
-                                if (result > 0)
-                                {
-                                    MainForm.Instance.ShowStatusText("生成对账单成功!");
-                                    
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-            */
-
 
         }
 
@@ -948,7 +897,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-   
+
 
         private void UCReceivablePayableQuery_Load(object sender, EventArgs e)
         {

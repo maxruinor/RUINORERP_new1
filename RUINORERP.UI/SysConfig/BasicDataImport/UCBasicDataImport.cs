@@ -723,11 +723,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 if (!string.IsNullOrEmpty(foreignKeySourceValue))
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[外键:{sourceColumnDisplay}:{foreignKeySourceValue}->{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
+                                    targetRow[mapping.SystemField?.Value] = $"[外键:{sourceColumnDisplay}:{foreignKeySourceValue}->{mapping.ForeignKeyTable?.Value}.{mapping.ForeignKeyField?.Value}]";
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Key}.{mapping.ForeignKeyField?.Key}]";
+                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Value}.{mapping.ForeignKeyField?.Value}]";
                                 }
                                 break;
 

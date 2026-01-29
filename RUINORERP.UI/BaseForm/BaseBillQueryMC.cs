@@ -3523,7 +3523,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 生成查询条件，并返回查询条件代理实体参数
+        /// 生成查询条件，并返回查询条件代理实体参数1
         /// </summary>
         /// <param name="useLike">true：默认不是模糊查询</param>
         internal override object LoadQueryConditionToUI(decimal QueryConditionShowColQty = 5)

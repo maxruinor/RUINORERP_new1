@@ -253,6 +253,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
                     mapping.CopyFromField = propertyDialog.CopyFromField;
+                    mapping.EnumTypeName = propertyDialog.EnumTypeName;
 
                     // 保存外键关联配置
                     if (propertyDialog.SelectedDataSourceType == DataSourceType.ForeignKey)
@@ -805,10 +806,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 switch (mapping.DataSourceType)
                 {
                     case DataSourceType.Excel:
-                        // Excel数据源不显示额外标识
+                        // Excel数据源，如果有默认值则显示
+                        if (!string.IsNullOrEmpty(mapping.DefaultValue))
+                        {
+                            flags.Add($"默认值:{mapping.DefaultValue}");
+                        }
                         break;
                     case DataSourceType.DefaultValue:
-                        flags.Add("默认值");
+                        flags.Add($"默认值:{mapping.DefaultValue}");
                         break;
                     case DataSourceType.SystemGenerated:
                         flags.Add("系统生成");
@@ -822,6 +827,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                     case DataSourceType.FieldCopy:
                         flags.Add($"复制:{mapping.CopyFromField?.Value}");
+                        break;
+                    case DataSourceType.ColumnConcat:
+                        string concatCols = string.Join("+", mapping.ConcatConfig?.SourceColumns ?? new List<string>());
+                        flags.Add($"列拼接:{concatCols}");
                         break;
                 }
 

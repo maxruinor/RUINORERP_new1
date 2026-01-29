@@ -42,6 +42,8 @@ using FastReport.Editor.Dialogs;
 using RUINORERP.Business.Cache;
 namespace RUINORERP.UI.AdvancedUIModule
 {
+
+    //
     public class UIGenerateHelper
     {
         /// <summary>

@@ -197,6 +197,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ColumnConcatConfig ConcatConfig { get; set; }
 
         /// <summary>
+        /// 枚举类型完整名称
+        /// 当数据库字段类型为int但实际使用枚举时，可手动指定枚举类型
+        /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
+        /// </summary>
+        public string EnumTypeName { get; set; }
+
+        /// <summary>
         /// 是否必填字段
         /// </summary>
         [XmlIgnore]

@@ -273,5 +273,32 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             proddetail.DataStatus = (int)DataStatus.新建;
             Business.BusinessHelper.Instance.InitEntity(proddetail);
         }
+
+        /// <summary>
+        /// 获取预定义的枚举类型（针对特殊字段）
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="fieldName">字段名</param>
+        /// <returns>枚举类型，无预定义返回null</returns>
+        public static Type GetPredefinedEnumType(string tableName, string fieldName)
+        {
+            // 使用表达式树定义字段到枚举类型的映射
+            var predefinedEnums = new List<(Type EntityType, string FieldName, Type EnumType)>
+            {
+                // 示例格式：表名.字段名 -> 枚举类型
+                (typeof(tb_Prod), nameof(tb_Prod.PropertyType), typeof(ProductAttributeType)),
+                // (typeof(YourEntity), nameof(YourEntity.YourField), typeof(YourEnum)),
+            };
+
+            foreach (var mapping in predefinedEnums)
+            {
+                if (mapping.EntityType.Name == tableName && mapping.FieldName == fieldName)
+                {
+                    return mapping.EnumType;
+                }
+            }
+
+            return null;
+        }
     }
 }

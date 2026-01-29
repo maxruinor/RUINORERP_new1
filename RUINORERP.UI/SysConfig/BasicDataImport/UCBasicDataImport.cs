@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Reflection;
+using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -738,7 +740,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                             case DataSourceType.DefaultValue:
                                 // 默认值映射
-                                targetRow[mapping.SystemField?.Value] = mapping.DefaultValue ?? "";
+                                string defaultValue = mapping.DefaultValue ?? "";
+                                // 检查是否需要转换为枚举值
+                                Type enumType = EntityImportHelper.GetPredefinedEnumType(_currentConfig?.EntityType ?? "", mapping.SystemField?.Key ?? "");
+                                if (enumType != null && !string.IsNullOrEmpty(defaultValue))
+                                {
+                                    // 解析枚举名称并转换为int
+                                    try
+                                    {
+                                        defaultValue = Convert.ChangeType(Enum.Parse(enumType, defaultValue), typeof(int)).ToString();
+                                    }
+                                    catch
+                                    {
+                                        // 解析失败保持原值
+                                    }
+                                }
+                                targetRow[mapping.SystemField?.Value] = defaultValue;
                                 break;
 
                             case DataSourceType.ForeignKey:

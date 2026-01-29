@@ -24,7 +24,7 @@ using RUINORERP.UI.UCSourceGrid;
 namespace RUINORERP.UI.UserPersonalized
 {
     /// <summary>
-    /// 表格显示
+    /// 表格显示1
     /// </summary>
     public partial class frmInputDataColSetting : KryptonForm
     {

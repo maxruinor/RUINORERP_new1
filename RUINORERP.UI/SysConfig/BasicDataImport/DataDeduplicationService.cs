@@ -135,8 +135,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 else
                 {
-                    // 如果找不到映射，尝试直接使用字段名（可能数据表就是用的字段名）
-                    displayNames.Add(fieldName);
+                    // 检查是否为外键来源列
+                    bool isForeignKeySourceColumn = false;
+                    if (config.ColumnMappings != null)
+                    {
+                        foreach (var map in config.ColumnMappings)
+                        {
+                            if (map.DataSourceType == DataSourceType.ForeignKey &&
+                                map.ForeignConfig != null &&
+                                map.ForeignConfig.ForeignKeySourceColumn != null &&
+                                map.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName == fieldName)
+                            {
+                                // 外键来源列直接使用Excel列名作为显示名称
+                                displayNames.Add(fieldName);
+                                isForeignKeySourceColumn = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // 如果不是外键来源列，则直接使用字段名（可能数据表就是用的字段名）
+                    if (!isForeignKeySourceColumn)
+                    {
+                        displayNames.Add(fieldName);
+                    }
                 }
             }
 

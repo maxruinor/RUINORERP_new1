@@ -124,29 +124,58 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <returns>去重字段列表</returns>
         /// <remarks>
-        /// 如果DeduplicateFields为空，则返回配置了IsUniqueValue的字段列表
+        /// 如果DeduplicateFields为空，则返回配置了IsUniqueValue的字段列表。
+        /// 如果有外键关联映射，会自动添加外键来源列到去重字段中。
         /// </remarks>
         public List<string> GetEffectiveDeduplicateFields()
         {
+            var resultFields = new List<string>();
+
+            // 1. 获取配置的去重字段
             if (DeduplicateFields != null && DeduplicateFields.Count > 0)
             {
-                return DeduplicateFields;
+                resultFields.AddRange(DeduplicateFields);
             }
-
-            // 如果未指定去重字段，则使用配置了唯一性的字段
-            var uniqueFields = new List<string>();
-            if (ColumnMappings != null)
+            else
             {
-                foreach (var mapping in ColumnMappings)
+                // 如果未指定去重字段，则使用配置了唯一性的字段
+                if (ColumnMappings != null)
                 {
-                    if (mapping.IsUniqueValue && !string.IsNullOrEmpty(mapping.SystemField?.Key))
+                    foreach (var mapping in ColumnMappings)
                     {
-                        uniqueFields.Add(mapping.SystemField.Key);
+                        if (mapping.IsUniqueValue && !string.IsNullOrEmpty(mapping.SystemField?.Key))
+                        {
+                            resultFields.Add(mapping.SystemField.Key);
+                        }
                     }
                 }
             }
 
-            return uniqueFields;
+            // 2. 自动添加外键来源列到去重字段中
+            // 这样可以确保去重时考虑外键参考值，避免因外键值不同而被误判为重复
+            if (ColumnMappings != null)
+            {
+                var foreignSourceColumns = new HashSet<string>();
+                foreach (var mapping in ColumnMappings)
+                {
+                    // 检查是否为外键关联类型
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                        mapping.ForeignConfig != null &&
+                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
+                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                    {
+                        // 添加外键来源列的Excel列名
+                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                        if (!foreignSourceColumns.Contains(sourceColumnName))
+                        {
+                            resultFields.Add(sourceColumnName);
+                            foreignSourceColumns.Add(sourceColumnName);
+                        }
+                    }
+                }
+            }
+
+            return resultFields;
         }
 
         /// <summary>

@@ -660,13 +660,41 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
+                // 用于跟踪已添加的列，避免重复添加
+                HashSet<string> addedColumns = new HashSet<string>();
+
                 // 创建结果表结构（使用SystemField.Value作为列名）显示给用户看的
                 foreach (var mapping in mappings)
                 {
-                    result.Columns.Add(mapping.SystemField?.Value, typeof(string));
+                    string columnName = mapping.SystemField?.Value;
+
+                    // 避免重复添加列
+                    if (!string.IsNullOrEmpty(columnName) && !addedColumns.Contains(columnName))
+                    {
+                        result.Columns.Add(columnName, typeof(string));
+                        addedColumns.Add(columnName);
+                    }
+
+                    // 对于外键关联类型，需要额外添加外键来源列到解析结果中
+                    // 这样在导入时才能从解析后的数据中获取外键参考值
+                    if (mapping.DataSourceType == DataSourceType.ForeignKey &&
+                        mapping.ForeignConfig != null &&
+                        mapping.ForeignConfig.ForeignKeySourceColumn != null &&
+                        !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                    {
+                        string sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+
+                        // 检查源数据中是否包含该列
+                        if (sourceData.Columns.Contains(sourceColumnName) && !addedColumns.Contains(sourceColumnName))
+                        {
+                            // 添加外键来源列到结果表
+                            result.Columns.Add(sourceColumnName, typeof(string));
+                            addedColumns.Add(sourceColumnName);
+                        }
+                    }
                 }
 
-      
+
                 // 转换数据行
                 foreach (DataRow sourceRow in sourceData.Rows)
                 {
@@ -726,6 +754,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     sourceData.Columns.Contains(sourceColumn))
                                 {
                                     foreignKeySourceValue = sourceRow[sourceColumn]?.ToString() ?? "";
+
+                                    // 将外键来源列的值复制到结果表中
+                                    // 这样在后续导入时，可以从解析后的数据中获取参考值
+                                    if (result.Columns.Contains(sourceColumn))
+                                    {
+                                        targetRow[sourceColumn] = foreignKeySourceValue;
+                                    }
                                 }
 
                                 if (!string.IsNullOrEmpty(foreignKeySourceValue))

@@ -75,7 +75,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
 
             // 3. 设置默认分类级别
-            if (!category.CategoryLevel.HasValue)
+            if (!category.CategoryLevel.HasValue && category.Parent_id.HasValue)
             {
                 category.CategoryLevel = 1;
             }
@@ -83,8 +83,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 4. 设置排序号
             if (!category.Sort.HasValue)
             {
-                int maxSort = db.Queryable<tb_ProdCategories>()
-                    .Max(c => c.Sort) ?? 0;
+                int maxSort = 0;// db.Queryable<tb_ProdCategories>().Max(c => c.Sort) ?? 0;
                 category.Sort = maxSort + 1;
             }
 

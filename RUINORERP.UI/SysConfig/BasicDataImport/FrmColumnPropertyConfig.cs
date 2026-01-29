@@ -343,16 +343,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbForeignExcelSourceColumn.Items.Clear();
                 kcmbForeignExcelSourceColumn.Items.Add("请选择Excel列（可选）");
 
-                // 如果有传入Excel列字典，则加载
+                // 如果有传入Excel列列表，则加载
                 if (ExcelColumns != null && ExcelColumns.Count > 0)
                 {
                     foreach (var column in ExcelColumns)
                     {
-                        // 显示格式：显示名称 (Excel列名)
-                        string displayText = string.IsNullOrEmpty(column.Value)
-                            ? column.Key
-                            : $"{column.Value} ({column.Key})";
-                        kcmbForeignExcelSourceColumn.Items.Add(displayText);
+                        kcmbForeignExcelSourceColumn.Items.Add(column);
                     }
                 }
                 else if (CurrentMapping != null && !string.IsNullOrEmpty(CurrentMapping.ExcelColumn))

@@ -271,17 +271,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 获取Excel列列表
         /// </summary>
-        /// <returns>Excel列名字典（Key: 列名, Value: 显示名称）</returns>
-        private Dictionary<string, string> GetExcelColumnsList()
+        /// <returns>Excel列名列表</returns>
+        private List<string> GetExcelColumnsList()
         {
-            var columns = new Dictionary<string, string>();
+            var columns = new List<string>();
             if (ExcelData != null)
             {
                 foreach (DataColumn col in ExcelData.Columns)
                 {
-                    // 默认情况下，Key和Value相同（列名）
-                    // 可以根据需要扩展，从配置中读取显示名称
-                    columns[col.ColumnName] = col.ColumnName;
+                    columns.Add(col.ColumnName);
                 }
             }
             return columns;

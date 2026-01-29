@@ -8,7 +8,7 @@ using System.Reflection;
 namespace RUINORERP.Common.Helper
 {
     /// <summary>
-    /// 程序集加载辅助类
+    /// 程序集加载辅助类1
     /// </summary>
     public static class AssemblyLoader
     {

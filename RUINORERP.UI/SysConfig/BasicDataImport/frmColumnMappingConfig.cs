@@ -1,6 +1,8 @@
 using Krypton.Toolkit;
 using RUINORERP.UI.Common;
 using RUINORERP.Common;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global.CustomAttribute;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using System.Xml.Serialization;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -386,7 +387,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 检查字段是否必填1
+        /// 检查字段是否必填
+        /// 通过FluentValidation验证器判断字段是否必填
         /// </summary>
         /// <param name="fieldName">字段名</param>
         /// <returns>是否必填</returns>
@@ -406,10 +408,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return false;
                 }
 
-                // 检查是否有RequiredAttribute
-                bool hasRequiredAttribute = property.GetCustomAttributes(typeof(RequiredAttribute), false).Length > 0;
-
-                // 检查是否有SugarColumnAttribute且IsNullable为false
+                // 首先检查SugarColumnAttribute的IsNullable
                 bool isNullable = true;
                 var sugarColumnAttribute = property.GetCustomAttributes(false)
                     .FirstOrDefault(attr => attr.GetType().Name == "SugarColumnAttribute");
@@ -426,12 +425,213 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                     catch
                     {
-                        // 如果获取失败，默认为可空
+                        // 如果获取失败，继续使用验证器检查
                     }
                 }
 
-                // 有RequiredAttribute或IsNullable为false则为必填
-                return hasRequiredAttribute || !isNullable;
+                // 如果IsNullable为false，则必填
+                if (!isNullable)
+                {
+                    return true;
+                }
+
+                // 尝试获取验证器并检查必填规则
+                try
+                {
+                    // 获取验证器类型名：实体名 + "Validator"
+                    string validatorTypeName = TargetEntityType.Name + "Validator";
+                    string fullTypeName = $"RUINORERP.Business.Validator.{validatorTypeName}";
+                    
+                    // 使用AssemblyLoader工具类加载程序集
+                    Type validatorType = AssemblyLoader.GetType("RUINORERP.Business", fullTypeName);
+                    
+                    if (validatorType != null && MainForm.Instance?.AppContext != null)
+                    {
+                        // 从依赖注入容器获取验证器实例
+                        object validator = MainForm.Instance.AppContext.GetRequiredService(validatorType);
+
+                        if (validator != null)
+                        {
+                            // 获取验证器的Type
+                            Type validatorInterface = validator.GetType();
+
+                            // 获取GetEnumerator方法来遍历验证规则
+                            var enumeratorMethod = validatorInterface.GetMethod("GetEnumerator");
+                            if (enumeratorMethod != null)
+                            {
+                                var enumerator = enumeratorMethod.Invoke(validator, null);
+                                if (enumerator != null)
+                                {
+                                    var moveNextMethod = enumerator.GetType().GetMethod("MoveNext");
+                                    var getCurrentMethod = enumerator.GetType().GetProperty("Current");
+
+                                    // 遍历所有验证规则
+                                    while ((bool)moveNextMethod.Invoke(enumerator, null))
+                                    {
+                                        var currentRule = getCurrentMethod.GetValue(enumerator);
+                                        if (currentRule != null)
+                                        {
+                                            // 获取PropertyName
+                                            var propertyNameProp = currentRule.GetType().GetProperty("PropertyName");
+                                            if (propertyNameProp != null)
+                                            {
+                                                string rulePropertyName = propertyNameProp.GetValue(currentRule) as string;
+                                                if (rulePropertyName == fieldName)
+                                                {
+                                                    // 获取Components
+                                                    var componentsProp = currentRule.GetType().GetProperty("Components");
+                                                    if (componentsProp != null)
+                                                    {
+                                                        var components = componentsProp.GetValue(currentRule);
+                                                        if (components != null)
+                                                        {
+                                                            foreach (var component in (System.Collections.IEnumerable)components)
+                                                            {
+                                                                // 检查是否为必填验证器
+                                                                if (IsRequiredValidator(component, fieldName, TargetEntityType))
+                                                                {
+                                                                    return true;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // 如果验证器检查失败，回退到属性检查
+                }
+
+                // 最后检查RequiredAttribute
+                bool hasRequiredAttribute = property.GetCustomAttributes(typeof(RequiredAttribute), false).Length > 0;
+                return hasRequiredAttribute;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断验证器组件是否为必填验证器
+        /// 参考BaseEditGeneric中的实现
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>如果是必填验证器返回true，否则返回false</returns>
+        private bool IsRequiredValidator(object component, string propertyName, Type entityType)
+        {
+            try
+            {
+                if (component == null)
+                {
+                    return false;
+                }
+
+                // 获取Validator属性
+                var validatorProp = component.GetType().GetProperty("Validator");
+                if (validatorProp == null)
+                {
+                    return false;
+                }
+
+                var validator = validatorProp.GetValue(component);
+                if (validator == null)
+                {
+                    return false;
+                }
+
+                // 获取Validator.Name
+                var nameProp = validator.GetType().GetProperty("Name");
+                if (nameProp == null)
+                {
+                    return false;
+                }
+
+                string validatorName = nameProp.GetValue(validator) as string;
+                if (string.IsNullOrEmpty(validatorName))
+                {
+                    return false;
+                }
+
+                // 检查常见的必填验证器类型
+                switch (validatorName)
+                {
+                    case "NotEmptyValidator":
+                    case "NotNullValidator":
+                        return true;
+
+                    case "PredicateValidator":
+                        // 对于外键验证器，需要检查属性是否为可空类型
+                        return IsRequiredForeignKeyValidator(component, propertyName, entityType);
+
+                    default:
+                        return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 判断验证器组件是否为必填的外键验证器
+        /// 参考BaseEditGeneric中的实现
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>如果是必填的外键验证器返回true，否则返回false</returns>
+        private bool IsRequiredForeignKeyValidator(object component, string propertyName, Type entityType)
+        {
+            try
+            {
+                // 检查是否是PredicateValidator（用于Must方法）
+                var validatorProp = component.GetType().GetProperty("Validator");
+                var validator = validatorProp?.GetValue(component);
+                var nameProp = validator?.GetType().GetProperty("Name");
+                string validatorName = nameProp?.GetValue(validator) as string;
+
+                if (validatorName != "PredicateValidator")
+                {
+                    return false;
+                }
+
+                // 获取属性信息
+                var propertyInfo = entityType.GetProperty(propertyName);
+                if (propertyInfo == null)
+                {
+                    return false;
+                }
+
+                // 检查属性是否有FKRelationAttribute特性，判断是否为外键
+                var fkAttr = propertyInfo.GetCustomAttribute<FKRelationAttribute>(false);
+                if (fkAttr == null)
+                {
+                    return false; // 不是外键
+                }
+
+                // 检查属性类型是否为非空类型（非可空类型）
+                // 如果是值类型且不是可空类型，则为必填
+                if (propertyInfo.PropertyType.IsValueType)
+                {
+                    // 检查是否是可空值类型
+                    var underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+                    // 如果underlyingType为null，表示不是可空类型，即为必填
+                    return underlyingType == null;
+                }
+
+                // 对于引用类型，通常认为是可空的
+                return false;
             }
             catch
             {

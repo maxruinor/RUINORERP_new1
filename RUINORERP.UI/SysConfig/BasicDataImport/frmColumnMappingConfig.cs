@@ -198,7 +198,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             mapping.ExcelColumn = $"[默认值:{mapping.DefaultValue}] {systemField}";
                             break;
                         case DataSourceType.ForeignKey:
-                            mapping.ExcelColumn = $"[外键关联:{mapping.ForeignKeyTable?.Value}] {systemField}";
+                            mapping.ExcelColumn = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}] {systemField}";
                             break;
                     case DataSourceType.SelfReference:
                         mapping.ExcelColumn = $"[自身引用:{mapping.SelfReferenceField?.Value}] {systemField}";
@@ -239,17 +239,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (propertyDialog.ShowDialog() == DialogResult.OK)
                 {
                     // 保存用户配置的属性
-                    mapping.IsForeignKey = propertyDialog.IsForeignKey;
                     mapping.IsUniqueValue = propertyDialog.IsUniqueValue;
                     mapping.IgnoreEmptyValue = propertyDialog.IgnoreEmptyValue;
                     mapping.DefaultValue = propertyDialog.DefaultValue;
                     mapping.IsSystemGenerated = propertyDialog.IsSystemGenerated;
-                    mapping.ForeignKeyTable = propertyDialog.ForeignKeyTable;
-                    mapping.ForeignKeyField = propertyDialog.ForeignKeyField;
-                    mapping.ForeignKeySourceColumn = propertyDialog.ForeignKeySourceColumn;
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
                     mapping.CopyFromField = propertyDialog.CopyFromField;
+
+                    // 保存外键关联配置
+                    if (propertyDialog.SelectedDataSourceType == DataSourceType.ForeignKey)
+                    {
+                        mapping.ForeignConfig = new ForeignRelatedConfig
+                        {
+                            ForeignKeyTable = propertyDialog.ForeignKeyTable,
+                            ForeignKeyField = propertyDialog.ForeignKeyField,
+                            ForeignKeySourceColumn = propertyDialog.ForeignKeySourceColumn
+                        };
+                    }
+                    else
+                    {
+                        mapping.ForeignConfig = null;
+                    }
 
                     return true;
                 }

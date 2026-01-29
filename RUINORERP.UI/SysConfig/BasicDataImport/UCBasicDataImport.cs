@@ -3,6 +3,7 @@ using Krypton.Toolkit;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using RUINORERP.Common;
+using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DynamicImporter _dynamicImporter;
         private DynamicDataValidator _dynamicDataValidator;
         private DataDeduplicationService _deduplicationService;
+        private IForeignKeyService _foreignKeyService;
         private ImportConfiguration _currentConfig;
         private DataTable _rawExcelData;           // 原始Excel数据（预览用）
         private DataTable _parsedImportData;         // 根据映射配置解析后的数据
@@ -103,10 +105,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 初始化数据库连接
             LoadDbConnection();
 
+            // 初始化外键服务（单例模式，整个导入流程共享）
+            _foreignKeyService = new ForeignKeyService(_db);
+
             // 初始化动态导入组件
             _dynamicExcelParser = new DynamicExcelParser();
             _columnMappingManager = new ColumnMappingManager();
-            _dynamicDataValidator = new DynamicDataValidator(_db);
+            _dynamicDataValidator = new DynamicDataValidator(_foreignKeyService);
             _deduplicationService = new DataDeduplicationService();
             _currentConfig = new ImportConfiguration();
             _rawExcelData = new DataTable();
@@ -602,6 +607,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     kcmbDynamicSheetName.SelectedIndex,
                     0); // 0表示读取全部数据
 
+                //
                 // 根据映射配置转换数据
                 _parsedImportData = ApplyColumnMapping(fullData, _currentConfig.ColumnMappings);
 
@@ -711,8 +717,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 // 在导入时需要通过关联表查询获取值
                                 // 显示外键来源列的值和关联信息
                                 string foreignKeySourceValue = "";
-                                string sourceColumn = mapping.ForeignKeySourceColumn?.Key ?? mapping.ExcelColumn;
-                                string sourceColumnDisplay = mapping.ForeignKeySourceColumn?.Value ?? sourceColumn;
+                                string sourceColumn = mapping.ForeignConfig?.ForeignKeySourceColumn?.ExcelColumnName ?? mapping.ExcelColumn;
+                                // DisplayName = 显示名称
+                                string sourceColumnDisplay = mapping.ForeignConfig?.ForeignKeySourceColumn?.DisplayName ?? sourceColumn;
 
                                 if (!string.IsNullOrEmpty(sourceColumn) &&
                                     !sourceColumn.StartsWith("[") &&
@@ -723,11 +730,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 if (!string.IsNullOrEmpty(foreignKeySourceValue))
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[外键:{sourceColumnDisplay}:{foreignKeySourceValue}->{mapping.ForeignKeyTable?.Value}.{mapping.ForeignKeyField?.Value}]";
+                                    targetRow[mapping.SystemField?.Value] = $"[通过关联外键:{sourceColumnDisplay}:{foreignKeySourceValue}->找{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
                                 }
                                 else
                                 {
-                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignKeyTable?.Value}.{mapping.ForeignKeyField?.Value}]";
+                                    targetRow[mapping.SystemField?.Value] = $"[外键关联:{mapping.ForeignConfig?.ForeignKeyTable?.Value}.{mapping.ForeignConfig?.ForeignKeyField?.Value}]";
                                 }
                                 break;
 
@@ -1084,8 +1091,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 Application.DoEvents();
 
-                // 初始化导入器
-                _dynamicImporter = new DynamicImporter(_db, _entityInfoService);
+                // 初始化导入器，传入共享的ForeignKeyService实例
+                _dynamicImporter = new DynamicImporter(_db, _entityInfoService, _foreignKeyService);
 
                 // 获取导入类型标识（用于区分客户和供应商等使用相同表的情况）
                 string importType = GetImportType();
@@ -1335,12 +1342,54 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 加载数据库连接
                 LoadDbConnection();
 
+                //导入前，通过当前配置找到这个配置中的列的情况，找到有外键关联的情况，再去找到具体关联的哪个表。
+                //再先从数据库中查找到结果集合。缓存起来。用于 外键服务类和验证服务类。
+                PreloadForeignKeyData();
+
                 // 执行动态导入（异步）
-                ExecuteDynamicImport();
+                await ExecuteDynamicImport();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"导入数据失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 预加载外键数据
+        /// 在导入前批量查询所有关联表数据，缓存起来用于外键服务类和验证服务类
+        /// 使用共享的ForeignKeyService实例，确保缓存复用
+        /// </summary>
+        private void PreloadForeignKeyData()
+        {
+            try
+            {
+                if (_currentConfig == null || _currentConfig.ColumnMappings == null)
+                {
+                    return;
+                }
+
+                // 筛选出所有外键关联的映射
+                var foreignKeyMappings = _currentConfig.ColumnMappings
+                    .Where(m => m.DataSourceType == DataSourceType.ForeignKey)
+                    .ToList();
+
+                if (!foreignKeyMappings.Any())
+                {
+                    return;
+                }
+
+                // 使用共享的ForeignKeyService实例预加载外键数据
+                // 确保验证和导入流程使用同一个缓存
+                _foreignKeyService.PreloadForeignKeyData(_currentConfig.ColumnMappings);
+
+                // 记录预加载成功的信息
+                MainForm.Instance.ShowStatusText($"成功预加载 {foreignKeyMappings.Count} 个外键关联表的数据");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.ShowStatusText($"预加载外键数据失败: {ex.Message}");
+                // 记录错误但不阻止导入
             }
         }
 

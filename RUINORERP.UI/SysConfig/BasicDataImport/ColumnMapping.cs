@@ -57,11 +57,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ColumnMapping
     {
         /// <summary>
-        /// 主键ID
-        /// </summary>
-        public int Id { get; set; }
-
-        /// <summary>
         /// Excel列名（数据来源标识）
         /// </summary>
         public string ExcelColumn { get; set; }
@@ -70,14 +65,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 系统字段引用（键值对：Key=英文字段名, Value=中文显示名）
         /// </summary>
         public SerializableKeyValuePair<string> SystemField { get; set; }
-
-        /// <summary>
-        /// 字段元信息（包含完整的字段定义）
-        /// 注：此属性不序列化到XML配置文件中，仅用于运行时使用
-        /// </summary>
-        [System.Xml.Serialization.XmlIgnore]
-        public FieldMetadata FieldMetadata { get; set; }
-
 
         /// <summary>
         /// 是否值唯一
@@ -100,39 +87,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string DefaultValue { get; set; }
 
         /// <summary>
-        /// 是否为外键
-        /// </summary>
-        public bool IsForeignKey { get; set; }
-
-        /// <summary>
         /// 是否系统生成
         /// </summary>
         public bool IsSystemGenerated { get; set; }
-
-        /// <summary>
-        /// 外键表引用（键值对：Key=英文表名, Value=中文表名）
-        /// </summary>
-        public SerializableKeyValuePair<string> ForeignKeyTable { get; set; }
-
-        /// <summary>
-        /// 外键字段引用（键值对：Key=英文字段名, Value=中文显示名）
-        /// 用于指定关联表中用于匹配的字段（通常是编码字段，如CategoryCode）
-        /// </summary>
-        public SerializableKeyValuePair<string> ForeignKeyField { get; set; }
-
-        /// <summary>
-        /// 外键来源列（Excel中的列名）
-        /// 指定Excel中作为外键关联依据的来源列（如"供应商名称"列）
-        /// 用于通过代码值查询关联表获取主键ID
-        /// Key: Excel列名, Value: 显示名称/映射描述
-        /// </summary>
-        public SerializableKeyValuePair<string> ForeignKeySourceColumn { get; set; }
 
         /// <summary>
         /// 数据来源类型
         /// 用于标识字段数据的来源方式
         /// </summary>
         public DataSourceType DataSourceType { get; set; } = DataSourceType.Excel;
+
+        /// <summary>
+        /// 外键关联配置（当DataSourceType为ForeignKey时使用）
+        /// 存储外部关联类型的列配置信息
+        /// </summary>
+        public ForeignRelatedConfig ForeignConfig { get; set; }
 
         /// <summary>
         /// 自身引用字段（当DataSourceType为SelfReference时使用）
@@ -150,47 +119,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> CopyFromField { get; set; }
 
         /// <summary>
-        /// 根据字段元信息初始化字段属性
+        /// 是否必填字段
         /// </summary>
-        /// <param name="metadata">字段元信息</param>
-        public void InitializeFromMetadata(FieldMetadata metadata)
-        {
-            if (metadata == null)
-            {
-                return;
-            }
+        [XmlIgnore]
+        public bool IsRequired { get; set; }
 
-            // 使用统一的SerializableKeyValuePair结构存储字段信息
-            SystemField = new SerializableKeyValuePair<string>(metadata.FieldName, metadata.DisplayName);
-            DataType = metadata.DataTypeName;
-            IsForeignKey = metadata.IsForeignKey;
-            IsSystemGenerated = metadata.IsIdentity || metadata.IsPrimaryKey;
-
-            // 如果有外键表，初始化外键表引用
-            if (!string.IsNullOrEmpty(metadata.ForeignTable))
-            {
-                ForeignKeyTable = new SerializableKeyValuePair<string>(metadata.ForeignTable, GetTableDisplayNameInternal(metadata.ForeignTable));
-            }
-
-            // 根据属性设置数据来源类型
-            if (IsSystemGenerated)
-            {
-                DataSourceType = DataSourceType.SystemGenerated;
-            }
-            else if (IsForeignKey)
-            {
-                DataSourceType = DataSourceType.ForeignKey;
-            }
-            else if (!string.IsNullOrEmpty(metadata.DefaultValue))
-            {
-                DataSourceType = DataSourceType.DefaultValue;
-            }
-
-            if (string.IsNullOrEmpty(DefaultValue))
-            {
-                DefaultValue = metadata.DefaultValue;
-            }
-        }
+        /// <summary>
+        /// 最大长度
+        /// </summary>
+        [XmlIgnore]
+        public int MaxLength { get; set; }
 
         /// <summary>
         /// 验证字段值
@@ -200,18 +138,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>是否验证通过</returns>
         public bool ValidateValue(object value, out string errorMessage)
         {
-            if (FieldMetadata != null)
-            {
-                return FieldMetadata.ValidateValue(value, out errorMessage);
-            }
-
-            // 如果没有元信息，进行基础验证
             errorMessage = string.Empty;
-            
+
+            // 基础验证：检查必填字段
             if (IsRequired && (value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())))
             {
                 errorMessage = $"字段【{SystemField?.Value ?? SystemField?.Key ?? string.Empty}】不能为空";
                 return false;
+            }
+
+            // 外键关联验证
+            if (DataSourceType == DataSourceType.ForeignKey && ForeignConfig != null)
+            {
+                if (!ForeignConfig.Validate(out string foreignError))
+                {
+                    errorMessage = foreignError;
+                    return false;
+                }
             }
 
             return true;
@@ -224,13 +167,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <returns>转换后的值</returns>
         public object ConvertValue(object value)
         {
-            if (FieldMetadata != null)
-            {
-                return FieldMetadata.ConvertValue(value);
-            }
-
             // 如果有默认值且值为空，返回默认值
-            if ((value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString())) 
+            if ((value == null || value == DBNull.Value || string.IsNullOrEmpty(value?.ToString()))
                 && !string.IsNullOrEmpty(DefaultValue))
             {
                 return DefaultValue;
@@ -240,62 +178,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 是否必填字段
+        /// 获取外键表名（便捷属性）
         /// </summary>
-        [System.Xml.Serialization.XmlIgnore]
-        public bool IsRequired
-        {
-            get
-            {
-                if (FieldMetadata != null)
-                {
-                    return FieldMetadata.IsRequired;
-                }
-                return false;
-            }
-        }
+        [XmlIgnore]
+        public string ForeignKeyTableName => ForeignConfig?.ForeignKeyTable?.Key;
 
         /// <summary>
-        /// 最大长度
+        /// 获取外键字段名（便捷属性）
         /// </summary>
-        [System.Xml.Serialization.XmlIgnore]
-        public int MaxLength
-        {
-            get
-            {
-                if (FieldMetadata != null)
-                {
-                    return FieldMetadata.MaxLength;
-                }
-                return 0;
-            }
-        }
+        [XmlIgnore]
+        public string ForeignKeyFieldName => ForeignConfig?.ForeignKeyField?.Key;
 
         /// <summary>
-        /// 获取表的中文显示名称（内部辅助方法）
+        /// 获取外键来源列名（便捷属性）
         /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <returns>中文显示名称</returns>
-        private string GetTableDisplayNameInternal(string tableName)
-        {
-            if (string.IsNullOrEmpty(tableName))
-                return string.Empty;
-
-            // 使用UCBasicDataImport中的EntityTypeMappings获取表的中文显示名称
-            if (UCBasicDataImport.EntityTypeMappings != null)
-            {
-                foreach (var mapping in UCBasicDataImport.EntityTypeMappings)
-                {
-                    if (mapping.Value.Name == tableName)
-                    {
-                        return mapping.Key;
-                    }
-                }
-            }
-
-            // 回退到表名本身
-            return tableName;
-        }
+        [XmlIgnore]
+        public string ForeignKeySourceColumnName => ForeignConfig?.ForeignKeySourceColumn?.ExcelColumnName;
     }
 
     /// <summary>
@@ -356,5 +254,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             return this.Where(m => m.IgnoreEmptyValue).ToList();
         }
 
+        /// <summary>
+        /// 获取所有外键关联映射
+        /// </summary>
+        /// <returns>外键关联映射配置列表</returns>
+        public List<ColumnMapping> GetForeignKeyMappings()
+        {
+            return this.Where(m => m.DataSourceType == DataSourceType.ForeignKey && m.ForeignConfig != null).ToList();
+        }
     }
 }

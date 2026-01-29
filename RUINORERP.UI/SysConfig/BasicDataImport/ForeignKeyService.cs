@@ -1,14 +1,28 @@
-using RUINORERP.Model; using SqlSugar; using System; using System.Data; using System.Diagnostics; using System.Linq;
+using RUINORERP.Model;
+using SqlSugar;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics;
+using System.Linq;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
     /// <summary>
     /// 外键处理服务
-    /// 负责外键值的获取和验证
+    /// 负责外键值的获取和验证，支持预加载和缓存功能
+    /// 实现IForeignKeyService接口，支持依赖注入
     /// </summary>
-    public class ForeignKeyService
+    public class ForeignKeyService : IForeignKeyService
     {
         private readonly ISqlSugarClient _db;
+
+        /// <summary>
+        /// 外键数据缓存
+        /// Key: 表名，Value: 字段值到主键ID的映射
+        /// </summary>
+        private ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _foreignKeyCache;
 
         /// <summary>
         /// 构造函数
@@ -17,6 +31,94 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ForeignKeyService(ISqlSugarClient db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _foreignKeyCache = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>();
+        }
+
+        /// <summary>
+        /// 预加载外键数据
+        /// </summary>
+        /// <param name="mappings">列映射配置集合</param>
+        public void PreloadForeignKeyData(IEnumerable<ColumnMapping> mappings)
+        {
+            if (mappings == null || !mappings.Any())
+            {
+                return;
+            }
+
+            // 收集所有外键映射
+            var foreignKeyMappings = mappings.Where(m => m.DataSourceType == DataSourceType.ForeignKey).ToList();
+            if (!foreignKeyMappings.Any())
+            {
+                return;
+            }
+
+            // 按表分组预加载数据
+            var tableGroups = foreignKeyMappings.GroupBy(m => m.ForeignConfig?.ForeignKeyTable?.Key).Where(g => !string.IsNullOrEmpty(g.Key));
+            foreach (var group in tableGroups)
+            {
+                string tableName = group.Key;
+                foreach (var mapping in group)
+                {
+                    if (!string.IsNullOrEmpty(mapping.ForeignConfig?.ForeignKeyField?.Key))
+                    {
+                        PreloadForeignKeyData(tableName, mapping.ForeignConfig.ForeignKeyField.Key);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 预加载指定表的外键数据
+        /// </summary>
+        /// <param name="tableName">表名</param>
+        /// <param name="fieldName">字段名</param>
+        public void PreloadForeignKeyData(string tableName, string fieldName)
+        {
+            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(fieldName))
+            {
+                return;
+            }
+
+            try
+            {
+                string cacheKey = $"{tableName}_{fieldName}";
+                if (_foreignKeyCache.ContainsKey(cacheKey))
+                {
+                    return; // 已经缓存过
+                }
+
+                // 构建查询SQL
+                string sql = $"SELECT ID, {fieldName} FROM {tableName}";
+                var data = _db.Ado.GetDataTable(sql);
+
+                // 构建缓存
+                var fieldValueToIdMap = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow row in data.Rows)
+                {
+                    object id = row["ID"];
+                    object fieldValue = row[fieldName];
+                    if (fieldValue != DBNull.Value && fieldValue != null)
+                    {
+                        string key = fieldValue.ToString().Trim();
+                        fieldValueToIdMap.TryAdd(key, id);
+                    }
+                }
+
+                _foreignKeyCache.TryAdd(cacheKey, fieldValueToIdMap);
+                Debug.WriteLine($"预加载外键数据完成: {tableName}.{fieldName}, 共 {fieldValueToIdMap.Count} 条记录");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"预加载外键数据失败: {tableName}.{fieldName}, 错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 清除缓存
+        /// </summary>
+        public void ClearCache()
+        {
+            _foreignKeyCache.Clear();
         }
 
         /// <summary>
@@ -39,11 +141,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 string sourceColumnDisplayName = null;
 
                 // 优先从指定的外键来源列获取（Excel列）
-                if (mapping.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(mapping.ForeignKeySourceColumn.Key))
+                if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
                 {
                     // 使用配置的外键来源列（如"供应商"列）
-                    sourceColumnName = mapping.ForeignKeySourceColumn.Key;
-                    sourceColumnDisplayName = mapping.ForeignKeySourceColumn.Value ?? sourceColumnName;
+                    sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                    // DisplayName = 显示名称
+                    sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.DisplayName ?? sourceColumnName;
                     if (dataTableContainsColumn(row.Table, sourceColumnName))
                     {
                         foreignKeyValue = row[sourceColumnName]?.ToString();
@@ -74,11 +177,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                 // 如果获取到了值，查询关联表获取主键ID
                 if (!string.IsNullOrEmpty(foreignKeyValue) &&
-                    !string.IsNullOrEmpty(mapping.ForeignKeyTable?.Key) &&
-                    !string.IsNullOrEmpty(mapping.ForeignKeyField?.Key))
+                    mapping.ForeignConfig != null &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key) &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key))
                 {
                     // 查找关联表中的对应值（通过代码字段）
-                    object foreignKeyId = GetForeignKeyId(foreignKeyValue, mapping.ForeignKeyTable?.Key, mapping.ForeignKeyField?.Key);
+                    object foreignKeyId = GetForeignKeyId(foreignKeyValue, mapping.ForeignConfig.ForeignKeyTable.Key, mapping.ForeignConfig.ForeignKeyField.Key);
                     if (foreignKeyId != null)
                     {
                         return foreignKeyId;
@@ -86,10 +190,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     else
                     {
                         errorMessage = $"行 {rowNumber} 外键值 '{foreignKeyValue}' (来源列: {sourceColumnDisplayName ?? sourceColumnName}) " +
-                            $"在关联表 {mapping.ForeignKeyTable?.Key} 的字段 {mapping.ForeignKeyField?.Key} 中未找到对应记录。";
+                            $"在关联表 {mapping.ForeignConfig.ForeignKeyTable.Key} 的字段 {mapping.ForeignConfig.ForeignKeyField.Key} 中未找到对应记录。";
 
                         // 如果是供应商表，提供额外提示
-                        if (mapping.ForeignKeyTable?.Key == "tb_CustomerVendor")
+                        if (mapping.ForeignConfig.ForeignKeyTable.Key == "tb_CustomerVendor")
                         {
                             errorMessage += "\n\n提示：请确保供应商名称在供应商表中已存在，或者先导入供应商数据。";
                         }
@@ -115,6 +219,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 获取外键ID
+        /// 优先从缓存中获取，缓存未命中时查询数据库
         /// </summary>
         /// <param name="foreignKeyValue">外键代码值</param>
         /// <param name="relatedTableName">关联表名</param>
@@ -131,13 +236,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return null;
                 }
 
+                string trimmedValue = foreignKeyValue.Trim();
+
+                // 尝试从缓存中获取
+                string cacheKey = $"{relatedTableName}_{relatedTableField}";
+                if (_foreignKeyCache.TryGetValue(cacheKey, out var fieldValueToIdMap))
+                {
+                    if (fieldValueToIdMap.TryGetValue(trimmedValue, out var cachedId))
+                    {
+                        Debug.WriteLine($"从缓存中获取外键ID: {relatedTableName}.{relatedTableField} = {trimmedValue} -> {cachedId}");
+                        return cachedId;
+                    }
+                }
+
+                // 缓存未命中，查询数据库
                 // 构建查询SQL，通过代码字段查询主键ID
                 // 例如：SELECT ID FROM tb_ProdCategories WHERE CategoryCode = 'CATEGORY001'
                 // 例如：SELECT ID FROM tb_CustomerVendor WHERE VendorName = '供应商A'
                 string sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} = @value";
 
                 // 使用参数化查询防止SQL注入
-                var parameters = new { value = foreignKeyValue.Trim() };
+                var parameters = new { value = trimmedValue };
 
                 // 执行查询
                 var result = _db.Ado.GetDataTable(sql, parameters);
@@ -155,7 +274,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         // throw new Exception($"外键值 '{foreignKeyValue}' 在表 {relatedTableName} 中不唯一，找到 {result.Rows.Count} 条记录");
                     }
 
-                    return result.Rows[0]["ID"];
+                    object id = result.Rows[0]["ID"];
+                    // 将结果添加到缓存
+                    AddToCache(cacheKey, trimmedValue, id);
+                    return id;
                 }
 
                 // 如果没有找到，尝试模糊匹配（对于供应商名称等可能包含空格的情况）
@@ -164,7 +286,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     relatedTableField.ToLower().Contains("supplier"))
                 {
                     sql = $"SELECT ID FROM {relatedTableName} WHERE {relatedTableField} LIKE @value";
-                    parameters = new { value = $"%{foreignKeyValue.Trim()}%" };
+                    parameters = new { value = $"%{trimmedValue}%" };
                     result = _db.Ado.GetDataTable(sql, parameters);
 
                     if (result != null && result.Rows.Count > 0)
@@ -174,7 +296,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             Debug.WriteLine(
                                 $"警告：模糊匹配返回多个结果。表：{relatedTableName}，字段：{relatedTableField}，值：{foreignKeyValue}");
                         }
-                        return result.Rows[0]["ID"];
+                        object id = result.Rows[0]["ID"];
+                        // 模糊匹配结果不缓存，因为可能不准确
+                        return id;
                     }
                 }
 
@@ -186,6 +310,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 记录错误信息
                 Debug.WriteLine($"查询外键ID失败: {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// 将外键数据添加到缓存
+        /// </summary>
+        /// <param name="cacheKey">缓存键</param>
+        /// <param name="fieldValue">字段值</param>
+        /// <param name="id">主键ID</param>
+        private void AddToCache(string cacheKey, string fieldValue, object id)
+        {
+            if (!_foreignKeyCache.ContainsKey(cacheKey))
+            {
+                _foreignKeyCache.TryAdd(cacheKey, new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase));
+            }
+
+            if (_foreignKeyCache.TryGetValue(cacheKey, out var fieldValueToIdMap))
+            {
+                fieldValueToIdMap.TryAdd(fieldValue, id);
             }
         }
 

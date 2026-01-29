@@ -14,15 +14,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     /// </summary>
     public class DynamicDataValidator
     {
-        private readonly ForeignKeyService _foreignKeyService;
+        private readonly IForeignKeyService _foreignKeyService;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="db">SqlSugar数据库客户端</param>
-        public DynamicDataValidator(ISqlSugarClient db)
+        /// <param name="foreignKeyService">外键服务</param>
+        public DynamicDataValidator(IForeignKeyService foreignKeyService)
         {
-            _foreignKeyService = new ForeignKeyService(db);
+            _foreignKeyService = foreignKeyService ?? throw new ArgumentNullException(nameof(foreignKeyService));
         }
 
         /// <summary>

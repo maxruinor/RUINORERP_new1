@@ -539,6 +539,9 @@ namespace RUINORERP.UI
             // 特定UI组件注册
             RegisterUIComponents(builder);
 
+            // 注册基础数据导入相关服务
+            RegisterBasicDataImportServices(builder);
+
             // 注册AOP相关
             ConfigureAOP(builder);
 
@@ -549,6 +552,18 @@ namespace RUINORERP.UI
                 .InstancePerLifetimeScope()
                 .EnableInterfaceInterceptors()
                 .InterceptedBy(typeof(BaseDataCacheAOP));
+        }
+
+        /// <summary>
+        /// 注册基础数据导入相关服务
+        /// </summary>
+        private static void RegisterBasicDataImportServices(ContainerBuilder builder)
+        {
+            // 注册外键服务为单例，确保缓存全局共享
+            builder.RegisterType<SysConfig.BasicDataImport.ForeignKeyService>()
+                .As<SysConfig.BasicDataImport.IForeignKeyService>()
+                .SingleInstance()
+                .PropertiesAutowired();
         }
 
         /// <summary>

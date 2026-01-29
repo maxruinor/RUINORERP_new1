@@ -42,6 +42,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel6 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel5 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel4 = new Krypton.Toolkit.KryptonLabel();
+            this.kcmbForeignExcelSourceColumn = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             this.ktxtRelatedField = new Krypton.Toolkit.KryptonComboBox();
             this.kcmbRelatedTable = new Krypton.Toolkit.KryptonComboBox();
             this.kchkIsForeignKey = new Krypton.Toolkit.KryptonCheckBox();
@@ -49,20 +51,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel2 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
-            this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
-            this.kcmbForeignKeySourceColumn = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonGroupBoxForeignType = new Krypton.Toolkit.KryptonGroupBox();
+            this.kcmbForeignDbSourceColumn = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel11 = new Krypton.Toolkit.KryptonLabel();
+            this.lblMaping = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignKeySourceColumn)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType.Panel)).BeginInit();
+            this.kryptonGroupBoxForeignType.Panel.SuspendLayout();
+            this.kryptonGroupBoxForeignType.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.kryptonGroupBoxForeignType);
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
             this.kryptonPanel1.Controls.Add(this.kbtnOK);
             this.kryptonPanel1.Controls.Add(this.kchkIsUniqueValue);
@@ -77,18 +87,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kryptonLabel6);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel5);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel4);
-            this.kryptonPanel1.Controls.Add(this.kcmbForeignKeySourceColumn);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel10);
-            this.kryptonPanel1.Controls.Add(this.ktxtRelatedField);
-            this.kryptonPanel1.Controls.Add(this.kcmbRelatedTable);
             this.kryptonPanel1.Controls.Add(this.kchkIsForeignKey);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel3);
-            this.kryptonPanel1.Controls.Add(this.kryptonLabel2);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(450, 600);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1155, 679);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kbtnCancel
@@ -213,12 +217,30 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel4.TabIndex = 7;
             this.kryptonLabel4.Values.Text = "系统生成:";
             // 
+            // kcmbForeignExcelSourceColumn
+            // 
+            this.kcmbForeignExcelSourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbForeignExcelSourceColumn.DropDownWidth = 280;
+            this.kcmbForeignExcelSourceColumn.IntegralHeight = false;
+            this.kcmbForeignExcelSourceColumn.Location = new System.Drawing.Point(126, 127);
+            this.kcmbForeignExcelSourceColumn.Name = "kcmbForeignExcelSourceColumn";
+            this.kcmbForeignExcelSourceColumn.Size = new System.Drawing.Size(280, 21);
+            this.kcmbForeignExcelSourceColumn.TabIndex = 20;
+            // 
+            // kryptonLabel10
+            // 
+            this.kryptonLabel10.Location = new System.Drawing.Point(18, 128);
+            this.kryptonLabel10.Name = "kryptonLabel10";
+            this.kryptonLabel10.Size = new System.Drawing.Size(105, 20);
+            this.kryptonLabel10.TabIndex = 19;
+            this.kryptonLabel10.Values.Text = "关联Excel来源列:";
+            // 
             // ktxtRelatedField
             // 
             this.ktxtRelatedField.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.ktxtRelatedField.DropDownWidth = 200;
             this.ktxtRelatedField.IntegralHeight = false;
-            this.ktxtRelatedField.Location = new System.Drawing.Point(120, 330);
+            this.ktxtRelatedField.Location = new System.Drawing.Point(126, 43);
             this.ktxtRelatedField.Name = "ktxtRelatedField";
             this.ktxtRelatedField.Size = new System.Drawing.Size(280, 21);
             this.ktxtRelatedField.TabIndex = 6;
@@ -229,7 +251,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kcmbRelatedTable.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.kcmbRelatedTable.DropDownWidth = 200;
             this.kcmbRelatedTable.IntegralHeight = false;
-            this.kcmbRelatedTable.Location = new System.Drawing.Point(120, 290);
+            this.kcmbRelatedTable.Location = new System.Drawing.Point(126, 16);
             this.kcmbRelatedTable.Name = "kcmbRelatedTable";
             this.kcmbRelatedTable.Size = new System.Drawing.Size(280, 21);
             this.kcmbRelatedTable.TabIndex = 5;
@@ -246,19 +268,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel3
             // 
-            this.kryptonLabel3.Location = new System.Drawing.Point(30, 300);
+            this.kryptonLabel3.Location = new System.Drawing.Point(18, 44);
             this.kryptonLabel3.Name = "kryptonLabel3";
-            this.kryptonLabel3.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel3.Size = new System.Drawing.Size(91, 20);
             this.kryptonLabel3.TabIndex = 3;
-            this.kryptonLabel3.Values.Text = "关联字段:";
+            this.kryptonLabel3.Values.Text = "关联目标字段:";
             // 
             // kryptonLabel2
             // 
-            this.kryptonLabel2.Location = new System.Drawing.Point(30, 260);
+            this.kryptonLabel2.Location = new System.Drawing.Point(31, 17);
             this.kryptonLabel2.Name = "kryptonLabel2";
-            this.kryptonLabel2.Size = new System.Drawing.Size(52, 20);
+            this.kryptonLabel2.Size = new System.Drawing.Size(78, 20);
             this.kryptonLabel2.TabIndex = 2;
-            this.kryptonLabel2.Values.Text = "关联表:";
+            this.kryptonLabel2.Values.Text = "关联数据表:";
             // 
             // kryptonLabel1
             // 
@@ -269,40 +291,67 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel1.Values.Text = "外键:";
             // 
             // kryptonLabel8
-            //
+            // 
             this.kryptonLabel8.Location = new System.Drawing.Point(30, 370);
             this.kryptonLabel8.Name = "kryptonLabel8";
             this.kryptonLabel8.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel8.TabIndex = 13;
             this.kryptonLabel8.Values.Text = "自身引用:";
-            //
-            // kryptonLabel10
-            //
-            // kryptonLabel10
-            //
-            this.kryptonLabel10.Location = new System.Drawing.Point(30, 260);
-            this.kryptonLabel10.Name = "kryptonLabel10";
-            this.kryptonLabel10.Size = new System.Drawing.Size(91, 20);
-            this.kryptonLabel10.TabIndex = 19;
-            this.kryptonLabel10.Values.Text = "外键来源列:";
-            //
-            // kcmbForeignKeySourceColumn
-            //
-            this.kcmbForeignKeySourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kcmbForeignKeySourceColumn.DropDownWidth = 280;
-            this.kcmbForeignKeySourceColumn.IntegralHeight = false;
-            this.kcmbForeignKeySourceColumn.Location = new System.Drawing.Point(120, 260);
-            this.kcmbForeignKeySourceColumn.Name = "kcmbForeignKeySourceColumn";
-            this.kcmbForeignKeySourceColumn.Size = new System.Drawing.Size(280, 21);
-            this.kcmbForeignKeySourceColumn.TabIndex = 20;
-            //
+            // 
+            // kryptonGroupBoxForeignType
+            // 
+            this.kryptonGroupBoxForeignType.Location = new System.Drawing.Point(608, 70);
+            this.kryptonGroupBoxForeignType.Name = "kryptonGroupBoxForeignType";
+            // 
+            // kryptonGroupBoxForeignType.Panel
+            // 
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.lblMaping);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbForeignDbSourceColumn);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel11);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbForeignExcelSourceColumn);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel2);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel3);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kcmbRelatedTable);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.ktxtRelatedField);
+            this.kryptonGroupBoxForeignType.Panel.Controls.Add(this.kryptonLabel10);
+            this.kryptonGroupBoxForeignType.Size = new System.Drawing.Size(485, 493);
+            this.kryptonGroupBoxForeignType.TabIndex = 202;
+            this.kryptonGroupBoxForeignType.Values.Heading = "关联外部数据【】";
+            // 
+            // kcmbForeignDbSourceColumn
+            // 
+            this.kcmbForeignDbSourceColumn.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbForeignDbSourceColumn.DropDownWidth = 280;
+            this.kcmbForeignDbSourceColumn.IntegralHeight = false;
+            this.kcmbForeignDbSourceColumn.Location = new System.Drawing.Point(126, 154);
+            this.kcmbForeignDbSourceColumn.Name = "kcmbForeignDbSourceColumn";
+            this.kcmbForeignDbSourceColumn.Size = new System.Drawing.Size(280, 21);
+            this.kcmbForeignDbSourceColumn.TabIndex = 22;
+            this.kcmbForeignDbSourceColumn.SelectedIndexChanged += new System.EventHandler(this.kcmbForeignDbSourceColumn_SelectedIndexChanged);
+            // 
+            // kryptonLabel11
+            // 
+            this.kryptonLabel11.Location = new System.Drawing.Point(18, 155);
+            this.kryptonLabel11.Name = "kryptonLabel11";
+            this.kryptonLabel11.Size = new System.Drawing.Size(104, 20);
+            this.kryptonLabel11.TabIndex = 21;
+            this.kryptonLabel11.Values.Text = "关联系统来源列:";
+            // 
+            // lblMaping
+            // 
+            this.lblMaping.Location = new System.Drawing.Point(208, 224);
+            this.lblMaping.Name = "lblMaping";
+            this.lblMaping.Size = new System.Drawing.Size(6, 2);
+            this.lblMaping.TabIndex = 23;
+            this.lblMaping.Values.Text = "";
+            // 
             // FrmColumnPropertyConfig
             // 
             this.AcceptButton = this.kbtnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.kbtnCancel;
-            this.ClientSize = new System.Drawing.Size(450, 600);
+            this.ClientSize = new System.Drawing.Size(1155, 679);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "FrmColumnPropertyConfig";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -314,9 +363,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignExcelSourceColumn)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ktxtRelatedField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbRelatedTable)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignKeySourceColumn)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType.Panel)).EndInit();
+            this.kryptonGroupBoxForeignType.Panel.ResumeLayout(false);
+            this.kryptonGroupBoxForeignType.Panel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxForeignType)).EndInit();
+            this.kryptonGroupBoxForeignType.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbForeignDbSourceColumn)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -346,6 +401,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonLabel kryptonLabel9;
         private Krypton.Toolkit.KryptonComboBox kcmbCopyFromField;
         private Krypton.Toolkit.KryptonLabel kryptonLabel10;
-        private Krypton.Toolkit.KryptonComboBox kcmbForeignKeySourceColumn;
+        private Krypton.Toolkit.KryptonComboBox kcmbForeignExcelSourceColumn;
+        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxForeignType;
+        private Krypton.Toolkit.KryptonComboBox kcmbForeignDbSourceColumn;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel11;
+        private Krypton.Toolkit.KryptonLabel lblMaping;
     }
 }

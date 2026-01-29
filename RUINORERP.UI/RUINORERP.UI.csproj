@@ -2415,9 +2415,8 @@
     <Compile Include="SysConfig\BasicDataImport\DynamicImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\EntityImportHelper.cs" />
     <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
-    <Compile Include="SysConfig\BasicDataImport\FieldMetadata.cs" />
-    <Compile Include="SysConfig\BasicDataImport\FieldMetadataService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
+    <Compile Include="SysConfig\BasicDataImport\ForeignRelatedConfig.cs" />
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2436,6 +2435,7 @@
     <Compile Include="SysConfig\BasicDataImport\frmDeduplicateFieldConfig.Designer.cs">
       <DependentUpon>frmDeduplicateFieldConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\IForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportConfiguration.cs" />
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">

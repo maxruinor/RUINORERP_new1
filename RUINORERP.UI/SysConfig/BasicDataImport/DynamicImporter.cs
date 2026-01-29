@@ -1,5 +1,6 @@
 using RUINORERP.Business.BizMapperService;
 using RUINORERP.Model;
+using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows.Documents;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -18,7 +18,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class DynamicImporter
     {
         private readonly ISqlSugarClient _db;
-        private readonly ForeignKeyService _foreignKeyService;
+        private readonly IForeignKeyService _foreignKeyService;
 
         /// <summary>
         /// 导入结果统计
@@ -89,11 +89,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="db">SqlSugar数据库客户端</param>
         /// <param name="entityInfoService">实体映射服务</param>
-        public DynamicImporter(ISqlSugarClient db, IEntityMappingService entityInfoService)
+        /// <param name="foreignKeyService">外键服务（可选，默认创建新实例）</param>
+        public DynamicImporter(ISqlSugarClient db, IEntityMappingService entityInfoService, IForeignKeyService foreignKeyService = null)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _entityInfoService = entityInfoService;
-            _foreignKeyService = new ForeignKeyService(db);
+            _foreignKeyService = foreignKeyService ?? new ForeignKeyService(db);
         }
 
         /// <summary>
@@ -657,22 +658,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 获取实体类型的主键字段名
-        /// 优先从映射配置获取，其次从FieldMetadata获取
+        /// 从entityInfo获取主键字段信息
         /// </summary>
         /// <param name="entityType">实体类型</param>
         /// <returns>主键字段名</returns>
         private string GetPrimaryKeyFieldName(Type entityType)
         {
-            // 从FieldMetadata获取主键字段
-            var metadata = FieldMetadataService.GetFieldMetadata(entityType);
-            var primaryKeyMetadata = metadata.Values.FirstOrDefault(m => m.IsPrimaryKey);
-
-            if (primaryKeyMetadata != null)
-            {
-                return primaryKeyMetadata.FieldName;
-            }
-
-            // 如果没有找到，尝试从entityInfo获取
+            // 从entityInfo获取主键字段
             var entityInfo = _entityInfoService.GetEntityInfoByTableName(entityType.Name);
             return entityInfo?.IdField ?? "ID";
         }

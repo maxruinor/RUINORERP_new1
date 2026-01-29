@@ -934,7 +934,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 如果已经有Excel列名，更新数据库字段名部分
                 string excelColumnName = ForeignKeySourceColumn?.ExcelColumnName ?? string.Empty;
-                string columnDisplayName = ForeignKeySourceColumn?.DisplayName ?? excelColumnName;
                 if (string.IsNullOrEmpty(excelColumnName))
                 {
                     excelColumnName = kcmbForeignExcelSourceColumn.SelectedItem.ToString();
@@ -945,7 +944,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 ForeignKeySourceColumn = new ForeignKeySourceColumnConfig
                 {
                     ExcelColumnName = excelColumnName,
-                    DisplayName = columnDisplayName,
+                    DisplayName = field.Value,
                     DatabaseFieldName = field.Key
                 };
             }

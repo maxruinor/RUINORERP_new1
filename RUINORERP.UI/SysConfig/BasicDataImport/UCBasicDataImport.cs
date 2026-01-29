@@ -1339,9 +1339,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                // 加载数据库连接
-                LoadDbConnection();
-
                 //导入前，通过当前配置找到这个配置中的列的情况，找到有外键关联的情况，再去找到具体关联的哪个表。
                 //再先从数据库中查找到结果集合。缓存起来。用于 外键服务类和验证服务类。
                 PreloadForeignKeyData();

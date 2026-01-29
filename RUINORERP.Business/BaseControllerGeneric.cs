@@ -944,34 +944,81 @@ namespace RUINORERP.Business
                 //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
             }
 
-            // 使用try-catch捕获DataReader关闭异常,避免短时间查询导致连接问题
-            try
+            // 使用try-catch捕获DataReader关闭异常,避免短时间查询导致连接问题11
+            int retryCount = 0;
+            const int maxRetryCount = 1;
+            
+            while (retryCount <= maxRetryCount)
             {
-                System.Diagnostics.Debug.WriteLine($"BaseQuerySimpleByAdvancedNavWithConditionsAsync:{dto.GetType().Name}");
-                return await querySqlQueryable.ToPageListAsync(pageNum, pageSize);
-            }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("FieldCount") || ex.Message.Contains("阅读器关闭"))
-            {
-                _logger.LogError(ex, $"DataReader已关闭,尝试重新查询。实体类型: {typeof(T).Name}");
-                // 等待一小段时间后重试,可能是连接池繁忙
-                await Task.Delay(100);
-                // 重新创建查询并执行
-                using (var newScope = _unitOfWorkManage.GetDbClient())
+                try
                 {
-                    ISugarQueryable<T> retryQuery = newScope.Queryable<T>();
-                    // 重新应用查询条件
-                    retryQuery = retryQuery
-                        .WhereIF(whereLambda != null, whereLambda)
-                        .WhereIF(dto.ContainsProperty(isdeleted), "isdeleted=@isdeleted", new { isdeleted = 0 });
-
-                    if (UseAutoNavQuery)
+                    if (retryCount == 0)
                     {
-                        retryQuery = retryQuery.IncludesAllFirstLayer();
+                        _logger.LogDebug($"执行查询: BaseQuerySimpleByAdvancedNavWithConditionsAsync, 实体类型: {typeof(T).Name}, DTO类型: {dto.GetType().Name}");
+                        System.Diagnostics.Debug.WriteLine($"BaseQuerySimpleByAdvancedNavWithConditionsAsync:{dto.GetType().Name}");
                     }
+                    else
+                    {
+                        _logger.LogDebug($"执行重试查询: BaseQuerySimpleByAdvancedNavWithConditionsAsync, 重试次数: {retryCount}, 实体类型: {typeof(T).Name}");
+                    }
+                    
+                    using (var dbClient = _unitOfWorkManage.GetDbClient())
+                    {
+                        ISugarQueryable<T> query;
+                        if (typeof(T).GetProperties().ContainsProperty(isdeleted))
+                        {
+                            query = dbClient.Queryable<T>()
+                                   //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                   .WhereAdv(useLike, queryConditions, dto)
+                                   .WhereIF(whereLambda != null, whereLambda)
+                                   .WhereIF(dto.ContainsProperty(isdeleted), "isdeleted=@isdeleted", new { isdeleted = 0 });
+                        }
+                        else
+                        {
+                            query = dbClient.Queryable<T>()
+                                   //这里一般是子表，或没有一对多外键的情况 ，用自动的只是为了语法正常一般不会调用这个方法
+                                   .WhereIF(whereLambda != null, whereLambda)
+                                   .WhereAdv(useLike, queryConditions, dto);
+                        }
 
-                    return await retryQuery.ToPageListAsync(pageNum, pageSize);
+                        // 先添加所有查询条件，包括子查询
+                        foreach (var SqlItem in sqlList)
+                        {
+                            if (!string.IsNullOrEmpty(SqlItem))
+                            {
+                                //如果有子查询。暂时这样上面SQL拼接处理。
+                                query = query.Where(SqlItem);
+                            }
+                        }
+
+                        // 所有查询条件构建完成后，再添加导航属性查询
+                        // 修复：确保 IncludesAllFirstLayer() 在所有 Where 条件之后调用
+                        if (UseAutoNavQuery)
+                        {
+                            query = query.IncludesAllFirstLayer();
+                            //自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+                        }
+                        
+                        return await query.ToPageListAsync(pageNum, pageSize);
+                    }
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("FieldCount") || ex.Message.Contains("阅读器关闭"))
+                {
+                    if (retryCount >= maxRetryCount)
+                    {
+                        _logger.LogError(ex, $"DataReader已关闭,重试次数已达上限。实体类型: {typeof(T).Name}");
+                        throw;
+                    }
+                    
+                    _logger.LogError(ex, $"DataReader已关闭,尝试重新查询。实体类型: {typeof(T).Name}, 重试次数: {retryCount + 1}");
+                    // 等待一小段时间后重试,可能是连接池繁忙
+                    await Task.Delay(100);
+                    retryCount++;
                 }
             }
+            
+            // 理论上不会执行到这里，因为while循环中要么返回要么抛出异常
+            return new List<T>();
         }
 
 

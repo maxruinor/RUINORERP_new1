@@ -820,6 +820,60 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     targetRow[mapping.SystemField?.Value] = "[字段复制:未设置]";
                                 }
                                 break;
+
+                            case DataSourceType.ColumnConcat:
+                                // 列拼接
+                                // 将Excel中的多个列值拼接后赋值给目标字段
+                                if (mapping.ConcatConfig != null &&
+                                    mapping.ConcatConfig.SourceColumns != null &&
+                                    mapping.ConcatConfig.SourceColumns.Count >= 2)
+                                {
+                                    var concatValues = new List<string>();
+
+                                    foreach (var sourceCol in mapping.ConcatConfig.SourceColumns)
+                                    {
+                                        if (sourceData.Columns.Contains(sourceCol))
+                                        {
+                                            object cellValue = sourceRow[sourceCol];
+                                            string valueStr = cellValue?.ToString() ?? "";
+
+                                            // 去除前后空格
+                                            if (mapping.ConcatConfig.TrimWhitespace)
+                                            {
+                                                valueStr = valueStr.Trim();
+                                            }
+
+                                            // 如果配置了忽略空值，跳过空列
+                                            if (mapping.ConcatConfig.IgnoreEmptyColumns &&
+                                                string.IsNullOrEmpty(valueStr))
+                                            {
+                                                continue;
+                                            }
+
+                                            concatValues.Add(valueStr);
+                                        }
+                                        else
+                                        {
+                                            // 列不存在时，根据配置决定是否继续
+                                            if (!mapping.ConcatConfig.IgnoreEmptyColumns)
+                                            {
+                                                concatValues.Add("");
+                                            }
+                                        }
+                                    }
+
+                                    // 拼接所有值
+                                    string concatenatedValue = string.Join(
+                                        mapping.ConcatConfig.Separator ?? "",
+                                        concatValues);
+
+                                    targetRow[mapping.SystemField?.Value] = concatenatedValue;
+                                }
+                                else
+                                {
+                                    targetRow[mapping.SystemField?.Value] = "[列拼接:配置无效]";
+                                }
+                                break;
                         }
                     }
 

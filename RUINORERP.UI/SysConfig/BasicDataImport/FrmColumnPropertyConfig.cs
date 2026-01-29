@@ -83,6 +83,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ForeignKeySourceColumnConfig ForeignKeySourceColumn { get; set; }
 
         /// <summary>
+        /// 列拼接配置
+        /// </summary>
+        public ColumnConcatConfig ConcatConfig { get; set; }
+
+        /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
@@ -170,6 +175,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbDataSourceType.Items.Add("外键关联");
                 kcmbDataSourceType.Items.Add("自身字段引用");
                 kcmbDataSourceType.Items.Add("字段复制");
+                kcmbDataSourceType.Items.Add("列拼接");
                 kcmbDataSourceType.SelectedIndex = 0;
             }
             catch (Exception ex)
@@ -263,6 +269,23 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     CopyFromField = CurrentMapping.CopyFromField;
                     kcmbCopyFromField.SelectedItem = CurrentMapping.CopyFromField?.Value;
                 }
+
+                // 初始化列拼接配置
+                if (CurrentMapping.DataSourceType == DataSourceType.ColumnConcat &&
+                    CurrentMapping.ConcatConfig != null)
+                {
+                    ConcatConfig = CurrentMapping.ConcatConfig;
+
+                    // 加载Excel列列表（会自动选中已配置的列）
+                    LoadConcatSourceColumns();
+
+                    // 加载分隔符
+                    ktxtSeparator.Text = ConcatConfig.Separator ?? string.Empty;
+
+                    // 加载选项
+                    kchkTrimWhitespace.Checked = ConcatConfig.TrimWhitespace;
+                    kchkIgnoreEmptyColumns.Checked = ConcatConfig.IgnoreEmptyColumns;
+                }
             }
 
             // 更新控件状态
@@ -302,6 +325,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kchkIsForeignKey.Checked = false;
                 kchkIsSystemGenerated.Checked = false;
             }
+
+            // 控制GroupBox的显示和隐藏
+            kryptonGroupBoxForeignType.Visible = (dataSourceType == DataSourceType.ForeignKey);
+            kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
         }
 
         /// <summary>
@@ -632,6 +659,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     return;
                 }
             }
+            else if (dataSourceType == DataSourceType.ColumnConcat)
+            {
+                // 列拼接配置111
+                // 由于窗体上暂未添加列拼接配置的UI控件，暂时使用简单的配置
+                // 用户需要手动在代码中设置 ConcatConfig，或者在后续版本中添加UI配置界面
+                if (ConcatConfig == null || ConcatConfig.SourceColumns == null || ConcatConfig.SourceColumns.Count < 2)
+                {
+                    var result = MessageBox.Show(
+                        "列拼接功能需要配置要拼接的Excel列。\n" +
+                        "当前版本暂未提供完整的列拼接配置界面，" +
+                        "如需使用此功能，请通过编程方式设置 ConcatConfig。\n\n" +
+                        "确定要继续保存配置吗？",
+                        "提示",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (result != DialogResult.Yes)
+                    {
+                        return;
+                    }
+                }
+            }
 
             // 根据数据来源类型设置属性
             if (dataSourceType == DataSourceType.ForeignKey)
@@ -658,6 +707,31 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             else if (dataSourceType == DataSourceType.FieldCopy)
             {
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+                DefaultValue = string.Empty;
+            }
+            else if (dataSourceType == DataSourceType.ColumnConcat)
+            {
+                // 获取选中的列
+                var selectedColumns = klstSourceColumns.SelectedItems.Cast<string>().ToList();
+
+                // 验证列拼接配置
+                if (selectedColumns.Count < 2)
+                {
+                    MessageBox.Show($"列拼接功能需要至少选择2个Excel列\n当前已选择: {selectedColumns.Count} 列\n\n提示: 按住Ctrl键可多选", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 构建列拼接配置
+                ConcatConfig = new ColumnConcatConfig
+                {
+                    SourceColumns = selectedColumns,
+                    Separator = ktxtSeparator.Text.Trim(),
+                    TrimWhitespace = kchkTrimWhitespace.Checked,
+                    IgnoreEmptyColumns = kchkIgnoreEmptyColumns.Checked
+                };
+
                 IsForeignKey = false;
                 IsSystemGenerated = false;
                 DefaultValue = string.Empty;
@@ -742,6 +816,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.FieldCopy)
             {
                 LoadCopyFromFields();
+            }
+
+            // 如果选择了列拼接，加载Excel列列表
+            if (kcmbDataSourceType.SelectedIndex == (int)DataSourceType.ColumnConcat)
+            {
+                LoadConcatSourceColumns();
             }
         }
 
@@ -949,6 +1029,50 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 };
             }
 
+        }
+
+        /// <summary>
+        /// 加载列拼接的Excel列列表
+        /// </summary>
+        private void LoadConcatSourceColumns()
+        {
+            try
+            {
+                klstSourceColumns.Items.Clear();
+
+                // 如果有传入Excel列列表，则加载所有可用列
+                if (ExcelColumns != null && ExcelColumns.Count > 0)
+                {
+                    foreach (var column in ExcelColumns)
+                    {
+                        klstSourceColumns.Items.Add(column);
+                    }
+
+                    // 如果已有配置，选中对应的列
+                    if (ConcatConfig != null && ConcatConfig.SourceColumns != null)
+                    {
+                        for (int i = 0; i < klstSourceColumns.Items.Count; i++)
+                        {
+                            if (ConcatConfig.SourceColumns.Contains(klstSourceColumns.Items[i].ToString()))
+                            {
+                                klstSourceColumns.SetSelected(i, true);
+                            }
+                        }
+                    }
+                }
+                else if (CurrentMapping != null && !string.IsNullOrEmpty(CurrentMapping.ExcelColumn))
+                {
+                    // 如果没有传入Excel列列表，但当前映射有Excel列，则使用该列
+                    if (!CurrentMapping.ExcelColumn.StartsWith("[") && !CurrentMapping.ExcelColumn.StartsWith("("))
+                    {
+                        klstSourceColumns.Items.Add(CurrentMapping.ExcelColumn);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"加载列拼接源列失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

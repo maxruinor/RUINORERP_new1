@@ -47,7 +47,79 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// 复制同一记录中另一个字段的值
         /// 例如：ProductName字段复制ProductCode字段的值
         /// </summary>
-        FieldCopy = 5
+        FieldCopy = 5,
+
+        /// <summary>
+        /// 列拼接
+        /// 将Excel中的多个列值拼接后赋值给目标字段
+        /// 例如：将"姓氏"和"名字"列拼接为"姓名"字段
+        /// </summary>
+        ColumnConcat = 6
+    }
+
+    /// <summary>
+    /// 列拼接配置
+    /// 用于配置多个Excel列的拼接规则
+    /// </summary>
+    [Serializable]
+    public class ColumnConcatConfig
+    {
+        /// <summary>
+        /// 要拼接的Excel列名列表（按顺序拼接）
+        /// </summary>
+        public List<string> SourceColumns { get; set; }
+
+        /// <summary>
+        /// 列之间的分隔符
+        /// 例如："-"、"_"、空格、空字符串等
+        /// </summary>
+        public string Separator { get; set; }
+
+        /// <summary>
+        /// 是否去除每个列的前后空格
+        /// </summary>
+        public bool TrimWhitespace { get; set; }
+
+        /// <summary>
+        /// 是否忽略空值列
+        /// 为true时，空值列不会参与拼接
+        /// </summary>
+        public bool IgnoreEmptyColumns { get; set; }
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public ColumnConcatConfig()
+        {
+            SourceColumns = new List<string>();
+            Separator = "";
+            TrimWhitespace = true;
+            IgnoreEmptyColumns = false;
+        }
+
+        /// <summary>
+        /// 验证配置是否有效
+        /// </summary>
+        /// <param name="errorMessage">错误信息</param>
+        /// <returns>是否有效</returns>
+        public bool Validate(out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (SourceColumns == null || SourceColumns.Count == 0)
+            {
+                errorMessage = "必须至少指定一个源列";
+                return false;
+            }
+
+            if (SourceColumns.Count < 2)
+            {
+                errorMessage = "列拼接至少需要两个源列";
+                return false;
+            }
+
+            return true;
+        }
     }
 
     /// <summary>
@@ -119,6 +191,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public SerializableKeyValuePair<string> CopyFromField { get; set; }
 
         /// <summary>
+        /// 列拼接配置（当DataSourceType为ColumnConcat时使用）
+        /// 存储多个Excel列的拼接规则
+        /// </summary>
+        public ColumnConcatConfig ConcatConfig { get; set; }
+
+        /// <summary>
         /// 是否必填字段
         /// </summary>
         [XmlIgnore]
@@ -153,6 +231,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (!ForeignConfig.Validate(out string foreignError))
                 {
                     errorMessage = foreignError;
+                    return false;
+                }
+            }
+
+            // 列拼接配置验证
+            if (DataSourceType == DataSourceType.ColumnConcat && ConcatConfig != null)
+            {
+                if (!ConcatConfig.Validate(out string concatError))
+                {
+                    errorMessage = concatError;
                     return false;
                 }
             }

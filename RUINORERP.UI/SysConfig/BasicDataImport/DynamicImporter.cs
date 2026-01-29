@@ -290,6 +290,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                 }
                             }
                             break;
+
+                        case DataSourceType.ColumnConcat:
+                            // 列拼接
+                            // 在ApplyColumnMapping阶段已经处理了拼接，直接从数据表中读取拼接后的值
+                            if (dataTableContainsColumn(row.Table, mapping.SystemField?.Value))
+                            {
+                                cellValue = row[mapping.SystemField?.Value];
+                            }
+                            break;
                     }
 
                     // 如果值为空，检查是否有默认值
@@ -696,7 +705,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 try
                 {
                     var ids = _db.Insertable(typedList).ExecuteReturnSnowflakeIdList();//多条插入批量返回,比自增好用
-                    //result.UpdatedCount += x.re;
+                    result.InsertedCount = ids.Count;
                     // 提交事务
                     _db.Ado.CommitTran();
                 }

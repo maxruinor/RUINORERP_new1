@@ -661,25 +661,28 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             else if (dataSourceType == DataSourceType.ColumnConcat)
             {
-                // 列拼接配置111
-                // 由于窗体上暂未添加列拼接配置的UI控件，暂时使用简单的配置
-                // 用户需要手动在代码中设置 ConcatConfig，或者在后续版本中添加UI配置界面
-                if (ConcatConfig == null || ConcatConfig.SourceColumns == null || ConcatConfig.SourceColumns.Count < 2)
-                {
-                    var result = MessageBox.Show(
-                        "列拼接功能需要配置要拼接的Excel列。\n" +
-                        "当前版本暂未提供完整的列拼接配置界面，" +
-                        "如需使用此功能，请通过编程方式设置 ConcatConfig。\n\n" +
-                        "确定要继续保存配置吗？",
-                        "提示",
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Information);
+                // 获取选中的列
+                var selectedColumns = klstSourceColumns.SelectedItems.Cast<string>().ToList();
 
-                    if (result != DialogResult.Yes)
-                    {
-                        return;
-                    }
+                // 验证列拼接配置
+                if (selectedColumns.Count < 2)
+                {
+                    MessageBox.Show($"列拼接功能需要至少选择2个Excel列\n当前已选择: {selectedColumns.Count} 列\n\n提示: 按住Ctrl键可多选", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
+
+                // 构建列拼接配置
+                ConcatConfig = new ColumnConcatConfig
+                {
+                    SourceColumns = selectedColumns,
+                    Separator = ktxtSeparator.Text.Trim(),
+                    TrimWhitespace = kchkTrimWhitespace.Checked,
+                    IgnoreEmptyColumns = kchkIgnoreEmptyColumns.Checked
+                };
+
+                IsForeignKey = false;
+                IsSystemGenerated = false;
+                DefaultValue = string.Empty;
             }
 
             // 根据数据来源类型设置属性
@@ -707,31 +710,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             else if (dataSourceType == DataSourceType.FieldCopy)
             {
-                IsForeignKey = false;
-                IsSystemGenerated = false;
-                DefaultValue = string.Empty;
-            }
-            else if (dataSourceType == DataSourceType.ColumnConcat)
-            {
-                // 获取选中的列
-                var selectedColumns = klstSourceColumns.SelectedItems.Cast<string>().ToList();
-
-                // 验证列拼接配置
-                if (selectedColumns.Count < 2)
-                {
-                    MessageBox.Show($"列拼接功能需要至少选择2个Excel列\n当前已选择: {selectedColumns.Count} 列\n\n提示: 按住Ctrl键可多选", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // 构建列拼接配置
-                ConcatConfig = new ColumnConcatConfig
-                {
-                    SourceColumns = selectedColumns,
-                    Separator = ktxtSeparator.Text.Trim(),
-                    TrimWhitespace = kchkTrimWhitespace.Checked,
-                    IgnoreEmptyColumns = kchkIgnoreEmptyColumns.Checked
-                };
-
                 IsForeignKey = false;
                 IsSystemGenerated = false;
                 DefaultValue = string.Empty;

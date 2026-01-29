@@ -207,6 +207,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     case DataSourceType.FieldCopy:
                         mapping.ExcelColumn = $"[字段复制:{mapping.CopyFromField?.Value}] {systemField}";
                         break;
+
+                    case DataSourceType.ColumnConcat:
+                        // 格式化显示列拼接配置
+                        string concatCols = string.Join("+", mapping.ConcatConfig?.SourceColumns ?? new List<string>());
+                        mapping.ExcelColumn = $"[列拼接:{concatCols}] {systemField}";
+                        break;
                     }
 
                     // 从系统字段列表中移除
@@ -260,6 +266,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     else
                     {
                         mapping.ForeignConfig = null;
+                    }
+
+                    // 保存列拼接配置
+                    if (propertyDialog.SelectedDataSourceType == DataSourceType.ColumnConcat)
+                    {
+                        mapping.ConcatConfig = propertyDialog.ConcatConfig;
+                    }
+                    else
+                    {
+                        mapping.ConcatConfig = null;
                     }
 
                     return true;
@@ -370,7 +386,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 检查字段是否必填
+        /// 检查字段是否必填1
         /// </summary>
         /// <param name="fieldName">字段名</param>
         /// <returns>是否必填</returns>

@@ -581,7 +581,6 @@ namespace RUINORERP.UI.SysConfig
                     c =>
                     {
                         //c.Category_ID = TempProd.Category_ID;
-                        c.Employee_ID = null;
                         c.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID;
                         c.Created_at = DateTime.Now;
                         c.Rack_ID = TempProd.Rack_ID;
@@ -1229,7 +1228,6 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            entity.Employee_ID = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
             entity.Created_at = System.DateTime.Now;
             entity.Created_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.Employee_ID.Value;
             //设置一下默认的枚举

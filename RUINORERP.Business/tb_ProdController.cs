@@ -291,7 +291,6 @@ namespace RUINORERP.Business
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
         {
             var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_Prod>()
-                                .Includes(m => m.tb_employee)
                             .Includes(m => m.tb_customervendor)
                             .Includes(m => m.tb_department)
                             .Includes(m => m.tb_location)
@@ -483,7 +482,6 @@ namespace RUINORERP.Business
         public virtual async Task<List<tb_Prod>> QueryByNavAsync()
         {
             List<tb_Prod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Prod>()
-                               .Includes(t => t.tb_employee)
                                .Includes(t => t.tb_customervendor)
                                .Includes(t => t.tb_department)
                                .Includes(t => t.tb_location)
@@ -514,7 +512,6 @@ namespace RUINORERP.Business
         public virtual async Task<List<tb_Prod>> QueryByNavAsync(Expression<Func<tb_Prod, bool>> exp)
         {
             List<tb_Prod> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_Prod>().Where(exp)
-                               .Includes(t => t.tb_employee)
                                .Includes(t => t.tb_customervendor)
                                .Includes(t => t.tb_department)
                                .Includes(t => t.tb_location)
@@ -545,7 +542,6 @@ namespace RUINORERP.Business
         public virtual List<tb_Prod> QueryByNav(Expression<Func<tb_Prod, bool>> exp)
         {
             List<tb_Prod> list = _unitOfWorkManage.GetDbClient().Queryable<tb_Prod>().Where(exp)
-                            .Includes(t => t.tb_employee)
                             .Includes(t => t.tb_customervendor)
                             .Includes(t => t.tb_department)
                             .Includes(t => t.tb_location)
@@ -593,7 +589,6 @@ namespace RUINORERP.Business
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_Prod entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_Prod>().Where(w => w.ProdBaseID == (long)id)
-                             .Includes(t => t.tb_employee)
                             .Includes(t => t.tb_customervendor)
                             .Includes(t => t.tb_department)
                             .Includes(t => t.tb_location)

@@ -440,7 +440,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     // 获取验证器类型名：实体名 + "Validator"
                     string validatorTypeName = TargetEntityType.Name + "Validator";
-                    string fullTypeName = $"RUINORERP.Business.Validator.{validatorTypeName}";
+                    string fullTypeName = $"RUINORERP.Business.{validatorTypeName}";
                     
                     // 使用AssemblyLoader工具类加载程序集
                     Type validatorType = AssemblyLoader.GetType("RUINORERP.Business", fullTypeName);

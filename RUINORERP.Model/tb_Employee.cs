@@ -483,13 +483,6 @@ namespace RUINORERP.Model
         //Employee_ID.FK_FM_STTEMENT_REF_EMPLOYEE)
         //tb_Employee.Employee_ID)
 
-        //[Browsable(false)]打印报表时的数据源会不显示
-        [SugarColumn(IsIgnore = true)]
-        [Navigate(NavigateType.OneToMany, nameof(tb_Prod.Employee_ID))]
-        public virtual List<tb_Prod> tb_Prods { get; set; }
-        //tb_Prod.Employee_ID)
-        //Employee_ID.FK_PRODBASE_REF_EMPLOYEE)
-        //tb_Employee.Employee_ID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
         [SugarColumn(IsIgnore = true)]

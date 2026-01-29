@@ -64,7 +64,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 { "产品基本信息表", typeof(tb_Prod) },
                 { "产品详情信息表", typeof(tb_ProdDetail) },
                 { "产品属性表", typeof(tb_ProdProperty) },
-                { "产品属性值表", typeof(tb_ProdPropertyValue) }
+                { "产品属性值表", typeof(tb_ProdPropertyValue) },
+                { "库位表", typeof(tb_Location) },
+                { "货架表", typeof(tb_StorageRack) },
+                { "单位表", typeof(tb_Unit) },
             };
         }
 
@@ -154,14 +157,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kcmbDynamicEntityType.Items.Clear();
                 kcmbDynamicEntityType.Items.Add("请选择");
 
-                // 添加支持的实体类型（仅显示中文描述）
-                kcmbDynamicEntityType.Items.Add("供应商表");
-                kcmbDynamicEntityType.Items.Add("客户表");
-                kcmbDynamicEntityType.Items.Add("产品类目表");
-                kcmbDynamicEntityType.Items.Add("产品基本信息表");
-                kcmbDynamicEntityType.Items.Add("产品详情信息表");
-                kcmbDynamicEntityType.Items.Add("产品属性表");
-                kcmbDynamicEntityType.Items.Add("产品属性值表");
+                // 从EntityTypeMappings字典中获取所有实体类型的中文描述
+                foreach (var mapping in EntityTypeMappings)
+                {
+                    kcmbDynamicEntityType.Items.Add(mapping.Key);
+                }
+
                 kcmbDynamicEntityType.SelectedIndex = 0;
             }
             catch (Exception ex)

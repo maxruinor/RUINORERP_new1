@@ -74,8 +74,7 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认货架:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 
-            RuleFor(tb_Prod => tb_Prod.Employee_ID).Must(CheckForeignKeyValueCanNull).WithMessage("业务员:下拉选择值不正确。");
-            RuleFor(tb_Prod => tb_Prod.Employee_ID).NotEmpty().When(x => x.Employee_ID.HasValue);
+         
 
             RuleFor(tb_Prod => tb_Prod.Brand).MaximumMixedLength(50).WithMessage("品牌:不能超过最大长度,50.");
 

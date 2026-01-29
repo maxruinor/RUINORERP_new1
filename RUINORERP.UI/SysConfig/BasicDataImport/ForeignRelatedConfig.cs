@@ -11,7 +11,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     public class ForeignKeySourceColumnConfig
     {
         /// <summary>
-        /// Excel列名（Key）
+        /// Excel列名
         /// </summary>
         public string ExcelColumnName { get; set; }
 

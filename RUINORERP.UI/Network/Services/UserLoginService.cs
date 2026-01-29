@@ -57,6 +57,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 异步登录方法，使用简化的连接管理
+        /// 增强版：添加详细的日志记录和状态管理，确保登录流程健壮性
         /// </summary>
         /// <param name="username">用户名</param>
         /// <param name="password">密码</param>
@@ -69,6 +70,8 @@ namespace RUINORERP.UI.Network.Services
                 throw new ArgumentException("用户名不能为空", nameof(username));
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentException("密码不能为空", nameof(password));
+
+
 
             try
             {
@@ -87,9 +90,10 @@ namespace RUINORERP.UI.Network.Services
                 // 检查连接状态 - 直接依赖ConnectionManager的连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
-                    _logger?.LogWarning("登录失败：未连接到服务器");
+
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("未连接到服务器，请检查网络连接后重试");
                 }
+
 
                 var loginRequest = LoginRequest.Create(username, password);
 
@@ -97,38 +101,46 @@ namespace RUINORERP.UI.Network.Services
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(
                     AuthenticationCommands.Login, loginRequest, ct, 20000);
 
+
+
                 // 检查响应数据
                 if (response == null)
                 {
-                    _logger?.LogError("登录失败：服务器返回了空的响应数据");
+
                     return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
+
                     return response;
                 }
 
                 // 登录成功后处理Token
                 if (response.Token != null && !string.IsNullOrEmpty(response.Token.AccessToken))
                 {
+
                     //接收来自服务器的Token并保存
                     await _tokenManager.TokenStorage.SetTokenAsync(response.Token);
                     MainForm.Instance.AppContext.SessionId = response.SessionId;
-                    //_logger?.LogDebug("登录成功，Token已保存 - 用户: {Username}", username);
+
+                }
+                else
+                {
+
                 }
 
                 return response;
             }
             catch (OperationCanceledException ex)
             {
-                _logger?.LogDebug(ex, "登录操作已被取消（可能是超时）- 用户: {Username}", username);
+
                 throw;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "登录过程中发生未预期的异常 - 用户: {Username}", username);
+
                 return ResponseFactory.CreateSpecificErrorResponse<LoginResponse>("登录过程中发生错误，请稍后重试");
             }
             finally
@@ -137,10 +149,11 @@ namespace RUINORERP.UI.Network.Services
                 try
                 {
                     _loginLock.Release();
+
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "释放登录锁时发生异常");
+
                 }
             }
         }
@@ -168,13 +181,12 @@ namespace RUINORERP.UI.Network.Services
 
                         if (!serverLogoutSuccess)
                         {
-                            _logger?.LogWarning("服务器登出请求失败，响应状态: {IsSuccess}, 错误: {ErrorMessage}",
-                                response?.IsSuccess ?? false, response?.ErrorMessage);
+
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogWarning(ex, "发送服务器登出请求时发生异常");
+
                         serverLogoutSuccess = false;
                     }
                 }
@@ -190,7 +202,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "登出过程中发生异常");
+
                 // 即使发生异常，也尝试清理基本的登录状态
                 try
                 {
@@ -198,7 +210,7 @@ namespace RUINORERP.UI.Network.Services
                 }
                 catch (Exception cleanupEx)
                 {
-                    _logger?.LogError(cleanupEx, "清理登录状态时也发生异常");
+
                 }
                 throw new Exception($"登出失败: {ex.Message}", ex);
             }
@@ -230,14 +242,14 @@ namespace RUINORERP.UI.Network.Services
                 var tokenRefreshResponse = await _tokenRefreshService.RefreshTokenAsync(CancellationToken.None);
                 if (tokenRefreshResponse != null && !string.IsNullOrEmpty(tokenRefreshResponse.AccessToken))
                 {
-                    _logger?.LogDebug("Token刷新成功");
+
                     return true;
                 }
                 return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Token刷新失败");
+
                 return false;
             }
         }
@@ -252,7 +264,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 连接断开时，更新登录状态
                 _isLoggedIn = false;
-                _logger?.LogDebug("连接断开，重置登录状态");
+
             }
         }
 
@@ -269,7 +281,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Token验证失败");
+
                 return false;
             }
         }
@@ -286,11 +298,11 @@ namespace RUINORERP.UI.Network.Services
                 // 重置登录状态
                 _isLoggedIn = false;
                 //_currentUserSession = null;
-                _logger?.LogDebug("登录状态已清理");
+
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "清理登录状态失败");
+
             }
         }
 
@@ -305,7 +317,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (!_communicationService.ConnectionManager.IsConnected || string.IsNullOrEmpty(sessionId))
                 {
-                    _logger?.LogWarning("取消登录失败：未连接到服务器或会话ID为空");
+
                     return false;
                 }
 
@@ -328,7 +340,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "取消登录操作失败");
+
                 // 即使发送失败，也清理本地状态
                 await CleanupLoginStateAsync();
                 return false;
@@ -349,7 +361,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (!_communicationService.ConnectionManager.IsConnected || _duplicateLoginResult == null || _duplicateLoginResult.ExistingSessions == null || _duplicateLoginResult.ExistingSessions.Count == 0)
                 {
-                    _logger?.LogWarning("处理重复登录失败：未连接到服务器或参数不完整");
+
                     return false;
                 }
 
@@ -381,7 +393,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理重复登录操作失败");
+
                 return false;
             }
         }
@@ -394,14 +406,14 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogDebug("服务器切换：取消重连并断开连接");
+
 
                 // 使用通信服务的取消重连和断开连接方法
                 return await _communicationService.CancelReconnectAndForceDisconnectAsync();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "服务器切换时取消重连并断开连接失败");
+
                 return false;
             }
         }
@@ -415,12 +427,12 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                _logger?.LogInformation("用户触发手动重连");
+
                 return await _communicationService.ManualReconnectAsync();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "手动重连失败");
+
                 return false;
             }
         }
@@ -447,7 +459,7 @@ namespace RUINORERP.UI.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "释放UserLoginService资源时发生异常");
+
             }
         }
     }

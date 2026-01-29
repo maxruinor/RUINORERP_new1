@@ -22,7 +22,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="fieldName">字段名</param>
-        void PreloadForeignKeyData(string tableName, string fieldName);
+        void PreloadForeignKeyData(ColumnMapping ForeignRelated);
 
         /// <summary>
         /// 清除缓存

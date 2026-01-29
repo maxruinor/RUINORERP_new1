@@ -27,7 +27,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="db">SqlSugar数据库客户端</param>
+        /// <param name="db">数据库客户端</param>
         public ForeignKeyService(ISqlSugarClient db)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
@@ -61,7 +61,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     if (!string.IsNullOrEmpty(mapping.ForeignConfig?.ForeignKeyField?.Key))
                     {
-                        PreloadForeignKeyData(tableName, mapping.ForeignConfig.ForeignKeyField.Key);
+                        PreloadForeignKeyData(mapping);
                     }
                 }
             }
@@ -72,31 +72,27 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <param name="fieldName">字段名</param>
-        public void PreloadForeignKeyData(string tableName, string fieldName)
+        public void PreloadForeignKeyData(ColumnMapping mapping)
         {
-            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(fieldName))
-            {
-                return;
-            }
-
+            ForeignRelatedConfig ForeignRelated = mapping.ForeignConfig;
             try
             {
-                string cacheKey = $"{tableName}_{fieldName}";
+                string cacheKey = $"{ForeignRelated.ForeignKeyTable.Key}_{ForeignRelated.ForeignKeyField.Key}";
                 if (_foreignKeyCache.ContainsKey(cacheKey))
                 {
                     return; // 已经缓存过
                 }
 
                 // 构建查询SQL
-                string sql = $"SELECT ID, {fieldName} FROM {tableName}";
+                string sql = $"SELECT {ForeignRelated.ForeignKeyField.Key}, {mapping.SystemField.Key},{ForeignRelated.ForeignKeySourceColumn.DatabaseFieldName}  FROM {ForeignRelated.ForeignKeyTable.Key}";
                 var data = _db.Ado.GetDataTable(sql);
 
                 // 构建缓存
                 var fieldValueToIdMap = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                 foreach (DataRow row in data.Rows)
                 {
-                    object id = row["ID"];
-                    object fieldValue = row[fieldName];
+                    object id = row[ForeignRelated.ForeignKeyField.Key];
+                    object fieldValue = row[ForeignRelated.ForeignKeySourceColumn.DatabaseFieldName];
                     if (fieldValue != DBNull.Value && fieldValue != null)
                     {
                         string key = fieldValue.ToString().Trim();
@@ -105,11 +101,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
 
                 _foreignKeyCache.TryAdd(cacheKey, fieldValueToIdMap);
-                Debug.WriteLine($"预加载外键数据完成: {tableName}.{fieldName}, 共 {fieldValueToIdMap.Count} 条记录");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"预加载外键数据失败: {tableName}.{fieldName}, 错误: {ex.Message}");
+                Debug.WriteLine($"预加载外键数据失败: {ForeignRelated.ForeignKeyTable}.{ForeignRelated.ForeignKeyField}, 错误: {ex.Message}");
             }
         }
 
@@ -123,91 +118,71 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
         /// <summary>
         /// 获取外键值
+        /// 逻辑：从Excel列获取编码值 -> 在缓存中查找匹配数据行 -> 提取关联表主键ID -> 返回主键ID
         /// </summary>
         /// <param name="row">数据行</param>
         /// <param name="mapping">列映射配置</param>
         /// <param name="rowNumber">行号</param>
         /// <param name="errorMessage">错误消息输出</param>
-        /// <returns>外键ID值</returns>
+        /// <returns>外键主键ID值</returns>
         public object GetForeignKeyValue(DataRow row, ColumnMapping mapping, int rowNumber, out string errorMessage)
         {
             errorMessage = string.Empty;
 
             try
             {
-                // 从Excel原始列或映射后的数据表中获取代码值
-                string foreignKeyValue = null;
-                string sourceColumnName = null;
-                string sourceColumnDisplayName = null;
-
-                // 优先从指定的外键来源列获取（Excel列）
-                if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+                // 步骤1: 从Excel中获取外键来源列的值（编码/代码值）
+                string sourceCodeValue = GetSourceCodeValueFromExcel(row, mapping,  out string sourceColumnDisplayName);
+                
+                // 如果没有获取到编码值，返回错误
+                if (string.IsNullOrEmpty(sourceCodeValue))
                 {
-                    // 使用配置的外键来源列（如"供应商"列）
-                    sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
-                    // DisplayName = 显示名称
-                    sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.DisplayName ?? sourceColumnName;
-                    if (dataTableContainsColumn(row.Table, sourceColumnName))
+                    if (mapping.IsRequired)
                     {
-                        foreignKeyValue = row[sourceColumnName]?.ToString();
+                        errorMessage = $"行 {rowNumber} 字段 {mapping.SystemField?.Value} 是必填字段，但无法从列 '{sourceColumnDisplayName}' 获取有效的外键值";
                     }
-                }
-                else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
-                         !mapping.ExcelColumn.StartsWith("[") &&
-                         !mapping.ExcelColumn.StartsWith("("))
-                {
-                    // 如果没有指定外键来源列，但映射有Excel列，尝试使用映射的Excel列
-                    sourceColumnName = mapping.ExcelColumn;
-                    sourceColumnDisplayName = mapping.ExcelColumn;
-                    if (dataTableContainsColumn(row.Table, sourceColumnName))
-                    {
-                        foreignKeyValue = row[sourceColumnName]?.ToString();
-                    }
-                }
-                else
-                {
-                    // 尝试从系统字段列获取（映射后的列名）
-                    sourceColumnName = mapping.SystemField?.Value;
-                    sourceColumnDisplayName = mapping.SystemField?.Value;
-                    if (dataTableContainsColumn(row.Table, sourceColumnName))
-                    {
-                        foreignKeyValue = row[sourceColumnName]?.ToString();
-                    }
-                }
-
-                // 如果获取到了值，查询关联表获取主键ID
-                if (!string.IsNullOrEmpty(foreignKeyValue) &&
-                    mapping.ForeignConfig != null &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key) &&
-                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key))
-                {
-                    // 查找关联表中的对应值（通过代码字段）
-                    object foreignKeyId = GetForeignKeyId(foreignKeyValue, mapping.ForeignConfig.ForeignKeyTable.Key, mapping.ForeignConfig.ForeignKeyField.Key);
-                    if (foreignKeyId != null)
-                    {
-                        return foreignKeyId;
-                    }
-                    else
-                    {
-                        errorMessage = $"行 {rowNumber} 外键值 '{foreignKeyValue}' (来源列: {sourceColumnDisplayName ?? sourceColumnName}) " +
-                            $"在关联表 {mapping.ForeignConfig.ForeignKeyTable.Key} 的字段 {mapping.ForeignConfig.ForeignKeyField.Key} 中未找到对应记录。";
-
-                        // 如果是供应商表，提供额外提示
-                        if (mapping.ForeignConfig.ForeignKeyTable.Key == "tb_CustomerVendor")
-                        {
-                            errorMessage += "\n\n提示：请确保供应商名称在供应商表中已存在，或者先导入供应商数据。";
-                        }
-
-                        return null;
-                    }
-                }
-                else if (mapping.IsRequired)
-                {
-                    // 如果是必填字段但没有获取到外键值
-                    errorMessage = $"行 {rowNumber} 字段 {mapping.SystemField?.Value} 是必填字段，但无法从列 '{sourceColumnDisplayName ?? sourceColumnName}' 获取有效的外键值";
                     return null;
                 }
 
+                // 步骤2: 从缓存中查找该编码值对应的主键ID
+                if (mapping.ForeignConfig != null &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyTable?.Key) &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeyField?.Key) &&
+                    !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn?.DatabaseFieldName))
+                {
+                    string tableName = mapping.ForeignConfig.ForeignKeyTable.Key;
+                    string relatedField = mapping.ForeignConfig.ForeignKeyField.Key;
+                    string sourceField = mapping.ForeignConfig.ForeignKeySourceColumn.DatabaseFieldName;
+                    
+                    // 构建缓存键
+                    string cacheKey = $"{tableName}_{relatedField}";
+                    
+                    // 从缓存获取 字段值 -> 主键ID 的映射
+                    object foreignKeyId;
+                    if (_foreignKeyCache.TryGetValue(cacheKey, out var fieldValueToIdMap))
+                    {
+                        string trimmedValue = sourceCodeValue.Trim();
+                        if (fieldValueToIdMap.TryGetValue(trimmedValue, out foreignKeyId))
+                        {
+                            // 成功从缓存中获取到主键ID
+                            return foreignKeyId;
+                        }
+                    }
+                    
+                    // 缓存未命中，返回错误
+                    errorMessage = $"行 {rowNumber} 外键值 '{sourceCodeValue}' (来源列: {sourceColumnDisplayName}) " +
+                        $"在关联表 {tableName} 中未找到对应记录。";
+
+                    // 如果是供应商表，提供额外提示
+                    if (tableName == "tb_CustomerVendor")
+                    {
+                        errorMessage += "\n\n提示：请确保{sourceColumnDisplayName}在供应商表中已存在，或者先导入供应商数据。";
+                    }
+
+                    return null;
+                }
+
+                // 如果配置不完整，返回null
                 return null;
             }
             catch (Exception ex)
@@ -215,6 +190,53 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 errorMessage = $"行 {rowNumber} 处理外键值时发生错误: {ex.Message}";
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 从Excel行中获取源代码值
+        /// </summary>
+        /// <param name="row">数据行</param>
+        /// <param name="mapping">列映射配置</param>
+        /// <param name="sourceColumnDisplayName">来源列显示名称</param>
+        /// <returns>源代码值</returns>
+        private string GetSourceCodeValueFromExcel(DataRow row, ColumnMapping mapping, out string sourceColumnDisplayName)
+        {
+            string sourceColumnName = null;
+            sourceColumnDisplayName = string.Empty;
+
+            // 优先从指定的外键来源列获取（Excel列）
+            if (mapping.ForeignConfig?.ForeignKeySourceColumn != null && 
+                !string.IsNullOrEmpty(mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName))
+            {
+                sourceColumnName = mapping.ForeignConfig.ForeignKeySourceColumn.ExcelColumnName;
+                sourceColumnDisplayName = mapping.ForeignConfig.ForeignKeySourceColumn.DisplayName ?? sourceColumnName;
+            }
+            else if (!string.IsNullOrEmpty(mapping.ExcelColumn) &&
+                     !mapping.ExcelColumn.StartsWith("[") &&
+                     !mapping.ExcelColumn.StartsWith("("))
+            {
+                // 如果没有指定外键来源列，但映射有Excel列，使用映射的Excel列
+                sourceColumnName = mapping.ExcelColumn;
+                sourceColumnDisplayName = mapping.ExcelColumn;
+            }
+            else
+            {
+                // 尝试从系统字段列获取（映射后的列名）
+                sourceColumnName = mapping.SystemField?.Value;
+                sourceColumnDisplayName = mapping.SystemField?.Value;
+            }
+
+            // 从Excel数据行中获取值
+            if (!string.IsNullOrEmpty(sourceColumnName))
+            {
+                sourceColumnDisplayName = sourceColumnDisplayName ?? sourceColumnName;
+                if (dataTableContainsColumn(row.Table, sourceColumnName))
+                {
+                    return row[sourceColumnName]?.ToString()?.Trim();
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

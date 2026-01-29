@@ -195,7 +195,7 @@ namespace RUINORERP.UI
 
         #region 当前系统中所有用户信息
         /// <summary>
-        /// 处理重连失败事件，自动进入注销锁定状态
+        /// 处理重连失败事件，优化：仅通知用户，不强制锁定系统
         /// </summary>
         private void OnReconnectFailed()
         {
@@ -203,26 +203,22 @@ namespace RUINORERP.UI
             {
                 logger?.LogWarning("客户端重连失败，检查当前登录状态");
 
-                // 只有在已登录状态下才进入锁定状态，避免登录失败后重复弹出登录窗口
+                // 仅在已登录状态下通知用户网络问题
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    logger?.LogWarning("当前为已登录状态，自动进入注销锁定状态");
+                    logger?.LogWarning("当前为已登录状态，网络连接失败，但系统保持工作状态");
 
-                    // 在UI线程上执行注销操作
+                    // 在UI线程上显示网络状态提示
                     if (InvokeRequired)
                     {
                         BeginInvoke(new Action(() =>
                         {
-                            // 更新锁定状态显示
-                            UpdateLockStatus(true);
-                            LogLock();
+                            ShowStatusText("网络连接失败，系统保持工作状态，将自动尝试重连");
                         }));
                     }
                     else
                     {
-                        // 更新锁定状态显示
-                        UpdateLockStatus(true);
-                        LogLock();
+                        ShowStatusText("网络连接失败，系统保持工作状态，将自动尝试重连");
                     }
                 }
                 else
@@ -257,36 +253,29 @@ namespace RUINORERP.UI
 
         /// <summary>
         /// 处理心跳失败达到阈值事件
-        /// 当连续心跳失败次数达到阈值且客户端尚未锁定时，触发客户端锁定
+        /// 当连续心跳失败次数达到阈值时，仅通知用户，不强制锁定系统
         /// </summary>
         private void OnHeartbeatFailureThresholdReached()
         {
             try
             {
-                //但不操作锁定
-                logger?.LogWarning("心跳失败达到阈值，检查当前登录和锁定状态");
+                logger?.LogWarning("心跳失败达到阈值，网络连接不稳定，但系统保持工作状态");
 
-                // 只有在已登录且未锁定状态下才进入锁定状态
-                if (CurrentLoginStatus == LoginStatus.LoggedIn && !IsLocked)
+                // 仅在已登录状态下通知用户
+                if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    // 在UI线程上执行注销操作
+                    // 在UI线程上显示网络状态提示
                     if (InvokeRequired)
                     {
                         BeginInvoke(new Action(() =>
                         {
-                            // 更新锁定状态显示
-                            UpdateLockStatus(true);
+                            ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
                         }));
                     }
                     else
                     {
-                        // 更新锁定状态显示
-                        UpdateLockStatus(true);
+                        ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
                     }
-                }
-                else
-                {
-                    // logger?.LogInformation($"当前状态不符合心跳锁定条件，登录状态: {CurrentLoginStatus}, 锁定状态: {IsLocked}");
                 }
             }
             catch (Exception ex)

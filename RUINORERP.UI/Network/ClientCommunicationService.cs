@@ -309,17 +309,17 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger?.LogDebug("开始初始化客户端命令调度器");
+
 
                 // 使用一键式初始化方法
                 var result = await _commandDispatcher.InitializeAndStartAsync();
 
-                _logger?.LogDebug($"客户端命令调度器初始化完成，结果: {{result.success}}, 注册处理器数: {{result.registeredCount}}");
+
                 return result;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "初始化客户端命令调度器时发生异常");
+
                 return (false, 0);
             }
         }
@@ -349,7 +349,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger?.LogWarning("连接管理器报告重连失败，触发客户端事件管理器的重连失败事件");
+
 
                 lock (_reconnectCoordinationLock)
                 {
@@ -386,7 +386,7 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception uiEx)
                 {
-                    _logger?.LogWarning(uiEx, "更新重连失败UI时发生异常");
+
                 }
 
                 // 清空队列中的待处理命令，避免长时间等待
@@ -399,12 +399,12 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "触发客户端事件管理器重连失败事件时发生异常");
+
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理重连失败事件时发生异常");
+
             }
         }
 
@@ -417,7 +417,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger?.LogDebug("重连尝试：第 {CurrentAttempt}/{MaxAttempts} 次", currentAttempt, maxAttempts);
+
 
                 // 显示重连状态到UI
                 try
@@ -449,32 +449,31 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception uiEx)
                 {
-                    _logger?.LogWarning(uiEx, "更新重连状态UI时发生异常");
+
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理重连尝试事件时发生异常");
+
             }
         }
 
         /// <summary>
         /// 处理连接管理器重连成功事件
+        /// 优化：网络恢复后自动恢复工作状态，不再依赖锁定机制
         /// </summary>
         private void OnReconnectSucceeded()
         {
             try
             {
-                _logger?.LogDebug("重连成功，开始处理排队的命令");
+
 
                 lock (_reconnectCoordinationLock)
                 {
                     _isReconnecting = false;
                 }
 
-                // 重置心跳失败次数和失败追踪器
-                Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
-                // 重置心跳失败计数
+                // 重置心跳失败计数（仅一次）
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
 
                 // 显示重连成功信息到UI
@@ -486,43 +485,37 @@ namespace RUINORERP.UI.Network
                         {
                             MainForm.Instance.BeginInvoke(new Action(() =>
                             {
-                                // 使用状态标签显示重连成功信息
-                                string statusText = "已成功重新连接到服务器";
-                                MainForm.Instance.ShowStatusText(statusText);
+                                // 显示网络恢复状态
+                                MainForm.Instance.ShowStatusText("网络已恢复，自动恢复工作");
+                                MainForm.Instance.PrintInfoLog("网络重连成功，已自动恢复与服务器的连接");
 
-                                // 同时添加到日志
-                                MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
-
-
-                                // 如果之前是锁定状态，现在应该解除锁定
+                                // 保持向后兼容：如果之前是锁定状态，解除锁定
+                                // 注意：由于心跳失败不再导致锁定，此逻辑主要用于手动锁定场景
                                 if (MainForm.Instance.IsLocked)
                                 {
                                     MainForm.Instance.UpdateLockStatus(false);
-                                    MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定");
+                                    MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定状态");
                                 }
                             }));
                         }
                         else
                         {
-                            // 使用状态标签显示重连成功信息
-                            string statusText = "已成功重新连接到服务器";
-                            MainForm.Instance.ShowStatusText(statusText);
+                            // 显示网络恢复状态
+                            MainForm.Instance.ShowStatusText("网络已恢复，自动恢复工作");
+                            MainForm.Instance.PrintInfoLog("网络重连成功，已自动恢复与服务器的连接");
 
-                            // 同时添加到日志
-                            MainForm.Instance.PrintInfoLog("重连成功，已恢复与服务器的连接");
-
-                            // 如果之前是锁定状态，现在应该解除锁定
+                            // 保持向后兼容：如果之前是锁定状态，解除锁定
                             if (MainForm.Instance.IsLocked)
                             {
                                 MainForm.Instance.UpdateLockStatus(false);
-                                MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定");
+                                MainForm.Instance.PrintInfoLog("重连成功，已解除客户端锁定状态");
                             }
                         }
                     }
                 }
                 catch (Exception uiEx)
                 {
-                    _logger?.LogWarning(uiEx, "更新重连成功UI时发生异常");
+
                 }
 
                 // 重连成功后，立即启动队列处理
@@ -533,7 +526,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理重连成功事件时发生异常");
+
             }
         }
 
@@ -561,7 +554,7 @@ namespace RUINORERP.UI.Network
                 _heartbeatTask = Task.Run(async () =>
                     await HeartbeatLoopAsync(_heartbeatCts.Token).ConfigureAwait(false));
 
-                _logger?.LogDebug("心跳检测已启动，间隔：{IntervalMs}ms", _heartbeatIntervalMs);
+
             }
         }
 
@@ -589,7 +582,7 @@ namespace RUINORERP.UI.Network
                 // 安全地等待任务完成，避免阻塞
                 SafeWaitForHeartbeatTaskCompletion();
 
-                _logger?.LogDebug("心跳检测已停止");
+
             }
         }
 
@@ -612,7 +605,7 @@ namespace RUINORERP.UI.Network
 
                     if (!completed)
                     {
-                        _logger?.LogWarning("心跳任务未在指定时间内完成，强制清理资源");
+
                     }
                 }
             }
@@ -623,13 +616,13 @@ namespace RUINORERP.UI.Network
                 {
                     if (ex is not OperationCanceledException)
                     {
-                        _logger?.LogWarning(ex, "等待心跳任务完成时发生异常");
+
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "等待心跳任务完成时发生异常");
+
             }
             finally
             {
@@ -655,7 +648,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "释放心跳资源时发生异常");
+
             }
         }
 
@@ -665,7 +658,7 @@ namespace RUINORERP.UI.Network
         /// </summary>
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
-            _logger?.LogDebug("进入心跳循环（优化版），心跳间隔：{IntervalMs}ms", _heartbeatIntervalMs);
+
 
             while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
             {
@@ -726,7 +719,7 @@ namespace RUINORERP.UI.Network
             int previousFailures = Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
             if (previousFailures > 0)
             {
-                _logger?.LogInformation("重置心跳失败计数，之前连续失败: {PreviousFailures}次", previousFailures);
+
             }
         }
 
@@ -791,7 +784,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "发送心跳时发生异常");
+
                 return false;
             }
         }
@@ -809,7 +802,7 @@ namespace RUINORERP.UI.Network
         /// <returns>连接是否成功</returns>
         public async Task<bool> ConnectAsync(string serverAddress, int serverPort, CancellationToken cancellationToken = default)
         {
-            _logger?.LogDebug("尝试连接到服务器 {ServerAddress}:{ServerPort}", serverAddress, serverPort);
+
             return await _connectionManager.ConnectAsync(serverAddress, serverPort, cancellationToken);
         }
 
@@ -819,8 +812,7 @@ namespace RUINORERP.UI.Network
         /// <returns>断开连接是否成功</returns>
         public async Task<bool> Disconnect()
         {
-            // 添加主动断开连接警告日志
-            _logger?.LogWarning("[主动断开连接] 开始断开服务器连接");
+
 
             // 停止心跳
             try
@@ -851,8 +843,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                // 添加主动断开连接警告日志
-                _logger?.LogWarning("[主动断开连接] 取消重连操作并强制断开连接（服务器切换）");
+
 
                 // 停止心跳
                 StopHeartbeat();
@@ -865,7 +856,7 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "取消重连并强制断开连接时发生异常");
+
                 return false;
             }
         }
@@ -879,7 +870,7 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                _logger?.LogInformation("手动触发重连，重置心跳失败计数和锁定状态");
+
 
                 // 重置心跳失败计数
                 Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
@@ -889,20 +880,20 @@ namespace RUINORERP.UI.Network
 
                 if (reconnectSuccess)
                 {
-                    _logger?.LogInformation("手动重连成功");
+
                     // 重连成功后，心跳会在OnReconnectSucceeded中自动启动
                     // 锁定状态也会在OnReconnectSucceeded中自动解除
                 }
                 else
                 {
-                    _logger?.LogWarning("手动重连失败，可能服务器不可用");
+
                 }
 
                 return reconnectSuccess;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "手动重连时发生异常");
+
                 return false;
             }
         }
@@ -918,19 +909,19 @@ namespace RUINORERP.UI.Network
 
                 if (connected)
                 {
-                    _logger?.LogDebug("客户端已连接到服务器");
+
 
                     // 连接恢复时，开始处理队列中的命令
                     _ = Task.Run(ProcessCommandQueueAsync);
                 }
                 else
                 {
-                    _logger?.LogDebug("客户端与服务器断开连接");
+
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "处理连接状态变更时发生异常");
+
             }
         }
 
@@ -1422,7 +1413,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     pr.Tcs.TrySetException(new TimeoutException($"请求 {kv.Key} 超时"));
                     removedCount++;
-                    _logger?.LogDebug("清理超时请求: {RequestId}, 超时时间: 5分钟", kv.Key);
+
                 }
             }
 
@@ -1439,8 +1430,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     queuedCommand.CompletionSource?.TrySetException(new TimeoutException($"队列命令 {queuedCommand.CommandId} 超时"));
                     queuedCommand.ResponseCompletionSource?.TrySetException(new TimeoutException($"队列响应命令 {queuedCommand.CommandId} 超时"));
                     queuedRemovedCount++;
-                    _logger?.LogDebug("清理超时队列命令: {CommandId}, 创建时间: {CreatedAt}, 超时时间: 10分钟",
-                        queuedCommand.CommandId, queuedCommand.CreatedAt);
+
                 }
                 else
                 {
@@ -1457,12 +1447,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
             if (removedCount > 0)
             {
-                _logger?.LogDebug("清理了 {RemovedCount} 个超时请求", removedCount);
+
             }
 
             if (queuedRemovedCount > 0)
             {
-                _logger?.LogDebug("清理了 {RemovedCount} 个超时队列命令", queuedRemovedCount);
+
             }
         }
 
@@ -1632,7 +1622,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                             // 显示倒计时提示
                                             string message = $"系统将在 {delaySeconds} 秒后退出，这是管理员要求的操作。";
                                             string title = "系统即将退出";
-                                            _logger.LogInformation($"收到延时退出命令，将在{delaySeconds}秒后退出系统");
+    
 
                                             // 创建一个新的线程来执行延时退出
                                             ThreadPool.QueueUserWorkItem((state) =>
@@ -1643,12 +1633,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                                     Thread.Sleep(delaySeconds * 1000);
 
                                                     // 延时后执行系统退出
-                                                    _logger.LogInformation("延时结束，执行系统退出");
+
                                                     System.Windows.Forms.Application.Exit();
                                                 }
                                                 catch (Exception ex)
                                                 {
-                                                    _logger.LogError(ex, "执行延时退出时发生异常");
+        
                                                 }
                                             });
 
@@ -1658,13 +1648,13 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                         else
                                         {
                                             // 立即执行系统退出
-                                            _logger.LogInformation("收到立即退出命令，执行系统退出");
+
                                             System.Windows.Forms.Application.Exit();
                                         }
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError(ex, "处理退出系统命令时发生异常");
+    
                                     }
                                 });
                             }
@@ -1692,12 +1682,12 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                 }
                                 catch (Exception ex)
                                 {
-                                    _logger.LogError(ex, "执行版本更新操作时发生异常");
+
                                 }
                             }
                             else
                             {
-                                _logger.LogWarning("MainForm实例不存在，无法执行版本更新操作");
+
                             }
                             break;
 
@@ -1867,11 +1857,11 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 检查连接状态
                 if (!_connectionManager.IsConnected)
                 {
-                    _logger.LogWarning("尝试发送单向命令但连接已断开，命令ID: {CommandId}", commandId);
+
 
                     // 如果启用了自动重连，将请求加入队列
 
-                    _logger.Debug($"连接已断开，将命令{commandId.Name}加入队列等待发送");
+
 
                     // 创建任务完成源
                     var tcs = new TaskCompletionSource<bool>();
@@ -1936,7 +1926,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 检查连接状态
                 if (!_connectionManager.IsConnected)
                 {
-                    _logger.LogWarning("尝试发送响应但连接已断开，命令ID: {CommandId}", commandId);
+    
                     return false;
                 }
 
@@ -2001,14 +1991,14 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         {
             try
             {
-                _logger.Debug("接收到服务器命令: {CommandId}", packetModel.CommandId);
+
 
                 // 使用命令调度器处理命令
                 await _commandDispatcher.DispatchAsync(packetModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理服务器命令时发生错误: {CommandId}", packetModel.CommandId);
+
                 _clientEventManager.OnErrorOccurred(new Exception($"处理命令 {packetModel.CommandId} 时发生错误: {ex.Message}", ex));
             }
         }
@@ -2043,7 +2033,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     SafeDisposeManagedResources();
                 }
 
-                _logger?.Debug("ClientCommunicationService资源释放完成");
+
             }
         }
 
@@ -2075,7 +2065,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "释放托管资源时发生异常");
+
             }
         }
 
@@ -2152,7 +2142,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     // 等待最多3秒
                     if (!disconnectTask.Wait(TimeSpan.FromSeconds(3)))
                     {
-                        _logger?.LogWarning("断开Socket连接超时");
+
                     }
                 }
             }
@@ -2170,7 +2160,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             try
             {
                 // 清理命令队列
-                _logger?.Debug($"清理命令队列，当前队列大小: {_queuedCommands.Count}");
+
                 while (_queuedCommands.TryDequeue(out var command))
                 {
                     SafeCancelTaskCompletionSource(command.CompletionSource, "命令队列");
@@ -2178,7 +2168,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 }
 
                 // 清理待处理请求
-                _logger?.Debug($"清理待处理请求，数量: {_pendingRequests.Count}");
+
                 foreach (var pendingRequest in _pendingRequests.Values)
                 {
                     SafeCancelTaskCompletionSource(pendingRequest.Tcs, "待处理请求");
@@ -2187,7 +2177,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "清理队列和取消任务时发生异常");
+
             }
         }
 
@@ -2205,7 +2195,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "取消{SourceName}的TaskCompletionSource时发生异常", sourceName);
+
             }
         }
 
@@ -2220,7 +2210,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "释放队列锁时发生异常");
+
             }
         }
 
@@ -2271,7 +2261,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     // 检查响应数据是否为空
                     if (responseData == null)
                     {
-                        _logger.LogWarning($"命令响应数据为空或处理失败。命令ID: {commandId}");
                         return ResponseFactory.CreateSpecificErrorResponse<TResponse>("服务器返回了空响应数据");
                     }
                     return responseData as TResponse;
@@ -2289,7 +2278,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     if (IsRetryableException(ex) && retryCount < maxRetries)
                     {
                         retryCount++;
-                        _logger?.LogWarning(ex, "命令发送失败，将进行第 {RetryCount}/{MaxRetries} 次重试。命令ID: {CommandId}", retryCount, maxRetries, commandId);
 
                         // 指数退避等待
                         int backoffMs = (int)Math.Pow(2, retryCount) * 1000; // 1秒, 2秒, 4秒...
@@ -2377,7 +2365,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
                 if (timeSinceLastAttempt.TotalSeconds < 5)
                 {
-                    _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
+                   // _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
                     return;
                 }
 
@@ -2387,7 +2375,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
             try
             {
-                _logger?.LogDebug("命令处理时检测到连接断开，尝试重连");
 
                 // 获取当前服务器地址和端口
                 string serverAddress = GetCurrentServerAddress();
@@ -2400,7 +2387,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
                     if (!connected)
                     {
-                        _logger?.LogWarning("连接失败，将由ConnectionManager的自动重连机制处理");
+                        //_logger?.LogWarning("连接失败，将由ConnectionManager的自动重连机制处理");
                     }
                 }
                 else
@@ -2433,7 +2420,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     return;
 
                 _isProcessingQueue = true;
-                _logger?.LogDebug("开始处理命令队列，当前队列大小：{QueueSize}", _queuedCommands.Count);
 
                 var processedCount = 0;
                 var failedCount = 0;
@@ -2544,9 +2530,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     }
                 }
 
-                _logger?.LogDebug("命令队列处理完成，成功：{ProcessedCount}，失败：{FailedCount}，剩余队列大小：{QueueSize}",
-                    processedCount, failedCount, _queuedCommands.Count);
-
+                
                 // 如果队列中还有命令，设置标志以便下次处理
                 if (!_queuedCommands.IsEmpty && !_disposed)
                 {
@@ -2621,7 +2605,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 clearedCount++;
             }
 
-            _logger?.LogDebug("已清空命令队列，清空原因：{Reason}，清空数量：{Count}", reason, clearedCount);
         }
 
 

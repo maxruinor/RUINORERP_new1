@@ -211,6 +211,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             var entity = Activator.CreateInstance(entityType);
 
+            // 获取该实体类型的预设字段（在导入时会自动填充默认值的字段）
+            var predefinedFields = EntityImportHelper.GetPredefinedFields(entityType);
+
             // 遍历所有映射配置
             foreach (var mapping in mappings)
             {
@@ -320,6 +323,12 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     if (property == null)
                     {
                         throw new Exception($"实体 {entityType.Name} 不存在属性 {mapping.SystemField?.Key}");
+                    }
+
+                    // 跳过预设字段，这些字段会在PreProcessEntity中自动填充默认值
+                    if (predefinedFields.Contains(mapping.SystemField?.Key))
+                    {
+                        continue;
                     }
 
                     // 类型转换

@@ -370,10 +370,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 // 获取字段信息
                 FieldNameList = UIHelper.GetFieldNameList(false, TargetEntityType);
 
+                // 获取该实体类型的预设字段（在导入时会自动填充默认值的字段）
+                var predefinedFields = EntityImportHelper.GetPredefinedFields(TargetEntityType);
+
                 // 清空并添加字段到列表框
                 listBoxSystemFields.Items.Clear();
                 foreach (var field in FieldNameList)
                 {
+                    // 跳过预设字段，这些字段在导入时会自动填充
+                    if (predefinedFields.Contains(field.Key))
+                    {
+                        continue;
+                    }
+
                     // 检查是否为必填字段
                     bool isRequired = IsFieldRequired(field.Key);
                     string displayText = isRequired ? $"* {field.Value}" : field.Value;

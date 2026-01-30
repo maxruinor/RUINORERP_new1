@@ -219,6 +219,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             {
                 // 获取工作簿中的所有图片数据
                 var allPictures = workbook.GetAllPictures();
+                System.Diagnostics.Debug.WriteLine($"[图片提取] 工作簿中共有 {allPictures?.Count ?? 0} 张图片");
+
                 if (allPictures == null || allPictures.Count == 0)
                 {
                     return images;
@@ -228,21 +230,51 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 if (sheet is HSSFSheet hssfSheet)
                 {
                     // 对于.xls文件
+                    System.Diagnostics.Debug.WriteLine($"[图片提取] 检测到.xls格式的工作表");
+
                     var patriarch = hssfSheet.DrawingPatriarch as HSSFPatriarch;
                     if (patriarch != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[图片提取] 找到DrawingPatriarch，子对象数量: {patriarch.Children?.Count ?? 0}");
+
                         foreach (HSSFShape shape in patriarch.Children)
                         {
                             if (shape is HSSFPicture picture && picture.PictureData != null)
                             {
                                 var imageInfo = new ExcelImageInfo
                                 {
-                                    ImageId = Guid.NewGuid().ToString(),
+                                    // 尝试使用DISPIMG ID作为图片ID，否则使用GUID
+                                    ImageId = GetPictureId(picture),
                                     ImageData = picture.PictureData.Data,
                                     ImageFormat = GetImageFormat(picture.PictureData.MimeType),
                                     RowIndex = GetPictureRowIndex(picture),
                                     ColumnIndex = GetPictureColumnIndex(picture)
                                 };
+
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: ID={imageInfo.ImageId}, 行={imageInfo.RowIndex}, 列={imageInfo.ColumnIndex}, 格式={imageInfo.ImageFormat}");
+                                images.Add(imageInfo);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[图片提取] 未找到DrawingPatriarch，尝试使用GetAllPictures方法");
+
+                        // 备用方法：遍历所有图片，尝试匹配到单元格位置
+                        foreach (var pictureDataObj in allPictures)
+                        {
+                            if (pictureDataObj is IPictureData pictureData)
+                            {
+                                var imageInfo = new ExcelImageInfo
+                                {
+                                    ImageId = Guid.NewGuid().ToString(),
+                                    ImageData = pictureData.Data,
+                                    ImageFormat = GetImageFormat(pictureData.MimeType),
+                                    RowIndex = 0,
+                                    ColumnIndex = 0
+                                };
+
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 备用方法提取到图片: ID={imageInfo.ImageId}, 格式={imageInfo.ImageFormat}");
                                 images.Add(imageInfo);
                             }
                         }
@@ -251,9 +283,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 else if (sheet is XSSFSheet xssfSheet)
                 {
                     // 对于.xlsx文件
+                    System.Diagnostics.Debug.WriteLine($"[图片提取] 检测到.xlsx格式的工作表");
+
                     var drawings = xssfSheet.GetDrawingPatriarch() as XSSFDrawing;
                     if (drawings != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[图片提取] 找到XSSFDrawing");
+
                         foreach (var shape in drawings.GetShapes())
                         {
                             if (shape is XSSFPicture picture && picture.PictureData != null)
@@ -265,25 +301,81 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                                 var imageInfo = new ExcelImageInfo
                                 {
-                                    ImageId = Guid.NewGuid().ToString(),
+                                    ImageId = GetPictureId(picture),
                                     ImageData = picture.PictureData.Data,
                                     ImageFormat = GetImageFormat(picture.PictureData.MimeType),
                                     RowIndex = rowIndex,
                                     ColumnIndex = colIndex
                                 };
+
+                                System.Diagnostics.Debug.WriteLine($"[图片提取] 提取到图片: 行={rowIndex}, 列={colIndex}, 格式={imageInfo.ImageFormat}");
                                 images.Add(imageInfo);
                             }
                         }
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[图片提取] 未找到XSSFDrawing");
+                    }
                 }
+
+                System.Diagnostics.Debug.WriteLine($"[图片提取] 总共提取到 {images.Count} 张图片");
             }
             catch (Exception ex)
             {
                 // 图片提取失败不影响数据读取，只记录错误
-                System.Diagnostics.Debug.WriteLine($"提取Excel图片失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[图片提取错误] 提取Excel图片失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[图片提取错误] 堆栈跟踪: {ex.StackTrace}");
             }
 
             return images;
+        }
+
+        /// <summary>
+        /// 获取图片ID（优先使用DISPIMG公式中引用的ID）
+        /// </summary>
+        /// <param name="picture">图片对象</param>
+        /// <returns>图片ID</returns>
+        private string GetPictureId(object picture)
+        {
+            try
+            {
+                // 尝试通过反射获取图片的真实ID
+                // NPOI中，XSSFPicture有GetPackageRelationshipId方法
+                var type = picture.GetType();
+                var method = type.GetMethod("GetPackageRelationshipId", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (method != null)
+                {
+                    var result = method.Invoke(picture, null);
+                    if (result != null)
+                    {
+                        return result.ToString();
+                    }
+                }
+
+                // 如果获取不到，尝试通过Formula获取
+                var formulaProperty = type.GetProperty("Formula", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (formulaProperty != null)
+                {
+                    var formula = formulaProperty.GetValue(picture)?.ToString();
+                    if (!string.IsNullOrEmpty(formula))
+                    {
+                        // 尝试从公式中提取ID
+                        var match = System.Text.RegularExpressions.Regex.Match(formula, @"DISPIMG\s*\(\s*[""']([^""']+)[""']");
+                        if (match.Success)
+                        {
+                            return match.Groups[1].Value;
+                        }
+                    }
+                }
+
+                // 如果都获取不到，返回GUID
+                return Guid.NewGuid().ToString();
+            }
+            catch
+            {
+                return Guid.NewGuid().ToString();
+            }
         }
 
         /// <summary>
@@ -477,21 +569,39 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             string formula = cell.CellFormula;
 
-            // 检查是否是DISPIMG公式
-            if (formula != null && formula.StartsWith("=DISPIMG", StringComparison.OrdinalIgnoreCase))
+            // 检查是否是DISPIMG公式（支持 _xlfn.DISPIMG 和 DISPIMG）
+            if (formula != null &&
+                formula.IndexOf("DISPIMG", StringComparison.OrdinalIgnoreCase) >= 0)
             {
+                System.Diagnostics.Debug.WriteLine($"[公式处理] 发现DISPIMG公式: {formula}, 位置: 行{rowIndex}, 列{colIndex}");
+
                 // 提取图片ID
-                var match = Regex.Match(formula, @"DISPIMG\s*\(\s*[""']([^""']+)[""']\s*,\s*\d+\s*\)");
+                var match = Regex.Match(formula, @"DISPIMG\s*\(\s*[""']([^""']+)[""']\s*,\s*\d+\s*\)", RegexOptions.IgnoreCase);
                 if (match.Success)
                 {
                     string imageId = match.Groups[1].Value;
+                    System.Diagnostics.Debug.WriteLine($"[公式处理] 提取到图片ID: {imageId}");
 
                     // 查找对应的图片
                     var image = imageDictionary.Values.FirstOrDefault(img => img.ImageId.Contains(imageId));
                     if (image != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"[公式处理] 找到匹配的图片，保存路径中...");
                         return SaveImage(image, rowIndex, colIndex);
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[公式处理] 未找到匹配的图片，图片字典中有 {imageDictionary.Count} 张图片");
+                        // 打印所有图片ID用于调试
+                        foreach (var img in imageDictionary.Values)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[公式处理] 字典中的图片ID: {img.ImageId}");
+                        }
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[公式处理] 正则匹配失败");
                 }
             }
 
@@ -527,14 +637,44 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         {
             try
             {
-                string fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageFormat}";
+                // 确保目录存在
+                if (!Directory.Exists(_imageSavePath))
+                {
+                    Directory.CreateDirectory(_imageSavePath);
+                    System.Diagnostics.Debug.WriteLine($"[保存图片] 创建图片保存目录: {_imageSavePath}");
+                }
+
+                // 使用图片ID（DISPIMG中的ID）作为文件名的一部分
+                string fileName;
+
+                // 如果ImageId是DISPIMG格式（包含ID_xxx），使用它作为文件名
+                if (!string.IsNullOrEmpty(imageInfo.ImageId) &&
+                    (imageInfo.ImageId.Contains("ID_") || imageInfo.ImageId.Length > 10))
+                {
+                    fileName = $"{imageInfo.ImageId}{imageInfo.ImageFormat}";
+                }
+                else
+                {
+                    // 否则使用GUID
+                    fileName = $"image_r{rowIndex}_c{colIndex}_{Guid.NewGuid().ToString().Substring(0, 8)}{imageInfo.ImageFormat}";
+                }
+
                 string fullPath = Path.Combine(_imageSavePath, fileName);
+
+                // 检查文件是否已存在，避免重复保存
+                if (File.Exists(fullPath))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[保存图片] 图片已存在，跳过保存: {fileName}");
+                    return fileName;
+                }
+
                 File.WriteAllBytes(fullPath, imageInfo.ImageData);
+                System.Diagnostics.Debug.WriteLine($"[保存图片] 成功保存图片: {fileName}, 路径: {fullPath}, 大小: {imageInfo.ImageData.Length} 字节");
                 return fileName;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"保存图片失败: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[保存图片] 保存图片失败: {ex.Message}");
                 return string.Empty;
             }
         }

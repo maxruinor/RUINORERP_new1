@@ -254,6 +254,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
                     mapping.CopyFromField = propertyDialog.CopyFromField;
                     mapping.EnumDefaultConfig = propertyDialog.EnumDefaultConfig;
+                    mapping.IsImageColumn = propertyDialog.IsImageColumn;
+                    mapping.ImageColumnType = propertyDialog.ImageColumnType;
 
                     // 保存外键关联配置
                     if (propertyDialog.SelectedDataSourceType == DataSourceType.ForeignKey)

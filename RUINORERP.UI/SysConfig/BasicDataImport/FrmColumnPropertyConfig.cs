@@ -105,6 +105,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public EnumDefaultConfig EnumDefaultConfig { get; set; }
 
         /// <summary>
+        /// 是否为图片列
+        /// </summary>
+        public bool IsImageColumn { get; set; }
+
+        /// <summary>
+        /// 图片列类型
+        /// </summary>
+        public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
+
+        /// <summary>
         /// Excel列名列表
         /// </summary>
         public List<string> ExcelColumns { get; set; }
@@ -263,10 +273,16 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 IsSystemGenerated = CurrentMapping.IsSystemGenerated;
                 EnumTypeName = CurrentMapping.EnumDefaultConfig?.EnumTypeName;
                 EnumDefaultConfig = CurrentMapping.EnumDefaultConfig;
+                IsImageColumn = CurrentMapping.IsImageColumn;
+                ImageColumnType = CurrentMapping.ImageColumnType;
 
                 // 初始化数据来源类型
                 kcmbDataSourceType.SelectedIndex = (int)CurrentMapping.DataSourceType;
                 SelectedDataSourceType = CurrentMapping.DataSourceType;
+
+                // 初始化图片配置
+                kchkIsImageColumn.Checked = CurrentMapping.IsImageColumn;
+                kcmbImageColumnType.SelectedIndex = (int)CurrentMapping.ImageColumnType;
 
                 // 初始化关联表信息
                 if (CurrentMapping.ForeignConfig != null && !string.IsNullOrEmpty(CurrentMapping.ForeignConfig.ForeignKeyTable?.Key))
@@ -384,6 +400,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 控制GroupBox的显示和隐藏
             kryptonGroupBoxForeignType.Visible = (dataSourceType == DataSourceType.ForeignKey);
             kryptonGroupBoxConcat.Visible = (dataSourceType == DataSourceType.ColumnConcat);
+
+            // 控制图片配置GroupBox的显示和隐藏
+            kryptonGroupBoxImageType.Visible = kchkIsImageColumn.Checked;
 
             // 处理默认值控件：选择默认值时动态生成控件
             if (dataSourceType == DataSourceType.DefaultValue)
@@ -807,6 +826,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             IsUniqueValue = kchkIsUniqueValue.Checked;
             IgnoreEmptyValue = kchkIgnoreEmptyValue.Checked;
+            IsImageColumn = kchkIsImageColumn.Checked;
+            ImageColumnType = (ImageColumnType)kcmbImageColumnType.SelectedIndex;
 
             // 验证：如果既不是系统生成，又没有设置默认值，也不是外键或自身引用，需要提示
             if (dataSourceType == DataSourceType.Excel && string.IsNullOrWhiteSpace(DefaultValue))
@@ -1635,6 +1656,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 default:
                     return ktxtDefaultValue.Text.Trim();
             }
+        }
+
+        /// <summary>
+        /// 图片列复选框变更事件
+        /// </summary>
+        private void kchkIsImageColumn_CheckedChanged(object sender, EventArgs e)
+        {
+            // 更新GroupBox的可见性
+            kryptonGroupBoxImageType.Visible = kchkIsImageColumn.Checked;
+
+            // 启用或禁用图片类型下拉框
+            kcmbImageColumnType.Enabled = kchkIsImageColumn.Checked;
         }
     }
 }

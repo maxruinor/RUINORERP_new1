@@ -155,6 +155,22 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     /// <summary>
+    /// 图片类型枚举
+    /// </summary>
+    public enum ImageColumnType
+    {
+        /// <summary>
+        /// 二进制图片（真正的图片数据）
+        /// </summary>
+        Binary = 0,
+
+        /// <summary>
+        /// 图片路径（保存为字符串路径，但按图片逻辑处理）
+        /// </summary>
+        Path = 1
+    }
+
+    /// <summary>
     /// 列映射配置模型
     /// 用于存储Excel列与系统字段的映射关系
     /// </summary>
@@ -241,6 +257,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         /// </summary>
         [Obsolete("请使用EnumDefaultConfig替代此属性")]
         public string EnumTypeName { get; set; }
+
+        /// <summary>
+        /// 是否为图片列
+        /// 当字段在Excel中包含图片数据或图片路径时，需要手工指定为图片类型
+        /// </summary>
+        public bool IsImageColumn { get; set; }
+
+        /// <summary>
+        /// 图片列类型（当IsImageColumn为true时使用）
+        /// Binary: 二进制图片（真正的图片数据）
+        /// Path: 图片路径（保存为字符串路径，但按图片逻辑处理）
+        /// </summary>
+        public ImageColumnType ImageColumnType { get; set; } = ImageColumnType.Path;
 
         /// <summary>
         /// 是否必填字段

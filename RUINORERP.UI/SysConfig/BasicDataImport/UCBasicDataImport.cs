@@ -128,11 +128,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             dgvRawExcelData.AutoGenerateColumns = true;
             dgvRawExcelData.DataSource = _rawExcelData;
             dgvRawExcelData.UseCustomColumnDisplay = false;
+            dgvRawExcelData.CellFormatting += DgvRawExcelData_CellFormatting;
 
             dgvParsedImportData.AutoGenerateColumns = true;
             dgvParsedImportData.DataSource = _parsedImportData;
             dgvParsedImportData.UseCustomColumnDisplay = false;
             dgvParsedImportData.UseSelectedColumn = true;
+            dgvParsedImportData.CellFormatting += DgvParsedImportData_CellFormatting;
             // 初始化实体类型选择下拉框
             InitializeEntityTypes();
 
@@ -707,7 +709,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
                     foreach (var mapping in mappings)
                     {
-                        // 根据数据来源类型处理
+                        // 根据数据来源类型处理1
                         switch (mapping.DataSourceType)
                         {
                             case DataSourceType.Excel:
@@ -726,7 +728,15 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                                     }
                                     else
                                     {
-                                        targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
+                                        // 如果是图片列，直接使用Excel中的值（图片路径）
+                                        if (mapping.IsImageColumn)
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
+                                        }
+                                        else
+                                        {
+                                            targetRow[mapping.SystemField?.Value] = cellValue?.ToString() ?? "";
+                                        }
                                     }
                                 }
                                 else
@@ -1499,6 +1509,207 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
         }
 
+        /// <summary>
+        /// 原始Excel数据预览表格的单元格格式化事件
+        /// 用于显示图片列的图片
+        /// </summary>
+        private void DgvRawExcelData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            try
+            {
+                // 如果没有当前配置或映射，不处理
+                if (_currentConfig?.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
+                {
+                    return;
+                }
+
+                // 检查当前列是否配置为图片列
+                string columnName = dgvRawExcelData.Columns[e.ColumnIndex]?.Name;
+                if (string.IsNullOrEmpty(columnName))
+                {
+                    return;
+                }
+
+                // 根据Excel列名查找映射配置
+                var imageMapping = _currentConfig.ColumnMappings.FirstOrDefault(m =>
+                    m.ExcelColumn.Equals(columnName, StringComparison.OrdinalIgnoreCase) &&
+                    m.IsImageColumn);
+
+                if (imageMapping != null && e.Value != null)
+                {
+                    string cellValue = e.Value.ToString();
+
+                    // 如果是图片路径，尝试加载并显示图片
+                    if (!string.IsNullOrEmpty(cellValue))
+                    {
+                        if (imageMapping.ImageColumnType == ImageColumnType.Path)
+                        {
+                            // 图片路径类型：尝试加载图片
+                            try
+                            {
+                                string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
+                                if (File.Exists(imagePath))
+                                {
+                                    Image img = Image.FromFile(imagePath);
+                                    // 缩放图片以适应单元格
+                                    int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
+                                    Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                    e.Value = scaledImg;
+                                    img.Dispose();
+                                }
+                            }
+                            catch
+                            {
+                                // 图片加载失败，显示文本
+                                e.Value = cellValue;
+                            }
+                        }
+                        else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
+                        {
+                            // 二进制图片类型：如果值是Base64编码，尝试解码并显示
+                            try
+                            {
+                                if (cellValue.Length > 0 && !cellValue.Contains(Path.DirectorySeparatorChar))
+                                {
+                                    // 尝试作为Base64解码
+                                    byte[] imageBytes = Convert.FromBase64String(cellValue);
+                                    using (MemoryStream ms = new MemoryStream(imageBytes))
+                                    {
+                                        Image img = Image.FromStream(ms);
+                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                    }
+                                }
+                                else
+                                {
+                                    // 如果是路径，尝试加载
+                                    string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
+                                    if (File.Exists(imagePath))
+                                    {
+                                        Image img = Image.FromFile(imagePath);
+                                        int maxSize = Math.Min(dgvRawExcelData.Rows[e.RowIndex].Height - 4, 80);
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                        img.Dispose();
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // 二进制数据处理失败，显示文本
+                                e.Value = cellValue;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 格式化失败不影响其他单元格
+            }
+        }
+
+        /// <summary>
+        /// 解析后数据预览表格的单元格格式化事件
+        /// 用于显示图片列的图片
+        /// </summary>
+        private void DgvParsedImportData_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            try
+            {
+                // 如果没有当前配置或映射，不处理
+                if (_currentConfig?.ColumnMappings == null || _currentConfig.ColumnMappings.Count == 0)
+                {
+                    return;
+                }
+
+                // 检查当前列是否配置为图片列
+                string columnName = dgvParsedImportData.Columns[e.ColumnIndex]?.Name;
+                if (string.IsNullOrEmpty(columnName))
+                {
+                    return;
+                }
+
+                // 根据系统字段名查找映射配置
+                var imageMapping = _currentConfig.ColumnMappings.FirstOrDefault(m =>
+                    m.SystemField?.Value.Equals(columnName, StringComparison.OrdinalIgnoreCase) == true &&
+                    m.IsImageColumn);
+
+                if (imageMapping != null && e.Value != null)
+                {
+                    string cellValue = e.Value.ToString();
+
+                    // 如果是图片路径，尝试加载并显示图片
+                    if (!string.IsNullOrEmpty(cellValue))
+                    {
+                        if (imageMapping.ImageColumnType == ImageColumnType.Path)
+                        {
+                            // 图片路径类型：尝试加载图片
+                            try
+                            {
+                                string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
+                                if (File.Exists(imagePath))
+                                {
+                                    Image img = Image.FromFile(imagePath);
+                                    // 缩放图片以适应单元格
+                                    int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
+                                    Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                    e.Value = scaledImg;
+                                    img.Dispose();
+                                }
+                            }
+                            catch
+                            {
+                                // 图片加载失败，显示文本
+                                e.Value = cellValue;
+                            }
+                        }
+                        else if (imageMapping.ImageColumnType == ImageColumnType.Binary)
+                        {
+                            // 二进制图片类型：如果值是Base64编码，尝试解码并显示
+                            try
+                            {
+                                if (cellValue.Length > 0 && !cellValue.Contains(Path.DirectorySeparatorChar))
+                                {
+                                    // 尝试作为Base64解码
+                                    byte[] imageBytes = Convert.FromBase64String(cellValue);
+                                    using (MemoryStream ms = new MemoryStream(imageBytes))
+                                    {
+                                        Image img = Image.FromStream(ms);
+                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                    }
+                                }
+                                else
+                                {
+                                    // 如果是路径，尝试加载
+                                    string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ImportImages", cellValue);
+                                    if (File.Exists(imagePath))
+                                    {
+                                        Image img = Image.FromFile(imagePath);
+                                        int maxSize = Math.Min(dgvParsedImportData.Rows[e.RowIndex].Height - 4, 80);
+                                        Image scaledImg = new Bitmap(img, new Size(maxSize, maxSize));
+                                        e.Value = scaledImg;
+                                        img.Dispose();
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // 二进制数据处理失败，显示文本
+                                e.Value = cellValue;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 格式化失败不影响其他单元格
+            }
+        }
 
     }
 }

@@ -63,6 +63,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kchkIsForeignKey = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
+            this.kryptonGroupBoxImageType = new Krypton.Toolkit.KryptonGroupBox();
+            this.kcmbImageColumnType = new Krypton.Toolkit.KryptonComboBox();
+            this.kryptonLabel15 = new Krypton.Toolkit.KryptonLabel();
+            this.kchkIsImageColumn = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxConcat)).BeginInit();
@@ -80,10 +84,14 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxImageType)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxImageType.Panel)).BeginInit();
+            this.kryptonGroupBoxImageType.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbImageColumnType)).BeginInit();
             this.SuspendLayout();
             // 
             // kryptonPanel1
-            //
+            // 
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBoxConcat);
             this.kryptonPanel1.Controls.Add(this.kryptonGroupBoxForeignType);
             this.kryptonPanel1.Controls.Add(this.kbtnCancel);
@@ -102,6 +110,11 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonPanel1.Controls.Add(this.kryptonLabel4);
             this.kryptonPanel1.Controls.Add(this.kchkIsForeignKey);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel8);
+            this.kryptonPanel1.Controls.Add(this.kryptonGroupBoxImageType);
+            this.kryptonPanel1.Controls.Add(this.kchkIsImageColumn);
+            this.kryptonPanel1.Controls.Add(this.kcmbImageColumnType);
+            this.kryptonPanel1.Controls.Add(this.kryptonLabel15);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
@@ -114,7 +127,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxConcat.Name = "kryptonGroupBoxConcat";
             // 
             // kryptonGroupBoxConcat.Panel
-            //
+            // 
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.ktxtSeparator);
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.kchkIgnoreEmptyColumns);
             this.kryptonGroupBoxConcat.Panel.Controls.Add(this.kchkTrimWhitespace);
@@ -126,7 +139,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonGroupBoxConcat.TabIndex = 203;
             this.kryptonGroupBoxConcat.Values.Heading = "列拼接配置";
             this.kryptonGroupBoxConcat.Visible = false;
-            //
+            // 
             // ktxtSeparator
             // 
             this.ktxtSeparator.Location = new System.Drawing.Point(135, 303);
@@ -378,7 +391,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kchkIsSystemGenerated.CheckedChanged += new System.EventHandler(this.kchkIsSystemGenerated_CheckedChanged);
             // 
             // ktxtDefaultValue
-            //
+            // 
             this.ktxtDefaultValue.Location = new System.Drawing.Point(120, 220);
             this.ktxtDefaultValue.Name = "ktxtDefaultValue";
             this.ktxtDefaultValue.Size = new System.Drawing.Size(280, 23);
@@ -419,7 +432,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             // 
             // kryptonLabel1
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(30, 30);
+            this.kryptonLabel1.Location = new System.Drawing.Point(49, 30);
             this.kryptonLabel1.Name = "kryptonLabel1";
             this.kryptonLabel1.Size = new System.Drawing.Size(39, 20);
             this.kryptonLabel1.TabIndex = 1;
@@ -432,6 +445,45 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             this.kryptonLabel8.Size = new System.Drawing.Size(65, 20);
             this.kryptonLabel8.TabIndex = 13;
             this.kryptonLabel8.Values.Text = "自身引用:";
+            // 
+            // kryptonGroupBoxImageType
+            // 
+            this.kryptonGroupBoxImageType.Location = new System.Drawing.Point(658, 200);
+            this.kryptonGroupBoxImageType.Name = "kryptonGroupBoxImageType";
+            this.kryptonGroupBoxImageType.Size = new System.Drawing.Size(435, 80);
+            this.kryptonGroupBoxImageType.TabIndex = 204;
+            this.kryptonGroupBoxImageType.Values.Heading = "图片类型配置";
+            this.kryptonGroupBoxImageType.Visible = false;
+            // 
+            // kcmbImageColumnType
+            // 
+            this.kcmbImageColumnType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kcmbImageColumnType.DropDownWidth = 200;
+            this.kcmbImageColumnType.IntegralHeight = false;
+            this.kcmbImageColumnType.Items.AddRange(new object[] {
+            "图片路径",
+            "二进制图片"});
+            this.kcmbImageColumnType.Location = new System.Drawing.Point(120, 432);
+            this.kcmbImageColumnType.Name = "kcmbImageColumnType";
+            this.kcmbImageColumnType.Size = new System.Drawing.Size(280, 21);
+            this.kcmbImageColumnType.TabIndex = 0;
+            // 
+            // kryptonLabel15
+            // 
+            this.kryptonLabel15.Location = new System.Drawing.Point(30, 432);
+            this.kryptonLabel15.Name = "kryptonLabel15";
+            this.kryptonLabel15.Size = new System.Drawing.Size(65, 20);
+            this.kryptonLabel15.TabIndex = 1;
+            this.kryptonLabel15.Values.Text = "图片类型:";
+            // 
+            // kchkIsImageColumn
+            // 
+            this.kchkIsImageColumn.Location = new System.Drawing.Point(450, 70);
+            this.kchkIsImageColumn.Name = "kchkIsImageColumn";
+            this.kchkIsImageColumn.Size = new System.Drawing.Size(75, 20);
+            this.kchkIsImageColumn.TabIndex = 19;
+            this.kchkIsImageColumn.Values.Text = "是图片列";
+            this.kchkIsImageColumn.CheckedChanged += new System.EventHandler(this.kchkIsImageColumn_CheckedChanged);
             // 
             // FrmColumnPropertyConfig
             // 
@@ -465,6 +517,10 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             ((System.ComponentModel.ISupportInitialize)(this.kcmbCopyFromField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbSelfReferenceField)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kcmbDataSourceType)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxImageType.Panel)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBoxImageType)).EndInit();
+            this.kryptonGroupBoxImageType.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.kcmbImageColumnType)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -507,5 +563,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private Krypton.Toolkit.KryptonLabel kryptonLabel13;
         private Krypton.Toolkit.KryptonLabel kryptonLabel12;
         private Krypton.Toolkit.KryptonListBox klstSourceColumns;
+        private Krypton.Toolkit.KryptonGroupBox kryptonGroupBoxImageType;
+        private Krypton.Toolkit.KryptonCheckBox kchkIsImageColumn;
+        private Krypton.Toolkit.KryptonComboBox kcmbImageColumnType;
+        private Krypton.Toolkit.KryptonLabel kryptonLabel15;
     }
 }

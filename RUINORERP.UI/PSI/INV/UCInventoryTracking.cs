@@ -146,6 +146,11 @@ namespace RUINORERP.UI.PSI.INV
             { "调拨出库", "tb_StockTransfer" },
             { "转换单减", "tb_ProdConversion" },
             { "转换单加", "tb_ProdConversion" },
+            { "售后申请入库", "tb_AS_AfterSaleApply" },
+            { "售后交付出库", "tb_AS_AfterSaleDelivery" },
+            { "维修领料出库", "tb_AS_RepairMaterialPickup" },
+            { "维修工单出库", "tb_AS_RepairOrder" },
+            { "维修完成入库", "tb_AS_RepairInStock" },
             { "返工退库", "tb_MRP_ReworkReturn" },
             { "返工入库", "tb_MRP_ReworkEntry" },
             //{ "返工入库", "tb_MRP_ReworkEntry" },
@@ -157,7 +162,6 @@ namespace RUINORERP.UI.PSI.INV
                 KeyNamePair keyNamePair = new KeyNamePair(item.Key, item.Value);
                 base._UCOutlookGridAnalysis1.GridRelated.SetRelatedInfo<Proc_InventoryTracking>(c => c.单据编号, keyNamePair);
             }
-
         }
 
         public override void BuildSummaryCols()

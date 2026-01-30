@@ -244,6 +244,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
 
                         case DataSourceType.DefaultValue:
+
+                            //如果配置时设置的对象默认值是枚举类型：应该设置时要设置更多的信息。在这里能判断处理。转换数据
+
                             // 默认值映射
                             cellValue = mapping.DefaultValue;
                             break;

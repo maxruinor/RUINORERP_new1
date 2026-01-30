@@ -1,3 +1,12 @@
+using Krypton.Toolkit;
+using RUINORERP.Business.Cache;
+using RUINORERP.Common;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.CustomAttribute;
+using RUINORERP.Model;
+using RUINORERP.UI.Common;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -5,12 +14,6 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
-using Krypton.Toolkit;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.Helper;
-using RUINORERP.Model;
-using RUINORERP.Global;
 
 namespace RUINORERP.UI.SysConfig.BasicDataImport
 {
@@ -97,14 +100,19 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public string EnumTypeName { get; set; }
 
         /// <summary>
+        /// 枚举默认值配置
+        /// </summary>
+        public EnumDefaultConfig EnumDefaultConfig { get; set; }
+
+        /// <summary>
+        /// Excel列名列表
+        /// </summary>
+        public List<string> ExcelColumns { get; set; }
+
+        /// <summary>
         /// 字段信息字典（字段名 -> 中文名）
         /// </summary>
         private System.Collections.Concurrent.ConcurrentDictionary<string, string> _fieldInfoDict;
-
-        /// <summary>
-        /// Excel列列表（用于外键来源列选择）
-        /// </summary>
-        public List<string> ExcelColumns { get; set; }
 
         /// <summary>
         /// 动态生成的默认值控件
@@ -117,6 +125,13 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         private DataBindingHelper _dataBindingHelper;
 
         /// <summary>
+        /// 数据库客户端
+        /// </summary>
+        private ISqlSugarClient _db;
+
+        private readonly ITableSchemaManager _tableSchemaManager;
+
+        /// <summary>
         /// 构造函数
         /// </summary>
         public FrmColumnPropertyConfig()
@@ -125,12 +140,21 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             LoadRelatedTables();
             LoadDataSourceTypes();
             _dataBindingHelper = new DataBindingHelper();
-
+             _tableSchemaManager = Startup.GetFromFac<ITableSchemaManager>();
+            
             // 手动绑定事件
             kcmbDataSourceType.SelectedIndexChanged += kcmbDataSourceType_SelectedIndexChanged;
             kcmbSelfReferenceField.SelectedIndexChanged += kcmbSelfReferenceField_SelectedIndexChanged;
             kcmbCopyFromField.SelectedIndexChanged += kcmbCopyFromField_SelectedIndexChanged;
             this.FormClosing += FrmColumnPropertyConfig_FormClosing;
+        }
+
+        /// <summary>
+        /// 带数据库客户端的构造函数
+        /// </summary>
+        public FrmColumnPropertyConfig(ISqlSugarClient db) : this()
+        {
+            _db = db;
         }
 
         /// <summary>
@@ -693,6 +717,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             }
             else if (dataSourceType == DataSourceType.DefaultValue)
             {
+                //这里应该去尝试获取值
                 if (string.IsNullOrWhiteSpace(DefaultValue))
                 {
                     MessageBox.Show("请输入默认值", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -742,6 +767,25 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 IsSystemGenerated = false;
                 // 从动态控件获取默认值
                 DefaultValue = GetDefaultValueFromDynamicControl();
+
+                // 如果是枚举类型控件，保存完整的枚举配置
+                if (_dynamicDefaultValueControl?.Name == "cmbDynamicDefaultEnum" &&
+                    _dynamicDefaultValueControl is KryptonComboBox enumComboBox &&
+                    enumComboBox.SelectedItem is EnumItemInfo enumInfo)
+                {
+                    EnumDefaultConfig = new EnumDefaultConfig
+                    {
+                        EnumTypeName = enumInfo.EnumType.FullName,
+                        EnumValue = enumInfo.EnumValue,
+                        EnumName = enumInfo.EnumName,
+                        EnumDisplayName = enumInfo.DisplayName
+                    };
+                    EnumTypeName = enumInfo.EnumType.FullName; // 保持向后兼容
+                }
+                else
+                {
+                    EnumDefaultConfig = null;
+                }
             }
             else if (dataSourceType == DataSourceType.SelfReference)
             {
@@ -1137,6 +1181,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     }
                 }
 
+                //根据生成目标表中的的目标字段的特性。去查找是不是有外键
+
                 // 根据字段类型生成控件
                 if (propertyType == typeof(bool))
                 {
@@ -1154,9 +1200,18 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 {
                     GenerateEnumControl(enumType);
                 }
-                else if (IsForeignKeyType(propertyType))
+                else if (propertyType == typeof(long) || propertyType == typeof(long?) || propertyType == typeof(int) || propertyType == typeof(int?))
                 {
-                    GenerateForeignKeyControl(property, fieldName);
+                    // 检查是否有外键特性
+                    var fkAttr = property?.GetCustomAttribute<FKRelationAttribute>();
+                    if (fkAttr != null)
+                    {
+                        GenerateForeignKeyControl(property, fieldName, fkAttr);
+                    }
+                    else
+                    {
+                        ShowDefaultTextBox();
+                    }
                 }
                 else
                 {
@@ -1294,25 +1349,58 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 Size = new System.Drawing.Size(280, 23)
             };
 
-            // 加载枚举值
+            // 加载枚举值（带显示文本）
             foreach (var value in Enum.GetValues(enumType))
             {
-                comboBox.Items.Add(value);
+                // 创建一个枚举信息对象存储
+                var enumInfo = new EnumItemInfo
+                {
+                    EnumType = enumType,
+                    EnumValue = (int)value,
+                    EnumName = value.ToString(),
+                    DisplayName = GetEnumDisplayName(enumType, value)
+                };
+                comboBox.Items.Add(enumInfo);
             }
 
             // 设置初始值
-            if (!string.IsNullOrEmpty(DefaultValue))
+            if (!string.IsNullOrEmpty(DefaultValue) && CurrentMapping?.EnumDefaultConfig != null)
             {
-                object enumValue = Enum.Parse(enumType, DefaultValue);
-                comboBox.SelectedItem = enumValue;
+                // 尝试根据已保存的枚举值查找对应的项
+                foreach (EnumItemInfo item in comboBox.Items)
+                {
+                    if (item.EnumValue == CurrentMapping.EnumDefaultConfig.EnumValue)
+                    {
+                        comboBox.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(DefaultValue))
+            {
+                // 兼容旧版本：通过枚举名称查找
+                try
+                {
+                    object enumValue = Enum.Parse(enumType, DefaultValue);
+                    foreach (EnumItemInfo item in comboBox.Items)
+                    {
+                        if (item.EnumName == enumValue.ToString())
+                        {
+                            comboBox.SelectedItem = item;
+                            break;
+                        }
+                    }
+                }
+                catch { }
             }
 
             // 绑定事件
             comboBox.SelectedIndexChanged += (s, e) =>
             {
-                if (comboBox.SelectedItem != null)
+                if (comboBox.SelectedItem is EnumItemInfo selectedInfo)
                 {
-                    DefaultValue = comboBox.SelectedItem.ToString();
+                    // 更新DefaultValue为枚举名称
+                    DefaultValue = selectedInfo.EnumName;
                 }
             };
 
@@ -1323,22 +1411,47 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         }
 
         /// <summary>
-        /// 判断是否为外键类型
+        /// 获取枚举值的显示名称（优先使用Description特性）
         /// </summary>
-        private bool IsForeignKeyType(Type propertyType)
+        private string GetEnumDisplayName(Type enumType, object enumValue)
         {
-            // 简单判断：类型为long或int且属性有外键特性
-            if (propertyType == typeof(long) || propertyType == typeof(int))
+            try
             {
-                return true;
+                var field = enumType.GetField(enumValue.ToString());
+                if (field != null)
+                {
+                    var descAttr = field.GetCustomAttributes(System.ComponentModel.DescriptionAttribute.class, false)
+                        .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
+                    if (descAttr != null && !string.IsNullOrEmpty(descAttr.Description))
+                    {
+                        return descAttr.Description;
+                    }
+                }
             }
-            return false;
+            catch { }
+            return enumValue.ToString();
+        }
+
+        /// <summary>
+        /// 枚举项信息（用于ComboBox显示和值存储）
+        /// </summary>
+        public class EnumItemInfo
+        {
+            public Type EnumType { get; set; }
+            public int EnumValue { get; set; }
+            public string EnumName { get; set; }
+            public string DisplayName { get; set; }
+
+            public override string ToString()
+            {
+                return !string.IsNullOrEmpty(DisplayName) ? $"{DisplayName} ({EnumName})" : EnumName;
+            }
         }
 
         /// <summary>
         /// 生成外键类型控件（下拉列表）
         /// </summary>
-        private void GenerateForeignKeyControl(PropertyInfo property, string fieldName)
+        private void GenerateForeignKeyControl(PropertyInfo property, string fieldName, FKRelationAttribute fkAttr)
         {
             var comboBox = new KryptonComboBox
             {
@@ -1351,39 +1464,64 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
 
             try
             {
-                // 尝试从字段属性获取外键关联表信息
-                var foreignKeyAttr = property.GetCustomAttribute<System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute>();
-                if (foreignKeyAttr != null)
+                if (fkAttr != null)
                 {
-                    // 查找关联表类型
-                    string fkTableName = foreignKeyAttr.Name;
+                    // 获取关联表类型
+                    string fkTableName = fkAttr.FKTableName;
+                    Type fkEntityType = null;
+
+                    // 从EntityTypeMappings中查找关联表类型
                     var mapping = UCBasicDataImport.EntityTypeMappings
                         .FirstOrDefault(m => m.Value.Name == fkTableName || m.Value.Name.Contains(fkTableName));
 
-                    Type fkEntityType = null;
-                    if (!string.IsNullOrEmpty(mapping.Key))
+                    if (mapping.Value != null)
                     {
                         fkEntityType = mapping.Value;
                     }
 
                     if (fkEntityType != null)
                     {
-                        // 暂时提示用户需要加载数据
-                        comboBox.Items.Add("（需要从数据库加载数据）");
+                        // 使用UIGenerateHelper绑定外键数据
+                        BindForeignKeyData(comboBox, fkEntityType, fkAttr);
+
+                        // 设置初始值（如果有默认值）
+                        if (!string.IsNullOrEmpty(DefaultValue) && comboBox.DataSource != null)
+                        {
+                            // 尝试通过ValueMember查找对应的项
+                            string primaryKey = GetPrimaryKeyName(fkEntityType);
+                            foreach (System.Data.DataRowView row in comboBox.Items)
+                            {
+                                if (row[primaryKey]?.ToString() == DefaultValue)
+                                {
+                                    comboBox.SelectedValue = row[primaryKey];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        comboBox.Items.Add($"未找到关联表: {fkTableName}");
                     }
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"生成外键控件失败: {ex.Message}");
+                comboBox.Items.Add($"加载失败: {ex.Message}");
             }
 
             // 绑定事件
             comboBox.SelectedIndexChanged += (s, e) =>
             {
-                if (comboBox.SelectedIndex > 0 && comboBox.SelectedItem != null)
+                if (comboBox.SelectedIndex >= 0 && comboBox.SelectedItem != null)
                 {
-                    DefaultValue = comboBox.SelectedItem.ToString();
+                    // 保存选中的值（ID）
+                    var selectedValue = comboBox.SelectedValue;
+                    if (selectedValue != null)
+                    {
+                        DefaultValue = selectedValue.ToString();
+                    }
                 }
             };
 
@@ -1392,6 +1530,78 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
             _dynamicDefaultValueControl = comboBox;
             ktxtDefaultValue.Visible = false;
         }
+
+        /// <summary>
+        /// 绑定外键数据到下拉列表
+        /// </summary>
+        /// <param name="comboBox">下拉列表控件</param>
+        /// <param name="fkEntityType">外键关联实体类型</param>
+        /// <param name="fkAttr">外键关系特性</param>
+        private void BindForeignKeyData(KryptonComboBox comboBox, Type fkEntityType, FKRelationAttribute fkAttr)
+        {
+            try
+            {
+                // 如果数据库客户端为空，提示用户
+                if (_db == null)
+                {
+                    comboBox.Items.Clear();
+                    comboBox.Items.Add("数据库连接不可用");
+                    return;
+                }
+
+                // 获取主键名称
+                string primaryKey = GetPrimaryKeyName(fkEntityType);
+                string displayField = string.Empty;
+                // 获取显示字段（通常是名称字段）
+                var tableSchema = _tableSchemaManager.GetSchemaInfo(fkEntityType.Name);
+                if (tableSchema != null)
+                {
+                    displayField = tableSchema.DisplayField;
+                }
+                // 构建查询
+                string query = $"SELECT {primaryKey}, {displayField} FROM {fkAttr.FKTableName} ORDER BY {displayField}";
+
+                // 执行查询获取数据
+                var dataTable = _db.Ado.GetDataTable(query);
+
+                if (dataTable != null && dataTable.Rows.Count > 0)
+                {
+                    // 手动绑定数据到KryptonComboBox
+                    comboBox.DataSource = dataTable;
+                    comboBox.DisplayMember = displayField;
+                    comboBox.ValueMember = primaryKey;
+                }
+                else
+                {
+                    comboBox.Items.Clear();
+                    comboBox.Items.Add("无可用数据");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"绑定外键数据失败: {ex.Message}");
+                comboBox.Items.Clear();
+                comboBox.Items.Add($"加载失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取实体的主键名称
+        /// </summary>
+        private string GetPrimaryKeyName(Type entityType)
+        {
+            var properties = entityType.GetProperties();
+            foreach (var prop in properties)
+            {
+                var pkAttr = prop.GetCustomAttribute<SugarColumn>();
+                if (pkAttr != null && pkAttr.IsPrimaryKey)
+                {
+                    return prop.Name;
+                }
+            }
+            return entityType.Name + "ID"; // 默认命名规则
+        }
+
 
         /// <summary>
         /// 从动态控件获取默认值
@@ -1408,10 +1618,20 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 case "chkDynamicDefaultBool":
                     return (_dynamicDefaultValueControl as KryptonCheckBox)?.Checked.ToString() ?? "False";
                 case "dtpDynamicDefaultDateTime":
-                    return (_dynamicDefaultValueControl as KryptonDateTimePicker)?.Value.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty;
+                    var dtp = _dynamicDefaultValueControl as KryptonDateTimePicker;
+                    return dtp?.Checked == true ? dtp.Value.ToString("yyyy-MM-dd HH:mm:ss") : string.Empty;
                 case "cmbDynamicDefaultEnum":
+                    // 枚举控件返回枚举名称
+                    var enumComboBox = _dynamicDefaultValueControl as KryptonComboBox;
+                    if (enumComboBox?.SelectedItem is EnumItemInfo enumInfo)
+                    {
+                        return enumInfo.EnumName;
+                    }
+                    return enumComboBox?.SelectedItem?.ToString() ?? string.Empty;
                 case "cmbDynamicDefaultForeignKey":
-                    return (_dynamicDefaultValueControl as KryptonComboBox)?.SelectedItem?.ToString() ?? string.Empty;
+                    // 外键控件应该返回SelectedValue（主键ID），而不是SelectedItem（显示字段值）
+                    var comboBox = _dynamicDefaultValueControl as KryptonComboBox;
+                    return comboBox?.SelectedValue?.ToString() ?? string.Empty;
                 default:
                     return ktxtDefaultValue.Text.Trim();
             }

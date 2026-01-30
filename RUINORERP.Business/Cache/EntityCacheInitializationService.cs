@@ -131,8 +131,7 @@ namespace RUINORERP.Business.Cache
                 RegistInformation<View_ProdDetail>(k => k.ProdDetailID, v => v.CNName, isView: true);
                 RegistInformation<View_ProdInfo>(k => k.ProdBaseID, v => v.CNName, isView: true);
 
-                // 产品相关表
-                RegistInformation<tb_ProdPropertyType>(k => k.PropertyType_ID, v => v.PropertyTypeName, tableType: TableType.Base);
+               
                 RegistInformation<tb_ProdProperty>(k => k.Property_ID, v => v.PropertyName, tableType: TableType.Base);
                 RegistInformation<tb_ProdPropertyValue>(k => k.PropertyValueID, v => v.PropertyValueName, tableType: TableType.Base);
                 RegistInformation<tb_ProdBundle>(k => k.BundleID, v => v.BundleName, tableType: TableType.Business);

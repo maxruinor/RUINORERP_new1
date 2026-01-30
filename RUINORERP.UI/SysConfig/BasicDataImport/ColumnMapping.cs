@@ -58,6 +58,38 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
     }
 
     /// <summary>
+    /// 枚举默认值配置
+    /// 用于存储枚举类型默认值的详细信息
+    /// </summary>
+    [Serializable]
+    public class EnumDefaultConfig
+    {
+        /// <summary>
+        /// 枚举类型完整名称
+        /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
+        /// </summary>
+        public string EnumTypeName { get; set; }
+
+        /// <summary>
+        /// 枚举值（数值）
+        /// 例如：0, 1, 2 等
+        /// </summary>
+        public int EnumValue { get; set; }
+
+        /// <summary>
+        /// 枚举名称（字符串表示）
+        /// 例如："RawMaterial", "SemiProduct" 等
+        /// </summary>
+        public string EnumName { get; set; }
+
+        /// <summary>
+        /// 枚举显示文本（Description特性或枚举名称）
+        /// 例如："原材料", "半成品" 等
+        /// </summary>
+        public string EnumDisplayName { get; set; }
+    }
+
+    /// <summary>
     /// 列拼接配置
     /// 用于配置多个Excel列的拼接规则
     /// </summary>
@@ -197,10 +229,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
         public ColumnConcatConfig ConcatConfig { get; set; }
 
         /// <summary>
-        /// 枚举类型完整名称
+        /// 枚举默认值配置（当DataSourceType为DefaultValue且值为枚举类型时使用）
+        /// 存储枚举类型的完整信息，用于后续的类型转换和验证
+        /// </summary>
+        public EnumDefaultConfig EnumDefaultConfig { get; set; }
+
+        /// <summary>
+        /// 枚举类型完整名称（保留用于向后兼容，建议使用EnumDefaultConfig）
         /// 当数据库字段类型为int但实际使用枚举时，可手动指定枚举类型
         /// 格式："命名空间.枚举名" 如："RUINORERP.Model.EnumProductType"
         /// </summary>
+        [Obsolete("请使用EnumDefaultConfig替代此属性")]
         public string EnumTypeName { get; set; }
 
         /// <summary>

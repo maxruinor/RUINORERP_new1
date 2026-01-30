@@ -2417,6 +2417,15 @@
     <Compile Include="SysConfig\BasicDataImport\ExcelDataParser.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ForeignRelatedConfig.cs" />
+    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRuleEdit.Designer.cs">
+      <DependentUpon>FrmAttributeRuleEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmAttributeRulesConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SysConfig\BasicDataImport\frmColumnMappingConfig.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2435,9 +2444,17 @@
     <Compile Include="SysConfig\BasicDataImport\frmDeduplicateFieldConfig.Designer.cs">
       <DependentUpon>frmDeduplicateFieldConfig.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmMultiAttributeImportConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SysConfig\BasicDataImport\FrmMultiAttributeImportConfig.Designer.cs">
+      <DependentUpon>FrmMultiAttributeImportConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="SysConfig\BasicDataImport\IForeignKeyService.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImageProcessor.cs" />
     <Compile Include="SysConfig\BasicDataImport\ImportConfiguration.cs" />
+    <Compile Include="SysConfig\BasicDataImport\MultiAttributeImportConfig.cs" />
+    <Compile Include="SysConfig\BasicDataImport\MultiAttributeProductImporter.cs" />
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.cs">
       <SubType>UserControl</SubType>
     </Compile>

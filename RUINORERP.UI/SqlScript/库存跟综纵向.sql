@@ -85,7 +85,22 @@ union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'缴库' as 业务类型,DeliveryBillNo as 单据编号 , sc.Location_ID as 库位,  Qty as 数量 ,DeliveryDate as 日期 from tb_FinishedGoodsInv sm LEFT JOIN tb_FinishedGoodsInvDetail sc on sm.FG_ID=sc.FG_ID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
+SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'售后申请入库' as 业务类型,ASApplyNo as 单据编号 , sc.Location_ID as 库位,  sc.ConfirmedQuantity as 数量 ,ApplyDate as 日期 from  tb_AS_AfterSaleApply sm LEFT JOIN tb_AS_AfterSaleApplyDetail sc on sm.ASApplyID=sc.ASApplyID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'售后交付出库' as 业务类型, ASDeliveryNo as 单据编号 , sc.Location_ID as 库位,  -sc.Quantity as 数量 ,DeliveryDate as 日期 from  tb_AS_AfterSaleDelivery sm LEFT JOIN tb_AS_AfterSaleDeliveryDetail sc on sm.ASDeliveryID=sc.ASDeliveryID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
+ WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
 SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'返工退库' as 业务类型,ReworkReturnNo as 单据编号 , sc.Location_ID as 库位,  -sc.Quantity as 数量 ,ReturnDate as 日期 from  tb_MRP_ReworkReturn sm LEFT JOIN tb_MRP_ReworkReturnDetail sc on sm.ReworkReturnID=sc.ReworkReturnID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'维修领料出库' as 业务类型,MaterialPickupNO as 单据编号 , sc.Location_ID as 库位,  -sc.ActualSentQty as 数量 ,DeliveryDate as 日期 from  tb_AS_RepairMaterialPickup sm LEFT JOIN tb_AS_RepairMaterialPickupDetail sc on sm.RMRID=sc.RMRID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
+WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'维修工单出库' as 业务类型, RepairOrderNo as 单据编号 , sc.Location_ID as 库位,  -sc.Quantity as 数量 ,Approver_at as 日期 from  tb_AS_RepairOrder sm LEFT JOIN tb_AS_RepairOrderDetail sc on sm.RepairOrderID=sc.RepairOrderID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID
+ WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
+union ALL
+SELECT '进出明细' as 经营历程,vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'维修完成入库' as 业务类型,RepairInStockNo as 单据编号 , sc.Location_ID as 库位,  sc.Quantity as 数量 ,EntryDate as 日期 from  tb_AS_RepairInStock sm LEFT JOIN tb_AS_RepairInStockDetail sc on sm.RepairInStockID=sc.RepairInStockID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID 
 WHERE (sm.DataStatus=4 or sm.DataStatus=8)  and sc.Location_ID=@Location_ID  and sc.ProdDetailID=@ProdDetailID
 union ALL
 SELECT '进出明细' as 经营历程, vp.ProdDetailID,vp.ProductNo,vp.SKU,vp.CNName,vp.Specifications,vp.prop,'返工入库' as 业务类型, ReworkEntryNo as 单据编号 , sc.Location_ID as 库位,  sc.Quantity as 数量 ,EntryDate as 日期 from  tb_MRP_ReworkEntry sm LEFT JOIN tb_MRP_ReworkEntryDetail sc on sm.ReworkEntryID=sc.ReworkEntryID INNER JOIN View_ProdDetail vp on vp.ProdDetailID=sc.ProdDetailID and vp.Location_ID=sc.Location_ID

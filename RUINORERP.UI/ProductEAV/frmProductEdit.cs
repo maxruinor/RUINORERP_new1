@@ -2131,8 +2131,6 @@ namespace RUINORERP.UI.ProductEAV
             List<Expression<Func<tb_ProdDetail, object>>> ExpInvisibleCols = new List<Expression<Func<tb_ProdDetail, object>>>();
             ExpInvisibleCols.Add(c => c.ProdBaseID);
             ExpInvisibleCols.Add(c => c.ProdDetailID);
-            ExpInvisibleCols.Add(c => c.Image);
-            ExpInvisibleCols.Add(c => c.Images);
             ExpInvisibleCols.Add(c => c.DataStatus);
             //如果不启用条码。则不显示
             if (!MainForm.Instance.AppContext.SysConfig.UseBarCode)

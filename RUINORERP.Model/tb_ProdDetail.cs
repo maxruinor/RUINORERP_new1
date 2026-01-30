@@ -123,20 +123,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private byte[] _Images;
-        /// <summary>
-        /// 产品图片
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Images",ColDesc = "产品图片")] 
-        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "Images" ,Length=2147483647,IsNullable = true,ColumnDescription = "产品图片" )]
-        public byte[] Images
-        { 
-            get{return _Images;}
-            set{
-            SetProperty(ref _Images, value);
-                        }
-        }
-
+      
         private decimal? _Weight;
         /// <summary>
         /// 重量（千克）
@@ -221,20 +208,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private byte[] _Image;
-        /// <summary>
-        /// 产品图片
-        /// </summary>
-        [AdvQueryAttribute(ColName = "Image",ColDesc = "产品图片")] 
-        [SugarColumn(ColumnDataType = "image", SqlParameterDbType ="Binary",  ColumnName = "Image" ,Length=2147483647,IsNullable = true,ColumnDescription = "产品图片" )]
-        public byte[] Image
-        { 
-            get{return _Image;}
-            set{
-            SetProperty(ref _Image, value);
-                        }
-        }
-
+       
         private string _Notes;
         /// <summary>
         /// 备注

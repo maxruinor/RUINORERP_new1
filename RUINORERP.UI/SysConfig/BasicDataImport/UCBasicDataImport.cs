@@ -70,6 +70,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 { "库位表", typeof(tb_Location) },
                 { "货架表", typeof(tb_StorageRack) },
                 { "单位表", typeof(tb_Unit) },
+                { "产品类型表", typeof(tb_ProductType) },
+                { "部门表", typeof(tb_Department) },
             };
         }
 
@@ -1216,9 +1218,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kbtnDynamicParse.Enabled = kcmbDynamicSheetName.SelectedIndex >= 0;
                 kbtnDynamicMap.Enabled = true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                MessageBox.Show($"导入数据失败，请检查数据格式和映射配置。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"导入数据失败，请检查数据格式和映射配置。{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 kbtnDynamicImport.Enabled = true;
                 kbtnDynamicBrowse.Enabled = true;
                 kbtnDynamicParse.Enabled = true;

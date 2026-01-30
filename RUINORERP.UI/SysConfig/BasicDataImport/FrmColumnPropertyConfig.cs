@@ -261,7 +261,8 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 IgnoreEmptyValue = CurrentMapping.IgnoreEmptyValue;
                 DefaultValue = CurrentMapping.DefaultValue;
                 IsSystemGenerated = CurrentMapping.IsSystemGenerated;
-                EnumTypeName = CurrentMapping.EnumTypeName;
+                EnumTypeName = CurrentMapping.EnumDefaultConfig?.EnumTypeName;
+                EnumDefaultConfig = CurrentMapping.EnumDefaultConfig;
 
                 // 初始化数据来源类型
                 kcmbDataSourceType.SelectedIndex = (int)CurrentMapping.DataSourceType;
@@ -780,7 +781,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                         EnumName = enumInfo.EnumName,
                         EnumDisplayName = enumInfo.DisplayName
                     };
-                    EnumTypeName = enumInfo.EnumType.FullName; // 保持向后兼容
                 }
                 else
                 {
@@ -1171,9 +1171,9 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 Type enumType = GetPredefinedEnumType(TargetEntityType.Name, fieldName);
 
                 // 检查是否手动指定了枚举类型（优先级高于预定义）
-                if (enumType == null && !string.IsNullOrEmpty(CurrentMapping.EnumTypeName))
+                if (enumType == null && !string.IsNullOrEmpty(CurrentMapping.EnumDefaultConfig?.EnumTypeName))
                 {
-                    enumType = AssemblyLoader.GetType("RUINORERP.Model", CurrentMapping.EnumTypeName);
+                    enumType = AssemblyLoader.GetType("RUINORERP.Model", CurrentMapping.EnumDefaultConfig.EnumTypeName);
                     if (enumType != null && enumType.IsEnum)
                     {
                         GenerateEnumControl(enumType);
@@ -1420,7 +1420,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 var field = enumType.GetField(enumValue.ToString());
                 if (field != null)
                 {
-                    var descAttr = field.GetCustomAttributes(System.ComponentModel.DescriptionAttribute.class, false)
+                    var descAttr = field.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false)
                         .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
                     if (descAttr != null && !string.IsNullOrEmpty(descAttr.Description))
                     {

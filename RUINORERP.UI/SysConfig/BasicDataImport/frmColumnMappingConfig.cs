@@ -253,19 +253,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                     mapping.DataSourceType = propertyDialog.SelectedDataSourceType;
                     mapping.SelfReferenceField = propertyDialog.SelfReferenceField;
                     mapping.CopyFromField = propertyDialog.CopyFromField;
-                    mapping.EnumTypeName = propertyDialog.EnumTypeName;
-
-                    // 保存枚举默认值配置
-                    if (propertyDialog.SelectedDataSourceType == DataSourceType.DefaultValue &&
-                        _dynamicDefaultValueControl?.Name == "cmbDynamicDefaultEnum")
-                    {
-                        // 构建完整的枚举配置
-                        mapping.EnumDefaultConfig = CreateEnumDefaultConfig(propertyDialog);
-                    }
-                    else
-                    {
-                        mapping.EnumDefaultConfig = null;
-                    }
+                    mapping.EnumDefaultConfig = propertyDialog.EnumDefaultConfig;
 
                     // 保存外键关联配置
                     if (propertyDialog.SelectedDataSourceType == DataSourceType.ForeignKey)
@@ -296,76 +284,6 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 }
                 return false;
             }
-
-        /// <summary>
-        /// 创建枚举默认值配置对象
-        /// </summary>
-        private EnumDefaultConfig CreateEnumDefaultConfig(FrmColumnPropertyConfig propertyDialog)
-        {
-            var config = new EnumDefaultConfig();
-
-            try
-            {
-                // 从控件中获取枚举信息
-                if (propertyDialog.Controls.OfType<KryptonPanel>()
-                    .FirstOrDefault(p => p.Name == "kryptonPanel1") is KryptonPanel panel)
-                {
-                    var enumComboBox = panel.Controls.OfType<KryptonComboBox>()
-                        .FirstOrDefault(c => c.Name == "cmbDynamicDefaultEnum");
-
-                    if (enumComboBox?.SelectedItem is EnumItemInfo enumInfo)
-                    {
-                        config.EnumTypeName = enumInfo.EnumType.FullName;
-                        config.EnumValue = enumInfo.EnumValue;
-                        config.EnumName = enumInfo.EnumName;
-                        config.EnumDisplayName = enumInfo.DisplayName;
-                    }
-                    else if (!string.IsNullOrEmpty(propertyDialog.EnumTypeName))
-                    {
-                        // 兼容旧版本：从EnumTypeName和DefaultValue构建配置
-                        var enumType = AssemblyLoader.GetType("RUINORERP.Model", propertyDialog.EnumTypeName);
-                        if (enumType != null && enumType.IsEnum)
-                        {
-                            config.EnumTypeName = propertyDialog.EnumTypeName;
-                            if (Enum.TryParse(enumType, propertyDialog.DefaultValue, out object enumValue))
-                            {
-                                config.EnumValue = (int)enumValue;
-                                config.EnumName = enumValue.ToString();
-                                config.EnumDisplayName = GetEnumDisplayName(enumType, enumValue);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"创建枚举配置失败: {ex.Message}");
-            }
-
-            return config;
-        }
-
-        /// <summary>
-        /// 获取枚举值的显示名称
-        /// </summary>
-        private string GetEnumDisplayName(Type enumType, object enumValue)
-        {
-            try
-            {
-                var field = enumType.GetField(enumValue.ToString());
-                if (field != null)
-                {
-                    var descAttr = field.GetCustomAttributes(System.ComponentModel.DescriptionAttribute.class, false)
-                        .FirstOrDefault() as System.ComponentModel.DescriptionAttribute;
-                    if (descAttr != null && !string.IsNullOrEmpty(descAttr.Description))
-                    {
-                        return descAttr.Description;
-                    }
-                }
-            }
-            catch { }
-            return enumValue.ToString();
-        }
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Common.Helper;
 using RUINORERP.Model;
 using RUINORERP.UI.SysConfig.BasicDataImport;
 using SqlSugar;
@@ -244,11 +245,17 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                             break;
 
                         case DataSourceType.DefaultValue:
-
-                            //如果配置时设置的对象默认值是枚举类型：应该设置时要设置更多的信息。在这里能判断处理。转换数据
-
                             // 默认值映射
-                            cellValue = mapping.DefaultValue;
+                            if (mapping.EnumDefaultConfig != null)
+                            {
+                                // 如果是枚举类型默认值，使用枚举的数值
+                                cellValue = mapping.EnumDefaultConfig.EnumValue;
+                            }
+                            else
+                            {
+                                // 普通默认值
+                                cellValue = mapping.DefaultValue;
+                            }
                             break;
 
                         case DataSourceType.ForeignKey:

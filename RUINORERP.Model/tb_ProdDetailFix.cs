@@ -27,7 +27,7 @@ namespace RUINORERP.Model
     /// 字段名：RowImage
     /// 后面如果支持多图则可能是List<key,value> key是图片名，value是图片对象
     /// </summary>
-    public partial class tb_ProdDetail : BaseEntity, ICloneable
+    public partial class tb_ProdDetail 
     {
         /// <summary>
         /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
@@ -35,6 +35,18 @@ namespace RUINORERP.Model
         [SugarColumn(IsIgnore = true, ColumnDescription = "多属性组合")]
         [Browsable(true)]
         public string PropertyGroupName { get; set; }
+
+
+        #region 扩展属性
+
+        /// <summary>
+        /// 是否有未保存的图片更改（UI临时字段）
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
+        public bool HasUnsavedImageChanges { get; set; }
+
+
 
         /// <summary>
         /// 多属性新组合序号，用于多属性组合生成时的唯一 标识，此字段不存储到数据库1
@@ -77,6 +89,7 @@ namespace RUINORERP.Model
                 return string.Join("-", uniqueParts);
             }
         }
+        #endregion
     }
 }
 

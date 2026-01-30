@@ -124,13 +124,6 @@ namespace RUINORERP.Business
                     entity.GetPropertyValue(statusProperty)
                 );
 
-              
-
-                //if (!FMPaymentStatusHelper.CanApprove(currentStatus, false))
-                //{
-                //    rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ProfitLossDirection)entity.ProfitLossDirection).ToString()}确认单不能审核";
-                //    return rmrs;
-                //}
 
 
                 //得到当前实体对应的业务类型
@@ -153,7 +146,7 @@ namespace RUINORERP.Business
                     {
                         //收集重复的单号信息
                         var duplicateBillNumbers = string.Join(", ", existingRecords.Select(r => r.ProfitLossNo));
-                        
+
                         rmrs.ErrorMsg = $"检测到重复：业务类型{(BizType)entity.SourceBizType}下的来源单号{entity.SourceBillNo}已存在于以下损溢单中：{duplicateBillNumbers}，不允许重复生成损溢单费用！审核失败。";
                         rmrs.Succeeded = false;
                         rmrs.ReturnObject = entity as T;
@@ -183,6 +176,7 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                //
                 //结案来源单？
                 if (entity.SourceBizType == (int)BizType.盘点单)
                 {
@@ -225,7 +219,11 @@ namespace RUINORERP.Business
             }
         }
 
-
+        /// <summary>
+        /// 应收应付转费用单还要完善TODO 要根据收付款方式和金额的正负数来确定最后的损失方向
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_FM_ReceivablePayable entity)
         {
             #region 创建损溢单费用单
@@ -269,7 +267,7 @@ namespace RUINORERP.Business
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
                     // 确保异步调用正确执行
-                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                    profitLoss.ProfitLossNo = await Task.Run(async () =>
                         await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None));
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
                 }
@@ -278,7 +276,7 @@ namespace RUINORERP.Business
                     //如果收款是负数， 则是退款（不退就算收入）
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
                     // 确保异步调用正确执行
-                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                    profitLoss.ProfitLossNo = await Task.Run(async () =>
                         await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None));
                     profitLossDetail.ExpenseDescription += "的退款";
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
@@ -292,7 +290,7 @@ namespace RUINORERP.Business
                 {
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
                     // 确保异步调用正确执行
-                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                    profitLoss.ProfitLossNo = await Task.Run(async () =>
                         await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None));
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
                 }
@@ -301,7 +299,7 @@ namespace RUINORERP.Business
                     //如果付款是负数， 则是供应商退款（不退就算损失）
                     profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
                     // 确保异步调用正确执行
-                    profitLoss.ProfitLossNo = await Task.Run(async () => 
+                    profitLoss.ProfitLossNo = await Task.Run(async () =>
                         await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None));
                     profitLossDetail.ExpenseDescription += "的退款";
                     profitLossDetail.IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
@@ -362,93 +360,148 @@ namespace RUINORERP.Business
             return profitLoss;
         }
 
-        public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_Stocktake entity)
+
+        /// <summary>
+        /// 盘点单转为费用单：通常盘点明细会有正负所以会同时转为两张单
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async Task<List<tb_FM_ProfitLoss>> BuildProfitLoss(tb_Stocktake entity)
         {
-
-            //一张盘点单中的明细 可能有多个产品。有些盘亏，有些盘盈。
-            #region 创建损溢单费用单
-
-            tb_FM_ProfitLoss profitLoss = new tb_FM_ProfitLoss();
-            profitLoss = mapper.Map<tb_FM_ProfitLoss>(entity);
-            profitLoss.ApprovalResults = null;
-            profitLoss.ApprovalStatus = (int)ApprovalStatus.未审核;
-            profitLoss.Approver_at = null;
-            profitLoss.Approver_by = null;
-            profitLoss.PrintStatus = 0;
-            profitLoss.ActionStatus = ActionStatus.新增;
-            profitLoss.ApprovalOpinions = "";
-            profitLoss.Modified_at = null;
-            profitLoss.Modified_by = null;
-
-            profitLoss.SourceBillNo = entity.CheckNo;
-            profitLoss.SourceBillId = entity.MainID;
-            profitLoss.SourceBizType = (int)BizType.盘点单;
-            profitLoss.PostDate = DateTime.Now;
-
-            List<tb_FM_ProfitLossDetail> details = mapper.Map<List<tb_FM_ProfitLossDetail>>(entity.tb_StocktakeDetails);
-            for (global::System.Int32 i = 0; i < details.Count; i++)
-            {
-                ////这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
-                ///如果来源和目录字段值一致。mapper应该完成映射。目前为了保险，在目标明细实体中添加一个 原始的主键ID
-                var olditem = entity.tb_StocktakeDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID
-                && c.SubID == details[i].SourceItemRowID).FirstOrDefault();
-                if (olditem != null)
-                {
-                    details[i].SubtotalAmont = olditem.DiffSubtotalAmount;
-                }
-                if (details[i].SubtotalAmont > 0)
-                {
-                    details[i].ProfitLossType = (int)ProfitLossType.存货盘盈收益;
-                    details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
-                }
-                if (details[i].SubtotalAmont < 0 && olditem.DiffQty < 0)
-                {
-                    details[i].ProfitLossType = (int)ProfitLossType.存货盘亏损失;
-                    details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
-                }
-                details[i].ActionStatus = ActionStatus.新增;
-            }
-
-            profitLoss.tb_FM_ProfitLossDetails = details.Where(c => c.SubtotalAmont != 0).ToList();
-
-            if (entity.Adjust_Type == (int)Adjust_Type.减少)
-            {
-                profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
-                    .Where(c => c.ProfitLossType == (int)ProfitLossType.存货盘亏损失).ToList();
-            }
-            if (entity.Adjust_Type == (int)Adjust_Type.增加)
-            {
-                profitLoss.tb_FM_ProfitLossDetails = profitLoss.tb_FM_ProfitLossDetails
-                  .Where(c => c.ProfitLossType == (int)ProfitLossType.存货盘盈收益).ToList();
-            }
-
-            profitLoss.TotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.SubtotalAmont);
-            profitLoss.TaxTotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.TaxSubtotalAmont);
-            profitLoss.UntaxedTotalAmont = profitLoss.TotalAmount - profitLoss.TaxTotalAmount;
-            if (profitLoss.TaxTotalAmount > 0)
-            {
-                profitLoss.IsIncludeTax = true;
-            }
             //最后根据总的情况来判断单据类型
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-            if (profitLoss.TotalAmount < 0)
+
+            List<tb_FM_ProfitLoss> losts = new List<tb_FM_ProfitLoss>();
+            if (entity.Adjust_Type == (int)Adjust_Type.全部 || entity.Adjust_Type == (int)Adjust_Type.增加)
             {
-                profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
-                profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None);
-            }
-            else
-            {
+                #region 创建损溢单费用单
+
+                tb_FM_ProfitLoss profitLoss = new tb_FM_ProfitLoss();
+                profitLoss = mapper.Map<tb_FM_ProfitLoss>(entity);
+                profitLoss.ApprovalResults = null;
+                profitLoss.ApprovalStatus = (int)ApprovalStatus.未审核;
+                profitLoss.Approver_at = null;
+                profitLoss.Approver_by = null;
+                profitLoss.PrintStatus = 0;
+                profitLoss.ActionStatus = ActionStatus.新增;
+                profitLoss.ApprovalOpinions = "";
+                profitLoss.Modified_at = null;
+                profitLoss.Modified_by = null;
+
+                profitLoss.SourceBillNo = entity.CheckNo;
+                profitLoss.SourceBillId = entity.MainID;
+                profitLoss.SourceBizType = (int)BizType.盘点单;
+                profitLoss.PostDate = DateTime.Now;
+                //如果是全部则有正有负，如果是减少则损失（负），如果是增加则正
+                List<tb_FM_ProfitLossDetail> details = mapper.Map<List<tb_FM_ProfitLossDetail>>(entity.tb_StocktakeDetails.Where(c => c.DiffQty > 0));
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    ////这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
+                    ///如果来源和目录字段值一致。mapper应该完成映射。目前为了保险，在目标明细实体中添加一个 原始的主键ID
+                    var olditem = entity.tb_StocktakeDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID
+                    && c.SubID == details[i].SourceItemRowID).FirstOrDefault();
+                    if (olditem != null)
+                    {
+                        details[i].SubtotalAmont = Math.Abs(olditem.DiffSubtotalAmount);
+                    }
+                    if (details[i].SubtotalAmont > 0)
+                    {
+                        details[i].ProfitLossType = (int)ProfitLossType.存货盘盈收益;
+                        details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.收入;
+                    }
+                    details[i].ActionStatus = ActionStatus.新增;
+                }
+
+          
+                profitLoss.TotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.SubtotalAmont);
+                profitLoss.TaxTotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.TaxSubtotalAmont);
+                profitLoss.UntaxedTotalAmont = profitLoss.TotalAmount - profitLoss.TaxTotalAmount;
+                if (profitLoss.TaxTotalAmount > 0)
+                {
+                    profitLoss.IsIncludeTax = true;
+                }
+
                 profitLoss.ProfitLossDirection = (int)ProfitLossDirection.溢余;
                 profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.溢余确认单, CancellationToken.None);
+
+                profitLoss.DataStatus = (int)DataStatus.草稿;
+                Business.BusinessHelper.Instance.InitEntity(profitLoss);
+
+                #endregion
+                losts.Add(profitLoss);
             }
 
-            profitLoss.DataStatus = (int)DataStatus.草稿;
-            Business.BusinessHelper.Instance.InitEntity(profitLoss);
+            if (entity.Adjust_Type == (int)Adjust_Type.全部 || entity.Adjust_Type == (int)Adjust_Type.减少)
+            {
+                #region 创建损溢单费用单
 
-            #endregion
-            return profitLoss;
+                tb_FM_ProfitLoss profitLoss = new tb_FM_ProfitLoss();
+                profitLoss = mapper.Map<tb_FM_ProfitLoss>(entity);
+                profitLoss.ApprovalResults = null;
+                profitLoss.ApprovalStatus = (int)ApprovalStatus.未审核;
+                profitLoss.Approver_at = null;
+                profitLoss.Approver_by = null;
+                profitLoss.PrintStatus = 0;
+                profitLoss.ActionStatus = ActionStatus.新增;
+                profitLoss.ApprovalOpinions = "";
+                profitLoss.Modified_at = null;
+                profitLoss.Modified_by = null;
+
+                profitLoss.SourceBillNo = entity.CheckNo;
+                profitLoss.SourceBillId = entity.MainID;
+                profitLoss.SourceBizType = (int)BizType.盘点单;
+                profitLoss.PostDate = DateTime.Now;
+
+                List<tb_FM_ProfitLossDetail> details = mapper.Map<List<tb_FM_ProfitLossDetail>>(entity.tb_StocktakeDetails.Where(c => c.DiffQty < 0));
+                for (global::System.Int32 i = 0; i < details.Count; i++)
+                {
+                    ////这个写法，如果原来明细中  相同产品ID 多行录入。就会出错。混乱。
+                    ///如果来源和目录字段值一致。mapper应该完成映射。目前为了保险，在目标明细实体中添加一个 原始的主键ID
+                    var olditem = entity.tb_StocktakeDetails.Where(c => c.ProdDetailID == details[i].ProdDetailID
+                    && c.SubID == details[i].SourceItemRowID).FirstOrDefault();
+                    if (olditem != null)
+                    {
+                        details[i].SubtotalAmont = olditem.DiffSubtotalAmount;
+                    }
+
+                    details[i].ProfitLossType = (int)ProfitLossType.存货盘亏损失;
+                    details[i].IncomeExpenseDirection = (int)IncomeExpenseDirection.支出;
+
+                    //有方向字段标识
+                    //费用金额取正数
+                    details[i].SubtotalAmont = Math.Abs(details[i].SubtotalAmont);
+                    details[i].ActionStatus = ActionStatus.新增;
+                }
+
+                profitLoss.tb_FM_ProfitLossDetails = details;
+
+                profitLoss.TotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.SubtotalAmont);
+                profitLoss.TaxTotalAmount = profitLoss.tb_FM_ProfitLossDetails.Sum(c => c.TaxSubtotalAmont);
+                profitLoss.UntaxedTotalAmont = profitLoss.TotalAmount - profitLoss.TaxTotalAmount;
+
+
+                if (profitLoss.TaxTotalAmount > 0)
+                {
+                    profitLoss.IsIncludeTax = true;
+                }
+
+                profitLoss.ProfitLossDirection = (int)ProfitLossDirection.损失;
+                profitLoss.ProfitLossNo = await bizCodeService.GenerateBizBillNoAsync(BizType.损失确认单, CancellationToken.None);
+
+                profitLoss.DataStatus = (int)DataStatus.草稿;
+                Business.BusinessHelper.Instance.InitEntity(profitLoss);
+
+                #endregion
+                losts.Add(profitLoss);
+            }
+            return losts;
         }
 
+        /// <summary>
+        /// 借出单转费用单，按成本算损失金额
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public async Task<tb_FM_ProfitLoss> BuildProfitLoss(tb_ProdBorrowing entity)
         {
             #region 创建损溢单费用单

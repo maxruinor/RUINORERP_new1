@@ -590,6 +590,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     byte[] imageBytes = imageBytesList[i];
 
+                    // 检查图片字节数组是否为空
+                    if (imageBytes == null || imageBytes.Length == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"跳过空图片数据 (索引 {i})");
+                        continue;
+                    }
+
                     // 计算哈希值，用于缓存查找
                     string hashValue = CalculateImageHash(imageBytes);
 
@@ -2984,6 +2991,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 for (int i = 0; i < images.Count; i++)
                 {
+                    // 检查图片是否有效
+                    if (images[i] == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"跳过空图片 (索引 {i})");
+                        continue;
+                    }
+
                     // 检查是否需要更新，同时确保索引有效
                     if (i < imageInfos.Count && imageInfos[i] != null && IsImageNeedingUpdate(i))
                     {

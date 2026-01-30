@@ -323,8 +323,16 @@ namespace RUINORERP.UI.Common
                 {
                     tableName = ConvertBizTypeToTableName(tableName);
                 }
-
                 relatedMenuInfo = FindMenuByTableName(tableName);
+                if (relatedMenuInfo == null)
+                {
+                    //库存跟踪的情况
+                    #region
+                    tableName = relatedRelationship.TargetTableName.Name;
+                    relatedMenuInfo = FindMenuByTableName(tableName);
+                    #endregion
+
+                }
 
                 if (relatedMenuInfo != null)
                 {
@@ -336,6 +344,10 @@ namespace RUINORERP.UI.Common
                 }
                 else
                 {
+
+
+
+
                     MessageBox.Show($"未找到表 {tableName} 对应的菜单，请联系管理员。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -414,7 +426,8 @@ namespace RUINORERP.UI.Common
                 targetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
                 System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
 
-                return RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == targetTableKey);
+                var info = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == targetTableKey);
+                return info;
             }
             else
             {

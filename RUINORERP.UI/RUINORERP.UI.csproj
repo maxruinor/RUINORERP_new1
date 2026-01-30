@@ -2375,6 +2375,12 @@
     <Compile Include="ProductEAV\frmSelectCombinations.Designer.cs">
       <DependentUpon>frmSelectCombinations.cs</DependentUpon>
     </Compile>
+    <Compile Include="ProductEAV\frmSKUImageEdit.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\frmSKUImageEdit.Designer.cs">
+      <DependentUpon>frmSKUImageEdit.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProductEAV\UCProductAttrRelationEdit.cs">
       <SubType>Form</SubType>
     </Compile>

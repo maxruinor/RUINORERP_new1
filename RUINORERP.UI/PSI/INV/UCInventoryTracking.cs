@@ -119,6 +119,7 @@ namespace RUINORERP.UI.PSI.INV
             page1.Text = "纵向库存跟踪";
             base._UCOutlookGridAnalysis1.GridRelated.FromMenuInfo = this.CurMenuInfo;
             base._UCOutlookGridAnalysis1.GridRelated.ComplexType = true;
+            //由这个列来决定单号显示哪个的业务窗体
             base._UCOutlookGridAnalysis1.GridRelated.SetComplexTargetField<Proc_InventoryTracking>(c => c.业务类型, c => c.单据编号);
             _UCOutlookGridAnalysis1.kryptonOutlookGrid1.ContextMenuStrip = this.contextMenuStripTracker;
 
@@ -158,7 +159,7 @@ namespace RUINORERP.UI.PSI.INV
         };//还要添加调拨单 转换单，售后维修，采购退回及采购退回入库。后面还要实现的返厂入库，返厂出库，返厂退回，返厂退回入库，返厂领用，返厂领用退回，返
             foreach (KeyValuePair<string, string> item in mappings)
             {
-                //取编号为条件，目标表为在kv
+                //取编号为条件，目标表为在kv，  英文类表名在前,中文后在
                 KeyNamePair keyNamePair = new KeyNamePair(item.Key, item.Value);
                 base._UCOutlookGridAnalysis1.GridRelated.SetRelatedInfo<Proc_InventoryTracking>(c => c.单据编号, keyNamePair);
             }

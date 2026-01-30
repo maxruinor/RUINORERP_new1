@@ -174,14 +174,9 @@ namespace RUINORERP.Business
                     rmrs.Succeeded = false;
                     _logger.LogError(rmrs.ErrorMsg + "详细信息：" + string.Join(",", CheckNewInvList));
                     return rmrs;
-
                 }
 
                 // 事务已经在方法开始处开启
-
-
-
-
 
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
@@ -197,12 +192,12 @@ namespace RUINORERP.Business
                     {
                         #region 生成费用单
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss = await ctrpayable.BuildProfitLoss(entity);
-                        ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
-                        if (rmr.Succeeded)
+                        List<tb_FM_ProfitLoss> profitLossList = await ctrpayable.BuildProfitLoss(entity);
+                        foreach (var profitLoss in profitLossList)
                         {
-                            rmrs.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                            ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
                         }
+
                         #endregion
                     }
                     catch (Exception)
@@ -211,16 +206,6 @@ namespace RUINORERP.Business
                         throw new Exception("盘点单审核时，财务费用单数据保存失败！");
                     }
                 }
-
-
-                //List<tb_Inventory> UpdateList = invUpdateList.Where(c => c.Inventory_ID > 0).ToList();
-
-                //int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(UpdateList).ExecuteCommandAsync();
-                //if (InvUpdateCounter == 0)
-                //{
-                //    _unitOfWorkManage.RollbackTran();
-                //    throw new Exception("库存更新失败！");
-                //}
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -381,15 +366,22 @@ namespace RUINORERP.Business
                 {
                     try
                     {
-                        #region 生成费用单
+                        #region  删除 生成费用单，如果没有审核则可以删除。如果审核了。则不能反审核
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ProfitLossController<tb_FM_ProfitLoss>>();
-                        tb_FM_ProfitLoss profitLoss = await ctrpayable.BuildProfitLoss(entity);
-                        ReturnMainSubResults<tb_FM_ProfitLoss> rmr = await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ProfitLoss>(profitLoss);
-                        if (rmr.Succeeded)
+                        List<tb_FM_ProfitLoss> profitLoss = await ctrpayable.QueryByNavAsync(c => c.SourceBillNo == entity.CheckNo);
+                        if (profitLoss.Where(c => c.DataStatus.Value > (int)DataStatus.新建).Any())
                         {
-                            //已经是等审核。 审核时会核销预收付款
-                            rmsr.ReturnObjectAsOtherEntity = rmr.ReturnObject;
+                            rmsr.ErrorMsg = "有盘点单生成的费用单已经审核，操作失败。";
+                            rmsr.Succeeded = false;
+                            _logger.LogError(rmsr.ErrorMsg);
+                            return rmsr;
                         }
+                        else
+                        {
+                            await ctrpayable.BaseDeleteAsync(profitLoss);
+                        }
+
+
                         #endregion
                     }
                     catch (Exception)

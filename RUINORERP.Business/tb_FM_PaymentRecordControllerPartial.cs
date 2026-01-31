@@ -269,7 +269,6 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
-
                 #region 关联单据状态处理
 
                 //相同客户，多个应收可以合成一个收款 。所以明细中就是对应的应收单。

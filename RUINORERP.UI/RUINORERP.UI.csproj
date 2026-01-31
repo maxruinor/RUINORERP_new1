@@ -2347,6 +2347,7 @@
     <Compile Include="Network\Services\FileBusinessService.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\FileUpdateClientService.cs" />
+    <Compile Include="Network\Services\ImageCacheService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\ClientLockManagementService.cs" />
     <Compile Include="Network\Services\LockRecoveryManager.cs" />
@@ -3276,6 +3277,7 @@
       <DependentUpon>ReadOnlyTextBox.cs</DependentUpon>
     </Compile>
     <Compile Include="UControls\SerializableDictionary.cs" />
+    <Compile Include="UControls\SKUImageColumn.cs" />
     <Compile Include="UControls\SummaryControlContainer.cs">
       <SubType>UserControl</SubType>
     </Compile>

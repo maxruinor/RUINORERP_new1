@@ -72,8 +72,8 @@ namespace RUINORERP.UI.Network.Services
 
             _logger?.LogInformation("图片缓存服务初始化完成,是否启用:{IsEnabled},产品图过期:{ProductExpiration}小时,订单图过期:{OrderExpiration}小时",
                 IsCacheEnabled,
-                _config?.ProductMainImageExpiration?.TotalHours ?? 24,
-                _config?.SaleOrderVoucherExpiration?.TotalHours ?? 1);
+                _config?.ProductMainImageExpiration.TotalHours ?? 24,
+                _config?.SaleOrderVoucherExpiration.TotalHours ?? 1);
         }
 
         #region 产品主图缓存
@@ -124,7 +124,7 @@ namespace RUINORERP.UI.Network.Services
             {
                 var db = _unitOfWorkManage.GetDbClient().CopyNew();
                 var product = await db.Queryable<tb_Prod>()
-                    .Where(p => p.Prod_ID == productId)
+                    .Where(p => p.ProdBaseID == productId)
                     .Select(p => p.ImagesPath)
                     .FirstAsync();
 
@@ -191,16 +191,16 @@ namespace RUINORERP.UI.Network.Services
                 {
                     var db = _unitOfWorkManage.GetDbClient().CopyNew();
                     var products = await db.Queryable<tb_Prod>()
-                        .Where(p => uncachedIds.Contains(p.Prod_ID))
-                        .Select(p => new { p.Prod_ID, p.ImagesPath })
+                        .Where(p => uncachedIds.Contains(p.ProdBaseID))
+                        .Select(p => new { p.ProdBaseID, p.ImagesPath })
                         .ToListAsync();
 
                     foreach (var product in products)
                     {
-                        result[product.Prod_ID] = product.ImagesPath;
+                        result[product.ProdBaseID] = product.ImagesPath;
 
                         // 缓存查询结果（如果启用缓存）
-                        string cacheKey = $"{CacheKeys.ProductMainImage}{product.Prod_ID}";
+                        string cacheKey = $"{CacheKeys.ProductMainImage}{product.ProdBaseID}";
                         if (IsCacheEnabled)
                         {
                             _cache.Set(cacheKey, product.ImagesPath, ProductMainImageExpiration);

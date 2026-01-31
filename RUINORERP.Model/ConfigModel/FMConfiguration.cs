@@ -37,14 +37,14 @@ namespace RUINORERP.Model.ConfigModel
 
 
         /// <summary>
-        /// 自动审核预收款单
+        /// 销售订单审核时，自动审核预收款单
         /// </summary>
         public bool AutoAuditPreReceive { get; set; }
 
 
 
         /// <summary>
-        /// 自动审核预付款单
+        /// 采购订单审核时，自动审核预付款单
         /// </summary>
         public bool AutoAuditPrePayment { get; set; } = false;
 

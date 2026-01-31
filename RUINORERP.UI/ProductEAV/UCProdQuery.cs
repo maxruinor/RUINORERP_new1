@@ -21,6 +21,7 @@ using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BI;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.MRP.MP;
+using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.ToolForm;
 using SqlSugar;
 using System;
@@ -535,7 +536,7 @@ namespace RUINORERP.UI.ProductEAV
 
             // 原文链接：https://blog.csdn.net/m0_53104033/article/details/129006538
         }
-        private void AddItems(List<View_ProdDetail> listDetails)
+        private async void AddItems(List<View_ProdDetail> listDetails)
         {
             List<long> allIds = listDetails.Select(c => c.ProdDetailID).ToList();
             var listboms = MainForm.Instance.AppContext.Db.CopyNew().Queryable<tb_BOM_S>()
@@ -546,6 +547,10 @@ namespace RUINORERP.UI.ProductEAV
                     .Includes(a => a.tb_BOM_SDetails, b => b.view_ProdInfo)
                     .Where(a => allIds.ToArray().Contains(a.ProdDetailID))
                     .ToList();
+
+            // 批量预加载SKU图片到缓存（优化性能）
+            await PreloadSKUImagesAsync(listDetails);
+
             foreach (View_ProdDetail row in listDetails)
             {
                 TreeListViewItem itemRow = new TreeListViewItem(row.CNName, 0);
@@ -565,14 +570,99 @@ namespace RUINORERP.UI.ProductEAV
                 itemRow.SubItems.Add(row.On_the_way_Qty.ToString());
                 itemRow.SubItems.Add(row.NotOutQty.ToString());
                 itemRow.SubItems.Add(row.Alert_Quantity.ToString());
+
+                // 添加SKU图片列（显示图片数量和状态）
+                AddSKUImageSubItem(itemRow, row);
+
                 treeListView1.Items.Add(itemRow);
                 tb_BOM_S bOM_S = listboms.Where(c => c.ProdDetailID == row.ProdDetailID).FirstOrDefault();
                 if (bOM_S != null)
                 {
                     Loadbom(bOM_S, row.ProdDetailID, row.Location_ID, itemRow);
                 }
-
             }
+        }
+
+        /// <summary>
+        /// 预加载SKU图片到缓存（性能优化）
+        /// </summary>
+        private async Task PreloadSKUImagesAsync(List<View_ProdDetail> listDetails)
+        {
+            try
+            {
+                if (listDetails == null || listDetails.Count == 0)
+                    return;
+
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                if (fileService == null)
+                    return;
+
+                var prodDetailIds = listDetails.Select(d => d.ProdDetailID).Where(id => id > 0).ToList();
+                if (prodDetailIds.Count == 0)
+                    return;
+
+                // 批量预加载图片到缓存
+                foreach (var prodDetailId in prodDetailIds)
+                {
+                    try
+                    {
+                        var prodDetail = new tb_ProdDetail { ProdDetailID = prodDetailId };
+                        await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"预加载SKU {prodDetailId} 图片失败: {ex.Message}", Global.UILogType.警告);
+                    }
+                }
+
+                MainForm.Instance.uclog.AddLog($"预加载 {prodDetailIds.Count} 个SKU的图片到缓存");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"预加载SKU图片失败: {ex.Message}", Global.UILogType.警告);
+            }
+        }
+
+        /// <summary>
+        /// 添加SKU图片子项（显示图片信息）
+        /// </summary>
+        private async void AddSKUImageSubItem(TreeListViewItem itemRow, View_ProdDetail row)
+        {
+            string imageText = "无图片";
+
+            try
+            {
+                // 查询tb_ProdDetail获取ImagesPath
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                if (fileService != null && row.ProdDetailID > 0)
+                {
+                    var prodDetail = new tb_ProdDetail { ProdDetailID = row.ProdDetailID };
+                    var downloadResponse = await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
+
+                    if (downloadResponse != null && downloadResponse.Count > 0)
+                    {
+                        int imageCount = 0;
+                        foreach (var response in downloadResponse)
+                        {
+                            if (response.IsSuccess && response.FileStorageInfos != null)
+                            {
+                                imageCount += response.FileStorageInfos.Count;
+                            }
+                        }
+
+                        if (imageCount > 0)
+                        {
+                            imageText = $"图片({imageCount}) ✓";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"获取SKU图片数量失败: {ex.Message}", Global.UILogType.警告);
+            }
+
+            itemRow.SubItems.Add(imageText);
         }
         // 从数据源获取类型排序优先级
         private Dictionary<string, int> GetTypePriorityFromData(List<View_ProdDetail> list)

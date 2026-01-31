@@ -25,6 +25,7 @@ using RUINORERP.SecurityTool;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.Network.Services;
+using RUINORERP.UI.UControls;
 using SqlSugar;
 using System;
 using System.Collections.Concurrent;
@@ -1722,6 +1723,69 @@ namespace RUINORERP.UI.ProductEAV
             bindingSourceList.DataSource = propGroups;
             dataGridView1.DataSource = bindingSourceList;
 
+            // 配置SKU图片列 - 使用SKUImageColumn显示图片
+            ConfigureSKUImageColumn();
+        }
+
+        /// <summary>
+        /// 配置SKU图片列 - 使用SKUImageColumn显示图片缩略图
+        /// </summary>
+        private void ConfigureSKUImageColumn()
+        {
+            try
+            {
+                // 检查是否存在ImagesPath列
+                if (!dataGridView1.Columns.Contains("ImagesPath"))
+                    return;
+
+                var imageColumn = dataGridView1.Columns["ImagesPath"];
+
+                // 如果已经是SKUImageColumn，直接配置
+                if (imageColumn is SKUImageColumn skuColumn)
+                {
+                    ConfigureSKUImageColumnProperties(skuColumn);
+                }
+                else
+                {
+                    // 替换为SKUImageColumn
+                    int columnIndex = imageColumn.Index;
+                    var newColumn = new SKUImageColumn();
+
+                    // 复制原列属性
+                    newColumn.Name = imageColumn.Name;
+                    newColumn.DataPropertyName = imageColumn.DataPropertyName;
+                    newColumn.HeaderText = imageColumn.HeaderText;
+                    newColumn.Width = imageColumn.Width;
+                    newColumn.Visible = imageColumn.Visible;
+
+                    // 移除原列，添加新列
+                    dataGridView1.Columns.RemoveAt(columnIndex);
+                    dataGridView1.Columns.Insert(columnIndex, newColumn);
+
+                    ConfigureSKUImageColumnProperties(newColumn);
+                }
+
+                MainForm.Instance.uclog.AddLog("SKU图片列已配置为SKUImageColumn");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"配置SKU图片列失败: {ex.Message}", Global.UILogType.警告);
+            }
+        }
+
+        /// <summary>
+        /// 配置SKUImageColumn列属性
+        /// </summary>
+        private void ConfigureSKUImageColumnProperties(SKUImageColumn skuColumn)
+        {
+            skuColumn.HeaderText = "SKU图片";
+            skuColumn.Width = 80;
+            skuColumn.ReadOnly = true;
+            skuColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            skuColumn.ToolTipText = "双击查看或编辑SKU图片";
+
+            // 设置显示格式
+            skuColumn.DefaultCellStyle.NullValue = null;
         }
 
 

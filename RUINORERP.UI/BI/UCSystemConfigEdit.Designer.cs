@@ -233,7 +233,7 @@ namespace RUINORERP.UI.BI
             this.chkAutoAuditPrePayment.Name = "chkAutoAuditPrePayment";
             this.chkAutoAuditPrePayment.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditPrePayment.TabIndex = 206;
-            this.chkAutoAuditPrePayment.Values.Text = "自动审核预付款单";
+            this.chkAutoAuditPrePayment.Values.Text = "采购订单审核时，自动审核预付款单";
             // 
             // chkEnablePaymentAutoOffsetAP
             // 
@@ -287,7 +287,7 @@ namespace RUINORERP.UI.BI
             this.chkAutoAuditPreReceive.Name = "chkAutoAuditPreReceive";
             this.chkAutoAuditPreReceive.Size = new System.Drawing.Size(127, 20);
             this.chkAutoAuditPreReceive.TabIndex = 200;
-            this.chkAutoAuditPreReceive.Values.Text = "自动审核预收款单";
+            this.chkAutoAuditPreReceive.Values.Text = "销售订单审核时，自动审核预收款单";
             // 
             // chkEnableARAutoOffsetPreReceive
             // 

@@ -192,7 +192,7 @@ namespace RUINORERP.Business.EntityLoadService
             else if (billNo is string no)
                 q = q.Where($"{cfg.NoField} = @no", new { no });
 
-            return q.Single();
+            return q.First();
         }
 
         /// <summary>

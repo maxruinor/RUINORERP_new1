@@ -28,7 +28,11 @@ namespace RUINORERP.UI.BI
         public UCSystemConfigEdit()
         {
             InitializeComponent();
-            DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SystemConfig>(typeof(Global.库存成本计算方式), e => e.CostCalculationMethod, cmbCostCalculationMethod, false);
+            if (!DesignMode)
+            {
+                DataBindingHelper.InitDataToCmbByEnumDynamicGeneratedDataSource<tb_SystemConfig>(typeof(Global.库存成本计算方式), e => e.CostCalculationMethod, cmbCostCalculationMethod, false);
+            }
+            
         }
 
         private tb_SystemConfig SystemConfig = new tb_SystemConfig();

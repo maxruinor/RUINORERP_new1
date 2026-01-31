@@ -11,7 +11,7 @@ namespace RUINORERP.Global
     /// <summary>
     /// 提交后修改规则模式枚举
     /// </summary>
-   public enum SubmitModifyRuleMode
+    public enum SubmitModifyRuleMode
     {
         /// <summary>
         /// 严格模式 - 提交后不允许修改
@@ -497,8 +497,8 @@ namespace RUINORERP.Global
         套装组合 = 58,
         包装信息 = 59,
         产品档案 = 60,
-        默认数据 = 61,
-
+        产品详情 = 61,
+        默认数据 = 99,
         /// <summary>
         /// 产品转换单 A变成B后再出库,AB相近。可能只是换说明书或刷机  A  数量  加或减 。B数量增加或减少。
         /// </summary>
@@ -562,8 +562,8 @@ namespace RUINORERP.Global
 
         损失确认单 = 171,
         溢余确认单 = 172,
-        库存快照查询=173,
-        库存流水查询=174,
+        库存快照查询 = 173,
+        库存流水查询 = 174,
 
         对账单 = 175,
 
@@ -660,7 +660,7 @@ namespace RUINORERP.Global
         作废 = 16
     }
 
- 
+
     /// <summary>
     /// 产品属性类型EVA
     /// 数据库中有对应的表及固定插入值，暂时初始化系统时，同时初始化数据

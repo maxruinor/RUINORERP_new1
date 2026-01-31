@@ -65,14 +65,15 @@ namespace RUINORERP.UI.ProductEAV
         private ClientBizCodeService clientBizCodeService;
 
         /// <summary>
-        /// 临时存储SKU图片数据（key: ProdDetailID, value: 图片数据列表）
+        /// 临时存储SKU图片数据（key: tb_ProdDetail对象引用, value: 图片数据列表）
+        /// 使用对象引用作为key，支持未保存的SKU（ProdDetailID为0的情况）
         /// </summary>
-        private Dictionary<long, List<Tuple<byte[], ImageInfo>>> skuImageDataCache = new Dictionary<long, List<Tuple<byte[], ImageInfo>>>();
+        private Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>> skuImageDataCache = new Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>>();
 
         /// <summary>
-        /// 临时存储SKU需要删除的图片信息（key: ProdDetailID, value: 需要删除的图片信息列表）
+        /// 临时存储SKU需要删除的图片信息（key: tb_ProdDetail对象引用, value: 需要删除的图片信息列表）
         /// </summary>
-        private Dictionary<long, List<ImageInfo>> skuImageDeletedCache = new Dictionary<long, List<ImageInfo>>();
+        private Dictionary<tb_ProdDetail, List<ImageInfo>> skuImageDeletedCache = new Dictionary<tb_ProdDetail, List<ImageInfo>>();
 
         //定义两个值，为了计算listview的高宽，高是属性的倍数 假设一个属性一行 是50px，有三组则x3
         //宽取每组属性中值的最多个数,的字长，一个字算20px?
@@ -2242,25 +2243,77 @@ namespace RUINORERP.UI.ProductEAV
                 string columnName = dataGridView1.Columns[e.ColumnIndex].Name;
                 if (columnName == "ImagesPath")
                 {
-                    // 绘制背景
-                    e.PaintBackground(e.ClipBounds, false);
-
                     var detail = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_ProdDetail;
                     if (detail != null)
                     {
                         // 检查是否有缓存的图片数据需要显示
-                        if (skuImageDataCache.ContainsKey(detail.ProdDetailID) &&
-                            skuImageDataCache[detail.ProdDetailID].Count > 0)
+                        if (skuImageDataCache.ContainsKey(detail) &&
+                            skuImageDataCache[detail].Count > 0)
                         {
-                            // 显示缓存的图片数量
-                            var imageCount = skuImageDataCache[detail.ProdDetailID].Count;
-                            using (var brush = new SolidBrush(e.CellStyle.ForeColor))
+                            // 绘制背景
+                            e.PaintBackground(e.ClipBounds, false);
+                            e.Handled = true;
+
+                            // 显示第一张图片的缩略图
+                            var imageDataList = skuImageDataCache[detail];
+                            try
                             {
-                                e.Graphics.DrawString($"待上传图片({imageCount}张)", e.CellStyle.Font, brush,
-                                    e.CellBounds, StringFormat.GenericDefault);
+                                using (var ms = new MemoryStream(imageDataList[0].Item1))
+                                using (var originalImage = Image.FromStream(ms))
+                                {
+                                    // 计算缩略图尺寸（保持宽高比）
+                                    int maxWidth = e.CellBounds.Width - 4;
+                                    int maxHeight = e.CellBounds.Height - 4;
+                                    float ratio = Math.Min((float)maxWidth / originalImage.Width, (float)maxHeight / originalImage.Height);
+                                    int thumbWidth = (int)(originalImage.Width * ratio);
+                                    int thumbHeight = (int)(originalImage.Height * ratio);
+
+                                    // 创建缩略图
+                                    using (var thumbnail = new Bitmap(thumbWidth, thumbHeight))
+                                    using (var g = Graphics.FromImage(thumbnail))
+                                    {
+                                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                        g.DrawImage(originalImage, 0, 0, thumbWidth, thumbHeight);
+
+                                        // 居中绘制缩略图
+                                        int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
+                                        int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
+                                        e.Graphics.DrawImage(thumbnail, x, y);
+
+                                        // 如果有多张图片，显示数量标签
+                                        if (imageDataList.Count > 1)
+                                        {
+                                            string countText = $" +{imageDataList.Count - 1}";
+                                            using (var countBrush = new SolidBrush(Color.FromArgb(200, 0, 120, 215)))
+                                            using (var textBrush = new SolidBrush(Color.White))
+                                            using (var countFont = new Font(e.CellStyle.Font.FontFamily, 8, FontStyle.Bold))
+                                            {
+                                                var textSize = e.Graphics.MeasureString(countText, countFont);
+                                                var countRect = new Rectangle(
+                                                    e.CellBounds.Right - (int)textSize.Width - 8,
+                                                    e.CellBounds.Bottom - (int)textSize.Height - 4,
+                                                    (int)textSize.Width + 6,
+                                                    (int)textSize.Height + 2);
+                                                e.Graphics.FillRectangle(countBrush, countRect);
+                                                e.Graphics.DrawString(countText, countFont, textBrush, countRect, 
+                                                    new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                                            }
+                                        }
+                                    }
+                                }
                             }
+                            catch
+                            {
+                                // 图片加载失败，显示文本
+                                using (var brush = new SolidBrush(Color.Red))
+                                {
+                                    e.Graphics.DrawString("图片加载失败", e.CellStyle.Font, brush,
+                                        e.CellBounds, StringFormat.GenericDefault);
+                                }
+                            }
+                            return;
                         }
-                        // 显示已有图片数量
+                        // 显示已有图片数量（无法加载已上传图片的缩略图，因为没有缓存数据）
                         else if (!string.IsNullOrEmpty(detail.ImagesPath))
                         {
                             using (var brush = new SolidBrush(e.CellStyle.ForeColor))
@@ -2409,30 +2462,29 @@ namespace RUINORERP.UI.ProductEAV
                         if (dialogResult == DialogResult.OK)
                         {
                             // 在窗体关闭前提取图片数据，避免窗体释放后无法访问
-                            if (detail.ProdDetailID > 0)
+                            // 使用对象引用作为key，支持未保存的SKU（ProdDetailID为0）
+                            // 获取需要上传的图片数据
+                            var updatedImages = imageEditForm.GetUpdatedImages();
+                            if (updatedImages != null && updatedImages.Count > 0)
                             {
-                                // 获取需要上传的图片数据
-                                var updatedImages = imageEditForm.GetUpdatedImages();
-                                if (updatedImages != null && updatedImages.Count > 0)
-                                {
-                                    skuImageDataCache[detail.ProdDetailID] = updatedImages;
-                                }
-                                else
-                                {
-                                    skuImageDataCache.Remove(detail.ProdDetailID);
-                                }
-
-                                // 获取需要删除的图片信息
-                                var deletedImages = imageEditForm.GetDeletedImages();
-                                if (deletedImages != null && deletedImages.Count > 0)
-                                {
-                                    skuImageDeletedCache[detail.ProdDetailID] = deletedImages;
-                                }
-                                else
-                                {
-                                    skuImageDeletedCache.Remove(detail.ProdDetailID);
-                                }
+                                skuImageDataCache[detail] = updatedImages;
                             }
+                            else
+                            {
+                                skuImageDataCache.Remove(detail);
+                            }
+
+                            // 获取需要删除的图片信息
+                            var deletedImages = imageEditForm.GetDeletedImages();
+                            if (deletedImages != null && deletedImages.Count > 0)
+                            {
+                                skuImageDeletedCache[detail] = deletedImages;
+                            }
+                            else
+                            {
+                                skuImageDeletedCache.Remove(detail);
+                            }
+
                             // 刷新当前单元格显示
                             dataGridView1.InvalidateCell(e.ColumnIndex, e.RowIndex);
                         }
@@ -2804,27 +2856,26 @@ namespace RUINORERP.UI.ProductEAV
                 int totalSuccessCount = 0;
                 int totalFailCount = 0;
 
-                // 合并两个缓存的所有ProdDetailID
-                var allProdDetailIds = new HashSet<long>();
-                if (skuImageDataCache != null) skuImageDataCache.Keys.ToList().ForEach(id => allProdDetailIds.Add(id));
-                if (skuImageDeletedCache != null) skuImageDeletedCache.Keys.ToList().ForEach(id => allProdDetailIds.Add(id));
+                // 合并两个缓存的所有tb_ProdDetail对象
+                var allDetails = new HashSet<tb_ProdDetail>();
+                if (skuImageDataCache != null) skuImageDataCache.Keys.ToList().ForEach(d => allDetails.Add(d));
+                if (skuImageDeletedCache != null) skuImageDeletedCache.Keys.ToList().ForEach(d => allDetails.Add(d));
 
                 // 遍历所有已编辑的SKU图片数据
-                foreach (var prodDetailId in allProdDetailIds)
+                foreach (var detail in allDetails)
                 {
                     try
                     {
-                        // 查找对应的tb_ProdDetail对象
-                        var detail = EditEntity.tb_ProdDetails.FirstOrDefault(d => d.ProdDetailID == prodDetailId);
-                        if (detail == null)
+                        // 验证detail是否还在EditEntity的列表中（可能已被删除）
+                        if (!EditEntity.tb_ProdDetails.Contains(detail))
                         {
-                            MainForm.Instance.uclog.AddLog($"找不到ProdDetailID为 {prodDetailId} 的SKU明细", Global.UILogType.警告);
+                            MainForm.Instance.uclog.AddLog($"SKU明细已从列表中移除，跳过图片处理", Global.UILogType.警告);
                             continue;
                         }
 
                         // 从缓存中获取需要上传和删除的图片数据
-                        var updatedImages = skuImageDataCache.ContainsKey(prodDetailId) ? skuImageDataCache[prodDetailId] : null;
-                        var deletedImages = skuImageDeletedCache.ContainsKey(prodDetailId) ? skuImageDeletedCache[prodDetailId] : null;
+                        var updatedImages = skuImageDataCache.ContainsKey(detail) ? skuImageDataCache[detail] : null;
+                        var deletedImages = skuImageDeletedCache.ContainsKey(detail) ? skuImageDeletedCache[detail] : null;
 
                         // 第一步：处理需要删除的图片
                         if (deletedImages != null && deletedImages.Count > 0)
@@ -2918,12 +2969,12 @@ namespace RUINORERP.UI.ProductEAV
                         }
 
                         // 上传成功后从缓存中移除此SKU的图片数据
-                        skuImageDataCache.Remove(prodDetailId);
-                        skuImageDeletedCache.Remove(prodDetailId);
+                        skuImageDataCache.Remove(detail);
+                        skuImageDeletedCache.Remove(detail);
                     }
                     catch (Exception ex)
                     {
-                        MainForm.Instance.uclog.AddLog($"处理SKU图片时出错（ProdDetailID: {prodDetailId}）：{ex.Message}", Global.UILogType.错误);
+                        MainForm.Instance.uclog.AddLog($"处理SKU图片时出错（SKU: {detail.SKU ?? "未命名"}）：{ex.Message}", Global.UILogType.错误);
                         totalFailCount++;
                     }
                 }

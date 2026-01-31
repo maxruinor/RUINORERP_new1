@@ -259,7 +259,7 @@ namespace RUINORERP.UI
         {
             try
             {
-                logger?.LogWarning("心跳失败达到阈值，网络连接不稳定，但系统保持工作状态");
+                //logger?.LogWarning("心跳失败达到阈值，网络连接不稳定，但系统保持工作状态");
 
                 // 仅在已登录状态下通知用户
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)

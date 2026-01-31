@@ -751,7 +751,13 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string msgTips = string.Empty;
+                    if (!_UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn)
+                    {
+                        msgTips = "请使用【多选模式】，选择要抵扣的单据。";
+                    }
+
+                    MessageBox.Show($"没有找到可抵扣的预收付款单！{msgTips}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 

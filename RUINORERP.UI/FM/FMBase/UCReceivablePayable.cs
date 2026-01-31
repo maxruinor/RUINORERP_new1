@@ -1164,15 +1164,7 @@ namespace RUINORERP.UI.FM
                                     //if (grid1[i, realIndex].Tag == null && valueImageWeb.CellImageBytes != null)
                                     if (valueImageWeb.CellImageBytes != null)
                                     {
-                                        //保存到本地
-                                        //if (EditEntity.DataStatus == (int)DataStatus.草稿)
-                                        //{
-                                        //    //保存在本地临时目录
-                                        //    ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
-                                        //    grid1[i, realIndex].Tag = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
-                                        //}
-                                        //else
-                                        //{
+                                        
                                         //上传到服务器，删除本地
                                         //实际应该可以直接传二进制数据，但是暂时没有实现，所以先保存到本地，再上传
                                         //ImageProcessor.SaveBytesAsImage(valueImageWeb.CellImageBytes, fileName);
@@ -1192,7 +1184,7 @@ namespace RUINORERP.UI.FM
                                         }
 
 
-                                        //}
+                                       
                                     }
                                 }
 
@@ -1325,22 +1317,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        protected override async Task<bool> Submit()
-        {
-            // 使用基类无参数的Submit方法,由状态管理架构自动处理状态转换
-            bool result = await base.Submit();
-            if (result)
-            {
-                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
-                var temppath = configManager.GetValue("WebServerUrl");
-                if (string.IsNullOrEmpty(temppath))
-                {
-                    MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
-                }
-            }
-            return result;
-        }
-
+     
 
 
         protected async override Task<ReturnResults<tb_FM_ReceivablePayable>> Delete()

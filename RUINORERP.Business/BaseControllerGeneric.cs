@@ -897,10 +897,27 @@ namespace RUINORERP.Business
                 }
                 if (item.SubFilter.FilterLimitExpressions.Count > 0 && propertyInfo.PropertyType.Name != "Nullable`1")
                 {
-                    select = $" EXISTS ( SELECT [{item.SubFilter.QueryTargetType.Name}].{item.FieldName} FROM [{item.SubFilter.QueryTargetType.Name}] WHERE [{typeof(T).Name}].{item.FieldName}= [{item.SubFilter.QueryTargetType.Name}].{item.FieldName}  ";
-                    where = expressionToSql.GetSql(item.SubFilter.QueryTargetType, item.SubFilter.GetFilterLimitExpression(item.SubFilter.QueryTargetType));
-                    where = $" and ({where})) ";
-                    counter++;
+                    // 获取子查询的目标类型（从字段的FK特性或属性类型推断）
+                    Type? subFilterTargetType = item.SubFilter.QueryTargetType;
+                    if (subFilterTargetType == null && propertyInfo.PropertyType.IsGenericType && propertyInfo.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    {
+                        // 如果是可空类型，获取实际类型
+                        subFilterTargetType = propertyInfo.PropertyType.GetGenericArguments()[0];
+                    }
+                    
+                    if (subFilterTargetType != null)
+                    {
+                        // 子查询：检查关联表中是否存在符合条件的记录
+                        select = $" EXISTS ( SELECT 1 FROM [{subFilterTargetType.Name}] WHERE  [{typeof(T).Name}].{item.FieldName}= [{subFilterTargetType.Name}].{item.FieldName} ";
+                        where = expressionToSql.GetSql(subFilterTargetType, item.SubFilter.GetFilterLimitExpression(subFilterTargetType));
+                        // 过滤掉空条件
+                        if (!string.IsNullOrWhiteSpace(where))
+                        {
+                            select = $" {select} AND ({where}) ";
+                        }
+                        select = $"{select}) ";
+                        counter++;
+                    }
                 }
                 sql = select + where;
                 if (sql.IsNotEmptyOrNull() && !sqlList.Contains(sql))

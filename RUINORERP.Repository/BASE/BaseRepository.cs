@@ -248,6 +248,11 @@ namespace RUINORERP.Repository.Base
         /// <returns>数据列表</returns>
         public async Task<List<TEntity>> QueryAsync()
         {
+            System.Diagnostics.Debug.WriteLine($"{System.DateTime.Now.ToString()}数据列表查询: {typeof(TEntity).Name}");
+            if (typeof(TEntity).Name == "tb_SysGlobalDynamicConfig")
+            {
+
+            }
             return await Db.Queryable<TEntity>().ToListAsync();
         }
 

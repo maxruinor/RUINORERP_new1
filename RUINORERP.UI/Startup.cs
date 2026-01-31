@@ -348,7 +348,6 @@ namespace RUINORERP.UI
             services.AddSingleton<UIConfigManager>(provider =>
             {
                 var configManager = new UIConfigManager();
-                configManager.Initialize();
                 return configManager;
             });
         }

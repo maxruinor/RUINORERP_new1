@@ -46,14 +46,7 @@ namespace RUINORERP.UI.SysConfig
         #endregion
 
         #region 数据库配置加载与管理
-        /// <summary>
-        /// 初始化配置管理器
-        /// </summary>
-        public void Initialize()
-        {
-            // 异步加载数据库配置
-            Task.Run(() => LoadConfigValues());
-        }
+ 
 
         /// <summary>
         /// 从数据库加载配置值

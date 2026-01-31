@@ -492,6 +492,11 @@ namespace RUINORERP.UI.BaseForm
 
                         if (!canSubmit)
                         {
+                            // 失败后重新启用按钮以便重试
+                            if (btnSubmit != null)
+                            {
+                                btnSubmit.Enabled = true;
+                            }
                             break;
                         }
 
@@ -501,17 +506,30 @@ namespace RUINORERP.UI.BaseForm
                             selectlist = validEntities;
                         }
 
-                        Submit();
+                        bool submitResult = await Submit();
+                        // 提交成功后保持禁用，失败后重新启用以便重试
+                        if (!submitResult && btnSubmit != null)
+                        {
+                            btnSubmit.Enabled = true;
+                        }
+
                         // 添加同步代码
-                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
+                        if (submitResult)
+                        {
+                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已提交");
+                        }
                     }
-                    finally
+                    catch (Exception ex)
                     {
+                        MainForm.Instance?.ShowStatusText($"提交操作异常: {ex.Message}");
                         if (btnSubmit != null)
                         {
                             btnSubmit.Enabled = true;
-                            MainForm.Instance?.ShowStatusText(string.Empty);
                         }
+                    }
+                    finally
+                    {
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.属性:
@@ -567,7 +585,7 @@ namespace RUINORERP.UI.BaseForm
                         // 反审核只支持单个单据，如果选择了多个给出提示
                         if (selectlist.Count > 1)
                         {
-                            MessageBox.Show("反审核操作一次只能处理一个单据，请选择单个单据进行反审核。", 
+                            MessageBox.Show("反审核操作一次只能处理一个单据，请选择单个单据进行反审核。",
                                 "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             break;
                         }
@@ -693,7 +711,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     try
                     {
-                        bool deleters =await Delete(selectlist);
+                        bool deleters = await Delete(selectlist);
                         if (deleters)
                         {
                             // 添加同步代码
@@ -1106,12 +1124,16 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
-        public virtual void Submit()
+        /// <summary>
+        /// 单据提交
+        /// </summary>
+        /// <returns>提交结果，成功失败</returns>
+        public virtual Task<bool> Submit()
         {
-
+            return Task.FromResult(false);
         }
 
- 
+
         /// <summary>
         /// 审核 注意后面还需要加很多业务逻辑。
         /// 比方出库单，审核就会减少库存修改成本
@@ -1520,7 +1542,7 @@ namespace RUINORERP.UI.BaseForm
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
-    
+
             }
             return ae;
         }

@@ -743,21 +743,6 @@ namespace RUINORERP.UI.FM
 
 
 
-        protected override async Task<bool> Submit()
-        {
-            bool rs = await base.Submit();
-            if (rs)
-            {
-                UIConfigManager configManager = Startup.GetFromFac<UIConfigManager>();
-                var temppath = configManager.GetValue("WebServerUrl");
-                if (string.IsNullOrEmpty(temppath))
-                {
-                    MainForm.Instance.uclog.AddLog("请先配置图片服务器路径", UILogType.错误);
-                }
-            }
-            return true;
-        }
-
 
 
         /// <summary>

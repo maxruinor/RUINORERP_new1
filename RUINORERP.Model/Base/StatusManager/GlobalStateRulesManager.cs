@@ -565,7 +565,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 { "已生效_待审核", "反审核" },
                 { "待支付_待审核", "反审核" },
                 { "部分支付_待审核", "反审核" },
-                { "全部支付_待审核", "反审核" }
+                { "全部支付_待审核", "反审核" },
+                { "新建_草稿", "撤回提交" }
             };
 
             // 尝试获取预定义的操作类型
@@ -647,22 +648,23 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             // 为不同状态添加通用按钮规则
             //草稿状态：允许所有操作，除了审核和反审核
-            AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
             // 灵活模式：允许修改；严格模式：不允许修改
             // 支持多次提交:新建状态下允许重新提交
+            // 新建状态：允许撤回提交（仅制单人）
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
-            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
 
             /// 确认状态：不允许修改和删除，允许反审核，可以结案
-            AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false, cancelSubmitEnabled: false);
             // 注意：DataStatus.确认状态不允许直接删除，但可以通过作废操作实现类似功能，确保逻辑一致性
             // 完结状态：仅允许查看和打印
-            AddStandardButtonRules(DataStatus.完结, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.完结, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
 
             /// 作废状态：仅允许查看操作
-            AddStandardButtonRules(DataStatus.作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(DataStatus.作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
         }
 
         /// <summary>
@@ -794,7 +796,7 @@ namespace RUINORERP.Model.Base.StatusManager
         private void AddStandardButtonRules<T>(T status, bool addEnabled = false, bool modifyEnabled = false,
             bool saveEnabled = false, bool deleteEnabled = false, bool submitEnabled = false,
             bool reviewEnabled = false, bool reverseReviewEnabled = false, bool caseClosedEnabled = false,
-            bool antiClosedEnabled = false, bool printVisible = true) where T : struct
+            bool antiClosedEnabled = false, bool cancelSubmitEnabled = false, bool printVisible = true) where T : struct
         {
             AddButtonRule(status, "toolStripbtnAdd", addEnabled);
             AddButtonRule(status, "toolStripbtnModify", modifyEnabled);
@@ -805,6 +807,7 @@ namespace RUINORERP.Model.Base.StatusManager
             AddButtonRule(status, "toolStripBtnReverseReview", reverseReviewEnabled);
             AddButtonRule(status, "toolStripButtonCaseClosed", caseClosedEnabled);
             AddButtonRule(status, "toolStripButtonAntiClosed", antiClosedEnabled);
+            AddButtonRule(status, "toolStripBtnCancelSubmit", cancelSubmitEnabled);
             AddButtonRule(status, "toolStripButtonPrint", printVisible);
         }
 
@@ -1454,6 +1457,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public static string GetActionDescription(MenuItemEnums action)
         {
             if (action == MenuItemEnums.提交) return "提交单据";
+            if (action == MenuItemEnums.撤回提交) return "撤回提交单据";
             if (action == MenuItemEnums.审核) return "审核单据";
             if (action == MenuItemEnums.反审) return "反审单据";
             if (action == MenuItemEnums.结案) return "结案单据";
@@ -1538,6 +1542,15 @@ namespace RUINORERP.Model.Base.StatusManager
                     if (currentStatus != null && currentStatus.Equals(DataStatus.新建))
                         return DataStatus.新建;
                     // 其他状态不允许提交,返回当前状态
+                    return currentStatus;
+                }
+
+                // 撤回提交操作：新建状态 -> 撤回到草稿
+                if (action == MenuItemEnums.撤回提交)
+                {
+                    if (currentStatus != null && currentStatus.Equals(DataStatus.新建))
+                        return DataStatus.草稿;
+                    // 其他状态不允许撤回,返回当前状态
                     return currentStatus;
                 }
 

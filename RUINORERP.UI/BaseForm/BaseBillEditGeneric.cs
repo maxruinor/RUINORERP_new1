@@ -564,7 +564,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-       
+
 
         /// <summary>
         /// 更新其他控件状态
@@ -6034,6 +6034,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
 
+
                             if (cbd.BizType == BizType.采购订单 && AppContext.SysConfig.AutoApprovedPurOrderAmount > 0)
                             {
                                 if (EditEntity is tb_PurOrder purOrder)
@@ -6047,40 +6048,41 @@ namespace RUINORERP.UI.BaseForm
                                         {
                                             //Undo操作会执行到的代码 意思是如果退审核，内存中审核的数据要变为空白（之前的样子）
                                             CloneHelper.SetValues<tb_PurOrder>(EditEntity, oldobj);
-                                    };
-                                    purOrder.ApprovalResults = true;
-                                    purOrder.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                                    purOrder.ApprovalOpinions = "自动审核";
-                                    purOrder.DataStatus = (int)DataStatus.确认;
-                                    BusinessHelper.Instance.ApproverEntity(EditEntity);
-                                    tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
-                                    ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
-                                    if (rmrs.Succeeded)
-                                    {
-                                        //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
-                                        //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
-                                        //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
-                                        //MainForm.Instance.ecs.AddSendData(od);
-
-                                        //审核成功
-                                        await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
-                                        //如果审核结果为不通过时，审核不是灰色。
-                                        if (!ae.ApprovalResults)
+                                        };
+                                        purOrder.ApprovalResults = true;
+                                        purOrder.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                                        purOrder.ApprovalOpinions = "自动审核";
+                                        purOrder.DataStatus = (int)DataStatus.确认;
+                                        BusinessHelper.Instance.ApproverEntity(EditEntity);
+                                        tb_PurOrderController<tb_PurOrder> ctrSO = Startup.GetFromFac<tb_PurOrderController<tb_PurOrder>>();
+                                        ReturnResults<tb_PurOrder> rmrs = await ctrSO.ApprovalAsync(purOrder);
+                                        if (rmrs.Succeeded)
                                         {
-                                            toolStripbtnReview.Enabled = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        command.Undo();
-                                        //审核失败 要恢复之前的值
-                                        MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
-                                        autoAuditSuccess = false; // 自动审核失败
+                                            //这里审核完了的话，如果这个单存在于工作流的集合队列中，则向服务器说明审核完成。
+                                            //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
+                                            //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
+                                            //MainForm.Instance.ecs.AddSendData(od);
 
+                                            //审核成功
+                                            await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("审核", rmr.ReturnObject, "满足金额设置条件，自动审核通过");
+                                            //如果审核结果为不通过时，审核不是灰色。
+                                            if (!ae.ApprovalResults)
+                                            {
+                                                toolStripbtnReview.Enabled = true;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            command.Undo();
+                                            //审核失败 要恢复之前的值
+                                            MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,{rmrs.ErrorMsg},请联系管理员！", Color.Red);
+                                            autoAuditSuccess = false; // 自动审核失败
+
+                                        }
                                     }
                                 }
                             }
-                        }
+
                             submitrs = autoAuditSuccess; // 提交成功与否取决于自动审核结果
                             var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
 
@@ -6133,9 +6135,175 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
+        /// <summary>
+        /// 撤回提交
+        /// 制单人提交后发现错误，若审核人尚未处理，允许其撤回提交回到草稿态
+        /// 核心规则：撤回提交仅制单人可操作，审核人已开始处理则禁止撤回
+        /// </summary>
+        /// <returns>撤回提交是否成功</returns>
         protected async override Task<bool> CancelSubmit()
         {
-           
+            bool rs = false;
+
+            if (EditEntity == null)
+            {
+                MainForm.Instance?.ShowStatusText("当前没有加载的单据");
+                return rs;
+            }
+
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid <= 0)
+            {
+                MainForm.Instance?.ShowStatusText("单据尚未保存，无法撤回提交");
+                return rs;
+            }
+
+            // 判断是否锁定
+            var lockStatus = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+            if (!lockStatus.CanPerformCriticalOperations)
+            {
+                KryptonMessageBox.Show("单据已被锁定，请刷新后再试", "撤回提交", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Warning);
+                MainForm.Instance.uclog.AddLog($"单据已被锁定，撤回提交失败", UILogType.错误);
+                return rs;
+            }
+
+            // 验证状态转换是否合法
+            StateTransitionResult stateTransitionResult = await StateManager.ValidateActionTransitionAsync(EditEntity, MenuItemEnums.撤回提交);
+            if (!stateTransitionResult.IsSuccess)
+            {
+                KryptonMessageBox.Show($"撤回提交失败: {stateTransitionResult.ErrorMessage}", "错误", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Error);
+                return rs;
+            }
+
+            // 检查是否可以执行撤回提交操作
+            var (canExecute, message) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.撤回提交);
+            if (!canExecute)
+            {
+                KryptonMessageBox.Show(message, "撤回提交", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Warning);
+                return rs;
+            }
+
+            // 权限验证：仅制单人可操作
+            var currentUser = MainForm.Instance.AppContext.CurUserInfo.UserInfo;
+            long creatorId = 0;
+            if (ReflectionHelper.ExistPropertyName<T>("Created_by"))
+            {
+                creatorId = (long)ReflectionHelper.GetPropertyValue(EditEntity, "Created_by");
+            }
+
+            if (creatorId > 0 && creatorId != currentUser.User_ID)
+            {
+                // 检查是否有管理员权限
+                if (!MainForm.Instance.AppContext.IsSuperUser)
+                {
+                    KryptonMessageBox.Show("撤回提交仅制单人可操作", "权限限制", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Warning);
+                    return rs;
+                }
+            }
+
+            // 确认对话框
+            var result = KryptonMessageBox.Show(
+                "确定要撤回提交吗？\n撤回后单据将回到草稿状态，可以继续编辑。",
+                "撤回提交确认",
+                KryptonMessageBoxButtons.YesNo,
+                KryptonMessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+            {
+                return rs;
+            }
+
+            try
+            {
+                var btnCancelSubmit = FindToolStripButtonByName("撤回提交");
+                if (btnCancelSubmit != null)
+                {
+                    btnCancelSubmit.Enabled = false;
+                    MainForm.Instance?.ShowStatusText("正在执行撤回提交操作，请稍候...");
+                }
+
+                // 保存原始状态，用于失败时恢复
+                object originalStatus = null;
+                if (StateManager != null && EditEntity is BaseEntity)
+                {
+                    originalStatus = StateManager.GetBusinessStatus(EditEntity as BaseEntity);
+                }
+
+                BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+                // 重新查询实体数据，确保数据最新
+                BaseEntity pkentity = editEntity as T;
+                BaseEntity oldEntity = EditEntity as BaseEntity;
+                EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+
+                // 重新订阅状态变更事件
+                if (EditEntity is BaseEntity newEntity)
+                {
+                    HandleEntityStatusSubscription(newEntity, true);
+                }
+
+                // 执行撤回提交操作 - 使用取消提交方法（将状态从新建改回草稿）
+                ReturnResults<T> rmr = await ctr.CancelSubmitAsync(EditEntity, true); // 参数true表示撤回提交
+                if (rmr.Succeeded)
+                {
+                    if (EditEntity is BaseEntity baseEntity)
+                    {
+                        baseEntity.AcceptChanges();
+                    }
+
+                    var entityInfo = EntityMappingHelper.GetEntityInfo<T>();
+                    string billNo = EditEntity.GetPropertyValue(entityInfo.NoField)?.ToString();
+
+                    // 统一状态同步 - 撤回提交操作
+                    var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
+                    if (updateData != null)
+                    {
+                        await SyncTodoStatusAsync(updateData, "撤回提交");
+                    }
+
+                    // 记录操作日志
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("撤回提交", EditEntity, "制单人撤回提交，单据回到草稿状态");
+
+                    rs = true;
+                    KryptonMessageBox.Show($"单据 {billNo} 已撤回提交，回到草稿状态。", "撤回提交成功", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Information);
+                }
+                else
+                {
+                    // 失败时恢复原始状态
+                    if (StateManager != null && EditEntity is BaseEntity && originalStatus != null)
+                    {
+                        var statusType = StateManager.GetStatusType(EditEntity as BaseEntity);
+                        if (statusType != null)
+                        {
+                            ReflectionHelper.SetPropertyValue(EditEntity, statusType.Name, originalStatus);
+                        }
+                    }
+
+                    MainForm.Instance.uclog.AddLog($"撤回提交失败，请重试或联系管理员。\r\n 错误信息：{rmr.ErrorMsg}", UILogType.错误);
+                    KryptonMessageBox.Show($"撤回提交失败：{rmr.ErrorMsg}", "错误", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Error);
+
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("撤回提交失败", EditEntity, $"结果:失败,{rmr.ErrorMsg}");
+                }
+            }
+            catch (Exception ex)
+            {
+                rs = false;
+                MainForm.Instance.logger?.LogError(ex, "撤回提交操作异常");
+                MainForm.Instance.uclog.AddLog($"撤回提交操作异常：{ex.Message}", UILogType.错误);
+                KryptonMessageBox.Show($"撤回提交操作异常：{ex.Message}", "错误", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Error);
+            }
+            finally
+            {
+                var btnCancelSubmit = FindToolStripButtonByName("撤回提交");
+                if (btnCancelSubmit != null)
+                {
+                    btnCancelSubmit.Enabled = false;
+                    MainForm.Instance?.ShowStatusText(string.Empty);
+                }
+            }
+
+            return rs;
         }
 
 

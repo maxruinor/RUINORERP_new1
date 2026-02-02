@@ -311,36 +311,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             return "UnknownMethod";
         }
 
-        //[Obsolete("请使用新的事务管理API")]
-        //public UnitOfWork CreateUnitOfWork()
-        //{
-        //    UnitOfWork uow = new UnitOfWork();
-        //    uow.Logger = _logger;
-        //    uow.Db = _sqlSugarClient;
-        //    uow.Tenant = (ITenant)_sqlSugarClient;
-        //    uow.IsTran = true;
-
-        //    uow.Db.Open();
-        //    uow.Tenant.BeginTran();
-        //    _logger.LogDebug("UnitOfWork Begin");
-        //    return uow;
-        //}
-
-        //public void BeginTran()
-        //{
-        //    lock (this)
-        //    {
-        //        _tranCount++;
-        //        if (_tranCount > 1)
-        //        {
-        //            System.Diagnostics.Debug.WriteLine($"_tranCount：{_tranCount}");
-        //            _logger.LogDebug($"_tranCount：{ _tranCount}");
-        //        }
-        //        GetDbClient().BeginTran();
-        //    }
-        //}
-
-        //
+ 
         public void BeginTran()
         {
             lock (this)
@@ -360,12 +331,25 @@ namespace RUINORERP.Repository.UnitOfWorks
                         _logger.LogDebug($"[Transaction-{context.TransactionId}] 使用现有事务上下文");
                     }
 
-                    // 双重检测：检查物理事务和逻辑状态的一致性
+                    // 检测僵尸事务：只有确认是异常状态时才强制清理
+                    // 正常情况下，深度为0但有物理事务可能是因为外部已经开启了事务
                     if (context.Depth == 0 && _sqlSugarClient.Ado.Transaction != null)
                     {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到僵尸事务，强制清理");
-                        _logger.LogWarning($"僵尸事务详情: {{LogicalDepth={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}}}");
-                        ForceRollback();
+                        // 检查这个事务是否是我们之前开启的（在活跃事务字典中）
+                        bool isOurTransaction = _activeTransactions.ContainsKey(context.TransactionId);
+                        
+                        if (isOurTransaction)
+                        {
+                            // 是我们开启的事务，但深度为0，说明状态异常
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到僵尸事务（深度=0但有物理事务），强制清理");
+                            _logger.LogWarning($"僵尸事务详情: {{LogicalDepth={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}}}");
+                            ForceRollback();
+                        }
+                        else
+                        {
+                            // 不是我们开启的事务，可能是外部已经开启的事务，记录警告但继续
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到外部已开启的事务，将直接加入嵌套");
+                        }
                     }
 
                     // 增加事务深度
@@ -404,7 +388,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                     // 嵌套事务支持：创建保存点
                     else if (_supportsNestedTransactions)
                     {
-                        var savePointName = $"SAVEPOINT_{context.TransactionId}_{newDepth}";
+                        // 使用短格式：SP_{GUID前20位}_{深度}，总长度不超过32字符
+                        var safeTransactionId = context.TransactionId.ToString("N").Substring(0, 20);
+                        var savePointName = $"SP_{safeTransactionId}_{newDepth}";
                         _sqlSugarClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
                         context.SavePointStack.Push(savePointName);
                         
@@ -423,7 +409,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                         }
                     }
                     
-                    _logger.LogError(ex, $"事务开启失败");
+                    _logger.LogError(ex, $"[Transaction] 事务开启失败");
                     throw new InvalidOperationException("事务开启失败，请检查前置事务是否正确关闭", ex);
                 }
             }
@@ -432,25 +418,6 @@ namespace RUINORERP.Repository.UnitOfWorks
 
    
 
-        //public void CommitTran()
-        //{
-        //    lock (this)
-        //    {
-        //        _tranCount--;
-        //        if (_tranCount == 0)
-        //        {
-        //            try
-        //            {
-        //                GetDbClient().CommitTran();
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                System.Diagnostics.Debug.WriteLine(ex.Message);
-        //                GetDbClient().RollbackTran();
-        //            }
-        //        }
-        //    }
-        //}
 
         public void CommitTran()
         {
@@ -478,12 +445,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但无活动事务，深度={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}");
                         
-                        // 如果深度为0但物理事务仍存在，说明状态不一致
-                        if (_sqlSugarClient.Ado.Transaction != null)
-                        {
-                            _logger.LogError($"[Transaction-{context.TransactionId}] 状态不一致：逻辑深度为0但物理事务仍存在，将强制回滚");
-                            ForceRollback();
-                        }
+                        // 深度为0时，不做任何操作
+                        // 物理事务如果存在，可能是外部事务，由外部管理
+                        // 或者是我们自己的状态异常，此时不应干预
                         return;
                     }
 
@@ -528,7 +492,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 finally
                 {
                     // 仅在最外层重置状态
-                    if (context.Depth <= 0)
+                    if (context != null && context.Depth <= 0)
                     {
                         ResetTransactionState();
                     }
@@ -559,12 +523,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 回滚请求但无活动事务，深度={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}");
                         
-                        // 如果深度为0但仍有物理事务，说明是异常状态，强制清理
-                        if (_sqlSugarClient.Ado.Transaction != null)
-                        {
-                            _logger.LogError($"[Transaction-{context.TransactionId}] 状态不一致：逻辑深度为0但物理事务仍存在");
-                            ForceRollback();
-                        }
+                        // 深度为0时，不做任何操作
+                        // 物理事务如果存在，可能是外部事务，由外部管理
+                        // 或者是我们自己的状态异常，此时不应干预
                         return;
                     }
 
@@ -620,7 +581,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 finally
                 {
                     // 仅在最外层重置状态
-                    if (context.Depth <= 0)
+                    if (context != null && context.Depth <= 0)
                     {
                         ResetTransactionState();
                     }

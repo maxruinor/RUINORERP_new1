@@ -313,6 +313,9 @@ namespace RUINORERP.Business
                                         catch (Exception ex)
                                         {
 
+                                            _unitOfWorkManage.RollbackTran();
+                                            _logger.LogError(ex, "自动审核收款单失败");
+                                            throw new Exception("自动审核收款单失败！");
                                         }
                                         #endregion
 

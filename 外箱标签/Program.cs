@@ -1,6 +1,6 @@
 /// <summary>
-/// PDF 标签纸尺寸批量修改工具
-/// 将亚马逊外箱标签从 100mm×150mm 裁剪为 100mm×100mm，并每张复制3份
+/// PDF 标签批量复制工具
+/// 将PDF标签每张复制10份，保持原始尺寸不变
 /// </summary>
 
 using PdfSharpCore.Pdf;
@@ -10,104 +10,53 @@ using System.IO;
 using PdfSharpCore.Pdf.IO;
 
 /// <summary>
-/// PDF 标签调整器
+/// PDF 标签复制器
 /// </summary>
 class PdfLabelResizer
 {
-    /// <summary>
-    /// 毫米转换为点（PDF点：1mm = 2.834645669 点）
-    /// </summary>
-    private const double MmToPoint = 2.834645669;
 
     /// <summary>
-    /// 复制份数（每张标签复制3份）
+    /// 复制份数（每张标签复制10份）
     /// </summary>
-    private const int CopyCount = 3;
+    private const int CopyCount = 10;
 
     /// <summary>
     /// 处理单个 PDF 文件
     /// </summary>
     /// <param name="inputPath">输入文件路径</param>
     /// <param name="outputPath">输出文件路径</param>
-    /// <param name="newHeightMm">新高度（毫米）</param>
     /// <returns>处理是否成功</returns>
-    public static bool ProcessPdfFile(string inputPath, string outputPath, double newHeightMm = 100)
+    public static bool ProcessPdfFile(string inputPath, string outputPath)
     {
         try
         {
-            // 第一步：用Modify模式打开文档，调整页面尺寸为100x100mm
-            var modifyDocument = PdfReader.Open(inputPath, PdfDocumentOpenMode.Modify);
+            // 用Import模式打开文档，直接复制页面（不调整尺寸）
+            var importDocument = PdfReader.Open(inputPath, PdfDocumentOpenMode.Import);
 
-            // 计算新的高度（点）
-            double newHeightPoint = newHeightMm * MmToPoint;
+            int originalPageCount = importDocument.PageCount;
 
-            int originalPageCount = modifyDocument.PageCount;
+            // 创建最终的输出文档
+            var outputDocument = new PdfDocument();
 
-            // 调整所有页面的尺寸为100x100mm
+            int totalPagesGenerated = 0;
+
+            // 将原始页面复制10份到输出文档
             for (int i = 0; i < originalPageCount; i++)
             {
-                PdfPage page = modifyDocument.Pages[i];
+                PdfPage sourcePage = importDocument.Pages[i];
 
-                // 获取当前页面尺寸
-                double currentWidth = page.Width;
-                double currentHeight = page.Height;
-
-                // 直接修改页面尺寸为100x100mm
-                page.Height = newHeightPoint;
-
-                // 修改 MediaBox（媒体框）- 保留顶部内容，去掉底部
-                var mediaBoxRect = new XRect(
-                    0,                                  // 左边界
-                    currentHeight - newHeightPoint,     // 下边界（从底部向上newHeightPoint）
-                    currentWidth,                        // 宽度
-                    newHeightPoint                      // 新高度
-                );
-
-                // 创建 PdfRectangle 从 XRect
-                var mediaBox = new PdfRectangle(mediaBoxRect);
-
-                // 设置 MediaBox
-                page.MediaBox = mediaBox;
-
-                // 设置 CropBox（裁剪框）与 MediaBox 相同
-                page.CropBox = mediaBox;
-
-                // 设置 TrimBox（修剪框）与 MediaBox 相同
-                page.TrimBox = mediaBox;
-            }
-
-            // 保存临时调整后的文档到内存流
-            int totalPagesGenerated = 0;
-            using (var tempStream = new MemoryStream())
-            {
-                modifyDocument.Save(tempStream);
-                modifyDocument.Close();
-
-                // 第二步：用Import模式打开调整后的文档，复制页面
-                tempStream.Position = 0;
-                var importDocument = PdfReader.Open(tempStream, PdfDocumentOpenMode.Import);
-
-                // 创建最终的输出文档
-                var outputDocument = new PdfDocument();
-
-                // 将调整后的页面复制3份到输出文档
-                for (int i = 0; i < originalPageCount; i++)
+                for (int copyIndex = 0; copyIndex < CopyCount; copyIndex++)
                 {
-                    PdfPage sourcePage = importDocument.Pages[i];
-
-                    for (int copyIndex = 0; copyIndex < CopyCount; copyIndex++)
-                    {
-                        // 使用AddPage添加页面到新文档
-                        PdfPage newPage = outputDocument.AddPage(sourcePage);
-                        totalPagesGenerated++;
-                    }
+                    // 使用AddPage添加页面到新文档
+                    PdfPage newPage = outputDocument.AddPage(sourcePage);
+                    totalPagesGenerated++;
                 }
-
-                // 保存新的 PDF
-                outputDocument.Save(outputPath);
-                outputDocument.Close();
-                importDocument.Close();
             }
+
+            // 保存新的 PDF
+            outputDocument.Save(outputPath);
+            outputDocument.Close();
+            importDocument.Close();
 
             Console.WriteLine($"✓ 处理成功: {Path.GetFileName(inputPath)} (原{originalPageCount}页 → {totalPagesGenerated}页)");
             return true;
@@ -123,17 +72,16 @@ class PdfLabelResizer
     /// 批量处理目录下的所有 PDF 文件
     /// </summary>
     /// <param name="rootDir">根目录</param>
-    /// <param name="newHeightMm">新高度（毫米）</param>
     /// <param name="suffix">输出文件后缀</param>
-    public static void BatchProcessPdfFiles(string rootDir, double newHeightMm = 100, string suffix = "_100x100_3copies")
+    public static void BatchProcessPdfFiles(string rootDir, string suffix = "_10copies")
     {
         int totalFiles = 0;
         int successFiles = 0;
         int failedFiles = 0;
 
         Console.WriteLine($"开始处理目录: {rootDir}");
-        Console.WriteLine($"目标尺寸: 100mm × {newHeightMm}mm");
         Console.WriteLine($"复制份数: 每张标签{CopyCount}份");
+        Console.WriteLine($"保持原始尺寸不变");
         Console.WriteLine(new string('-', 60));
 
         // 遍历所有子目录
@@ -151,7 +99,7 @@ class PdfLabelResizer
             string outputPath = Path.Combine(directory, $"{filename}{suffix}{extension}");
 
             totalFiles++;
-            if (ProcessPdfFile(file, outputPath, newHeightMm))
+            if (ProcessPdfFile(file, outputPath))
             {
                 successFiles++;
             }
@@ -186,7 +134,7 @@ class Program
         }
 
         // 批量处理
-        PdfLabelResizer.BatchProcessPdfFiles(pdfDir, newHeightMm: 100, suffix: "_100x100_3copies");
+        PdfLabelResizer.BatchProcessPdfFiles(pdfDir, suffix: "_10copies");
 
         Console.WriteLine("\n按任意键退出...");
         Console.ReadKey();

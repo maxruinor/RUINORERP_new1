@@ -6243,6 +6243,25 @@ namespace RUINORERP.UI.BaseForm
                     HandleEntityStatusSubscription(newEntity, true);
                 }
 
+                // 检查是否可以撤回提交（对于销售订单和采购订单，先检查收款单/付款单是否已审核）
+                bool canProceed = true;
+                string cannotProceedReason = string.Empty;
+                
+                if (EditEntity is tb_SaleOrder saleOrder)
+                {
+                    (canProceed, cannotProceedReason) = await CheckCanCancelSaleOrderSubmitAsync(saleOrder);
+                }
+                else if (EditEntity is tb_PurOrder purOrder)
+                {
+                    (canProceed, cannotProceedReason) = await CheckCanCancelPurOrderSubmitAsync(purOrder);
+                }
+
+                if (!canProceed)
+                {
+                    KryptonMessageBox.Show(cannotProceedReason, "无法撤回提交", KryptonMessageBoxButtons.OK, KryptonMessageBoxIcon.Warning);
+                    return rs;
+                }
+
                 // 执行撤回提交操作 - 使用取消提交方法（将状态从新建改回草稿）
                 ReturnResults<T> rmr = await ctr.CancelSubmitAsync(EditEntity, true); // 参数true表示撤回提交
                 if (rmr.Succeeded)
@@ -6254,6 +6273,17 @@ namespace RUINORERP.UI.BaseForm
 
                     var entityInfo = EntityMappingHelper.GetEntityInfo<T>();
                     string billNo = EditEntity.GetPropertyValue(entityInfo.NoField)?.ToString();
+
+                    // 处理销售订单撤回提交的预收款单删除（在同一个事务中）
+                    if (EditEntity is tb_SaleOrder so)
+                    {
+                        await HandleSaleOrderCancelSubmitAsync(so);
+                    }
+                    // 处理采购订单撤回提交的预付款单删除（在同一个事务中）
+                    else if (EditEntity is tb_PurOrder po)
+                    {
+                        await HandlePurOrderCancelSubmitAsync(po);
+                    }
 
                     // 统一状态同步 - 撤回提交操作
                     var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
@@ -6304,6 +6334,246 @@ namespace RUINORERP.UI.BaseForm
             }
 
             return rs;
+        }
+
+        /// <summary>
+        /// 检查销售订单是否可以撤回提交
+        /// 如果存在已审核的收款单，则不允许撤回
+        /// </summary>
+        /// <param name="saleOrder">销售订单实体</param>
+        /// <returns>(是否可以撤回, 原因)</returns>
+        private async Task<(bool canCancel, string reason)> CheckCanCancelSaleOrderSubmitAsync(tb_SaleOrder saleOrder)
+        {
+            try
+            {
+                // 查找该销售订单生成的预收款单
+                var ctrPreReceivedPayment = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var prePaymentList = await ctrPreReceivedPayment.BaseGetQueryable()
+                    .Where(x => x.SourceBizType == (int)BizType.销售订单
+                        && x.SourceBillId == saleOrder.SOrder_ID)
+                    .ToListAsync();
+
+                if (prePaymentList != null && prePaymentList.Count > 0)
+                {
+                    var ctrPaymentRecord = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+
+                    foreach (var prePayment in prePaymentList)
+                    {
+                        // 如果预收款单已审核通过，检查关联的收款单
+                        if (prePayment.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                        {
+                            // 查找关联的收款单
+                            var paymentRecords = await ctrPaymentRecord.BaseGetQueryable()
+                                .Where(x => x.SourceBillNos != null && x.SourceBillNos.Contains(prePayment.PreRPNO))
+                                .ToListAsync();
+
+                            if (paymentRecords != null && paymentRecords.Count > 0)
+                            {
+                                foreach (var paymentRecord in paymentRecords)
+                                {
+                                    // 收款单已审核通过，无法撤回
+                                    if (paymentRecord.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                                    {
+                                        string reason = $"销售订单【{saleOrder.SOrderNo}】的预收款单【{prePayment.PreRPNO}】已关联收款单【{paymentRecord.PaymentNo}】且已审核通过，无法撤回提交。\n\n请先作废该收款单后再撤回提交。";
+                                        return (false, reason);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return (true, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, $"检查销售订单{saleOrder.SOrderNo}是否可撤回提交时发生异常");
+                return (false, $"检查是否可撤回提交时发生异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查采购订单是否可以撤回提交
+        /// 如果存在已审核的付款单，则不允许撤回
+        /// </summary>
+        /// <param name="purOrder">采购订单实体</param>
+        /// <returns>(是否可以撤回, 原因)</returns>
+        private async Task<(bool canCancel, string reason)> CheckCanCancelPurOrderSubmitAsync(tb_PurOrder purOrder)
+        {
+            try
+            {
+                // 查找该采购订单生成的预付款单
+                var ctrPreReceivedPayment = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var prePaymentList = await ctrPreReceivedPayment.BaseGetQueryable()
+                    .Where(x => x.SourceBizType == (int)BizType.采购订单
+                        && x.SourceBillId == purOrder.PurOrder_ID)
+                    .ToListAsync();
+
+                if (prePaymentList != null && prePaymentList.Count > 0)
+                {
+                    var ctrPaymentRecord = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+
+                    foreach (var prePayment in prePaymentList)
+                    {
+                        // 如果预付款单已审核通过，检查关联的付款单
+                        if (prePayment.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                        {
+                            // 查找关联的付款单
+                            var paymentRecords = await ctrPaymentRecord.BaseGetQueryable()
+                                .Where(x => x.SourceBillNos != null && x.SourceBillNos.Contains(prePayment.PreRPNO))
+                                .ToListAsync();
+
+                            if (paymentRecords != null && paymentRecords.Count > 0)
+                            {
+                                foreach (var paymentRecord in paymentRecords)
+                                {
+                                    // 付款单已审核通过，无法撤回
+                                    if (paymentRecord.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                                    {
+                                        string reason = $"采购订单【{purOrder.PurOrderNo}】的预付款单【{prePayment.PreRPNO}】已关联付款单【{paymentRecord.PaymentNo}】且已审核通过，无法撤回提交。\n\n请先作废该付款单后再撤回提交。";
+                                        return (false, reason);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return (true, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, $"检查采购订单{purOrder.PurOrderNo}是否可撤回提交时发生异常");
+                return (false, $"检查是否可撤回提交时发生异常：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 处理销售订单撤回提交的特殊业务逻辑
+        /// 删除已生成的预收款单及其关联的收款单
+        /// 注意：此方法应该在事务中执行，如果删除失败会抛出异常触发回滚
+        /// </summary>
+        /// <param name="saleOrder">销售订单实体</param>
+        /// <exception cref="Exception">删除操作失败时抛出异常</exception>
+        private async Task HandleSaleOrderCancelSubmitAsync(tb_SaleOrder saleOrder)
+        {
+            try
+            {
+                // 查找该销售订单生成的预收款单
+                var ctrPreReceivedPayment = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var prePaymentList = await ctrPreReceivedPayment.BaseGetQueryable()
+                    .Where(x => x.SourceBizType == (int)BizType.销售订单
+                        && x.SourceBillId == saleOrder.SOrder_ID)
+                    .ToListAsync();
+
+                if (prePaymentList != null && prePaymentList.Count > 0)
+                {
+                    foreach (var prePayment in prePaymentList)
+                    {
+                        // 如果预收款单已审核通过，说明可能已生成收款单，需要先处理收款单
+                        if (prePayment.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                        {
+                            // 查找关联的收款单（通过SourceBillNos字段关联预收款单号）
+                            var ctrPaymentRecord = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            var paymentRecords = await ctrPaymentRecord.BaseGetQueryable()
+                                .Where(x => x.SourceBillNos != null && x.SourceBillNos.Contains(prePayment.PreRPNO))
+                                .ToListAsync();
+
+                            if (paymentRecords != null && paymentRecords.Count > 0)
+                            {
+                                foreach (var paymentRecord in paymentRecords)
+                                {
+                                    // 收款单已审核通过，无法撤回（理论上前面已经检查过，这里再次确认）
+                                    if (paymentRecord.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"销售订单{saleOrder.SOrderNo}的预收款单{prePayment.PreRPNO}已关联收款单{paymentRecord.PaymentNo}且已审核，无法撤回提交。", UILogType.警告);
+                                        continue;
+                                    }
+
+                                    // 删除未审核的收款单
+                                    await ctrPaymentRecord.DeleteAsync(paymentRecord.PaymentId);
+                                    MainForm.Instance.uclog.AddLog($"已删除收款单{paymentRecord.PaymentNo}", UILogType.普通消息);
+                                }
+                            }
+                        }
+
+                        // 删除预收款单
+                        await ctrPreReceivedPayment.DeleteAsync(prePayment.PreRPID);
+                        MainForm.Instance.uclog.AddLog($"已删除预收款单{prePayment.PreRPNO}", UILogType.普通消息);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, $"处理销售订单{saleOrder.SOrderNo}撤回提交时的预收款单删除异常");
+                MainForm.Instance.uclog.AddLog($"撤回提交时处理预收款单异常：{ex.Message}", UILogType.警告);
+                // 抛出异常，触发事务回滚
+                throw new Exception($"删除预收款单失败：{ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// 处理采购订单撤回提交的特殊业务逻辑
+        /// 删除已生成的预付款单及其关联的付款单
+        /// 注意：此方法应该在事务中执行，如果删除失败会抛出异常触发回滚
+        /// </summary>
+        /// <param name="purOrder">采购订单实体</param>
+        /// <exception cref="Exception">删除操作失败时抛出异常</exception>
+        private async Task HandlePurOrderCancelSubmitAsync(tb_PurOrder purOrder)
+        {
+            try
+            {
+                // 查找该采购订单生成的预付款单
+                var ctrPreReceivedPayment = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                var prePaymentList = await ctrPreReceivedPayment.BaseGetQueryable()
+                    .Where(x => x.SourceBizType == (int)BizType.采购订单
+                        && x.SourceBillId == purOrder.PurOrder_ID)
+                    .ToListAsync();
+
+                if (prePaymentList != null && prePaymentList.Count > 0)
+                {
+                    foreach (var prePayment in prePaymentList)
+                    {
+                        // 如果预付款单已审核通过，说明可能已生成付款单，需要先处理付款单
+                        if (prePayment.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                        {
+                            // 查找关联的付款单（通过SourceBillNos字段关联预付款单号）
+                            var ctrPaymentRecord = Startup.GetFromFac<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            var paymentRecords = await ctrPaymentRecord.BaseGetQueryable()
+                                .Where(x => x.SourceBillNos != null && x.SourceBillNos.Contains(prePayment.PreRPNO))
+                                .ToListAsync();
+
+                            if (paymentRecords != null && paymentRecords.Count > 0)
+                            {
+                                foreach (var paymentRecord in paymentRecords)
+                                {
+                                    // 付款单已审核通过，无法撤回（理论上前面已经检查过，这里再次确认）
+                                    if (paymentRecord.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                                    {
+                                        MainForm.Instance.uclog.AddLog($"采购订单{purOrder.PurOrderNo}的预付款单{prePayment.PreRPNO}已关联付款单{paymentRecord.PaymentNo}且已审核，无法撤回提交。", UILogType.警告);
+                                        continue;
+                                    }
+
+                                    // 删除未审核的付款单
+                                    await ctrPaymentRecord.DeleteAsync(paymentRecord.PaymentId);
+                                    MainForm.Instance.uclog.AddLog($"已删除付款单{paymentRecord.PaymentNo}", UILogType.普通消息);
+                                }
+                            }
+                        }
+
+                        // 删除预付款单
+                        await ctrPreReceivedPayment.DeleteAsync(prePayment.PreRPID);
+                        MainForm.Instance.uclog.AddLog($"已删除预付款单{prePayment.PreRPNO}", UILogType.普通消息);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, $"处理采购订单{purOrder.PurOrderNo}撤回提交时的预付款单删除异常");
+                MainForm.Instance.uclog.AddLog($"撤回提交时处理预付款单异常：{ex.Message}", UILogType.警告);
+                // 抛出异常，触发事务回滚
+                throw new Exception($"删除预付款单失败：{ex.Message}", ex);
+            }
         }
 
 

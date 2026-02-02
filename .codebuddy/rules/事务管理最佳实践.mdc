@@ -1,0 +1,323 @@
+---
+description: 
+alwaysApply: true
+enabled: true
+updatedAt: 2026-02-02T08:35:08.897Z
+provider: 
+---
+
+# 事务管理最佳实践规范
+
+## 📋 核心原则
+
+### 1. 单一入口原则 ✅
+- **每个业务方法只开启一次事务**
+- 在业务验证通过后开启事务（延迟开启模式）
+- 禁止在同个方法中多次调用`BeginTran()`
+
+### 2. 异常处理规范 ✅
+```csharp
+// ✅ 正确示例
+try
+{
+    _unitOfWorkManage.BeginTran();
+    // ... 业务逻辑 ...
+    _unitOfWorkManage.CommitTran();
+    return ReturnResults.Success();
+}
+catch (Exception ex)
+{
+    _unitOfWorkManage.RollbackTran();  // 必须回滚
+    _logger.LogError(ex, "业务操作失败");  // 必须记录日志
+    return ReturnResults.Error($"操作失败: {ex.Message}");
+}
+
+// ❌ 错误示例
+try
+{
+    _unitOfWorkManage.BeginTran();
+    // ... 业务逻辑 ...
+    _unitOfWorkManage.CommitTran();
+}
+catch (Exception ex)
+{
+    // 缺少Rollback
+    _logger.LogError(ex);  // 只有日志
+}
+```
+
+### 3. 禁止空catch块 ✅
+```csharp
+// ❌ 绝对禁止
+catch (Exception ex)
+{
+    // 空的！
+}
+
+// ✅ 至少记录日志
+catch (Exception ex)
+{
+    _logger.LogError(ex, "操作失败");
+}
+
+// ✅ 或者重新抛出
+catch (Exception ex)
+{
+    _logger.LogWarning(ex, "非关键错误");
+    throw new BusinessException("操作失败", ex);
+}
+```
+
+### 4. 延迟开启事务 ✅
+```csharp
+// ✅ 正确：先验证，再开事务
+public async Task<ReturnResults> BusinessOperation(Entity entity)
+{
+    // 1. 只读验证（无事务）
+    var validation = await ValidateAsync(entity);
+    if (!validation.IsValid)
+        return ReturnResults.Error(validation.Errors);
+    
+    // 2. 验证通过后才开启事务
+    _unitOfWorkManage.BeginTran();
+    try
+    {
+        await CoreBusinessLogicAsync(entity);
+        _unitOfWorkManage.CommitTran();
+        return ReturnResults.Success();
+    }
+    catch (Exception ex)
+    {
+        _unitOfWorkManage.RollbackTran();
+        _logger.LogError(ex);
+        return ReturnResults.Error(ex.Message);
+    }
+}
+
+// ❌ 错误：过早开启事务
+public async Task<ReturnResults> BusinessOperation(Entity entity)
+{
+    _unitOfWorkManage.BeginTran();  // 过早开启，增加锁时间
+    try
+    {
+        var validation = await ValidateAsync(entity);  // 验证也持有事务
+        if (!validation.IsValid)
+        {
+            _unitOfWorkManage.RollbackTran();  // 不必要的回滚
+            return ReturnResults.Error(validation.Errors);
+        }
+        
+        await CoreBusinessLogicAsync(entity);
+        _unitOfWorkManage.CommitTran();
+        return ReturnResults.Success();
+    }
+    catch (Exception ex)
+    {
+        _unitOfWorkManage.RollbackTran();
+        _logger.LogError(ex);
+        return ReturnResults.Error(ex.Message);
+    }
+}
+```
+
+### 5. 嵌套深度限制 ✅
+- **最大深度**：5层
+- **超过限制**：抛出`InvalidOperationException`
+- **目的**：防止滥用，提升性能
+
+```csharp
+private const int MAX_NESTED_DEPTH = 5;
+
+public void BeginTran()
+{
+    if (CurrentTransactionContext?.Depth >= MAX_NESTED_DEPTH)
+    {
+        throw new InvalidOperationException(
+            $"事务嵌套深度超过最大限制({MAX_NESTED_DEPTH})，请检查业务逻辑");
+    }
+    // ... 原有逻辑 ...
+}
+```
+
+### 6. 性能优化 ✅
+
+#### 6.1 锁粒度最小化
+```csharp
+// ❌ 错误：lock整个方法
+public void BeginTran()
+{
+    lock (this)  // 锁太大！
+    {
+        // ... 所有逻辑 ...
+    }
+}
+
+// ✅ 正确：细粒度锁
+public void BeginTran()
+{
+    var context = CurrentTransactionContext;
+    if (context == null)
+    {
+        context = CreateTransactionContext();
+        CurrentTransactionContext = context;
+    }
+    
+    lock (context.LockObject)  // 只锁必要部分
+    {
+        // ... 临界区代码 ...
+    }
+}
+```
+
+#### 6.2 批量操作
+```csharp
+// ❌ 错误：循环中开启事务
+foreach (var item in items)
+{
+    _unitOfWorkManage.BeginTran();  // 性能差！
+    await ProcessItemAsync(item);
+    _unitOfWorkManage.CommitTran();
+}
+
+// ✅ 正确：批量事务
+_unitOfWorkManage.BeginTran();
+try
+{
+    foreach (var item in items)
+    {
+        await ProcessItemAsync(item);
+    }
+    _unitOfWorkManage.CommitTran();
+}
+catch (Exception ex)
+{
+    _unitOfWorkManage.RollbackTran();
+    _logger.LogError(ex);
+}
+```
+
+### 7. 跨服务调用规范 ✅
+```csharp
+// ❌ 错误：跨服务调用持有事务
+_unitOfWorkManage.BeginTran();
+try
+{
+    await UpdateDatabaseAsync();  // 本地数据库操作
+    await CallRemoteServiceAsync();  // 长时间远程调用，占用连接！
+    _unitOfWorkManage.CommitTran();
+}
+catch (Exception ex)
+{
+    _unitOfWorkManage.RollbackTran();
+}
+
+// ✅ 正确：先完成本地事务
+_unitOfWorkManage.BeginTran();
+try
+{
+    await UpdateDatabaseAsync();  // 本地操作
+    _unitOfWorkManage.CommitTran();
+}
+catch (Exception ex)
+{
+    _unitOfWorkManage.RollbackTran();
+    return ReturnResults.Error(ex.Message);
+}
+
+// 再调用远程服务
+var remoteResult = await CallRemoteServiceAsync();
+if (!remoteResult.Succeeded)
+{
+    // 远程调用失败，需要补偿本地操作
+    await CompensateLocalOperationAsync();
+}
+```
+
+### 8. 监控与日志 ✅
+
+#### 8.1 必记录的信息
+```csharp
+catch (Exception ex)
+{
+    _logger.LogError(ex, "业务操作失败详情", new
+    {
+        EntityId = entity.ID,
+        BillNo = entity.BillNo,
+        UserId = CurrentUser.UserId,
+        TransactionId = _unitOfWorkManage.CurrentTransactionContext?.TransactionId,
+        Duration = _unitOfWorkManage.CurrentTransactionContext?.GetDuration()
+    });
+}
+```
+
+#### 8.2 关键指标
+- 事务持续时间（histogram）
+- 事务成功率（counter）
+- 嵌套深度分布（histogram）
+- 僵尸事务数量（gauge）
+- 长事务告警（>60秒）
+
+### 9. 单元测试 ✅
+```csharp
+[Fact]
+public async Task ApprovalAsync_WithValidEntity_ShouldCommitTransaction()
+{
+    // Arrange
+    var entity = CreateValidEntity();
+    
+    // Act
+    var result = await _controller.ApprovalAsync(entity);
+    
+    // Assert
+    Assert.True(result.Succeeded);
+    Assert.Equal(0, _unitOfWorkManage.TranCount);  // 事务已清理
+}
+
+[Fact]
+public async Task ApprovalAsync_WithInvalidEntity_ShouldRollbackTransaction()
+{
+    // Arrange
+    var entity = CreateInvalidEntity();
+    
+    // Act
+    var result = await _controller.ApprovalAsync(entity);
+    
+    // Assert
+    Assert.False(result.Succeeded);
+    Assert.Equal(0, _unitOfWorkManage.TranCount);  // 事务已清理
+}
+```
+
+### 10. 代码审查检查清单 ✅
+
+#### 审查每个使用事务的方法：
+- [ ] 只有一个`BeginTran()`调用
+- [ ] `BeginTran()`在业务验证之后
+- [ ] 所有异常路径都有`RollbackTran()`
+- [ ] catch块不为空（至少记录日志）
+- [ ] 日志包含足够的上下文信息
+- [ ] 事务深度不超过5层
+- [ ] 没有在循环中开启事务
+- [ ] 没有跨服务调用持有事务
+- [ ] 使用`try-finally`或`using`确保清理
+
+## 📊 代码质量目标
+
+- **事务边界清晰**：100%的方法遵循单一入口原则
+- **异常处理完整**：100%的catch块非空
+- **监控覆盖率**：100%的关键业务方法有指标记录
+- **单元测试覆盖率**：>80%的事务相关代码
+- **长事务**：0个（>5分钟的事务）
+
+## 🔥 红线规则（绝对不能违反）
+
+1. **禁止空catch块** ❌
+2. **禁止在循环中开启事务** ❌
+3. **禁止跨服务调用持有事务** ❌
+4. **禁止事务深度超过5层** ❌
+5. **禁止只记录日志不回滚** ❌
+
+---
+
+**最后更新**：2026-02-02
+**基于实际代码分析修订**

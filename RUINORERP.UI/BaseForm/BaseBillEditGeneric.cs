@@ -122,6 +122,7 @@ namespace RUINORERP.UI.BaseForm
     // - 移除了多余的状态缓存和重复检查逻辑
     // - 保留了必要的重复调用防护机制
     // - 简化了事件订阅和处理流程
+    //添加取消提交的方法
     // ==============================================================================
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
@@ -6130,6 +6131,13 @@ namespace RUINORERP.UI.BaseForm
                 }
             }
         }
+
+
+        protected async override Task<bool> CancelSubmit()
+        {
+           
+        }
+
 
         /// <summary>
         /// 提交成功后的处理（虚方法，子类可重写）

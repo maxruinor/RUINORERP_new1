@@ -89,10 +89,7 @@ namespace RUINORERP.UI.PSI.SAL
 
         }
 
-
-
-
-
+ 
 
 
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();

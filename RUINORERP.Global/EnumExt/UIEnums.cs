@@ -15,6 +15,7 @@ namespace RUINORERP.Global
         删除,
         修改,
         提交,
+        撤回提交,
         查询,
         选中,
         保存,

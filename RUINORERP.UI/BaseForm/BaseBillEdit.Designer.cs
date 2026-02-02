@@ -64,6 +64,7 @@ namespace RUINORERP.UI.BaseForm
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
+            this.toolStripBtnCancelSubmit = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -84,6 +85,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripButtonRefresh,
             this.toolStripButtonSave,
             this.toolStripbtnSubmit,
+            this.toolStripBtnCancelSubmit,
             this.toolStripbtnPrint,
             this.toolStripSeparator1,
             this.toolStripbtnReview,
@@ -171,13 +173,13 @@ namespace RUINORERP.UI.BaseForm
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem1.Text = "预览";
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(100, 22);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(180, 22);
             this.toolStripMenuItem2.Text = "设计";
             // 
             // toolStripSeparator1
@@ -281,6 +283,14 @@ namespace RUINORERP.UI.BaseForm
             // 
             this.errorProviderForAllInput.ContainerControl = this;
             // 
+            // toolStripBtnCancelSubmit
+            // 
+            this.toolStripBtnCancelSubmit.Image = global::RUINORERP.UI.Properties.Resources.ok;
+            this.toolStripBtnCancelSubmit.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripBtnCancelSubmit.Name = "toolStripBtnCancelSubmit";
+            this.toolStripBtnCancelSubmit.Size = new System.Drawing.Size(79, 22);
+            this.toolStripBtnCancelSubmit.Text = "撤回提交";
+            // 
             // BaseBillEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -328,5 +338,6 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnConvertDocuments;
+        public System.Windows.Forms.ToolStripButton toolStripBtnCancelSubmit;
     }
 }

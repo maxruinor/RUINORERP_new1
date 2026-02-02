@@ -72,6 +72,12 @@ namespace RUINORERP.UI.ProductEAV
         private Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>> skuImageDataCache = new Dictionary<tb_ProdDetail, List<Tuple<byte[], ImageInfo>>>();
 
         /// <summary>
+        /// 按ProdDetailID存储图片数据的缓存（key: ProdDetailID, value: 图片数据列表）
+        /// 用于在对象引用不一致时通过ID查找图片数据
+        /// </summary>
+        private Dictionary<long, List<Tuple<byte[], ImageInfo>>> skuImageDataCacheById = new Dictionary<long, List<Tuple<byte[], ImageInfo>>>();
+
+        /// <summary>
         /// 临时存储SKU需要删除的图片信息（key: tb_ProdDetail对象引用, value: 需要删除的图片信息列表）
         /// </summary>
         private Dictionary<tb_ProdDetail, List<ImageInfo>> skuImageDeletedCache = new Dictionary<tb_ProdDetail, List<ImageInfo>>();
@@ -2301,7 +2307,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
-            // 处理ImagesPath列的图片预览显示
+            // 处理ImagesPath列的图片预览显示11
             if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
             {
                 string columnName = dataGridView1.Columns[e.ColumnIndex].Name;
@@ -2310,11 +2316,18 @@ namespace RUINORERP.UI.ProductEAV
                     var detail = dataGridView1.Rows[e.RowIndex].DataBoundItem as tb_ProdDetail;
                     if (detail != null)
                     {
-                        // 检查是否有缓存的图片数据需要显示
-                        if (skuImageDataCache.ContainsKey(detail) &&
-                            skuImageDataCache[detail].Count > 0)
+                        // 检查是否有缓存的图片数据需要显示（包括新添加但未上传的图片）
+                        bool hasCachedData = skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail].Count > 0;
+
+                        // 调试日志（仅在第一次绘制时记录）
+                        if (e.RowIndex == dataGridView1.CurrentCell?.RowIndex)
                         {
-                            // 绘制背景
+                            MainForm.Instance.uclog.AddLog($"CellPainting: SKU={detail.SKU}, ID={detail.ProdDetailID}, HasCachedData={hasCachedData}, HasUnsavedChanges={detail.HasUnsavedImageChanges}, ImagesPath={detail.ImagesPath}");
+                        }
+
+                        if (hasCachedData)
+                        {
+                            // 绘制背景（不绘制前景，我们自己绘制）
                             e.PaintBackground(e.ClipBounds, false);
                             e.Handled = true;
 
@@ -2332,36 +2345,47 @@ namespace RUINORERP.UI.ProductEAV
                                     int thumbWidth = (int)(originalImage.Width * ratio);
                                     int thumbHeight = (int)(originalImage.Height * ratio);
 
-                                    // 创建缩略图
-                                    using (var thumbnail = new Bitmap(thumbWidth, thumbHeight))
-                                    using (var g = Graphics.FromImage(thumbnail))
+                                    // 居中绘制缩略图
+                                    int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
+                                    int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
+                                    var thumbRect = new Rectangle(x, y, thumbWidth, thumbHeight);
+
+                                    // 直接绘制图片到单元格，不创建中间的缩略图Bitmap
+                                    e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                                    e.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
+                                    e.Graphics.DrawImage(originalImage, thumbRect);
+
+                                    // 如果有多张图片，显示数量标签
+                                    if (imageDataList.Count > 1)
                                     {
-                                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                                        g.DrawImage(originalImage, 0, 0, thumbWidth, thumbHeight);
-
-                                        // 居中绘制缩略图
-                                        int x = e.CellBounds.X + (e.CellBounds.Width - thumbWidth) / 2;
-                                        int y = e.CellBounds.Y + (e.CellBounds.Height - thumbHeight) / 2;
-                                        e.Graphics.DrawImage(thumbnail, x, y);
-
-                                        // 如果有多张图片，显示数量标签
-                                        if (imageDataList.Count > 1)
+                                        string countText = $"+{imageDataList.Count - 1}";
+                                        using (var countBrush = new SolidBrush(Color.FromArgb(200, 0, 120, 215)))
+                                        using (var textBrush = new SolidBrush(Color.White))
+                                        using (var countFont = new Font(e.CellStyle.Font.FontFamily, 8, FontStyle.Bold))
                                         {
-                                            string countText = $" +{imageDataList.Count - 1}";
-                                            using (var countBrush = new SolidBrush(Color.FromArgb(200, 0, 120, 215)))
-                                            using (var textBrush = new SolidBrush(Color.White))
-                                            using (var countFont = new Font(e.CellStyle.Font.FontFamily, 8, FontStyle.Bold))
-                                            {
-                                                var textSize = e.Graphics.MeasureString(countText, countFont);
-                                                var countRect = new Rectangle(
-                                                    e.CellBounds.Right - (int)textSize.Width - 8,
-                                                    e.CellBounds.Bottom - (int)textSize.Height - 4,
-                                                    (int)textSize.Width + 6,
-                                                    (int)textSize.Height + 2);
-                                                e.Graphics.FillRectangle(countBrush, countRect);
-                                                e.Graphics.DrawString(countText, countFont, textBrush, countRect, 
-                                                    new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
-                                            }
+                                            var textSize = e.Graphics.MeasureString(countText, countFont);
+                                            var countRect = new Rectangle(
+                                                e.CellBounds.Right - (int)textSize.Width - 8,
+                                                e.CellBounds.Bottom - (int)textSize.Height - 4,
+                                                (int)textSize.Width + 6,
+                                                (int)textSize.Height + 2);
+                                            e.Graphics.FillRectangle(countBrush, countRect);
+                                            e.Graphics.DrawString(countText, countFont, textBrush, countRect,
+                                                new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center });
+                                        }
+                                    }
+
+                                    // 如果图片有未保存的更改，显示标记
+                                    if (detail.HasUnsavedImageChanges)
+                                    {
+                                        string unsavedText = "*";
+                                        using (var unsavedBrush = new SolidBrush(Color.Orange))
+                                        using (var unsavedFont = new Font(e.CellStyle.Font.FontFamily, 10, FontStyle.Bold))
+                                        {
+                                            var textSize = e.Graphics.MeasureString(unsavedText, unsavedFont);
+                                            e.Graphics.DrawString(unsavedText, unsavedFont, unsavedBrush,
+                                                new PointF(e.CellBounds.Right - textSize.Width - 4, e.CellBounds.Top + 2));
                                         }
                                     }
                                 }
@@ -2376,6 +2400,15 @@ namespace RUINORERP.UI.ProductEAV
                                 }
                             }
                             return;
+                        }
+                        // 如果有未保存的更改但没有缓存数据（可能是删除了所有图片），显示特殊提示
+                        else if (detail.HasUnsavedImageChanges)
+                        {
+                            using (var brush = new SolidBrush(Color.Orange))
+                            {
+                                e.Graphics.DrawString("* 图片已更改（待保存）", e.CellStyle.Font, brush,
+                                    e.CellBounds, StringFormat.GenericDefault);
+                            }
                         }
                         // 显示已有图片数量（无法加载已上传图片的缩略图，因为没有缓存数据）
                         else if (!string.IsNullOrEmpty(detail.ImagesPath))
@@ -2532,6 +2565,7 @@ namespace RUINORERP.UI.ProductEAV
                             if (updatedImages != null && updatedImages.Count > 0)
                             {
                                 skuImageDataCache[detail] = updatedImages;
+                                MainForm.Instance.uclog.AddLog($"已缓存 {updatedImages.Count} 张SKU图片到内存，SKU: {detail.SKU}, ID: {detail.ProdDetailID}");
                             }
                             else
                             {

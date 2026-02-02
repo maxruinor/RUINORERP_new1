@@ -169,7 +169,7 @@ namespace RUINORERP.UI.ProductEAV
         {
             try
             {
-                // 检查是否有图片更改
+                // 检查是否有图片更改1
                 var updatedImages = magicPictureBox.GetImagesNeedingUpdate();
                 var deletedImages = magicPictureBox.GetDeletedImages();
 

@@ -253,11 +253,22 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = typeof(DataStatus);
             _stateTransitionRules[statusType] = new Dictionary<object, List<object>>
             {
+                // 草稿态：可提交（转新建）、可直接作废（无需提交）
                 [DataStatus.草稿] = new List<object> { DataStatus.新建, DataStatus.作废 },
-                [DataStatus.新建] = new List<object> { DataStatus.新建, DataStatus.确认, DataStatus.作废 }, // 支持多次提交:新建状态可再次提交到新建状态(重新提交)
+
+                // 新建态（已提交/待审核）：可撤回/驳回（转草稿）、可审核通过（转确认）、可作废（待审核单据直接作废）
+                // 核心调整：删除 DataStatus.新建（去掉多次提交逻辑），新增 DataStatus.草稿（撤回/驳回路径）
+                [DataStatus.新建] = new List<object> { DataStatus.草稿, DataStatus.确认, DataStatus.作废 },
+
+                // 确认态（已审核）：可反审核（转新建）、可结案（转完结）、可作废（已审核单据特殊情况作废，需权限管控）
                 [DataStatus.确认] = new List<object> { DataStatus.新建, DataStatus.完结, DataStatus.作废 },
-                [DataStatus.完结] = new List<object> { }, // 完结状态不能再转换
-                [DataStatus.作废] = new List<object> { } // 作废状态就不再使用
+
+                // 完结态：无任何转换可能，终身锁定
+                [DataStatus.完结] = new List<object> { },
+
+                // 作废态：无任何转换可能，终身锁定
+                [DataStatus.作废] = new List<object> { }
+
             };
         }
 
@@ -1078,7 +1089,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
                 [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
             };
-        
+
             var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
                 [ARAPStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.打印, MenuItemEnums.保存 },
@@ -1089,7 +1100,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [ARAPStatus.坏账] = new List<MenuItemEnums> { MenuItemEnums.打印 },
                 [ARAPStatus.已冲销] = new List<MenuItemEnums> { MenuItemEnums.打印 }
             };
-        
+
             _actionPermissionRules[statusType] = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式 ? flexibleModeRules : strictModeRules;
         }
 
@@ -1419,7 +1430,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
             var statusType = stateManager.GetStatusType(entity);
             // 获取当前状态
-        
+
             var currentStatus = entity.GetCurrentStatus();
             // 尝试使用自定义处理器
             var customKey = $"{statusType.FullName}_{action}";

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.Model;
@@ -124,6 +125,25 @@ namespace RUINORERP.UI.UControls
                 return;
             }
 
+            // 优先检查frmProductEdit中的缓存数据（新添加但未上传的图片）
+            var frmProductEdit = this.DataGridView?.FindForm() as ProductEAV.frmProductEdit;
+            if (frmProductEdit != null)
+            {
+                // 使用反射获取私有缓存字段
+                var cacheField = typeof(ProductEAV.frmProductEdit).GetField("skuImageDataCache",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (cacheField != null)
+                {
+                    var cache = cacheField.GetValue(frmProductEdit) as System.Collections.Generic.Dictionary<tb_ProdDetail, System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>>;
+                    if (cache != null && cache.TryGetValue(detail, out var cachedImages) && cachedImages.Count > 0)
+                    {
+                        // 绘制缓存的图片
+                        DrawCachedImage(graphics, cellBounds, cachedImages, detail.HasUnsavedImageChanges);
+                        return;
+                    }
+                }
+            }
+
             // 检查是否有图片路径
             string imagesPath = detail.ImagesPath;
             if (string.IsNullOrEmpty(imagesPath))
@@ -176,11 +196,11 @@ namespace RUINORERP.UI.UControls
             else if (_loadedImage != null)
             {
                 // 绘制图片
-                DrawImage(graphics, cellBounds, _loadedImage, imagePaths.Length);
+                DrawImage(graphics, cellBounds, _loadedImage, imagePaths.Length, false);
             }
             else
             {
-                DrawPlaceholder(graphics, cellBounds, "无图片");
+                DrawPlaceholder(graphics, cellBounds, "双击添加图片");
             }
         }
 
@@ -203,7 +223,7 @@ namespace RUINORERP.UI.UControls
         /// <summary>
         /// 绘制图片
         /// </summary>
-        private void DrawImage(Graphics graphics, Rectangle cellBounds, Image image, int imageCount)
+        private void DrawImage(Graphics graphics, Rectangle cellBounds, Image image, int imageCount, bool hasUnsavedChanges)
         {
             // 计算缩略图大小和位置
             int thumbnailSize = SKUImageColumn.ThumbnailSize;
@@ -220,6 +240,78 @@ namespace RUINORERP.UI.UControls
             {
                 DrawImageCountBadge(graphics, imgRect, imageCount);
             }
+
+            // 如果有未保存的更改，显示星号标记
+            if (hasUnsavedChanges)
+            {
+                DrawUnsavedBadge(graphics, cellBounds);
+            }
+        }
+
+        /// <summary>
+        /// 绘制缓存的图片（从byte[]数据绘制）
+        /// </summary>
+        private void DrawCachedImage(Graphics graphics, Rectangle cellBounds,
+            System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> cachedImages,
+            bool hasUnsavedChanges)
+        {
+            try
+            {
+                // 使用第一张图片
+                var firstImageData = cachedImages[0].Item1;
+                using (var ms = new System.IO.MemoryStream(firstImageData))
+                using (var originalImage = System.Drawing.Image.FromStream(ms))
+                {
+                    // 计算缩略图大小和位置
+                    int thumbnailSize = SKUImageColumn.ThumbnailSize;
+                    var imgRect = new Rectangle(
+                        cellBounds.Left + (cellBounds.Width - thumbnailSize) / 2,
+                        cellBounds.Top + (cellBounds.Height - thumbnailSize) / 2,
+                        thumbnailSize, thumbnailSize);
+
+                    // 绘制图片（保持比例）
+                    graphics.DrawImage(originalImage, imgRect);
+
+                    // 如果有多个图片，绘制数量角标
+                    if (cachedImages.Count > 1)
+                    {
+                        DrawImageCountBadge(graphics, imgRect, cachedImages.Count);
+                    }
+
+                    // 如果有未保存的更改，显示星号标记
+                    if (hasUnsavedChanges)
+                    {
+                        DrawUnsavedBadge(graphics, cellBounds);
+                    }
+                }
+            }
+            catch
+            {
+                DrawPlaceholder(graphics, cellBounds, "图片加载失败");
+            }
+        }
+
+        /// <summary>
+        /// 绘制未保存更改的星号标记
+        /// </summary>
+        private void DrawUnsavedBadge(Graphics graphics, Rectangle cellBounds)
+        {
+            using (var brush = new SolidBrush(Color.Orange))
+            using (var font = new Font("Arial", 10, FontStyle.Bold))
+            {
+                string text = "*";
+                var size = graphics.MeasureString(text, font);
+                graphics.DrawString(text, font, brush,
+                    new PointF(cellBounds.Right - size.Width - 4, cellBounds.Top + 2));
+            }
+        }
+
+        /// <summary>
+        /// 绘制图片
+        /// </summary>
+        private void DrawImage(Graphics graphics, Rectangle cellBounds, Image image, int imageCount)
+        {
+            DrawImage(graphics, cellBounds, image, imageCount, false);
         }
 
         /// <summary>

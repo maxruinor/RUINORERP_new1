@@ -544,6 +544,10 @@ namespace RUINORERP.UI.BaseForm
                     // 提交操作是异步的
                     _ = Submit();
                     break;
+                case MenuItemEnums.撤回提交:
+                    // 提交操作是异步的
+                    _ = CancelSubmit();
+                    break;
                 case MenuItemEnums.审核:
                     // 审核操作是异步的
                     _ = Review();
@@ -679,6 +683,12 @@ namespace RUINORERP.UI.BaseForm
             await Task.Delay(0);
             MessageBox.Show("应该有选项 同意和同意，原因？");
             return null;
+        }
+
+        protected async virtual Task<bool> CancelSubmit()
+        {
+            await Task.Delay(0);
+            return false;
         }
 
         protected async virtual Task<bool> ReReview()

@@ -2076,6 +2076,12 @@ namespace RUINORERP.UI.Common
                     MenuAttrAssemblyInfo info = new MenuAttrAssemblyInfo();
                     info = attribute;
                     info.ClassName = type.Name;
+
+                    if (info.ClassName.Contains("UCPreReceived"))
+                    {
+
+                    }
+
                     info.ClassType = type;
                     info.ClassPath = type.FullName;
                     info.Caption = attribute.Describe;
@@ -2089,7 +2095,7 @@ namespace RUINORERP.UI.Common
 
                     #region 判断是不是财务合并接口
 
-                    // 优化：不在此处实例化，只标记实现了接口
+                    // 优化：不在此处实例化，只标记实现了接口11
                     if (type.IsClass && !type.IsAbstract && interfaceType.IsAssignableFrom(type))
                     {
                         info.BizInterface = nameof(ISharedIdentification);
@@ -2195,7 +2201,15 @@ namespace RUINORERP.UI.Common
         {
             try
             {
-                // 尝试通过 DI 容器获取实例，避免手动实例化
+                // 优先尝试通过反射获取属性定义的默认值
+                // 这样不依赖 DI 容器，确保注册时能获取到值
+                var defaultValue = GetSharedFlagDefaultValue(type, property);
+                if (!string.IsNullOrEmpty(defaultValue))
+                {
+                    return defaultValue;
+                }
+
+                // 如果反射获取失败，尝试通过 DI 容器获取实例
                 if (typeof(UserControl).IsAssignableFrom(type))
                 {
                     var instance = Startup.GetFromFacByName<UserControl>(type.Name);
@@ -2215,7 +2229,72 @@ namespace RUINORERP.UI.Common
             }
             catch
             {
-                // DI 容器获取失败，忽略
+                // 获取失败，忽略
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 通过反射获取 sharedFlag 属性在类中定义的默认值
+        /// </summary>
+        /// <param name="type">窗体类型</param>
+        /// <param name="property">sharedFlag 属性</param>
+        /// <returns>sharedFlag 的字符串值（如 "Flag1", "Flag2"）</returns>
+        private static string GetSharedFlagDefaultValue(Type type, PropertyInfo property)
+        {
+            try
+            {
+                // 方法1：检查是否有 DefaultValue 特性
+                var defaultValueAttr = property.GetCustomAttribute<DefaultValueAttribute>();
+                if (defaultValueAttr != null && defaultValueAttr.Value != null)
+                {
+                    return defaultValueAttr.Value.ToString();
+                }
+
+                // 方法2：通过编译器生成的属性初始化字段获取值
+                // C# 属性如 "public SharedFlag sharedFlag { get; set; } = SharedFlag.Flag1;"
+                // 会在后台生成一个BackingField，名称通常是 "<sharedFlag>k__BackingField"
+                var backingFieldName = $"<{property.Name}>k__BackingField";
+                var backingField = type.GetField(backingFieldName,
+                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+                if (backingField != null)
+                {
+                    // 需要一个实例来读取字段值
+                    var instance = Activator.CreateInstance(type);
+                    var value = backingField.GetValue(instance);
+                    if (value != null)
+                    {
+                        return value.ToString();
+                    }
+                }
+
+                // 方法3：查找所有以 "sharedFlag" 开头的字段
+                var fields = type.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                    .Where(f => f.Name.Contains("sharedFlag"))
+                    .ToList();
+
+                foreach (var field in fields)
+                {
+                    try
+                    {
+                        var instance = Activator.CreateInstance(type);
+                        var value = field.GetValue(instance);
+                        if (value != null && value.GetType() == property.PropertyType)
+                        {
+                            return value.ToString();
+                        }
+                    }
+                    catch
+                    {
+                        // 继续尝试其他字段
+                    }
+                }
+            }
+            catch
+            {
+                // 反射失败，忽略
             }
 
             return string.Empty;

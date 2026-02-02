@@ -590,7 +590,7 @@ namespace RUINORERP.Business
             payable.ReceivePaymentType = (int)ReceivePaymentType.付款;
 
             IBizCodeGenerateService bizCodeService = _appContext.GetRequiredService<IBizCodeGenerateService>();
-            payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预收款单);
+            payable.PreRPNO = await bizCodeService.GenerateBizBillNoAsync(BizType.预付款单);
             payable.SourceBizType = (int)BizType.采购订单;
             payable.SourceBillNo = entity.PurOrderNo;
             payable.SourceBillId = entity.PurOrder_ID;

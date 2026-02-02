@@ -323,13 +323,16 @@ namespace RUINORERP.UI.Common
                 {
                     tableName = ConvertBizTypeToTableName(tableName);
                 }
-                relatedMenuInfo = FindMenuByTableName(tableName);
+                //预收款中，有点击打开 预付款单时 要用 CurrentRowEntity 中是否存收付款类型来区别。
+
+
+                relatedMenuInfo = FindMenuByTableName(tableName, CurrentRowEntity);
                 if (relatedMenuInfo == null)
                 {
                     //库存跟踪的情况
                     #region
                     tableName = relatedRelationship.TargetTableName.Name;
-                    relatedMenuInfo = FindMenuByTableName(tableName);
+                    relatedMenuInfo = FindMenuByTableName(tableName, CurrentRowEntity);
                     #endregion
 
                 }
@@ -441,21 +444,55 @@ namespace RUINORERP.UI.Common
         /// </summary>
         /// <param name="tableName">表名</param>
         /// <returns>找到的菜单信息，如果未找到则返回null</returns>
-        private tb_MenuInfo FindMenuByTableName(string tableName)
+        private tb_MenuInfo FindMenuByTableName(string tableName, object entity)
         {
-            var menuInfo = MainForm.Instance.MenuList
-                .Where(m => m.IsVisble && m.EntityName == tableName && m.BIBaseForm == "BaseBillEditGeneric`2")
-                .FirstOrDefault();
 
-            if (menuInfo == null && SpecialMenuMappings.ContainsKey(tableName))
+            tb_MenuInfo menuInfo = null;
+            if (entity.ContainsProperty(nameof(ReceivePaymentType)))
             {
-                var className = SpecialMenuMappings[tableName];
-                menuInfo = MainForm.Instance.MenuList
-                    .Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains(className))
+                string flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
+                var adjustedMenu = MainForm.Instance.MenuList
+                    .Where(m => m.IsVisble
+                        && m.EntityName == tableName
+                        && m.BIBaseForm == "BaseBillEditGeneric`2"
+                        && m.UIPropertyIdentifier == flag)
                     .FirstOrDefault();
+
+                if (adjustedMenu != null)
+                {
+                    menuInfo = adjustedMenu;
+                }
+            }
+            else
+            {
+                var adjustedMenu = MainForm.Instance.MenuList
+                    .Where(m => m.IsVisble
+                        && m.EntityName == tableName
+                        && m.BIBaseForm == "BaseBillEditGeneric`2")
+                    .FirstOrDefault();
+
+                if (adjustedMenu != null)
+                {
+                    menuInfo = adjustedMenu;
+                }
             }
 
             return menuInfo;
+
+
+            //var menuInfo = MainForm.Instance.MenuList
+            //    .Where(m => m.IsVisble && m.EntityName == tableName && m.BIBaseForm == "BaseBillEditGeneric`2")
+            //    .FirstOrDefault();
+
+            //if (menuInfo == null && SpecialMenuMappings.ContainsKey(tableName))
+            //{
+            //    var className = SpecialMenuMappings[tableName];
+            //    menuInfo = MainForm.Instance.MenuList
+            //        .Where(m => m.IsVisble && m.EntityName == tableName && m.ClassPath.Contains(className))
+            //        .FirstOrDefault();
+            //}
+
+            //return menuInfo;
         }
 
         /// <summary>
@@ -487,7 +524,7 @@ namespace RUINORERP.UI.Common
                 if (entity != null)
                 {
                     // 处理有收付款类型的特殊情况
-                    relatedMenuInfo = AdjustMenuForPaymentType(relatedMenuInfo, entity, tableName);
+                    relatedMenuInfo = GetMenuInfoForPaymentType(entity, tableName);
                     await menuPowerHelper.ExecuteEvents(relatedMenuInfo, entity);
                     return;
                 }
@@ -500,12 +537,12 @@ namespace RUINORERP.UI.Common
         /// <summary>
         /// 调整菜单以适应收付款类型
         /// </summary>
-        /// <param name="menuInfo">菜单信息</param>
         /// <param name="entity">实体对象</param>
         /// <param name="tableName">表名</param>
         /// <returns>调整后的菜单信息</returns>
-        private tb_MenuInfo AdjustMenuForPaymentType(tb_MenuInfo menuInfo, object entity, string tableName)
+        private tb_MenuInfo GetMenuInfoForPaymentType(object entity, string tableName)
         {
+            tb_MenuInfo menuInfo = null;
             if (entity.ContainsProperty(nameof(ReceivePaymentType)))
             {
                 string flag = ((SharedFlag)entity.GetPropertyValue(nameof(ReceivePaymentType)).ToInt()).ToString();
@@ -518,7 +555,7 @@ namespace RUINORERP.UI.Common
 
                 if (adjustedMenu != null)
                 {
-                    return adjustedMenu;
+                    menuInfo = adjustedMenu;
                 }
             }
 

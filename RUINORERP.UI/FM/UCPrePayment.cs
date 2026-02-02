@@ -14,6 +14,10 @@ using System.Windows.Forms;
 
 namespace RUINORERP.UI.FM
 {
+
+    /// <summary>
+    /// 12
+    /// </summary>
     [MenuAttrAssemblyInfo("预付款单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.付款管理, BizType.预付款单)]
     [SharedIdRequired]
     public partial class UCPrePayment : UCPreReceivedPayment, ISharedIdentification

@@ -16,7 +16,7 @@ using System.Windows.Forms;
 namespace RUINORERP.UI.FM
 {
     /// <summary>
-    /// 收款记录表
+    /// 收款记录表11
     /// </summary>
     [MenuAttrAssemblyInfo("收款单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.收款管理, BizType.收款单)]
     [SharedIdRequired]

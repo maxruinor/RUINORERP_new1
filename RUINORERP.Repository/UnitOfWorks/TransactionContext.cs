@@ -127,6 +127,11 @@ namespace RUINORERP.Repository.UnitOfWorks
         public ConcurrentDictionary<string, object> CustomData { get; set; }
         
         /// <summary>
+        /// 锁对象（用于细粒度锁，替代lock(this)）
+        /// </summary>
+        public object LockObject { get; set; }
+        
+        /// <summary>
         /// 构造函数
         /// </summary>
         public TransactionContext()
@@ -139,6 +144,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             CustomData = new ConcurrentDictionary<string, object>();
             ThreadId = Thread.CurrentThread.ManagedThreadId;
             OperationId = Guid.NewGuid().ToString("N").Substring(0, 8);
+            LockObject = new object(); // 初始化锁对象
         }
         
         /// <summary>

@@ -20,8 +20,6 @@ namespace RUINORERP.Repository.UnitOfWorks
         private readonly ISqlSugarClient _sqlSugarClient;
         private readonly bool _supportsNestedTransactions;
         public ApplicationContext _appContext;
-        
- 
 
         // 使用 AsyncLocal 保证异步安全 - 增强的事务上下文
         private readonly AsyncLocal<TransactionContext> _currentTransactionContext =
@@ -31,7 +29,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         private static readonly ConcurrentDictionary<Guid, TransactionContext> _activeTransactions = 
             new ConcurrentDictionary<Guid, TransactionContext>();
 
-        // 僵尸事务清理定时器
+        // 僵尸事务清理定时器 - 简化：只记录警告，不强制清理
         private static Timer _zombieCleanupTimer;
         private static readonly object _cleanupLock = new object();
         private static bool _cleanupInitialized = false;
@@ -74,33 +72,30 @@ namespace RUINORERP.Repository.UnitOfWorks
         }
 
         /// <summary>
-        /// 清理僵尸事务的回调方法
+        /// 清理僵尸事务的回调方法 - 简化：只记录警告
         /// </summary>
         private void CleanupZombieTransactions(object state)
         {
             try
             {
+                var now = DateTime.Now;
                 var zombieTransactions = _activeTransactions.Values
-                    .Where(t => t.IsTimeout() && t.Status == TransactionStatus.Active)
+                    .Where(t => t.Status == TransactionStatus.Active && (now - t.LastActivityAt).TotalMinutes > 30) // 30分钟未活动
                     .ToList();
 
                 if (zombieTransactions.Any())
                 {
-                    _logger.LogWarning($"检测到 {zombieTransactions.Count} 个僵尸事务，正在清理...");
-                    
+                    _logger.LogWarning($"检测到 {zombieTransactions.Count} 个长时间未活动的事务：");
                     foreach (var transaction in zombieTransactions)
                     {
-                        if (_activeTransactions.TryRemove(transaction.TransactionId, out _))
-                        {
-                            transaction.Status = TransactionStatus.Zombie;
-                            _logger.LogWarning($"已清理僵尸事务: {transaction.TransactionId}");
-                        }
+                        var duration = (now - transaction.LastActivityAt).TotalMinutes;
+                        _logger.LogWarning($"  事务ID: {transaction.TransactionId}, 持续时间: {duration:F2}分钟, Caller: {transaction.CallerMethod}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "僵尸事务清理过程中发生错误");
+                _logger.LogError(ex, "僵尸事务检查过程中发生错误");
             }
         }
 
@@ -322,21 +317,16 @@ namespace RUINORERP.Repository.UnitOfWorks
  
         public void BeginTran()
         {
-            // 获取或创建事务上下文（无锁）
+            // 获取或创建事务上下文
             var context = CurrentTransactionContext;
             if (context == null)
             {
                 context = CreateTransactionContext();
                 CurrentTransactionContext = context;
-                _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务上下文已创建，Caller={context.CallerMethod}");
-            }
-            else
-            {
-                _logger.LogDebug($"[Transaction-{context.TransactionId}] 使用现有事务上下文");
             }
 
-            // 使用细粒度锁保护临界区
-            lock (context)
+            // 简化：只锁必要的操作，减少锁范围
+            lock (context.LockObject)
             {
                 try
                 {
@@ -347,24 +337,13 @@ namespace RUINORERP.Repository.UnitOfWorks
                             $"事务嵌套深度超过最大限制({MAX_NESTED_DEPTH})，请检查业务逻辑");
                     }
 
-                    // 检测僵尸事务：只有确认是异常状态时才强制清理
-                    // 正常情况下，深度为0但有物理事务可能是因为外部已经开启了事务
+                    // 简化：仅记录外部事务，不进行强制清理
                     if (context.Depth == 0 && _sqlSugarClient.Ado.Transaction != null)
                     {
-                        // 检查这个事务是否是我们之前开启的（在活跃事务字典中）
-                        bool isOurTransaction = _activeTransactions.ContainsKey(context.TransactionId);
-                        
-                        if (isOurTransaction)
+                        var isOurTransaction = _activeTransactions.ContainsKey(context.TransactionId);
+                        if (!isOurTransaction)
                         {
-                            // 是我们开启的事务，但深度为0，说明状态异常
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到僵尸事务（深度=0但有物理事务），强制清理");
-                            _logger.LogWarning($"僵尸事务详情: {{LogicalDepth={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}}}");
-                            ForceRollback();
-                        }
-                        else
-                        {
-                            // 不是我们开启的事务，可能是外部已经开启的事务，记录警告但继续
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到外部已开启的事务，将直接加入嵌套");
+                            _logger.LogDebug($"[Transaction-{context.TransactionId}] 检测到外部已开启的事务，将直接加入嵌套");
                         }
                     }
 
@@ -372,54 +351,21 @@ namespace RUINORERP.Repository.UnitOfWorks
                     context.Depth++;
                     context.UpdateActivityTime();
                     context.Status = TransactionStatus.Active;
-                    
-                    // 检查嵌套深度限制
-                    if (context.Depth > MAX_NESTED_DEPTH)
-                    {
-                        context.Depth--; // 恢复深度
-                        _logger.LogError($"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制({MAX_NESTED_DEPTH})，Caller={context.CallerMethod}");
-                        throw new InvalidOperationException(
-                            $"事务嵌套深度超过最大限制({MAX_NESTED_DEPTH})，请检查业务逻辑是否滥用嵌套事务。当前Caller={context.CallerMethod}");
-                    }
-
-                    var newDepth = context.Depth;
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务深度增加: {newDepth - 1} -> {newDepth}");
 
                     // 最外层事务：开启物理事务
-                    if (newDepth == 1)
+                    if (context.Depth == 1)
                     {
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 开启物理事务");
-                        _logger.LogDebug($"调用堆栈: {context.CallerMethod}");
-                        
-                        try
-                        {
-                            _sqlSugarClient.Ado.BeginTran();
-                            
-                            // 注册到全局活跃事务字典
-                            _activeTransactions.TryAdd(context.TransactionId, context);
-                            _logger.LogInformation($"[Transaction-{context.TransactionId}] 物理事务已成功开启");
-                        }
-                        catch (Exception beginEx)
-                        {
-                            // 如果BeginTran失败，清理状态
-                            context.Depth = 0;
-                            context.Status = TransactionStatus.NotStarted;
-                            _activeTransactions.TryRemove(context.TransactionId, out _);
-                            
-                            _logger.LogError(beginEx, $"[Transaction-{context.TransactionId}] 物理事务开启失败，已清理状态");
-                            throw;
-                        }
+                        _sqlSugarClient.Ado.BeginTran();
+                        _activeTransactions.TryAdd(context.TransactionId, context);
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 物理事务已开启");
                     }
                     // 嵌套事务支持：创建保存点
                     else if (_supportsNestedTransactions)
                     {
-                        // 使用短格式：SP_{GUID前20位}_{深度}，总长度不超过32字符
                         var safeTransactionId = context.TransactionId.ToString("N").Substring(0, 20);
-                        var savePointName = $"SP_{safeTransactionId}_{newDepth}";
+                        var savePointName = $"SP_{safeTransactionId}_{context.Depth}";
                         _sqlSugarClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
                         context.SavePointStack.Push(savePointName);
-                        
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点: {savePointName}");
                     }
                 }
                 catch (Exception ex)
@@ -430,9 +376,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         context.Status = TransactionStatus.NotStarted;
                     }
-                    
+
                     _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务开启失败");
-                    throw new InvalidOperationException("事务开启失败，请检查前置事务是否正确关闭", ex);
+                    throw new InvalidOperationException("事务开启失败", ex);
                 }
             }
         }
@@ -450,27 +396,20 @@ namespace RUINORERP.Repository.UnitOfWorks
                 return;
             }
 
-            // 使用细粒度锁保护临界区
-            lock (context)
+            // 简化：只锁关键部分
+            lock (context.LockObject)
             {
                 try
                 {
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 准备提交事务，当前深度: {context.Depth}");
+                    if (context.Depth <= 0)
+                    {
+                        return; // 深度为0时，不做任何操作
+                    }
 
                     // 检查回滚标记
                     if (context.ShouldRollback)
                     {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务已被标记为回滚，跳过提交");
-                        return;
-                    }
-
-                    if (context.Depth <= 0)
-                    {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 提交请求但无活动事务，深度={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}");
-                        
-                        // 深度为0时，不做任何操作
-                        // 物理事务如果存在，可能是外部事务，由外部管理
-                        // 或者是我们自己的状态异常，此时不应干预
+                        context.Depth--;
                         return;
                     }
 
@@ -478,55 +417,42 @@ namespace RUINORERP.Repository.UnitOfWorks
                     context.Depth--;
                     context.UpdateActivityTime();
 
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务深度减少: {context.Depth + 1} -> {context.Depth}");
-
-                    // 内层提交：仅更新深度，不提交物理事务
+                    // 内层提交：仅更新深度
                     if (context.Depth > 0)
                     {
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 嵌套事务提交完成（未提交物理事务）");
                         return;
                     }
 
-                    // === 最外层提交逻辑 ===
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 准备提交物理事务");
-                    _logger.LogDebug($"事务持续时间: {context.GetDuration().TotalSeconds:F2} 秒");
-                    
-                    var commitStartTime = DateTime.Now;
+                    // 最外层提交
                     try
                     {
                         _sqlSugarClient.Ado.CommitTran();
                         context.Status = TransactionStatus.Committed;
-                        
-                        var duration = (DateTime.Now - commitStartTime).TotalSeconds;
-                        TransactionMetrics.RecordTransaction("commit", context.CallerMethod, duration, true);
-                        
-                        _logger.LogInformation($"[Transaction-{context.TransactionId}] 物理事务已成功提交");
+                        _activeTransactions.TryRemove(context.TransactionId, out _);
+
+                        var duration = context.GetDuration().TotalSeconds;
+                        if (duration > 10) // 超过10秒的提交需要记录
+                        {
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时: {duration:F2}秒");
+                        }
                     }
                     catch (Exception commitEx)
                     {
                         context.Status = TransactionStatus.RolledBack;
-                        
-                        var duration = (DateTime.Now - commitStartTime).TotalSeconds;
-                        TransactionMetrics.RecordTransaction("commit", context.CallerMethod, duration, false);
-                        
+                        _activeTransactions.TryRemove(context.TransactionId, out _);
                         _logger.LogError(commitEx, $"[Transaction-{context.TransactionId}] 物理事务提交失败");
                         throw;
+                    }
+                    finally
+                    {
+                        ResetTransactionState();
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务提交失败，将执行强制回滚");
                     context.Status = TransactionStatus.RolledBack;
                     ForceRollback();
                     throw new InvalidOperationException($"事务提交失败: {ex.Message}", ex);
-                }
-                finally
-                {
-                    // 仅在最外层重置状态
-                    if (context.Depth <= 0)
-                    {
-                        ResetTransactionState();
-                    }
                 }
             }
         }
@@ -540,69 +466,44 @@ namespace RUINORERP.Repository.UnitOfWorks
                 return;
             }
 
-             // 使用细粒度锁保护临界区
-            lock (context)
-            {  
+            // 简化：只锁关键部分
+            lock (context.LockObject)
+            {
                 try
                 {
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 准备回滚事务，当前深度: {context.Depth}");
+                    if (context.Depth <= 0)
+                    {
+                        return; // 深度为0时，不做任何操作
+                    }
 
-                    // 设置回滚标记（阻止后续提交）
+                    // 设置回滚标记
                     context.ShouldRollback = true;
                     context.UpdateActivityTime();
 
-                    if (context.Depth <= 0)
-                    {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 回滚请求但无活动事务，深度={context.Depth}, PhysicalTransaction={_sqlSugarClient.Ado.Transaction != null}");
-                        
-                        // 深度为0时，不做任何操作
-                        // 物理事务如果存在，可能是外部事务，由外部管理
-                        // 或者是我们自己的状态异常，此时不应干预
-                        return;
-                    }
-
-                    var currentDepth = context.Depth;
+                    // 减少深度
                     context.Depth--;
 
-                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务深度减少: {currentDepth} -> {context.Depth}");
-
                     // 最外层回滚
-                    if (currentDepth == 1)
+                    if (context.Depth == 0)
                     {
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 准备回滚物理事务");
-                        
-                        var rollbackStartTime = DateTime.Now;
                         try
                         {
                             _sqlSugarClient.Ado.RollbackTran();
                             context.Status = TransactionStatus.RolledBack;
-                            
-                            var duration = (DateTime.Now - rollbackStartTime).TotalSeconds;
-                            TransactionMetrics.RecordTransaction("rollback", context.CallerMethod, duration, true);
-                            
-                            _logger.LogInformation($"[Transaction-{context.TransactionId}] 物理事务已成功回滚");
+                            _activeTransactions.TryRemove(context.TransactionId, out _);
                         }
                         catch (Exception rollbackEx)
                         {
-                            context.Status = TransactionStatus.RolledBack;
-                            
-                            var duration = (DateTime.Now - rollbackStartTime).TotalSeconds;
-                            TransactionMetrics.RecordTransaction("rollback", context.CallerMethod, duration, false);
-                            
                             _logger.LogError(rollbackEx, $"[Transaction-{context.TransactionId}] 物理事务回滚失败");
                             throw;
                         }
-                        
-                        return;
                     }
-
-                    // 嵌套事务支持：回滚到保存点
-                    if (_supportsNestedTransactions && context.SavePointStack.TryPop(out var savePoint))
+                    // 嵌套事务：回滚到保存点
+                    else if (_supportsNestedTransactions && context.SavePointStack.TryPop(out var savePoint))
                     {
                         try
                         {
                             _sqlSugarClient.Ado.ExecuteCommand($"ROLLBACK TRANSACTION {savePoint}");
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 回滚到保存点: {savePoint}");
                         }
                         catch (Exception savePointEx)
                         {

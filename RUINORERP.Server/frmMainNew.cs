@@ -563,42 +563,44 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 使用异步方式执行更新，避免阻塞UI线程
-                _ = Task.Run(async () =>
+                // 简化：直接在后台线程获取信息，避免任务堆积
+                Task.Run(() =>
                 {
                     try
                     {
-                        if (_networkServer != null)
+                        if (_networkServer == null || IsDisposed) return;
+
+                        var serverInfo = _networkServer.GetServerInfo();
+
+                        // 安全更新UI
+                        if (InvokeRequired && !IsDisposed)
                         {
-                            var serverInfo = _networkServer.GetServerInfo();
-                            // 更新UI显示
-                            this.Invoke(new Action(() =>
+                            try
                             {
-                                // 更新状态栏服务器信息
-                                toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
-                                toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
-
-                                // 更新附加服务器信息
-                                toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
-
-                                // 记录服务器信息日志
-                                // PrintInfoLog($"服务器信息 - IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}, 当前连接: {serverInfo.CurrentConnections}, 最大连接: {serverInfo.MaxConnections}");
-                            }));
+                                Invoke(new Action(() =>
+                                {
+                                    if (!IsDisposed)
+                                    {
+                                        toolStripStatusLabelServerStatus.Text = $"服务状态: {serverInfo.Status}";
+                                        toolStripStatusLabelConnectionCount.Text = $"连接数: {serverInfo.CurrentConnections}/{serverInfo.MaxConnections}";
+                                        toolStripStatusLabelMessage.Text = $"服务器IP: {serverInfo.ServerIp}, 端口: {serverInfo.Port}";
+                                    }
+                                }));
+                            }
+                            catch (ObjectDisposedException) { /* 窗体已关闭 */ }
+                            catch (InvalidOperationException) { /* 窗体句柄未创建 */ }
                         }
                     }
                     catch (Exception ex)
                     {
-                        // 确保在UI线程上记录错误日志
-                        this.Invoke(new Action(() =>
-                        {
-                            Instance.PrintInfoLog("服务器信息更新过程中发生错误: " + ex.Message);
-                        }));
+                        // 静默记录错误，避免频繁输出
+                        _logger?.LogDebug(ex, "服务器信息更新失败");
                     }
                 });
             }
             catch (Exception ex)
             {
-                Instance.PrintInfoLog("启动服务器信息更新任务时发生错误: " + ex.Message);
+                _logger?.LogDebug(ex, "定时器触发异常");
             }
         }
 
@@ -1456,39 +1458,32 @@ namespace RUINORERP.Server
                 {
                     // 服务器启动后异步加载缓存，不阻塞UI
                     PrintInfoLog("开始异步加载缓存数据...");
-                    // 使用ConfigureAwait(false)避免死锁风险
                     _ = Task.Run(async () =>
                     {
                         try
                         {
-                            // 记录开始时间用于性能分析
                             var startTime = DateTime.Now;
-
-                            // 执行缓存初始化
                             await _entityCacheInitializationService.InitializeAllCacheAsync().ConfigureAwait(false);
-
-                            // 计算耗时并记录完成信息
                             var elapsedTime = DateTime.Now - startTime;
-                            this.BeginInvoke(new Action(() =>
+
+                            // 简化：使用BeginInvoke + 简单异常处理
+                            if (!IsDisposed)
                             {
-                                PrintInfoLog($"缓存数据加载完成，耗时: {elapsedTime.TotalSeconds:F2}秒");
-                            }));
+                                try
+                                {
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        if (!IsDisposed)
+                                            PrintInfoLog($"缓存数据加载完成，耗时: {elapsedTime.TotalSeconds:F2}秒");
+                                    }));
+                                }
+                                catch (ObjectDisposedException) { }
+                            }
                         }
                         catch (Exception ex)
                         {
-                            // 记录更详细的错误
-                            this.BeginInvoke(new Action(() =>
-                            {
-                                PrintErrorLog($"加载缓存数据时发生错误: {ex.Message}");
-                                // 对于重要错误记录更详细的信息
-                                PrintErrorLog($"异常类型: {ex.GetType().Name}");
-
-                                // 如果有内部异常则记录
-                                if (ex.InnerException != null)
-                                {
-                                    PrintErrorLog($"内部异常: {ex.InnerException.Message}");
-                                }
-                            }));
+                            // 记录错误但不依赖UI
+                            LogToFile($"加载缓存数据时发生错误: {ex.Message}", LogLevel.Error);
                         }
                     });
                 }
@@ -1762,16 +1757,23 @@ namespace RUINORERP.Server
 
         private async void frmMainNew_Load(object sender, EventArgs e)
         {
-            // 检查系统注册状态
-            CheckSystemRegistration();
+            try
+            {
+                // 检查系统注册状态
+                CheckSystemRegistration();
 
-            // 初始化界面
-            InitializeUI();
+                // 初始化界面
+                InitializeUI();
 
-            Initialize();
+                Initialize();
 
-            // 主窗体初始化完成后，调度工作流（避免空引用异常）
-            await ScheduleWorkflowsAfterInitialization();
+                // 主窗体初始化完成后，调度工作流（避免空引用异常）
+                await ScheduleWorkflowsAfterInitialization();
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"窗体加载时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -1935,45 +1937,30 @@ namespace RUINORERP.Server
                     formattedMsg = formattedMsg.Substring(0, 497) + "...\r\n";
                 }
 
-                // 使用轻量级的线程池任务处理日志操作，避免阻塞调用线程
-                Task.Run(() =>
+                // 将Color转换为LogLevel
+                LogLevel logLevel;
+                if (color == Color.Red)
                 {
-                    try
-                    {
-                        // 将Color转换为LogLevel
-                        LogLevel logLevel;
-                        if (color == Color.Red)
-                        {
-                            logLevel = LogLevel.Error;
-                        }
-                        else if (color == Color.Yellow)
-                        {
-                            logLevel = LogLevel.Warning;
-                        }
-                        else // Color.Green, Color.Blue或其他颜色
-                        {
-                            logLevel = LogLevel.Information;
-                        }
+                    logLevel = LogLevel.Error;
+                }
+                else if (color == Color.Yellow)
+                {
+                    logLevel = LogLevel.Warning;
+                }
+                else // Color.Green, Color.Blue或其他颜色
+                {
+                    logLevel = LogLevel.Information;
+                }
 
-                        // 优先记录到文件日志 - 更可靠
-                        LogToFile(formattedMsg, logLevel);
+                // 优先记录到文件日志 - 更可靠,且不会阻塞
+                LogToFile(formattedMsg, logLevel);
 
-                        // 仅当UI日志启用时，才尝试记录到UI控件
-                        if (_uiLoggingEnabled)
-                        {
-                            TryUILogging(formattedMsg, color);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 捕获所有异常，确保日志操作不会影响主程序
-                        try
-                        {
-                            System.Diagnostics.Debug.WriteLine($"日志后台处理错误: {ex.Message}");
-                        }
-                        catch { }
-                    }
-                });
+                // 仅当UI日志启用时，才尝试记录到UI控件
+                // 直接加入队列,不再创建Task
+                if (_uiLoggingEnabled)
+                {
+                    TryUILogging(formattedMsg, color);
+                }
             }
             catch (Exception)
             {
@@ -2446,8 +2433,7 @@ namespace RUINORERP.Server
             {
                 // 1. 立即禁用UI日志，防止后续操作触发AccessViolationException
                 _uiLoggingEnabled = false;
-                StopUiLogPump();  // 确保日志泵被停止
-                PrintInfoLog("UI日志已禁用");
+                StopUiLogPump();
 
                 // 2. 关闭NetworkServer
                 if (_networkServer != null)
@@ -2488,7 +2474,6 @@ namespace RUINORERP.Server
                 if (fileStorageMonitorService != null)
                 {
                     fileStorageMonitorService.StopMonitoring();
-                    PrintInfoLog("文件存储监控服务已停止");
                 }
             }
             catch (Exception e)

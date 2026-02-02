@@ -134,28 +134,41 @@ namespace RUINORERP.Server.Network.Core
                 // 在启动前检查所有配置的端口是否被占用
                 var configuredPorts = GetConfiguredPorts(config, serverOptions);
                 var occupiedPorts = new List<int>();
-                
-                // 检查所有端口占用情况
-                foreach (var port in configuredPorts)
+
+                // 检查所有端口占用情况（带超时保护）
+                var portCheckTasks = configuredPorts.Select(port => IsPortInUseAsync(port)).ToList();
+                try
                 {
-                    if (await IsPortInUseAsync(port))
+                    await Task.WhenAll(portCheckTasks).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "端口占用检查过程中发生异常");
+                }
+
+                for (int i = 0; i < configuredPorts.Count; i++)
+                {
+                    if (i < portCheckTasks.Count && portCheckTasks[i].Status == TaskStatus.RanToCompletion)
                     {
-                        occupiedPorts.Add(port);
+                        if (portCheckTasks[i].Result)
+                        {
+                            occupiedPorts.Add(configuredPorts[i]);
+                        }
                     }
                 }
-                
+
                 // 如果发现被占用的端口，提供详细错误信息
                 if (occupiedPorts.Count > 0)
                 {
                     // 只处理第一个被占用的端口（简化逻辑）
                     var errorMessage = BuildPortOccupiedMessage(occupiedPorts[0]);
                     LogError(errorMessage);
-                    
+
                     // 同时在控制台显示彩色错误信息
                     Console.ForegroundColor = ConsoleColor.Red;
                     System.Diagnostics.Debug.WriteLine(errorMessage);
                     Console.ResetColor();
-                    
+
                     throw new InvalidOperationException(errorMessage);
                 }
 
@@ -332,12 +345,22 @@ namespace RUINORERP.Server.Network.Core
 
                 return _host;
             }
+            catch (OperationCanceledException)
+            {
+                // 取消操作,清理资源后重新抛出
+                if (_host != null)
+                {
+                    try { _host.Dispose(); } catch { }
+                    _host = null;
+                }
+                throw;
+            }
             catch (Exception ex)
             {
                 // 确保在启动失败时清理资源
                 if (_host != null)
                 {
-                    _host.Dispose();
+                    try { _host.Dispose(); } catch { }
                     _host = null;
                 }
 
@@ -346,7 +369,7 @@ namespace RUINORERP.Server.Network.Core
                 {
                     // 处理端口占用异常，记录详细信息
                     HandlePortOccupiedException(ex);
-                    
+
                     // 创建包含详细解决方案的异常并向上抛出
                     var detailedErrorMessage = GetPortOccupiedDetailedMessage(ex);
                     throw new InvalidOperationException(detailedErrorMessage, ex);

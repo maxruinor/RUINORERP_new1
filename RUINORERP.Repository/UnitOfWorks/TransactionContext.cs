@@ -62,9 +62,9 @@ namespace RUINORERP.Repository.UnitOfWorks
         public DateTime LastActivityAt { get; set; }
         
         /// <summary>
-        /// 事务超时时间（秒）
+        /// 事务超时时间（秒）- 默认5分钟，允许长事务
         /// </summary>
-        public int TimeoutSeconds { get; set; } = 30;
+        public int TimeoutSeconds { get; set; } = 300; // 5分钟，适合企业级应用
         
         /// <summary>
         /// 调用者方法信息

@@ -34,7 +34,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
         {
             // 仅执行UI初始化操作，不包含数据库查询
             menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-            timer1.Start();
         }
 
         /// <summary>
@@ -207,27 +206,14 @@ namespace RUINORERP.UI.UserCenter.DataParts
             catch (Exception ex)
             {
                 errorCount++;
-                // MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
                 MainForm.Instance.logger.Error(ex);
-                if (errorCount > 10)
-                {
-                    timer1.Stop();
-                }
             }
         }
 
         MenuPowerHelper menuPowerHelper;
 
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            long lastInputTime = MainForm.GetLastInputTime();
-            //if (lastInputTime > 10000 && kryptonTreeGridView1.Rows.Count > 0)
-            //{
-            //    MainForm.Instance.ShowMsg($"您有需要处理的销售订单。");
-            //    MainForm.Instance.PrintInfoLog("您有需要处理的销售订单。");
-            //}
-        }
+ 
 
         private async void kryptonCommand1_Execute(object sender, EventArgs e)
         {

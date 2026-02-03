@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 45000; // 固定心跳间隔45秒，与服务器端宽松策略匹配
-        private readonly int _heartbeatTimeoutMs = 90000; // 心跳超时时间90秒，给予更多响应时间
+        private readonly int _heartbeatIntervalMs = 15000; // 固定心跳间隔15秒，符合主流ERP系统实践
+        private readonly int _heartbeatTimeoutMs = 30000; // 心跳超时时间30秒，给予适当响应时间
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;

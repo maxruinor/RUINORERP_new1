@@ -212,10 +212,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <returns>下次心跳间隔（毫秒）</returns>
         private int CalculateNextHeartbeatInterval(SessionInfo sessionInfo)
         {
-            // 默认45秒间隔，与客户端保持一致
-            const int defaultIntervalMs = 45000;
-            const int minIntervalMs = 30000;  // 最小30秒
-            const int maxIntervalMs = 120000;  // 最大120秒
+            // 默认15秒间隔，与客户端保持一致
+            const int defaultIntervalMs = 15000;
+            const int minIntervalMs = 10000;  // 最小10秒
+            const int maxIntervalMs = 60000;  // 最大60秒
 
             // 如果会话信息无效，使用默认间隔
             if (sessionInfo == null)

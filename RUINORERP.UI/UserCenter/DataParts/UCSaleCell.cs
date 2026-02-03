@@ -76,18 +76,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
             }
         }
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            long lastInputTime = MainForm.GetLastInputTime();
-
-
-            //if (MainForm.GetLastInputTime() > 100000 && kryptonTreeGridView1.Rows.Count > 0)
-            //{
-            //    //刷新工作台数据？
-            //    QueryMRPDataStatus();
-            //}
-
-        }
+ 
 
         //进度有两种，一种是有缴库过的。另一个是没有缴库过的。这种就按步骤来算一下进度。  前者用绿色进度条。后用橙色？  没有任何进度的 用灰色？
 

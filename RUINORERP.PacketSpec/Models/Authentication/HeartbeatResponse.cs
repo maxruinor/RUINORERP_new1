@@ -25,7 +25,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// <summary>
         /// 下次心跳间隔（毫秒）
         /// </summary>
-        public int NextIntervalMs { get; set; } = 30000;
+        public int NextIntervalMs { get; set; } = 45000; // 默认45秒，与服务器和客户端保持一致
 
         /// <summary>
         /// 服务器信息
@@ -43,6 +43,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Message = message,
                 Status = isSuccess ? "OK" : "ERROR",
                 ServerTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                NextIntervalMs = 45000, // 使用45秒作为默认心跳间隔
                 ServerInfo = new Dictionary<string, object>
                 {
                     ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -62,6 +63,7 @@ namespace RUINORERP.PacketSpec.Models.Responses
                 Message = errorMessage,
                 Status = "ERROR",
                 ServerTimestamp = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+                NextIntervalMs = 45000, // 使用45秒作为心跳间隔
                 ServerInfo = new Dictionary<string, object>
                 {
                     ["ErrorCode"] = errorCode ?? "UNKNOWN_ERROR",

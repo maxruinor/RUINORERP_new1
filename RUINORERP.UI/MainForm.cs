@@ -3422,23 +3422,22 @@ namespace RUINORERP.UI
                 }
                 MainForm.Instance.AppContext.CurUserInfo.静止时间 = GetLastInputTime();
 
-
-                if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
-                {
-                    GetAutoUpdateConfig();
-                    //刷新工作台数据？
-                    //指向工作台
-                    KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
-                    if (cell != null || kryptonDockableWorkspace1.PageCount > 0)
-                    {
-                        KryptonPage databaord = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
-                        if (databaord != null)
-                        {
-                            cell.SelectedPage = databaord;
-                            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
-                        }
-                    }
-                }
+                //if (GetLastInputTime() > 30 && !MainForm.Instance.AppContext.IsOnline)
+                //{
+                //    GetAutoUpdateConfig();
+                //    //刷新工作台数据？
+                //    //指向工作台
+                //    KryptonWorkspaceCell cell = kryptonDockableWorkspace1.ActiveCell;
+                //    if (cell != null || kryptonDockableWorkspace1.PageCount > 0)
+                //    {
+                //        KryptonPage databaord = cell.Pages.Where(x => x.Text == "工作台").FirstOrDefault();
+                //        if (databaord != null)
+                //        {
+                //            cell.SelectedPage = databaord;
+                //            kryptonDockableWorkspace1.ActivePage = kryptonDockableWorkspace1.AllPages().FirstOrDefault(c => c.UniqueName == "工作台");
+                //        }
+                //    }
+                //}
 
             }
             catch (Exception ex)

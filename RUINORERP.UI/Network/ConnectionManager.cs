@@ -670,14 +670,22 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 2. 检查本地回环地址，确认网络栈正常
-                using (var ping = new System.Net.NetworkInformation.Ping())
+                try
                 {
-                    var localReply = await ping.SendPingAsync("127.0.0.1", 1000); // 本地回环，1秒超时
-                    if (localReply.Status != System.Net.NetworkInformation.IPStatus.Success)
+                    using (var ping = new System.Net.NetworkInformation.Ping())
                     {
-                        _logger?.LogDebug("本地回环地址Ping失败，网络栈异常：{Status}", localReply.Status);
-                        return false;
+                        var localReply = await ping.SendPingAsync("127.0.0.1", 1000); // 本地回环，1秒超时
+                        if (localReply.Status != System.Net.NetworkInformation.IPStatus.Success)
+                        {
+                            _logger?.LogDebug("本地回环地址Ping失败，网络栈异常：{Status}", localReply.Status);
+                            return false;
+                        }
                     }
+                }
+                catch (Exception pingEx)
+                {
+                    _logger?.LogDebug(pingEx, "本地回环Ping失败，网络栈异常");
+                    return false;
                 }
 
                 // 3. 可选：尝试检查网关地址（如果能获取到）

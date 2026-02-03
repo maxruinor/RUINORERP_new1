@@ -82,6 +82,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
+                    // 首先验证请求的有效性
+                    if (!heartbeatRequest.IsValid())
+                    {
+                        var invalidResponse = HeartbeatResponse.Create(false, "心跳请求数据无效")
+                            .WithNextInterval(30000);
+                        return invalidResponse;
+                    }
+
                     // 使用UserId进行会话验证，不再依赖完整的UserInfo
                     sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
 
@@ -92,8 +100,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         return responseNotLogin;
                     }
 
-                    // 立即更新最后活动时间（快速路径）
-                    sessionInfo.LastActivityTime = DateTime.Now;
+                    // 立即更新最后活动时间和心跳时间
+                    var currentTime = DateTime.Now;
+                    sessionInfo.LastActivityTime = currentTime;
+                    sessionInfo.LastHeartbeat = currentTime; // 更新心跳时间
 
                     // 动态计算下次心跳间隔
                     var nextIntervalMs = CalculateNextHeartbeatInterval(sessionInfo);
@@ -107,7 +117,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         NextIntervalMs = nextIntervalMs,
                         ServerInfo = new Dictionary<string, object>
                         {
-                            ["ServerTime"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                            ["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss"),
                             ["ServerVersion"] = "1.0.0",
                             ["SessionId"] = sessionInfo.SessionID,
                             ["RecommendedInterval"] = nextIntervalMs,
@@ -118,7 +128,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 异步更新完整会话信息（不阻塞响应）
                     if (heartbeatRequest.UserOperationInfo != null)
                     {
-                        _ = Task.Run(async () =>
+                        // 使用ThreadPool.QueueUserWorkItem替代Task.Run避免不必要的上下文捕获
+                        ThreadPool.QueueUserWorkItem(async (_) =>
                         {
                             try
                             {
@@ -146,7 +157,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             {
                                 LogError("异步更新会话信息失败", ex);
                             }
-                        }, cancellationToken);
+                        });
                     }
                     else
                     {
@@ -201,10 +212,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// <returns>下次心跳间隔（毫秒）</returns>
         private int CalculateNextHeartbeatInterval(SessionInfo sessionInfo)
         {
-            // 默认30秒间隔
-            const int defaultIntervalMs = 30000;
-            const int minIntervalMs = 15000;  // 最小15秒
-            const int maxIntervalMs = 60000;  // 最大60秒
+            // 默认45秒间隔，与客户端保持一致
+            const int defaultIntervalMs = 45000;
+            const int minIntervalMs = 30000;  // 最小30秒
+            const int maxIntervalMs = 120000;  // 最大120秒
 
             // 如果会话信息无效，使用默认间隔
             if (sessionInfo == null)
@@ -217,19 +228,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
             var timeSinceLastActivity = DateTime.Now - sessionInfo.LastActivityTime;
             var intervalMs = defaultIntervalMs;
 
-            if (timeSinceLastActivity.TotalMinutes < 5)
+            if (timeSinceLastActivity.TotalMinutes < 10)
             {
-                // 5分钟内有活动，使用较短间隔（快速检测断线）
+                // 10分钟内有活动，使用较短间隔（快速检测断线）
                 intervalMs = minIntervalMs;
             }
-            else if (timeSinceLastActivity.TotalMinutes < 30)
+            else if (timeSinceLastActivity.TotalMinutes < 60)
             {
-                // 5-30分钟内有活动，使用默认间隔
+                // 10-60分钟内有活动，使用默认间隔
                 intervalMs = defaultIntervalMs;
             }
             else
             {
-                // 超过30分钟无活动，使用较长间隔（节省资源）
+                // 超过60分钟无活动，使用较长间隔（节省资源）
                 intervalMs = maxIntervalMs;
             }
 

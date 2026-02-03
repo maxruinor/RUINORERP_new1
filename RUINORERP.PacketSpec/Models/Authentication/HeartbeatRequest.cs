@@ -91,10 +91,13 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// </summary>
         public bool IsValid()
         {
+            var now = DateTime.Now;
             return !string.IsNullOrEmpty(SessionToken) &&
                    UserId > 0 &&
-                   ClientTime <= DateTime.Now.AddMinutes(5) &&
-                   ClientTime >= DateTime.Now.AddMinutes(-5);
+                   ClientTime <= now.AddMinutes(5) &&
+                   ClientTime >= now.AddMinutes(-5) &&
+                   // 额外验证资源使用数据的有效性
+                   (ResourceUsage == null || ResourceUsage.IsValid());
         }
 
         /// <summary>
@@ -155,6 +158,18 @@ namespace RUINORERP.PacketSpec.Models.Requests
                 DiskFreeSpace = diskFreeSpace,
                 ProcessUptime = processUptime
             };
+        }
+        
+        /// <summary>
+        /// 验证资源使用数据的有效性
+        /// </summary>
+        public bool IsValid()
+        {
+            return CpuUsage >= 0 && CpuUsage <= 100 && // CPU使用率应在0-100%之间
+                   MemoryUsage >= 0 && // 内存使用量应非负
+                   NetworkUsage >= 0 && // 网络使用量应非负
+                   DiskFreeSpace >= 0 && // 磁盘可用空间应非负
+                   ProcessUptime >= 0; // 进程运行时间应非负
         }
     }
    

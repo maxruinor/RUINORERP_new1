@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 30000; // 固定心跳间隔30秒
-        private readonly int _heartbeatTimeoutMs = 60000; // 心跳超时时间60秒
+        private readonly int _heartbeatIntervalMs = 45000; // 固定心跳间隔45秒，与服务器端宽松策略匹配
+        private readonly int _heartbeatTimeoutMs = 90000; // 心跳超时时间90秒，给予更多响应时间
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -115,13 +115,13 @@ namespace RUINORERP.UI.Network
         private readonly ConcurrentQueue<ClientQueuedCommand> _queuedCommands = new();
         private readonly SemaphoreSlim _queueLock = new SemaphoreSlim(1, 1);
         private bool _isProcessingQueue = false;
-        
+
         /// <summary>
         /// 是否正在重连
         /// 注意：此状态应作为辅助标志，真实来源是 ConnectionManager.IsReconnecting
         /// </summary>
-        private bool _isReconnecting = false; 
-        
+        private bool _isReconnecting = false;
+
         private bool _disposed = false; // 资源释放状态标志
         private readonly object _heartbeatLock = new object();
         private DateTime _lastHeartbeatTime;
@@ -170,7 +170,7 @@ namespace RUINORERP.UI.Network
         /// 连续心跳失败达到此阈值时触发客户端锁定
         /// 调整为3次，避免过长的不确定状态
         /// </summary>
-        public const int HEARTBEAT_FAILURE_THRESHOLD = 3;
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 5; // 增加心跳失败阈值，给予更多容错机会
 
         /// <summary>
         /// 心跳失败事件
@@ -730,39 +730,54 @@ namespace RUINORERP.UI.Network
         {
             try
             {
-                var sessionId = MainForm.Instance?.AppContext?.SessionId;
-                var userId = MainForm.Instance?.AppContext?.CurUserInfo?.UserID ?? 0;
+                var appContext = MainForm.Instance?.AppContext;
+                var curUserInfo = appContext?.CurUserInfo;
+
+                var userId = curUserInfo?.UserID ?? 0;
+                var sessionId = appContext?.SessionId;
 
                 if (string.IsNullOrEmpty(sessionId) || userId == 0)
                 {
+                    _logger?.LogWarning("心跳发送失败：用户未登录或会话无效");
                     return false;
                 }
 
+                // 创建心跳请求，只包含必要信息
                 var heartbeatRequest = new HeartbeatRequest
                 {
                     UserId = userId,
                     ClientId = _socketClient.ClientID,
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
-                    UserOperationInfo = new RUINORERP.Model.UserOperationInfo
-                    {
-                        用户名 = MainForm.Instance.AppContext.CurUserInfo.用户名,
-                        姓名 = MainForm.Instance.AppContext.CurUserInfo.姓名,
-                        当前模块 = MainForm.Instance.AppContext.CurUserInfo.当前模块,
-                        当前窗体 = MainForm.Instance.AppContext.CurUserInfo.当前窗体,
-                        登录时间 = MainForm.Instance.AppContext.CurUserInfo.登录时间,
-                        心跳数 = MainForm.Instance.AppContext.CurUserInfo.心跳数,
-                        客户端版本 = MainForm.Instance.AppContext.CurUserInfo.客户端版本,
-                        客户端IP = MainForm.Instance.AppContext.CurUserInfo.客户端IP,
-                        静止时间 = MainForm.Instance.AppContext.CurUserInfo.静止时间,
-                        超级用户 = MainForm.Instance.AppContext.CurUserInfo.超级用户,
-                        授权状态 = MainForm.Instance.AppContext.CurUserInfo.授权状态,
-                        操作系统 = MainForm.Instance.AppContext.CurUserInfo.操作系统,
-                        机器名 = MainForm.Instance.AppContext.CurUserInfo.机器名,
-                        CPU信息 = MainForm.Instance.AppContext.CurUserInfo.CPU信息,
-                        内存大小 = MainForm.Instance.AppContext.CurUserInfo.内存大小
-                    }
+                    // 收集客户端资源使用情况
+                    ResourceUsage = CollectClientResourceUsage()
                 };
+
+                // 只在必要时添加用户操作信息以减少数据传输
+                if (curUserInfo != null)
+                {
+                    // 获取最新的静止时间，而不是使用可能已过时的值
+                    var latestIdleTime = MainForm.GetLastInputTime();
+
+                    heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
+                    {
+                        用户名 = curUserInfo.用户名,
+                        姓名 = curUserInfo.姓名,
+                        当前模块 = curUserInfo.当前模块,
+                        当前窗体 = curUserInfo.当前窗体,
+                        登录时间 = curUserInfo.登录时间,
+                        心跳数 = curUserInfo.心跳数 + 1, // 递增心跳数
+                        客户端版本 = curUserInfo.客户端版本,
+                        客户端IP = curUserInfo.客户端IP,
+                        静止时间 = latestIdleTime, // 使用最新获取的静止时间
+                        超级用户 = curUserInfo.超级用户,
+                        授权状态 = curUserInfo.授权状态,
+                        操作系统 = curUserInfo.操作系统,
+                        机器名 = curUserInfo.机器名,
+                        CPU信息 = curUserInfo.CPU信息,
+                        内存大小 = curUserInfo.内存大小
+                    };
+                }
 
                 var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
                     SystemCommands.Heartbeat,
@@ -773,6 +788,13 @@ namespace RUINORERP.UI.Network
                 if (response != null && response.IsSuccess)
                 {
                     _lastHeartbeatTime = DateTime.Now;
+
+                    // 更新心跳数
+                    if (curUserInfo != null)
+                    {
+                        curUserInfo.心跳数 = curUserInfo.心跳数 + 1;
+                    }
+
                     if (MainForm.Instance?.lblServerInfo != null)
                     {
                         MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
@@ -784,8 +806,54 @@ namespace RUINORERP.UI.Network
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "发送心跳请求时发生异常");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 收集客户端资源使用情况
+        /// </summary>
+        /// <returns>客户端资源使用信息</returns>
+        private ClientResourceUsage CollectClientResourceUsage()
+        {
+            try
+            {
+                var process = System.Diagnostics.Process.GetCurrentProcess();
+                var totalMemory = GC.GetTotalMemory(false);
+
+                // 获取CPU使用率（这是一个近似值）
+                var cpuUsage = 0f; // 实际获取CPU使用率比较复杂，这里设为0
+
+                return ClientResourceUsage.Create(
+                    cpuUsage: cpuUsage,
+                    memoryUsage: totalMemory / (1024 * 1024), // 转换为MB
+                    networkUsage: 0, // 网络使用情况需要专门的监测
+                    diskFreeSpace: GetFreeDiskSpace(),
+                    processUptime: (long)(DateTime.Now - process.StartTime).TotalSeconds
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "收集客户端资源使用情况时发生异常");
+                return ClientResourceUsage.Create(); // 返回默认值
+            }
+        }
+
+        /// <summary>
+        /// 获取磁盘可用空间（MB）
+        /// </summary>
+        /// <returns>可用磁盘空间（MB）</returns>
+        private float GetFreeDiskSpace()
+        {
+            try
+            {
+                var drive = new System.IO.DriveInfo(System.IO.Path.GetPathRoot(AppDomain.CurrentDomain.BaseDirectory));
+                return (float)(drive.AvailableFreeSpace / (1024 * 1024 * 1024)); // 转换为GB
+            }
+            catch
+            {
+                return 0; // 如果无法获取，返回0
             }
         }
 
@@ -1225,20 +1293,20 @@ namespace RUINORERP.UI.Network
                     var now = DateTime.Now;
                     var timeDiff = Math.Abs((now - packet.CreatedTime).TotalMinutes);
                     var isValidPacketId = !string.IsNullOrEmpty(packet.PacketId);
-                    
+
                     _logger.LogWarning($"接收到无效数据包！CommandId: {packet.CommandId}, PacketId: {packet.PacketId}, CreatedTime: {packet.CreatedTime:yyyy-MM-dd HH:mm:ss}, CurrentTime: {now:yyyy-MM-dd HH:mm:ss}");
                     _logger.LogWarning($"时间差异: {timeDiff:F2}分钟, PacketId有效: {isValidPacketId}");
-                    
+
                     // 如果时间差异超过2分钟，可能是客户端或服务器时间不同步
                     if (timeDiff > 2)
                     {
                         var errorMsg = $"系统时间不同步！\n服务器时间: {now:yyyy-MM-dd HH:mm:ss}\n数据包创建时间: {packet.CreatedTime:yyyy-MM-dd HH:mm:ss}\n时间差异: {timeDiff:F1}分钟\n\n请检查您的电脑系统时间是否正确。";
                         _logger.Error(errorMsg);
-                        
+
                         // 在UI线程显示错误提示
                         System.Windows.Forms.MessageBox.Show(errorMsg, "时间同步错误", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);
                     }
-                    
+
                     return;
                 }
 
@@ -1622,7 +1690,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                             // 显示倒计时提示
                                             string message = $"系统将在 {delaySeconds} 秒后退出，这是管理员要求的操作。";
                                             string title = "系统即将退出";
-    
+
 
                                             // 创建一个新的线程来执行延时退出
                                             ThreadPool.QueueUserWorkItem((state) =>
@@ -1638,7 +1706,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                                 }
                                                 catch (Exception ex)
                                                 {
-        
+
                                                 }
                                             });
 
@@ -1654,7 +1722,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                                     }
                                     catch (Exception ex)
                                     {
-    
+
                                     }
                                 });
                             }
@@ -1926,7 +1994,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 // 检查连接状态
                 if (!_connectionManager.IsConnected)
                 {
-    
+
                     return false;
                 }
 
@@ -2365,7 +2433,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 var timeSinceLastAttempt = DateTime.Now - _lastManualReconnectAttempt;
                 if (timeSinceLastAttempt.TotalSeconds < 5)
                 {
-                   // _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
+                    // _logger?.LogDebug("距离上次重连尝试时间过短，跳过此次重连");
                     return;
                 }
 
@@ -2530,7 +2598,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                     }
                 }
 
-                
+
                 // 如果队列中还有命令，设置标志以便下次处理
                 if (!_queuedCommands.IsEmpty && !_disposed)
                 {

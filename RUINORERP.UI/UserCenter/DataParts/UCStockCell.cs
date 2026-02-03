@@ -162,20 +162,6 @@ namespace RUINORERP.UI.UserCenter.DataParts
 
         MenuPowerHelper menuPowerHelper = Startup.GetFromFac<MenuPowerHelper>();
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            long lastInputTime = MainForm.GetLastInputTime();
-            if (lastInputTime > 10000 && kryptonTreeGridView1.Rows.Count > 0)
-            {
-                // MainForm.Instance.ShowMsg($"您有需要处理的盘点单。");
-            }
-            //if (MainForm.GetLastInputTime() > 10000 && kryptonTreeGridView1.Rows.Count > 0)
-            //{
-
-            //    QueryStockOtherIn();
-            //    QueryStockOtherOut();
-            //}
-        }
 
         private async void kryptonTreeGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -191,7 +177,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         tb_SaleOrderController<tb_SaleOrder> controller = Startup.GetFromFac<tb_SaleOrderController<tb_SaleOrder>>();
                         tb_SaleOrder saleOrder = await controller.BaseQueryByIdNavAsync(pid);
                         //要把单据信息传过去
-                        menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, saleOrder);
+                        await menuPowerHelper.ExecuteEvents(RelatedBillMenuInfo, saleOrder);
                     }
 
                 }

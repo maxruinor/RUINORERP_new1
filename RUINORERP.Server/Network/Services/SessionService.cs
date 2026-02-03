@@ -1291,29 +1291,29 @@ namespace RUINORERP.Server.Network.Services
                         // 增强线程安全性：使用锁保护会话访问
                         lock (session)
                         {
-                            // 检查1: 活动超时（30分钟无活动）
-                            if (session.LastActivityTime.AddMinutes(30) < DateTime.Now)
+                            // 检查1: 活动超时（45分钟无活动），给予更多活动时间
+                            if (session.LastActivityTime.AddMinutes(45) < DateTime.Now)
                             {
                                 timeoutSessions.Add(session);
                                 _logger.LogWarning($"[活动超时] SessionID={session.SessionID}, IP={session.ClientIp}, 最后活动={session.LastActivityTime}");
                                 continue;
                             }
 
-                            // 检查2: 未验证会话（欢迎回复超时2分钟后强制断开）
+                            // 检查2: 未验证会话（欢迎回复超时5分钟后强制断开），给予更多验证时间
                             if (!session.IsVerified &&
                                 !session.WelcomeAckReceived &&
                                 session.WelcomeSentTime.HasValue &&
-                                session.WelcomeSentTime.Value.AddMinutes(2) < DateTime.Now)
+                                session.WelcomeSentTime.Value.AddMinutes(5) < DateTime.Now)
                             {
                                 timeoutSessions.Add(session);
                                 _logger.LogWarning($"[欢迎超时-定时检查] SessionID={session.SessionID}, IP={session.ClientIp}");
                                 continue;
                             }
 
-                            // 检查3: 已验证但未授权的会话（5分钟内未登录强制断开）
+                            // 检查3: 已验证但未授权的会话（15分钟内未登录强制断开），给予更多授权时间
                             if (session.IsVerified &&
                                 !session.IsAuthenticated &&
-                                session.ConnectedTime.AddMinutes(5) < DateTime.Now)
+                                session.ConnectedTime.AddMinutes(15) < DateTime.Now)
                             {
                                 timeoutSessions.Add(session);
                                 _logger.LogWarning($"[未授权超时] SessionID={session.SessionID}, IP={session.ClientIp}, 连接时间={session.ConnectedTime}");
@@ -1395,31 +1395,37 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
+                var currentTime = DateTime.Now;
+                // 将心跳超时时间从5分钟增加到10分钟，给予更多容错机会
                 var abnormalSessions = _sessions.Values
-                    .Where(s => s.LastHeartbeat.AddMinutes(5) < DateTime.Now)
+                    .Where(s => s.LastHeartbeat.AddMinutes(10) < currentTime)
                     .ToList();
-
+        
                 var abnormalCount = 0;
                 foreach (var session in abnormalSessions)
                 {
                     // 使用更详细的日志，包含最后心跳时间
                     _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}, 最后心跳: {session.LastHeartbeat}");
-
+        
                     // 更新会话状态为心跳异常
                     lock (session)
                     {
                         session.HeartbeatFailedCount++;
-
+                                
                         // 如果心跳失败次数过多，考虑标记会话为异常
-                        if (session.HeartbeatFailedCount > 3)
+                        // 将阈值从3次增加到5次，给予更多容错机会
+                        if (session.HeartbeatFailedCount > 5)
                         {
-                            _logger.LogWarning($"会话心跳连续失败超过3次: {session.SessionID}, 准备清理");
+                            _logger.LogWarning($"会话心跳连续失败超过5次: {session.SessionID}, 准备清理");
+                                    
+                            // 如果心跳失败次数过多，直接清理该会话
+                            RemoveSession(session.SessionID);
                         }
                     }
-
+        
                     abnormalCount++;
                 }
-
+        
                 return abnormalCount;
             }
             catch (Exception ex)
@@ -1441,6 +1447,8 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
+                var currentTime = DateTime.Now;
+                
                 // 清理超时会话
                 var removedCount = CleanupTimeoutSessions();
 
@@ -1454,8 +1462,8 @@ namespace RUINORERP.Server.Network.Services
                 {
                     _statistics.TimeoutSessions += removedCount;
                     _statistics.HeartbeatFailures += abnormalCount;
-                    _statistics.LastCleanupTime = DateTime.Now;
-                    _statistics.LastHeartbeatCheck = DateTime.Now;
+                    _statistics.LastCleanupTime = currentTime;
+                    _statistics.LastHeartbeatCheck = currentTime;
                 }
             }
             catch (Exception ex)

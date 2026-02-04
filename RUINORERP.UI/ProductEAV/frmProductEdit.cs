@@ -37,6 +37,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -2928,12 +2929,209 @@ namespace RUINORERP.UI.ProductEAV
             // 检查每个SKU明细是否有未保存的图片更改
             foreach (var detail in EditEntity.tb_ProdDetails)
             {
+                // 检查是否有缓存的图片数据需要上传
                 if (detail.HasUnsavedImageChanges)
+                {
+                    return true;
+                }
+                
+                // 检查是否有缓存的图片数据
+                if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null && skuImageDataCache[detail].Count > 0)
+                {
+                    return true;
+                }
+                
+                if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null && skuImageDeletedCache[detail].Count > 0)
                 {
                     return true;
                 }
             }
             return false;
+        }
+        
+        /// <summary>
+        /// 获取指定SKU需要更新的图片列表
+        /// </summary>
+        /// <param name="detail">SKU明细对象</param>
+        /// <returns>需要更新的图片列表</returns>
+        private List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
+        {
+            // 检查缓存中是否有待上传的图片
+            if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null)
+            {
+                return skuImageDataCache[detail];
+            }
+            
+            // 如果没有缓存数据，返回null
+            return null;
+        }
+        
+        /// <summary>
+        /// 获取指定SKU需要删除的图片列表
+        /// </summary>
+        /// <param name="detail">SKU明细对象</param>
+        /// <returns>需要删除的图片列表</returns>
+        private List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
+        {
+            // 检查缓存中是否有待删除的图片
+            if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null)
+            {
+                return skuImageDeletedCache[detail];
+            }
+            
+            // 如果没有缓存数据，返回null
+            return null;
+        }
+        
+        /// <summary>
+        /// 上传或删除图片（如果需要）- 通用方法
+        /// 支持同时处理新增/更新和删除的图片
+        /// </summary>
+        /// <typeparam name="Target">目标实体类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <param name="updatedImages">需要更新的图片列表</param>
+        /// <param name="deletedImages">需要删除的图片列表</param>
+        /// <param name="TargetField">关联字段表达式</param>
+        /// <returns>操作是否成功</returns>
+        public async Task<bool> UploadUpdatedImagesAsync<Target>(
+            Target entity,
+            List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> updatedImages,
+            List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> deletedImages,
+            Expression<Func<Target, object>> TargetField)
+        {
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            try
+            {
+                bool allSuccess = true;
+                MemberInfo memberInfo = TargetField.GetMemberInfo();
+                string columnName = memberInfo.Name;
+                
+                // 获取实体信息 - 对于产品明细，使用具体字段
+                string billNo = "";
+                long billId = 0;
+                
+                // 通过反射获取ID字段值
+                if (entity is tb_ProdDetail prodDetailEntity)
+                {
+                    billNo = prodDetailEntity.SKU ?? prodDetailEntity.ProdDetailID.ToString();
+                    billId = prodDetailEntity.ProdDetailID;
+                }
+                else
+                {
+                    // 如果不是预期类型，尝试通过反射获取
+                    billId = Convert.ToInt64(entity.GetPropertyValue("ProdDetailID"));
+                    billNo = entity.GetPropertyValue("SKU")?.ToString() ?? billId.ToString();
+                }
+                
+                // ========== 第一步：处理已删除的图片 ==========
+                if (deletedImages != null && deletedImages.Count > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"开始处理 {deletedImages.Count} 张待删除的图片");
+
+                    var fileService = Startup.GetFromFac<FileManagementService>();
+                    var deleteRequest = new FileDeleteRequest();
+                    deleteRequest.BusinessNo = billNo;
+                    deleteRequest.BusinessId = billId;
+                    deleteRequest.BusinessType = (int)BizType.产品档案; // 产品明细使用产品档案业务类型
+                    deleteRequest.PhysicalDelete = false; // 逻辑删除
+
+                    // 添加要删除的文件信息
+                    foreach (var deletedImage in deletedImages)
+                    {
+                        if (deletedImage != null && deletedImage.FileId > 0)
+                        {
+                            var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
+                            if (fileStorageInfo != null)
+                            {
+                                deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                            }
+                        }
+                    }
+
+                    // 调用文件管理服务删除文件
+                    var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+
+                    if (deleteResponse.IsSuccess)
+                    {
+                        MainForm.Instance.uclog.AddLog($"图片删除成功：共{deletedImages.Count}张", Global.UILogType.普通消息);
+                    }
+                    else
+                    {
+                        allSuccess = false;
+                        MainForm.Instance.uclog.AddLog($"图片删除失败：{deleteResponse.ErrorMessage}", Global.UILogType.错误);
+                    }
+                }
+
+                // ========== 第二步：处理新上传或更新的图片 ==========
+                if (updatedImages != null && updatedImages.Count > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"开始处理 {updatedImages.Count} 张需要更新的图片");
+
+                    int successCount = 0;
+
+                    // 遍历上传所有需要更新的图片
+                    foreach (var imageDataWithInfo in updatedImages)
+                    {
+                        byte[] imageData = imageDataWithInfo.Item1;
+                        var imageInfo = imageDataWithInfo.Item2;
+
+                        if (imageData == null || imageData.Length == 0)
+                        {
+                            MainForm.Instance.uclog.AddLog($"跳过空图片数据: {imageInfo.OriginalFileName}");
+                            continue;
+                        }
+
+                        // 检查文件大小限制
+                        if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                        {
+                            MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                            allSuccess = false;
+                            continue;
+                        }
+
+                        // 准备参数
+                        // 如果图片有FileId，说明这是替换操作，服务器会更新现有文件
+                        long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
+
+                        // 上传图片
+                        var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
+
+                        // 检查响应是否为空
+                        if (response == null)
+                        {
+                            allSuccess = false;
+                            MainForm.Instance.uclog.AddLog($"图片上传返回空响应：{imageInfo.OriginalFileName}");
+                            continue;
+                        }
+
+                        if (response.IsSuccess)
+                        {
+                            successCount++;
+                            MainForm.Instance.uclog.AddLog($"图片上传成功：{imageInfo.OriginalFileName}");
+                            // 上传成功后，将图片标记为未更新
+                            imageInfo.IsUpdated = false;
+                            imageInfo.IsDeleted = false; // 重置删除标记
+                        }
+                        else
+                        {
+                            allSuccess = false;
+                            MainForm.Instance.uclog.AddLog($"图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                        }
+                    }
+
+                    if (successCount > 0)
+                    {
+                        MainForm.Instance.uclog.AddLog($"成功上传 {successCount} 张图片");
+                    }
+                }
+
+                return allSuccess;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"处理图片时发生异常：{ex.Message}", Global.UILogType.错误);
+                return false;
+            }
         }
 
         /// <summary>
@@ -2950,125 +3148,72 @@ namespace RUINORERP.UI.ProductEAV
                     return false;
                 }
 
-                var ctrpay = Startup.GetFromFac<FileBusinessService>();
                 int totalSuccessCount = 0;
                 int totalFailCount = 0;
 
-                // 合并两个缓存的所有tb_ProdDetail对象
-                var allDetails = new HashSet<tb_ProdDetail>();
-                if (skuImageDataCache != null) skuImageDataCache.Keys.ToList().ForEach(d => allDetails.Add(d));
-                if (skuImageDeletedCache != null) skuImageDeletedCache.Keys.ToList().ForEach(d => allDetails.Add(d));
-
-                // 遍历所有已编辑的SKU图片数据
-                foreach (var detail in allDetails)
+                // 遍历所有SKU明细，检查是否有需要上传或删除的图片
+                foreach (var detail in EditEntity.tb_ProdDetails)
                 {
                     try
                     {
-                        // 验证detail是否还在EditEntity的列表中（可能已被删除）
-                        if (!EditEntity.tb_ProdDetails.Contains(detail))
+                        // 从SKU图片编辑对话框获取需要上传和删除的图片
+                        // 使用frmSKUImageEdit类中的方法来获取图片变更
+                        var updatedImages = GetSKUImagesNeedingUpdate(detail);
+                        var deletedImages = GetSKUImagesToDelete(detail);
+
+                        // 检查是否有需要处理的图片（上传或删除）
+                        if ((updatedImages != null && updatedImages.Count > 0) || 
+                            (deletedImages != null && deletedImages.Count > 0))
                         {
-                            MainForm.Instance.uclog.AddLog($"SKU明细已从列表中移除，跳过图片处理", Global.UILogType.警告);
-                            continue;
-                        }
+                            MainForm.Instance.uclog.AddLog($"处理SKU {detail.SKU ?? "未命名"} 的图片变更");
 
-                        // 从缓存中获取需要上传和删除的图片数据
-                        var updatedImages = skuImageDataCache.ContainsKey(detail) ? skuImageDataCache[detail] : null;
-                        var deletedImages = skuImageDeletedCache.ContainsKey(detail) ? skuImageDeletedCache[detail] : null;
+                            // 使用通用的图片上传方法，支持同时处理上传和删除
+                            var uploadSuccess = await UploadUpdatedImagesAsync<tb_ProdDetail>(
+                                detail,
+                                updatedImages,
+                                deletedImages,
+                                d => d.ImagesPath);
 
-                        // 第一步：处理需要删除的图片
-                        if (deletedImages != null && deletedImages.Count > 0)
-                        {
-                            MainForm.Instance.uclog.AddLog($"SKU {detail.SKU ?? "未命名"} 检测到 {deletedImages.Count} 张图片需要删除");
-
-                            // 删除图片
-                            foreach (var deletedImage in deletedImages)
+                            if (uploadSuccess)
                             {
-                                if (deletedImage != null && deletedImage.FileId > 0)
+                                // 统计成功上传的图片数量
+                                if (updatedImages != null)
                                 {
-                                    try
-                                    {
-                                        var fileService = Startup.GetFromFac<FileManagementService>();
-                                        var deleteRequest = new FileDeleteRequest();
-                                        deleteRequest.BusinessNo = detail.SKU ?? detail.ProdDetailID.ToString();
-                                        deleteRequest.BusinessId = detail.ProdDetailID;
-                                        deleteRequest.BusinessType = (int)BizType.产品档案;
-                                        deleteRequest.PhysicalDelete = false;
-
-                                        var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
-                                        if (fileStorageInfo != null)
-                                        {
-                                            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
-                                        }
-
-                                        var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
-                                        if (deleteResponse.IsSuccess)
-                                        {
-                                            MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片删除成功：{deletedImage.OriginalFileName}", UILogType.普通消息);
-                                        }
-                                        else
-                                        {
-                                            MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片删除失败：{deletedImage.OriginalFileName}，原因：{deleteResponse.ErrorMessage}", UILogType.错误);
-                                            totalFailCount++;
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        MainForm.Instance.uclog.AddLog($"删除SKU {detail.SKU} 图片出错：{deletedImage.OriginalFileName}，{ex.Message}", UILogType.错误);
-                                        totalFailCount++;
-                                    }
+                                    totalSuccessCount += updatedImages.Count;
+                                    MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 成功处理 {updatedImages.Count} 张图片");
+                                }
+                                if (deletedImages != null)
+                                {
+                                    MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 成功删除 {deletedImages.Count} 张图片");
                                 }
                             }
-                        }
-
-                        // 第二步：处理需要上传的图片
-                        if (updatedImages != null && updatedImages.Count > 0)
-                        {
-                            MainForm.Instance.uclog.AddLog($"SKU {detail.SKU ?? "未命名"} 检测到 {updatedImages.Count} 张图片需要上传");
-
-                            int successCount = 0;
-                            foreach (var imageDataWithInfo in updatedImages)
+                            else
                             {
-                                byte[] imageData = imageDataWithInfo.Item1;
-                                var imageInfo = imageDataWithInfo.Item2;
-
-                                if (imageData == null || imageData.Length == 0)
+                                // 统计失败的图片数量
+                                if (updatedImages != null)
                                 {
-                                    continue;
+                                    totalFailCount += updatedImages.Count;
                                 }
-
-                                try
+                                if (deletedImages != null)
                                 {
-                                    // 准备参数
-                                    long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
-
-                                    // 上传图片
-                                    var response = await ctrpay.UploadImageAsync(detail, imageInfo.OriginalFileName, imageData, "ImagesPath", existingFileId);
-
-                                    if (response != null && response.IsSuccess)
-                                    {
-                                        successCount++;
-                                        totalSuccessCount++;
-                                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片上传成功：{imageInfo.OriginalFileName}");
-                                        imageInfo.IsUpdated = false;
-                                        imageInfo.IsDeleted = false;
-                                    }
-                                    else
-                                    {
-                                        MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片上传失败：{imageInfo.OriginalFileName}，原因：{response?.Message ?? "未知错误"}", UILogType.错误);
-                                        totalFailCount++;
-                                    }
+                                    totalFailCount += deletedImages.Count;
                                 }
-                                catch (Exception ex)
-                                {
-                                    MainForm.Instance.uclog.AddLog($"上传SKU {detail.SKU} 图片出错：{imageInfo.OriginalFileName}，{ex.Message}", UILogType.错误);
-                                    totalFailCount++;
-                                }
+                                MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 图片处理失败", UILogType.错误);
+                            }
+
+                            // 如果处理了图片，更新SKU的HasUnsavedImageChanges标志
+                            detail.HasUnsavedImageChanges = false; // 重置标记，因为已处理
+                            
+                            // 清空相关缓存
+                            if (skuImageDataCache.ContainsKey(detail))
+                            {
+                                skuImageDataCache.Remove(detail);
+                            }
+                            if (skuImageDeletedCache.ContainsKey(detail))
+                            {
+                                skuImageDeletedCache.Remove(detail);
                             }
                         }
-
-                        // 上传成功后从缓存中移除此SKU的图片数据
-                        skuImageDataCache.Remove(detail);
-                        skuImageDeletedCache.Remove(detail);
                     }
                     catch (Exception ex)
                     {
@@ -3077,7 +3222,7 @@ namespace RUINORERP.UI.ProductEAV
                     }
                 }
 
-                // 处理完成后清空缓存
+                // 处理完成后清空所有缓存
                 skuImageDataCache.Clear();
                 skuImageDeletedCache.Clear();
 

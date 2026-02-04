@@ -871,6 +871,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     tb_SaleOrderDetail Detail = MainForm.Instance.mapper.Map<tb_SaleOrderDetail>(item);
                     Detail.PrimaryKeyID = 0;
+                    Detail.Quantity = 0;
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_SaleOrderDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

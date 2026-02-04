@@ -1991,6 +1991,7 @@ namespace RUINORERP.UI.MRP.BOM
                 foreach (var item in RowDetails)
                 {
                     tb_BOM_SDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_BOM_SDetail>(item);
+                    bOM_SDetail.UsedQty = 0;
                     details.Add(bOM_SDetail);
                 }
                 //List<tb_BOM_SDetail> details = mapper.Map<List<tb_BOM_SDetail>>(RowDetails);

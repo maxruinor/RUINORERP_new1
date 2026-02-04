@@ -52,6 +52,12 @@ namespace RUINORERP.Server.Network.DI
             services.AddSingleton<CacheSubscriptionManager>(provider =>
                 new CacheSubscriptionManager(provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CacheSubscriptionManager>>()));
 
+            // 注册心跳批量处理器
+            services.AddSingleton<HeartbeatBatchProcessor>();
+
+            // 注册心跳性能监控器
+            services.AddSingleton<HeartbeatPerformanceMonitor>();
+
             // 注册客户端响应处理器
             services.AddSingleton<IClientResponseHandler, ClientResponseHandler>();
 

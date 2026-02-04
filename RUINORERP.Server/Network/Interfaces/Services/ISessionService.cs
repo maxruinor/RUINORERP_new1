@@ -73,6 +73,20 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// <param name="sessionInfo">会话信息</param>
         /// <returns>更新是否成功</returns>
         bool UpdateSession(SessionInfo sessionInfo);
+        
+        /// <summary>
+        /// 异步更新会话信息
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>更新任务</returns>
+        Task<bool> UpdateSessionAsync(SessionInfo sessionInfo);
+        
+        /// <summary>
+        /// 轻量级会话更新（仅更新活动时间）
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>更新是否成功</returns>
+        bool UpdateSessionLight(SessionInfo sessionInfo);
 
         /// <summary>
         /// 删除会话

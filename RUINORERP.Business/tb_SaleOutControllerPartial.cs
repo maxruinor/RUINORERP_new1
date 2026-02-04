@@ -318,9 +318,7 @@ namespace RUINORERP.Business
                 if (existingEntity != null)
                 {
                     // 检查是否已经审核通过
-                    if (existingEntity.DataStatus == (int)DataStatus.确认 ||
-                        existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 ||
-                        (existingEntity.ApprovalResults.HasValue && existingEntity.ApprovalResults.Value))
+                    if (existingEntity.DataStatus == (int)DataStatus.确认 && existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过)
                     {
                         rrs.ErrorMsg = "销售出库单已经审核通过，不能重复审核！";
                         rrs.Succeeded = false;

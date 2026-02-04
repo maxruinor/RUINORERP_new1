@@ -381,6 +381,7 @@ namespace RUINORERP.UI.MRP.MP
                 foreach (var item in RowDetails)
                 {
                     tb_ProductionPlanDetail Detail = MainForm.Instance.mapper.Map<tb_ProductionPlanDetail>(item);
+                    Detail.Quantity = 0;
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_ProductionPlanDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

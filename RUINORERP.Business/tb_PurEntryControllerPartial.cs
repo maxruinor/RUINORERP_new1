@@ -56,13 +56,11 @@ namespace RUINORERP.Business
                     .Where(c => c.PurEntryID == entity.PurEntryID)
                     .Select(c => new { c.DataStatus, c.ApprovalStatus, c.ApprovalResults })
                     .FirstAsync();
-                
+
                 if (existingEntity != null)
                 {
                     // 检查是否已经审核通过
-                    if (existingEntity.DataStatus == (int)DataStatus.确认 || 
-                        existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过 ||
-                        (existingEntity.ApprovalResults.HasValue && existingEntity.ApprovalResults.Value))
+                    if (existingEntity.DataStatus == (int)DataStatus.确认 && existingEntity.ApprovalStatus == (int)ApprovalStatus.审核通过)
                     {
                         rs.ErrorMsg = "采购入库单已经审核通过，不能重复审核！";
                         rs.Succeeded = false;
@@ -744,7 +742,7 @@ namespace RUINORERP.Business
                         transaction.Notes = $"采购入库单反审核：{entity.PurEntryNo}";
                     }
 
-                  
+
 
                     transactionList.Add(transaction);
                 }

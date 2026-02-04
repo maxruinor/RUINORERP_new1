@@ -930,11 +930,29 @@ namespace RUINORERP.UI.PSI.SAL
                 //如果所有数据都出库。金额也要一致。否则提醒
                 if (NeedValidated && EditEntity.tb_saleorder != null)
                 {
-                    //如果总数量一致。金额不一致。提示
+                    //如果总数量一致。金额不一致。 如果差额小于1元提示是否继续，是的话继续。否则返回
                     if (EditEntity.TotalQty == EditEntity.tb_saleorder.TotalQty && EditEntity.TotalAmount != EditEntity.tb_saleorder.TotalAmount)
                     {
-                        MessageBox.Show($"出库总金额{EditEntity.TotalAmount}与订单总金额{EditEntity.tb_saleorder.TotalAmount}不一致，请检查数据后再试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return false;
+                        // 计算金额差额
+                        decimal difference = Math.Abs(EditEntity.TotalAmount - EditEntity.tb_saleorder.TotalAmount);
+                        
+                        // 如果差额小于1元，提示用户选择是否继续
+                        if (difference < 1m)
+                        {
+                            DialogResult result = MessageBox.Show($"出库总金额{EditEntity.TotalAmount}与订单总金额{EditEntity.tb_saleorder.TotalAmount}存在微小差异({difference:F2}元)，是否继续执行？", "金额差异确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                            
+                            if (result == DialogResult.No)
+                            {
+                                return false; // 用户选择不继续，返回false
+                            }
+                            // 用户选择继续，继续执行后续逻辑
+                        }
+                        else
+                        {
+                            // 差额大于等于1元，直接提示错误
+                            MessageBox.Show($"出库总金额{EditEntity.TotalAmount}与订单总金额{EditEntity.tb_saleorder.TotalAmount}差异较大({difference:F2}元)，请检查数据后再试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return false; // 差额较大时返回false
+                        }
                     }
                 }
 

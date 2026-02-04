@@ -232,8 +232,7 @@ namespace RUINORERP.Business
             try
             {
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
+
 
                 //如果采购订单明细数据来自于请购单，则明细要回写状态为已采购
                 //if (entity.RefBillID.HasValue && entity.RefBillID.Value > 0)
@@ -259,7 +258,8 @@ namespace RUINORERP.Business
                 //        }
                 //    }
                 //}
-
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OnTheWayQty)>();
 
                 foreach (var child in entity.tb_PurOrderDetails)

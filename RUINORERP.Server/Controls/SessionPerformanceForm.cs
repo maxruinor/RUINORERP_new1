@@ -4,6 +4,9 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using RUINORERP.Server.Network.Interfaces.Services;
 using Microsoft.Extensions.Logging;
+using RUINORERP.Server.Network.Monitoring;
+using System.Linq;
+using System.Drawing;
 
 namespace RUINORERP.Server.Controls
 {
@@ -12,6 +15,7 @@ namespace RUINORERP.Server.Controls
         private readonly SessionInfo _session;
         private readonly Timer _updateTimer;
         private readonly ILogger<SessionPerformanceForm> _logger;
+        private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor;
         private int _baseUpdateInterval = 1000; // 基础更新间隔，单位：毫秒
         private int _currentUpdateInterval;
         private PerformanceCounter _cpuCounter;
@@ -22,6 +26,7 @@ namespace RUINORERP.Server.Controls
             InitializeComponent();
             _session = session;
             _logger = Startup.GetFromFac<ILogger<SessionPerformanceForm>>();
+            _heartbeatPerformanceMonitor = Startup.GetFromFac<HeartbeatPerformanceMonitor>();
             _currentUpdateInterval = _baseUpdateInterval;
             
             Text = $"会话性能详情 - {session.UserName ?? "未登录用户"} ({session.SessionID})";
@@ -99,6 +104,9 @@ namespace RUINORERP.Server.Controls
                 // 心跳信息
                 lblHeartbeatCount.Text = _session.HeartbeatCount.ToString("N0");
 
+                // 更新心跳性能监控信息
+                UpdateHeartbeatPerformanceInfo();
+
                 // 计算并显示实时性能指标
                 UpdateRealTimeMetrics();
 
@@ -108,6 +116,45 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 _logger.LogError(ex, "更新会话性能数据失败，会话ID: {SessionID}", _session?.SessionID);
+            }
+        }
+
+        /// <summary>
+        /// 更新心跳性能监控信息
+        /// </summary>
+        private void UpdateHeartbeatPerformanceInfo()
+        {
+            try
+            {
+                if (_heartbeatPerformanceMonitor != null)
+                {
+                    var performanceStats = _heartbeatPerformanceMonitor.GetPerformanceStats();
+                    
+                    // 更新会话特定的心跳性能信息
+                    var lblHeartbeatAvgTime = Controls.Find("lblHeartbeatAvgTime", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatAvgTime != null)
+                    {
+                        lblHeartbeatAvgTime.Text = $"{performanceStats.AverageProcessingTime:F2}ms";
+                    }
+                    
+                    var lblHeartbeatErrorRate = Controls.Find("lblHeartbeatErrorRate", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatErrorRate != null)
+                    {
+                        lblHeartbeatErrorRate.Text = $"{performanceStats.ErrorRate:F2}%";
+                        lblHeartbeatErrorRate.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : Color.Green;
+                    }
+                    
+                    var lblBatchProcessingStatus = Controls.Find("lblBatchProcessingStatus", true).FirstOrDefault() as Label;
+                    if (lblBatchProcessingStatus != null)
+                    {
+                        lblBatchProcessingStatus.Text = performanceStats.UseBatchProcessing ? "启用" : "禁用";
+                        lblBatchProcessingStatus.ForeColor = performanceStats.UseBatchProcessing ? Color.Green : Color.Gray;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"更新会话心跳性能信息时出错: {ex.Message}");
             }
         }
 

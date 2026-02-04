@@ -17,7 +17,8 @@
     using RUINORERP.Server.Network.Core;
     using RUINORERP.Server.Network.Interfaces.Services;
     using RUINORERP.Server.Network.Models;
-    using SuperSocket.Channel;
+using RUINORERP.Server.Network.Monitoring;
+using SuperSocket.Channel;
     using SuperSocket.Connection;
     using SuperSocket.Server;
     using SuperSocket.Server.Abstractions.Session;
@@ -48,6 +49,7 @@ namespace RUINORERP.Server.Network.Services
         private bool _disposed = false;
         private readonly ILogger<SessionService> _logger;
         private readonly CacheSubscriptionManager _subscriptionManager; // 使用统一的订阅管理器
+        private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor; // 心跳性能监控器
 
         // 存储待处理的请求任务，用于匹配响应
         private static readonly ConcurrentDictionary<string, TaskCompletionSource<PacketModel>> _pendingRequests =
@@ -71,10 +73,12 @@ namespace RUINORERP.Server.Network.Services
         public SessionService(
             ILogger<SessionService> logger,
             CacheSubscriptionManager subscriptionManager,
+            HeartbeatPerformanceMonitor heartbeatPerformanceMonitor,
             int maxSessionCount = 1000)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _subscriptionManager = subscriptionManager ?? throw new ArgumentNullException(nameof(subscriptionManager));
+            _heartbeatPerformanceMonitor = heartbeatPerformanceMonitor ?? throw new ArgumentNullException(nameof(heartbeatPerformanceMonitor));
             MaxSessionCount = maxSessionCount;
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
@@ -325,6 +329,51 @@ namespace RUINORERP.Server.Network.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"更新会话信息失败: {sessionInfo?.SessionID}");
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// 异步更新会话信息
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>更新任务</returns>
+        public async Task<bool> UpdateSessionAsync(SessionInfo sessionInfo)
+        {
+            return await Task.Run(() => UpdateSession(sessionInfo));
+        }
+
+        /// <summary>
+        /// 轻量级会话更新（仅更新活动时间）
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <returns>更新是否成功</returns>
+        public bool UpdateSessionLight(SessionInfo sessionInfo)
+        {
+            try
+            {
+                if (sessionInfo == null || string.IsNullOrEmpty(sessionInfo.SessionID))
+                {
+                    return false;
+                }
+
+                if (_sessions.TryGetValue(sessionInfo.SessionID, out var existingSession))
+                {
+                    // 仅更新关键时间戳，减少开销
+                    existingSession.UpdateActivity();
+                    existingSession.LastHeartbeat = DateTime.Now;
+
+                    // 轻量级更新不触发事件以减少开销
+                    // SessionUpdated?.Invoke(existingSession);
+
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, $"轻量级更新会话信息失败: {sessionInfo?.SessionID}");
                 return false;
             }
         }
@@ -1458,6 +1507,9 @@ namespace RUINORERP.Server.Network.Services
                 // 清理过期的待处理请求
                 CleanupPendingRequests();
 
+                // 收集心跳性能监控数据
+                CollectHeartbeatPerformanceData();
+
                 lock (_lockObject)
                 {
                     _statistics.TimeoutSessions += removedCount;
@@ -1545,6 +1597,38 @@ namespace RUINORERP.Server.Network.Services
             }
 
             GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 收集心跳性能监控数据
+        /// </summary>
+        private void CollectHeartbeatPerformanceData()
+        {
+            try
+            {
+                if (_heartbeatPerformanceMonitor == null)
+                    return;
+
+                // 记录当前活动会话数
+                _heartbeatPerformanceMonitor.RecordQueueLength(ActiveSessionCount);
+
+                // 记录心跳统计信息
+                var stats = GetStatistics();
+                if (stats.HeartbeatFailures > 0)
+                {
+                    // 记录心跳失败
+                    for (int i = 0; i < stats.HeartbeatFailures; i++)
+                    {
+                        _heartbeatPerformanceMonitor.RecordError();
+                    }
+                }
+
+                _logger.LogDebug($"收集心跳性能数据 - 活动会话: {ActiveSessionCount}, 心跳失败: {stats.HeartbeatFailures}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "收集心跳性能数据时发生异常");
+            }
         }
 
         #endregion

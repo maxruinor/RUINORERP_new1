@@ -475,6 +475,7 @@ namespace RUINORERP.UI.ASS
                 foreach (var item in RowDetails)
                 {
                     tb_AS_AfterSaleDeliveryDetail Detail = MainForm.Instance.mapper.Map<tb_AS_AfterSaleDeliveryDetail>(item);
+                    Detail.Quantity = 0;
                     details.Add(Detail);
                 }
                 sgh.InsertItemDataToGrid<tb_AS_AfterSaleDeliveryDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

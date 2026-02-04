@@ -30,6 +30,8 @@ namespace RUINORERP.Server.Controls
         private readonly DiagnosticsService _diagnosticsService;
         private readonly PerformanceMonitoringService _performanceMonitoringService;
         private readonly ErrorAnalysisService _errorAnalysisService;
+        private readonly HeartbeatBatchProcessor _heartbeatBatchProcessor;
+        private readonly HeartbeatPerformanceMonitor _heartbeatPerformanceMonitor;
         private readonly ILogger<ServerMonitorControl> _logger;
         // 不再使用独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
         private readonly System.Windows.Forms.Timer _refreshTimer;
@@ -54,6 +56,8 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _heartbeatBatchProcessor = Startup.GetFromFac<HeartbeatBatchProcessor>();
+            _heartbeatPerformanceMonitor = Startup.GetFromFac<HeartbeatPerformanceMonitor>();
             _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
@@ -86,6 +90,8 @@ namespace RUINORERP.Server.Controls
             _diagnosticsService = Startup.GetFromFac<DiagnosticsService>();
             _performanceMonitoringService = Startup.GetFromFac<PerformanceMonitoringService>();
             _errorAnalysisService = Startup.GetFromFac<ErrorAnalysisService>();
+            _heartbeatBatchProcessor = Startup.GetFromFac<HeartbeatBatchProcessor>();
+            _heartbeatPerformanceMonitor = Startup.GetFromFac<HeartbeatPerformanceMonitor>();
             _logger = Startup.GetFromFac<ILogger<ServerMonitorControl>>();
             // 不再初始化独立的熔断器指标实例，改为使用CommandDispatcher.Metrics
 
@@ -185,6 +191,9 @@ namespace RUINORERP.Server.Controls
 
                 // 更新熔断器监控数据
                 UpdateCircuitBreakerMetrics();
+
+                // 更新心跳性能监控数据
+                UpdateHeartbeatPerformanceData();
             }
             catch (Exception ex)
             {
@@ -1017,5 +1026,104 @@ namespace RUINORERP.Server.Controls
                 cbLblStatusValue.ForeColor = Color.Red;
             }
         }
+
+        /// <summary>
+        /// 更新心跳性能监控数据
+        /// </summary>
+        private void UpdateHeartbeatPerformanceData()
+        {
+            try
+            {
+                // 更新心跳批量处理器统计信息
+                if (_heartbeatBatchProcessor != null)
+                {
+                    var queueStats = _heartbeatBatchProcessor.GetQueueStats();
+                    
+                    // 查找并更新心跳队列长度标签
+                    var lblHeartbeatQueueLength = Controls.Find("lblHeartbeatQueueLengthValue", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatQueueLength != null)
+                    {
+                        lblHeartbeatQueueLength.Text = queueStats.QueueLength.ToString();
+                        // 根据队列长度设置颜色警告
+                        if (queueStats.QueueLength > 20)
+                        {
+                            lblHeartbeatQueueLength.ForeColor = Color.Red;
+                        }
+                        else if (queueStats.QueueLength > 10)
+                        {
+                            lblHeartbeatQueueLength.ForeColor = Color.Orange;
+                        }
+                        else
+                        {
+                            lblHeartbeatQueueLength.ForeColor = Color.Green;
+                        }
+                    }
+                }
+
+                // 更新心跳性能监控统计信息
+                if (_heartbeatPerformanceMonitor != null)
+                {
+                    var performanceStats = _heartbeatPerformanceMonitor.GetPerformanceStats();
+                    
+                    // 更新处理统计
+                    var lblHeartbeatProcessed = Controls.Find("lblHeartbeatProcessedValue", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatProcessed != null)
+                    {
+                        lblHeartbeatProcessed.Text = performanceStats.TotalProcessed.ToString("N0");
+                    }
+                    
+                    // 更新错误统计
+                    var lblHeartbeatErrors = Controls.Find("lblHeartbeatErrorsValue", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatErrors != null)
+                    {
+                        lblHeartbeatErrors.Text = performanceStats.TotalErrors.ToString("N0");
+                        lblHeartbeatErrors.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : Color.Green;
+                    }
+                    
+                    // 更新错误率
+                    var lblHeartbeatErrorRate = Controls.Find("lblHeartbeatErrorRateValue", true).FirstOrDefault() as Label;
+                    if (lblHeartbeatErrorRate != null)
+                    {
+                        lblHeartbeatErrorRate.Text = $"{performanceStats.ErrorRate:F2}%";
+                        lblHeartbeatErrorRate.ForeColor = performanceStats.ErrorRate > 5 ? Color.Red : 
+                                                         performanceStats.ErrorRate > 1 ? Color.Orange : Color.Green;
+                    }
+                    
+                    // 更新平均处理时间
+                    var lblAvgHeartbeatTime = Controls.Find("lblAvgHeartbeatTimeValue", true).FirstOrDefault() as Label;
+                    if (lblAvgHeartbeatTime != null)
+                    {
+                        lblAvgHeartbeatTime.Text = $"{performanceStats.AverageProcessingTime:F2}ms";
+                        lblAvgHeartbeatTime.ForeColor = performanceStats.AverageProcessingTime > 100 ? Color.Red : 
+                                                       performanceStats.AverageProcessingTime > 50 ? Color.Orange : Color.Green;
+                    }
+                    
+                    // 更新优化策略状态
+                    var lblBatchProcessing = Controls.Find("lblBatchProcessingValue", true).FirstOrDefault() as Label;
+                    if (lblBatchProcessing != null)
+                    {
+                        lblBatchProcessing.Text = performanceStats.UseBatchProcessing ? "启用" : "禁用";
+                        lblBatchProcessing.ForeColor = performanceStats.UseBatchProcessing ? Color.Green : Color.Gray;
+                    }
+                    
+                    var lblMergeThreshold = Controls.Find("lblMergeThresholdValue", true).FirstOrDefault() as Label;
+                    if (lblMergeThreshold != null)
+                    {
+                        lblMergeThreshold.Text = $"{performanceStats.MergeThresholdSeconds}秒";
+                    }
+                    
+                    var lblBatchSize = Controls.Find("lblBatchSizeValue", true).FirstOrDefault() as Label;
+                    if (lblBatchSize != null)
+                    {
+                        lblBatchSize.Text = performanceStats.BatchSize.ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug($"更新心跳性能监控数据时出错: {ex.Message}");
+            }
+        }
+
     }
 }

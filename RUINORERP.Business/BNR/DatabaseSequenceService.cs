@@ -46,6 +46,10 @@ namespace RUINORERP.Business.BNR
         // 后台任务
         private Task _backgroundTask;
 
+        // 数据刷写状态跟踪
+        private volatile bool _isFlushing = false;
+        private readonly object _flushLock = new object();
+
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -66,7 +70,7 @@ namespace RUINORERP.Business.BNR
         /// <summary>
         /// 序列更新信息
         /// </summary>
-        private class SequenceUpdateInfo
+        public class SequenceUpdateInfo
         {
             public string SequenceKey { get; set; }
             public long Value { get; set; }
@@ -103,6 +107,7 @@ namespace RUINORERP.Business.BNR
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"后台刷新任务异常: {ex.Message}");
+                    LogError("后台刷新任务异常", ex);
                 }
             }
         }
@@ -117,6 +122,60 @@ namespace RUINORERP.Business.BNR
         }
 
         /// <summary>
+        /// 强制刷新所有数据，确保不丢失
+        /// </summary>
+        private void ForceFlushAllData()
+        {
+            int retryCount = 0;
+            const int maxRetries = 3;
+            
+            while (retryCount < maxRetries)
+            {
+                try
+                {
+                    // 确保所有队列数据都被处理
+                    while (!_updateQueue.IsEmpty)
+                    {
+                        FlushCacheToDatabase();
+                        System.Threading.Thread.Sleep(100); // 短暂等待
+                    }
+                    
+                    // 强制刷新内存缓存
+                    foreach (var kvp in _sequenceCache)
+                    {
+                        _updateQueue.Enqueue(new SequenceUpdateInfo
+                        {
+                            SequenceKey = kvp.Key,
+                            Value = kvp.Value,
+                            ResetType = "ForceFlush",
+                            FormatMask = null,
+                            Description = "应用关闭时强制刷写",
+                            BusinessType = null
+                        });
+                    }
+                    
+                    FlushCacheToDatabase();
+                    System.Diagnostics.Debug.WriteLine("数据强制刷写完成");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    retryCount++;
+                    System.Diagnostics.Debug.WriteLine($"强制刷写失败 (尝试 {retryCount}/{maxRetries}): {ex.Message}");
+                    if (retryCount < maxRetries)
+                    {
+                        System.Threading.Thread.Sleep(500 * retryCount);
+                    }
+                    else
+                    {
+                        // 最后一次失败，记录严重错误
+                        LogCriticalError($"数据刷写最终失败，可能存在数据丢失风险: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 释放资源
         /// </summary>
         public void Dispose()
@@ -126,15 +185,17 @@ namespace RUINORERP.Business.BNR
                 // 取消后台任务
                 _cancellationTokenSource?.Cancel();
 
-                // 等待后台任务完成
+                // 等待后台任务完成，增加超时处理
                 if (_backgroundTask != null && !_backgroundTask.IsCompleted)
                 {
-                    // 使用Task.Wait替代_task.Wait()以避免潜在的死锁
-                    Task.WaitAny(_backgroundTask, Task.Delay(2000)); // 等待最多2秒
+                    if (!_backgroundTask.Wait(5000)) // 等待最多5秒
+                    {
+                        System.Diagnostics.Debug.WriteLine("警告：后台任务未能在5秒内完成");
+                    }
                 }
 
-                // 最后一次刷新缓存到数据库
-                FlushAllToDatabase();
+                // 强制刷新所有剩余数据
+                ForceFlushAllData();
 
                 // 释放取消令牌
                 _cancellationTokenSource?.Dispose();
@@ -142,6 +203,8 @@ namespace RUINORERP.Business.BNR
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"释放 DatabaseSequenceService 资源时出错: {ex.Message}");
+                // 在生产环境中应该记录到正式日志系统
+                LogError("资源释放失败", ex);
             }
         }
 
@@ -150,6 +213,33 @@ namespace RUINORERP.Business.BNR
         /// 优化：使用小事务批量更新 + 乐观锁，减少锁持有时间
         /// </summary>
         private void FlushCacheToDatabase()
+        {
+            // 防止重入和并发刷写
+            if (_isFlushing)
+                return;
+
+            lock (_flushLock)
+            {
+                if (_isFlushing)
+                    return;
+                    
+                _isFlushing = true;
+                
+                try
+                {
+                    InternalFlushCacheToDatabase();
+                }
+                finally
+                {
+                    _isFlushing = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 内部实际执行刷写逻辑
+        /// </summary>
+        private void InternalFlushCacheToDatabase()
         {
             // 使用双重检查锁定模式，减少锁竞争
             if (_updateQueue.IsEmpty)
@@ -182,21 +272,32 @@ namespace RUINORERP.Business.BNR
                 {
                     try
                     {
-                        // 使用乐观锁更新，只在数据库值小于当前值时才更新
-                        int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
-                            .SetColumns(s => new SequenceNumbers
-                            {
-                                CurrentValue = update.Value,
-                                LastUpdated = DateTime.Now
-                            })
-                            .Where(s => s.SequenceKey == update.SequenceKey
-                                && s.CurrentValue < update.Value) // 条件更新，避免覆盖新值
-                            .ExecuteCommand();
+                        // 先检查记录是否存在
+                        var existingRecord = _sqlSugarClient.Queryable<SequenceNumbers>()
+                            .Where(s => s.SequenceKey == update.SequenceKey)
+                            .First();
 
-                        // 如果没有更新到任何记录，说明记录不存在
-                        if (affectedRows == 0)
+                        if (existingRecord != null)
                         {
-                            // 尝试插入新记录
+                            // 记录存在，使用乐观锁更新
+                            int affectedRows = _sqlSugarClient.Updateable<SequenceNumbers>()
+                                .SetColumns(s => new SequenceNumbers
+                                {
+                                    CurrentValue = update.Value,
+                                    LastUpdated = DateTime.Now
+                                })
+                                .Where(s => s.SequenceKey == update.SequenceKey
+                                    && s.CurrentValue < update.Value) // 条件更新，避免覆盖新值
+                                .ExecuteCommand();
+
+                            if (affectedRows == 0)
+                            {
+                                LogInfo($"记录已存在且值较新，跳过更新: {update.SequenceKey}");
+                            }
+                        }
+                        else
+                        {
+                            // 记录不存在，尝试插入
                             try
                             {
                                 _sqlSugarClient.Insertable(new SequenceNumbers
@@ -211,11 +312,19 @@ namespace RUINORERP.Business.BNR
                                     BusinessType = update.BusinessType
                                 }).ExecuteCommand();
                             }
-                            catch
+                            catch (Exception insertEx) when (IsUniqueConstraintViolation(insertEx))
                             {
-                                // 插入失败，可能已被并发插入，忽略
+                                // 并发插入导致的唯一约束违反，这很正常
+                                LogInfo($"并发插入检测到重复键，忽略: {update.SequenceKey}");
+                            }
+                            catch (Exception insertEx)
+                            {
+                                LogError($"插入序列记录失败: {update.SequenceKey}", insertEx);
                             }
                         }
+
+                        // 记录处理成功
+                        LogInfo($"成功处理序列更新: {update.SequenceKey} = {update.Value}");
                     }
                     catch (Exception ex)
                     {
@@ -417,7 +526,7 @@ namespace RUINORERP.Business.BNR
             if (_updateQueue.Count >= _batchUpdateThreshold)
             {
                 // 使用单独的任务刷新缓存，避免阻塞当前线程
-                Task.Run(() =>
+                Task.Run(async () =>
                 {
                     try
                     {
@@ -426,6 +535,18 @@ namespace RUINORERP.Business.BNR
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"后台刷新缓存时发生异常: {ex.Message}");
+                        LogError("后台刷新缓存异常", ex);
+                        
+                        // 如果刷新失败，延迟重试
+                        await Task.Delay(1000);
+                        try
+                        {
+                            FlushCacheToDatabase();
+                        }
+                        catch (Exception retryEx)
+                        {
+                            LogError("后台刷新缓存重试也失败", retryEx);
+                        }
                     }
                 });
             }
@@ -958,6 +1079,187 @@ namespace RUINORERP.Business.BNR
         {
             return _batchUpdateThreshold;
         }
+
+        /// <summary>
+        /// 获取服务健康状态
+        /// </summary>
+        /// <returns>健康检查结果</returns>
+        public SequenceServiceHealthInfo GetHealthInfo()
+        {
+            return new SequenceServiceHealthInfo
+            {
+                IsHealthy = true,
+                CacheSize = _sequenceCache.Count,
+                QueueSize = _updateQueue.Count,
+                IsFlushing = _isFlushing,
+                LastFlushTime = _lastFlushTime,
+                BatchThreshold = _batchUpdateThreshold
+            };
+        }
+
+        /// <summary>
+        /// 强制将指定键的缓存值刷写到数据库
+        /// </summary>
+        /// <param name="key">序列键</param>
+        /// <param name="value">要刷写的值</param>
+        /// <param name="reason">刷写原因</param>
+        public void ForceFlushCacheValue(string key, long value, string reason = "ManualFlush")
+        {
+            var updateInfo = new SequenceUpdateInfo
+            {
+                SequenceKey = key,
+                Value = value,
+                ResetType = reason,
+                FormatMask = null,
+                Description = $"手动强制刷写: {reason}",
+                BusinessType = null
+            };
+            
+            _updateQueue.Enqueue(updateInfo);
+            FlushCacheToDatabase();
+        }
+
+        /// <summary>
+        /// 诊断序列键冲突问题
+        /// </summary>
+        /// <param name="sequenceKey">要诊断的序列键</param>
+        /// <returns>诊断结果</returns>
+        public SequenceConflictDiagnosis DiagnoseSequenceConflict(string sequenceKey)
+        {
+            var diagnosis = new SequenceConflictDiagnosis
+            {
+                SequenceKey = sequenceKey,
+                Timestamp = DateTime.Now
+            };
+
+            try
+            {
+                // 检查数据库中是否存在该键
+                var dbRecord = _sqlSugarClient.Queryable<SequenceNumbers>()
+                    .Where(s => s.SequenceKey == sequenceKey)
+                    .First();
+
+                diagnosis.ExistsInDatabase = dbRecord != null;
+                if (dbRecord != null)
+                {
+                    diagnosis.DatabaseValue = dbRecord.CurrentValue;
+                    diagnosis.LastUpdated = dbRecord.LastUpdated;
+                }
+
+                // 检查缓存中是否存在
+                diagnosis.ExistsInCache = _sequenceCache.ContainsKey(sequenceKey);
+                if (diagnosis.ExistsInCache)
+                {
+                    diagnosis.CacheValue = _sequenceCache[sequenceKey];
+                }
+
+                // 检查更新队列
+                diagnosis.PendingUpdates = _updateQueue.Count(update => update.SequenceKey == sequenceKey);
+
+                // 分析冲突原因
+                if (diagnosis.ExistsInDatabase && diagnosis.ExistsInCache)
+                {
+                    if (diagnosis.DatabaseValue >= diagnosis.CacheValue)
+                    {
+                        diagnosis.ConflictReason = "数据库值大于等于缓存值，可能是正常并发更新";
+                    }
+                    else
+                    {
+                        diagnosis.ConflictReason = "缓存值大于数据库值，可能存在数据不一致";
+                    }
+                }
+                else if (diagnosis.ExistsInDatabase)
+                {
+                    diagnosis.ConflictReason = "仅存在于数据库中";
+                }
+                else if (diagnosis.ExistsInCache)
+                {
+                    diagnosis.ConflictReason = "仅存在于缓存中，等待刷写";
+                }
+                else
+                {
+                    diagnosis.ConflictReason = "键不存在于任何存储中";
+                }
+
+                diagnosis.IsHealthy = true;
+            }
+            catch (Exception ex)
+            {
+                diagnosis.IsHealthy = false;
+                diagnosis.ConflictReason = $"诊断过程中发生异常: {ex.Message}";
+                LogError($"诊断序列冲突失败: {sequenceKey}", ex);
+            }
+
+            return diagnosis;
+        }
+
+        #region 日志辅助方法
+
+        /// <summary>
+        /// 记录普通错误日志
+        /// </summary>
+        private void LogError(string message, Exception ex = null)
+        {
+            var logMessage = ex != null ? $"{message}: {ex.Message}" : message;
+            System.Diagnostics.Debug.WriteLine($"[ERROR] {logMessage}");
+            
+            // 在实际项目中，这里应该调用正式的日志系统
+            // Logger.Error(logMessage, ex);
+        }
+
+        /// <summary>
+        /// 记录严重错误日志
+        /// </summary>
+        private void LogCriticalError(string message, Exception ex = null)
+        {
+            var logMessage = ex != null ? $"{message}: {ex.Message}" : message;
+            System.Diagnostics.Debug.WriteLine($"[CRITICAL] {logMessage}");
+            
+            // 在实际项目中，这里应该调用正式的日志系统并触发告警
+            // Logger.Critical(logMessage, ex);
+        }
+
+        /// <summary>
+        /// 记录信息日志
+        /// </summary>
+        private void LogInfo(string message)
+        {
+            System.Diagnostics.Debug.WriteLine($"[INFO] {message}");
+            
+            // 在实际项目中，这里应该调用正式的日志系统
+            // Logger.Info(message);
+        }
+
+        #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 判断是否为唯一约束违反异常
+        /// </summary>
+        private bool IsUniqueConstraintViolation(Exception ex)
+        {
+            if (ex == null) return false;
+            
+            var message = ex.Message.ToLower();
+            return message.Contains("primary key") ||
+                   message.Contains("unique constraint") ||
+                   message.Contains("违反了 primary key") ||
+                   message.Contains("duplicate key");
+        }
+
+        /// <summary>
+        /// 计算退避延迟时间（指数退避加随机化）
+        /// </summary>
+        private int CalculateBackoffDelay(int retryCount)
+        {
+            var random = new Random();
+            int baseDelay = Math.Min(50 * (int)Math.Pow(2, retryCount), 1000);
+            int jitter = random.Next(0, Math.Max(50 * retryCount, 100));
+            return baseDelay + jitter;
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -1020,5 +1322,152 @@ namespace RUINORERP.Business.BNR
         /// </summary>
         [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType = "String", ColumnName = "BusinessType", Length = 100, IsNullable = true, ColumnDescription = "业务类型")]
         public string BusinessType { get; set; }
+    }
+
+    /// <summary>
+    /// 序列冲突诊断结果
+    /// </summary>
+    public class SequenceConflictDiagnosis
+    {
+        /// <summary>
+        /// 序列键
+        /// </summary>
+        public string SequenceKey { get; set; }
+
+        /// <summary>
+        /// 诊断时间
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+
+        /// <summary>
+        /// 是否存在于数据库中
+        /// </summary>
+        public bool ExistsInDatabase { get; set; }
+
+        /// <summary>
+        /// 是否存在于缓存中
+        /// </summary>
+        public bool ExistsInCache { get; set; }
+
+        /// <summary>
+        /// 数据库中的值
+        /// </summary>
+        public long? DatabaseValue { get; set; }
+
+        /// <summary>
+        /// 缓存中的值
+        /// </summary>
+        public long? CacheValue { get; set; }
+
+        /// <summary>
+        /// 待处理的更新数量
+        /// </summary>
+        public int PendingUpdates { get; set; }
+
+        /// <summary>
+        /// 最后更新时间
+        /// </summary>
+        public DateTime? LastUpdated { get; set; }
+
+        /// <summary>
+        /// 冲突原因分析
+        /// </summary>
+        public string ConflictReason { get; set; }
+
+        /// <summary>
+        /// 是否健康
+        /// </summary>
+        public bool IsHealthy { get; set; }
+
+        /// <summary>
+        /// 格式化输出诊断信息
+        /// </summary>
+        public override string ToString()
+        {
+            return $@"序列键: {SequenceKey}
+诊断时间: {Timestamp:yyyy-MM-dd HH:mm:ss}
+数据库存在: {ExistsInDatabase}
+缓存存在: {ExistsInCache}
+数据库值: {DatabaseValue?.ToString() ?? "N/A"}
+缓存值: {CacheValue?.ToString() ?? "N/A"}
+待处理更新: {PendingUpdates}
+最后更新: {LastUpdated?.ToString("yyyy-MM-dd HH:mm:ss") ?? "N/A"}
+冲突原因: {ConflictReason}
+健康状态: {IsHealthy}";
+        }
+    }
+
+    /// <summary>
+    /// 序号服务健康检查信息
+    /// </summary>
+    public class SequenceServiceHealthInfo
+    {
+        /// <summary>
+        /// 服务是否健康
+        /// </summary>
+        public bool IsHealthy { get; set; }
+
+        /// <summary>
+        /// 缓存大小
+        /// </summary>
+        public int CacheSize { get; set; }
+
+        /// <summary>
+        /// 队列大小
+        /// </summary>
+        public int QueueSize { get; set; }
+
+        /// <summary>
+        /// 是否正在刷写
+        /// </summary>
+        public bool IsFlushing { get; set; }
+
+        /// <summary>
+        /// 最后刷写时间
+        /// </summary>
+        public DateTime LastFlushTime { get; set; }
+
+        /// <summary>
+        /// 批量更新阈值
+        /// </summary>
+        public int BatchThreshold { get; set; }
+    }
+
+    /// <summary>
+    /// 序列键状态信息
+    /// </summary>
+    public class SequenceKeyStatus
+    {
+        /// <summary>
+        /// 序列键
+        /// </summary>
+        public string Key { get; set; }
+
+        /// <summary>
+        /// 是否存在于缓存中
+        /// </summary>
+        public bool ExistsInCache { get; set; }
+
+        /// <summary>
+        /// 是否存在于数据库中
+        /// </summary>
+        public bool ExistsInDatabase { get; set; }
+
+        /// <summary>
+        /// 缓存中的值
+        /// </summary>
+        public long? CacheValue { get; set; }
+
+        /// <summary>
+        /// 数据库中的值
+        /// </summary>
+        public long? DatabaseValue { get; set; }
+
+        /// <summary>
+        /// 数据是否一致
+        /// </summary>
+        public bool IsConsistent => 
+            (!ExistsInCache && !ExistsInDatabase) || 
+            (ExistsInCache && ExistsInDatabase && CacheValue == DatabaseValue);
     }
 }

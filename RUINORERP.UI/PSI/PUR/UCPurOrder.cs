@@ -809,6 +809,7 @@ namespace RUINORERP.UI.PSI.PUR
                         bOM_SDetail.PreDeliveryDate = EditEntity.PreDeliveryDate.Value;
                     }
                     bOM_SDetail.Quantity = 0;
+                    bOM_SDetail.PrimaryKeyID = 0;
                     details.Add(bOM_SDetail);
                 }
                 sgh.InsertItemDataToGrid<tb_PurOrderDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

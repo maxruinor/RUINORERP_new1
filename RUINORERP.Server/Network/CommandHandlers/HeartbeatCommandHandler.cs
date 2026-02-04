@@ -1,6 +1,7 @@
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -12,6 +13,9 @@ using RUINORERP.PacketSpec.Errors;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.Model;
+using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Network.Monitoring;
 
 namespace RUINORERP.Server.Network.CommandHandlers
 {
@@ -24,6 +28,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
     public class HeartbeatCommandHandler : BaseCommandHandler
     {
         private readonly ISessionService _sessionService;
+        private readonly HeartbeatBatchProcessor _batchProcessor;
+        private readonly HeartbeatPerformanceMonitor _performanceMonitor;
 
 
         /// <summary>
@@ -31,9 +37,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         public HeartbeatCommandHandler(
              ISessionService sessionService,
+             HeartbeatBatchProcessor batchProcessor,
+             HeartbeatPerformanceMonitor performanceMonitor,
             ILogger<HeartbeatCommandHandler> logger) : base(logger ?? throw new ArgumentNullException(nameof(logger)))
         {
             _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+            _batchProcessor = batchProcessor ?? throw new ArgumentNullException(nameof(batchProcessor));
+            _performanceMonitor = performanceMonitor ?? throw new ArgumentNullException(nameof(performanceMonitor));
 
             // 使用安全方法设置支持的命令
             SetSupportedCommands(SystemCommands.Heartbeat);
@@ -44,13 +54,20 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected override async Task<IResponse> OnHandleAsync(QueuedCommand cmd, CancellationToken cancellationToken)
         {
+            var startTime = DateTime.Now;
             try
             {
                 var commandId = cmd.Packet.CommandId;
 
                 if (commandId == SystemCommands.Heartbeat)
                 {
-                    return await HandleHeartbeatAsync(cmd, cancellationToken);
+                    var response = await HandleHeartbeatAsync(cmd, cancellationToken);
+                    
+                    // 记录处理时间
+                    var processingTime = (DateTime.Now - startTime).TotalMilliseconds;
+                    _performanceMonitor.RecordProcessingTime((long)processingTime);
+                    
+                    return response;
                 }
                 else
                 {
@@ -59,7 +76,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                LogError($"处理心跳命令异常: {ex.Message}", ex);
+                var processingDuration = (DateTime.Now - startTime).TotalMilliseconds;
+                LogError($"处理心跳命令异常，耗时: {processingDuration}ms", ex);
+                LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
+
                 return ResponseFactory.CreateSpecificErrorResponse(cmd.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
@@ -68,6 +88,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 会话管理服务
         /// </summary>
         private ISessionService SessionService => _sessionService;
+        
+        /// <summary>
+        /// 缓存的心跳响应模板，减少序列化开销
+        /// </summary>
+        private static readonly HeartbeatResponse _cachedSuccessResponse = new HeartbeatResponse
+        {
+            IsSuccess = true,
+            Status = "OK",
+            ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            ServerInfo = new Dictionary<string, object>
+            {
+                ["ServerVersion"] = "1.0.0",
+                ["RecommendedInterval"] = 15000
+            }
+        };
+        
+        /// <summary>
+        /// 上次心跳响应时间缓存，用于响应合并
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, DateTime> _lastHeartbeatResponses = 
+            new ConcurrentDictionary<string, DateTime>();
 
         /// <summary>
         /// 处理心跳命令（优化版 - 异步处理提高响应速度）
@@ -78,8 +119,6 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
             try
             {
-                SessionInfo sessionInfo = new SessionInfo();
-
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
                     // 首先验证请求的有效性
@@ -91,7 +130,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
 
                     // 使用UserId进行会话验证，不再依赖完整的UserInfo
-                    sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
+                    var sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
 
                     if (heartbeatRequest.UserId == 0 || sessionInfo == null)
                     {
@@ -108,71 +147,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 动态计算下次心跳间隔
                     var nextIntervalMs = CalculateNextHeartbeatInterval(sessionInfo);
 
-                    // 创建心跳响应（快速返回，不等待异步处理）
-                    var response = new HeartbeatResponse
+                    // 检查是否应该使用批量处理
+                    if (ShouldUseBatchProcessing())
                     {
-                        IsSuccess = true,
-                        Status = "OK",
-                        ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                        NextIntervalMs = nextIntervalMs,
-                        ServerInfo = new Dictionary<string, object>
+                        // 使用批量处理器
+                        _batchProcessor.EnqueueHeartbeat(heartbeatRequest, sessionInfo.SessionID);
+                        // 返回立即响应，实际处理由批量处理器完成
+                        var immediateResponse = CreateImmediateResponse(sessionInfo, nextIntervalMs, currentTime);
+                        
+                        var batchProcessingDuration = (DateTime.Now - startTime).TotalMilliseconds;
+                        if (immediateResponse is HeartbeatResponse hr && hr.ServerInfo != null)
                         {
-                            ["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss"),
-                            ["ServerVersion"] = "1.0.0",
-                            ["SessionId"] = sessionInfo.SessionID,
-                            ["RecommendedInterval"] = nextIntervalMs,
-                            ["ProcessingDurationMs"] = 0 // 初始值
+                            hr.ServerInfo["ProcessingDurationMs"] = batchProcessingDuration;
                         }
-                    };
-
-                    // 异步更新完整会话信息（不阻塞响应）
-                    if (heartbeatRequest.UserOperationInfo != null)
-                    {
-                        // 使用ThreadPool.QueueUserWorkItem替代Task.Run避免不必要的上下文捕获
-                        ThreadPool.QueueUserWorkItem(async (_) =>
-                        {
-                            try
-                            {
-                                // 更新用户操作信息
-                                sessionInfo.UserInfo.用户名 = heartbeatRequest.UserOperationInfo.用户名;
-                                sessionInfo.UserInfo.姓名 = heartbeatRequest.UserOperationInfo.姓名;
-                                sessionInfo.UserInfo.当前模块 = heartbeatRequest.UserOperationInfo.当前模块;
-                                sessionInfo.UserInfo.当前窗体 = heartbeatRequest.UserOperationInfo.当前窗体;
-                                sessionInfo.UserInfo.登录时间 = heartbeatRequest.UserOperationInfo.登录时间;
-                                sessionInfo.UserInfo.心跳数 = heartbeatRequest.UserOperationInfo.心跳数;
-                                sessionInfo.UserInfo.客户端版本 = heartbeatRequest.UserOperationInfo.客户端版本;
-                                sessionInfo.UserInfo.客户端IP = heartbeatRequest.UserOperationInfo.客户端IP;
-                                sessionInfo.UserInfo.静止时间 = heartbeatRequest.UserOperationInfo.静止时间;
-                                sessionInfo.UserInfo.超级用户 = heartbeatRequest.UserOperationInfo.超级用户;
-                                sessionInfo.UserInfo.授权状态 = heartbeatRequest.UserOperationInfo.授权状态;
-                                sessionInfo.UserInfo.操作系统 = heartbeatRequest.UserOperationInfo.操作系统;
-                                sessionInfo.UserInfo.机器名 = heartbeatRequest.UserOperationInfo.机器名;
-                                sessionInfo.UserInfo.CPU信息 = heartbeatRequest.UserOperationInfo.CPU信息;
-                                sessionInfo.UserInfo.内存大小 = heartbeatRequest.UserOperationInfo.内存大小;
-
-                                // 异步更新到SessionService
-                                SessionService.UpdateSession(sessionInfo);
-                            }
-                            catch (Exception ex)
-                            {
-                                LogError("异步更新会话信息失败", ex);
-                            }
-                        });
+                        
+                        return immediateResponse;
                     }
                     else
                     {
-                        // 如果没有用户操作信息，直接同步更新
-                        SessionService.UpdateSession(sessionInfo);
+                        // 直接处理
+                        return await ProcessHeartbeatDirectly(heartbeatRequest, sessionInfo, nextIntervalMs, currentTime, cancellationToken);
                     }
-
-                    var processingDuration = (DateTime.Now - startTime).TotalMilliseconds;
-
-                    if (response.ServerInfo != null)
-                    {
-                        response.ServerInfo["ProcessingDurationMs"] = processingDuration;
-                    }
-
-                    return response;
                 }
                 else
                 {
@@ -184,22 +179,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 var processingDuration = (DateTime.Now - startTime).TotalMilliseconds;
                 LogError($"处理心跳命令异常，耗时: {processingDuration}ms", ex);
-                LogWarning($"[主动断开连接] 心跳命令处理异常，可能导致连接中断: {ex.Message}");
-
-                var errorResponse = new HeartbeatResponse
-                {
-                    IsSuccess = false,
-                    Status = "ERROR",
-                    ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                    NextIntervalMs = 5000,
-                    ServerInfo = new Dictionary<string, object>
-                    {
-                        ["Error"] = ex.Message,
-                        ["ErrorCode"] = "HEARTBEAT_ERROR",
-                        ["ProcessingDurationMs"] = processingDuration
-                    }
-                };
-
+                _performanceMonitor.RecordError();
                 return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet.ExecutionContext, ex, "处理心跳命令异常");
             }
         }
@@ -247,6 +227,189 @@ namespace RUINORERP.Server.Network.CommandHandlers
             //logger?.LogDebug("动态计算心跳间隔: {IntervalMs}ms (最后活动: {Minutes}分钟前)", intervalMs, timeSinceLastActivity.TotalMinutes);
 
             return intervalMs;
+        }
+        
+        /// <summary>
+        /// 批量更新用户操作信息
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="userInfo">用户操作信息</param>
+        private void UpdateUserInfoBatch(SessionInfo sessionInfo, UserOperationInfo userInfo)
+        {
+            if (sessionInfo?.UserInfo == null || userInfo == null)
+                return;
+                
+            // 批量赋值，减少多次属性访问
+            sessionInfo.UserInfo.用户名 = userInfo.用户名;
+            sessionInfo.UserInfo.姓名 = userInfo.姓名;
+            sessionInfo.UserInfo.当前模块 = userInfo.当前模块;
+            sessionInfo.UserInfo.当前窗体 = userInfo.当前窗体;
+            sessionInfo.UserInfo.登录时间 = userInfo.登录时间;
+            sessionInfo.UserInfo.心跳数 = userInfo.心跳数;
+            sessionInfo.UserInfo.客户端版本 = userInfo.客户端版本;
+            sessionInfo.UserInfo.客户端IP = userInfo.客户端IP;
+            sessionInfo.UserInfo.静止时间 = userInfo.静止时间;
+            sessionInfo.UserInfo.超级用户 = userInfo.超级用户;
+            sessionInfo.UserInfo.授权状态 = userInfo.授权状态;
+            sessionInfo.UserInfo.操作系统 = userInfo.操作系统;
+            sessionInfo.UserInfo.机器名 = userInfo.机器名;
+            sessionInfo.UserInfo.CPU信息 = userInfo.CPU信息;
+            sessionInfo.UserInfo.内存大小 = userInfo.内存大小;
+        }
+        
+        /// <summary>
+        /// 创建优化的心跳响应
+        /// </summary>
+        /// <param name="sessionInfo">会话信息</param>
+        /// <param name="nextIntervalMs">下次间隔</param>
+        /// <param name="currentTime">当前时间</param>
+        /// <returns>心跳响应</returns>
+        private HeartbeatResponse CreateOptimizedHeartbeatResponse(SessionInfo sessionInfo, int nextIntervalMs, DateTime currentTime)
+        {
+            // 检查是否可以合并响应
+            var sessionId = sessionInfo?.SessionID ?? string.Empty;
+            if (ShouldMergeResponse(sessionId))
+            {
+                // 返回缓存的响应副本，减少序列化开销
+                var cachedResponse = new HeartbeatResponse
+                {
+                    IsSuccess = _cachedSuccessResponse.IsSuccess,
+                    Status = _cachedSuccessResponse.Status,
+                    ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                    NextIntervalMs = nextIntervalMs,
+                    ServerInfo = new Dictionary<string, object>(_cachedSuccessResponse.ServerInfo)
+                };
+                
+                cachedResponse.ServerInfo["SessionId"] = sessionId;
+                cachedResponse.ServerInfo["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss");
+                return cachedResponse;
+            }
+            
+            // 正常创建响应
+            var response = new HeartbeatResponse
+            {
+                IsSuccess = true,
+                Status = "OK",
+                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                NextIntervalMs = nextIntervalMs,
+                ServerInfo = new Dictionary<string, object>
+                {
+                    ["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ["ServerVersion"] = "1.0.0",
+                    ["SessionId"] = sessionInfo.SessionID,
+                    ["RecommendedInterval"] = nextIntervalMs,
+                    ["ProcessingDurationMs"] = 0
+                }
+            };
+            
+            // 更新最后一次响应时间
+            _lastHeartbeatResponses[sessionId] = currentTime;
+            return response;
+        }
+        
+        /// <summary>
+        /// 判断是否应该合并响应
+        /// </summary>
+        /// <param name="sessionId">会话ID</param>
+        /// <returns>是否合并</returns>
+        private bool ShouldMergeResponse(string sessionId)
+        {
+            if (string.IsNullOrEmpty(sessionId))
+                return false;
+                
+            // 使用性能监控器的动态阈值
+            var mergeThreshold = _performanceMonitor?.GetMergeThresholdSeconds() ?? 5;
+                
+            if (_lastHeartbeatResponses.TryGetValue(sessionId, out var lastTime))
+            {
+                // 使用动态合并阈值
+                return (DateTime.Now - lastTime).TotalSeconds < mergeThreshold;
+            }
+            return false;
+        }
+        
+        /// <summary>
+        /// 直接处理心跳（非批量模式）
+        /// </summary>
+        private async Task<IResponse> ProcessHeartbeatDirectly(
+            HeartbeatRequest heartbeatRequest, 
+            SessionInfo sessionInfo, 
+            int nextIntervalMs, 
+            DateTime currentTime,
+            CancellationToken cancellationToken)
+        {
+            // 创建优化的心跳响应
+            var response = CreateOptimizedHeartbeatResponse(sessionInfo, nextIntervalMs, currentTime);
+            
+            // 异步更新完整会话信息（不阻塞响应）
+            if (heartbeatRequest.UserOperationInfo != null)
+            {
+                // 使用Task.Run优化异步操作，减少堆分配
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        // 批量更新用户操作信息
+                        UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
+                                        
+                        // 异步更新到SessionService
+                        await SessionService.UpdateSessionAsync(sessionInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError("异步更新会话信息失败", ex);
+                    }
+                });
+            }
+            else
+            {
+                // 如果没有用户操作信息，使用轻量级更新
+                _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
+            }
+            
+            return response;
+        }
+        
+        /// <summary>
+        /// 创建立即响应（批量处理模式）
+        /// </summary>
+        private IResponse CreateImmediateResponse(SessionInfo sessionInfo, int nextIntervalMs, DateTime currentTime)
+        {
+            var response = new HeartbeatResponse
+            {
+                IsSuccess = true,
+                Status = "BATCH_PROCESSING",
+                ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                NextIntervalMs = nextIntervalMs,
+                ServerInfo = new Dictionary<string, object>
+                {
+                    ["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                    ["ServerVersion"] = "1.0.0",
+                    ["SessionId"] = sessionInfo.SessionID,
+                    ["Mode"] = "BATCH",
+                    ["RecommendedInterval"] = nextIntervalMs
+                }
+            };
+            
+            return response;
+        }
+        
+        /// <summary>
+        /// 判断是否应该使用批量处理
+        /// </summary>
+        /// <returns>是否使用批量处理</returns>
+        private bool ShouldUseBatchProcessing()
+        {
+            // 结合性能监控数据和队列状态做出决策
+            var queueStats = _batchProcessor?.GetQueueStats();
+            var performanceStats = _performanceMonitor?.GetPerformanceStats();
+            
+            // 多重条件判断
+            bool queueCondition = queueStats?.QueueLength > 5;
+            bool performanceCondition = _performanceMonitor?.ShouldUseBatchProcessing() ?? false;
+            bool loadCondition = (performanceStats?.AverageProcessingTime ?? 0) > 30;
+            
+            return queueCondition || performanceCondition || loadCondition;
         }
 
 

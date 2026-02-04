@@ -122,7 +122,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    logger?.LogWarning("解锁单据失败: BillID={BillId}, 原因: {Message}", billId, response.Message);
+                    logger?.LogDebug("解锁单据失败: BillID={BillId}, 原因: {Message}", billId, response.Message);
                 }
 
                 return response;

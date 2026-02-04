@@ -489,18 +489,18 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        protected virtual void ToolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-            MainForm.Instance.AppContext.log.ActionName = e.ClickedItem.Text.ToString();
-            if (e.ClickedItem.Text.Length > 0)
-            {
-                bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), e.ClickedItem.Text);
-                if (isInEnum)
-                {
-                    DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(e.ClickedItem.Text));
-                }
-            }
-        }
+        //protected virtual void ToolStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        //{
+        //    MainForm.Instance.AppContext.log.ActionName = e.ClickedItem.Text.ToString();
+        //    if (e.ClickedItem.Text.Length > 0)
+        //    {
+        //        bool isInEnum = Enum.IsDefined(typeof(MenuItemEnums), e.ClickedItem.Text);
+        //        if (isInEnum)
+        //        {
+        //            DoButtonClick(EnumHelper.GetEnumByString<MenuItemEnums>(e.ClickedItem.Text));
+        //        }
+        //    }
+        //}
 
         protected virtual void DoButtonClick(MenuItemEnums menuItem)
         {

@@ -872,6 +872,7 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     tb_SaleOutReDetail bOM_SDetail = MainForm.Instance.mapper.Map<tb_SaleOutReDetail>(item);
                     bOM_SDetail.Quantity = 0;
+                    bOM_SDetail.PrimaryKeyID = 0;
                     details.Add(bOM_SDetail);
                 }
                 sgh.InsertItemDataToGrid<tb_SaleOutReDetail>(grid1, sgd, details, c => c.ProdDetailID, position);

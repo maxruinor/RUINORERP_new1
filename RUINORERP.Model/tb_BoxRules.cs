@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 箱规表
+    /// 箱规表1
     /// </summary>
     [Serializable()]
     [Description("箱规表")]

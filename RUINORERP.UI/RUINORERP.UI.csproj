@@ -2370,6 +2370,12 @@
     <Compile Include="ProductEAV\Core\ProductValidationService.cs" />
     <Compile Include="ProductEAV\Core\PropertyCombinationService.cs" />
     <Compile Include="ProductEAV\Core\SkuGenerationService.cs" />
+    <Compile Include="ProductEAV\frmPackingInstructions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\frmPackingInstructions.Designer.cs">
+      <DependentUpon>frmPackingInstructions.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProductEAV\frmSelectCombinations.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2381,6 +2387,12 @@
     </Compile>
     <Compile Include="ProductEAV\frmSKUImageEdit.Designer.cs">
       <DependentUpon>frmSKUImageEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ProductEAV\frmSmartPackagingCalculator.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ProductEAV\frmSmartPackagingCalculator.Designer.cs">
+      <DependentUpon>frmSmartPackagingCalculator.cs</DependentUpon>
     </Compile>
     <Compile Include="ProductEAV\UCProductAttrRelationEdit.cs">
       <SubType>Form</SubType>
@@ -4482,6 +4494,9 @@
     <EmbeddedResource Include="MRP\PPROC\UCMaterialReturnQuery.resx">
       <DependentUpon>UCMaterialReturnQuery.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\frmPackingInstructions.resx">
+      <DependentUpon>frmPackingInstructions.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\frmProductEdit.resx">
       <DependentUpon>frmProductEdit.cs</DependentUpon>
     </EmbeddedResource>
@@ -4490,6 +4505,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\frmSelectCombinations.resx">
       <DependentUpon>frmSelectCombinations.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ProductEAV\frmSmartPackagingCalculator.resx">
+      <DependentUpon>frmSmartPackagingCalculator.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProductEAV\UCMultiPropertyEditor.resx">
       <DependentUpon>UCMultiPropertyEditor.cs</DependentUpon>

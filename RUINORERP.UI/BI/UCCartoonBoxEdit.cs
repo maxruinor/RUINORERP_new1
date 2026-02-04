@@ -20,7 +20,7 @@ namespace RUINORERP.UI.BI
 {
 
 
-    [MenuAttrAssemblyInfo("产品类型编辑", true, UIType.单表数据)]
+    [MenuAttrAssemblyInfo("卡通箱编辑", true, UIType.单表数据)]
     public partial class UCCartoonBoxEdit : BaseEditGeneric<tb_CartoonBox>
     {
         public UCCartoonBoxEdit()

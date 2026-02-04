@@ -220,7 +220,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductHeight2.Name = "numProductHeight2";
             this.numProductHeight2.Size = new System.Drawing.Size(80, 22);
             this.numProductHeight2.TabIndex = 9;
@@ -234,9 +234,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductHeight2.Location = new System.Drawing.Point(7, 81);
             this.lblProductHeight2.Name = "lblProductHeight2";
-            this.lblProductHeight2.Size = new System.Drawing.Size(39, 20);
+            this.lblProductHeight2.Size = new System.Drawing.Size(63, 20);
             this.lblProductHeight2.TabIndex = 8;
-            this.lblProductHeight2.Values.Text = "高度:";
+            this.lblProductHeight2.Values.Text = "高度(cm):";
             // 
             // numProductWeight2
             // 
@@ -255,7 +255,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductWeight2.Name = "numProductWeight2";
             this.numProductWeight2.Size = new System.Drawing.Size(80, 22);
             this.numProductWeight2.TabIndex = 7;
@@ -292,7 +292,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductWidth2.Name = "numProductWidth2";
             this.numProductWidth2.Size = new System.Drawing.Size(80, 22);
             this.numProductWidth2.TabIndex = 5;
@@ -306,9 +306,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductWidth2.Location = new System.Drawing.Point(7, 55);
             this.lblProductWidth2.Name = "lblProductWidth2";
-            this.lblProductWidth2.Size = new System.Drawing.Size(39, 20);
+            this.lblProductWidth2.Size = new System.Drawing.Size(63, 20);
             this.lblProductWidth2.TabIndex = 4;
-            this.lblProductWidth2.Values.Text = "宽度:";
+            this.lblProductWidth2.Values.Text = "宽度(cm):";
             // 
             // numProductLength2
             // 
@@ -329,7 +329,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductLength2.Name = "numProductLength2";
             this.numProductLength2.Size = new System.Drawing.Size(80, 22);
             this.numProductLength2.TabIndex = 3;
@@ -343,9 +343,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductLength2.Location = new System.Drawing.Point(8, 26);
             this.lblProductLength2.Name = "lblProductLength2";
-            this.lblProductLength2.Size = new System.Drawing.Size(39, 20);
+            this.lblProductLength2.Size = new System.Drawing.Size(63, 20);
             this.lblProductLength2.TabIndex = 2;
-            this.lblProductLength2.Values.Text = "长度:";
+            this.lblProductLength2.Values.Text = "长度(cm):";
             // 
             // cmbProductSelect2
             // 
@@ -405,7 +405,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductHeight1.Name = "numProductHeight1";
             this.numProductHeight1.Size = new System.Drawing.Size(80, 22);
             this.numProductHeight1.TabIndex = 9;
@@ -419,9 +419,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductHeight1.Location = new System.Drawing.Point(8, 80);
             this.lblProductHeight1.Name = "lblProductHeight1";
-            this.lblProductHeight1.Size = new System.Drawing.Size(39, 20);
+            this.lblProductHeight1.Size = new System.Drawing.Size(63, 20);
             this.lblProductHeight1.TabIndex = 8;
-            this.lblProductHeight1.Values.Text = "高度:";
+            this.lblProductHeight1.Values.Text = "高度(cm):";
             // 
             // numProductWeight1
             // 
@@ -440,7 +440,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductWeight1.Name = "numProductWeight1";
             this.numProductWeight1.Size = new System.Drawing.Size(80, 22);
             this.numProductWeight1.TabIndex = 7;
@@ -477,7 +477,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductWidth1.Name = "numProductWidth1";
             this.numProductWidth1.Size = new System.Drawing.Size(80, 22);
             this.numProductWidth1.TabIndex = 5;
@@ -491,9 +491,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductWidth1.Location = new System.Drawing.Point(8, 55);
             this.lblProductWidth1.Name = "lblProductWidth1";
-            this.lblProductWidth1.Size = new System.Drawing.Size(39, 20);
+            this.lblProductWidth1.Size = new System.Drawing.Size(63, 20);
             this.lblProductWidth1.TabIndex = 4;
-            this.lblProductWidth1.Values.Text = "宽度:";
+            this.lblProductWidth1.Values.Text = "宽度(cm):";
             // 
             // numProductLength1
             // 
@@ -514,7 +514,7 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numProductLength1.Name = "numProductLength1";
             this.numProductLength1.Size = new System.Drawing.Size(80, 22);
             this.numProductLength1.TabIndex = 3;
@@ -528,9 +528,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblProductLength1.Location = new System.Drawing.Point(8, 28);
             this.lblProductLength1.Name = "lblProductLength1";
-            this.lblProductLength1.Size = new System.Drawing.Size(39, 20);
+            this.lblProductLength1.Size = new System.Drawing.Size(63, 20);
             this.lblProductLength1.TabIndex = 2;
-            this.lblProductLength1.Values.Text = "长度:";
+            this.lblProductLength1.Values.Text = "长度(cm):";
             // 
             // cmbProductSelect1
             // 
@@ -576,20 +576,22 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblBoxWeight.Location = new System.Drawing.Point(8, 97);
             this.lblBoxWeight.Name = "lblBoxWeight";
-            this.lblBoxWeight.Size = new System.Drawing.Size(54, 20);
+            this.lblBoxWeight.Size = new System.Drawing.Size(60, 20);
             this.lblBoxWeight.TabIndex = 10;
-            this.lblBoxWeight.Values.Text = "重量(g):";
+            this.lblBoxWeight.Values.Text = "重量(kg):";
             // 
             // numBoxWeight
             // 
+            this.numBoxWeight.AllowDecimals = true;
+            this.numBoxWeight.DecimalPlaces = 2;
             this.numBoxWeight.Increment = new decimal(new int[] {
             1,
             0,
             0,
-            0});
+            65536});
             this.numBoxWeight.Location = new System.Drawing.Point(80, 95);
             this.numBoxWeight.Maximum = new decimal(new int[] {
-            100000,
+            500,
             0,
             0,
             0});
@@ -597,12 +599,12 @@ namespace RUINORERP.UI.ProductEAV
             1,
             0,
             0,
-            0});
+            65536});
             this.numBoxWeight.Name = "numBoxWeight";
             this.numBoxWeight.Size = new System.Drawing.Size(80, 22);
             this.numBoxWeight.TabIndex = 9;
             this.numBoxWeight.Value = new decimal(new int[] {
-            50000,
+            50,
             0,
             0,
             0});
@@ -648,9 +650,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblBoxHeight.Location = new System.Drawing.Point(8, 72);
             this.lblBoxHeight.Name = "lblBoxHeight";
-            this.lblBoxHeight.Size = new System.Drawing.Size(39, 20);
+            this.lblBoxHeight.Size = new System.Drawing.Size(63, 20);
             this.lblBoxHeight.TabIndex = 6;
-            this.lblBoxHeight.Values.Text = "高度:";
+            this.lblBoxHeight.Values.Text = "高度(cm):";
             // 
             // numBoxWidth
             // 
@@ -685,9 +687,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblBoxWidth.Location = new System.Drawing.Point(8, 49);
             this.lblBoxWidth.Name = "lblBoxWidth";
-            this.lblBoxWidth.Size = new System.Drawing.Size(39, 20);
+            this.lblBoxWidth.Size = new System.Drawing.Size(63, 20);
             this.lblBoxWidth.TabIndex = 4;
-            this.lblBoxWidth.Values.Text = "宽度:";
+            this.lblBoxWidth.Values.Text = "宽度(cm):";
             // 
             // numBoxLength
             // 
@@ -722,9 +724,9 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.lblBoxLength.Location = new System.Drawing.Point(8, 27);
             this.lblBoxLength.Name = "lblBoxLength";
-            this.lblBoxLength.Size = new System.Drawing.Size(39, 20);
+            this.lblBoxLength.Size = new System.Drawing.Size(63, 20);
             this.lblBoxLength.TabIndex = 2;
-            this.lblBoxLength.Values.Text = "长度:";
+            this.lblBoxLength.Values.Text = "长度(cm):";
             // 
             // cmbBoxSelect
             // 
@@ -768,7 +770,7 @@ namespace RUINORERP.UI.ProductEAV
             this.numGap.Size = new System.Drawing.Size(80, 22);
             this.numGap.TabIndex = 5;
             this.numGap.Value = new decimal(new int[] {
-            5,
+            3,
             0,
             0,
             65536});

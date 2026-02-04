@@ -64,7 +64,7 @@ namespace RUINORERP.UI.ProductEAV
             _solutionBindingSource.DataSource = _solutions;
 
             // 初始化包装实体
-            _boxRulesEntity = new ();
+            _boxRulesEntity = new tb_BoxRules();
             _boxRulesEntity.ActionStatus = ActionStatus.新增;
 
             // 绑定结果网格
@@ -73,6 +73,7 @@ namespace RUINORERP.UI.ProductEAV
 
             // 设置默认值
             numGap.Value = 0.5m; // cm
+            numBoxWeight.Value = 50m; // kg
             numBoxLength.Value = 50.00m; // cm
             numBoxWidth.Value = 40.00m; // cm
             numBoxHeight.Value = 30.00m; // cm
@@ -103,7 +104,7 @@ namespace RUINORERP.UI.ProductEAV
             try
             {
                 // 创建包装实体用于数据绑定
-                _boxRulesEntity = new ();
+                _boxRulesEntity = new tb_BoxRules();
                 _boxRulesEntity.ActionStatus = ActionStatus.新增;
 
                 // 创建外箱过滤条件（只加载启用的外箱）
@@ -290,10 +291,12 @@ namespace RUINORERP.UI.ProductEAV
                 var selectedBox = cmbBoxSelect.SelectedItem as tb_CartoonBox;
                 if (selectedBox != null)
                 {
-                    // 自动填充外箱尺寸信息
+                    // 自动填充外箱尺寸信息（cm单位）
                     numBoxLength.Value = selectedBox.Length;
                     numBoxWidth.Value = selectedBox.Width;
                     numBoxHeight.Value = selectedBox.Height;
+                    // 自动填充外箱重量（kg单位，MaxLoad已经是kg）
+                    numBoxWeight.Value = selectedBox.MaxLoad;
                 }
             }
         }
@@ -366,7 +369,8 @@ namespace RUINORERP.UI.ProductEAV
             decimal avgProductVolume = config.Products.Sum(p => p.Volume) / config.Products.Count;
             // 使用智能容差
             decimal smartGap = CalculateSmartTolerance(avgProductVolume);
-            decimal maxWeight = numBoxWeight.Value;
+            // 外箱重量单位是kg，转换为g（乘以1000）
+            decimal maxWeight = numBoxWeight.Value * 1000;
 
             _solutions.Clear();
 
@@ -377,7 +381,7 @@ namespace RUINORERP.UI.ProductEAV
                 Length = numBoxLength.Value,
                 Width = numBoxWidth.Value,
                 Height = numBoxHeight.Value,
-                MaxLoad = maxWeight / 1000 // kg
+                MaxLoad = maxWeight // kg，直接使用
             };
 
             // 计算单个方案
@@ -406,7 +410,8 @@ namespace RUINORERP.UI.ProductEAV
             decimal avgProductVolume = config.Products.Sum(p => p.Volume) / config.Products.Count;
             // 使用智能容差
             decimal smartGap = CalculateSmartTolerance(avgProductVolume);
-            decimal maxWeight = numBoxWeight.Value;
+            // 外箱重量单位是kg，转换为g（乘以1000）
+            decimal maxWeight = numBoxWeight.Value * 1000;
 
             // 使用用户输入的外箱尺寸
             var customBox = new tb_CartoonBox
@@ -415,7 +420,7 @@ namespace RUINORERP.UI.ProductEAV
                 Length = numBoxLength.Value,
                 Width = numBoxWidth.Value,
                 Height = numBoxHeight.Value,
-                MaxLoad = maxWeight / 1000 // kg
+                MaxLoad = maxWeight // kg，直接使用
             };
 
             var solution = CalculatePackagingSolution(config, customBox, smartGap, maxWeight);
@@ -773,6 +778,7 @@ namespace RUINORERP.UI.ProductEAV
         private void ResetForm()
         {
             numGap.Value = 0.5m;
+            numBoxWeight.Value = 50m; // kg，默认值
             numTargetQuantity.Value = 100;
             rdoQuantityToBox.Checked = true;
             chkMixedPack.Checked = false;
@@ -784,7 +790,11 @@ namespace RUINORERP.UI.ProductEAV
             lblBoxCount.Text = "";
 
             // 清空预览图
-            picPreview.Image = null;
+            if (picPreview.Image != null)
+            {
+                picPreview.Image.Dispose();
+                picPreview.Image = null;
+            }
         }
 
         private void ApplySelectedSolution()
@@ -816,39 +826,68 @@ namespace RUINORERP.UI.ProductEAV
         {
             try
             {
+                // 释放旧的Image以避免内存泄漏
+                if (picPreview.Image != null)
+                {
+                    picPreview.Image.Dispose();
+                }
+
                 var bitmap = new Bitmap(picPreview.Width, picPreview.Height);
                 using (var g = Graphics.FromImage(bitmap))
                 {
                     g.SmoothingMode = SmoothingMode.AntiAlias;
                     g.Clear(Color.White);
 
+                    // 获取箱子和产品的实际尺寸（cm）
+                    decimal boxLength = solution.BoxRule.Length;
+                    decimal boxWidth = solution.BoxRule.Width;
+                    decimal boxHeight = solution.BoxRule.Height;
+
+                    // 获取产品信息（用于计算显示尺寸）
+                    ProductInfo productInfo = solution.Configuration?.Products?.FirstOrDefault();
+                    decimal prodLength = productInfo?.Length ?? 10;
+                    decimal prodWidth = productInfo?.Width ?? 10;
+                    decimal prodHeight = productInfo?.Height ?? 10;
+
+                    // 计算显示比例：确保箱子能完整显示在预览区域内
+                    // 预留边距：左侧50，顶部50，右侧150（显示统计信息），底部50
+                    int maxDisplayWidth = picPreview.Width - 50 - 150;
+                    int maxDisplayHeight = picPreview.Height - 100;
+
+                    // 选择显示方向：长度方向对应X轴，高度方向对应Y轴，宽度方向对应Z轴（深度）
+                    decimal scaleX = maxDisplayWidth / boxLength;
+                    decimal scaleY = maxDisplayHeight / boxHeight;
+                    decimal scale = Math.Min(scaleX, scaleY); // 使用最小缩放比例，确保完整显示
+
+                    // 计算箱子的显示尺寸
+                    int displayBoxLength = (int)(boxLength * scale);
+                    int displayBoxHeight = (int)(boxHeight * scale);
+                    int displayBoxDepth = (int)(boxWidth * scale * 0.3m); // 深度按比例缩小30%用于透视效果
+
                     // 绘制3D箱子轮廓（透视效果）
                     int boxLeft = 50;
                     int boxTop = 50;
-                    int boxWidth = 200;
-                    int boxHeight = 150;
-                    int depth = 30; // 3D深度
 
                     // 绘制箱子正面
-                    g.DrawRectangle(Pens.Blue, boxLeft, boxTop, boxWidth, boxHeight);
+                    g.DrawRectangle(Pens.Blue, boxLeft, boxTop, displayBoxLength, displayBoxHeight);
 
                     // 绘制箱子顶部（3D效果）
                     Point[] topPoints = new Point[]
                     {
                         new Point(boxLeft, boxTop),
-                        new Point(boxLeft + depth, boxTop - depth),
-                        new Point(boxLeft + boxWidth + depth, boxTop - depth),
-                        new Point(boxLeft + boxWidth, boxTop)
+                        new Point(boxLeft + displayBoxDepth, boxTop - displayBoxDepth),
+                        new Point(boxLeft + displayBoxLength + displayBoxDepth, boxTop - displayBoxDepth),
+                        new Point(boxLeft + displayBoxLength, boxTop)
                     };
                     g.DrawPolygon(Pens.Blue, topPoints);
 
                     // 绘制箱子右侧（3D效果）
                     Point[] rightPoints = new Point[]
                     {
-                        new Point(boxLeft + boxWidth, boxTop),
-                        new Point(boxLeft + boxWidth + depth, boxTop - depth),
-                        new Point(boxLeft + boxWidth + depth, boxTop + boxHeight - depth),
-                        new Point(boxLeft + boxWidth, boxTop + boxHeight)
+                        new Point(boxLeft + displayBoxLength, boxTop),
+                        new Point(boxLeft + displayBoxLength + displayBoxDepth, boxTop - displayBoxDepth),
+                        new Point(boxLeft + displayBoxLength + displayBoxDepth, boxTop + displayBoxHeight - displayBoxDepth),
+                        new Point(boxLeft + displayBoxLength, boxTop + displayBoxHeight)
                     };
                     g.DrawPolygon(Pens.Blue, rightPoints);
 
@@ -859,27 +898,39 @@ namespace RUINORERP.UI.ProductEAV
                                boxLeft,
                                boxTop - 40);
 
-                    // 如果有摆放方案，绘制分层产品
+                    // 绘制尺寸标注
+                    g.DrawString($"{boxLength:F1}cm",
+                               new Font(Font.FontFamily, 8),
+                               Brushes.Gray,
+                               boxLeft + displayBoxLength / 2 - 20,
+                               boxTop + displayBoxHeight + 5);
+                    g.DrawString($"{boxHeight:F1}cm",
+                               new Font(Font.FontFamily, 8),
+                               Brushes.Gray,
+                               boxLeft - 35,
+                               boxTop + displayBoxHeight / 2);
+
+                    // 如果有摆放方案，按实际尺寸比例绘制产品
                     if (solution.Arrangement != null && solution.Arrangement.Layers.Count > 0)
                     {
-                        DrawLayeredProducts(g, solution, boxLeft, boxTop, boxWidth, boxHeight, depth);
+                        DrawLayeredProductsScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, displayBoxDepth, scale);
                     }
                     else
                     {
-                        // 简单绘制产品示意
-                        DrawSimpleProductGrid(g, solution, boxLeft, boxTop, boxWidth, boxHeight);
+                        // 简单绘制产品示意（按比例）
+                        DrawSimpleProductGridScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, scale, prodLength, prodWidth, prodHeight);
                     }
 
                     // 显示统计信息（带图标）
                     string stats = $"📊 每箱数量: {solution.QuantityPerBox}个\n" +
                                   $"📈 空间利用率: {solution.UtilizationRate:F1}%\n" +
                                   $"⚖️  重量状态: {solution.WeightStatus}\n" +
-                                  $"📏 箱规尺寸: {solution.BoxRule.Length}×{solution.BoxRule.Width}×{solution.BoxRule.Height} cm";
+                                  $"📏 箱规: {boxLength:F1}×{boxWidth:F1}×{boxHeight:F1} cm";
 
                     g.DrawString(stats,
                                new Font(Font.FontFamily, 9),
                                Brushes.Black,
-                               boxLeft + boxWidth + 30,
+                               boxLeft + displayBoxLength + 30,
                                boxTop);
                 }
 
@@ -892,29 +943,75 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         /// <summary>
-        /// 绘制分层产品（3D效果）
+        /// 绘制分层产品（按实际尺寸比例）
         /// </summary>
-        private void DrawLayeredProducts(Graphics g, PackagingSolution solution, int boxLeft, int boxTop,
-            int boxWidth, int boxHeight, int depth)
+        private void DrawLayeredProductsScaled(Graphics g, PackagingSolution solution, int boxLeft, int boxTop,
+            int displayBoxLength, int displayBoxHeight, int displayBoxDepth, decimal scale)
         {
             if (solution.Arrangement.Layers.Count == 0) return;
 
-            var layer = solution.Arrangement.Layers[0]; // 获取第一层信息
-            int itemsPerRow = Math.Min(layer.ItemsInLayer > 0 ?
-                (int)Math.Sqrt(layer.ItemsInLayer) : 8, 8);
-            int itemsPerCol = Math.Max(1, layer.ItemsInLayer / Math.Max(itemsPerRow, 1));
+            var arrangement = solution.Arrangement;
+            var productInfo = solution.Configuration?.Products?.FirstOrDefault();
+            if (productInfo == null) return;
 
-            // 计算产品显示尺寸
-            int productWidth = Math.Max(8, (boxWidth - 20) / Math.Max(itemsPerRow, 1));
-            int productHeight = Math.Max(8, (boxHeight - 20) / Math.Max(itemsPerCol, 1));
+            // 获取产品的实际尺寸（cm）
+            decimal prodLength = productInfo.Length;
+            decimal prodWidth = productInfo.Width;
+            decimal prodHeight = productInfo.Height;
+
+            // 确定产品摆放方向
+            string orientation = arrangement.Orientation ?? "LWH"; // 默认：长=箱长，宽=箱宽，高=箱高
+
+            // 根据摆放方向计算产品在显示区域中的尺寸
+            int displayProdLength;
+            int displayProdWidth;
+            int displayProdHeight;
+
+            if (orientation == "LWH") // 长=箱长，宽=箱宽，高=箱高
+            {
+                displayProdLength = (int)(prodLength * scale);
+                displayProdWidth = (int)(prodWidth * scale * 0.3m); // 宽度对应深度方向
+                displayProdHeight = (int)(prodHeight * scale);
+            }
+            else if (orientation == "WLH") // 宽=箱长，长=箱宽，高=箱高
+            {
+                displayProdLength = (int)(prodWidth * scale);
+                displayProdWidth = (int)(prodLength * scale * 0.3m);
+                displayProdHeight = (int)(prodHeight * scale);
+            }
+            else if (orientation == "LHW") // 长=箱长，高=箱宽，宽=箱高
+            {
+                displayProdLength = (int)(prodLength * scale);
+                displayProdWidth = (int)(prodHeight * scale * 0.3m);
+                displayProdHeight = (int)(prodWidth * scale);
+            }
+            else // 默认使用LWH
+            {
+                displayProdLength = (int)(prodLength * scale);
+                displayProdWidth = (int)(prodWidth * scale * 0.3m);
+                displayProdHeight = (int)(prodHeight * scale);
+            }
+
+            // 确保产品尺寸不会太小（至少4个像素）
+            displayProdLength = Math.Max(4, displayProdLength);
+            displayProdWidth = Math.Max(2, displayProdWidth);
+            displayProdHeight = Math.Max(4, displayProdHeight);
+
+            // 计算每层能放多少个产品（从Arrangement中获取）
+            int itemsPerRow = Math.Max(1, arrangement.LengthFit);
+            int itemsPerCol = Math.Max(1, arrangement.HeightFit);
+
+            // 计算间距
+            int gapX = (displayBoxLength - itemsPerRow * displayProdLength) / Math.Max(itemsPerRow + 1, 1);
+            int gapY = (displayBoxHeight - itemsPerCol * displayProdHeight) / Math.Max(itemsPerCol + 1, 1);
 
             // 绘制每层产品
             int currentLayer = 0;
-            foreach (var layerInfo in solution.Arrangement.Layers)
+            foreach (var layerInfo in arrangement.Layers)
             {
                 if (layerInfo.ItemsInLayer <= 0) continue;
 
-                int layerOffsetY = currentLayer * (productHeight / 2); // 层间偏移（3D效果）
+                int layerOffsetY = currentLayer * (displayProdHeight / 3); // 层间偏移（3D效果）
 
                 // 绘制该层产品
                 for (int i = 0; i < Math.Min(layerInfo.ItemsInLayer, itemsPerRow * itemsPerCol); i++)
@@ -923,11 +1020,11 @@ namespace RUINORERP.UI.ProductEAV
                     int col = i % itemsPerRow;
 
                     // 计算产品位置（带层偏移）
-                    int productX = boxLeft + 10 + col * productWidth;
-                    int productY = boxTop + 10 + row * productHeight + layerOffsetY;
+                    int productX = boxLeft + gapX + col * (displayProdLength + gapX);
+                    int productY = boxTop + gapY + row * (displayProdHeight + gapY) + layerOffsetY;
 
                     // 绘制产品正面
-                    var productRect = new Rectangle(productX, productY, productWidth - 2, productHeight - 2);
+                    var productRect = new Rectangle(productX, productY, displayProdLength, displayProdHeight);
 
                     // 不同层使用不同颜色
                     Brush productBrush = GetLayerBrush(currentLayer);
@@ -935,18 +1032,21 @@ namespace RUINORERP.UI.ProductEAV
                     g.DrawRectangle(Pens.DarkGreen, productRect);
 
                     // 绘制产品顶部（3D效果）
-                    Point[] productTop = new Point[]
+                    if (displayProdWidth > 2)
                     {
-                        new Point(productX, productY),
-                        new Point(productX + depth/2, productY - depth/2),
-                        new Point(productX + productWidth - 2 + depth/2, productY - depth/2),
-                        new Point(productX + productWidth - 2, productY)
-                    };
-                    g.FillPolygon(productBrush, productTop);
-                    g.DrawPolygon(Pens.DarkGreen, productTop);
+                        Point[] productTop = new Point[]
+                        {
+                            new Point(productX, productY),
+                            new Point(productX + displayProdWidth/2, productY - displayProdWidth/2),
+                            new Point(productX + displayProdLength + displayProdWidth/2, productY - displayProdWidth/2),
+                            new Point(productX + displayProdLength, productY)
+                        };
+                        g.FillPolygon(productBrush, productTop);
+                        g.DrawPolygon(Pens.DarkGreen, productTop);
+                    }
 
                     // 在产品上显示编号
-                    if (productWidth > 12 && productHeight > 12)
+                    if (displayProdLength > 15 && displayProdHeight > 15)
                     {
                         g.DrawString($"{i + 1}",
                                    new Font(Font.FontFamily, 6),
@@ -963,51 +1063,94 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             // 绘制层数指示器
-            if (solution.Arrangement.Layers.Count > 1)
+            if (arrangement.Layers.Count > 1)
             {
-                g.DrawString($"📚 共 {solution.Arrangement.Layers.Count} 层",
+                g.DrawString($"📚 共 {arrangement.Layers.Count} 层",
                            new Font(Font.FontFamily, 8, FontStyle.Italic),
                            Brushes.Gray,
                            boxLeft,
-                           boxTop + boxHeight + 10);
+                           boxTop + displayBoxHeight + 10);
             }
+
+            // 绘制摆放方向说明
+            string orientationText = $"摆放: {orientation} (长×宽×高)";
+            g.DrawString(orientationText,
+                       new Font(Font.FontFamily, 8),
+                       Brushes.DarkGray,
+                       boxLeft,
+                       boxTop + displayBoxHeight + 25);
         }
 
         /// <summary>
-        /// 绘制简单产品网格（无分层信息时使用）
+        /// 绘制简单产品网格（按实际尺寸比例，无分层信息时使用）
         /// </summary>
-        private void DrawSimpleProductGrid(Graphics g, PackagingSolution solution, int boxLeft, int boxTop,
-            int boxWidth, int boxHeight)
+        private void DrawSimpleProductGridScaled(Graphics g, PackagingSolution solution, int boxLeft, int boxTop,
+            int displayBoxLength, int displayBoxHeight, decimal scale, decimal prodLength, decimal prodWidth, decimal prodHeight)
         {
-            int productsPerRow = Math.Min(solution.QuantityPerBox > 0 ?
-                (int)Math.Sqrt(solution.QuantityPerBox) : 8, 8);
-            int productSize = Math.Max(8, Math.Min((boxWidth - 20) / Math.Max(productsPerRow, 1),
-                                                  (boxHeight - 20) / Math.Max(productsPerRow, 1)));
+            // 计算产品在显示区域中的尺寸（使用产品长度和高度）
+            int displayProdLength = (int)(prodLength * scale);
+            int displayProdHeight = (int)(prodHeight * scale);
+            int displayProdDepth = (int)(prodWidth * scale * 0.3m); // 深度方向对应产品宽度
 
-            for (int i = 0; i < Math.Min(solution.QuantityPerBox, 64); i++)
+            // 确保产品尺寸不会太小
+            displayProdLength = Math.Max(4, displayProdLength);
+            displayProdHeight = Math.Max(4, displayProdHeight);
+            displayProdDepth = Math.Max(2, displayProdDepth);
+
+            // 计算可以放多少行和列的产品
+            int productsPerRow = Math.Max(1, displayBoxLength / (displayProdLength + 2));
+            int productsPerCol = Math.Max(1, displayBoxHeight / (displayProdHeight + 2));
+
+            // 计算间距
+            int gapX = (displayBoxLength - productsPerRow * displayProdLength) / Math.Max(productsPerRow + 1, 1);
+            int gapY = (displayBoxHeight - productsPerCol * displayProdHeight) / Math.Max(productsPerCol + 1, 1);
+
+            // 绘制产品网格
+            for (int i = 0; i < Math.Min(solution.QuantityPerBox, productsPerRow * productsPerCol); i++)
             {
                 int row = i / productsPerRow;
                 int col = i % productsPerRow;
 
-                var productRect = new Rectangle(
-                    boxLeft + 10 + col * productSize,
-                    boxTop + 10 + row * productSize,
-                    productSize - 2,
-                    productSize - 2);
+                // 计算产品位置
+                int productX = boxLeft + gapX + col * (displayProdLength + gapX);
+                int productY = boxTop + gapY + row * (displayProdHeight + gapY);
 
+                // 绘制产品正面
+                var productRect = new Rectangle(productX, productY, displayProdLength, displayProdHeight);
                 g.FillRectangle(Brushes.LightGreen, productRect);
                 g.DrawRectangle(Pens.DarkGreen, productRect);
 
+                // 绘制产品顶部（3D效果）
+                if (displayProdDepth > 2)
+                {
+                    Point[] productTop = new Point[]
+                    {
+                        new Point(productX, productY),
+                        new Point(productX + displayProdDepth/2, productY - displayProdDepth/2),
+                        new Point(productX + displayProdLength + displayProdDepth/2, productY - displayProdDepth/2),
+                        new Point(productX + displayProdLength, productY)
+                    };
+                    g.FillPolygon(Brushes.LightGreen, productTop);
+                    g.DrawPolygon(Pens.DarkGreen, productTop);
+                }
+
                 // 在产品上显示编号
-                if (productSize > 12)
+                if (displayProdLength > 15 && displayProdHeight > 15)
                 {
                     g.DrawString($"{i + 1}",
                                new Font(Font.FontFamily, 6),
                                Brushes.Black,
-                               productRect.X + 2,
-                               productRect.Y + 2);
+                               productX + 2,
+                               productY + 2);
                 }
             }
+
+            // 显示产品尺寸信息
+            g.DrawString($"产品尺寸: {prodLength:F1}×{prodWidth:F1}×{prodHeight:F1} cm",
+                       new Font(Font.FontFamily, 8),
+                       Brushes.DarkGray,
+                       boxLeft,
+                       boxTop + displayBoxHeight + 10);
         }
 
         /// <summary>
@@ -1031,364 +1174,117 @@ namespace RUINORERP.UI.ProductEAV
 
         #endregion
 
-    #region 数据模型类
+        #region 数据模型类
 
-    /// <summary>
-    /// 产品信息（支持混合包装）
-    /// </summary>
+        /// <summary>
+        /// 产品信息（支持混合包装）
+        /// </summary>
         public class ProductInfo
-{
-    public long ProdDetailID { get; set; }
-    public string ProductName { get; set; }
-    public string SKU { get; set; }
-    public decimal Length { get; set; }  // cm
-    public decimal Width { get; set; }   // cm
-    public decimal Height { get; set; }  // cm
-    public decimal Weight { get; set; }  // g
-    public int TargetQuantity { get; set; }
-    public decimal Volume => Length * Width * Height;
-
-    public ProductInfo Clone()
-    {
-        return new ProductInfo
         {
-            ProdDetailID = this.ProdDetailID,
-            ProductName = this.ProductName,
-            SKU = this.SKU,
-            Length = this.Length,
-            Width = this.Width,
-            Height = this.Height,
-            Weight = this.Weight,
-            TargetQuantity = this.TargetQuantity
-        };
-    }
-}
+            public long ProdDetailID { get; set; }
+            public string ProductName { get; set; }
+            public string SKU { get; set; }
+            public decimal Length { get; set; }  // cm
+            public decimal Width { get; set; }   // cm
+            public decimal Height { get; set; }  // cm
+            public decimal Weight { get; set; }  // g
+            public int TargetQuantity { get; set; }
+            public decimal Volume => Length * Width * Height;
 
-/// <summary>
-/// 箱内产品排列方案
-/// </summary>
-public class BoxArrangement
-{
-    public string Orientation { get; set; }
-    public int LengthFit { get; set; }
-    public int WidthFit { get; set; }
-    public int HeightFit { get; set; }
-    private int _totalFit;
-    public int TotalFit
-    {
-        get { return _totalFit; }
-        set { _totalFit = value; }
-    }
-    public string DetailedInstructions { get; set; } // 详细摆放说明
-    public List<LayerInfo> Layers { get; set; } = new List<LayerInfo>(); // 分层信息
-}
-
-/// <summary>
-/// 分层摆放信息
-/// </summary>
-public class LayerInfo
-{
-    public int LayerNumber { get; set; }
-    public int ItemsInLayer { get; set; }
-    public string LayoutPattern { get; set; } // 如 "5×4 矩阵排列"
-    public decimal LayerHeight { get; set; }
-}
-
-/// <summary>
-/// 混合包装配置
-/// </summary>
-public class MixedPackConfiguration
-{
-    public List<ProductInfo> Products { get; set; } = new List<ProductInfo>();
-    public Dictionary<long, int> ProductQuantities { get; set; } = new Dictionary<long, int>();
-    public decimal TotalWeight { get; set; }
-    public decimal TotalVolume { get; set; }
-}
-
-/// <summary>
-/// 包装方案结果
-/// </summary>
-public class PackagingSolution
-{
-    public tb_CartoonBox BoxRule { get; set; }
-    public MixedPackConfiguration Configuration { get; set; }
-    public BoxArrangement Arrangement { get; set; }
-    public int QuantityPerBox { get; set; }
-    public decimal BoxVolume { get; set; }
-    public decimal EffectiveVolume { get; set; }
-    public decimal OccupiedVolume { get; set; }
-    public decimal UtilizationRate { get; set; }
-    public int RequiredBoxes { get; set; }
-    public int TotalQuantity { get; set; }
-    public decimal RemainingSpace { get; set; }
-    public decimal TotalWeight { get; set; }
-    public bool WeightExceeded { get; set; }
-    public string WeightStatus { get; set; }
-    public decimal UsedGap { get; set; } // 实际使用的智能容差
-    public string PackingInstructions { get; set; } // 完整的包装指导
-    public List<PackingStep> PackingSteps { get; set; } = new List<PackingStep>(); // 分步指导
-}
-
-/// <summary>
-/// 包装步骤
-/// </summary>
-public class PackingStep
-{
-    public int StepNumber { get; set; }
-    public string Description { get; set; }
-    public string VisualHint { get; set; } // 可视化提示
-}
-
-#endregion
-
-#region 摆放指导生成方法
-
-/// <summary>
-/// 生成详细的包装摆放指导
-/// </summary>
-private void GeneratePackingInstructions(PackagingSolution solution, MixedPackConfiguration config, tb_CartoonBox box,
-    decimal effLength, decimal effWidth, decimal effHeight)
-{
-    var steps = new List<PackingStep>();
-    var sb = new StringBuilder();
-
-    sb.AppendLine($"📦 包装方案指导 - {box.CartonName}");
-    sb.AppendLine(new string('=', 50));
-
-    // 基本信息
-    sb.AppendLine($"📦 箱规尺寸: {box.Length:F2}×{box.Width:F2}×{box.Height:F2} cm");
-    sb.AppendLine($"📏 有效空间: {effLength:F2}×{effWidth:F2}×{effHeight:F2} cm (扣除间隙)");
-    sb.AppendLine($"📊 每箱容量: {solution.QuantityPerBox} 件");
-    sb.AppendLine($"⚖️  总重量: {solution.TotalWeight:F0}g ({solution.WeightStatus})");
-    sb.AppendLine();
-
-    if (config.Products.Count == 1)
-    {
-        // 单产品模式
-        var product = config.Products[0];
-        var arrangement = CalculateOptimalArrangement(product, effLength, effWidth, effHeight);
-        solution.Arrangement = arrangement;
-
-        sb.AppendLine("🔢 摆放方案:");
-        sb.AppendLine($"   方向: {arrangement.Orientation}");
-        sb.AppendLine($"   排列: {arrangement.LengthFit}×{arrangement.WidthFit}×{arrangement.HeightFit}");
-        sb.AppendLine($"   总数: {arrangement.TotalFit} 件");
-        sb.AppendLine();
-
-        // 生成分层信息
-        GenerateLayerInfo(arrangement, product, steps);
-
-        sb.AppendLine("📋 分步摆放指导:");
-        for (int i = 0; i < steps.Count; i++)
-        {
-            sb.AppendLine($"   {steps[i].StepNumber}. {steps[i].Description}");
-            if (!string.IsNullOrEmpty(steps[i].VisualHint))
+            public ProductInfo Clone()
             {
-                sb.AppendLine($"      💡 {steps[i].VisualHint}");
+                return new ProductInfo
+                {
+                    ProdDetailID = this.ProdDetailID,
+                    ProductName = this.ProductName,
+                    SKU = this.SKU,
+                    Length = this.Length,
+                    Width = this.Width,
+                    Height = this.Height,
+                    Weight = this.Weight,
+                    TargetQuantity = this.TargetQuantity
+                };
             }
         }
-    }
-    else
-    {
-        // 混合包装模式
-        sb.AppendLine("🔢 混合包装分布:");
-        foreach (var product in config.Products)
+
+        /// <summary>
+        /// 箱内产品排列方案
+        /// </summary>
+        public class BoxArrangement
         {
-            int productQty = (int)(solution.QuantityPerBox * (decimal)product.TargetQuantity /
-                                 config.Products.Sum(p => p.TargetQuantity));
-            sb.AppendLine($"   • {product.ProductName} ({product.SKU}): {productQty} 件");
+            public string Orientation { get; set; }
+            public int LengthFit { get; set; }
+            public int WidthFit { get; set; }
+            public int HeightFit { get; set; }
+            private int _totalFit;
+            public int TotalFit
+            {
+                get { return _totalFit; }
+                set { _totalFit = value; }
+            }
+            public string DetailedInstructions { get; set; } // 详细摆放说明
+            public List<LayerInfo> Layers { get; set; } = new List<LayerInfo>(); // 分层信息
         }
-        sb.AppendLine();
 
-        // 混合包装摆放建议
-        sb.AppendLine("📋 混合包装建议:");
-        sb.AppendLine("   1. 先放置较重或较大的产品作为底层");
-        sb.AppendLine("   2. 按产品类别分区域摆放");
-        sb.AppendLine("   3. 易碎品放在中间位置，周围用缓冲材料");
-        sb.AppendLine("   4. 确保重心居中，避免运输时倾斜");
-        sb.AppendLine("   5. 顶层放置轻质产品");
-
-        // 添加通用步骤
-        steps.Add(new PackingStep
+        /// <summary>
+        /// 分层摆放信息
+        /// </summary>
+        public class LayerInfo
         {
-            StepNumber = 1,
-            Description = "清理箱内杂物，确保底部平整",
-            VisualHint = "检查箱底无尖锐物品"
-        });
-        steps.Add(new PackingStep
+            public int LayerNumber { get; set; }
+            public int ItemsInLayer { get; set; }
+            public string LayoutPattern { get; set; } // 如 "5×4 矩阵排列"
+            public decimal LayerHeight { get; set; }
+        }
+
+        /// <summary>
+        /// 混合包装配置
+        /// </summary>
+        public class MixedPackConfiguration
         {
-            StepNumber = 2,
-            Description = "按重量和尺寸分类产品",
-            VisualHint = "重物在下，轻物在上"
-        });
-        steps.Add(new PackingStep
+            public List<ProductInfo> Products { get; set; } = new List<ProductInfo>();
+            public Dictionary<long, int> ProductQuantities { get; set; } = new Dictionary<long, int>();
+            public decimal TotalWeight { get; set; }
+            public decimal TotalVolume { get; set; }
+        }
+
+        /// <summary>
+        /// 包装方案结果
+        /// </summary>
+        public class PackagingSolution
         {
-            StepNumber = 3,
-            Description = "逐层摆放，保持重心稳定",
-            VisualHint = "每层产品尽量紧密排列"
-        });
-        steps.Add(new PackingStep
+            public tb_CartoonBox BoxRule { get; set; }
+            public MixedPackConfiguration Configuration { get; set; }
+            public BoxArrangement Arrangement { get; set; }
+            public int QuantityPerBox { get; set; }
+            public decimal BoxVolume { get; set; }
+            public decimal EffectiveVolume { get; set; }
+            public decimal OccupiedVolume { get; set; }
+            public decimal UtilizationRate { get; set; }
+            public int RequiredBoxes { get; set; }
+            public int TotalQuantity { get; set; }
+            public decimal RemainingSpace { get; set; }
+            public decimal TotalWeight { get; set; }
+            public bool WeightExceeded { get; set; }
+            public string WeightStatus { get; set; }
+            public decimal UsedGap { get; set; } // 实际使用的智能容差
+            public string PackingInstructions { get; set; } // 完整的包装指导
+            public List<PackingStep> PackingSteps { get; set; } = new List<PackingStep>(); // 分步指导
+        }
+
+        /// <summary>
+        /// 包装步骤
+        /// </summary>
+        public class PackingStep
         {
-            StepNumber = 4,
-            Description = "填充空隙，防止运输中移动",
-            VisualHint = "使用填充物或气泡膜"
-        });
-        steps.Add(new PackingStep
-        {
-            StepNumber = 5,
-            Description = "封箱并贴标签",
-            VisualHint = "标明重量和易碎标识"
-        });
-    }
-
-    sb.AppendLine();
-    sb.AppendLine("⚠️  注意事项:");
-    sb.AppendLine("   • 确保包装间隙均匀分布");
-    sb.AppendLine("   • 重物靠近箱底中心位置");
-    sb.AppendLine("   • 易碎品需额外缓冲保护");
-    sb.AppendLine("   • 封箱前检查重心是否平衡");
-
-    solution.PackingInstructions = sb.ToString();
-    solution.PackingSteps = steps;
-}
-
-/// <summary>
-/// 计算最优的产品摆放方向
-/// </summary>
-private BoxArrangement CalculateOptimalArrangement(ProductInfo product, decimal effLength, decimal effWidth, decimal effHeight)
-{
-    var arrangements = new List<BoxArrangement>();
-
-    // 原始方向: 长×宽×高
-    var arr1 = new BoxArrangement
-    {
-        Orientation = "原始方向(长×宽×高)",
-        LengthFit = (int)(effLength / product.Length),
-        WidthFit = (int)(effWidth / product.Width),
-        HeightFit = (int)(effHeight / product.Height),
-        DetailedInstructions = $"产品按原始方向摆放，长边沿箱长方向"
-    };
-    arr1.TotalFit = arr1.LengthFit * arr1.WidthFit * arr1.HeightFit;
-    arrangements.Add(arr1);
-
-    // 长宽交换: 宽×长×高
-    var arr2 = new BoxArrangement
-    {
-        Orientation = "长宽交换(宽×长×高)",
-        LengthFit = (int)(effLength / product.Width),
-        WidthFit = (int)(effWidth / product.Length),
-        HeightFit = (int)(effHeight / product.Height),
-        DetailedInstructions = $"产品旋转90度，宽边沿箱长方向"
-    };
-    arr2.TotalFit = arr2.LengthFit * arr2.WidthFit * arr2.HeightFit;
-    arrangements.Add(arr2);
-
-    // 长高交换: 高×宽×长
-    var arr3 = new BoxArrangement
-    {
-        Orientation = "竖直摆放(高×宽×长)",
-        LengthFit = (int)(effLength / product.Height),
-        WidthFit = (int)(effWidth / product.Width),
-        HeightFit = (int)(effHeight / product.Length),
-        DetailedInstructions = $"产品竖直摆放，高边沿箱长方向"
-    };
-    arr3.TotalFit = arr3.LengthFit * arr3.WidthFit * arr3.HeightFit;
-    arrangements.Add(arr3);
-
-    // 宽高交换: 长×高×宽
-    var arr4 = new BoxArrangement
-    {
-        Orientation = "侧放(长×高×宽)",
-        LengthFit = (int)(effLength / product.Length),
-        WidthFit = (int)(effWidth / product.Height),
-        HeightFit = (int)(effHeight / product.Width),
-        DetailedInstructions = $"产品侧放，高边沿箱宽方向"
-    };
-    arr4.TotalFit = arr4.LengthFit * arr4.WidthFit * arr4.HeightFit;
-    arrangements.Add(arr4);
-
-    // 找到最优排列方式
-    var bestArrangement = arrangements
-        .Where(a => a.LengthFit > 0 && a.WidthFit > 0 && a.HeightFit > 0)
-        .OrderByDescending(a => a.TotalFit)
-        .FirstOrDefault();
-
-    if (bestArrangement != null)
-    {
-        // 生成详细的分层信息
-        GenerateDetailedLayers(bestArrangement, product);
-    }
-
-    return bestArrangement ?? new BoxArrangement { TotalFit = 0 };
-}
-
-/// <summary>
-/// 生成详细的分层摆放信息
-/// </summary>
-private void GenerateDetailedLayers(BoxArrangement arrangement, ProductInfo product)
-{
-    arrangement.Layers.Clear();
-
-    for (int layer = 1; layer <= arrangement.HeightFit; layer++)
-    {
-        int itemsInThisLayer = arrangement.LengthFit * arrangement.WidthFit;
-        string layout = $"{arrangement.LengthFit}×{arrangement.WidthFit} 矩阵排列";
-        decimal layerHeight = layer * product.Height; // 基于摆放方向的实际高度
-
-        arrangement.Layers.Add(new LayerInfo
-        {
-            LayerNumber = layer,
-            ItemsInLayer = itemsInThisLayer,
-            LayoutPattern = layout,
-            LayerHeight = layerHeight
-        });
-    }
-}
-
-/// <summary>
-/// 生成分层摆放步骤
-/// </summary>
-private void GenerateLayerInfo(BoxArrangement arrangement, ProductInfo product, List<PackingStep> steps)
-{
-    steps.Add(new PackingStep
-    {
-        StepNumber = 1,
-        Description = "清理箱内杂物，确保底部平整",
-        VisualHint = "检查箱底无尖锐物品"
-    });
-
-    // 逐层添加摆放步骤
-    for (int i = 0; i < arrangement.Layers.Count; i++)
-    {
-        var layer = arrangement.Layers[i];
-        steps.Add(new PackingStep
-        {
-            StepNumber = i + 2,
-            Description = $"第{layer.LayerNumber}层: 按{layer.LayoutPattern}摆放{layer.ItemsInLayer}件产品",
-            VisualHint = $"排列紧密，间隙≤{product.Length * 0.1m:F1}cm"
-        });
-    }
-
-    steps.Add(new PackingStep
-    {
-        StepNumber = steps.Count + 2,
-        Description = "检查整体稳定性，必要时添加填充物",
-        VisualHint = "摇晃测试，确保无松动"
-    });
-
-    steps.Add(new PackingStep
-    {
-        StepNumber = steps.Count + 2,
-        Description = "封箱并标注重量和重心位置",
-        VisualHint = "标明'此面朝上'和重量信息"
-    });
-}
+            public int StepNumber { get; set; }
+            public string Description { get; set; }
+            public string VisualHint { get; set; } // 可视化提示
+        }
 
         #endregion
 
-        private void chkMixedBoxing_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
+   
     }
+
 }

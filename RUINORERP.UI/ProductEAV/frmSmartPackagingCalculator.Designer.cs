@@ -75,6 +75,7 @@ namespace RUINORERP.UI.ProductEAV
             this.lblModeDescription = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this.picPreview = new Krypton.Toolkit.KryptonPictureBox();
             this.dgvResults = new Krypton.Toolkit.KryptonDataGridView();
             this.colBoxName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colQuantityPerBox = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -84,7 +85,6 @@ namespace RUINORERP.UI.ProductEAV
             this.colTotalWeight = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colWeightStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRemainingSpace = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.picPreview = new Krypton.Toolkit.KryptonPictureBox();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
             this.lblResultCount = new Krypton.Toolkit.KryptonLabel();
             this.btnApply = new Krypton.Toolkit.KryptonButton();
@@ -122,8 +122,8 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonGroupBox2.Panel.SuspendLayout();
             this.kryptonGroupBox2.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picPreview)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).BeginInit();
             this.kryptonPanel2.SuspendLayout();
             this.SuspendLayout();
@@ -141,24 +141,27 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.kryptonSplitContainer1.Cursor = System.Windows.Forms.Cursors.Default;
             this.kryptonSplitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonSplitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
             this.kryptonSplitContainer1.Location = new System.Drawing.Point(0, 0);
             this.kryptonSplitContainer1.Name = "kryptonSplitContainer1";
             // 
             // kryptonSplitContainer1.Panel1
             // 
             this.kryptonSplitContainer1.Panel1.Controls.Add(this.kryptonGroupBox1);
-            this.kryptonSplitContainer1.Panel1MinSize = 300;
+            this.kryptonSplitContainer1.Panel1MinSize = 370;
             // 
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonGroupBox2);
+            this.kryptonSplitContainer1.Panel2MinSize = 500;
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(1288, 701);
             this.kryptonSplitContainer1.SplitterDistance = 386;
+            this.kryptonSplitContainer1.SplitterIncrement = 2;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.kryptonGroupBox1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonGroupBox1.Location = new System.Drawing.Point(0, 0);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
@@ -175,7 +178,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoBoxToQuantity);
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoQuantityToBox);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblModeDescription);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(386, 701);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(373, 701);
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "参数设置";
             // 
@@ -397,7 +400,7 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numProductHeight1.Location = new System.Drawing.Point(80, 79);
             this.numProductHeight1.Maximum = new decimal(new int[] {
-            1000,
+            150,
             0,
             0,
             0});
@@ -469,7 +472,7 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numProductWidth1.Location = new System.Drawing.Point(80, 54);
             this.numProductWidth1.Maximum = new decimal(new int[] {
-            1000,
+            150,
             0,
             0,
             0});
@@ -506,7 +509,7 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numProductLength1.Location = new System.Drawing.Point(80, 29);
             this.numProductLength1.Maximum = new decimal(new int[] {
-            1000,
+            150,
             0,
             0,
             0});
@@ -628,12 +631,12 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numBoxHeight.Location = new System.Drawing.Point(80, 72);
             this.numBoxHeight.Maximum = new decimal(new int[] {
-            1000,
+            200,
             0,
             0,
             0});
             this.numBoxHeight.Minimum = new decimal(new int[] {
-            1,
+            5,
             0,
             0,
             0});
@@ -665,12 +668,12 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numBoxWidth.Location = new System.Drawing.Point(80, 50);
             this.numBoxWidth.Maximum = new decimal(new int[] {
-            1000,
+            200,
             0,
             0,
             0});
             this.numBoxWidth.Minimum = new decimal(new int[] {
-            1,
+            5,
             0,
             0,
             0});
@@ -702,12 +705,12 @@ namespace RUINORERP.UI.ProductEAV
             0});
             this.numBoxLength.Location = new System.Drawing.Point(80, 27);
             this.numBoxLength.Maximum = new decimal(new int[] {
-            1000,
+            200,
             0,
             0,
             0});
             this.numBoxLength.Minimum = new decimal(new int[] {
-            1,
+            5,
             0,
             0,
             0});
@@ -871,8 +874,8 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.tableLayoutPanel2.ColumnCount = 1;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Controls.Add(this.dgvResults, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.picPreview, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this.dgvResults, 0, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
@@ -881,6 +884,16 @@ namespace RUINORERP.UI.ProductEAV
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(893, 677);
             this.tableLayoutPanel2.TabIndex = 0;
+            // 
+            // picPreview
+            // 
+            this.picPreview.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.picPreview.Location = new System.Drawing.Point(3, 409);
+            this.picPreview.Name = "picPreview";
+            this.picPreview.Size = new System.Drawing.Size(887, 265);
+            this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.picPreview.TabIndex = 1;
+            this.picPreview.TabStop = false;
             // 
             // dgvResults
             // 
@@ -979,16 +992,6 @@ namespace RUINORERP.UI.ProductEAV
             this.colRemainingSpace.ReadOnly = true;
             this.colRemainingSpace.Width = 120;
             // 
-            // picPreview
-            // 
-            this.picPreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.picPreview.Location = new System.Drawing.Point(3, 409);
-            this.picPreview.Name = "picPreview";
-            this.picPreview.Size = new System.Drawing.Size(887, 265);
-            this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
-            this.picPreview.TabIndex = 1;
-            this.picPreview.TabStop = false;
-            // 
             // kryptonPanel2
             // 
             this.kryptonPanel2.Controls.Add(this.lblResultCount);
@@ -1083,8 +1086,8 @@ namespace RUINORERP.UI.ProductEAV
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox2)).EndInit();
             this.kryptonGroupBox2.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picPreview)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvResults)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
             this.kryptonPanel2.ResumeLayout(false);
             this.kryptonPanel2.PerformLayout();

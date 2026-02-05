@@ -916,6 +916,10 @@ namespace RUINORERP.UI.BaseForm
             UIExcelHelper.ExportExcel(dataGridView1);
         }
 
+
+        /// <summary>
+        /// 复制性新增
+        /// </summary>
         protected void AddByCopy()
         {
             object frm = Activator.CreateInstance(EditForm);

@@ -144,7 +144,7 @@ namespace RUINORERP.UI.UserCenter.DataParts
                                 return await MainForm.Instance.AppContext.Db.Ado.GetDecimalAsync(sqlquery);
                             }, 30); // 缓存30分钟
 
-                            lblMonthly商机.Text += "本月新增线索:" + Leads.ToString("##,###0个");
+                            lblMonthly商机.Text = "本月新增线索:" + Leads.ToString("##,###0个");
 
                             //本月新增潜客数
                             string cacheKeyNewCustomers = $"MonthlyNewCustomers_{strEmployees}_{DateTime.Now.ToString("yyyyMM")}";

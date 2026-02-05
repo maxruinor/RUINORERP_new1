@@ -214,6 +214,9 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
+
+
+
         private void pictureBox1_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))

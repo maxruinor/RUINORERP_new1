@@ -1082,7 +1082,7 @@ namespace RUINORERP.UI.FM
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
-        {
+            {
             if (EditEntity == null)
             {
                 //都不是正常状态

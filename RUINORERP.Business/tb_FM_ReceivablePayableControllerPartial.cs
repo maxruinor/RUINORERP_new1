@@ -743,10 +743,29 @@ namespace RUINORERP.Business
 
             payable.tb_FM_ReceivablePayableDetails = details;
 
+            // 重新计算总金额(包含物料费和人工费)
+            decimal totalMaterialAmount = 0;
+            decimal totalLaborCost = 0;
+            foreach (var detail in details)
+            {
+                if (detail.ProdDetailID.HasValue)
+                {
+                    // 物料费用
+                    totalMaterialAmount += detail.LocalPayableAmount;
+                }
+                else if (detail.ExpenseDescription == "人工费")
+                {
+                    // 人工费用
+                    totalLaborCost += detail.LocalPayableAmount;
+                }
+            }
+
+            decimal totalAmount = totalMaterialAmount + totalLaborCost;
+
             //本币时
-            payable.LocalBalanceAmount = entity.TotalAmount;
+            payable.LocalBalanceAmount = totalAmount;
             payable.LocalPaidAmount = 0;
-            payable.TotalLocalPayableAmount = entity.TotalAmount;
+            payable.TotalLocalPayableAmount = totalAmount;
             //否则会关联性SQL出错，外键
             if (payable.Account_id <= 0)
             {
@@ -2668,7 +2687,7 @@ namespace RUINORERP.Business
             }
             payable.ExchangeRate = entity.ExchangeRate;
 
-            //日期类型 业务意义    财务价值 使用场景
+            //日期类型 业务意义    财务价值 使用场景1
             //业务发生日期 真实交易时间  确定收入成本期间 对账核心依据
             //单据日期 债权债务确认  账期起始点 账龄计算
             //到期日 资金计划依据  现金流管理 催款付款
@@ -2732,7 +2751,7 @@ namespace RUINORERP.Business
             #endregion
 
 
-            payable.TotalLocalPayableAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.LocalPayableAmount);
+            payable.TotalLocalPayableAmount = payable.tb_FM_ReceivablePayableDetails.Sum(c => c.LocalPayableAmount) + payable.ShippingFee;
 
             //本币时 一定会有值。
             //生成时余额就是总金额

@@ -237,33 +237,6 @@ namespace RUINORERP.Model
                         }
         }
 
-        private decimal _SubtotalUnitCost= ((0));
-        /// <summary>
-        /// 成本小计
-        /// </summary>
-        [AdvQueryAttribute(ColName = "SubtotalUnitCost",ColDesc = "成本小计")] 
-        [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "SubtotalUnitCost" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "成本小计" )]
-        public decimal SubtotalUnitCost
-        { 
-            get{return _SubtotalUnitCost;}
-            set{
-            SetProperty(ref _SubtotalUnitCost, value);
-                        }
-        }
-
-        private string _PositionDesc;
-        /// <summary>
-        /// 位号描述
-        /// </summary>
-        [AdvQueryAttribute(ColName = "PositionDesc",ColDesc = "位号描述")] 
-        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType ="String",  ColumnName = "PositionDesc" ,Length=100,IsNullable = true,ColumnDescription = "位号描述" )]
-        public string PositionDesc
-        { 
-            get{return _PositionDesc;}
-            set{
-            SetProperty(ref _PositionDesc, value);
-                        }
-        }
 
         private long? _ManufacturingProcessID;
         /// <summary>
@@ -334,6 +307,38 @@ namespace RUINORERP.Model
             SetProperty(ref _Sort, value);
                         }
         }
+
+
+        private decimal _SubtotalUnitCost = ((0));
+        /// <summary>
+        /// 成本小计
+        /// </summary>
+        [AdvQueryAttribute(ColName = "SubtotalUnitCost", ColDesc = "成本小计")]
+        [SugarColumn(ColumnDataType = "money", SqlParameterDbType = "Decimal", ColumnName = "SubtotalUnitCost", DecimalDigits = 4, IsNullable = false, ColumnDescription = "成本小计")]
+        public decimal SubtotalUnitCost
+        {
+            get { return _SubtotalUnitCost; }
+            set
+            {
+                SetProperty(ref _SubtotalUnitCost, value);
+            }
+        }
+
+        private string _PositionDesc;
+        /// <summary>
+        /// 位号描述
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PositionDesc", ColDesc = "位号描述")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PositionDesc", Length = 100, IsNullable = true, ColumnDescription = "位号描述")]
+        public string PositionDesc
+        {
+            get { return _PositionDesc; }
+            set
+            {
+                SetProperty(ref _PositionDesc, value);
+            }
+        }
+
 
         #endregion
 

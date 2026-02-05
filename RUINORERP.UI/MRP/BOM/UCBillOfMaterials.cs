@@ -11,6 +11,7 @@ using OfficeOpenXml.Style;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.Cache;
 using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
@@ -79,7 +80,13 @@ namespace RUINORERP.UI.MRP.BOM
             InitializeComponent();
 
             kryptonDockableNavigator1.SelectedPage = kryptonPage1;
-            //            kryptonNavigator1.SelectedPage = kryptonPageMain;
+            if (!this.DesignMode)
+            {
+                DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_BOM_SDetail>();
+                DisplayTextResolver.AddReferenceKeyMapping<tb_ProductType,tb_Prod>(c => c.Type_ID, t => t.Type_ID, t => t.TypeName);
+                DisplayTextResolver.AddReferenceKeyMapping<tb_Unit, tb_BOM_SDetail>(c => c.Unit_ID, t => t.Unit_ID, t => t.UnitName);
+                DisplayTextResolver.Initialize(kryptonTreeGridViewBOMDetail);
+            }
         }
 
 
@@ -158,14 +165,7 @@ namespace RUINORERP.UI.MRP.BOM
         }
 
         #region BOM配方导出
-        // 确保颜色数组包含足够多的颜色
-        //        private static readonly Color[] BomBackColors =
-        //        {
-        //    Color.LightBlue,    // Level 0
-        //    Color.LightGreen,  // Level 1
-        //    Color.LightYellow, // Level 2
-        //    Color.LightPink    // Level 3
-        //};
+
 
         public bool ExportExcelNew(DataTable dt = null)
         {
@@ -467,37 +467,7 @@ namespace RUINORERP.UI.MRP.BOM
             worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
 
 
-            //worksheet.Cells[StartRowIndex, 1].Value = $"自产分摊费用：";
-            //worksheet.Cells[StartRowIndex, 1, StartRowIndex, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex, costIndex + 1].Value = EditEntity.SelfApportionedCost;
-
-            //worksheet.Cells[StartRowIndex + 1, 1].Value = $"外发分摊费用：";
-            //worksheet.Cells[StartRowIndex + 1, 1, StartRowIndex + 1, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex + 1, costIndex + 1].Value = EditEntity.OutApportionedCost;
-
-
-            //worksheet.Cells[StartRowIndex + 2, 1].Value = $"自行制造费用：";
-            //worksheet.Cells[StartRowIndex + 2, 1, StartRowIndex+2, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex + 2, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex + 2, costIndex + 1].Value = EditEntity.SelfApportionedCost;
-
-            //worksheet.Cells[StartRowIndex + 3, 1].Value = $"外发加工费用：";
-            //worksheet.Cells[StartRowIndex + 3, 1, StartRowIndex + 3, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex + 3, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex + 3, costIndex + 1].Value = EditEntity.OutApportionedCost;
-
-
-            //worksheet.Cells[StartRowIndex + 4, 1].Value = $"自产总成本：";
-            //worksheet.Cells[StartRowIndex + 4, 1, StartRowIndex + 4, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex + 4, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex + 4, costIndex + 1].Value = EditEntity.SelfProductionAllCosts;
-
-            //worksheet.Cells[StartRowIndex + 5, 1].Value = $"外发总成本：";
-            //worksheet.Cells[StartRowIndex + 5, 1, StartRowIndex + 5, costIndex].Merge = true;
-            //worksheet.Cells[StartRowIndex + 5, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-            //worksheet.Cells[StartRowIndex + 5, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
+         
 
 
             #region    导出日期
@@ -513,11 +483,7 @@ namespace RUINORERP.UI.MRP.BOM
 
             #endregion
 
-            // 设置样式
-            //Enumerable.Range(StartRowIndex, 1).Where(i => i % 2 == 1).ForEach(col =>
-            //{
-            //    worksheet.Cells[StartRowIndex, col].Style.SetSummaryStyle();
-            //});
+   
 
             //5行设置一个背景色
 
@@ -624,7 +590,10 @@ namespace RUINORERP.UI.MRP.BOM
             }
         }
 
-
+        /// <summary>
+        /// 网格显示文本解析器，用于设置特殊的映射关系
+        /// </summary>
+        public GridViewDisplayTextResolverGeneric<tb_BOM_SDetail> DisplayTextResolver { get; set; }
         private void ShowExportResult(TimeSpan? elapsed, string filePath)
         {
             var message = $"成功导出 BOM数据，耗时 {elapsed?.TotalSeconds:F2} 秒。\n是否立即打开文件？";
@@ -1014,21 +983,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         #endregion
 
-        /*导出多级的BOM时按级给不同的背景色，固定的*/
-
-        //// 8 colors for when the tab is not selected
-        //private Color[] _normal = new Color[]{ Color.FromArgb(156, 193, 182), Color.FromArgb(247, 184, 134),
-        //                                       Color.FromArgb(217, 173, 194), Color.FromArgb(165, 194, 215),
-        //                                       Color.FromArgb(179, 166, 190), Color.FromArgb(234, 214, 163),
-        //                                       Color.FromArgb(246, 250, 125), Color.FromArgb(188, 168, 225) };
-
-        //// 8 colors for when the tab is selected
-        //private Color[] _select = new Color[]{ Color.FromArgb(200, 221, 215), Color.FromArgb(251, 216, 188),
-        //                                       Color.FromArgb(234, 210, 221), Color.FromArgb(205, 221, 233),
-        //                                       Color.FromArgb(213, 206, 219), Color.FromArgb(244, 232, 204),
-        //                                       Color.FromArgb(250, 252, 183), Color.FromArgb(218, 207, 239) };
-
-
+       
 
 
         /// <summary>
@@ -1481,19 +1436,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                         cmbType.SelectedValue = vp.Type_ID;
 
-                        //加载关联数据
-                        //if (txtProdDetailID.ButtonSpecs.Count > 0 && txtProdDetailID.ButtonSpecs[0].Tag != null)
-                        // {
-                        //     if (txtProdDetailID.ButtonSpecs[0].Tag is View_ProdDetail vp)
-                        //     {
-                        //         txtSpec.Text = vp.Specifications;
-                        //         EditEntity.property = vp.prop;
-                        //         EditEntity.BOM_Name = vp.CNName + "-" + vp.prop;
-                        //         EditEntity.SKU = vp.SKU;
-                        //         EditEntity.ProdDetailID = vp.ProdDetailID;
-                        //         cmbType.SelectedValue = vp.Type_ID;
-                        //     }
-                        // }
+                       
                     }
                 }
 

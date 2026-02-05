@@ -83,7 +83,6 @@ namespace RUINORERP.UI.MRP.BOM
             if (!this.DesignMode)
             {
                 DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_BOM_SDetail>();
-
                 DisplayTextResolver.AddReferenceKeyMapping<tb_Unit, tb_BOM_SDetail>(c => c.Unit_ID, t => t.Unit_ID, t => t.UnitName);
                 DisplayTextResolver.Initialize(kryptonTreeGridViewBOMDetail);
             }

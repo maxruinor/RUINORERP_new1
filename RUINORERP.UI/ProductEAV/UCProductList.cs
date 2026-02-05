@@ -77,48 +77,29 @@ namespace RUINORERP.UI.ProductEAV
         }
 
 
-        //// 忽略属性配置
-        //// 重写忽略属性配置
-        //protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
-        //{
-        //    return base.ConfigureIgnoreProperties()
-        //        // 主表忽略的属性
-        //        .Ignore<tb_Prod>(
-        //            e => e.RefBillID,
-        //            e => e.RefNO,
-        //            e => e.SOrder_ID,
-        //            e => e.SOrderNo,
-        //            e => e.TotalQty,
-        //            e => e.TotalTaxAmount,
-        //            e => e.ForeignTotalAmount,
-        //            e => e.TotalAmount,
-        //            e => e.TotalCost,
-        //            e => e.DataStatus,
-        //            e => e.ApprovalStatus,
-        //            e => e.ApprovalResults,
-        //            e => e.Approver_by,
-        //            e => e.Approver_at,
-        //            e => e.PrintStatus,
-        //            e => e.TotalCommissionAmount,
-        //            e => e.Deposit,
-        //            e => e.Paytype_ID,
-        //            e => e.PayStatus,
-        //            e => e.ForeignDeposit)
-        //        // 明细表忽略的属性
-        //        .Ignore<tb_ProdDetail>(
-        //            e => e.SaleOrderDetail_ID,
-        //            e => e.TotalDeliveredQty,
-        //            e => e.TotalReturnedQty,
-        //            e => e.CommissionAmount,
-        //            e => e.SubtotalCostAmount,
-        //            e => e.Quantity,
-        //            e => e.UnitCommissionAmount,
-        //            e => e.SubtotalTransAmount,
-        //            e => e.CustomizedCost,
-        //            e => e.SubtotalTaxAmount,
-        //            e => e.TaxRate,
-        //            e => e.Gift);
-        //}
+        // 忽略属性配置
+        // 重写忽略属性配置
+        protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            return base.ConfigureIgnoreProperties()
+                // 主表忽略的属性
+                .Ignore<tb_Prod>(
+                    e => e.ProdBaseID,
+                    e => e.ProductNo,
+                    e => e.ShortCode,
+                    e => e.DataStatus,
+                    e => e.PrimaryKeyID,
+                    e => e.tb_ProdDetails,
+                    e => e.StateManager)
+                // 明细表忽略的属性
+                .Ignore<tb_ProdDetail>(
+                    e => e.ProdDetailID,
+                    e => e.ProdBaseID,
+                    e => e.PrimaryKeyID,
+                    e => e.SKU,
+                    e => e.BarCode
+                    );
+        }
 
         private void dataGridView1_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
@@ -219,7 +200,7 @@ namespace RUINORERP.UI.ProductEAV
         tb_ProdController<tb_Prod> pctr = Startup.GetFromFac<tb_ProdController<tb_Prod>>();
         tb_ProdCategoriesController<tb_ProdCategories> mca = Startup.GetFromFac<tb_ProdCategoriesController<tb_ProdCategories>>();
 
-  
+
         protected async override Task<bool> Delete()
         {
             bool rs = false;
@@ -313,7 +294,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void UCProductList_Load(object sender, EventArgs e)
         {
-            
+
         }
     }
 }

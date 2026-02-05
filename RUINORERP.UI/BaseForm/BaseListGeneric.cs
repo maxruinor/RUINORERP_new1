@@ -938,14 +938,6 @@ namespace RUINORERP.UI.BaseForm
                 BaseEditGeneric<T> frmadd = frm as BaseEditGeneric<T>;
                 frmadd.bindingSourceEdit = bindingSourceList;
                 object NewObj = frmadd.bindingSourceEdit.AddNew();
-                if (frmadd.usedActionStatus)
-                {
-                    frmadd.BindData(NewObj as BaseEntity, ActionStatus.新增);
-                }
-                else
-                {
-                    frmadd.BindData(NewObj as BaseEntity);
-                }
 
                 //复制性 的就是把原有值除主键全部复制过去。
                 FastCopy<T, T>.Copy(selectItem as T, NewObj as T, true);
@@ -963,6 +955,15 @@ namespace RUINORERP.UI.BaseForm
                 // 重置审批状态
                 ResetApprovalStatus(NewObj);
 
+
+                if (frmadd.usedActionStatus)
+                {
+                    frmadd.BindData(NewObj as BaseEntity, ActionStatus.新增);
+                }
+                else
+                {
+                    frmadd.BindData(NewObj as BaseEntity);
+                }
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
                     ToolBarEnabledControl(MenuItemEnums.新增);

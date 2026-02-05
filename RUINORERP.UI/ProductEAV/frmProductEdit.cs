@@ -734,7 +734,6 @@ namespace RUINORERP.UI.ProductEAV
 
         public async override void BindData(BaseEntity entity)
         {
-
             oldOjb = CloneHelper.DeepCloneObject<tb_Prod>(entity);
             _EditEntity = entity as tb_Prod;
             if (_EditEntity.ProdBaseID == 0)
@@ -975,7 +974,6 @@ namespace RUINORERP.UI.ProductEAV
             queryFilterC.FilterLimitExpressions.Add(lambda);
 
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterC);
-
 
         }
 

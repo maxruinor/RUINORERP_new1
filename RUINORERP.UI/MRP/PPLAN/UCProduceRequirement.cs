@@ -1602,7 +1602,6 @@ namespace RUINORERP.UI.MRP.MP
             kryptonTreeGridViewStockLess.SetHideColumns<tb_ProductionDemandDetail>(c => c.ProdDetailID);
             kryptonTreeGridViewStockLess.SetHideColumns<tb_ProductionDemandDetail>(c => c.BOM_ID);
 
-
             kryptonTreeGridViewStockLess.DataSource = dtAll;
             kryptonTreeGridViewStockLess.Columns[kryptonTreeGridViewStockLess.IdColumnName].Visible = false;
 

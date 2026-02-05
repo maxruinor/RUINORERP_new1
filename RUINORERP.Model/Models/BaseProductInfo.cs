@@ -21,7 +21,7 @@ namespace RUINORERP.Model.Dto
         {
 
         }
- 
+
 
         /// <summary>
         /// 产品
@@ -90,11 +90,13 @@ namespace RUINORERP.Model.Dto
         public long? Type_ID { get; set; }
 
 
- 
-
-
-
-
+        private string _TypeName;
+        /// <summary>
+        /// 类型名称
+        /// </summary>
+        [AdvQueryAttribute(ColName = "TypeName", ColDesc = "类型名称")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "TypeName", Length = 50, IsNullable = false, ColumnDescription = "类型名称")]
+        public string TypeName { get; set; }
 
     }
 

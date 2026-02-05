@@ -83,7 +83,7 @@ namespace RUINORERP.UI.MRP.BOM
             if (!this.DesignMode)
             {
                 DisplayTextResolver = new GridViewDisplayTextResolverGeneric<tb_BOM_SDetail>();
-                DisplayTextResolver.AddReferenceKeyMapping<tb_ProductType,tb_Prod>(c => c.Type_ID, t => t.Type_ID, t => t.TypeName);
+
                 DisplayTextResolver.AddReferenceKeyMapping<tb_Unit, tb_BOM_SDetail>(c => c.Unit_ID, t => t.Unit_ID, t => t.UnitName);
                 DisplayTextResolver.Initialize(kryptonTreeGridViewBOMDetail);
             }
@@ -467,7 +467,7 @@ namespace RUINORERP.UI.MRP.BOM
             worksheet.Cells[StartRowIndex + row, costIndex + 1].Value = EditEntity.OutProductionAllCosts;
 
 
-         
+
 
 
             #region    导出日期
@@ -483,7 +483,7 @@ namespace RUINORERP.UI.MRP.BOM
 
             #endregion
 
-   
+
 
             //5行设置一个背景色
 
@@ -983,7 +983,7 @@ namespace RUINORERP.UI.MRP.BOM
 
         #endregion
 
-       
+
 
 
         /// <summary>
@@ -1094,7 +1094,9 @@ namespace RUINORERP.UI.MRP.BOM
             }
             return currentRow;
         }
-
+        // 在类开始处添加：
+        private static IEntityCacheManager _cacheManager;
+        private static IEntityCacheManager CacheManager => _cacheManager ?? (_cacheManager = Startup.GetFromFac<IEntityCacheManager>());
 
         private DataTable TransToDataTableByTreeAsync(tb_BOM_S entity)
         {
@@ -1137,7 +1139,11 @@ namespace RUINORERP.UI.MRP.BOM
 
             //将产品详情转换为基本信息列表
             List<BaseProductInfo> BaseProductInfoList = MainForm.Instance.mapper.Map<List<BaseProductInfo>>(ViewProdlist);
-
+            for (int i = 0; i < BaseProductInfoList.Count; i++)
+            {
+                var item = BaseProductInfoList[i];
+                item.TypeName = CacheManager.GetEntity<tb_ProductType>(item.Type_ID).TypeName;
+            }
 
             //合并的实体中有指定的业务主键关联，不然无法给值
             DataTable dtAll = TreeList.ToDataTable<BaseProductInfo, tb_BOM_SDetailTree>(BaseProductInfoList, BaseProductInfoColNames, colNames, c => c.ProdDetailID);
@@ -1436,7 +1442,7 @@ namespace RUINORERP.UI.MRP.BOM
 
                         cmbType.SelectedValue = vp.Type_ID;
 
-                       
+
                     }
                 }
 

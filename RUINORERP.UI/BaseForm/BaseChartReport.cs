@@ -614,7 +614,8 @@ namespace RUINORERP.UI.BaseForm
                 #endregion
 
                 QueryDtoProxy = QueryParameters;
-                ExtendedQuery(true);
+                // 修复：移除这里的ExtendedQuery调用,避免与QueryAsync中的调用重复导致连接关闭错误
+                // ExtendedQuery(true);
             }
             else
             {

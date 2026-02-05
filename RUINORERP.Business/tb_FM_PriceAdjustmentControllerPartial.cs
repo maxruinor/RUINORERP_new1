@@ -169,7 +169,7 @@ namespace RUINORERP.Business
                         {
                             #region 计算成本
                             //这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
-                            if (detail.Correct_UnitPrice_NoTax > 0 && inv.Quantity>0 && inv.Inv_Cost!= detail.Correct_UnitPrice_NoTax)
+                            if (detail.Correct_UnitPrice_NoTax > 0 && inv.Quantity > 0 && inv.Inv_Cost != detail.Correct_UnitPrice_NoTax)
                             {
                                 CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.Correct_UnitPrice_NoTax);
 
@@ -208,7 +208,7 @@ namespace RUINORERP.Business
                     {
                         var paybalbe = rmr.ReturnObject as tb_FM_ReceivablePayable;
                         paybalbe.ApprovalOpinions = $"价格调整单{entity.AdjustNo}审核时，自动创建并审核通过";
-                        ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe,true);
+                        ReturnResults<tb_FM_ReceivablePayable> rr = await paymentController.ApprovalAsync(paybalbe, true);
                         if (rr.Succeeded)
                         {
                             //审计日志
@@ -456,53 +456,15 @@ namespace RUINORERP.Business
                     priceAdjustment.Created_by = null;
 
                     List<tb_FM_PriceAdjustmentDetail> NewDetails = new List<tb_FM_PriceAdjustmentDetail>();
-                    List<string> tipsMsg = new List<string>();
                     for (global::System.Int32 i = 0; i < details.Count; i++)
                     {
-                        var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                        if (aa.Count > 0)
-                        {
-                            //来源单据明细中有相同产品多行出库时，请合并调整价格。
-                            tipsMsg.Add($"来源单据明细中有相同产品多行出库时，请合并调整价格");
-                        }
-                        else
-                        {
-                            #region 每行产品ID唯一
-                            tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
-                                .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            details[i].Original_UnitPrice_WithTax = item.UnitPrice;
-                            NewDetails.Add(details[i]);
-                            //tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
-                            //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            //details[i].Quantity = item.Quantity;// 已经交数量去掉
-                            //details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
-                            //if (details[i].Quantity > 0)
-                            //{
-                            //    NewDetails.Add(details[i]);
-                            //}
-                            //else
-                            //{
-                            //    tipsMsg.Add($"订单{purorder.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
-                            //}
-                            #endregion
-                        }
-
-                    }
-
-                    //if (NewDetails.Count == 0)
-                    //{
-                    //    tipsMsg.Add($"订单:{priceAdjustment.PurOrder_NO}已全部入库，请检查是否正在重复入库！");
-                    //}
-
-                    StringBuilder msg = new StringBuilder();
-                    foreach (var item in tipsMsg)
-                    {
-                        msg.Append(item).Append("\r\n");
-
-                    }
-                    if (tipsMsg.Count > 0)
-                    {
-                        MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        #region 为每行分配唯一行号
+                        tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                        details[i].Original_UnitPrice_WithTax = item.UnitPrice;
+                        details[i].LineNumber = item.SaleOutDetail_ID;
+                        NewDetails.Add(details[i]);
+                        #endregion
                     }
 
                     priceAdjustment.tb_FM_PriceAdjustmentDetails = NewDetails;
@@ -547,57 +509,38 @@ namespace RUINORERP.Business
                     priceAdjustment.Modified_at = null;
                     priceAdjustment.Modified_by = null;
                     List<tb_FM_PriceAdjustmentDetail> NewDetails = new List<tb_FM_PriceAdjustmentDetail>();
-                    List<string> tipsMsg = new List<string>();
+
                     for (global::System.Int32 i = 0; i < details.Count; i++)
                     {
-                        var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                        if (aa.Count > 0)
-                        {
-                            //来源单据明细中有相同产品多行出库时，请合并调整价格。
-                            tipsMsg.Add($"来源单据明细中有相同产品多行出库时，请合并调整价格");
-                        }
-                        else
-                        {
-                            #region 每行产品ID唯一
-                            tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
-                                .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            details[i].Original_UnitPrice_WithTax = item.UnitPrice;
-                            details[i].Original_UnitPrice_NoTax = item.UntaxedUnitPrice;
-                            details[i].Original_TaxRate = item.TaxRate;
-                            details[i].Quantity = item.Quantity;
-                            NewDetails.Add(details[i]);
-                            //tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
-                            //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                            //details[i].Quantity = item.Quantity;// 已经交数量去掉
-                            //details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
-                            //if (details[i].Quantity > 0)
-                            //{
-                            //    NewDetails.Add(details[i]);
-                            //}
-                            //else
-                            //{
-                            //    tipsMsg.Add($"订单{purorder.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
-                            //}
-                            #endregion
-                        }
+
+                        #region 每行产品ID和行号唯一
+                        tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                        details[i].Original_UnitPrice_WithTax = item.UnitPrice;
+                        details[i].Original_UnitPrice_NoTax = item.UntaxedUnitPrice;
+                        details[i].Original_TaxRate = item.TaxRate;
+                        details[i].Quantity = item.Quantity;
+                        details[i].LineNumber =item.PurEntryDetail_ID;
+                        NewDetails.Add(details[i]);
+                        //tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
+                        //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                        //details[i].Quantity = item.Quantity;// 已经交数量去掉
+                        //details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
+                        //if (details[i].Quantity > 0)
+                        //{
+                        //    NewDetails.Add(details[i]);
+                        //}
+                        //else
+                        //{
+                        //    tipsMsg.Add($"订单{purorder.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
+                        //}
+                        #endregion
+
 
                     }
 
-                    //if (NewDetails.Count == 0)
-                    //{
-                    //    tipsMsg.Add($"订单:{priceAdjustment.PurOrder_NO}已全部入库，请检查是否正在重复入库！");
-                    //}
-
-                    StringBuilder msg = new StringBuilder();
-                    foreach (var item in tipsMsg)
-                    {
-                        msg.Append(item).Append("\r\n");
-
-                    }
-                    if (tipsMsg.Count > 0)
-                    {
-                        MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
+      
+                    
 
                     priceAdjustment.tb_FM_PriceAdjustmentDetails = NewDetails;
 

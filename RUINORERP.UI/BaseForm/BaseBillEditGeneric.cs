@@ -3079,10 +3079,7 @@ namespace RUINORERP.UI.BaseForm
                             //这里更新数据库
                             await ctr.BaseSaveOrUpdate(EditEntity);
                         }
-                        else
-                        {
-                            await MainForm.Instance.LoginWebServer();
-                        }
+                        
                     }
 
 
@@ -4051,7 +4048,6 @@ namespace RUINORERP.UI.BaseForm
                             }
                             else
                             {
-                                MainForm.Instance.LoginWebServer();
                                 rs = false;
                             }
                         }

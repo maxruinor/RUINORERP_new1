@@ -972,7 +972,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// by watson 删除了-> .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档
+        /// by watson 删除了-> .IncludesAllFirstLayer()//自动更新导航 只能两层。这里项目中有时会失效，具体看文档1
         /// 因为这个方法只用于基础数据的查询列表。不用引用显示太多内容
         /// 更名为BaseQuerySimpleByAdvancedNavWithConditionsAsync
         /// 老方法用于单据,但是中间过程重复。可以优化重构

@@ -256,7 +256,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4DataTime<tb_FM_PreReceivedPayment>(entity, t => t.PrePayDate, dtpPrePayDate, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.PrePaymentReason, txtPrePaymentReason, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBizType, txtBizType, BindDataType4TextBox.Qty, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_FM_PreReceivedPayment, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
+            DataBindingHelper.BindData4CmbByEnumWithInclude<tb_FM_PreReceivedPayment, BizType>(entity, k => k.SourceBizType, cmbBizType, false, BizType.销售订单, BizType.采购订单,BizType.无对应数据);
             //DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillId, txtSourceBillId, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PreReceivedPayment>(entity, t => t.ForeignPrepaidAmount.ToString(), txtForeignPrepaidAmount, BindDataType4TextBox.Money, false);
@@ -559,10 +559,7 @@ namespace RUINORERP.UI.FM
                                     //成功后。旧文件名部分要和上传成功后新文件名部分一致。后面修改只修改新文件名部分。再对比
                                     MainForm.Instance.PrintInfoLog("UploadSuccessful for base List:" + newfileName);
                                 }
-                                else
-                                {
-                                    MainForm.Instance.LoginWebServer();
-                                }
+
                             }
                         }
                     }
@@ -587,7 +584,7 @@ namespace RUINORERP.UI.FM
 
 
 
-       
+
 
 
 

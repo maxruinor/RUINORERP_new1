@@ -1146,7 +1146,7 @@ namespace RUINORERP.UI.Common
 
         #region by watson 2025-06-26  一个新的绑定枚举的方法更友好
         /// <summary>
-        /// by watson 2025-06-26
+        /// by watson 2025-06-2611
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>
@@ -1286,12 +1286,195 @@ namespace RUINORERP.UI.Common
                 list.Insert(0, sobj);
             }
 
+
             cmbBox.SelectedValue = -1;
 
             BindingSource bs = new BindingSource();
             bs.DataSource = list;
             ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
 
+        }
+
+        /// <summary>
+        /// 绑定枚举类型-仅绑定指定的枚举值
+        /// </summary>
+        /// <typeparam name="TEntity">数据库对应表实体名</typeparam>
+        /// <typeparam name="TEnum">枚举类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <param name="expkey">属性表达式</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="addSelect">是否添加"请选择"选项</param>
+        /// <param name="includeEnums">需要绑定的枚举值集合</param>
+        public static void BindData4CmbByEnumWithInclude<TEntity, TEnum>(object entity, Expression<Func<TEntity, int?>> expkey, KryptonComboBox cmbBox, bool addSelect, params TEnum[] includeEnums)
+             where TEnum : Enum
+        {
+            cmbBox.DataBindings.Clear();
+            MemberInfo minfo = expkey.GetMemberInfo();
+            string key = minfo.Name;
+            BindData4CmbByEnumWithInclude<TEntity, TEnum>(entity, key, cmbBox, addSelect, includeEnums);
+        }
+
+        /// <summary>
+        /// 绑定枚举类型-仅绑定指定的枚举值
+        /// </summary>
+        /// <typeparam name="TEntity">数据库对应表实体名</typeparam>
+        /// <typeparam name="TEnum">枚举类型</typeparam>
+        /// <param name="entity">实体对象</param>
+        /// <param name="keyName">属性名称</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="addSelect">是否添加"请选择"选项</param>
+        /// <param name="includeEnums">需要绑定的枚举值集合</param>
+        public static void BindData4CmbByEnumWithInclude<TEntity, TEnum>(object entity, string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] includeEnums)
+              where TEnum : Enum
+        {
+            // 处理空值或无效枚举值情况
+            if (includeEnums == null || includeEnums.Length == 0)
+            {
+                // 如果没有指定枚举值，绑定空列表
+                cmbBox.Tag = keyName;
+                InitDataToCmbByEnumDynamicGeneratedDataSource<TEnum>(keyName, cmbBox, addSelect, new TEnum[0]);
+
+                var depa = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+                depa.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+                depa.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+                cmbBox.DataBindings.Add(depa);
+                return;
+            }
+
+            cmbBox.Tag = keyName;
+            InitDataToCmbByEnumDynamicGeneratedDataSourceWithInclude<TEnum>(keyName, cmbBox, addSelect, includeEnums);
+
+            var binding = new Binding("SelectedValue", entity, keyName, true, DataSourceUpdateMode.OnPropertyChanged);
+            //数据源的数据类型转换为控件要求的数据类型。
+            binding.Format += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            //将控件的数据类型转换为数据源要求的数据类型。
+            binding.Parse += (s, args) => args.Value = args.Value == null ? -1 : args.Value;
+            cmbBox.DataBindings.Add(binding);
+        }
+
+        /// <summary>
+        /// 初始化下拉框数据源-仅绑定指定的枚举值
+        /// </summary>
+        /// <typeparam name="TEnum">枚举类型</typeparam>
+        /// <param name="keyName">属性名称</param>
+        /// <param name="cmbBox">下拉框控件</param>
+        /// <param name="addSelect">是否添加"请选择"选项</param>
+        /// <param name="includeEnums">需要绑定的枚举值集合</param>
+        public static void InitDataToCmbByEnumDynamicGeneratedDataSourceWithInclude<TEnum>(string keyName, KryptonComboBox cmbBox, bool addSelect, params TEnum[] includeEnums) where TEnum : Enum
+        {
+            Type enumType = typeof(TEnum);
+
+            //枚举值为int/long，动态生成一个类再绑定
+            // 获取枚举的基础类型
+            Type underlyingType = Enum.GetUnderlyingType(enumType);
+
+            var type = enumType;
+            var aName = new System.Reflection.AssemblyName(Assembly.GetExecutingAssembly().GetName().Name);
+
+            TypeConfig typeConfig = new TypeConfig();
+            typeConfig.FullName = aName.Name;
+
+            //要创建的属性
+            PropertyConfig propertyConfigKey = new PropertyConfig();
+            propertyConfigKey.PropertyName = keyName;// type.Name;默认枚举名改为可以指定名
+            if (underlyingType == typeof(int))
+            {
+                propertyConfigKey.PropertyType = typeof(int);//枚举值为int 默认
+            }
+            if (underlyingType == typeof(long))
+            {
+                propertyConfigKey.PropertyType = typeof(long);//枚举值为long 默认
+            }
+            PropertyConfig propertyConfigName = new PropertyConfig();
+            propertyConfigName.PropertyName = "Name";
+            propertyConfigName.PropertyType = typeof(string);
+
+            typeConfig.Properties.Add(propertyConfigKey);
+            typeConfig.Properties.Add(propertyConfigName);
+            Type newType = TypeBuilderHelper.BuildType(typeConfig);
+
+            List<object> list = new List<object>();
+
+            // 处理空值或无效枚举值情况
+            if (includeEnums == null || includeEnums.Length == 0)
+            {
+                // 只添加"请选择"选项
+                if (addSelect)
+                {
+                    object sobj = Activator.CreateInstance(newType);
+                    if (underlyingType == typeof(int))
+                    {
+                        sobj.SetPropertyValue(keyName, -1);
+                    }
+                    else if (underlyingType == typeof(long))
+                    {
+                        sobj.SetPropertyValue(keyName, (long)-1);
+                    }
+                    sobj.SetPropertyValue("Name", "请选择");
+                    list.Add(sobj);
+                }
+
+                cmbBox.SelectedValue = -1;
+
+                BindingSource bindingSource = new BindingSource();
+                bindingSource.DataSource = list;
+                ComboBoxHelper.InitDropList(bindingSource, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
+                return;
+            }
+
+            // 遍历指定的枚举值集合
+            foreach (TEnum enumValue in includeEnums)
+            {
+                object eobj = Activator.CreateInstance(newType);
+                if (underlyingType == typeof(int))
+                {
+                    int currentValue = Convert.ToInt32(enumValue);
+                    eobj.SetPropertyValue(keyName, currentValue);
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    long currentValueLong = Convert.ToInt64(enumValue);
+                    eobj.SetPropertyValue(keyName, currentValueLong);
+                }
+
+                string currentName = enumValue.ToString();
+
+                var fieldInfo = enumType.GetField(currentName);
+                var descriptionAttribute = fieldInfo?
+                    .GetCustomAttributes(typeof(DescriptionAttribute), false)
+                    .FirstOrDefault() as DescriptionAttribute;
+                string Description = descriptionAttribute?.Description ?? string.Empty;
+                if (!string.IsNullOrEmpty(Description))
+                {
+                    eobj.SetPropertyValue("Name", Description);
+                }
+                else
+                {
+                    eobj.SetPropertyValue("Name", currentName);
+                }
+                list.Add(eobj);
+            }
+
+            if (addSelect)
+            {
+                object sobj = Activator.CreateInstance(newType);
+                if (underlyingType == typeof(int))
+                {
+                    sobj.SetPropertyValue(keyName, -1);
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    sobj.SetPropertyValue(keyName, (long)-1);
+                }
+                sobj.SetPropertyValue("Name", "请选择");
+                list.Insert(0, sobj);
+            }
+
+            cmbBox.SelectedValue = -1;
+
+            BindingSource bs = new BindingSource();
+            bs.DataSource = list;
+            ComboBoxHelper.InitDropList(bs, cmbBox, keyName, "Name", ComboBoxStyle.DropDown, false);
         }
 
 

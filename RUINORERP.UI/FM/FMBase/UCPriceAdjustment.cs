@@ -55,17 +55,29 @@ namespace RUINORERP.UI.FM
 {
 
     /// <summary>
-    /// 价格调整单
+    /// 价格调整单1
     /// </summary>
     public partial class UCPriceAdjustment : BaseBillEditGeneric<tb_FM_PriceAdjustment, tb_FM_PriceAdjustmentDetail>, IPublicEntityObject
     {
         public UCPriceAdjustment()
         {
             InitializeComponent();
-            AddPublicEntityObject(typeof(ProductSharePart));
+            if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                if (!this.DesignMode)
+                {
+                    AddPublicEntityObject(typeof(ProductSharePart));
+                }
+            }
+
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             if (base.EditEntity is tb_FM_PriceAdjustment priceAdjustment)
             {
                 if (priceAdjustment.SourceBillId.HasValue)
@@ -141,6 +153,11 @@ namespace RUINORERP.UI.FM
         tb_FM_PriceAdjustmentController<tb_FM_PriceAdjustment> ctr = Startup.GetFromFac<tb_FM_PriceAdjustmentController<tb_FM_PriceAdjustment>>();
         public override void BindData(tb_FM_PriceAdjustment entity, ActionStatus actionStatus)
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             if (entity == null)
             {
                 return;
@@ -204,7 +221,7 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustNo, txtAdjustNo, BindDataType4TextBox.Qty, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.TotalLocalDiffAmount.ToString(), txtTotalLocalDiffAmount, BindDataType4TextBox.Money, false);
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, t => t.AdjustReason, txtAdjustReason, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4CmbByEnum<tb_FM_PriceAdjustment, BizType>(entity, k => k.SourceBizType, cmbBizType, false);
+            DataBindingHelper.BindData4CmbByEnumWithInclude<tb_FM_PriceAdjustment, BizType>(entity, k => k.SourceBizType, cmbBizType, false, BizType.采购入库单, BizType.销售出库单);
 
             //先绑定这个。InitFilterForControl 这个才生效
             DataBindingHelper.BindData4TextBox<tb_FM_PriceAdjustment>(entity, v => v.SourceBillNo, txtSourceBillNo, BindDataType4TextBox.Text, true, false);
@@ -340,7 +357,7 @@ namespace RUINORERP.UI.FM
             //如果属性变化 则状态为修改
             entity.PropertyChanged += async (sender, s2) =>
             {
-                //权限允许
+                //权限允许  
                 if ((true && entity.DataStatus == (long)DataStatus.草稿)
                 || (true && entity.DataStatus == (long)DataStatus.新建))
                 {
@@ -420,6 +437,11 @@ namespace RUINORERP.UI.FM
         /// </summary>
         public override void QueryConditionBuilder()
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
+
             BaseProcessor baseProcessor = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PriceAdjustment).Name + "Processor");
             QueryConditionFilter = baseProcessor.GetQueryFilter();
 
@@ -457,6 +479,10 @@ namespace RUINORERP.UI.FM
 
         private void UCStockIn_Load(object sender, EventArgs e)
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return;
+            }
 
             #region
             switch (PaymentType)
@@ -475,13 +501,12 @@ namespace RUINORERP.UI.FM
 
             #endregion
 
-            MainForm.Instance.LoginWebServer();
             if (CurMenuInfo != null)
             {
                 lblBillText.Text = CurMenuInfo.CaptionCN;
             }
             InitDataTocmbbox();
-            
+
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             grid1.Selection.EnableMultiSelection = false;
@@ -493,6 +518,7 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.AdjustDetailID);
             listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.ProdDetailID);
+            //listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.LineNumber);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
@@ -741,7 +767,6 @@ namespace RUINORERP.UI.FM
                                         else
                                         {
                                             MainForm.Instance.PrintInfoLog("请重试！ " + uploadRsult);
-                                            MainForm.Instance.LoginWebServer();
                                         }
 
 
@@ -766,6 +791,11 @@ namespace RUINORERP.UI.FM
         List<tb_FM_PriceAdjustmentDetail> details = new List<tb_FM_PriceAdjustmentDetail>();
         protected async override Task<bool> Save(bool NeedValidated)
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return false;
+            }
+
             if (EditEntity == null)
             {
                 return false;
@@ -846,6 +876,11 @@ namespace RUINORERP.UI.FM
 
         protected override async Task<bool> Submit()
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return false;
+            }
+
             bool rs = await base.Submit();
             if (rs)
             {
@@ -863,6 +898,11 @@ namespace RUINORERP.UI.FM
 
         protected async override Task<ReturnResults<tb_FM_PriceAdjustment>> Delete()
         {
+            if (System.ComponentModel.LicenseManager.UsageMode == System.ComponentModel.LicenseUsageMode.Designtime)
+            {
+                return new ReturnResults<tb_FM_PriceAdjustment>();
+            }
+
             ReturnResults<tb_FM_PriceAdjustment> rss = new ReturnResults<tb_FM_PriceAdjustment>();
             if (EditEntity == null)
             {

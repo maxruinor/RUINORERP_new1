@@ -853,7 +853,6 @@ namespace RUINORERP.UI.FM
             #endregion
             if (!this.DesignMode)
             {
-                MainForm.Instance.LoginWebServer();
                 if (CurMenuInfo != null)
                 {
                     lblBillText.Text = CurMenuInfo.CaptionCN;

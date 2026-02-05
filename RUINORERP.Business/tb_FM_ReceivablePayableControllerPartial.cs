@@ -2675,9 +2675,7 @@ namespace RUINORERP.Business
             //创建时间 系统操作时间  操作审计 内部控制
             //审核时间 财务确认时间  审批流程 责任追溯
 
-
-
-
+ 
 
             List<tb_FM_ReceivablePayableDetail> details = mapper.Map<List<tb_FM_ReceivablePayableDetail>>(entity.tb_PurEntryDetails);
 

@@ -1180,7 +1180,6 @@ namespace RUINORERP.UI.FM
                                         else
                                         {
                                             MainForm.Instance.PrintInfoLog("请重试！ " + uploadRsult);
-                                            MainForm.Instance.LoginWebServer();
                                         }
 
 

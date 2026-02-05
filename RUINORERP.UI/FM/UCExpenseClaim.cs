@@ -475,7 +475,6 @@ namespace RUINORERP.UI.FM
         List<SGDefineColumnItem> listCols = new List<SGDefineColumnItem>();
         private void UCStockIn_Load(object sender, EventArgs e)
         {
-            MainForm.Instance.LoginWebServer();
             if (CurMenuInfo != null)
             {
                 lbl盘点单.Text = CurMenuInfo.CaptionCN;

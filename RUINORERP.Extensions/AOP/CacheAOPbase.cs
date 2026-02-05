@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common.Helper;
+using RUINORERP.Common.Helper;
 using Castle.DynamicProxy;
 using Newtonsoft.Json;
 using SqlSugar;
@@ -52,15 +52,41 @@ namespace RUINORERP.Extensions.AOP
 
             if (arg != null)
             {
+                // 排除不适合缓存的类型
+                var argType = arg.GetType();
+                var typeName = argType.Name;
+                var fullTypeName = argType.FullName;
+                
+                // 排除SqlSugar相关类型
+                if (typeName.Contains("SqlSugar") || fullTypeName.Contains("SqlSugar"))
+                {
+                    return string.Empty;
+                }
+                
+                // 排除数据库连接相关类型
+                if (typeName.Contains("Connection") || typeName.Contains("DbClient") || typeName.Contains("UnitOfWork"))
+                {
+                    return string.Empty;
+                }
+                
+                // 排除表达式树以外的复杂类型
                 if (arg is Expression)
                 {
                     var obj = arg as Expression;
                     var result = Resolve(obj);
                     return MD5Helper.MD5Encrypt16(result);
                 }
-                else if (arg.GetType().IsClass)
+                else if (argType.IsClass && !argType.FullName.StartsWith("System"))
                 {
-                    return MD5Helper.MD5Encrypt16(JsonConvert.SerializeObject(arg));
+                    try
+                    {
+                        return MD5Helper.MD5Encrypt16(JsonConvert.SerializeObject(arg));
+                    }
+                    catch
+                    {
+                        // 序列化失败时返回空值
+                        return string.Empty;
+                    }
                 }
 
                 return $"value:{arg.ObjToString()}";

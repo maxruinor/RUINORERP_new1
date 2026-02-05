@@ -33,6 +33,13 @@ namespace RUINORERP.Extensions.AOP
 
             #endregion
 
+            // 排除UnitOfWorkManage类型的方法拦截，避免事务操作被缓存处理
+            if (invocation.InvocationTarget.GetType().Name.Contains("UnitOfWorkManage"))
+            {
+                invocation.Proceed();
+                return;
+            }
+
             var method = invocation.MethodInvocationTarget ?? invocation.Method;
             //对当前方法的特性验证
             //如果需要验证

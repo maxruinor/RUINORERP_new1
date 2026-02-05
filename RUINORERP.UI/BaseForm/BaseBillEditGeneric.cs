@@ -4795,6 +4795,11 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+
+        /// <summary>
+        /// 1
+        /// </summary>
+        /// <returns></returns>
         protected virtual T AddByCopy()
         {
             if (EditEntity == null)

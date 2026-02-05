@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQuery));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseBillQueryMC));
             this.BaseToolStrip = new System.Windows.Forms.ToolStrip();
             this.toolStripButton4 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
@@ -43,8 +43,6 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripBtnExport = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
-            this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripButton12 = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.最大行数 = new System.Windows.Forms.ToolStripLabel();
@@ -56,6 +54,8 @@
             this.kryptonPanelQuery = new Krypton.Toolkit.KryptonPanel();
             this.groupLine1 = new WinLib.Line.GroupLine();
             this.kryptonDockingManagerQuery = new Krypton.Docking.KryptonDockingManager();
+            this.toolStripbtnFunction = new System.Windows.Forms.ToolStripDropDownButton();
+            this.复制性新增ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanelMainBig)).BeginInit();
             this.kryptonPanelMainBig.SuspendLayout();
@@ -191,23 +191,6 @@
             this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnProperty.Text = "属性";
             // 
-            // toolStripbtnFunction
-            // 
-            this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.复制性新增ToolStripMenuItem});
-            this.toolStripbtnFunction.Image = global::RUINORERP.UI.Properties.Resources.objectItem;
-            this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnFunction.Name = "toolStripbtnFunction";
-            this.toolStripbtnFunction.Size = new System.Drawing.Size(62, 22);
-            this.toolStripbtnFunction.Text = "功能";
-            // 
-            // 复制性新增ToolStripMenuItem
-            // 
-            this.复制性新增ToolStripMenuItem.Image = global::RUINORERP.UI.Properties.Resources.add;
-            this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
-            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
-            this.复制性新增ToolStripMenuItem.Text = "复制性新增";
-            // 
             // toolStripButton12
             // 
             this.toolStripButton12.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton12.Image")));
@@ -313,6 +296,24 @@
             // 
             this.kryptonDockingManagerQuery.Strings.TextAutoHide = "自动隐藏";
             // 
+            // toolStripbtnFunction
+            // 
+            this.toolStripbtnFunction.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.复制性新增ToolStripMenuItem});
+            this.toolStripbtnFunction.Image = global::RUINORERP.UI.Properties.Resources.objectItem;
+            this.toolStripbtnFunction.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnFunction.Name = "toolStripbtnFunction";
+            this.toolStripbtnFunction.Size = new System.Drawing.Size(62, 22);
+            this.toolStripbtnFunction.Text = "功能";
+            // 
+            // 复制性新增ToolStripMenuItem
+            // 
+            this.复制性新增ToolStripMenuItem.Image = global::RUINORERP.UI.Properties.Resources.add;
+            this.复制性新增ToolStripMenuItem.Name = "复制性新增ToolStripMenuItem";
+            this.复制性新增ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.复制性新增ToolStripMenuItem.Text = "复制性新增";
+            this.复制性新增ToolStripMenuItem.Visible = false;
+            // 
             // BaseBillQueryMC
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -347,8 +348,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton toolStripBtnExport;
         private System.Windows.Forms.ToolStripButton toolStripButton12;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripbtnFunction;
-        private System.Windows.Forms.ToolStripMenuItem 复制性新增ToolStripMenuItem;
         public Krypton.Toolkit.KryptonPanel kryptonPanelMainBig;
         public Krypton.Docking.KryptonDockableWorkspace kryptonDockableWorkspaceQuery;
         public Krypton.Docking.KryptonDockingManager kryptonDockingManagerQuery;
@@ -368,5 +367,7 @@
         public System.Windows.Forms.ToolStripButton toolStripbtnSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnApprove;
         public System.Windows.Forms.ToolStripButton tsbtnAntiApproval;
+        private System.Windows.Forms.ToolStripDropDownButton toolStripbtnFunction;
+        private System.Windows.Forms.ToolStripMenuItem 复制性新增ToolStripMenuItem;
     }
 }

@@ -918,7 +918,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 复制性新增
+        /// 复制性新增1
         /// </summary>
         protected void AddByCopy()
         {
@@ -949,9 +949,19 @@ namespace RUINORERP.UI.BaseForm
 
                 //复制性 的就是把原有值除主键全部复制过去。
                 FastCopy<T, T>.Copy(selectItem as T, NewObj as T, true);
-                //设置主键为0才会新增，这里代码顺序不能反
+                
+                // 获取忽略属性配置
+                var ignoreConfig = ConfigureIgnoreProperties();
+                
+                // 重置需要忽略的属性
+                ResetIgnoredProperties(NewObj, ignoreConfig);
+                
+                // 设置主键为0才会新增，这里代码顺序不能反
                 string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
-                ReflectionHelper.SetPropertyValue(NewObj, PKCol, 0);
+                ResetPrimaryKey(NewObj, PKCol);
+                
+                // 重置审批状态
+                ResetApprovalStatus(NewObj);
 
                 if (frmadd.ShowDialog() == DialogResult.OK)
                 {
@@ -982,6 +992,113 @@ namespace RUINORERP.UI.BaseForm
             }
 
 
+        }
+
+        /// <summary>
+        /// 配置复制操作时需要忽略的属性
+        /// </summary>
+        /// <returns>忽略属性配置</returns>
+        protected virtual RUINORERP.Business.CommService.IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            var config = new RUINORERP.Business.CommService.IgnorePropertyConfiguration();
+
+            // 使用字符串方式配置通用属性
+            config.IgnoreIfExists<T>("DataStatus")
+                  .IgnoreIfExists<T>("PrimaryKeyID")
+                  .IgnoreIfExists<T>("Created_at")
+                  .IgnoreIfExists<T>("Created_by")
+                  .IgnoreIfExists<T>("Modified_at")
+                  .IgnoreIfExists<T>("Modified_by")
+                  .IgnoreIfExists<T>("ApprovalStatus")
+                  .IgnoreIfExists<T>("ApprovalResults")
+                  .IgnoreIfExists<T>("Approver_by")
+                  .IgnoreIfExists<T>("Approver_at")
+                  .IgnoreIfExists<T>("PrintStatus");
+
+            return config;
+        }
+
+        /// <summary>
+        /// 重置需要忽略的属性
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="ignoreConfig">忽略属性配置</param>
+        private void ResetIgnoredProperties(object entity, RUINORERP.Business.CommService.IgnorePropertyConfiguration ignoreConfig)
+        {
+            if (entity == null) return;
+
+            var entityType = entity.GetType();
+            var ignoredProperties = ignoreConfig.GetIgnoredProperties(entityType);
+
+            foreach (var propName in ignoredProperties)
+            {
+                if (ReflectionHelper.ExistPropertyName(entityType, propName))
+                {
+                    var prop = entityType.GetProperty(propName);
+                    if (prop != null && prop.CanWrite)
+                    {
+                        // 根据属性类型设置默认值
+                        if (prop.PropertyType == typeof(string))
+                            prop.SetValue(entity, null);
+                        else if (prop.PropertyType == typeof(int))
+                            prop.SetValue(entity, 0);
+                        else if (prop.PropertyType == typeof(long))
+                            prop.SetValue(entity, 0L);
+                        else if (prop.PropertyType == typeof(decimal))
+                            prop.SetValue(entity, 0m);
+                        else if (prop.PropertyType == typeof(DateTime))
+                            prop.SetValue(entity, DateTime.MinValue);
+                        else if (prop.PropertyType == typeof(DateTime?))
+                            prop.SetValue(entity, null);
+                        else if (prop.PropertyType == typeof(bool))
+                            prop.SetValue(entity, false);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重置实体的主键
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="pkCol">主键列名</param>
+        private void ResetPrimaryKey(object entity, string pkCol)
+        {
+            if (entity == null) return;
+
+            long pkid = (long)ReflectionHelper.GetPropertyValue(entity, pkCol);
+            if (pkid > 0)
+            {
+                ReflectionHelper.SetPropertyValue(entity, pkCol, 0);
+            }
+        }
+
+        /// <summary>
+        /// 重置审批状态相关属性
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        private void ResetApprovalStatus(object entity)
+        {
+            if (entity == null) return;
+
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(ApprovalStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(entity, typeof(ApprovalStatus).Name, (int)ApprovalStatus.未审核);
+            }
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), typeof(DataStatus).Name))
+            {
+                ReflectionHelper.SetPropertyValue(entity, typeof(DataStatus).Name, (int)DataStatus.草稿);
+            }
+
+            if (ReflectionHelper.ExistPropertyName(entity.GetType(), "ApprovalResults"))
+            {
+                ReflectionHelper.SetPropertyValue(entity, "ApprovalResults", false);
+            }
+
+            RUINORERP.Business.BusinessHelper.Instance.InitEntity(entity);
+            RUINORERP.Business.BusinessHelper.Instance.ClearEntityApproverInfo(entity);
+            RUINORERP.Business.BusinessHelper.Instance.ClearEntityEditInfo(entity);
+            RUINORERP.Business.BusinessHelper.Instance.InitStatusEntity(entity);
         }
 
 

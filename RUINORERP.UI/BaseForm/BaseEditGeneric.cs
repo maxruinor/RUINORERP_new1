@@ -498,7 +498,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 特殊显示必填项 1
+        /// 特殊显示必填项 2
         /// </summary>
         /// <typeparam name="T">要验证必填的类型</typeparam>
         /// <param name="rules">验证器实例</param>
@@ -576,20 +576,122 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>如果是必填验证器返回true，否则返回false</returns>
         private bool IsRequiredValidator(FluentValidation.Internal.IRuleComponent component, string propertyName, Type entityType)
         {
+      
+
             // 检查常见的必填验证器类型
             switch (component.Validator.Name)
             {
                 case "NotEmptyValidator":
                 case "NotNullValidator":
+                    // 检查是否有 When 条件，如果有且条件是检查属性是否有值，则不视为必填
+                    if (HasConditionalValidation(component, propertyName, entityType))
+                    {
+                        return false;
+                    }
                     return true;
 
                 case "PredicateValidator":
-                    // 对于外键验证器，需要检查属性是否为可空类型
-                    return IsRequiredForeignKeyValidator(component, propertyName, entityType);
+                    // 对于值类型字段（如 int），如果有 Must 验证器，并且是外键字段（通常以 _ID 结尾），则视为必填
+                    return IsRequiredValueTypeValidator(component, propertyName, entityType);
 
                 default:
                     return false;
             }
+        }
+
+        /// <summary>
+        /// 检查验证器组件是否有条件验证（如 When(x => x.Property.HasValue)）
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <returns>如果有条件验证返回true，否则返回false</returns>
+        private bool HasConditionalValidation(FluentValidation.Internal.IRuleComponent component, string propertyName,Type entityType)
+        {
+            // 使用反射来检查组件是否有条件相关的属性
+            try
+            {
+                // 首先检查组件是否有 HasCondition 属性，并且值为 true
+                var hasConditionProperty = component.GetType().GetProperty("HasCondition", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                if (hasConditionProperty != null)
+                {
+                    var hasCondition = hasConditionProperty.GetValue(component);
+                    if (hasCondition is bool && (bool)hasCondition)
+                    {
+                        // 检查属性是否为可空类型
+                        var propertyInfo = entityType.GetProperty(propertyName);
+                        if (propertyInfo != null)
+                        {
+                            Type propertyType = propertyInfo.PropertyType;
+                            // 检查是否为可空类型
+                            if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                            {
+                                // 可空类型字段，不视为必填
+                                return false;
+                            }
+                        }
+
+                        // 检查组件类型是否包含 Predicate 属性（可能是另一种条件表示方式）
+                        var predicateProperty = component.GetType().GetProperty("Predicate", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                        if (predicateProperty != null)
+                        {
+                            var predicate = predicateProperty.GetValue(component);
+                            if (predicate != null)
+                            {
+                                // 获取条件的表达式字符串
+                                string predicateExpression = predicate.ToString();
+                                
+                                // 检查条件是否是检查属性是否有值（如 x => x.Rack_ID.HasValue）
+                                string hasValuePattern = $"{propertyName}.HasValue";
+                                if (predicateExpression.Contains(hasValuePattern))
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // 忽略反射异常
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// 判断验证器组件是否为必填的值类型验证器
+        /// 例如：对于 int 类型的外键字段，即使没有显式的 NotEmpty 验证，
+        /// 但如果有 Must 验证器要求值大于 0，则视为必填
+        /// </summary>
+        /// <param name="component">验证器组件</param>
+        /// <param name="propertyName">属性名称</param>
+        /// <param name="entityType">实体类型</param>
+        /// <returns>如果是必填的值类型验证器返回true，否则返回false</returns>
+        private bool IsRequiredValueTypeValidator(FluentValidation.Internal.IRuleComponent component, string propertyName, Type entityType)
+        {
+            // 获取属性信息
+            var propertyInfo = entityType.GetProperty(propertyName);
+            if (propertyInfo == null)
+            {
+                return false;
+            }
+
+            // 检查属性是否为外键（有 FKRelationAttribute 特性）
+            var fkAttr = propertyInfo.GetCustomAttribute<FKRelationAttribute>(false);
+            if (fkAttr != null)
+            {
+                // 检查属性是否为不可空值类型
+                if (propertyInfo.PropertyType.IsValueType)
+                {
+                    // 检查是否是可空值类型
+                    var underlyingType = Nullable.GetUnderlyingType(propertyInfo.PropertyType);
+                    // 如果不是可空值类型，则为必填
+                    return underlyingType == null;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

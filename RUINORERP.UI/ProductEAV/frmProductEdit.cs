@@ -670,22 +670,26 @@ namespace RUINORERP.UI.ProductEAV
 
         /// <summary>
         /// 验证生成产品编号规则所需的前置条件
+        ///  1. 产品类型必须选择
+        ///  2. 产品类目必须选择
         /// </summary>
         /// <param name="product">产品实体</param>
         /// <returns>验证结果消息，如果为空表示验证通过</returns>
-        private string ValidateProductCodeGeneration(tb_Prod product)
+        private (string, bool) ValidateProductCodeGeneration(tb_Prod product)
         {
+            //改为元组返回值
+
             if (product.Type_ID <= 0)
             {
-                return "请选择产品类型";
+                return ("请选择产品类型", false);
             }
 
-            if (!product.Category_ID.HasValue || product.Category_ID.Value <= 0)
+            if (product.Category_ID <= 0)
             {
-                return "请选择产品类目";
+                return ("请选择产品类目", false);
             }
 
-            return string.Empty;
+            return (string.Empty, true);
         }
 
         /// <summary>
@@ -694,8 +698,8 @@ namespace RUINORERP.UI.ProductEAV
         private async Task GenerateProductCodes()
         {
             // 验证生成产品编号规则所需的前置条件
-            string validationMessage = ValidateProductCodeGeneration(EditEntity);
-            if (!string.IsNullOrEmpty(validationMessage))
+            var (validationMessage, isValid) = ValidateProductCodeGeneration(EditEntity);
+            if (!isValid)
             {
                 // 显示验证失败消息并返回
                 MessageBox.Show(validationMessage, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -703,7 +707,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
-            var obj = _cacheManager.GetEntity<tb_ProdCategories>(EditEntity.Category_ID.Value);
+            var obj = _cacheManager.GetEntity<tb_ProdCategories>(EditEntity.Category_ID);
             if (obj != null && obj.ToString() != "System.Object")
             {
                 if (obj is tb_ProdCategories Cate)
@@ -741,24 +745,25 @@ namespace RUINORERP.UI.ProductEAV
             {
                 _EditEntity.DataStatus = (int)RUINORERP.Global.DataStatus.草稿;
                 _EditEntity.ActionStatus = ActionStatus.新增;
-                //long maxid = await mcProdBase.GetMaxID();
-                //_EditEntity.ShortCode = maxid.ToString().PadLeft(4, '0');//推荐
                 //助记码要在类目选择后生成，要有规律
                 //详情直接清空，因为是新增 ，属性这块不清楚。后面再优化：TODO:
                 _EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
 
                 _EditEntity.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
-                //当用户使用复制性新增加时，如果已经选择了产品类型和产品类别， 助记码为空时， 则自动生成助记码。
-                if (string.IsNullOrEmpty(_EditEntity.ShortCode))
+                var (validationMessage, isValid) = ValidateProductCodeGeneration(EditEntity);
+                if (isValid)
                 {
-                    await GenerateProductCodes();
+                    //当用户使用复制性新增加时，如果已经选择了产品类型和产品类别， 助记码为空时， 则自动生成助记码。
+                    if (string.IsNullOrEmpty(_EditEntity.ShortCode))
+                    {
+                        await GenerateProductCodes();
+                    }
+                    //同时也生成产品编码
+                    if (string.IsNullOrEmpty(_EditEntity.ProductNo))
+                    {
+                        await GenerateProductCodes();
+                    }
                 }
-                //同时也生成产品编码
-                if (string.IsNullOrEmpty(_EditEntity.ProductNo))
-                {
-                    await GenerateProductCodes();
-                }
-
             }
             else
             {
@@ -878,14 +883,14 @@ namespace RUINORERP.UI.ProductEAV
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
                 // 监听产品类目变更事件
-                if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
+                if (EditEntity.Category_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
                 {
                     await GenerateProductCodes();
                 }
                 // 监听产品类型变更事件
                 else if (EditEntity.Type_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Type_ID))
                 {
-                    if (EditEntity.Category_ID.HasValue && EditEntity.Category_ID.Value > 0)
+                    if (EditEntity.Category_ID > 0)
                     {
                         await GenerateProductCodes();
                     }
@@ -922,15 +927,15 @@ namespace RUINORERP.UI.ProductEAV
                                         tb_ProdDetail ppg = new tb_ProdDetail();
                                         ppg.PropertyGroupName = "";
                                         // 验证生成产品编号规则所需的前置条件
-                                        string validationMessage3 = ValidateProductCodeGeneration(EditEntity);
-                                        if (!string.IsNullOrEmpty(validationMessage3))
+                                        var (validationMessage3, isValid3) = ValidateProductCodeGeneration(EditEntity);
+                                        if (!isValid3)
                                         {
                                             // 显示验证失败消息并返回
                                             MessageBox.Show(validationMessage3, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                             return;
                                         }
 
-                                        if (EditEntity.Category_ID.HasValue && EditEntity.ProductNo.Trim().Length > 0)
+                                        if (EditEntity.ProductNo.Trim().Length > 0)
                                         {
                                             EditEntity.tb_ProdDetails.Add(ppg);
                                             ppg.SKU = await clientBizCodeService.GenerateProductSKUCodeAsync(BaseInfoType.SKU_No, EditEntity, ppg);
@@ -1084,7 +1089,7 @@ namespace RUINORERP.UI.ProductEAV
                 // 使用新的BizCodeService生成产品编号
                 try
                 {
-                    if (!EditEntity.Category_ID.HasValue)
+                    if (EditEntity.Category_ID <= 0)
                     {
                         MessageBox.Show("警告：请选选择产品类目", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;

@@ -60,8 +60,8 @@ namespace RUINORERP.Business
 
             RuleFor(tb_Prod => tb_Prod.Unit_ID).Must(CheckForeignKeyValue).WithMessage("单位:下拉选择值不正确。");
 
-            RuleFor(tb_Prod => tb_Prod.Category_ID).Must(CheckForeignKeyValueCanNull).WithMessage("类别:下拉选择值不正确。");
-            RuleFor(tb_Prod => tb_Prod.Category_ID).NotEmpty().When(x => x.Category_ID.HasValue);
+            RuleFor(tb_Prod => tb_Prod.Category_ID).Must(CheckForeignKeyValue).WithMessage("类别:下拉选择值不正确。");
+          
 
 
 
@@ -71,7 +71,7 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认仓库:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
 
-            //这种不是必须的。可空值
+            //这种不是必须的。可空值1
             RuleFor(tb_Prod => tb_Prod.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认货架:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 

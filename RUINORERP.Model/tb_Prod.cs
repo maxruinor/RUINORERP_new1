@@ -235,14 +235,14 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _Category_ID;
+        private long _Category_ID;
         /// <summary>
         /// 类别
         /// </summary>
         [AdvQueryAttribute(ColName = "Category_ID",ColDesc = "类别")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Category_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "类别" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Category_ID" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "类别" )]
         [FKRelationAttribute("tb_ProdCategories","Category_ID")]
-        public long? Category_ID
+        public long Category_ID
         { 
             get{return _Category_ID;}
             set{

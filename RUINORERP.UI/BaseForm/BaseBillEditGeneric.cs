@@ -5326,13 +5326,13 @@ namespace RUINORERP.UI.BaseForm
                     //var updateData = ConvertToTodoUpdate(entity);
                     //TodoSyncManager.Instance.PublishUpdate(updateData);
                 }
-
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
             }
             else
             {
                 MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
             }
-            await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("保存", rmr.ReturnObject, $"结果:{(rmr.Succeeded ? "成功" : "失败")},{rmr.ErrorMsg}");
+            
             return rmr;
         }
 

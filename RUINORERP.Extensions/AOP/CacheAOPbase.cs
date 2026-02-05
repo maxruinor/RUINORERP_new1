@@ -44,54 +44,97 @@ namespace RUINORERP.Extensions.AOP
         /// <returns></returns>
         protected static string GetArgumentValue(object arg)
         {
+            // 空值处理
+            if (arg == null)
+                return string.Empty;
+
+            // 基本类型处理
             if (arg is DateTime)
                 return ((DateTime)arg).ToString("yyyyMMddHHmmss");
 
-            if (!arg.IsNotEmptyOrNull())
+            if (arg is string)
+                return arg.ToString();
+
+            if (arg is ValueType)
                 return arg.ObjToString();
 
-            if (arg != null)
+            // 排除不适合缓存的类型
+            var argType = arg.GetType();
+            var typeName = argType.Name;
+            var fullTypeName = argType.FullName;
+            
+            // 排除SqlSugar相关类型
+            if (typeName.Contains("SqlSugar") || fullTypeName.Contains("SqlSugar"))
             {
-                // 排除不适合缓存的类型
-                var argType = arg.GetType();
-                var typeName = argType.Name;
-                var fullTypeName = argType.FullName;
-                
-                // 排除SqlSugar相关类型
-                if (typeName.Contains("SqlSugar") || fullTypeName.Contains("SqlSugar"))
-                {
-                    return string.Empty;
-                }
-                
-                // 排除数据库连接相关类型
-                if (typeName.Contains("Connection") || typeName.Contains("DbClient") || typeName.Contains("UnitOfWork"))
-                {
-                    return string.Empty;
-                }
-                
-                // 排除表达式树以外的复杂类型
-                if (arg is Expression)
+                return string.Empty;
+            }
+            
+            // 排除数据库连接相关类型
+            if (typeName.Contains("Connection") || typeName.Contains("DbClient") || typeName.Contains("UnitOfWork"))
+            {
+                return string.Empty;
+            }
+            
+            // 排除缓存相关类型
+            if (typeName.Contains("Cache") || typeName.Contains("Caching"))
+            {
+                return string.Empty;
+            }
+            
+            // 排除服务相关类型
+            if (typeName.Contains("Service"))
+            {
+                return string.Empty;
+            }
+            
+            // 排除工具类和辅助类
+            if (typeName.Contains("Helper") || typeName.Contains("Util") || typeName.Contains("Tool"))
+            {
+                return string.Empty;
+            }
+            
+            // 排除系统级组件
+            if (fullTypeName.Contains("System.") || fullTypeName.Contains("Microsoft."))
+            {
+                return string.Empty;
+            }
+            
+            // 排除集合类型
+            if (argType.IsArray || argType.GetInterface("ICollection") != null || argType.GetInterface("IEnumerable") != null)
+            {
+                return string.Empty;
+            }
+            
+            // 表达式树处理
+            if (arg is Expression)
+            {
+                try
                 {
                     var obj = arg as Expression;
                     var result = Resolve(obj);
                     return MD5Helper.MD5Encrypt16(result);
                 }
-                else if (argType.IsClass && !argType.FullName.StartsWith("System"))
+                catch
                 {
-                    try
-                    {
-                        return MD5Helper.MD5Encrypt16(JsonConvert.SerializeObject(arg));
-                    }
-                    catch
-                    {
-                        // 序列化失败时返回空值
-                        return string.Empty;
-                    }
+                    return string.Empty;
                 }
-
-                return $"value:{arg.ObjToString()}";
             }
-            return string.Empty;
+            
+            // 其他复杂类型处理
+            if (argType.IsClass)
+            {
+                try
+                {
+                    return MD5Helper.MD5Encrypt16(JsonConvert.SerializeObject(arg));
+                }
+                catch
+                {
+                    // 序列化失败时返回空值
+                    return string.Empty;
+                }
+            }
+
+            return $"value:{arg.ObjToString()}";
         }
 
         private static string Resolve(Expression expression)

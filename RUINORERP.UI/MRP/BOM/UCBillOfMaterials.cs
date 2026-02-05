@@ -2129,7 +2129,7 @@ namespace RUINORERP.UI.MRP.BOM
             kryptonTreeGridViewBOMDetail.SetHideColumns(kryptonTreeGridViewBOMDetail.ParentIdColumnName);
             kryptonTreeGridViewBOMDetail.SetHideColumns<tb_BOM_SDetailTree>(c => c.ProdDetailID);
             kryptonTreeGridViewBOMDetail.SetHideColumns<tb_BOM_SDetailTree>(c => c.BOM_ID);
-
+            kryptonTreeGridViewBOMDetail.SetHideColumns<BaseProductInfo>(c => c.Type_ID);
 
             kryptonTreeGridViewBOMDetail.DataSource = dtAll;
             kryptonTreeGridViewBOMDetail.Columns[kryptonTreeGridViewBOMDetail.IdColumnName].Visible = false;

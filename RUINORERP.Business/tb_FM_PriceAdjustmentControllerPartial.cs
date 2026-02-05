@@ -412,7 +412,7 @@ namespace RUINORERP.Business
 
 
         public async Task<tb_FM_PriceAdjustment> BuildPriceAdjustment(ReceivePaymentType PaymentType, long sourceBillID, string NewBillNo = "")
-        {
+            {
             tb_FM_PriceAdjustment priceAdjustment = new tb_FM_PriceAdjustment();
 
             if (PaymentType == ReceivePaymentType.收款)

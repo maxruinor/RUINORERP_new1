@@ -222,62 +222,166 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 生成默认的列配置
+        /// 参考 UIBizService.InitDataGridViewColumnDisplays 方法实现
+        /// 使用绑定到 targetDataGridView 中的强类型的数据类型来生成最初的显示列控制信息
         /// </summary>
         /// <returns>默认列显示控制器列表</returns>
         private List<ColDisplayController> GenerateDefaultColumnConfig()
         {
-            List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>(); if (targetDataGridView != null)
+            List<ColDisplayController> ColumnDisplays = new List<ColDisplayController>();
+            if (targetDataGridView != null)
             {
-                if (targetDataGridView.FieldNameList != null && targetDataGridView.FieldNameList.Count > 0)
+                // 获取绑定的强类型数据类型
+                Type gridSourceType = targetDataGridView.GetBoundItemType();
+                if (gridSourceType != null)
                 {
-
-
-                    foreach (DataGridViewColumn dc in targetDataGridView.Columns)
+                    // 使用 UIHelper 获取基于强类型的列信息
+                    List<ColDisplayController> allInitCols = RUINORERP.UI.Common.UIHelper.GetColumnDisplayList(gridSourceType);
+                    
+                    // 如果有 FieldNameList，使用它来补充列信息
+                    if (targetDataGridView.FieldNameList != null && targetDataGridView.FieldNameList.Count > 0)
                     {
-                        //理论上不应该有导航属性
-                        if (dc.Name.Contains("tb_"))
+                        foreach (var col in allInitCols)
                         {
-                            continue;
+                            if (targetDataGridView.FieldNameList.ContainsKey(col.ColName))
+                            {
+                                KeyValuePair<string, bool> kv = new KeyValuePair<string, bool>();
+                                if (targetDataGridView.FieldNameList.TryGetValue(col.ColName, out kv))
+                                {
+                                    col.ColDisplayText = kv.Key;
+                                    col.Visible = kv.Value;
+                                }
+                            }
                         }
-                        ColDisplayController cdc = new ColDisplayController();
-                        cdc.ColDisplayText = dc.HeaderText;
-                        cdc.ColDisplayIndex = dc.DisplayIndex;
-                        cdc.ColWidth = dc.Width;
-                        cdc.ColName = dc.Name;
-                        cdc.IsFixed = dc.Frozen;
-                        if (string.IsNullOrEmpty(cdc.ColDisplayText))
+                    }
+                    
+                    // 处理主键列
+                    foreach (var col in allInitCols)
+                    {
+                        if (col.IsPrimaryKey)
                         {
-                            //不可用
-                            cdc.Disable = true;
+                            col.Visible = false;
                         }
-                        else
+                        else if (!col.Visible)
                         {
-                            cdc.Disable = false;
+                            // 非主键列默认显示
+                            col.Visible = true;
                         }
-                        if (cdc.ColName == "Selected")
+                        
+                        // 处理 Selected 列
+                        if (col.ColName == "Selected")
                         {
-                            //不可用
-                            cdc.Disable = true;
-                            cdc.Visible = true;
+                            col.Disable = true;
+                            col.Visible = true;
                         }
-
-                        if (targetDataGridView.FieldNameList.ContainsKey(cdc.ColName))
+                        
+                        // 处理导航属性列
+                        if (col.ColName.Contains("tb_"))
                         {
-                            KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(cdc.ColName, false);
-                            targetDataGridView.FieldNameList.TryGetValue(cdc.ColName, out Newkv);
-                            cdc.Visible = Newkv.Value;
+                            col.Disable = true;
+                            col.Visible = false;
                         }
-                        else
+                        
+                        // 确保列名不为空
+                        if (string.IsNullOrEmpty(col.ColName))
                         {
-                            cdc.Visible = dc.Visible;
+                            col.Disable = true;
+                            col.Visible = false;
                         }
-                        cdc.DataPropertyName = dc.DataPropertyName;
-                        ColumnDisplays.Add(cdc);
+                        
+                        ColumnDisplays.Add(col);
+                    }
+                    
+                    // 处理系统和权限的限制列显示
+                    HashSet<string> invisibleCols = targetDataGridView.BizInvisibleCols;
+                    if (invisibleCols != null)
+                    {
+                        foreach (var col in ColumnDisplays)
+                        {
+                            if (invisibleCols.Any(ic => col.ColName.Equals(ic)))
+                            {
+                                col.Visible = false;
+                                col.Disable = true;
+                            }
+                        }
+                    }
+                    
+                    // 计算列宽
+                    using (System.Drawing.Graphics graphics = targetDataGridView.CreateGraphics())
+                    {
+                        foreach (var col in ColumnDisplays)
+                        {
+                            if (!string.IsNullOrEmpty(col.ColDisplayText))
+                            {
+                                // 计算文本宽度
+                                float textWidth = RUINORERP.UI.Common.UITools.CalculateTextWidth(col.ColDisplayText, targetDataGridView.Font, graphics);
+                                col.ColWidth = (int)textWidth + 10; // 加上一些额外的空间
+                                if (col.ColWidth < 100)
+                                {
+                                    col.ColWidth = 100;
+                                }
+                            }
+                            else
+                            {
+                                col.ColWidth = 100;
+                            }
+                        }
                     }
                 }
-
-
-
+                else
+                {
+                    // 如果无法获取强类型，使用原来的方法基于现有列生成配置
+                    if (targetDataGridView.Columns.Count > 0)
+                    {
+                        foreach (DataGridViewColumn dc in targetDataGridView.Columns)
+                        {
+                            //理论上不应该有导航属性
+                            if (dc.Name.Contains("tb_"))
+                            {
+                                continue;
+                            }
+                            ColDisplayController cdc = new ColDisplayController();
+                            cdc.ColDisplayText = dc.HeaderText;
+                            cdc.ColDisplayIndex = dc.DisplayIndex;
+                            cdc.ColWidth = dc.Width;
+                            cdc.ColName = dc.Name;
+                            cdc.IsFixed = dc.Frozen;
+                            cdc.DataPropertyName = dc.DataPropertyName;
+                            
+                            if (string.IsNullOrEmpty(cdc.ColDisplayText))
+                            {
+                                //不可用
+                                cdc.Disable = true;
+                            }
+                            else
+                            {
+                                cdc.Disable = false;
+                            }
+                            
+                            if (cdc.ColName == "Selected")
+                            {
+                                //不可用
+                                cdc.Disable = true;
+                                cdc.Visible = true;
+                            }
+                            else
+                            {
+                                if (targetDataGridView.FieldNameList != null && targetDataGridView.FieldNameList.ContainsKey(cdc.ColName))
+                                {
+                                    KeyValuePair<string, bool> Newkv = new KeyValuePair<string, bool>(cdc.ColName, false);
+                                    targetDataGridView.FieldNameList.TryGetValue(cdc.ColName, out Newkv);
+                                    cdc.Visible = Newkv.Value;
+                                }
+                                else
+                                {
+                                    cdc.Visible = dc.Visible;
+                                }
+                            }
+                            
+                            ColumnDisplays.Add(cdc);
+                        }
+                    }
+                }
             }
 
             return ColumnDisplays;

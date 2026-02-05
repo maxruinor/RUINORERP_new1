@@ -31,7 +31,7 @@ namespace RUINORERP.UI.UControls
 
 
     /// <summary>
-    /// 2023-8-19 在这个项目中完善 最新1
+    /// 2023-8-19 在这个项目中完善 最新2
     /// 2022-7-28 best new
     /// 这个控制组里面的子控件 需要一个标记2020
     /// 修改一下 让他不合计时 就是普通的,最原生的滚动条
@@ -3099,6 +3099,61 @@ namespace RUINORERP.UI.UControls
         private void _dgvSumRow_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
 
+        }
+
+        /// <summary>
+        /// 获取绑定的强类型集合的类型
+        /// </summary>
+        /// <returns>如果绑定的是强类型集合，返回集合元素的类型；否则返回null</returns>
+        public Type GetBoundItemType()
+        {
+            // 检查 DataSource 是否为 BindingSource
+            if (this.DataSource is BindingSource bindingSource)
+            {
+                // 获取 BindingSource 的 DataSource
+                object dataSource = bindingSource.DataSource;
+                if (dataSource != null)
+                {
+                    Type dataSourceType = dataSource.GetType();
+                    
+                    // 检查是否为泛型集合
+                    if (dataSourceType.IsGenericType)
+                    {
+                        // 获取泛型类型参数，通常第一个参数就是集合元素的类型
+                        Type[] genericArguments = dataSourceType.GetGenericArguments();
+                        if (genericArguments.Length > 0)
+                        {
+                            return genericArguments[0];
+                        }
+                    }
+                    // 检查是否为数组
+                    else if (dataSourceType.IsArray)
+                    {
+                        // 返回数组元素的类型
+                        return dataSourceType.GetElementType();
+                    }
+                    // 检查是否实现了 IEnumerable<T>
+                    else
+                    {
+                        // 获取所有实现的接口
+                        Type[] interfaces = dataSourceType.GetInterfaces();
+                        foreach (Type iface in interfaces)
+                        {
+                            if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                            {
+                                // 获取 IEnumerable<T> 的泛型参数
+                                Type[] genericArguments = iface.GetGenericArguments();
+                                if (genericArguments.Length > 0)
+                                {
+                                    return genericArguments[0];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return null;
         }
 
         /// <summary>

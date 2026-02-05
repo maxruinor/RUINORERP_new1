@@ -1055,6 +1055,8 @@ namespace RUINORERP.UI.Common
         }
 
 
+        //生成初始化的集合
+
         public static void InitDataGridViewColumnDisplays(List<ColDisplayController> ColumnDisplays,
             NewSumDataGridView dataGridView, Type GridSourceType, tb_MenuInfo CurMenuInfo, HashSet<string> InvisibleCols)
         {

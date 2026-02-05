@@ -748,6 +748,16 @@ namespace RUINORERP.UI.ProductEAV
                 _EditEntity.tb_ProdDetails = new List<tb_ProdDetail>();
 
                 _EditEntity.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
+                //当用户使用复制性新增加时，如果已经选择了产品类型和产品类别， 助记码为空时， 则自动生成助记码。
+                if (string.IsNullOrEmpty(_EditEntity.ShortCode))
+                {
+                    await GenerateProductCodes();
+                }
+                //同时也生成产品编码
+                if (string.IsNullOrEmpty(_EditEntity.ProductNo))
+                {
+                    await GenerateProductCodes();
+                }
 
             }
             else
@@ -767,6 +777,10 @@ namespace RUINORERP.UI.ProductEAV
                     {
                         MainForm.Instance.uclog.AddLog($"加载图片失败: {ex.Message}", UILogType.错误);
                     }
+                }
+                if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.单属性)
+                {
+                    this.dataGridView1.HideColumn<tb_ProdDetail>(c => c.PropertyGroupName);
                 }
             }
 

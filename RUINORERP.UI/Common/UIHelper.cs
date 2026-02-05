@@ -1280,6 +1280,13 @@ namespace RUINORERP.UI.Common
         /// <returns>是否为导航属性</returns>
         private static bool IsNavigationProperty(PropertyInfo property)
         {
+
+            //请在这里添加 如果 [Browsable(true)]  则认为不是导航属性
+            if (IsPropertyBrowsable(property))
+            {
+                return false;
+            }
+
             // 检查IsIgnore特性
             var sugarColumn = property.GetCustomAttribute<SugarColumn>();
             if (sugarColumn?.IsIgnore == true)

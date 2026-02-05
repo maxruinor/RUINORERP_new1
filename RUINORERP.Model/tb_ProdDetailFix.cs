@@ -29,6 +29,8 @@ namespace RUINORERP.Model
     /// </summary>
     public partial class tb_ProdDetail 
     {
+
+
         /// <summary>
         /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
         /// </summary>

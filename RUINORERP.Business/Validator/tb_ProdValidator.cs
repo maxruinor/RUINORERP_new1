@@ -71,6 +71,7 @@ namespace RUINORERP.Business
             RuleFor(tb_Prod => tb_Prod.Location_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认仓库:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Location_ID).NotEmpty().When(x => x.Location_ID.HasValue);
 
+            //这种不是必须的。可空值
             RuleFor(tb_Prod => tb_Prod.Rack_ID).Must(CheckForeignKeyValueCanNull).WithMessage("默认货架:下拉选择值不正确。");
             RuleFor(tb_Prod => tb_Prod.Rack_ID).NotEmpty().When(x => x.Rack_ID.HasValue);
 

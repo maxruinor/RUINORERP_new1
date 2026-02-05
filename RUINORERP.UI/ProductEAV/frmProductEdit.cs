@@ -5,6 +5,7 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Microsoft.International.Converters.PinYinConverter;
 using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
 using ObjectsComparer;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINOR.WinFormsUI.TileListView;
@@ -930,7 +931,11 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     dataGridView1.Columns["GroupName"].Visible = false;
                                 }
-
+                                // 检查产品是否为多属性类型
+                                if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.单属性)
+                                {
+                                    this.dataGridView1.HideColumn<tb_ProdDetail>(c => c.PropertyGroupName);
+                                }
                                 break;
                             case ProductAttributeType.可配置多属性:
                                 ControlBtn(pt, EditEntity.ActionStatus);
@@ -946,7 +951,11 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     //编辑性加载
                                 }
-
+                                // 检查产品是否为多属性类型
+                                if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)
+                                {
+                                    this.dataGridView1.ShowColumn<tb_ProdDetail>(c => c.PropertyGroupName);
+                                }
 
                                 break;
                             case ProductAttributeType.捆绑:
@@ -1723,10 +1732,7 @@ namespace RUINORERP.UI.ProductEAV
 
         private void BindToSkulistGrid(List<tb_ProdDetail> propGroups)
         {
-            //ucskulist.dataGridView1.RowHeadersVisible = false;
-            //ucskulist.bindingSourceList.DataSource = propGroups;
-            //ucskulist.dataGridView1.DataSource = ucskulist.bindingSourceList;
-            //ucskulist.dataGridView1.ColumnDisplayControl(ucskulist.FieldNameList);
+
             dataGridView1.RowHeadersVisible = false;
             bindingSourceList.DataSource = propGroups;
             dataGridView1.DataSource = bindingSourceList;
@@ -2218,9 +2224,29 @@ namespace RUINORERP.UI.ProductEAV
             //同样为dataGridView1添加PropertyGroupName属性
             if (typeof(T) == typeof(tb_ProdDetail))
             {
+
+                //因为是第一次加载时。实体还没有数据。先默认添加。再根据数据决定是否显示。数据是用户手动选择的
+                // 多属性组组合
                 KeyValuePair<string, bool> fieldInfo = new KeyValuePair<string, bool>("多属性组合", true);
-                this.dataGridView1.FieldNameList.TryAdd("PropertyGroupName", fieldInfo);
+
+                // 确保PropertyGroupName列位于所有列的最前面
+                // 创建一个新的字典，先添加PropertyGroupName列，然后再添加其他列
+                var newFieldNameList = new ConcurrentDictionary<string, KeyValuePair<string, bool>>();
+                newFieldNameList.TryAdd("PropertyGroupName", fieldInfo);
+
+                // 添加其他列
+                foreach (var item in this.dataGridView1.FieldNameList)
+                {
+                    if (item.Key != "PropertyGroupName")
+                    {
+                        newFieldNameList.TryAdd(item.Key, item.Value);
+                    }
+                }
+
+                // 替换原有的FieldNameList
+                this.dataGridView1.FieldNameList = newFieldNameList;
             }
+
 
             HashSet<string> InvisibleCols = new HashSet<string>();
 
@@ -2468,24 +2494,7 @@ namespace RUINORERP.UI.ProductEAV
         }
 
         #endregion
-        private System.Collections.Concurrent.ConcurrentDictionary<string, string> fieldNameList;
 
-        /// <summary>
-        /// 表列名的中文描述集合
-        /// </summary>
-        [Description("表列名的中文描述集合"), Category("自定属性"), Browsable(true)]
-        public System.Collections.Concurrent.ConcurrentDictionary<string, string> FieldNameList
-        {
-            get
-            {
-                return fieldNameList;
-            }
-            set
-            {
-                fieldNameList = value;
-            }
-
-        }
 
 
         public System.Windows.Forms.BindingSource _ListDataSoure = null;
@@ -2501,15 +2510,6 @@ namespace RUINORERP.UI.ProductEAV
         }
         private bool editflag;
 
-        /// <summary>
-        /// 是否为编辑 如果为是则true
-        /// </summary>
-        public bool Edited
-        {
-            get { return editflag; }
-            set { editflag = value; }
-        }
-
 
         /// <summary>
         /// 初始化列表数据
@@ -2522,10 +2522,6 @@ namespace RUINORERP.UI.ProductEAV
 
             this.dataGridView1.DataSource = ListDataSoure.DataSource;
         }
-
-
-
-
 
 
         private async void dataGridView1_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -2935,13 +2931,13 @@ namespace RUINORERP.UI.ProductEAV
                 {
                     return true;
                 }
-                
+
                 // 检查是否有缓存的图片数据
                 if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null && skuImageDataCache[detail].Count > 0)
                 {
                     return true;
                 }
-                
+
                 if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null && skuImageDeletedCache[detail].Count > 0)
                 {
                     return true;
@@ -2949,7 +2945,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             return false;
         }
-        
+
         /// <summary>
         /// 获取指定SKU需要更新的图片列表
         /// </summary>
@@ -2962,11 +2958,11 @@ namespace RUINORERP.UI.ProductEAV
             {
                 return skuImageDataCache[detail];
             }
-            
+
             // 如果没有缓存数据，返回null
             return null;
         }
-        
+
         /// <summary>
         /// 获取指定SKU需要删除的图片列表
         /// </summary>
@@ -2979,11 +2975,11 @@ namespace RUINORERP.UI.ProductEAV
             {
                 return skuImageDeletedCache[detail];
             }
-            
+
             // 如果没有缓存数据，返回null
             return null;
         }
-        
+
         /// <summary>
         /// 上传或删除图片（如果需要）- 通用方法
         /// 支持同时处理新增/更新和删除的图片
@@ -3006,11 +3002,11 @@ namespace RUINORERP.UI.ProductEAV
                 bool allSuccess = true;
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                
+
                 // 获取实体信息 - 对于产品明细，使用具体字段
                 string billNo = "";
                 long billId = 0;
-                
+
                 // 通过反射获取ID字段值
                 if (entity is tb_ProdDetail prodDetailEntity)
                 {
@@ -3023,7 +3019,7 @@ namespace RUINORERP.UI.ProductEAV
                     billId = Convert.ToInt64(entity.GetPropertyValue("ProdDetailID"));
                     billNo = entity.GetPropertyValue("SKU")?.ToString() ?? billId.ToString();
                 }
-                
+
                 // ========== 第一步：处理已删除的图片 ==========
                 if (deletedImages != null && deletedImages.Count > 0)
                 {
@@ -3163,7 +3159,7 @@ namespace RUINORERP.UI.ProductEAV
                         var deletedImages = GetSKUImagesToDelete(detail);
 
                         // 检查是否有需要处理的图片（上传或删除）
-                        if ((updatedImages != null && updatedImages.Count > 0) || 
+                        if ((updatedImages != null && updatedImages.Count > 0) ||
                             (deletedImages != null && deletedImages.Count > 0))
                         {
                             MainForm.Instance.uclog.AddLog($"处理SKU {detail.SKU ?? "未命名"} 的图片变更");
@@ -3204,7 +3200,7 @@ namespace RUINORERP.UI.ProductEAV
 
                             // 如果处理了图片，更新SKU的HasUnsavedImageChanges标志
                             detail.HasUnsavedImageChanges = false; // 重置标记，因为已处理
-                            
+
                             // 清空相关缓存
                             if (skuImageDataCache.ContainsKey(detail))
                             {

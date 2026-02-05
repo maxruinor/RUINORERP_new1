@@ -1090,9 +1090,6 @@ namespace RUINORERP.UI.Common
                 InvisibleCols = dataGridView.BizInvisibleCols;
             }
 
-
-
-
             // 获取Graphics对象
             Graphics graphics = dataGridView.CreateGraphics();
             ColumnDisplays.ForEach(c =>
@@ -1117,7 +1114,6 @@ namespace RUINORERP.UI.Common
                 }
 
             });
-
 
 
             //权限限制，默认值等

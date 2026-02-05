@@ -89,6 +89,7 @@ namespace RUINORERP.UI.ProductEAV
                     e => e.ShortCode,
                     e => e.DataStatus,
                     e => e.PrimaryKeyID,
+                    e => e.PropertyType,
                     e => e.tb_ProdDetails,
                     e => e.StateManager)
                 // 明细表忽略的属性

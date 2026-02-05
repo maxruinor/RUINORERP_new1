@@ -22,7 +22,7 @@ using RUINORERP.Global.EnumExt;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// tb_ProdDetail 扩展类，用于存放临时字段和辅助功能
+    /// tb_ProdDetail 扩展类，用于存放临时字段和辅助功能1
     /// 后面按这个规律统一处理。如果实现中带有图片的字段。则需要额外处理
     /// 字段名：RowImage
     /// 后面如果支持多图则可能是List<key,value> key是图片名，value是图片对象

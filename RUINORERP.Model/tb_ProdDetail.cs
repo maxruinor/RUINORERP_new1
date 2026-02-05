@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 产品详细表
+    /// 产品详细表2
     /// </summary>
     [Serializable()]
     [Description("产品详细表")]
@@ -66,20 +66,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private long? _BOM_ID;
-        /// <summary>
-        /// 标准配方
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BOM_ID",ColDesc = "标准配方")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "BOM_ID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "标准配方" )]
-        [FKRelationAttribute("tb_BOM_S","BOM_ID")]
-        public long? BOM_ID
-        { 
-            get{return _BOM_ID;}
-            set{
-            SetProperty(ref _BOM_ID, value);
-                        }
-        }
+
 
         private string _SKU;
         /// <summary>
@@ -263,6 +250,22 @@ namespace RUINORERP.Model
             set{
             SetProperty(ref _Is_available, value);
                         }
+        }
+
+        private long? _BOM_ID;
+        /// <summary>
+        /// 标准配方
+        /// </summary>
+        [AdvQueryAttribute(ColName = "BOM_ID", ColDesc = "标准配方")]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType = "Int64", ColumnName = "BOM_ID", DecimalDigits = 0, IsNullable = true, ColumnDescription = "标准配方")]
+        [FKRelationAttribute("tb_BOM_S", "BOM_ID")]
+        public long? BOM_ID
+        {
+            get { return _BOM_ID; }
+            set
+            {
+                SetProperty(ref _BOM_ID, value);
+            }
         }
 
         private DateTime? _Created_at;

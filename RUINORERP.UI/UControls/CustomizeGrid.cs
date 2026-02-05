@@ -438,11 +438,10 @@ namespace RUINORERP.UI.UControls
                            select col;
 
                 set.ColumnDisplays = cols.ToList();
-                if (NeedSaveColumnsXml)
-                {
-                    set.InitColumnDisplays = LoadColumnsListByCdc(true);
-                }
-
+                //if (NeedSaveColumnsXml)
+                //{
+                //    set.InitColumnDisplays = LoadColumnsListByCdc(true);
+                //}
 
                 set.InitializeDefaultColumn += Set_InitializeDefaultColumn;
 

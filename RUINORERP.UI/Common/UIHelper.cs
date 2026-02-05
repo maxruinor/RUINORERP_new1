@@ -1363,7 +1363,7 @@ namespace RUINORERP.UI.Common
         }
 
         /// <summary>
-        /// 获取字段名称和描述列表（包含可见性信息）
+        /// 获取字段名称和描述列表（包含可见性信息）1
         /// 优化版本：提高性能，复用已有逻辑
         /// </summary>
         /// <param name="types">实体类型数组</param>

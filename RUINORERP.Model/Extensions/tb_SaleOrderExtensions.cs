@@ -166,6 +166,7 @@ namespace RUINORERP.Model
         /// 获取所有图片的统一字典
         /// </summary>
         [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
         public Dictionary<string, List<tb_FS_FileStorageInfo>> AllImages
         {
             get
@@ -189,6 +190,7 @@ namespace RUINORERP.Model
         /// 获取总图片数量
         /// </summary>
         [SugarColumn(IsIgnore = true)]
+        [Browsable(false)]
         public int TotalImageCount
         {
             get

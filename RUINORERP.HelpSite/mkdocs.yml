@@ -1,0 +1,113 @@
+# MkDocs configuration for RUINOR ERP Help System
+site_name: RUINOR ERP 帮助中心
+site_url: http://localhost:8000
+site_author: RUINOR ERP Team
+site_description: RUINOR ERP 系统在线帮助文档
+
+# Theme configuration
+theme:
+  name: material
+  language: zh
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    logo: material/book-open-variant
+
+# Extra configuration
+extra:
+  social:
+    - icon: material/email
+      link: mailto:support@ruinor.com
+      name: 联系支持
+  version:
+    provider: mike
+
+# Plugins
+plugins:
+  - search:
+      lang: zh
+      separator: '[\s\u200b\-]'
+  - minify:
+      minify_html: true
+
+# Extensions
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+# Navigation structure
+nav:
+  - 首页: index.md
+  - 快速入门:
+    - quickstart/index.md
+    - quickstart/login.md
+    - quickstart/interface.md
+    - quickstart/basic-operations.md
+    - quickstart/shortcuts.md
+  - 销售管理:
+    - modules/sales/index.md
+    - 销售订单: forms/UCSaleOrder.md
+    - 销售出库: forms/UCSaleOut.md
+    - 销售退货: forms/UCSaleReturn.md
+  - 采购管理:
+    - modules/purchase/index.md
+    - 采购订单: forms/UCPurchaseOrder.md
+    - 采购入库: forms/UCStockIn.md
+  - 库存管理:
+    - modules/inventory/index.md
+    - 库存查询: forms/UCStockQuery.md
+    - 库存盘点: forms/UCStockCheck.md
+    - 库存调拨: forms/UCStockTransfer.md
+  - 财务管理:
+    - modules/finance/index.md
+    - 应收管理: forms/UCARReceivable.md
+    - 应付管理: forms/UCAPPayable.md
+  - 字段参考:
+    - fields/index.md
+
+# Copyright
+copyright: Copyright &copy; 2024 RUINOR ERP
+
+# Extra CSS/JS
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js

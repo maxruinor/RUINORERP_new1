@@ -210,6 +210,9 @@
     <Reference Include="log4net, Version=2.0.17.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.17\lib\net45\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Markdig, Version=0.44.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Markdig.0.44.0\lib\net462\Markdig.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
       <HintPath>..\packages\MathNet.Numerics.Signed.5.0.0\lib\net48\MathNet.Numerics.dll</HintPath>
     </Reference>
@@ -465,8 +468,8 @@
       <HintPath>..\packages\System.Linq.Dynamic.Core.1.6.0.1\lib\net46\System.Linq.Dynamic.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Management" />
-    <Reference Include="System.Memory, Version=4.0.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.6.2\lib\net462\System.Memory.dll</HintPath>
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Net.NameResolution, Version=4.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Net.NameResolution.4.3.0\lib\net46\System.Net.NameResolution.dll</HintPath>
@@ -495,8 +498,8 @@
     <Reference Include="System.Reflection.TypeExtensions, Version=4.1.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reflection.TypeExtensions.4.7.0\lib\net461\System.Reflection.TypeExtensions.dll</HintPath>
     </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.1\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Extensions, Version=4.1.1.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.Extensions.4.3.1\lib\net462\System.Runtime.Extensions.dll</HintPath>
@@ -952,6 +955,7 @@
     <Compile Include="HelpSystem\Components\WebView2HelpPanel.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="HelpSystem\Core\EnhancedCompositeHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\HelpContentMonitor.cs" />
     <Compile Include="HelpSystem\Core\HelpContext.cs" />
     <Compile Include="HelpSystem\Core\HelpLevel.cs" />
@@ -959,9 +963,11 @@
     <Compile Include="HelpSystem\Core\HelpSearchResult.cs" />
     <Compile Include="HelpSystem\Core\HelpUrlRouter.cs" />
     <Compile Include="HelpSystem\Core\IHelpProvider.cs" />
+    <Compile Include="HelpSystem\Core\LocalCacheHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\LocalHelpProvider.cs" />
     <Compile Include="HelpSystem\Core\SmartHelpResolver.cs" />
     <Compile Include="HelpSystem\Core\SmartHelpResolverEnhanced.cs" />
+    <Compile Include="HelpSystem\Core\WebHelpProvider.cs" />
     <Compile Include="HelpSystem\Extensions\HelpExtensions.cs" />
     <Compile Include="Common\MenuItemEnumsExtensions.cs" />
     <Compile Include="Common\ProgressExtensions.cs" />
@@ -2133,6 +2139,7 @@
     <Compile Include="Common\BarCodeCreator.cs" />
     <Compile Include="Common\BarCodeHelper.cs" />
     <Compile Include="HelpSystem\Extensions\KryptonHelpExtensions.cs" />
+    <Compile Include="HelpSystem\HelpLauncher.cs" />
     <Compile Include="IM\BaseMessagePrompt.cs">
       <SubType>Form</SubType>
     </Compile>

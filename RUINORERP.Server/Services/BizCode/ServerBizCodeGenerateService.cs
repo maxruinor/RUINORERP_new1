@@ -816,7 +816,7 @@ namespace RUINORERP.Server.Services.BizCode
                     // SKU编码生成逻辑
                     // 编辑已有产品（ProdDetailID > 0）：SKU永远不变, 多属性编辑器时
                     // 注意：ProdDetailID 来自于 prod.tb_ProdDetails 集合中的详情实体
-                    if ((prodDetail != null && prodDetail.ProdDetailID > 0)|| !string.IsNullOrEmpty(prodDetail.SKU))
+                    if ((prodDetail != null && prodDetail.ProdDetailID > 0) || !string.IsNullOrEmpty(prodDetail.SKU))
                     {
                         // 编辑模式：如果产品详情已保存（ProdDetailID > 0），SKU不再改变
                         return prodDetail.SKU; // 返回原来的
@@ -843,27 +843,22 @@ namespace RUINORERP.Server.Services.BizCode
                     else
                     {
                         // SKU为空，生成全新的SKU
-                        if (prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
+                        // 单属性产品：SKU编码直接等于产品编号
+                        // 优点：
+                        // 1. 简化管理，避免单属性产品有两个不同编号的混乱
+                        // 2. 直观易懂，通过SKU即可识别对应的产品
+                        // 3. 符合业务逻辑，单属性产品一个产品只有一个SKU
+                        if (prodDetail.tb_Prod_Attr_Relations == null || prodDetail.tb_Prod_Attr_Relations.Count == 0)
                         {
-                            // 使用ProductSKUCodeGenerator生成基于属性的SKU编码
-                            // 优先使用attributeInfos，如果为空则使用prod内部的属性关系
-                            return _productSKUCodeGenerator.GenerateSKUCodeAsync(prod, prodDetail);
+                            // 单属性产品：直接使用产品编号作为SKU
+                            return prod.ProductNo;
                         }
                         else
                         {
-                            // 如果没有属性信息，则使用默认的SKU编码生成方式
-                            string rule;
-
-                            // 优先从数据库获取规则配置
-                            rule = await GetRuleFromDatabaseAsync(baseInfoType, ct);
-
-                            // 如果数据库中没有配置，则使用默认规则
-                            if (string.IsNullOrEmpty(rule))
-                            {
-                                rule = "{S:SK}{Hex:yyMM}{DB:SKU_No/0000}";
-                            }
-
-                            return _bnrFactory.Create(rule);
+                            // 多属性产品：使用ProductSKUCodeGenerator生成基于属性的SKU编码
+                            // 格式：类目缩写(2-4位) + 产品基础码(4-6位) + 属性组合码 + 产品类型码(1位)
+                            // 示例：CZ0001C-W（表示车载设备类目，产品编号0001，颜色白色，类型为W）
+                            return _productSKUCodeGenerator.GenerateSKUCodeAsync(prod, prodDetail);
                         }
                     }
                     #endregion
@@ -925,17 +920,9 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
-                // 首先尝试从缓存获取规则（如果有缓存机制）
-                // string cachedRule = GetRuleFromCache(productId, "SKU");
-                // if (!string.IsNullOrEmpty(cachedRule)) return cachedRule;
-
                 // 查询数据库中的规则配置，指定规则类型为基础类规则
                 var rules = await _ruleConfigService.QueryAsync();
                 var rule = rules?.FirstOrDefault(r => r.BizType == (int)infoType && r.RuleType == (int)RuleType.基础信息编号 && r.IsActive);
-
-                // 缓存规则（如果有缓存机制）
-                // if (rule?.RulePattern != null) CacheRule(productId, "SKU", rule.RulePattern);
-
                 return rule?.RulePattern;
             }
             catch

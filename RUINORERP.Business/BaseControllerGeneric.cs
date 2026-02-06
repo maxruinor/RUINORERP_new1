@@ -1,5 +1,4 @@
 using AutoMapper;
-using CacheManager.Core;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -64,9 +63,6 @@ namespace RUINORERP.Business
         public string BizTypeText { get; set; }
         public int BizTypeInt { get; set; }
 
-        // 查询缓存管理器
-        private ICacheManager<object> _queryCacheManager;
-
         /// <summary>
         /// 行级权限过滤器服务（注入单例）
         /// </summary>
@@ -84,12 +80,6 @@ namespace RUINORERP.Business
             BizTypeInt = (int)bizType;
             _cacheManager = appContext.GetRequiredService<IEntityCacheManager>();
             mapper = appContext.GetRequiredService<IMapper>();
-
-            // 初始化查询缓存管理器
-            _queryCacheManager = CacheFactory.Build<object>(settings =>
-                settings
-                    .WithSystemRuntimeCacheHandle("QueryCache")
-                    .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(15))); // 15分钟过期
         }
 
 
@@ -1213,16 +1203,6 @@ namespace RUINORERP.Business
         public async virtual Task<List<T>> BaseQueryByAdvancedNavWithConditionsAsync(bool useLike,
             QueryFilter QueryConditionFilter, object dto, int pageNum, int pageSize, string additionalSqlWhere = "")
         {
-            // 生成查询缓存键
-            string cacheKey = GenerateQueryCacheKey(typeof(T).Name, QueryConditionFilter, dto, pageNum, pageSize, additionalSqlWhere);
-
-            // 尝试从缓存获取数据
-            var cachedResult = await GetFromQueryCacheAsync<List<T>>(cacheKey);
-            if (cachedResult != null)
-            {
-                return cachedResult;
-            }
-
             if (QueryConditionFilter == null)
             {
                 throw new ArgumentNullException(nameof(QueryConditionFilter), "查询条件过滤器不能为空");
@@ -1285,9 +1265,6 @@ namespace RUINORERP.Business
 
             // 执行查询
             var result = await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;
-
-            // 将结果存入缓存
-            await PutToQueryCacheAsync(cacheKey, result);
 
             return result;
         }
@@ -1418,196 +1395,6 @@ namespace RUINORERP.Business
                 .Take(top).Where(exp);
             return querySqlQueryable.ToList();
         }
-
-        #region 查询缓存相关方法
-
-        /// <summary>
-        /// 生成查询缓存键
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        /// <param name="queryFilter">查询过滤器</param>
-        /// <param name="dto">数据传输对象</param>
-        /// <param name="pageNum">页码</param>
-        /// <param name="pageSize">页大小</param>
-        /// <param name="additionalSqlWhere">额外SQL条件</param>
-        /// <returns>缓存键</returns>
-        private string GenerateQueryCacheKey(string tableName, QueryFilter queryFilter, object dto, int pageNum, int pageSize, string additionalSqlWhere)
-        {
-            try
-            {
-                // 生成查询条件的哈希值作为缓存键的一部分
-                var queryConditionsHash = GetQueryConditionsHash(queryFilter, dto, additionalSqlWhere);
-
-                // 构建缓存键
-                var cacheKey = $"Query_{tableName}_Page{pageNum}_Size{pageSize}_{queryConditionsHash}";
-
-                // 限制缓存键长度
-                if (cacheKey.Length > 200)
-                {
-                    // 如果键太长，使用哈希值缩短
-                    using (var sha256 = System.Security.Cryptography.SHA256.Create())
-                    {
-                        var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(cacheKey));
-                        var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-                        cacheKey = $"Query_{tableName}_{hashString.Substring(0, 16)}_Page{pageNum}_Size{pageSize}";
-                    }
-                }
-
-                return cacheKey;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "生成查询缓存键时发生错误，使用默认键");
-                return $"Query_{tableName}_Page{pageNum}_Size{pageSize}_{DateTime.Now.Ticks}";
-            }
-        }
-
-        /// <summary>
-        /// 获取查询条件的哈希值
-        /// </summary>
-        /// <param name="queryFilter">查询过滤器</param>
-        /// <param name="dto">数据传输对象</param>
-        /// <param name="additionalSqlWhere">额外SQL条件</param>
-        /// <returns>查询条件哈希值</returns>
-        private string GetQueryConditionsHash(QueryFilter queryFilter, object dto, string additionalSqlWhere)
-        {
-            var conditionsString = new StringBuilder();
-
-            // 添加查询过滤器条件
-            if (queryFilter != null && queryFilter.QueryFields != null)
-            {
-                foreach (var field in queryFilter.QueryFields.OrderBy(f => f.FieldName))
-                {
-                    conditionsString.Append($"{field.FieldName}:{field.Value},");
-                }
-            }
-
-            // 添加DTO属性值
-            if (dto != null)
-            {
-                var properties = dto.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (var prop in properties.OrderBy(p => p.Name))
-                {
-                    // 跳过索引器属性
-                    if (prop.GetIndexParameters().Length > 0)
-                    {
-                        continue;
-                    }
-
-                    // 检查是否有公共getter
-                    if (!prop.CanRead)
-                    {
-                        continue;
-                    }
-
-                    try
-                    {
-                        var value = prop.GetValue(dto);
-                        if (value != null)
-                        {
-                            conditionsString.Append($"{prop.Name}:{value},");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 单个属性获取失败不影响整个方法
-                        _logger.LogDebug(ex, $"获取属性值失败: {prop.Name}");
-                    }
-                }
-            }
-
-            // 添加额外SQL条件
-            if (!string.IsNullOrEmpty(additionalSqlWhere))
-            {
-                conditionsString.Append($"Additional:{additionalSqlWhere}");
-            }
-
-            // 计算哈希值
-            using (var sha256 = System.Security.Cryptography.SHA256.Create())
-            {
-                var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(conditionsString.ToString()));
-                var hashString = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
-                return hashString.Substring(0, 16); // 取前16个字符
-            }
-        }
-
-        /// <summary>
-        /// 从查询缓存异步获取数据
-        /// </summary>
-        /// <typeparam name="TResult">结果类型</typeparam>
-        /// <param name="cacheKey">缓存键</param>
-        /// <returns>缓存中的数据，如果不存在则返回null</returns>
-        private async Task<TResult> GetFromQueryCacheAsync<TResult>(string cacheKey)
-        {
-            try
-            {
-                var cachedData = _queryCacheManager.Get(cacheKey);
-                if (cachedData != null)
-                {
-                    // 检查类型兼容性并转换
-                    if (cachedData is TResult result)
-                    {
-                        return result;
-                    }
-                    else if (cachedData is Newtonsoft.Json.Linq.JArray jArray)
-                    {
-                        // 将JArray转换为指定类型
-                        return jArray.ToObject<TResult>();
-                    }
-                    else
-                    {
-                        // 尝试使用JSON序列化/反序列化进行类型转换
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(cachedData);
-                        return Newtonsoft.Json.JsonConvert.DeserializeObject<TResult>(json);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "从查询缓存获取数据时发生错误");
-            }
-
-            return default(TResult);
-        }
-
-        /// <summary>
-        /// 将数据异步存入查询缓存
-        /// </summary>
-        /// <typeparam name="TResult">结果类型</typeparam>
-        /// <param name="cacheKey">缓存键</param>
-        /// <param name="data">要缓存的数据</param>
-        private async Task PutToQueryCacheAsync<TResult>(string cacheKey, TResult data)
-        {
-            try
-            {
-                _queryCacheManager.Put(cacheKey, data);
-                _logger.LogDebug($"查询结果已存入缓存，键: {cacheKey}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "将数据存入查询缓存时发生错误");
-            }
-        }
-
-        /// <summary>
-        /// 清除指定表的查询缓存
-        /// </summary>
-        /// <param name="tableName">表名</param>
-        public void ClearQueryCache(string tableName)
-        {
-            try
-            {
-                // 通过表名清除相关缓存（这里可以实现更精确的清除逻辑）
-                _logger.LogDebug($"清除表 {tableName} 的查询缓存");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "清除查询缓存时发生错误");
-            }
-        }
-
-        #endregion
-
 
         #region 查询参数设置
 

@@ -876,6 +876,13 @@ namespace RUINORERP.UI.ProductEAV
 
             // 数据加载完成后，执行依赖数据的操作
             LoadBaseInfoSKUList(_EditEntity);
+            
+            // 加载SKU图片（如果是编辑模式）
+            if (entity.ActionStatus == ActionStatus.加载 || entity.ActionStatus == ActionStatus.修改)
+            {
+                await LoadSKUImagesAsync(_EditEntity);
+            }
+            
             listView1.UpdateUI();
             Task task_2 = Task.Run(task_Help);
             //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
@@ -2870,6 +2877,107 @@ namespace RUINORERP.UI.ProductEAV
             {
                 MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// 异步加载所有SKU明细的图片
+        /// 在编辑产品时调用，加载每个SKU已保存的图片
+        /// </summary>
+        /// <param name="entity">产品实体</param>
+        private async Task LoadSKUImagesAsync(tb_Prod entity)
+        {
+            try
+            {
+                if (entity?.tb_ProdDetails == null || entity.tb_ProdDetails.Count == 0)
+                {
+                    return;
+                }
+
+                MainForm.Instance.uclog.AddLog($"开始加载 {entity.tb_ProdDetails.Count} 个SKU的图片...");
+                int loadedCount = 0;
+
+                foreach (var detail in entity.tb_ProdDetails)
+                {
+                    try
+                    {
+                        // 只加载有图片路径的SKU
+                        if (!string.IsNullOrEmpty(detail.ImagesPath))
+                        {
+                            await LoadSKUImageAsync(detail);
+                            loadedCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"加载SKU {detail.SKU} 图片失败: {ex.Message}", Global.UILogType.警告);
+                    }
+                }
+
+                if (loadedCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功加载 {loadedCount} 个SKU的图片");
+                    // 刷新网格显示
+                    dataGridView1.Invalidate();
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"加载SKU图片时发生错误: {ex.Message}", Global.UILogType.错误);
+            }
+        }
+
+        /// <summary>
+        /// 加载单个SKU的图片
+        /// </summary>
+        /// <param name="detail">SKU明细</param>
+        private async Task LoadSKUImageAsync(tb_ProdDetail detail)
+        {
+            try
+            {
+                var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                
+                // 下载该SKU关联的图片
+                var list = await ctrpay.DownloadImageAsync(detail, "ImagesPath");
+
+                if (list == null || list.Count == 0)
+                {
+                    return;
+                }
+
+                // 将下载的图片转换为缓存格式
+                var imageDataList = new List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>();
+
+                foreach (var downloadResponse in list)
+                {
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    {
+                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        {
+                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
+                            {
+                                var imageInfo = ctrpay.ConvertToImageInfo(fileStorageInfo);
+                                imageDataList.Add(new Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>(
+                                    fileStorageInfo.FileData, imageInfo));
+                            }
+                        }
+                    }
+                }
+
+                // 缓存图片数据
+                if (imageDataList.Count > 0)
+                {
+                    skuImageDataCache[detail] = imageDataList;
+                    if (detail.ProdDetailID > 0)
+                    {
+                        skuImageDataCacheById[detail.ProdDetailID] = imageDataList;
+                    }
+                    MainForm.Instance.uclog.AddLog($"SKU {detail.SKU} 已缓存 {imageDataList.Count} 张图片");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"加载SKU {detail.SKU} 图片失败: {ex.Message}", Global.UILogType.警告);
             }
         }
 

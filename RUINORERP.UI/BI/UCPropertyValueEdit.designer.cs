@@ -31,14 +31,16 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
+            this.txtSortOrder = new Krypton.Toolkit.KryptonTextBox();
             this.lblProperty_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbProperty_ID = new Krypton.Toolkit.KryptonComboBox();
             this.lblPropertyValueName = new Krypton.Toolkit.KryptonLabel();
             this.txtPropertyValueName = new Krypton.Toolkit.KryptonTextBox();
             this.lblPropertyValueDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtPropertyValueDesc = new Krypton.Toolkit.KryptonTextBox();
-            this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
-            this.txtSortOrder = new Krypton.Toolkit.KryptonTextBox();
+            this.lblPropertyValueCode = new Krypton.Toolkit.KryptonLabel();
+            this.txtPropertyValueCode = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -47,7 +49,7 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(132, 272);
+            this.btnOk.Location = new System.Drawing.Point(121, 360);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(90, 25);
             this.btnOk.TabIndex = 0;
@@ -56,7 +58,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(250, 272);
+            this.btnCancel.Location = new System.Drawing.Point(239, 360);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(90, 25);
             this.btnCancel.TabIndex = 1;
@@ -65,6 +67,8 @@
             // 
             // kryptonPanel1
             // 
+            this.kryptonPanel1.Controls.Add(this.lblPropertyValueCode);
+            this.kryptonPanel1.Controls.Add(this.txtPropertyValueCode);
             this.kryptonPanel1.Controls.Add(this.kryptonLabel1);
             this.kryptonPanel1.Controls.Add(this.txtSortOrder);
             this.kryptonPanel1.Controls.Add(this.lblProperty_ID);
@@ -78,20 +82,36 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(447, 328);
+            this.kryptonPanel1.Size = new System.Drawing.Size(493, 421);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // kryptonLabel1
+            // 
+            this.kryptonLabel1.Location = new System.Drawing.Point(78, 97);
+            this.kryptonLabel1.Name = "kryptonLabel1";
+            this.kryptonLabel1.Size = new System.Drawing.Size(36, 20);
+            this.kryptonLabel1.TabIndex = 18;
+            this.kryptonLabel1.Values.Text = "排序";
+            // 
+            // txtSortOrder
+            // 
+            this.txtSortOrder.Location = new System.Drawing.Point(119, 97);
+            this.txtSortOrder.Name = "txtSortOrder";
+            this.txtSortOrder.Size = new System.Drawing.Size(294, 23);
+            this.txtSortOrder.TabIndex = 19;
             // 
             // lblProperty_ID
             // 
             this.lblProperty_ID.Location = new System.Drawing.Point(78, 13);
             this.lblProperty_ID.Name = "lblProperty_ID";
-            this.lblProperty_ID.Size = new System.Drawing.Size(35, 20);
+            this.lblProperty_ID.Size = new System.Drawing.Size(36, 20);
             this.lblProperty_ID.TabIndex = 10;
             this.lblProperty_ID.Values.Text = "属性";
             // 
             // cmbProperty_ID
             // 
             this.cmbProperty_ID.DropDownWidth = 100;
+            this.cmbProperty_ID.IntegralHeight = false;
             this.cmbProperty_ID.Location = new System.Drawing.Point(119, 12);
             this.cmbProperty_ID.Name = "cmbProperty_ID";
             this.cmbProperty_ID.Size = new System.Drawing.Size(294, 21);
@@ -99,55 +119,55 @@
             // 
             // lblPropertyValueName
             // 
-            this.lblPropertyValueName.Location = new System.Drawing.Point(40, 46);
+            this.lblPropertyValueName.Location = new System.Drawing.Point(40, 40);
             this.lblPropertyValueName.Name = "lblPropertyValueName";
-            this.lblPropertyValueName.Size = new System.Drawing.Size(73, 20);
+            this.lblPropertyValueName.Size = new System.Drawing.Size(75, 20);
             this.lblPropertyValueName.TabIndex = 12;
             this.lblPropertyValueName.Values.Text = "属性值名称";
             // 
             // txtPropertyValueName
             // 
-            this.txtPropertyValueName.Location = new System.Drawing.Point(119, 45);
+            this.txtPropertyValueName.Location = new System.Drawing.Point(119, 39);
             this.txtPropertyValueName.Name = "txtPropertyValueName";
-            this.txtPropertyValueName.Size = new System.Drawing.Size(294, 20);
+            this.txtPropertyValueName.Size = new System.Drawing.Size(294, 23);
             this.txtPropertyValueName.TabIndex = 13;
             // 
             // lblPropertyValueDesc
             // 
-            this.lblPropertyValueDesc.Location = new System.Drawing.Point(40, 114);
+            this.lblPropertyValueDesc.Location = new System.Drawing.Point(40, 131);
             this.lblPropertyValueDesc.Name = "lblPropertyValueDesc";
-            this.lblPropertyValueDesc.Size = new System.Drawing.Size(73, 20);
+            this.lblPropertyValueDesc.Size = new System.Drawing.Size(75, 20);
             this.lblPropertyValueDesc.TabIndex = 14;
             this.lblPropertyValueDesc.Values.Text = "属性值描述";
             // 
             // txtPropertyValueDesc
             // 
-            this.txtPropertyValueDesc.Location = new System.Drawing.Point(119, 113);
+            this.txtPropertyValueDesc.Location = new System.Drawing.Point(119, 130);
             this.txtPropertyValueDesc.Multiline = true;
             this.txtPropertyValueDesc.Name = "txtPropertyValueDesc";
             this.txtPropertyValueDesc.Size = new System.Drawing.Size(294, 123);
             this.txtPropertyValueDesc.TabIndex = 15;
             // 
-            // kryptonLabel1
+            // lblPropertyValueCode
             // 
-            this.kryptonLabel1.Location = new System.Drawing.Point(78, 80);
-            this.kryptonLabel1.Name = "kryptonLabel1";
-            this.kryptonLabel1.Size = new System.Drawing.Size(35, 20);
-            this.kryptonLabel1.TabIndex = 18;
-            this.kryptonLabel1.Values.Text = "排序";
+            this.lblPropertyValueCode.Location = new System.Drawing.Point(40, 69);
+            this.lblPropertyValueCode.Name = "lblPropertyValueCode";
+            this.lblPropertyValueCode.Size = new System.Drawing.Size(75, 20);
+            this.lblPropertyValueCode.TabIndex = 20;
+            this.lblPropertyValueCode.Values.Text = "属性值名称";
             // 
-            // txtSortOrder
+            // txtPropertyValueCode
             // 
-            this.txtSortOrder.Location = new System.Drawing.Point(119, 80);
-            this.txtSortOrder.Name = "txtSortOrder";
-            this.txtSortOrder.Size = new System.Drawing.Size(294, 20);
-            this.txtSortOrder.TabIndex = 19;
+            this.txtPropertyValueCode.Location = new System.Drawing.Point(119, 68);
+            this.txtPropertyValueCode.Name = "txtPropertyValueCode";
+            this.txtPropertyValueCode.Size = new System.Drawing.Size(294, 23);
+            this.txtPropertyValueCode.TabIndex = 21;
             // 
             // UCPropertyValueEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(447, 328);
+            this.ClientSize = new System.Drawing.Size(493, 421);
             this.Controls.Add(this.kryptonPanel1);
             this.Name = "UCPropertyValueEdit";
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).EndInit();
@@ -172,5 +192,7 @@
         private Krypton.Toolkit.KryptonTextBox txtPropertyValueDesc;
         private Krypton.Toolkit.KryptonLabel kryptonLabel1;
         private Krypton.Toolkit.KryptonTextBox txtSortOrder;
+        private Krypton.Toolkit.KryptonLabel lblPropertyValueCode;
+        private Krypton.Toolkit.KryptonTextBox txtPropertyValueCode;
     }
 }

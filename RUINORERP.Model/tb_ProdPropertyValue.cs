@@ -80,6 +80,22 @@ namespace RUINORERP.Model
                         }
         }
 
+
+        private string _PropertyValueCode;
+        /// <summary>
+        /// 属性值编码
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PropertyValueCode", ColDesc = "属性值编码")]
+        [SugarColumn(ColumnDataType = "varchar", SqlParameterDbType = "String", ColumnName = "PropertyValueCode", Length = 20, IsNullable = false, ColumnDescription = "属性值编码")]
+        public string PropertyValueCode
+        {
+            get { return _PropertyValueCode; }
+            set
+            {
+                SetProperty(ref _PropertyValueCode, value);
+            }
+        }
+
         private string _PropertyValueDesc;
         /// <summary>
         /// 属性值描述

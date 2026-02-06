@@ -120,5 +120,15 @@ namespace RUINORERP.Model.ConfigModel
         [Category("消息配置")]
         [Description("是否启用单据状态变化消息发送功能")]
         public bool EnableBillStatusMessage { get; set; } = true;
+
+        [JsonProperty("OllamaApiAddress")]
+        [Category("AI配置")]
+        [Description("OLLAMA大模型API地址")]
+        public string OllamaApiAddress { get; set; } = "http://localhost:11434/api";
+
+        [JsonProperty("OllamaDefaultModel")]
+        [Category("AI配置")]
+        [Description("OLLAMA大模型默认名称")]
+        public string OllamaDefaultModel { get; set; } = "llama3";
     }
 }

@@ -5451,6 +5451,12 @@
     <Folder Include="WorkFlowDesigner\Nodes\editor\" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\RUINORERP.AI\RUINORERP.AI.csproj">
+      <Project>{A7B3D7A9-1C4A-4F9E-9D9C-8E5D7A8F9E12}</Project>
+      <Name>RUINORERP.AI</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.8">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.8 %28x86 和 x64%29</ProductName>

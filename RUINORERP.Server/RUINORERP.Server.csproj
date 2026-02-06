@@ -199,6 +199,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
+    <ProjectReference Include="..\RUINORERP.AI\RUINORERP.AI.csproj" />
     <ProjectReference Include="..\RUINORERP.Business\RUINORERP.Business.csproj" />
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj" />

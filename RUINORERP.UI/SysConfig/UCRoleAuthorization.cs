@@ -1591,12 +1591,14 @@ namespace RUINORERP.UI.SysConfig
 
         /// <summary>
         /// 初始化字段权限（优化版本）
+        /// 支持增量添加字段，自动检测并添加新字段
         /// </summary>
         /// <param name="CurrentRole">当前角色</param>
         /// <param name="SelectedMenuInfo">选中菜单</param>
         /// <param name="selected">是否选中</param>
+        /// <param name="forceRefresh">是否强制刷新字段信息（用于增量更新场景）</param>
         /// <returns></returns>
-        public async Task<List<tb_P4Field>> InitFiledByRole(tb_RoleInfo CurrentRole, tb_MenuInfo SelectedMenuInfo, bool selected = false)
+        public async Task<List<tb_P4Field>> InitFiledByRole(tb_RoleInfo CurrentRole, tb_MenuInfo SelectedMenuInfo, bool selected = false, bool forceRefresh = false)
         {
             // 空值检查
             if (SelectedMenuInfo == null || CurrentRole == null)
@@ -1607,8 +1609,12 @@ namespace RUINORERP.UI.SysConfig
             // 确保字段信息已初始化
             SelectedMenuInfo.tb_FieldInfos ??= new List<tb_FieldInfo>();
 
+            // 获取当前已存在的字段ID集合（用于后续对比）
+            var existingFieldIds = SelectedMenuInfo.tb_FieldInfos.Select(f => f.FieldInfo_ID).ToHashSet();
+
             // 使用缓存机制避免重复加载模型类型
-            if (SelectedMenuInfo.tb_FieldInfos.Count == 0)
+            // 当字段信息为空或强制刷新时，重新加载字段信息
+            if (SelectedMenuInfo.tb_FieldInfos.Count == 0 || forceRefresh)
             {
                 try
                 {
@@ -1645,6 +1651,19 @@ namespace RUINORERP.UI.SysConfig
                             }
                         }
                     });
+
+                    // 记录新发现的字段
+                    if (forceRefresh && existingFieldIds.Count > 0)
+                    {
+                        var discoveredFields = SelectedMenuInfo.tb_FieldInfos
+                            .Where(f => !existingFieldIds.Contains(f.FieldInfo_ID))
+                            .ToList();
+                        
+                        if (discoveredFields.Count > 0)
+                        {
+                            MainForm.Instance.logger.Info($"菜单 '{SelectedMenuInfo.CaptionCN}' 发现 {discoveredFields.Count} 个新字段，将进行增量添加");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1910,9 +1929,10 @@ namespace RUINORERP.UI.SysConfig
                 .ToList() ?? new List<tb_P4Field>();
 
             // 只有在需要时才重新初始化数据
+            // InitLoadData=true 时表示用户主动触发初始化（如右键菜单），此时需要强制刷新字段信息以支持增量添加
             if (pflist.Count == 0 || InitLoadData)
             {
-                pflist = await InitFiledByRole(CurrentRole, selectMenu);
+                pflist = await InitFiledByRole(CurrentRole, selectMenu, false, InitLoadData);
 
                 // 更新缓存
                 if (CurrentRole.tb_P4Fields == null)

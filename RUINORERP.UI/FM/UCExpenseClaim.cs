@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using DevAge.Windows.Forms;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
@@ -49,6 +49,7 @@ using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
+using RUINORERP.PacketSpec.Models.FileManagement;
 
 namespace RUINORERP.UI.FM
 {
@@ -351,6 +352,22 @@ namespace RUINORERP.UI.FM
                 });
             }
 
+            // 异步下载并显示明细报销凭证图片
+            if (entity.tb_FM_ExpenseClaimDetails != null && entity.tb_FM_ExpenseClaimDetails.Count > 0)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await LoadDetailImagesAsync(entity.tb_FM_ExpenseClaimDetails);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "异步下载明细报销凭证图片异常");
+                    }
+                });
+            }
+
             base.BindData(entity);
         }
 
@@ -373,6 +390,183 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterC, true);
 
             #endregion
+        }
+
+        /// <summary>
+        /// 异步加载明细报销凭证图片
+        /// </summary>
+        /// <param name="details">报销明细列表</param>
+        private async Task LoadDetailImagesAsync(List<tb_FM_ExpenseClaimDetail> details)
+        {
+            if (details == null || details.Count == 0) return;
+
+            try
+            {
+                int loadedCount = 0;
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+
+                foreach (var detail in details)
+                {
+                    if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
+                    {
+                        try
+                        {
+                            // 查找对应的网格行
+                            int rowIndex = FindGridRowIndex(detail);
+                            if (rowIndex > 0)
+                            {
+                                int colIndex = GetEvidenceImageColumnIndex();
+                                if (colIndex >= 0)
+                                {
+                                    // 下载图片
+                                    var imageData = await DownloadDetailImageAsync(detail, fileService);
+                                    if (imageData != null && imageData.Length > 0)
+                                    {
+                                        // 更新单元格显示
+                                        await UpdateGridCellImageAsync(rowIndex, colIndex, imageData, detail.EvidenceImagePath);
+                                        loadedCount++;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.LogError(ex, $"加载明细 {detail.ClaimSubID} 的图片失败");
+                        }
+                    }
+                }
+
+                if (loadedCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功加载 {loadedCount} 张明细报销凭证图片");
+                    // 刷新网格显示
+                    this.Invoke(new Action(() =>
+                    {
+                        grid1.Invalidate();
+                    }));
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "加载明细报销凭证图片异常");
+            }
+        }
+
+        /// <summary>
+        /// 查找明细对应的网格行索引
+        /// </summary>
+        private int FindGridRowIndex(tb_FM_ExpenseClaimDetail detail)
+        {
+            try
+            {
+                for (int i = 1; i < grid1.RowsCount; i++)
+                {
+                    var rowData = grid1.Rows[i].RowData;
+                    if (rowData is tb_FM_ExpenseClaimDetail rowDetail)
+                    {
+                        if (rowDetail.ClaimSubID == detail.ClaimSubID)
+                        {
+                            return i;
+                        }
+                    }
+                }
+            }
+            catch { }
+            return -1;
+        }
+
+        /// <summary>
+        /// 获取报销凭证图片列的索引
+        /// </summary>
+        private int GetEvidenceImageColumnIndex()
+        {
+            try
+            {
+                var col = sgd["EvidenceImagePath"];
+                if (col != null)
+                {
+                    var colInfo = grid1.Columns.GetColumnInfo(col.UniqueId);
+                    if (colInfo != null)
+                    {
+                        return colInfo.Index;
+                    }
+                }
+            }
+            catch { }
+            return -1;
+        }
+
+        /// <summary>
+        /// 下载明细图片
+        /// </summary>
+        private async Task<byte[]> DownloadDetailImageAsync(tb_FM_ExpenseClaimDetail detail, FileBusinessService fileService)
+        {
+            try
+            {
+                var downloadResponse = await fileService.DownloadImageAsync(detail, "EvidenceImagePath");
+                if (downloadResponse != null && downloadResponse.Count > 0)
+                {
+                    var firstResponse = downloadResponse[0];
+                    if (firstResponse.IsSuccess && firstResponse.FileStorageInfos != null && firstResponse.FileStorageInfos.Count > 0)
+                    {
+                        return firstResponse.FileStorageInfos[0].FileData;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"下载明细 {detail.ClaimSubID} 图片失败");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 更新网格单元格图片
+        /// </summary>
+        private async Task UpdateGridCellImageAsync(int rowIndex, int colIndex, byte[] imageData, string imagePath)
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    this.Invoke(new Action(() =>
+                    {
+                        var cell = grid1[rowIndex, colIndex];
+                        if (cell != null)
+                        {
+                            // 获取或创建 ValueImageWeb 模型
+                            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb;
+                            if (model == null)
+                            {
+                                valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                                cell.Model.AddModel(valueImageWeb);
+                            }
+                            else
+                            {
+                                valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                            }
+
+                            // 设置图片数据
+                            valueImageWeb.CellImageBytes = imageData;
+                            valueImageWeb.CellImageHashName = imagePath;
+
+                            // 设置单元格值
+                            cell.Value = imagePath;
+
+                            // 设置视图
+                            if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
+                            {
+                                cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                            }
+                        }
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.logger.LogError(ex, "更新网格单元格图片失败");
+                }
+            });
         }
 
         /// <summary>
@@ -550,6 +744,10 @@ namespace RUINORERP.UI.FM
             sgh.InitGrid(grid1, sgd, true, nameof(tb_FM_ExpenseClaimDetail));
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
+
+            // 添加网格双击事件处理（用于图片编辑）
+            grid1.MouseDoubleClick += Grid1_MouseDoubleClick;
+
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
@@ -558,6 +756,148 @@ namespace RUINORERP.UI.FM
 
 
 
+        }
+
+        /// <summary>
+        /// 网格鼠标双击事件处理
+        /// 用于处理报销凭证图片的双击编辑
+        /// </summary>
+        private void Grid1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                // 获取点击位置对应的单元格
+                var position = grid1.PositionAtPoint(e.Location);
+                if (position.IsEmpty()) return;
+
+                // 检查是否是报销凭证图片列
+                var col = sgd["EvidenceImagePath"];
+                if (col == null) return;
+
+                var colInfo = grid1.Columns.GetColumnInfo(col.UniqueId);
+                if (colInfo == null || position.Column != colInfo.Index) return;
+
+                // 获取单元格
+                var cell = grid1[position];
+                if (cell == null) return;
+
+                // 检查是否有图片
+                bool hasImage = false;
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                {
+                    hasImage = valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0;
+                }
+
+                if (hasImage)
+                {
+                    // 显示右键菜单选项
+                    ShowImageContextMenu(position.Row, position.Column, e.Location);
+                }
+                else
+                {
+                    // 没有图片，进入编辑模式
+                    grid1.Selection.SelectCell(position, true);
+                    // 使用网格的编辑功能启动编辑
+                    var editContext = new SourceGrid.CellContext(grid1, position);
+                    if (cell.Editor != null)
+                    {
+                        cell.Editor.EnableEdit = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "处理网格双击事件失败");
+            }
+        }
+
+        /// <summary>
+        /// 显示图片右键菜单
+        /// </summary>
+        private void ShowImageContextMenu(int rowIndex, int colIndex, Point location)
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
+
+            // 查看大图
+            ToolStripMenuItem viewItem = new ToolStripMenuItem("查看大图");
+            viewItem.Click += (s, e) => ViewDetailImage(rowIndex, colIndex);
+            menu.Items.Add(viewItem);
+
+            // 替换图片
+            ToolStripMenuItem replaceItem = new ToolStripMenuItem("替换图片");
+            replaceItem.Click += async (s, e) => await ReplaceDetailImageFromDialog(rowIndex);
+            menu.Items.Add(replaceItem);
+
+            menu.Items.Add(new ToolStripSeparator());
+
+            // 删除图片
+            ToolStripMenuItem deleteItem = new ToolStripMenuItem("删除图片");
+            deleteItem.Click += (s, e) => DeleteDetailImage(rowIndex, colIndex);
+            menu.Items.Add(deleteItem);
+
+            // 显示菜单
+            menu.Show(grid1, location);
+        }
+
+        /// <summary>
+        /// 查看明细大图
+        /// </summary>
+        private void ViewDetailImage(int rowIndex, int colIndex)
+        {
+            try
+            {
+                var cell = grid1[rowIndex, colIndex];
+                if (cell == null) return;
+
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                {
+                    if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                    {
+                        using (var ms = new System.IO.MemoryStream(valueImageWeb.CellImageBytes))
+                        {
+                            var image = System.Drawing.Image.FromStream(ms);
+                            frmPictureViewer viewer = new frmPictureViewer();
+                            viewer.PictureBoxViewer.Image = image;
+                            viewer.ShowDialog();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "查看明细大图失败");
+                MessageBox.Show($"查看图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 从对话框替换明细图片
+        /// </summary>
+        private async Task ReplaceDetailImageFromDialog(int rowIndex)
+        {
+            try
+            {
+                using (OpenFileDialog dlg = new OpenFileDialog())
+                {
+                    dlg.Filter = "图片文件|*.jpg;*.jpeg;*.png;*.gif;*.bmp|所有文件|*.*";
+                    dlg.Title = "选择新的报销凭证图片";
+
+                    if (dlg.ShowDialog() == DialogResult.OK)
+                    {
+                        // 使用 Task.Run 包装同步方法以实现异步
+                        byte[] imageData = await Task.Run(() => System.IO.File.ReadAllBytes(dlg.FileName));
+                        string fileName = System.IO.Path.GetFileName(dlg.FileName);
+                        await ReplaceDetailImage(rowIndex, imageData, fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "替换图片失败");
+                MessageBox.Show($"替换图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
@@ -725,6 +1065,9 @@ namespace RUINORERP.UI.FM
                                 await UploadImageAsync(EditEntity, picboxCloseCaseImagePath, "结案凭证");
                             }
                         }
+
+                        // 清理已替换的旧图片
+                        await CleanupOldImagesAsync();
                     }
                     else
                     {
@@ -864,6 +1207,209 @@ namespace RUINORERP.UI.FM
             // 无需额外处理，双击即可触发内置的上传/查看功能
         }
 
+        #region 明细图片删除和替换功能
+
+        /// <summary>
+        /// 删除明细图片
+        /// </summary>
+        /// <param name="rowIndex">行索引</param>
+        /// <param name="colIndex">列索引</param>
+        public void DeleteDetailImage(int rowIndex, int colIndex)
+        {
+            try
+            {
+                if (rowIndex <= 0 || rowIndex >= grid1.RowsCount) return;
+                if (colIndex < 0 || colIndex >= grid1.ColumnsCount) return;
+
+                var cell = grid1[rowIndex, colIndex];
+                if (cell == null) return;
+
+                // 确认删除
+                if (MessageBox.Show("确定要删除这张报销凭证图片吗？", "确认删除", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // 获取模型数据
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                {
+                    // 记录需要删除的旧文件
+                    string oldImagePath = valueImageWeb.CellImageHashName;
+                    if (!string.IsNullOrEmpty(oldImagePath))
+                    {
+                        // 将旧文件路径添加到待删除列表
+                        AddImageToDeleteList(oldImagePath);
+                    }
+
+                    // 清空图片数据
+                    valueImageWeb.CellImageBytes = null;
+                    valueImageWeb.SetImageNewHash(string.Empty);
+                    cell.Value = null;
+                    cell.View = sgd.ViewNormal;
+
+                    // 更新明细对象
+                    var rowData = grid1.Rows[rowIndex].RowData;
+                    if (rowData is tb_FM_ExpenseClaimDetail detail)
+                    {
+                        detail.EvidenceImagePath = null;
+                        detail.SetPropertyValue("EvidenceImagePath", null);
+                    }
+
+                    // 刷新单元格
+                    var position = new SourceGrid.Position(rowIndex, colIndex);
+                    grid1.InvalidateCell(position);
+
+                    MainForm.Instance.uclog.AddLog("报销凭证图片已删除");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "删除明细图片失败");
+                MessageBox.Show($"删除图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 待删除图片列表
+        /// </summary>
+        private List<string> _imagesToDelete = new List<string>();
+
+        /// <summary>
+        /// 添加图片到待删除列表
+        /// </summary>
+        private void AddImageToDeleteList(string imagePath)
+        {
+            if (!string.IsNullOrEmpty(imagePath) && !_imagesToDelete.Contains(imagePath))
+            {
+                _imagesToDelete.Add(imagePath);
+            }
+        }
+
+        /// <summary>
+        /// 删除服务器上的旧图片
+        /// </summary>
+        private async Task DeleteOldImagesAsync()
+        {
+            if (_imagesToDelete == null || _imagesToDelete.Count == 0) return;
+
+            try
+            {
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                int successCount = 0;
+
+                foreach (var imagePath in _imagesToDelete.ToList())
+                {
+                    try
+                    {
+                        // 构建删除请求
+                        var deleteRequest = new FileDeleteRequest
+                        {
+                            BusinessNo = EditEntity?.ClaimNo ?? EditEntity?.ClaimMainID.ToString(),
+                            BusinessId = EditEntity?.ClaimMainID ?? 0,
+                            BusinessType = (int)BizType.费用报销单,
+                            PhysicalDelete = false // 逻辑删除
+                        };
+
+                        // 注意：这里需要根据实际的文件存储信息构建FileStorageInfo
+                        // 简化处理：直接调用删除方法
+                        var deleteResult = await fileService.DeleteImagesAsync(EditEntity, false);
+                        if (deleteResult != null && deleteResult.IsSuccess)
+                        {
+                            successCount++;
+                            _imagesToDelete.Remove(imagePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, $"删除图片 {imagePath} 失败");
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    MainForm.Instance.uclog.AddLog($"成功删除 {successCount} 张旧图片");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "删除旧图片异常");
+            }
+        }
+
+        /// <summary>
+        /// 替换明细图片
+        /// </summary>
+        /// <param name="rowIndex">行索引</param>
+        /// <param name="newImageData">新图片数据</param>
+        /// <param name="fileName">文件名</param>
+        public async Task ReplaceDetailImage(int rowIndex, byte[] newImageData, string fileName)
+        {
+            try
+            {
+                if (rowIndex <= 0 || rowIndex >= grid1.RowsCount) return;
+
+                int colIndex = GetEvidenceImageColumnIndex();
+                if (colIndex < 0) return;
+
+                var cell = grid1[rowIndex, colIndex];
+                if (cell == null) return;
+
+                // 获取旧图片路径
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                {
+                    string oldImagePath = valueImageWeb.CellImageHashName;
+                    if (!string.IsNullOrEmpty(oldImagePath))
+                    {
+                        // 将旧文件添加到待删除列表
+                        AddImageToDeleteList(oldImagePath);
+                    }
+
+                    // 设置新图片
+                    string newHash = ImageHashHelper.GenerateHash(newImageData);
+                    valueImageWeb.SetImageNewHash(newHash);
+                    valueImageWeb.CellImageBytes = newImageData;
+                    valueImageWeb.CellImageHashName = fileName;
+                    cell.Value = fileName;
+
+                    // 设置视图
+                    if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
+                    {
+                        cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                    }
+
+                    // 更新明细对象
+                    var rowData = grid1.Rows[rowIndex].RowData;
+                    if (rowData is tb_FM_ExpenseClaimDetail detail)
+                    {
+                        detail.EvidenceImagePath = fileName;
+                    }
+
+                    // 刷新单元格
+                    var position = new SourceGrid.Position(rowIndex, colIndex);
+                    grid1.InvalidateCell(position);
+
+                    MainForm.Instance.uclog.AddLog("报销凭证图片已替换");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "替换明细图片失败");
+                MessageBox.Show($"替换图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 检查并删除已替换的旧图片（在保存后调用）
+        /// </summary>
+        public async Task CleanupOldImagesAsync()
+        {
+            await DeleteOldImagesAsync();
+        }
+
+        #endregion
 
     }
 }

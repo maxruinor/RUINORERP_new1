@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -106,101 +106,119 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 重写Paint方法，自定义绘制图片
+        /// 优化：确保图片在单元格内绘制，不覆盖其他行
         /// </summary>
         protected override void Paint(Graphics graphics, Rectangle clipBounds, Rectangle cellBounds,
             int rowIndex, DataGridViewElementStates cellState, object value,
             object formattedValue, string errorText, DataGridViewCellStyle cellStyle,
             DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
         {
-            // 绘制背景
-            base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value,
-                formattedValue, errorText, cellStyle, advancedBorderStyle,
-                paintParts & ~DataGridViewPaintParts.ContentForeground);
+            // 设置裁剪区域，确保绘制不会超出单元格边界
+            Rectangle oldClip = graphics.ClipBounds.IsEmpty ? Rectangle.Empty : Rectangle.Round(graphics.ClipBounds);
+            graphics.SetClip(cellBounds);
 
-            // 获取SKU数据
-            var detail = GetProdDetail(rowIndex);
-            if (detail == null)
+            try
             {
-                DrawPlaceholder(graphics, cellBounds, "无图片");
-                return;
-            }
+                // 绘制背景
+                base.Paint(graphics, clipBounds, cellBounds, rowIndex, cellState, value,
+                    formattedValue, errorText, cellStyle, advancedBorderStyle,
+                    paintParts & ~DataGridViewPaintParts.ContentForeground);
 
-            // 优先检查frmProductEdit中的缓存数据（新添加但未上传的图片）
-            var frmProductEdit = this.DataGridView?.FindForm() as ProductEAV.frmProductEdit;
-            if (frmProductEdit != null)
-            {
-                // 使用反射获取私有缓存字段
-                var cacheField = typeof(ProductEAV.frmProductEdit).GetField("skuImageDataCache",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (cacheField != null)
+                // 获取SKU数据
+                var detail = GetProdDetail(rowIndex);
+                if (detail == null)
                 {
-                    var cache = cacheField.GetValue(frmProductEdit) as System.Collections.Generic.Dictionary<tb_ProdDetail, System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>>;
-                    if (cache != null && cache.TryGetValue(detail, out var cachedImages) && cachedImages.Count > 0)
+                    DrawPlaceholder(graphics, cellBounds, "无图片");
+                    return;
+                }
+
+                // 优先检查frmProductEdit中的缓存数据（新添加但未上传的图片）
+                var frmProductEdit = this.DataGridView?.FindForm() as ProductEAV.frmProductEdit;
+                if (frmProductEdit != null)
+                {
+                    // 使用反射获取私有缓存字段
+                    var cacheField = typeof(ProductEAV.frmProductEdit).GetField("skuImageDataCache",
+                        BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (cacheField != null)
                     {
-                        // 绘制缓存的图片
-                        DrawCachedImage(graphics, cellBounds, cachedImages, detail.HasUnsavedImageChanges);
-                        return;
+                        var cache = cacheField.GetValue(frmProductEdit) as System.Collections.Generic.Dictionary<tb_ProdDetail, System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>>;
+                        if (cache != null && cache.TryGetValue(detail, out var cachedImages) && cachedImages.Count > 0)
+                        {
+                            // 绘制缓存的图片
+                            DrawCachedImage(graphics, cellBounds, cachedImages, detail.HasUnsavedImageChanges);
+                            return;
+                        }
                     }
                 }
-            }
 
-            // 检查是否有图片路径
-            string imagesPath = detail.ImagesPath;
-            if (string.IsNullOrEmpty(imagesPath))
-            {
-                DrawPlaceholder(graphics, cellBounds, "无图片");
-                return;
-            }
-
-            // 解析图片数量
-            var imagePaths = imagesPath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-            if (imagePaths.Length == 0)
-            {
-                DrawPlaceholder(graphics, cellBounds, "无图片");
-                return;
-            }
-
-            // 异步加载图片（只在需要时加载）
-            if (!_isLoading && _loadedImage == null && !_loadError)
-            {
-                _isLoading = true;
-                LoadImageAsync(detail.ProdDetailID, imagePaths[0]).ContinueWith(task =>
+                // 检查是否有图片路径
+                string imagesPath = detail.ImagesPath;
+                if (string.IsNullOrEmpty(imagesPath))
                 {
-                    _isLoading = false;
-                    if (task.Status == TaskStatus.RanToCompletion && task.Result != null)
-                    {
-                        _loadedImage = task.Result;
-                    }
-                    else
-                    {
-                        _loadError = true;
-                    }
+                    DrawPlaceholder(graphics, cellBounds, "双击添加图片");
+                    return;
+                }
 
-                    // 刷新单元格显示
-                    if (this.DataGridView != null && rowIndex < this.DataGridView.Rows.Count)
-                    {
-                        this.DataGridView.InvalidateCell(this.ColumnIndex, rowIndex);
-                    }
-                }, TaskScheduler.FromCurrentSynchronizationContext());
-            }
+                // 解析图片数量
+                var imagePaths = imagesPath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                if (imagePaths.Length == 0)
+                {
+                    DrawPlaceholder(graphics, cellBounds, "双击添加图片");
+                    return;
+                }
 
-            // 绘制加载状态
-            if (_isLoading)
-            {
-                DrawPlaceholder(graphics, cellBounds, "加载中...");
+                // 异步加载图片（只在需要时加载）
+                if (!_isLoading && _loadedImage == null && !_loadError)
+                {
+                    _isLoading = true;
+                    LoadImageAsync(detail.ProdDetailID, imagePaths[0]).ContinueWith(task =>
+                    {
+                        _isLoading = false;
+                        if (task.Status == TaskStatus.RanToCompletion && task.Result != null)
+                        {
+                            // 创建缩略图副本
+                            _loadedImage = task.Result;
+                        }
+                        else
+                        {
+                            _loadError = true;
+                        }
+
+                        // 刷新单元格显示
+                        if (this.DataGridView != null && rowIndex < this.DataGridView.Rows.Count)
+                        {
+                            this.DataGridView.InvalidateCell(this.ColumnIndex, rowIndex);
+                        }
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+
+                // 绘制加载状态
+                if (_isLoading)
+                {
+                    DrawPlaceholder(graphics, cellBounds, "加载中...");
+                }
+                else if (_loadError)
+                {
+                    DrawPlaceholder(graphics, cellBounds, "加载失败");
+                }
+                else if (_loadedImage != null)
+                {
+                    // 绘制图片
+                    DrawImage(graphics, cellBounds, _loadedImage, imagePaths.Length, false);
+                }
+                else
+                {
+                    // 显示已上传图片数量
+                    DrawImageInfoPlaceholder(graphics, cellBounds, imagePaths.Length);
+                }
             }
-            else if (_loadError)
+            finally
             {
-                DrawPlaceholder(graphics, cellBounds, "加载失败");
-            }
-            else if (_loadedImage != null)
-            {
-                // 绘制图片
-                DrawImage(graphics, cellBounds, _loadedImage, imagePaths.Length, false);
-            }
-            else
-            {
-                DrawPlaceholder(graphics, cellBounds, "双击添加图片");
+                // 恢复原始裁剪区域
+                if (oldClip.IsEmpty)
+                    graphics.ResetClip();
+                else
+                    graphics.SetClip(oldClip);
             }
         }
 
@@ -209,28 +227,151 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         private void DrawPlaceholder(Graphics graphics, Rectangle cellBounds, string text)
         {
+            // 确保在单元格边界内绘制，留出边距
+            var drawRect = new Rectangle(
+                cellBounds.X + 2,
+                cellBounds.Y + 2,
+                cellBounds.Width - 4,
+                cellBounds.Height - 4);
+
             using (var brush = new SolidBrush(Color.Gray))
-            using (var font = new Font("Microsoft YaHei", 8))
             {
-                var size = graphics.MeasureString(text, font);
-                var point = new PointF(
-                    cellBounds.Left + (cellBounds.Width - size.Width) / 2,
-                    cellBounds.Top + (cellBounds.Height - size.Height) / 2);
-                graphics.DrawString(text, font, brush, point);
+                // 计算合适的字体大小
+                float fontSize = 8;
+                Font font = new Font("Microsoft YaHei", fontSize);
+                try
+                {
+                    var size = graphics.MeasureString(text, font);
+                    // 如果文本宽度超过单元格，缩小字体
+                    if (size.Width > drawRect.Width)
+                    {
+                        float scale = drawRect.Width / size.Width;
+                        fontSize = font.Size * scale;
+                        font.Dispose();
+                        font = new Font("Microsoft YaHei", fontSize);
+                        size = graphics.MeasureString(text, font);
+                    }
+
+                    var point = new PointF(
+                        drawRect.Left + (drawRect.Width - size.Width) / 2,
+                        drawRect.Top + (drawRect.Height - size.Height) / 2);
+
+                    // 使用TextRenderer确保清晰渲染
+                    TextRenderer.DrawText(graphics, text, font, new Point((int)point.X, (int)point.Y), Color.Gray);
+                }
+                finally
+                {
+                    font?.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 绘制图片数量信息占位符
+        /// </summary>
+        private void DrawImageInfoPlaceholder(Graphics graphics, Rectangle cellBounds, int imageCount)
+        {
+            var drawRect = new Rectangle(
+                cellBounds.X + 2,
+                cellBounds.Y + 2,
+                cellBounds.Width - 4,
+                cellBounds.Height - 4);
+
+            // 绘制边框
+            using (var pen = new Pen(Color.LightGray, 1))
+            {
+                graphics.DrawRectangle(pen, drawRect);
+            }
+
+            // 绘制图片数量和提示
+            using (var brush = new SolidBrush(Color.FromArgb(100, 0, 120, 215)))
+            {
+                // 计算合适的字体大小
+                float fontSize = 9;
+                Font font = new Font("Microsoft YaHei", fontSize, FontStyle.Bold);
+                try
+                {
+                    string text = $"{imageCount}张图片";
+                    var size = graphics.MeasureString(text, font);
+
+                    // 确保文本在单元格内
+                    while (size.Width > drawRect.Width - 4 && fontSize > 6)
+                    {
+                        fontSize -= 0.5f;
+                        font.Dispose();
+                        font = new Font("Microsoft YaHei", fontSize, FontStyle.Bold);
+                        size = graphics.MeasureString(text, font);
+                    }
+
+                    var point = new PointF(
+                        drawRect.Left + (drawRect.Width - size.Width) / 2,
+                        drawRect.Top + (drawRect.Height - size.Height) / 2 - 5);
+
+                    TextRenderer.DrawText(graphics, text, font, new Point((int)point.X, (int)point.Y), Color.FromArgb(100, 0, 120, 215));
+                }
+                finally
+                {
+                    font?.Dispose();
+                }
+            }
+
+            // 绘制提示文本
+            using (var hintFont = new Font("Microsoft YaHei", 7))
+            {
+                string hint = "双击查看";
+                var hintSize = graphics.MeasureString(hint, hintFont);
+                var hintPoint = new PointF(
+                    drawRect.Left + (drawRect.Width - hintSize.Width) / 2,
+                    drawRect.Bottom - hintSize.Height - 2);
+
+                TextRenderer.DrawText(graphics, hint, hintFont, new Point((int)hintPoint.X, (int)hintPoint.Y), Color.Gray);
             }
         }
 
         /// <summary>
         /// 绘制图片
+        /// 优化：在单元格内合理缩放和定位，不超出边界
         /// </summary>
         private void DrawImage(Graphics graphics, Rectangle cellBounds, Image image, int imageCount, bool hasUnsavedChanges)
         {
-            // 计算缩略图大小和位置
-            int thumbnailSize = SKUImageColumn.ThumbnailSize;
+            // 计算可用绘制区域（留出边距）
+            int padding = 4;
+            var availableRect = new Rectangle(
+                cellBounds.X + padding,
+                cellBounds.Y + padding,
+                cellBounds.Width - padding * 2,
+                cellBounds.Height - padding * 2);
+
+            // 如果单元格太小，使用最小尺寸
+            if (availableRect.Width < 20 || availableRect.Height < 20)
+            {
+                availableRect = cellBounds;
+            }
+
+            // 计算缩略图大小（保持宽高比）
+            float ratio = Math.Min(
+                (float)availableRect.Width / image.Width,
+                (float)availableRect.Height / image.Height);
+
+            int thumbWidth = Math.Max(1, (int)(image.Width * ratio));
+            int thumbHeight = Math.Max(1, (int)(image.Height * ratio));
+
+            // 居中定位
             var imgRect = new Rectangle(
-                cellBounds.Left + (cellBounds.Width - thumbnailSize) / 2,
-                cellBounds.Top + (cellBounds.Height - thumbnailSize) / 2,
-                thumbnailSize, thumbnailSize);
+                availableRect.X + (availableRect.Width - thumbWidth) / 2,
+                availableRect.Y + (availableRect.Height - thumbHeight) / 2,
+                thumbWidth, thumbHeight);
+
+            // 确保图片不会超出单元格边界
+            if (imgRect.X < cellBounds.X) imgRect.X = cellBounds.X + 1;
+            if (imgRect.Y < cellBounds.Y) imgRect.Y = cellBounds.Y + 1;
+            if (imgRect.Right > cellBounds.Right) imgRect.Width = cellBounds.Right - imgRect.X - 1;
+            if (imgRect.Bottom > cellBounds.Bottom) imgRect.Height = cellBounds.Bottom - imgRect.Y - 1;
+
+            // 设置高质量绘制模式
+            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
 
             // 绘制图片（保持比例）
             graphics.DrawImage(image, imgRect);
@@ -250,6 +391,7 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 绘制缓存的图片（从byte[]数据绘制）
+        /// 优化：在单元格内合理缩放和定位，不超出边界
         /// </summary>
         private void DrawCachedImage(Graphics graphics, Rectangle cellBounds,
             System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> cachedImages,
@@ -262,12 +404,44 @@ namespace RUINORERP.UI.UControls
                 using (var ms = new System.IO.MemoryStream(firstImageData))
                 using (var originalImage = System.Drawing.Image.FromStream(ms))
                 {
-                    // 计算缩略图大小和位置
-                    int thumbnailSize = SKUImageColumn.ThumbnailSize;
+                    // 计算可用绘制区域（留出边距）
+                    int padding = 4;
+                    var availableRect = new Rectangle(
+                        cellBounds.X + padding,
+                        cellBounds.Y + padding,
+                        cellBounds.Width - padding * 2,
+                        cellBounds.Height - padding * 2);
+
+                    // 如果单元格太小，使用最小尺寸
+                    if (availableRect.Width < 20 || availableRect.Height < 20)
+                    {
+                        availableRect = cellBounds;
+                    }
+
+                    // 计算缩略图大小（保持宽高比）
+                    float ratio = Math.Min(
+                        (float)availableRect.Width / originalImage.Width,
+                        (float)availableRect.Height / originalImage.Height);
+
+                    int thumbWidth = Math.Max(1, (int)(originalImage.Width * ratio));
+                    int thumbHeight = Math.Max(1, (int)(originalImage.Height * ratio));
+
+                    // 居中定位
                     var imgRect = new Rectangle(
-                        cellBounds.Left + (cellBounds.Width - thumbnailSize) / 2,
-                        cellBounds.Top + (cellBounds.Height - thumbnailSize) / 2,
-                        thumbnailSize, thumbnailSize);
+                        availableRect.X + (availableRect.Width - thumbWidth) / 2,
+                        availableRect.Y + (availableRect.Height - thumbHeight) / 2,
+                        thumbWidth, thumbHeight);
+
+                    // 确保图片不会超出单元格边界
+                    if (imgRect.X < cellBounds.X) imgRect.X = cellBounds.X + 1;
+                    if (imgRect.Y < cellBounds.Y) imgRect.Y = cellBounds.Y + 1;
+                    if (imgRect.Right > cellBounds.Right) imgRect.Width = cellBounds.Right - imgRect.X - 1;
+                    if (imgRect.Bottom > cellBounds.Bottom) imgRect.Height = cellBounds.Bottom - imgRect.Y - 1;
+
+                    // 设置高质量绘制模式
+                    graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighQuality;
 
                     // 绘制图片（保持比例）
                     graphics.DrawImage(originalImage, imgRect);
@@ -293,16 +467,29 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 绘制未保存更改的星号标记
+        /// 优化：确保标记在单元格内，不会覆盖其他内容
         /// </summary>
         private void DrawUnsavedBadge(Graphics graphics, Rectangle cellBounds)
         {
+            // 根据单元格大小调整标记大小
+            int fontSize = Math.Min(10, Math.Max(8, cellBounds.Height / 3));
+
             using (var brush = new SolidBrush(Color.Orange))
-            using (var font = new Font("Arial", 10, FontStyle.Bold))
+            using (var font = new Font("Arial", fontSize, FontStyle.Bold))
             {
                 string text = "*";
                 var size = graphics.MeasureString(text, font);
-                graphics.DrawString(text, font, brush,
-                    new PointF(cellBounds.Right - size.Width - 4, cellBounds.Top + 2));
+
+                // 计算位置，确保在单元格内
+                float x = cellBounds.Right - size.Width - 2;
+                float y = cellBounds.Top + 1;
+
+                // 确保不会超出边界
+                if (x < cellBounds.X) x = cellBounds.X + 1;
+                if (y > cellBounds.Bottom - size.Height) y = cellBounds.Bottom - size.Height - 1;
+
+                TextRenderer.DrawText(graphics, text, font,
+                    new Point((int)x, (int)y), Color.Orange);
             }
         }
 
@@ -316,30 +503,64 @@ namespace RUINORERP.UI.UControls
 
         /// <summary>
         /// 绘制图片数量角标
+        /// 优化：确保角标在图片区域内，不会覆盖其他单元格
         /// </summary>
         private void DrawImageCountBadge(Graphics graphics, Rectangle imgRect, int count)
         {
-            // 角标背景
-            var badgeRect = new Rectangle(
-                imgRect.Right - 18,
-                imgRect.Bottom - 18,
-                16, 16);
+            // 角标大小根据图片大小动态调整
+            int badgeSize = Math.Min(16, Math.Min(imgRect.Width / 3, imgRect.Height / 3));
+            if (badgeSize < 10) badgeSize = 10; // 最小尺寸
 
-            using (var brush = new SolidBrush(Color.Red))
+            // 角标背景位置（限制在图片区域内）
+            var badgeRect = new Rectangle(
+                Math.Max(imgRect.X, imgRect.Right - badgeSize - 2),
+                Math.Max(imgRect.Y, imgRect.Bottom - badgeSize - 2),
+                badgeSize, badgeSize);
+
+            // 确保角标不会超出图片边界
+            if (badgeRect.Right > imgRect.Right)
+                badgeRect.X = imgRect.Right - badgeSize;
+            if (badgeRect.Bottom > imgRect.Bottom)
+                badgeRect.Y = imgRect.Bottom - badgeSize;
+
+            // 绘制半透明红色背景
+            using (var brush = new SolidBrush(Color.FromArgb(220, 255, 59, 48)))
             {
                 graphics.FillEllipse(brush, badgeRect);
             }
 
             // 角标文字
             using (var brush = new SolidBrush(Color.White))
-            using (var font = new Font("Arial", 7, FontStyle.Bold))
             {
-                string text = $"+{count - 1}";
-                var size = graphics.MeasureString(text, font);
-                var point = new PointF(
-                    badgeRect.Left + (badgeRect.Width - size.Width) / 2,
-                    badgeRect.Top + (badgeRect.Height - size.Height) / 2);
-                graphics.DrawString(text, font, brush, point);
+                // 计算合适的字体大小
+                float fontSize = Math.Max(6, badgeSize / 2 - 1);
+                Font font = new Font("Arial", fontSize, FontStyle.Bold);
+                try
+                {
+                    string text = $"+{count - 1}";
+                    var size = graphics.MeasureString(text, font);
+
+                    // 如果文本太大，调整字体
+                    while (size.Width > badgeRect.Width - 2 && fontSize > 6)
+                    {
+                        fontSize -= 0.5f;
+                        font.Dispose();
+                        font = new Font("Arial", fontSize, FontStyle.Bold);
+                        size = graphics.MeasureString(text, font);
+                    }
+
+                    var point = new PointF(
+                        badgeRect.Left + (badgeRect.Width - size.Width) / 2,
+                        badgeRect.Top + (badgeRect.Height - size.Height) / 2);
+
+                    // 使用TextRenderer确保清晰
+                    TextRenderer.DrawText(graphics, text, font,
+                        new Point((int)point.X, (int)point.Y), Color.White);
+                }
+                finally
+                {
+                    font?.Dispose();
+                }
             }
         }
 

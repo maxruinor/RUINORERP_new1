@@ -60,7 +60,7 @@ namespace RUINORERP.Server.Services.BizCode
 
         // 属性值代码映射表（静态一次性初始化，避免重复初始化）
         private static readonly Lazy<Dictionary<string, string>> _valueCodeMap = new Lazy<Dictionary<string, string>>(
-            () => InitializeValueCodeMapStatic(), 
+            () => InitializeValueCodeMapStatic(),
             System.Threading.LazyThreadSafetyMode.ExecutionAndPublication
         );
 
@@ -89,38 +89,50 @@ namespace RUINORERP.Server.Services.BizCode
                     attributeType = (ProductAttributeType)prod.PropertyType;
                 }
 
-                // 1. 获取类目缩写（2-4位）
-                string categoryCode = GetCategoryCode(prod);
+                // 新的SKU生成规则：使用产品品号作为前缀，属性信息作为后缀
+                // 格式：产品品号 + 属性组合码（多属性时）+ 序号（确保唯一性）
+                // 示例：
+                // - 产品品号：PROD-2024-001
+                // - 多属性SKU：PROD-2024-001-C-W（表示该产品的白色变体）
+                // - 多属性SKU：PROD-2024-001-C-B（表示该产品的黑色变体）
+                // 优点：
+                // 1. 从SKU可以直接识别出是哪个产品
+                // 2. 同一产品的所有SKU有相同前缀，便于管理和追溯
+                // 3. 符合"一个产品多个规格变体"的业务逻辑
 
-                // 2. 获取产品基础码（4-6位） - 基于类目的独立序列
-                string productBaseCode = GetProductBaseCodeByCategoryAsync(prod, categoryCode);
+                string productNo = prod.ProductNo;
+                if (string.IsNullOrEmpty(productNo))
+                {
+                    _logger.LogWarning("产品编号为空，使用默认规则生成SKU，产品ID: {ProductId}", prod.ProdBaseID);
+                    return GenerateDefaultSKUCodeAsync("");
+                }
 
-                // 3. 获取属性组合码（按需变长）
-                // 如果传入了属性信息列表，优先使用，否则使用产品内部的属性关系
+                // 1. 获取属性组合码（多属性时）
                 string attributeCode = string.Empty;
                 if (prodDetail.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
                 {
                     attributeCode = GetAttributeCombinationCode(prodDetail.tb_Prod_Attr_Relations);
                 }
+
+                // 2. 组合生成基础SKU编码
+                string baseSkuCode;
+                if (!string.IsNullOrEmpty(attributeCode))
+                {
+                    // 多属性产品：产品品号 + 属性组合码
+                    baseSkuCode = $"{productNo}-{attributeCode}";
+                }
                 else
                 {
-                    attributeCode = GetAttributeCombinationCode(prod);
+                    // 单属性产品：直接使用产品品号（这种情况在ServerBizCodeGenerateService.cs中已处理，这里是备用）
+                    baseSkuCode = productNo;
                 }
 
-                string prodType = GetProdType(prod);
-                string attr = string.Empty;
-                if (attributeType == ProductAttributeType.可配置多属性)
-                {
-                    //prod.tb_Prod_Attr_Relations
+                // 3. 检查SKU是否已存在，如果存在则添加序号
+                string skuCode = EnsureUniqueSKU(baseSkuCode);
 
-                    //attr = GenerateAttributeCode();
-                }
-
-                // 4. 组合生成SKU编码
-                string skuCode = $"{categoryCode}{productBaseCode}{attributeCode}-{prodType}";
-
-                // 5. 检查SKU是否已存在，如果存在则添加序号
-                skuCode = EnsureUniqueSKU(skuCode);
+                _logger.LogDebug(
+                    "生成SKU编码: {SkuCode}, 产品编号: {ProductNo}, 属性代码: {AttributeCode}",
+                    skuCode, productNo, attributeCode);
 
                 return skuCode;
             }
@@ -132,11 +144,12 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
-        /// 更新SKU编码的属性部分（保持序号不变，仅更新属性标识）
+        /// 更新SKU编码的属性部分（保持产品品号不变，仅更新属性标识）
         /// 用于产品编辑时，当属性发生变化需要更新SKU编码的情况
         /// </summary>
         /// <param name="existingSku">现有的SKU编码</param>
         /// <param name="prod">更新后的产品实体</param>
+        /// <param name="prodDetail">产品详情实体</param>
         /// <returns>更新后的SKU编码</returns>
         public string UpdateSKUAttributePart(string existingSku, tb_Prod prod, tb_ProdDetail prodDetail)
         {
@@ -148,27 +161,44 @@ namespace RUINORERP.Server.Services.BizCode
 
             try
             {
-                // 1. 解析现有SKU，提取序号部分
-                // 格式：类目代码 + 序号 + 属性代码
-                // 示例：CZ0001C-W → 类目:CZ, 序号:0001, 属性:C-W
+                // 新的SKU格式：产品品号 + 属性组合码
+                // 示例：PROD-2024-001-C-W（产品品号：PROD-2024-001，属性：C-W表示颜色白色）
 
-                // 获取类目代码（通常是2-4个字母）
-                string categoryCode = ExtractCategoryCode(existingSku);
-
-                // 获取序号部分（通常是数字）
-                string sequencePart = ExtractSequencePart(existingSku);
+                // 1. 提取产品品号部分（通常是SKU中第一个"-"之前的部分，或整个SKU直到属性代码开始）
+                string productNo = prod.ProductNo;
+                if (string.IsNullOrEmpty(productNo))
+                {
+                    _logger.LogWarning("更新SKU时产品编号为空，返回原有SKU: {ExistingSku}", existingSku);
+                    return existingSku;
+                }
 
                 // 2. 生成新的属性组合码
-                string newAttributeCode = GetAttributeCombinationCode(prod);
+                string newAttributeCode = string.Empty;
+                if (prodDetail?.tb_Prod_Attr_Relations != null && prodDetail.tb_Prod_Attr_Relations.Count > 0)
+                {
+                    newAttributeCode = GetAttributeCombinationCode(prodDetail.tb_Prod_Attr_Relations);
+                }
 
                 // 3. 组合新的SKU编码
-                string newSkuCode = $"{categoryCode}{sequencePart}{newAttributeCode}";
+                string newSkuCode;
+                if (!string.IsNullOrEmpty(newAttributeCode))
+                {
+                    newSkuCode = $"{productNo}-{newAttributeCode}";
+                }
+                else
+                {
+                    newSkuCode = productNo;
+                }
 
                 // 4. 检查SKU是否已存在（排除自身），如果存在则添加序号
                 if (newSkuCode != existingSku)
                 {
                     newSkuCode = EnsureUniqueSKUExceptSelf(newSkuCode, existingSku);
                 }
+
+                _logger.LogDebug(
+                    "更新SKU属性部分: 原SKU: {ExistingSku}, 新SKU: {NewSkuCode}, 产品编号: {ProductNo}, 新属性代码: {AttributeCode}",
+                    existingSku, newSkuCode, productNo, newAttributeCode);
 
                 return newSkuCode;
             }
@@ -181,13 +211,27 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
+        /// 清理当前批次的生成记录
+        /// 在批量生成SKU完成后调用，释放内存
+        /// </summary>
+        public void ClearGeneratingSkus()
+        {
+            int count = _generatingSkus.Count;
+            _generatingSkus.Clear();
+            _logger.LogInformation("已清理当前批次生成记录，共 {Count} 个SKU", count);
+        }
+
+        /// <summary>
         /// 初始化或刷新SKU缓存
         /// 在批量生成SKU前调用，可显著提高性能
+        /// 同时会清理上一批次的生成记录
         /// </summary>
         /// <param name="categoryCode">可选的类目编码，如果提供则只加载该类目的SKU</param>
         /// <returns>异步任务</returns>
         public async Task RefreshSKUCacheAsync()
         {
+            // 清理上一批次的生成记录
+            ClearGeneratingSkus();
             try
             {
                 // 清空现有缓存
@@ -855,8 +899,14 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
+        /// 当前批次正在生成的SKU集合，用于防止同一批次生成重复SKU
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, bool> _generatingSkus = new ConcurrentDictionary<string, bool>();
+
+        /// <summary>
         /// 确保SKU编码唯一性
         /// 使用内存缓存和批量查询优化性能，避免频繁数据库访问
+        /// 修复了并发安全问题：在同一批次生成时会检查正在生成的SKU
         /// </summary>
         /// <param name="baseSkuCode">基础SKU编码</param>
         /// <returns>唯一的SKU编码</returns>
@@ -864,10 +914,19 @@ namespace RUINORERP.Server.Services.BizCode
         {
             try
             {
-                // 使用线程安全的字典缓存已存在的SKU，避免重复查询
+                // 第1步：检查是否正在生成中（同一批次）
+                // 使用 TryAdd 原子操作，如果添加成功说明是第一个，否则说明重复
+                if (!_generatingSkus.TryAdd(baseSkuCode, true))
+                {
+                    // 同一批次中已经有这个SKU在生成，需要添加序号
+                    _logger.LogWarning("检测到同一批次生成重复SKU: {BaseSkuCode}，将添加序号", baseSkuCode);
+                    return GenerateUniqueVariantInBatch(baseSkuCode);
+                }
+
+                // 第2步：检查缓存中是否已存在
                 if (!_skuCache.ContainsKey(baseSkuCode))
                 {
-                    // 批量查询相似SKU，减少数据库访问次数
+                    // 第3步：查询数据库确认唯一性
                     var similarSkus = _db.Queryable<tb_ProdDetail>()
                         .Where(p => p.SKU.StartsWith(baseSkuCode))
                         .Select(p => p.SKU)
@@ -882,37 +941,72 @@ namespace RUINORERP.Server.Services.BizCode
                     // 如果基础SKU不在缓存中，则它是唯一的
                     if (!_skuCache.ContainsKey(baseSkuCode))
                     {
+                        // 添加到持久缓存并返回
+                        _skuCache.TryAdd(baseSkuCode, true);
                         return baseSkuCode;
                     }
                 }
 
-                // 如果SKU已存在，生成唯一变体
+                // SKU已存在（在缓存或数据库中），生成唯一变体
                 return GenerateUniqueVariant(baseSkuCode);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "检查SKU唯一性时发生错误，基础SKU: {BaseSkuCode}", baseSkuCode);
                 // 如果检查失败，添加时间戳确保唯一性
-                return $"{baseSkuCode}{DateTime.Now:HHmm}";
+                return $"{baseSkuCode}{DateTime.Now:HHmmss}";
             }
+        }
+
+        /// <summary>
+        /// 在同一批次内生成唯一变体
+        /// 用于处理同一批次中生成重复SKU的情况
+        /// </summary>
+        /// <param name="baseSkuCode">基础SKU编码</param>
+        /// <returns>唯一的SKU变体</returns>
+        private string GenerateUniqueVariantInBatch(string baseSkuCode)
+        {
+            int sequence = 1;
+            string uniqueSkuCode;
+
+            // 循环查找可用的序号
+            do
+            {
+                uniqueSkuCode = $"{baseSkuCode}-{sequence:D2}";
+                sequence++;
+            } while (_generatingSkus.ContainsKey(uniqueSkuCode) || _skuCache.ContainsKey(uniqueSkuCode));
+
+            // 添加到正在生成集合
+            _generatingSkus.TryAdd(uniqueSkuCode, true);
+            _skuCache.TryAdd(uniqueSkuCode, true);
+
+            _logger.LogInformation(
+                "为重复SKU生成变体: {OriginalSku} -> {UniqueSkuCode}",
+                baseSkuCode, uniqueSkuCode);
+
+            return uniqueSkuCode;
         }
 
         /// <summary>
         /// 生成SKU的唯一变体
         /// 使用更高效的算法生成唯一变体，避免循环查询
+        /// 格式：baseSkuCode-{sequence:D2}，例如：PROD-001-C-R-01
         /// </summary>
         /// <param name="baseSkuCode">基础SKU编码</param>
         /// <returns>唯一的SKU变体</returns>
         private string GenerateUniqueVariant(string baseSkuCode)
         {
-            // 获取所有匹配的SKU
+            // 获取所有匹配的SKU（包括正在生成的）
             var existingSkus = _skuCache.Keys
-                .Where(sku => sku.StartsWith(baseSkuCode))
+                .Concat(_generatingSkus.Keys)
+                .Where(sku => sku.StartsWith(baseSkuCode + "-") || sku == baseSkuCode)
+                .Distinct()
                 .ToList();
 
             // 如果没有匹配的SKU，直接返回基础SKU
             if (!existingSkus.Any())
             {
+                _skuCache.TryAdd(baseSkuCode, true);
                 return baseSkuCode;
             }
 
@@ -920,26 +1014,39 @@ namespace RUINORERP.Server.Services.BizCode
             var usedNumbers = new HashSet<int>();
             foreach (var sku in existingSkus)
             {
-                // 尝试从SKU中提取序号部分
-                var remainingPart = sku.Substring(baseSkuCode.Length);
-                if (int.TryParse(remainingPart, out int number))
+                // 只处理以 baseSkuCode- 开头的SKU
+                if (sku.StartsWith(baseSkuCode + "-"))
                 {
-                    usedNumbers.Add(number);
+                    // 提取序号部分（在最后一个连字符之后）
+                    var parts = sku.Split('-');
+                    if (parts.Length > 0)
+                    {
+                        var lastPart = parts[parts.Length - 1];
+                        if (int.TryParse(lastPart, out int number))
+                        {
+                            usedNumbers.Add(number);
+                        }
+                    }
                 }
             }
 
-            // 找到最小的未使用序号
+            // 找到最小的未使用序号（从1开始）
             int sequence = 1;
-            while (usedNumbers.Contains(sequence) && sequence < 100)
+            while (usedNumbers.Contains(sequence) && sequence < 1000)
             {
                 sequence++;
             }
 
-            // 生成新的SKU
-            string uniqueSkuCode = $"{baseSkuCode}{sequence:D2}";
+            // 生成新的SKU，格式：baseSkuCode-{sequence:D2}
+            string uniqueSkuCode = $"{baseSkuCode}-{sequence:D2}";
 
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
+            _generatingSkus.TryAdd(uniqueSkuCode, true);
+
+            _logger.LogInformation(
+                "生成SKU唯一变体: {BaseSkuCode} -> {UniqueSkuCode} (序号: {Sequence})",
+                baseSkuCode, uniqueSkuCode, sequence);
 
             return uniqueSkuCode;
         }
@@ -947,20 +1054,24 @@ namespace RUINORERP.Server.Services.BizCode
         /// <summary>
         /// 生成SKU的唯一变体（排除指定的SKU）
         /// 用于更新SKU属性时，确保新SKU唯一但不与原SKU冲突
+        /// 格式：baseSkuCode-{sequence:D2}，例如：PROD-001-C-R-01
         /// </summary>
         /// <param name="baseSkuCode">基础SKU编码</param>
         /// <param name="excludeSku">需要排除的SKU编码</param>
         /// <returns>唯一的SKU变体</returns>
         private string GenerateUniqueVariantExcludeSelf(string baseSkuCode, string excludeSku)
         {
-            // 获取所有匹配的SKU（排除自身）
+            // 获取所有匹配的SKU（排除自身，包括正在生成的）
             var existingSkus = _skuCache.Keys
-                .Where(sku => sku.StartsWith(baseSkuCode) && sku != excludeSku)
+                .Concat(_generatingSkus.Keys)
+                .Where(sku => (sku.StartsWith(baseSkuCode + "-") || sku == baseSkuCode) && sku != excludeSku)
+                .Distinct()
                 .ToList();
 
             // 如果没有匹配的SKU，直接返回基础SKU
             if (!existingSkus.Any())
             {
+                _skuCache.TryAdd(baseSkuCode, true);
                 return baseSkuCode;
             }
 
@@ -968,26 +1079,35 @@ namespace RUINORERP.Server.Services.BizCode
             var usedNumbers = new HashSet<int>();
             foreach (var sku in existingSkus)
             {
-                // 尝试从SKU中提取序号部分
-                var remainingPart = sku.Substring(baseSkuCode.Length);
-                if (int.TryParse(remainingPart, out int number))
+                // 只处理以 baseSkuCode- 开头的SKU
+                if (sku.StartsWith(baseSkuCode + "-"))
                 {
-                    usedNumbers.Add(number);
+                    // 提取序号部分（在最后一个连字符之后）
+                    var parts = sku.Split('-');
+                    if (parts.Length > 0)
+                    {
+                        var lastPart = parts[parts.Length - 1];
+                        if (int.TryParse(lastPart, out int number))
+                        {
+                            usedNumbers.Add(number);
+                        }
+                    }
                 }
             }
 
             // 找到最小的未使用序号
             int sequence = 1;
-            while (usedNumbers.Contains(sequence) && sequence < 100)
+            while (usedNumbers.Contains(sequence) && sequence < 1000)
             {
                 sequence++;
             }
 
-            // 生成新的SKU
-            string uniqueSkuCode = $"{baseSkuCode}{sequence:D2}";
+            // 生成新的SKU，格式：baseSkuCode-{sequence:D2}
+            string uniqueSkuCode = $"{baseSkuCode}-{sequence:D2}";
 
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
+            _generatingSkus.TryAdd(uniqueSkuCode, true);
 
             return uniqueSkuCode;
         }
@@ -1044,6 +1164,7 @@ namespace RUINORERP.Server.Services.BizCode
                 if (!string.IsNullOrEmpty(productCode) && productCode != "ERROR")
                 {
                     StringBuilder skuBuilder = new StringBuilder(productCode);
+
 
                     // 生成序号部分
                     string sequenceNo = _bnrFactory.Create("{Hex:yyMM}{DB:SKU_No/0000}");

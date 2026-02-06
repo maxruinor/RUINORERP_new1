@@ -1,26 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using RUINORERP.PacketSpec.Models.Requests;
+using FastReport.Data;
+using FastReport.DevComponents.DotNetBar;
+using LiveChartsCore.Geo;
+using Microsoft.Extensions.Logging;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
-using RUINORERP.Repository.UnitOfWorks;
-using Microsoft.Extensions.Logging;
 using RUINORERP.Model.Context;
-using RUINORERP.Business.BizMapperService;
-using RUINORERP.Global;
-using System.IO;
-using RUINORERP.Common.Extensions;
-using LiveChartsCore.Geo;
-using RUINORERP.UI.Network.Services;
-using RUINORERP.Business;
-using RUINOR.WinFormsUI.CustomPictureBox;
-using System.Linq;
-using static NPOI.HSSF.UserModel.HeaderFooter;
-using FastReport.DevComponents.DotNetBar;
-using FastReport.Data;
 using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.FileManagement;
+using RUINORERP.PacketSpec.Models.Requests;
+using RUINORERP.Repository.UnitOfWorks;
+using RUINORERP.UI.Network.Services;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using static NPOI.HSSF.UserModel.HeaderFooter;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -178,31 +179,15 @@ namespace RUINORERP.UI.Network.Services
                 var entityInfo = _mapper.GetEntityInfo(entity.GetType());
                 if (entityInfo != null && entityInfo.Fields != null)
                 {
-                    string BusinessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
-
-                    // 获取实体主键ID(性能优化：优先使用BusinessId)
-                    //long? businessId = null;
-                    //if (entityInfo.KeyProperty != null)
-                    //{
-                    //    var keyValue = entity.GetPropertyValue(entityInfo.KeyProperty.Name);
-                    //    if (keyValue != null && long.TryParse(keyValue.ToString(), out long idValue))
-                    //    {
-                    //        businessId = idValue;
-                    //    }
-                    //}
 
                     // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
                     var db = _unitOfWorkManage.GetDbClient().CopyNew();
 
                     // 构建查询条件
                     var query = db.Queryable<tb_FS_BusinessRelation>()
-                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.BusinessNo == BusinessNo && c.isdeleted == false);
+                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.isdeleted == false);
 
-                    // 优先使用BusinessId查询(性能优化)
-                    //if (businessId.HasValue && businessId.Value > 0)
-                    //{
-                        query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
-                    //}
+                    query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
 
                     // 如果指定了关联字段，按字段筛选
                     if (!string.IsNullOrEmpty(relatedField))
@@ -255,7 +240,11 @@ namespace RUINORERP.UI.Network.Services
         }
 
 
-
+        public async Task<List<FileDownloadResponse>> DownloadImageAsync<T>(BaseEntity entity, Expression<Func<T, object>> exp)
+        {
+            string relatedField = exp.GetMemberInfo().Name;
+            return await DownloadImageAsync(entity, relatedField);
+        }
 
 
         /// <summary>

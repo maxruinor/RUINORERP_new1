@@ -282,7 +282,6 @@ namespace RUINORERP.UI.Network.Services
             // 使用信号量确保同一时间只有一个文件操作请求，并添加超时保护
             if (!await _fileOperationLock.WaitAsync(TimeSpan.FromSeconds(30), ct))
             {
-                _log?.LogWarning("获取文件操作锁超时");
                 return FileDownloadResponse.CreateFailure("系统繁忙，请稍后重试");
             }
 
@@ -292,12 +291,11 @@ namespace RUINORERP.UI.Network.Services
                 // 检查连接状态
                 if (!_communicationService.ConnectionManager.IsConnected)
                 {
-                    _log?.LogWarning("文件下载失败：未连接到服务器");
                     return FileDownloadResponse.CreateFailure("未连接到服务器，请检查网络连接后重试");
                 }
 
                 // 只记录关键信息，移除详细的文件ID日志
-                _log?.LogDebug("开始文件下载请求");
+                //开始文件下载请求
 
                 // 发送文件下载命令并获取响应
                 var response = await _communicationService.SendCommandWithResponseAsync<FileDownloadResponse>(
@@ -306,15 +304,13 @@ namespace RUINORERP.UI.Network.Services
                 // 检查响应数据是否为空
                 if (response == null)
                 {
-                    _log?.LogError("文件下载失败：服务器返回了空的响应数据");
                     return FileDownloadResponse.CreateFailure("服务器返回了空的响应数据，请联系系统管理员");
                 }
 
                 // 检查响应是否成功
                 if (!response.IsSuccess)
                 {
-                    _log?.LogWarning("文件下载失败: {ErrorMessage}", response.ErrorMessage);
-                    return FileDownloadResponse.CreateFailure($"文件下载失败: {response.ErrorMessage}");
+                    return FileDownloadResponse.CreateFailure($"文件下载失败: {response.Message}{response.ErrorMessage}");
                 }
 
                 return response;

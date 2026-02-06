@@ -868,6 +868,7 @@ namespace RUINORERP.UI.ProductEAV
                 base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdValidator>(), kryptonPanel1.Controls);
                 base.InitEditItemToControl(entity, kryptonPanel1.Controls);
             }
+
             base.BindData(entity);
             dataGridView1.NeedSaveColumnsXml = true;
 
@@ -876,13 +877,13 @@ namespace RUINORERP.UI.ProductEAV
 
             // 数据加载完成后，执行依赖数据的操作
             LoadBaseInfoSKUList(_EditEntity);
-            
+
             // 加载SKU图片（如果是编辑模式）
-            if (entity.ActionStatus == ActionStatus.加载 || entity.ActionStatus == ActionStatus.修改)
+            if (entity.ActionStatus == ActionStatus.加载 || entity.ActionStatus == ActionStatus.修改 || entity.ActionStatus == ActionStatus.无操作)
             {
                 await LoadSKUImagesAsync(_EditEntity);
             }
-            
+
             listView1.UpdateUI();
             Task task_2 = Task.Run(task_Help);
             //task_2.Wait();  //注释打开则等待task_2延时，注释掉则不等待
@@ -2902,11 +2903,10 @@ namespace RUINORERP.UI.ProductEAV
                     try
                     {
                         // 只加载有图片路径的SKU
-                        if (!string.IsNullOrEmpty(detail.ImagesPath))
-                        {
-                            await LoadSKUImageAsync(detail);
-                            loadedCount++;
-                        }
+
+                        await LoadSKUImageAsync(detail);
+                        loadedCount++;
+
                     }
                     catch (Exception ex)
                     {
@@ -2936,9 +2936,9 @@ namespace RUINORERP.UI.ProductEAV
             try
             {
                 var ctrpay = Startup.GetFromFac<FileBusinessService>();
-                
+
                 // 下载该SKU关联的图片
-                var list = await ctrpay.DownloadImageAsync(detail, "ImagesPath");
+                var list = await ctrpay.DownloadImageAsync<tb_ProdDetail>(detail, c => c.ImagesPath);
 
                 if (list == null || list.Count == 0)
                 {

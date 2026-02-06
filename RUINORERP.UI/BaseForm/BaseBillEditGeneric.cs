@@ -1230,8 +1230,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     else
                     {
-                        logger.LogWarning("图片下载失败: {ErrorMessage}",
-                            downloadResponse.ErrorMessage ?? "未知错误");
+                        logger.LogWarning("图片下载失败: {ErrorMessage}", downloadResponse.ErrorMessage ?? "未知错误");
                     }
                 }
 
@@ -3079,7 +3078,7 @@ namespace RUINORERP.UI.BaseForm
                             //这里更新数据库
                             await ctr.BaseSaveOrUpdate(EditEntity);
                         }
-                        
+
                     }
 
 
@@ -5337,7 +5336,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.uclog.AddLog("保存失败，请重试;或联系管理员。" + rmr.ErrorMsg, UILogType.错误);
             }
-            
+
             return rmr;
         }
 
@@ -6247,7 +6246,7 @@ namespace RUINORERP.UI.BaseForm
                 // 检查是否可以撤回提交（对于销售订单和采购订单，先检查收款单/付款单是否已审核）
                 bool canProceed = true;
                 string cannotProceedReason = string.Empty;
-                
+
                 if (EditEntity is tb_SaleOrder saleOrder)
                 {
                     (canProceed, cannotProceedReason) = await CheckCanCancelSaleOrderSubmitAsync(saleOrder);

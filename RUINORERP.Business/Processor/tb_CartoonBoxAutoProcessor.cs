@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：08/05/2024 17:45:38
+// 时间：09/13/2024 18:43:29
 // **************************************
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
@@ -30,22 +30,19 @@ using System.Threading.Tasks;
 namespace RUINORERP.Business.Processor
 {
     /// <summary>
-    /// 箱规表
+    /// 卡通箱规格表
     /// </summary>
-    public partial class tb_BoxRulesProcessor:BaseProcessor 
+    public partial class tb_CartoonBoxProcessor:BaseProcessor 
     {
-
         public override QueryFilter GetQueryFilter()
         {
             QueryFilter queryFilter = new QueryFilter();
-            queryFilter.SetQueryField<tb_BoxRules>(c => c.CartonID);
-            queryFilter.SetQueryField<tb_BoxRules>(c => c.BoxRuleName);
-            queryFilter.SetQueryField<tb_BoxRules>(c => c.Pack_ID);
-            queryFilter.SetQueryField<tb_BoxRules>(c => c.Is_enabled);
-            queryFilter.SetQueryField<tb_BoxRules>(c => c.Created_at, QueryFieldType.DateTimeRange, new QueryFieldDateTimeRangeData(false));
+            queryFilter.SetQueryField<tb_CartoonBox>(c => c.CartonName);
+            queryFilter.SetQueryField<tb_CartoonBox>(c => c.Is_enabled);
+            queryFilter.SetQueryField<tb_CartoonBox>(c => c.Color);
+            queryFilter.SetQueryField<tb_CartoonBox>(c => c.Material);
             return queryFilter;
         }
-
     }
 }
 

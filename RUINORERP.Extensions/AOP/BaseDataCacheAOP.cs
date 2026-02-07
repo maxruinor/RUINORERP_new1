@@ -46,17 +46,6 @@ namespace RUINORERP.Extensions.AOP
             
             try
             {
-                #region 方法执行前
-                string beforeExe_msg = string.Format("AOP方法执行前:拦截[{0}]类下的方法[{1}]的参数是[{2}]",
-                    invocation.InvocationTarget.GetType(),
-                    invocation.Method.Name, string.Join(", ", invocation.Arguments.Select(a => (a ?? "").ToString()).ToArray()));
-#if DEBUG
-                {
-                    System.Diagnostics.Debug.WriteLine(beforeExe_msg);
-                }
-#endif
-                #endregion
-
                 // 排除不需要缓存的类型的方法拦截
                 var targetType = invocation.InvocationTarget.GetType();
                 var typeName = targetType.Name;
@@ -96,7 +85,16 @@ namespace RUINORERP.Extensions.AOP
                     invocation.Proceed();
                     return;
                 }
-
+                #region 方法执行前
+                string beforeExe_msg = string.Format("AOP方法执行前:拦截[{0}]类下的方法[{1}]的参数是[{2}]",
+                    invocation.InvocationTarget.GetType(),
+                    invocation.Method.Name, string.Join(", ", invocation.Arguments.Select(a => (a ?? "").ToString()).ToArray()));
+#if DEBUG
+                {
+                    System.Diagnostics.Debug.WriteLine(beforeExe_msg);
+                }
+#endif
+                #endregion
                 var method = invocation.MethodInvocationTarget ?? invocation.Method;
                 //对当前方法的特性验证
                 //如果需要验证

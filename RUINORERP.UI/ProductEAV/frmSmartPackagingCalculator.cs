@@ -1835,24 +1835,97 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         public class PackagingSolution
         {
+            /// <summary>
+            /// 适用的纸箱规则
+            /// </summary>
             public tb_CartoonBox BoxRule { get; set; }
+
+            /// <summary>
+            /// 混合包装配置
+            /// </summary>
             public MixedPackConfiguration Configuration { get; set; }
+
+            /// <summary>
+            /// 箱内产品排列方案
+            /// </summary>
             public BoxArrangement Arrangement { get; set; }
+
+            /// <summary>
+            /// 每个箱子的产品数量
+            /// </summary>
             public int QuantityPerBox { get; set; }
+
+            /// <summary>
+            /// 箱子体积
+            /// </summary>
             public decimal BoxVolume { get; set; }
+
+            /// <summary>
+            /// 有效体积（考虑间隙）
+            /// </summary>
             public decimal EffectiveVolume { get; set; }
+
+            /// <summary>
+            /// 占用体积（考虑间隙）
+            /// </summary>
             public decimal OccupiedVolume { get; set; }
+
+            /// <summary>
+            /// 利用率（考虑间隙）
+            /// </summary>
             public decimal UtilizationRate { get; set; }
+
+            /// <summary>
+            /// 所需箱子数量
+            /// </summary>
             public int RequiredBoxes { get; set; }
+
+            /// <summary>
+            /// 总产品数量
+            /// </summary>
             public int TotalQuantity { get; set; }
+
+            /// <summary>
+            /// 剩余空间（考虑间隙）
+            /// </summary>
             public decimal RemainingSpace { get; set; }
+
+            /// <summary>
+            /// 总重量
+            /// </summary>
             public decimal TotalWeight { get; set; }
+            
+
+            /// <summary>
+            /// 重量是否超出
+            /// </summary>
             public bool WeightExceeded { get; set; }
+
+            /// <summary>
+            /// 重量状态
+            /// </summary>
             public string WeightStatus { get; set; }
+
+            /// <summary>
+            /// 包装说明
+            /// </summary>
             public string PackingInstructions { get; set; }
+
+            /// <summary>
+            /// 包装步骤
+            /// </summary>
             public List<PackingStep> PackingSteps { get; set; }
+
+            /// <summary>
+            /// 使用的间隙
+            /// </summary>
             public decimal UsedGap { get; set; }
-            public string Description { get; set; } // 方案描述
+
+
+            /// <summary>
+            /// 方案描述
+            /// </summary>
+            public string Description { get; set; } 
         }
 
         /// <summary>

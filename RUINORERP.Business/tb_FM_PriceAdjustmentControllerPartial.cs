@@ -45,7 +45,7 @@ namespace RUINORERP.Business
     {
         /// <summary>
         ///  价格调整单反审核 相于当销售或采购的一种补充行为
-        ///  审核时生成应收付单，
+        ///  审核时生成应收付单，这里要进行反向操作
         ///  反审核时删除应收付单（如果没有支付的情况），否则只能红字退款作废
         /// </summary>
         /// <param name="ObjectEntity"></param>
@@ -60,10 +60,13 @@ namespace RUINORERP.Business
                 //只有生效状态的才允许反审，其它不能也不需要，有可能可删除。也可能只能红字
                 if (entity.DataStatus != (long)DataStatus.确认)
                 {
-                    rmrs.ErrorMsg = "只有【已确认】审核通过状态的价格调整单才可以反审";
+                    rmrs.ErrorMsg = "只有【已确认】状态的价格调整单才可以执行反审核操作";
                     return rmrs;
                 }
                 var PaymentType = (ReceivePaymentType)entity.ReceivePaymentType;
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
                 var ARAPList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                                      .Includes(c => c.tb_FM_ReceivablePayableDetails)
@@ -74,22 +77,79 @@ namespace RUINORERP.Business
                                     .ToListAsync();
                 if (ARAPList != null && ARAPList.Count > 0)
                 {
-                    if (ARAPList[0].ARAPStatus <= (int)ARAPStatus.待审核)
+                    foreach (var arap in ARAPList)
                     {
-                        //删除应收付单
-                        await _appContext.Db.DeleteNav(ARAPList).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
-                    }
-                    else
-                    {
-                        rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{ARAPList[0].ARAPNo}，状态为{(ARAPStatus)ARAPList[0].ARAPStatus.Value}，反审核失败。";
-                        rmrs.Succeeded = false;
-                        return rmrs;
+                        // 检查应收/应付款单是否已关联生成付款单或收款单
+                        var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                                    .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == arap.ARAPId))
+                                      .ToListAsync();
+                        if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
+                        {
+                            // 判断是否能反审? 如果出库是草稿，订单反审 修改后。出库再提交 审核。所以 出库审核要核对订单数据。
+                            if ((PaymentRecordlist.Any(c => c.PaymentStatus == (int)PaymentStatus.已支付)
+                                && PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过)))
+                            {
+                                _unitOfWorkManage.RollbackTran();
+                                rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{arap.ARAPNo}，已关联生成{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单且状态为已支付，反审核失败。";
+                                rmrs.Succeeded = false;
+                                return rmrs;
+                            }
+                            else
+                            {
+                                // 删除对应的由应收付款单生成的收款单
+                                foreach (var item in PaymentRecordlist)
+                                {
+                                    await _appContext.Db.DeleteNav(item)
+                                        .Include(c => c.tb_FM_PaymentRecordDetails)
+                                        .ExecuteCommandAsync();
+                                }
+                            }
+                        }
+
+                        // 检查应收/应付款单状态
+                        if (arap.ARAPStatus <= (int)ARAPStatus.待审核)
+                        {
+                            //删除应收付单
+                            await _appContext.Db.DeleteNav(arap).Include(c => c.tb_FM_ReceivablePayableDetails).ExecuteCommandAsync();
+                        }
+                        else
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rmrs.ErrorMsg = $"当前调整单的应{PaymentType}单{arap.ARAPNo}，状态为{(ARAPStatus)arap.ARAPStatus.Value}，反审核失败。";
+                            rmrs.Succeeded = false;
+                            return rmrs;
+                        }
                     }
                 }
 
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
                 //产生看产生的应收付是否真的付了。如果付了。则不能反审了。
+
+                // 对于采购入库单的价格调整，需要恢复库存成本
+                if (entity.ReceivePaymentType == (int)ReceivePaymentType.付款
+                    && entity.SourceBizType == (int)BizType.采购入库单)
+                {
+                    tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+
+                    for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
+                    {
+                        var detail = entity.tb_FM_PriceAdjustmentDetails[i];
+                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == detail.ProdDetailID && i.Location_ID == detail.Location_ID);
+                        if (inv != null)
+                        {
+                            #region 恢复成本
+                            // 这里只修改成本。数量不变,如果库存数量为0，或成本没有变化。则不执行调整成本的方法
+                            if (detail.Original_UnitPrice_NoTax > 0 && inv.Quantity > 0 && inv.Inv_Cost != detail.Original_UnitPrice_NoTax)
+                            {
+                                CommService.CostCalculations.AdjustCostOnly(_appContext, inv, detail.Original_UnitPrice_NoTax);
+
+                                var ctrbom = _appContext.GetRequiredService<tb_BOM_SController<tb_BOM_S>>();
+                                // 递归更新所有上级BOM的成本
+                                await ctrbom.UpdateParentBOMsAsync(inv.ProdDetailID, inv.Inv_Cost);
+                            }
+                            #endregion
+                        }
+                    }
+                }
 
                 entity.DataStatus = (int)DataStatus.草稿;
                 entity.ApprovalResults = false;
@@ -412,7 +472,7 @@ namespace RUINORERP.Business
 
 
         public async Task<tb_FM_PriceAdjustment> BuildPriceAdjustment(ReceivePaymentType PaymentType, long sourceBillID, string NewBillNo = "")
-            {
+        {
             tb_FM_PriceAdjustment priceAdjustment = new tb_FM_PriceAdjustment();
 
             if (PaymentType == ReceivePaymentType.收款)
@@ -460,7 +520,7 @@ namespace RUINORERP.Business
                     {
                         #region 为每行分配唯一行号
                         tb_SaleOutDetail item = SourceBill.tb_SaleOutDetails
-                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.SaleOutDetail_ID == details[i].LineNumber);
                         details[i].Original_UnitPrice_WithTax = item.UnitPrice;
                         details[i].LineNumber = item.SaleOutDetail_ID;
                         NewDetails.Add(details[i]);
@@ -515,32 +575,17 @@ namespace RUINORERP.Business
 
                         #region 每行产品ID和行号唯一
                         tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
-                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
+                            .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID && c.PurEntryDetail_ID == details[i].LineNumber);
                         details[i].Original_UnitPrice_WithTax = item.UnitPrice;
                         details[i].Original_UnitPrice_NoTax = item.UntaxedUnitPrice;
                         details[i].Original_TaxRate = item.TaxRate;
                         details[i].Quantity = item.Quantity;
-                        details[i].LineNumber =item.PurEntryDetail_ID;
+                        details[i].LineNumber = item.PurEntryDetail_ID;
                         NewDetails.Add(details[i]);
-                        //tb_PurEntryDetail item = SourceBill.tb_PurEntryDetails
-                        //    .FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID);
-                        //details[i].Quantity = item.Quantity;// 已经交数量去掉
-                        //details[i].SubtotalAmount = (details[i].UnitPrice + details[i].CustomizedCost) * details[i].Quantity;
-                        //if (details[i].Quantity > 0)
-                        //{
-                        //    NewDetails.Add(details[i]);
-                        //}
-                        //else
-                        //{
-                        //    tipsMsg.Add($"订单{purorder.PurOrderNo}，{item.tb_proddetail.tb_prod.CNName}已入库数为{item.DeliveredQuantity}，可入库数为{details[i].Quantity}，当前行数据忽略！");
-                        //}
+
                         #endregion
 
-
                     }
-
-      
-                    
 
                     priceAdjustment.tb_FM_PriceAdjustmentDetails = NewDetails;
 

@@ -108,7 +108,7 @@ FROM (
         SUM(c.TransactionPrice * c.Quantity) AS 退货金额,
         SUM(c.SubtotalTaxAmount) AS 退货税额,
         SUM(c.CommissionAmount) AS 佣金返还,
-        -SUM(c.Cost * c.Quantity) AS 成本  -- 退货成本应该是负值，因为是冲减成本
+        -SUM((c.Cost+c.CustomizedCost) * c.Quantity) AS 成本  -- 退货成本应该是负值，因为是冲减成本
     FROM tb_SaleOutRe m 
     LEFT JOIN tb_SaleOutReDetail c ON m.SaleOutRe_ID = c.SaleOutRe_ID
     WHERE (m.DataStatus = 4 OR m.DataStatus = 8) 

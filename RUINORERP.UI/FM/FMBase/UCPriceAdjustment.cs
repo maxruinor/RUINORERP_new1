@@ -518,7 +518,7 @@ namespace RUINORERP.UI.FM
 
             listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.AdjustDetailID);
             listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.ProdDetailID);
-            //listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.LineNumber);
+            listCols.SetCol_NeverVisible<tb_FM_PriceAdjustmentDetail>(c => c.LineNumber);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Rack_ID);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.ShortCode);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Brand);
@@ -529,7 +529,10 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Inv_Cost);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.Standard_Price);
             listCols.SetCol_NeverVisible<ProductSharePart>(c => c.TransPrice);
-
+            listCols.SetCol_ReadOnly<tb_FM_PriceAdjustmentDetail>(c => c.Original_UnitPrice_NoTax);
+            listCols.SetCol_ReadOnly<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxAmount);
+            listCols.SetCol_ReadOnly<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxRate);
+            listCols.SetCol_ReadOnly<tb_FM_PriceAdjustmentDetail>(c => c.Original_UnitPrice_WithTax);
 
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
             UIHelper.ControlChildColumnsInvisible(CurMenuInfo, listCols);
@@ -537,10 +540,6 @@ namespace RUINORERP.UI.FM
             {
                 listCols.SetCol_NeverVisible<ProductSharePart>(c => c.BarCode);
             }
-
-            //listCols.SetCol_DefaultValue<tb_FM_PriceAdjustmentDetail>(c => c.ForeignPayableAmount, 0.00M);
-
-            //listCols.SetCol_DisplayFormatText<tb_FM_PriceAdjustmentDetail>(c => c.SourceBizType, 1);
 
             listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_PriceAdjustmentDetail>(c => c.Correct_TaxRate, CustomFormatType.PercentFormat);
@@ -598,17 +597,9 @@ namespace RUINORERP.UI.FM
             //反算  已知未税及税点，算出 新旧包含税的单价
             listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Original_UnitPrice_WithTax == 0, (a, b) => a.Original_UnitPrice_NoTax * (1 + b.Correct_TaxRate), c => c.Original_UnitPrice_WithTax);
             listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Correct_UnitPrice_WithTax == 0, (a, b) => a.Correct_UnitPrice_NoTax * (1 + b.Correct_TaxRate), c => c.Correct_UnitPrice_WithTax);
-
-
-            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => b.Correct_UnitPrice_NoTax - a.Original_UnitPrice_NoTax, c => c.UnitPrice_WithTax_Diff);
-            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.UnitPrice_WithTax_Diff / (1 + b.Correct_TaxRate) * c.Correct_TaxRate, d => d.Correct_UnitPrice_WithTax);
-            //listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.UnitPrice_WithTax_Diff / (1 + b.Correct_TaxRate) * c.Correct_TaxRate, d => d.Correct_UnitPrice_NoTax);
-
-
-
-            //  listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.DiffUnitPrice * b.Quantity, c => c.SubtotalDiffLocalAmount);
-            // listCols.SetCol_FormulaReverse<tb_FM_PriceAdjustmentDetail>(d => d.Quantity != 0, (a, b) => (a.SubtotalDiffLocalAmount / b.Quantity) - a.OriginalUnitPrice, c => c.AdjustedUnitPrice);
+ 
             sgd.GridMasterData = EditEntity;
+
             listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TaxAmount_Diff);
             listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff);
             listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.TotalAmount_Diff_NoTax);
@@ -618,27 +609,6 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.Original_TaxAmount);
             listCols.SetCol_Summary<tb_FM_PriceAdjustmentDetail>(c => c.Correct_TaxAmount);
 
-            //  listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b, c) => a.DiffUnitPrice / (1 + b.TaxRate) * c.TaxRate, d => d.TaxDiffLocalAmount);
-            // listCols.SetCol_Formula<tb_FM_PriceAdjustmentDetail>((a, b) => a.TaxDiffLocalAmount * b.Quantity, c => c.TaxSubtotalDiffLocalAmount);
-            /*
-            listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.UnitPrice == 0 && d.Discount != 0 && d.TransactionPrice != 0, (a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);//-->成交价是结果列
-            //单价和成交价不一样时，并且单价不能为零时，可以计算出折扣的值 TODO:!!!!
-            listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.UnitPrice != d.TransactionPrice || d.UnitPrice != 0, (a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);//-->折扣
-            listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.UnitPrice != 0, (a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);//-->折扣 
-
-            listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.Quantity != 0 && d.SubtotalTransAmount != 0, (a, b) => a.SubtotalTransAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
-            //listCols.SetCol_Formula<tb_SaleOrderDetail>(d => d.Quantity != 0,(a, b) => a.SubtotalTransAmount / b.Quantity, c => c.UnitPrice);//-->成交价是结果列
-
-            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => a.TransactionPrice * b.Quantity, c => c.SubtotalTransAmount);
-
-            //反算时还要加更复杂的逻辑：如果单价为0时，则可以反算到单价。折扣不变。（默认为1）， 如果单价有值。则反算折扣？成交价？
-
-
-
-            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b, c) => a.SubtotalTransAmount / (1 + b.TaxRate) * c.TaxRate, d => d.SubtotalTaxAmount);
-            listCols.SetCol_Formula<tb_SaleOrderDetail>((a, b) => (a.Cost + a.CustomizedCost) * b.Quantity, c => c.SubtotalCostAmount);
-
-             */
 
             //公共到明细的映射 源 ，左边会隐藏
             sgh.SetPointToColumnPairs<ProductSharePart, tb_FM_PriceAdjustmentDetail>(sgd, f => f.Specifications, t => t.CustomerPartNo);

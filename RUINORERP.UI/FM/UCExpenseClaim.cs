@@ -707,34 +707,12 @@ namespace RUINORERP.UI.FM
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             sgd.GridMasterData = EditEntity;
-            /*
-            //具体审核权限的人才显示
-            if (!AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.UnitPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.TransactionPrice);
-                //listCols.SetCol_NeverVisible<tb_PurEntryDetail>(c => c.SubtotalPirceAmount);
-            }*/
-
-
-            //listCols.SetCol_NeverVisible<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage);//后面会删除这一列
+    
+            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b, c) => a.SingleAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
+            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SingleAmount - b.TaxAmount, c => c.UntaxedAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount);
-
-            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b, c) => a.SingleAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
-            listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SingleAmount - b.TaxAmount, c => c.UntaxedAmount);
-
-            ////反算成交单价，目标列能重复添加。已经优化好了。
-            //listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SubtotalAmount / b.Quantity, c => c.TransactionPrice);//-->成交价是结果列
-            ////反算折扣
-            //listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.TransactionPrice / b.UnitPrice, c => c.Discount);
-            //listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.TransactionPrice / b.Discount, c => c.UnitPrice);
-
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Location_ID, t => t.Location_ID);
-            //sgh.SetPointToColumnPairs<ProductSharePart, tb_PurEntryDetail>(sgd, f => f.Rack_ID, t => t.Rack_ID);
-
-
 
             //应该只提供一个结构
             List<tb_FM_ExpenseClaimDetail> lines = new List<tb_FM_ExpenseClaimDetail>();

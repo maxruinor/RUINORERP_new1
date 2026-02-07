@@ -255,6 +255,9 @@
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 102;
+            this.chkIsCustomizedOrder.ToolTipValues.Description = "定制单时，需要由采购或财务补充【定制成本】列";
+            this.chkIsCustomizedOrder.ToolTipValues.EnableToolTips = true;
+            this.chkIsCustomizedOrder.ToolTipValues.Heading = "";
             this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // chk平台单

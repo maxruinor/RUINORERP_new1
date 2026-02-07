@@ -77,6 +77,7 @@ namespace RUINORERP.UI.EOP
             if (EditEntity.WSR_ID == 0)
             {
                 EditEntity.ActionStatus = ActionStatus.新增;
+                EditEntity.DataStatus = (int)DataStatus.草稿;
                 if (string.IsNullOrEmpty(EditEntity.WSRNo))
                 {
                     //_EditEntity.WSRNo = BizCodeService.GetBizBillNo(BizType.销售订单);
@@ -187,7 +188,7 @@ namespace RUINORERP.UI.EOP
                     {
                         if (EditEntity.RowImage.image != null)
                         {
-                            
+
                         }
                     }
                     #endregion

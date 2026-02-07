@@ -207,6 +207,9 @@
             this.chkIsCustomizedOrder.Name = "chkIsCustomizedOrder";
             this.chkIsCustomizedOrder.Size = new System.Drawing.Size(62, 20);
             this.chkIsCustomizedOrder.TabIndex = 197;
+            this.chkIsCustomizedOrder.ToolTipValues.Description = "定制单时，标品成本之外由采购或财务补充【定制成本】列，要区别开定制成本和标准成本";
+            this.chkIsCustomizedOrder.ToolTipValues.EnableToolTips = true;
+            this.chkIsCustomizedOrder.ToolTipValues.Heading = "";
             this.chkIsCustomizedOrder.Values.Text = "定制单";
             // 
             // lblCurrency_ID

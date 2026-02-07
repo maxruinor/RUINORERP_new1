@@ -71,8 +71,6 @@ namespace RUINORERP.UI.ProductEAV
             this.lblTargetQuantity = new Krypton.Toolkit.KryptonLabel();
             this.chkMixedPack = new Krypton.Toolkit.KryptonCheckBox();
             this.rdoBoxToQuantity = new Krypton.Toolkit.KryptonRadioButton();
-            this.rdoQuantityToBox = new Krypton.Toolkit.KryptonRadioButton();
-            this.lblModeDescription = new Krypton.Toolkit.KryptonLabel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.picPreview = new Krypton.Toolkit.KryptonPictureBox();
@@ -90,6 +88,8 @@ namespace RUINORERP.UI.ProductEAV
             this.btnApply = new Krypton.Toolkit.KryptonButton();
             this.btnReset = new Krypton.Toolkit.KryptonButton();
             this.btnCalculate = new Krypton.Toolkit.KryptonButton();
+            this.lblModeDescription = new Krypton.Toolkit.KryptonLabel();
+            this.rdoQuantityToBox = new Krypton.Toolkit.KryptonRadioButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -134,7 +134,7 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(1288, 701);
+            this.kryptonPanel1.Size = new System.Drawing.Size(1288, 703);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kryptonSplitContainer1
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonGroupBox2);
             this.kryptonSplitContainer1.Panel2MinSize = 500;
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1288, 701);
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1288, 703);
             this.kryptonSplitContainer1.SplitterDistance = 386;
             this.kryptonSplitContainer1.SplitterIncrement = 2;
             this.kryptonSplitContainer1.TabIndex = 0;
@@ -178,13 +178,13 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoBoxToQuantity);
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoQuantityToBox);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblModeDescription);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(373, 701);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(373, 703);
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "参数设置";
             // 
             // grpProductInfo2
             // 
-            this.grpProductInfo2.Location = new System.Drawing.Point(12, 425);
+            this.grpProductInfo2.Location = new System.Drawing.Point(12, 470);
             this.grpProductInfo2.Name = "grpProductInfo2";
             // 
             // grpProductInfo2.Panel
@@ -370,7 +370,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // grpProductInfo1
             // 
-            this.grpProductInfo1.Location = new System.Drawing.Point(13, 233);
+            this.grpProductInfo1.Location = new System.Drawing.Point(13, 278);
             this.grpProductInfo1.Name = "grpProductInfo1";
             // 
             // grpProductInfo1.Panel
@@ -555,7 +555,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // grpBoxInfo
             // 
-            this.grpBoxInfo.Location = new System.Drawing.Point(12, 80);
+            this.grpBoxInfo.Location = new System.Drawing.Point(12, 125);
             this.grpBoxInfo.Name = "grpBoxInfo";
             // 
             // grpBoxInfo.Panel
@@ -758,7 +758,7 @@ namespace RUINORERP.UI.ProductEAV
             0,
             0,
             65536});
-            this.numGap.Location = new System.Drawing.Point(95, 641);
+            this.numGap.Location = new System.Drawing.Point(94, 644);
             this.numGap.Maximum = new decimal(new int[] {
             10,
             0,
@@ -780,7 +780,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblGap
             // 
-            this.lblGap.Location = new System.Drawing.Point(13, 643);
+            this.lblGap.Location = new System.Drawing.Point(12, 646);
             this.lblGap.Name = "lblGap";
             this.lblGap.Size = new System.Drawing.Size(63, 20);
             this.lblGap.TabIndex = 4;
@@ -793,7 +793,7 @@ namespace RUINORERP.UI.ProductEAV
             0,
             0,
             0});
-            this.numTargetQuantity.Location = new System.Drawing.Point(94, 599);
+            this.numTargetQuantity.Location = new System.Drawing.Point(274, 66);
             this.numTargetQuantity.Maximum = new decimal(new int[] {
             100000,
             0,
@@ -815,15 +815,15 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblTargetQuantity
             // 
-            this.lblTargetQuantity.Location = new System.Drawing.Point(12, 601);
+            this.lblTargetQuantity.Location = new System.Drawing.Point(177, 68);
             this.lblTargetQuantity.Name = "lblTargetQuantity";
-            this.lblTargetQuantity.Size = new System.Drawing.Size(65, 20);
+            this.lblTargetQuantity.Size = new System.Drawing.Size(91, 20);
             this.lblTargetQuantity.TabIndex = 2;
-            this.lblTargetQuantity.Values.Text = "目标数量:";
+            this.lblTargetQuantity.Values.Text = "已经产品数量:";
             // 
             // chkMixedPack
             // 
-            this.chkMixedPack.Location = new System.Drawing.Point(12, 399);
+            this.chkMixedPack.Location = new System.Drawing.Point(12, 444);
             this.chkMixedPack.Name = "chkMixedPack";
             this.chkMixedPack.Size = new System.Drawing.Size(101, 20);
             this.chkMixedPack.TabIndex = 1;
@@ -832,30 +832,12 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // rdoBoxToQuantity
             // 
-            this.rdoBoxToQuantity.Location = new System.Drawing.Point(12, 55);
+            this.rdoBoxToQuantity.Location = new System.Drawing.Point(18, 31);
             this.rdoBoxToQuantity.Name = "rdoBoxToQuantity";
             this.rdoBoxToQuantity.Size = new System.Drawing.Size(143, 20);
             this.rdoBoxToQuantity.TabIndex = 0;
             this.rdoBoxToQuantity.Values.Text = "已知箱规 → 计算数量";
             this.rdoBoxToQuantity.CheckedChanged += new System.EventHandler(this.rdoBoxToQuantity_CheckedChanged);
-            // 
-            // rdoQuantityToBox
-            // 
-            this.rdoQuantityToBox.Checked = true;
-            this.rdoQuantityToBox.Location = new System.Drawing.Point(12, 28);
-            this.rdoQuantityToBox.Name = "rdoQuantityToBox";
-            this.rdoQuantityToBox.Size = new System.Drawing.Size(143, 20);
-            this.rdoQuantityToBox.TabIndex = 0;
-            this.rdoQuantityToBox.Values.Text = "已知数量 → 推荐箱规";
-            this.rdoQuantityToBox.CheckedChanged += new System.EventHandler(this.rdoQuantityToBox_CheckedChanged);
-            // 
-            // lblModeDescription
-            // 
-            this.lblModeDescription.Location = new System.Drawing.Point(12, 5);
-            this.lblModeDescription.Name = "lblModeDescription";
-            this.lblModeDescription.Size = new System.Drawing.Size(179, 20);
-            this.lblModeDescription.TabIndex = 0;
-            this.lblModeDescription.Values.Text = "输入成品数量，推荐最优箱规";
             // 
             // kryptonGroupBox2
             // 
@@ -866,7 +848,7 @@ namespace RUINORERP.UI.ProductEAV
             // kryptonGroupBox2.Panel
             // 
             this.kryptonGroupBox2.Panel.Controls.Add(this.tableLayoutPanel2);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(897, 701);
+            this.kryptonGroupBox2.Size = new System.Drawing.Size(897, 703);
             this.kryptonGroupBox2.TabIndex = 0;
             this.kryptonGroupBox2.Values.Heading = "计算结果";
             // 
@@ -882,7 +864,7 @@ namespace RUINORERP.UI.ProductEAV
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.08863F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 79.91138F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(893, 677);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(893, 679);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // picPreview
@@ -890,7 +872,7 @@ namespace RUINORERP.UI.ProductEAV
             this.picPreview.Dock = System.Windows.Forms.DockStyle.Fill;
             this.picPreview.Location = new System.Drawing.Point(3, 139);
             this.picPreview.Name = "picPreview";
-            this.picPreview.Size = new System.Drawing.Size(887, 535);
+            this.picPreview.Size = new System.Drawing.Size(887, 537);
             this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picPreview.TabIndex = 1;
             this.picPreview.TabStop = false;
@@ -999,9 +981,9 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel2.Controls.Add(this.btnReset);
             this.kryptonPanel2.Controls.Add(this.btnCalculate);
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.kryptonPanel2.Location = new System.Drawing.Point(0, 701);
+            this.kryptonPanel2.Location = new System.Drawing.Point(0, 703);
             this.kryptonPanel2.Name = "kryptonPanel2";
-            this.kryptonPanel2.Size = new System.Drawing.Size(1288, 48);
+            this.kryptonPanel2.Size = new System.Drawing.Size(1288, 46);
             this.kryptonPanel2.TabIndex = 1;
             // 
             // lblResultCount
@@ -1041,6 +1023,24 @@ namespace RUINORERP.UI.ProductEAV
             this.btnCalculate.TabIndex = 0;
             this.btnCalculate.Values.Text = "开始计算";
             this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
+            // 
+            // lblModeDescription
+            // 
+            this.lblModeDescription.Location = new System.Drawing.Point(12, 5);
+            this.lblModeDescription.Name = "lblModeDescription";
+            this.lblModeDescription.Size = new System.Drawing.Size(179, 20);
+            this.lblModeDescription.TabIndex = 0;
+            this.lblModeDescription.Values.Text = "输入成品数量，推荐最优箱规";
+            // 
+            // rdoQuantityToBox
+            // 
+            this.rdoQuantityToBox.Checked = true;
+            this.rdoQuantityToBox.Location = new System.Drawing.Point(17, 66);
+            this.rdoQuantityToBox.Name = "rdoQuantityToBox";
+            this.rdoQuantityToBox.Size = new System.Drawing.Size(143, 20);
+            this.rdoQuantityToBox.TabIndex = 0;
+            this.rdoQuantityToBox.Values.Text = "已知数量 → 推荐箱规";
+            this.rdoQuantityToBox.CheckedChanged += new System.EventHandler(this.rdoQuantityToBox_CheckedChanged);
             // 
             // frmSmartPackagingCalculator
             // 
@@ -1100,8 +1100,6 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
-        private Krypton.Toolkit.KryptonLabel lblModeDescription;
-        private Krypton.Toolkit.KryptonRadioButton rdoQuantityToBox;
         private Krypton.Toolkit.KryptonRadioButton rdoBoxToQuantity;
         private Krypton.Toolkit.KryptonCheckBox chkMixedPack;
         private Krypton.Toolkit.KryptonLabel lblTargetQuantity;
@@ -1159,5 +1157,7 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonButton btnApply;
         private Krypton.Toolkit.KryptonButton btnReset;
         private Krypton.Toolkit.KryptonButton btnCalculate;
+        private Krypton.Toolkit.KryptonRadioButton rdoQuantityToBox;
+        private Krypton.Toolkit.KryptonLabel lblModeDescription;
     }
 }

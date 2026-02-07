@@ -175,13 +175,15 @@ namespace RUINORERP.Business.AutoMapper
             //生成应付及明细
             CreateMap<tb_FM_PriceAdjustment, tb_FM_ReceivablePayable>();
             CreateMap<tb_FM_PriceAdjustmentDetail, tb_FM_ReceivablePayableDetail>()
-                  .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.AdjustDetailID))
-                ;
+            .ForMember(a => a.SourceItemRowID, o => o.MapFrom(d => d.AdjustDetailID));
 
             CreateMap<tb_SaleOut, tb_FM_PriceAdjustment>();
-            CreateMap<tb_SaleOutDetail, tb_FM_PriceAdjustmentDetail>();
+            CreateMap<tb_SaleOutDetail, tb_FM_PriceAdjustmentDetail>()
+            .ForMember(a => a.LineNumber, o => o.MapFrom(d => d.SaleOutDetail_ID));
+
             CreateMap<tb_PurEntry, tb_FM_PriceAdjustment>();
-            CreateMap<tb_PurEntryDetail, tb_FM_PriceAdjustmentDetail>();
+            CreateMap<tb_PurEntryDetail, tb_FM_PriceAdjustmentDetail>()
+            .ForMember(a => a.LineNumber, o => o.MapFrom(d => d.PurEntryDetail_ID));
 
 
             //生成应付及明细

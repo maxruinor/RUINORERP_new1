@@ -31,6 +31,8 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblPropertyValueCode = new Krypton.Toolkit.KryptonLabel();
+            this.txtPropertyValueCode = new Krypton.Toolkit.KryptonTextBox();
             this.kryptonLabel1 = new Krypton.Toolkit.KryptonLabel();
             this.txtSortOrder = new Krypton.Toolkit.KryptonTextBox();
             this.lblProperty_ID = new Krypton.Toolkit.KryptonLabel();
@@ -39,8 +41,6 @@
             this.txtPropertyValueName = new Krypton.Toolkit.KryptonTextBox();
             this.lblPropertyValueDesc = new Krypton.Toolkit.KryptonLabel();
             this.txtPropertyValueDesc = new Krypton.Toolkit.KryptonTextBox();
-            this.lblPropertyValueCode = new Krypton.Toolkit.KryptonLabel();
-            this.txtPropertyValueCode = new Krypton.Toolkit.KryptonTextBox();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
@@ -84,6 +84,21 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(493, 421);
             this.kryptonPanel1.TabIndex = 2;
+            // 
+            // lblPropertyValueCode
+            // 
+            this.lblPropertyValueCode.Location = new System.Drawing.Point(40, 69);
+            this.lblPropertyValueCode.Name = "lblPropertyValueCode";
+            this.lblPropertyValueCode.Size = new System.Drawing.Size(75, 20);
+            this.lblPropertyValueCode.TabIndex = 20;
+            this.lblPropertyValueCode.Values.Text = "属性值编码";
+            // 
+            // txtPropertyValueCode
+            // 
+            this.txtPropertyValueCode.Location = new System.Drawing.Point(119, 68);
+            this.txtPropertyValueCode.Name = "txtPropertyValueCode";
+            this.txtPropertyValueCode.Size = new System.Drawing.Size(294, 23);
+            this.txtPropertyValueCode.TabIndex = 21;
             // 
             // kryptonLabel1
             // 
@@ -147,21 +162,6 @@
             this.txtPropertyValueDesc.Name = "txtPropertyValueDesc";
             this.txtPropertyValueDesc.Size = new System.Drawing.Size(294, 123);
             this.txtPropertyValueDesc.TabIndex = 15;
-            // 
-            // lblPropertyValueCode
-            // 
-            this.lblPropertyValueCode.Location = new System.Drawing.Point(40, 69);
-            this.lblPropertyValueCode.Name = "lblPropertyValueCode";
-            this.lblPropertyValueCode.Size = new System.Drawing.Size(75, 20);
-            this.lblPropertyValueCode.TabIndex = 20;
-            this.lblPropertyValueCode.Values.Text = "属性值名称";
-            // 
-            // txtPropertyValueCode
-            // 
-            this.txtPropertyValueCode.Location = new System.Drawing.Point(119, 68);
-            this.txtPropertyValueCode.Name = "txtPropertyValueCode";
-            this.txtPropertyValueCode.Size = new System.Drawing.Size(294, 23);
-            this.txtPropertyValueCode.TabIndex = 21;
             // 
             // UCPropertyValueEdit
             // 

@@ -129,6 +129,6 @@ namespace RUINORERP.Model.ConfigModel
         [JsonProperty("OllamaDefaultModel")]
         [Category("AI配置")]
         [Description("OLLAMA大模型默认名称")]
-        public string OllamaDefaultModel { get; set; } = "llama3";
+        public string OllamaDefaultModel { get; set; } = "deepseek-coder:6.7b";
     }
 }

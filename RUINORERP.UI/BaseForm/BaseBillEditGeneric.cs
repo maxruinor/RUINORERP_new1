@@ -2327,9 +2327,16 @@ namespace RUINORERP.UI.BaseForm
                         var lockStatusDelete = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusDelete.CanPerformCriticalOperations)
                         {
-                            // 恢复所有非查询按钮的可用状态
                             return;
                         }
+
+                        // 立即禁用删除按钮，防止重复点击
+                        var btnDelete = FindToolStripButtonByName("toolStripbtnDelete");
+                        if (btnDelete != null)
+                        {
+                            btnDelete.Enabled = false;
+                        }
+
                         var deleteResult = await Delete();
                         if (deleteResult.Succeeded)
                         {
@@ -2340,21 +2347,26 @@ namespace RUINORERP.UI.BaseForm
                         else
                         {
                             MainForm.Instance.ShowStatusText(deleteResult.ErrorMsg);
+                            // 删除失败时恢复删除按钮状态
+                            if (btnDelete != null && EditEntity != null)
+                            {
+                                btnDelete.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnDelete");
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"删除单据失败：{ex.Message}");
+                        // 删除异常时恢复删除按钮状态
+                        var btnDelete = FindToolStripButtonByName("toolStripbtnDelete");
+                        if (btnDelete != null && EditEntity != null)
+                        {
+                            btnDelete.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnDelete");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnDelete = FindToolStripButtonByName("toolStripbtnDelete");
-                        if (btnDelete != null)
-                        {
-                            btnDelete.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnDelete");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
-                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.修改:
@@ -2374,23 +2386,30 @@ namespace RUINORERP.UI.BaseForm
                                 return;
                             }
                         }
+                        
+                        // 立即禁用修改按钮，防止重复点击
+                        var btnModify = FindToolStripButtonByName("toolStripbtnModify");
+                        if (btnModify != null)
+                        {
+                            btnModify.Enabled = false;
+                        }
+                        
                         Modify();
-                        // 修改成功后保持修改按钮禁用
-                        toolStripbtnModify.Enabled = false;
+                        // 注意：修改成功后保持修改按钮禁用，直到保存或取消后才重新评估状态
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"修改单据失败：{ex.Message}");
+                        // 修改失败时，根据状态重新评估修改按钮状态
+                        var btnModify = FindToolStripButtonByName("toolStripbtnModify");
+                        if (btnModify != null && EditEntity != null)
+                        {
+                            btnModify.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnModify");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnModify = FindToolStripButtonByName("toolStripbtnModify");
-                        if (btnModify != null)
-                        {
-                            btnModify.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnModify");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
-                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.查询:
@@ -2502,26 +2521,30 @@ namespace RUINORERP.UI.BaseForm
                     finally
                     {
                         // 根据保存结果和状态管理系统恢复按钮状态
-                        var btnSave = FindToolStripButtonByName("toolStripButtonSave");
-                        if (btnSave != null)
+                        if (rsSave)
                         {
-                            if (rsSave)
-                            {
-                                // 保存成功，立即重置保存按钮为禁用状态
-                                toolStripButtonSave.Enabled = false;
-                            }
-                            else if (EditEntity != null && EditEntity.HasChanged)
-                            {
-                                // 保存失败但实体有变化，保持保存按钮启用
-                                btnSave.Enabled = true;
-                            }
-                            else
-                            {
-                                // 其他情况，根据状态管理系统设置按钮状态
-                                btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
-                            }
-                            MainForm.Instance?.ShowStatusText(string.Empty);
+                            // 保存成功，更新所有UI状态（包括修改按钮等）
+                            UpdateAllUIStates(EditEntity);
                         }
+                        else
+                        {
+                            // 保存失败，仅更新保存按钮状态
+                            var btnSave = FindToolStripButtonByName("toolStripButtonSave");
+                            if (btnSave != null)
+                            {
+                                if (EditEntity != null && EditEntity.HasChanged)
+                                {
+                                    // 保存失败但实体有变化，保持保存按钮启用
+                                    btnSave.Enabled = true;
+                                }
+                                else
+                                {
+                                    // 其他情况，根据状态管理系统设置按钮状态
+                                    btnSave.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonSave");
+                                }
+                            }
+                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.提交:
@@ -2549,36 +2572,108 @@ namespace RUINORERP.UI.BaseForm
                             return;
                         }
 
+                        // 立即禁用提交按钮，防止重复点击
+                        var btnSubmit = FindToolStripButtonByName("toolStripbtnSubmit");
+                        if (btnSubmit != null)
+                        {
+                            btnSubmit.Enabled = false;
+                        }
+
                         //操作前将数据收集
                         this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
                         bool rs = await Submit();
                         if (!rs)
                         {
+                            // 提交失败时恢复提交按钮状态
+                            if (btnSubmit != null && EditEntity != null)
+                            {
+                                btnSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnSubmit");
+                            }
                         }
                         else
                         {
-
                             // 调用提交成功后的处理逻辑（虚方法，子类可重写）
                             await AfterSubmitAsync();
                             //提交后别人可以审核
                             UNLock();
-
+                            // 提交成功后更新所有UI状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"提交单据失败：{ex.Message}");
+                        // 提交异常时恢复提交按钮状态
+                        var btnSubmit = FindToolStripButtonByName("toolStripbtnSubmit");
+                        if (btnSubmit != null && EditEntity != null)
+                        {
+                            btnSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnSubmit");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnSubmit = FindToolStripButtonByName("toolStripbtnSubmit");
-                        if (btnSubmit != null)
+                        MainForm.Instance?.ShowStatusText(string.Empty);
+                    }
+                    break;
+                case MenuItemEnums.撤回提交:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnCancelSubmit = FindToolStripButtonByName("toolStripBtnCancelSubmit");
+                    try
+                    {
+                        // 使用状态管理架构检查撤回提交权限
+                        var canCancelSubmit = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                        if (canCancelSubmit == null || !canCancelSubmit.Value.CanExecute)
                         {
-                            btnSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnSubmit");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
+                            var message = canCancelSubmit?.Message ?? "无法检查撤回提交权限";
+                            MainForm.Instance.uclog.AddLog($"当前状态下无法撤回提交单据：{message}");
+                            return;
                         }
+
+                        // 检查锁定状态
+                        var lockStatusCancelSubmit = await CheckLockStatusAndUpdateUI(EditEntity?.PrimaryKeyID ?? 0);
+                        if (!lockStatusCancelSubmit.CanPerformCriticalOperations)
+                        {
+                            MainForm.Instance.uclog.AddLog("单据已被锁定，无法撤回提交", UILogType.警告);
+                            return;
+                        }
+
+                        // 立即禁用撤回提交按钮，防止重复点击
+                        if (btnCancelSubmit != null)
+                        {
+                            btnCancelSubmit.Enabled = false;
+                        }
+
+                        // 执行撤回提交操作
+                        bool rs = await CancelSubmit();
+                        if (rs)
+                        {
+                            // 撤回提交成功后，更新UI状态
+                            UpdateAllUIStates(EditEntity);
+                            // 撤回提交成功后保持按钮禁用，让 UpdateAllUIStates 根据新状态重新评估
+                        }
+                        else
+                        {
+                            // 撤回提交失败时恢复按钮状态
+                            if (btnCancelSubmit != null && EditEntity != null)
+                            {
+                                btnCancelSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnCancelSubmit");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"撤回提交操作失败：{ex.Message}", UILogType.错误);
+                        MainForm.Instance.logger?.LogError(ex, "撤回提交操作异常");
+                        // 撤回提交异常时恢复按钮状态
+                        if (btnCancelSubmit != null && EditEntity != null)
+                        {
+                            btnCancelSubmit.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnCancelSubmit");
+                        }
+                    }
+                    finally
+                    {
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.关闭:
@@ -2609,76 +2704,126 @@ namespace RUINORERP.UI.BaseForm
                     Property();
                     break;
                 case MenuItemEnums.审核:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnReview = FindToolStripButtonByName("toolStripbtnReview");
                     try
                     {
+                        // 使用状态管理架构检查审核权限
+                        var canReview = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                        if (canReview == null || !canReview.Value.CanExecute)
+                        {
+                            var message = canReview?.Message ?? "无法检查审核权限";
+                            MainForm.Instance.uclog.AddLog($"当前状态下无法审核单据：{message}");
+                            return;
+                        }
+
                         var lockStatusReview = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusReview.CanPerformCriticalOperations)
                         {
                             return;
                         }
+
+                        // 立即禁用审核按钮，防止重复点击
+                        if (btnReview != null)
+                        {
+                            btnReview.Enabled = false;
+                        }
+
                         await LockBill();
                         ReviewResult reviewResult = await Review();
                         if (!reviewResult.Succeeded)
                         {
                             UNLock();
+                            // 审核失败时恢复审核按钮状态
+                            if (btnReview != null && EditEntity != null)
+                            {
+                                btnReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnReview");
+                            }
                         }
                         else
                         {
                             // 状态同步已在审核方法内部处理，无需重复调用
+                            // 审核成功后更新所有UI状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"审核单据失败：{ex.Message}");
                         UNLock();
+                        // 审核异常时恢复审核按钮状态
+                        if (btnReview != null && EditEntity != null)
+                        {
+                            btnReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnReview");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnReview = FindToolStripButtonByName("toolStripbtnReview");
-                        if (btnReview != null)
-                        {
-                            btnReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripbtnReview");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
-                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.反审:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnReverseReview = FindToolStripButtonByName("toolStripBtnReverseReview");
                     try
                     {
+                        // 使用状态管理架构检查反审核权限
+                        var canReReview = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                        if (canReReview == null || !canReReview.Value.CanExecute)
+                        {
+                            var message = canReReview?.Message ?? "无法检查反审核权限";
+                            MainForm.Instance.uclog.AddLog($"当前状态下无法反审核单据：{message}");
+                            return;
+                        }
+
                         var lockStatusReverseReview = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
                         if (!lockStatusReverseReview.CanPerformCriticalOperations)
                         {
                             return;
                         }
+
+                        // 立即禁用反审核按钮，防止重复点击
+                        if (btnReverseReview != null)
+                        {
+                            btnReverseReview.Enabled = false;
+                        }
+
                         await LockBill();
-                        bool rs反审 = await ReReview();
-                        if (!rs反审)
+                        bool rsReReview = await ReReview();
+                        if (!rsReReview)
                         {
                             UNLock();
+                            // 反审失败时恢复反审按钮状态
+                            if (btnReverseReview != null && EditEntity != null)
+                            {
+                                btnReverseReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseReview");
+                            }
                         }
                         else
                         {
                             // 状态同步已在反审方法内部处理，无需重复调用
+                            // 反审成功后更新所有UI状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"反审单据失败：{ex.Message}");
                         UNLock();
+                        // 反审异常时恢复反审按钮状态
+                        if (btnReverseReview != null && EditEntity != null)
+                        {
+                            btnReverseReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseReview");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnReverseReview = FindToolStripButtonByName("toolStripBtnReverseReview");
-                        if (btnReverseReview != null)
-                        {
-                            btnReverseReview.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseReview");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
-                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.结案:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnCaseClosed = FindToolStripButtonByName("toolStripButtonCaseClosed");
                     try
                     {
                         var lockStatusCloseCase = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
@@ -2686,21 +2831,40 @@ namespace RUINORERP.UI.BaseForm
                         {
                             return;
                         }
-                        await CloseCaseAsync();
+
+                        // 立即禁用结案按钮，防止重复点击
+                        if (btnCaseClosed != null)
+                        {
+                            btnCaseClosed.Enabled = false;
+                        }
+
+                        bool rsCloseCase = await CloseCaseAsync();
+                        if (!rsCloseCase)
+                        {
+                            // 结案失败时恢复结案按钮状态
+                            if (btnCaseClosed != null && EditEntity != null)
+                            {
+                                btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
+                            }
+                        }
+                        else
+                        {
+                            // 结案成功后更新所有UI状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
+                        }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"结案失败：{ex.Message}");
+                        // 结案异常时恢复结案按钮状态
+                        if (btnCaseClosed != null && EditEntity != null)
+                        {
+                            btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
+                        }
                     }
                     finally
                     {
-                        // 根据状态管理系统恢复按钮状态
-                        var btnCaseClosed = FindToolStripButtonByName("toolStripButtonCaseClosed");
-                        if (btnCaseClosed != null)
-                        {
-                            btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
-                            MainForm.Instance?.ShowStatusText(string.Empty);
-                        }
+                        MainForm.Instance?.ShowStatusText(string.Empty);
                     }
                     break;
                 case MenuItemEnums.反结案:

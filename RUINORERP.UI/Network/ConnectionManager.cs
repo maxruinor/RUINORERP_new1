@@ -541,7 +541,8 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// Socket连接关闭事件处理
+        /// Socket连接关闭事件处理 - 优化版
+        /// 修复：增加延迟检查，避免短时间内重复触发重连
         /// </summary>
         private void OnSocketClosed(EventArgs e)
         {
@@ -549,6 +550,7 @@ namespace RUINORERP.UI.Network
             OnConnectionStateChanged(false);
 
             bool shouldStartReconnect = false;
+            DateTime lastDisconnectTime = DateTime.Now;
 
             lock (_reconnectStateLock)
             {
@@ -556,11 +558,22 @@ namespace RUINORERP.UI.Network
                 // 即使达到最大重连次数，如果AutoReconnect为true，也允许继续重连
                 if (!_isReconnecting && !_disposed && _config.AutoReconnect)
                 {
-                    // 重置重连停止标志，允许新的重连尝试
-                    _reconnectStopped = false;
-                    shouldStartReconnect = true;
-                    _isReconnecting = true;
-                    _logger?.LogDebug("准备启动自动重连机制");
+                    // 检查上次重连尝试时间，避免过于频繁的重连
+                    var timeSinceLastAttempt = DateTime.Now - _lastReconnectAttempt;
+                    if (timeSinceLastAttempt.TotalSeconds < 5)
+                    {
+                        _logger?.LogDebug("距离上次重连尝试时间过短（{Seconds:F1}秒），延迟启动重连", 
+                            timeSinceLastAttempt.TotalSeconds);
+                        shouldStartReconnect = false;
+                    }
+                    else
+                    {
+                        // 重置重连停止标志，允许新的重连尝试
+                        _reconnectStopped = false;
+                        shouldStartReconnect = true;
+                        _isReconnecting = true;
+                        _logger?.LogDebug("准备启动自动重连机制");
+                    }
                 }
             }
 
@@ -569,6 +582,7 @@ namespace RUINORERP.UI.Network
             {
                 Task.Run(async () =>
                 {
+                    // 使用更长的延迟，确保连接真的断开
                     await Task.Delay(_config.ReconnectDelayMs).ConfigureAwait(false);
 
                     // 再次检查连接状态，避免重复启动
@@ -576,6 +590,7 @@ namespace RUINORERP.UI.Network
                     {
                         if (!IsConnected && _isReconnecting && !_disposed)
                         {
+                            _lastReconnectAttempt = DateTime.Now;
                             StartAutoReconnect();
                         }
                         else if (IsConnected)

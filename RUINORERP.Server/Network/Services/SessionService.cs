@@ -83,8 +83,9 @@ namespace RUINORERP.Server.Network.Services
             _sessions = new ConcurrentDictionary<string, SessionInfo>();
             _statistics = SessionStatistics.Create(maxSessionCount);
 
-            // 优化:将清理定时器改为每1分钟执行一次,确保超时断开及时
-            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            // 优化：将清理定时器改为每2分钟执行一次，减少系统开销
+            // 同时避免过于频繁的清理操作影响正常业务
+            _cleanupTimer = new Timer(CleanupAndHeartbeatCallback, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
 
             _logger.LogInformation("SessionService初始化完成");
         }
@@ -1321,7 +1322,8 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 清理超时会话
+        /// 清理超时会话 - 优化版
+        /// 减少过于激进的清理策略，避免误判正常连接
         /// </summary>
         /// <returns>清理的会话数量</returns>
         public int CleanupTimeoutSessions()
@@ -1331,6 +1333,7 @@ namespace RUINORERP.Server.Network.Services
                 // 1. 首先获取所有会话ID，避免在遍历过程中修改集合导致异常
                 var allSessionIds = _sessions.Keys.ToList();
                 var timeoutSessions = new List<SessionInfo>();
+                var currentTime = DateTime.Now;
 
                 // 2. 筛选超时会话和未验证会话，使用线程安全的方式访问会话信息
                 foreach (var sessionId in allSessionIds)
@@ -1340,32 +1343,41 @@ namespace RUINORERP.Server.Network.Services
                         // 增强线程安全性：使用锁保护会话访问
                         lock (session)
                         {
-                            // 检查1: 活动超时（45分钟无活动），给予更多活动时间
-                            if (session.LastActivityTime.AddMinutes(45) < DateTime.Now)
+                            // 检查1: 活动超时（60分钟无活动），增加超时时间避免误判
+                            var inactiveTime = currentTime - session.LastActivityTime;
+                            if (inactiveTime.TotalMinutes > 60)
                             {
-                                timeoutSessions.Add(session);
-                                _logger.LogWarning($"[活动超时] SessionID={session.SessionID}, IP={session.ClientIp}, 最后活动={session.LastActivityTime}");
+                                // 对于已认证的会话，给予更长的宽限期
+                                if (session.IsAuthenticated && inactiveTime.TotalMinutes < 120)
+                                {
+                                    _logger.LogDebug($"[活动超时警告] SessionID={session.SessionID}, IP={session.ClientIp}, 无活动时间={inactiveTime.TotalMinutes:F1}分钟");
+                                }
+                                else
+                                {
+                                    timeoutSessions.Add(session);
+                                    _logger.LogWarning($"[活动超时] SessionID={session.SessionID}, IP={session.ClientIp}, 最后活动={session.LastActivityTime:yyyy-MM-dd HH:mm:ss}, 无活动时间={inactiveTime.TotalMinutes:F1}分钟");
+                                }
                                 continue;
                             }
 
-                            // 检查2: 未验证会话（欢迎回复超时5分钟后强制断开），给予更多验证时间
+                            // 检查2: 未验证会话（欢迎回复超时10分钟后强制断开），增加超时时间
                             if (!session.IsVerified &&
                                 !session.WelcomeAckReceived &&
                                 session.WelcomeSentTime.HasValue &&
-                                session.WelcomeSentTime.Value.AddMinutes(5) < DateTime.Now)
+                                session.WelcomeSentTime.Value.AddMinutes(10) < currentTime)
                             {
                                 timeoutSessions.Add(session);
                                 _logger.LogWarning($"[欢迎超时-定时检查] SessionID={session.SessionID}, IP={session.ClientIp}");
                                 continue;
                             }
 
-                            // 检查3: 已验证但未授权的会话（15分钟内未登录强制断开），给予更多授权时间
+                            // 检查3: 已验证但未授权的会话（30分钟内未登录强制断开），增加超时时间
                             if (session.IsVerified &&
                                 !session.IsAuthenticated &&
-                                session.ConnectedTime.AddMinutes(15) < DateTime.Now)
+                                session.ConnectedTime.AddMinutes(30) < currentTime)
                             {
                                 timeoutSessions.Add(session);
-                                _logger.LogWarning($"[未授权超时] SessionID={session.SessionID}, IP={session.ClientIp}, 连接时间={session.ConnectedTime}");
+                                _logger.LogWarning($"[未授权超时] SessionID={session.SessionID}, IP={session.ClientIp}, 连接时间={session.ConnectedTime:yyyy-MM-dd HH:mm:ss}");
                                 continue;
                             }
                         }
@@ -1420,11 +1432,7 @@ namespace RUINORERP.Server.Network.Services
 
                 if (removedCount > 0)
                 {
-                    _logger.LogInformation($"清理超时会话完成，共清理 {removedCount} 个会话，总超时会话数: {totalTimeoutSessions}");
-                }
-                else if (totalTimeoutSessions > 0)
-                {
-                    _logger.LogWarning($"清理超时会话完成，但没有成功清理任何会话，总超时会话数: {totalTimeoutSessions}");
+                    _logger.LogInformation($"清理超时会话完成，共清理 {removedCount} 个会话");
                 }
 
                 return removedCount;
@@ -1437,7 +1445,8 @@ namespace RUINORERP.Server.Network.Services
         }
 
         /// <summary>
-        /// 心跳检查
+        /// 心跳检查 - 优化版
+        /// 修复：优化心跳超时检测逻辑，避免误判正常会话
         /// </summary>
         /// <returns>心跳异常的会话数量</returns>
         public int HeartbeatCheck()
@@ -1445,37 +1454,79 @@ namespace RUINORERP.Server.Network.Services
             try
             {
                 var currentTime = DateTime.Now;
-                // 将心跳超时时间从5分钟增加到10分钟，给予更多容错机会
-                var abnormalSessions = _sessions.Values
-                    .Where(s => s.LastHeartbeat.AddMinutes(10) < currentTime)
+                
+                // 只检查已认证且未断开的会话
+                var activeSessions = _sessions.Values
+                    .Where(s => s.IsAuthenticated && s.IsConnected)
                     .ToList();
-        
-                var abnormalCount = 0;
-                foreach (var session in abnormalSessions)
+                
+                var abnormalSessions = new List<SessionInfo>();
+                
+                foreach (var session in activeSessions)
                 {
-                    // 使用更详细的日志，包含最后心跳时间
-                    _logger.LogWarning($"会话心跳异常: {session.SessionID}, 用户: {session.UserName}, 最后心跳: {session.LastHeartbeat}");
-        
-                    // 更新会话状态为心跳异常
-                    lock (session)
+                    // 计算距离上次心跳的时间
+                    var timeSinceLastHeartbeat = currentTime - session.LastHeartbeat;
+                    
+                    // 动态超时时间：根据会话活跃度和失败次数调整
+                    // 基础超时时间：10分钟
+                    // 如果有心跳失败记录，增加超时时间
+                    int timeoutMinutes = 10;
+                    if (session.HeartbeatFailedCount > 0)
                     {
-                        session.HeartbeatFailedCount++;
-                                
-                        // 如果心跳失败次数过多，考虑标记会话为异常
-                        // 将阈值从3次增加到5次，给予更多容错机会
-                        if (session.HeartbeatFailedCount > 5)
+                        timeoutMinutes += Math.Min(session.HeartbeatFailedCount * 2, 10); // 最多增加到20分钟
+                    }
+                    
+                    // 检查是否超时
+                    if (timeSinceLastHeartbeat.TotalMinutes > timeoutMinutes)
+                    {
+                        lock (session)
                         {
-                            _logger.LogWarning($"会话心跳连续失败超过5次: {session.SessionID}, 准备清理");
-                                    
-                            // 如果心跳失败次数过多，直接清理该会话
-                            RemoveSession(session.SessionID);
+                            session.HeartbeatFailedCount++;
+                            
+                            // 只有连续多次超时且时间很长才清理
+                            if (session.HeartbeatFailedCount >= 3 && timeSinceLastHeartbeat.TotalMinutes > 20)
+                            {
+                                _logger.LogWarning($"会话心跳超时将被清理: {session.SessionID}, 用户: {session.UserName}, " +
+                                    $"最后心跳: {session.LastHeartbeat:yyyy-MM-dd HH:mm:ss}, 超时: {timeSinceLastHeartbeat.TotalMinutes:F1}分钟");
+                                abnormalSessions.Add(session);
+                            }
+                            else if (session.HeartbeatFailedCount < 3)
+                            {
+                                // 前几次只记录日志，不清理
+                                _logger.LogDebug($"会话心跳异常(第{session.HeartbeatFailedCount}次): {session.SessionID}, 用户: {session.UserName}, " +
+                                    $"距离上次心跳: {timeSinceLastHeartbeat.TotalMinutes:F1}分钟");
+                            }
                         }
                     }
-        
-                    abnormalCount++;
+                    else
+                    {
+                        // 如果心跳正常，重置失败计数
+                        if (session.HeartbeatFailedCount > 0)
+                        {
+                            lock (session)
+                            {
+                                session.HeartbeatFailedCount = 0;
+                            }
+                        }
+                    }
                 }
         
-                return abnormalCount;
+                // 清理严重超时的会话
+                var removedCount = 0;
+                foreach (var session in abnormalSessions)
+                {
+                    if (RemoveSession(session.SessionID))
+                    {
+                        removedCount++;
+                    }
+                }
+        
+                if (removedCount > 0)
+                {
+                    _logger.LogInformation($"心跳检查完成，清理了 {removedCount} 个超时会话");
+                }
+        
+                return removedCount;
             }
             catch (Exception ex)
             {

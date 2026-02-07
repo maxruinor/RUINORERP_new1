@@ -111,7 +111,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             new ConcurrentDictionary<string, DateTime>();
 
         /// <summary>
-        /// 处理心跳命令（优化版 - 异步处理提高响应速度）
+        /// 处理心跳命令（优化版 - 快速响应）
+        /// 修复：简化处理逻辑，快速响应客户端，避免超时
         /// </summary>
         private async Task<IResponse> HandleHeartbeatAsync(QueuedCommand queuedCommand, CancellationToken cancellationToken)
         {
@@ -121,57 +122,77 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 if (queuedCommand.Packet.Request is HeartbeatRequest heartbeatRequest)
                 {
-                    // 首先验证请求的有效性
-                    if (!heartbeatRequest.IsValid())
+                    // 快速验证请求
+                    if (!heartbeatRequest.IsValid() || heartbeatRequest.UserId == 0)
                     {
-                        var invalidResponse = HeartbeatResponse.Create(false, "心跳请求数据无效")
-                            .WithNextInterval(30000);
-                        return invalidResponse;
+                        // 快速返回失败响应，不记录详细日志
+                        return new HeartbeatResponse
+                        {
+                            IsSuccess = false,
+                            Status = "Invalid Request",
+                            NextIntervalMs = 30000
+                        };
                     }
 
-                    // 使用UserId进行会话验证，不再依赖完整的UserInfo
+                    // 使用UserId进行会话验证
                     var sessionInfo = SessionService.GetSession(heartbeatRequest.UserId);
 
-                    if (heartbeatRequest.UserId == 0 || sessionInfo == null)
+                    if (sessionInfo == null)
                     {
-                        var responseNotLogin = HeartbeatResponse.Create(false, "用户不存在或会话已过期")
-                            .WithNextInterval(30000);
-                        return responseNotLogin;
+                        // 会话不存在，返回特定响应
+                        return new HeartbeatResponse
+                        {
+                            IsSuccess = false,
+                            Status = "Session Not Found",
+                            NextIntervalMs = 30000
+                        };
                     }
 
-                    // 立即更新最后活动时间和心跳时间
+                    // 立即更新最后活动时间和心跳时间（关键：快速更新）
                     var currentTime = DateTime.Now;
                     sessionInfo.LastActivityTime = currentTime;
-                    sessionInfo.LastHeartbeat = currentTime; // 更新心跳时间
+                    sessionInfo.LastHeartbeat = currentTime;
+                    sessionInfo.HeartbeatFailedCount = 0; // 重置失败计数
 
-                    // 动态计算下次心跳间隔
+                    // 快速创建响应（不等待异步操作）
                     var nextIntervalMs = CalculateNextHeartbeatInterval(sessionInfo);
-
-                    // 检查是否应该使用批量处理
-                    if (ShouldUseBatchProcessing())
+                    var response = new HeartbeatResponse
                     {
-                        // 使用批量处理器
-                        _batchProcessor.EnqueueHeartbeat(heartbeatRequest, sessionInfo.SessionID);
-                        // 返回立即响应，实际处理由批量处理器完成
-                        var immediateResponse = CreateImmediateResponse(sessionInfo, nextIntervalMs, currentTime);
-                        
-                        var batchProcessingDuration = (DateTime.Now - startTime).TotalMilliseconds;
-                        if (immediateResponse is HeartbeatResponse hr && hr.ServerInfo != null)
+                        IsSuccess = true,
+                        Status = "OK",
+                        ServerTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+                        NextIntervalMs = nextIntervalMs,
+                        ServerInfo = new Dictionary<string, object>
                         {
-                            hr.ServerInfo["ProcessingDurationMs"] = batchProcessingDuration;
+                            ["ServerTime"] = currentTime.ToString("yyyy-MM-dd HH:mm:ss"),
+                            ["SessionId"] = sessionInfo.SessionID,
+                            ["RecommendedInterval"] = nextIntervalMs
                         }
-                        
-                        return immediateResponse;
+                    };
+                    
+                    // 异步更新用户操作信息（不阻塞响应）
+                    if (heartbeatRequest.UserOperationInfo != null)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
+                                await SessionService.UpdateSessionLight(sessionInfo);
+                            }
+                            catch { /* 忽略异步更新错误 */ }
+                        });
                     }
                     else
                     {
-                        // 直接处理
-                        return await ProcessHeartbeatDirectly(heartbeatRequest, sessionInfo, nextIntervalMs, currentTime, cancellationToken);
+                        // 轻量级更新
+                        _ = Task.Run(() => SessionService.UpdateSessionLight(sessionInfo));
                     }
+                    
+                    return response;
                 }
                 else
                 {
-                    LogError($"心跳请求数据类型错误: {queuedCommand.Packet.Request?.GetType()}");
                     return ResponseFactory.CreateSpecificErrorResponse(queuedCommand.Packet, "心跳请求数据格式错误");
                 }
             }

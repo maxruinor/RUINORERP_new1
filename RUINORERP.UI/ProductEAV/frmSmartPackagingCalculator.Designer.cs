@@ -891,7 +891,7 @@ namespace RUINORERP.UI.ProductEAV
             this.picPreview.Location = new System.Drawing.Point(3, 223);
             this.picPreview.Name = "picPreview";
             this.picPreview.Size = new System.Drawing.Size(887, 451);
-            this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picPreview.TabIndex = 1;
             this.picPreview.TabStop = false;
             // 

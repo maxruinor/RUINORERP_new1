@@ -653,12 +653,14 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 心跳检测循环（优化版）
+        /// 心跳检测循环（优化版 - 修复重连冲突和请求ID重复问题）
         /// 定期执行心跳检测，避免UI阻塞和资源竞争
+        /// 修复：1. 在重连期间暂停心跳 2. 优化超时处理 3. 避免请求ID重复
         /// </summary>
         private async Task HeartbeatLoopAsync(CancellationToken cancellationToken)
         {
-
+            int consecutiveTimeouts = 0; // 连续超时计数
+            const int MAX_CONSECUTIVE_TIMEOUTS = 3; // 最大连续超时次数
 
             while (!cancellationToken.IsCancellationRequested && _isHeartbeatRunning)
             {
@@ -666,12 +668,44 @@ namespace RUINORERP.UI.Network
                 {
                     await Task.Delay(_heartbeatIntervalMs, cancellationToken).ConfigureAwait(false);
 
+                    // 检查是否应该发送心跳：
+                    // 1. 连接必须正常
+                    // 2. 不能正在重连
+                    // 3. 连接管理器状态正常
                     if (!_connectionManager.IsConnected)
                     {
                         Interlocked.Exchange(ref _heartbeatFailedAttempts, 0);
+                        consecutiveTimeouts = 0;
                         continue;
                     }
 
+                    // 检查是否正在重连，如果是则跳过本次心跳
+                    if (_connectionManager.IsReconnecting || _isReconnecting)
+                    {
+                        _logger?.LogDebug("正在重连中，跳过本次心跳");
+                        continue;
+                    }
+
+                    // 检查是否有未完成的心跳请求
+                    // 如果有，说明上一个心跳还未完成，跳过本次以避免请求堆积
+                    if (_pendingRequests.Values.Any(r => r.CommandId == SystemCommands.Heartbeat.Name))
+                    {
+                        _logger?.LogDebug("存在未完成的心跳请求，跳过本次心跳");
+                        consecutiveTimeouts++;
+                        
+                        // 如果连续多次跳过，说明可能存在问题
+                        if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS)
+                        {
+                            _logger?.LogWarning("连续{Count}次心跳被跳过，可能存在连接问题", consecutiveTimeouts);
+                            // 重置计数，避免过度触发
+                            consecutiveTimeouts = 0;
+                        }
+                        continue;
+                    }
+
+                    consecutiveTimeouts = 0; // 重置连续超时计数
+
+                    // 发送心跳
                     bool success = await SendHeartbeatAsync(cancellationToken).ConfigureAwait(false);
 
                     if (success)
@@ -701,6 +735,7 @@ namespace RUINORERP.UI.Network
                 }
                 catch (Exception ex)
                 {
+                    _logger?.LogError(ex, "心跳循环发生异常");
                     int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
                     if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
@@ -724,7 +759,8 @@ namespace RUINORERP.UI.Network
         }
 
         /// <summary>
-        /// 发送心跳请求（优化版 - 简化逻辑）
+        /// 发送心跳请求（优化版 - 修复请求ID重复问题）
+        /// 修复：使用唯一请求ID，避免重试时ID重复
         /// </summary>
         private async Task<bool> SendHeartbeatAsync(CancellationToken cancellationToken)
         {
@@ -738,7 +774,14 @@ namespace RUINORERP.UI.Network
 
                 if (string.IsNullOrEmpty(sessionId) || userId == 0)
                 {
-                    _logger?.LogWarning("心跳发送失败：用户未登录或会话无效");
+                    _logger?.LogDebug("心跳发送跳过：用户未登录或会话无效");
+                    return false;
+                }
+
+                // 检查连接状态，如果连接断开则不发送心跳
+                if (!_connectionManager.IsConnected)
+                {
+                    _logger?.LogDebug("心跳发送跳过：连接已断开");
                     return false;
                 }
 
@@ -749,14 +792,13 @@ namespace RUINORERP.UI.Network
                     ClientId = _socketClient.ClientID,
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
-                    // 收集客户端资源使用情况
                     ResourceUsage = CollectClientResourceUsage()
                 };
 
                 // 只在必要时添加用户操作信息以减少数据传输
                 if (curUserInfo != null)
                 {
-                    // 获取最新的静止时间，而不是使用可能已过时的值
+                    // 获取最新的静止时间
                     var latestIdleTime = MainForm.GetLastInputTime();
 
                     heartbeatRequest.UserOperationInfo = new RUINORERP.Model.UserOperationInfo
@@ -766,10 +808,10 @@ namespace RUINORERP.UI.Network
                         当前模块 = curUserInfo.当前模块,
                         当前窗体 = curUserInfo.当前窗体,
                         登录时间 = curUserInfo.登录时间,
-                        心跳数 = curUserInfo.心跳数 + 1, // 递增心跳数
+                        心跳数 = curUserInfo.心跳数 + 1,
                         客户端版本 = curUserInfo.客户端版本,
                         客户端IP = curUserInfo.客户端IP,
-                        静止时间 = latestIdleTime, // 使用最新获取的静止时间
+                        静止时间 = latestIdleTime,
                         超级用户 = curUserInfo.超级用户,
                         授权状态 = curUserInfo.授权状态,
                         操作系统 = curUserInfo.操作系统,
@@ -779,37 +821,82 @@ namespace RUINORERP.UI.Network
                     };
                 }
 
-                var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
-                    SystemCommands.Heartbeat,
-                    heartbeatRequest,
-                    cancellationToken,
-                    _heartbeatTimeoutMs);
+                // 关键修复：使用唯一请求ID，包含时间戳和计数器，确保每次请求ID都不同
+                // 这样可以避免重试时使用相同ID导致请求冲突
+                heartbeatRequest.RequestId = GenerateUniqueRequestId();
 
-                if (response != null && response.IsSuccess)
+                // 使用较短的心跳超时时间（15秒），避免长时间等待
+                // 心跳应该快速响应，如果15秒无响应，说明网络可能有问题
+                int heartbeatTimeout = Math.Min(_heartbeatTimeoutMs, 15000);
+
+                // 创建链接的取消令牌源，用于提前取消
+                using (var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
-                    _lastHeartbeatTime = DateTime.Now;
-
-                    // 更新心跳数
-                    if (curUserInfo != null)
+                    heartbeatCts.CancelAfter(heartbeatTimeout);
+                    
+                    try
                     {
-                        curUserInfo.心跳数 = curUserInfo.心跳数 + 1;
-                    }
+                        var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
+                            SystemCommands.Heartbeat,
+                            heartbeatRequest,
+                            heartbeatCts.Token,
+                            heartbeatTimeout);
 
-                    if (MainForm.Instance?.lblServerInfo != null)
-                    {
-                        MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
+                        if (response != null && response.IsSuccess)
+                        {
+                            _lastHeartbeatTime = DateTime.Now;
+
+                            // 更新心跳数
+                            if (curUserInfo != null)
+                            {
+                                curUserInfo.心跳数 = curUserInfo.心跳数 + 1;
+                            }
+
+                            if (MainForm.Instance?.lblServerInfo != null)
+                            {
+                                MainForm.Instance.lblServerInfo.Text = $"服务器信息：{_socketClient.ServerIP}:{_socketClient.ServerPort}";
+                            }
+                            return true;
+                        }
+
+                        // 如果响应不成功但连接还在，记录日志
+                        if (_connectionManager.IsConnected)
+                        {
+                            _logger?.LogDebug("心跳响应失败，但连接正常");
+                        }
+                        return false;
                     }
-                    return true;
+                    catch (OperationCanceledException) when (heartbeatCts.Token.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+                    {
+                        // 心跳超时，但外层取消令牌未取消，这是网络问题
+                        _logger?.LogDebug("心跳请求超时");
+                        return false;
+                    }
                 }
-
-                return false;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "发送心跳请求时发生异常");
+                // 减少日志级别，避免日志风暴
+                _logger?.LogDebug(ex, "发送心跳请求时发生异常");
                 return false;
             }
         }
+
+        /// <summary>
+        /// 生成唯一请求ID
+        /// 使用GUID和时间戳的组合，确保唯一性
+        /// </summary>
+        private string GenerateUniqueRequestId()
+        {
+            // 组合：客户端ID前缀 + 时间戳 + 随机数
+            // 这样可以确保在重试时生成不同的ID
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var random = Interlocked.Increment(ref _requestIdCounter);
+            return $"{_socketClient.ClientID}_{timestamp}_{random:X4}";
+        }
+        
+        // 请求ID计数器，用于生成唯一ID
+        private long _requestIdCounter = 0;
 
         /// <summary>
         /// 收集客户端资源使用情况

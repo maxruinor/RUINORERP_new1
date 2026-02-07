@@ -37,6 +37,12 @@ namespace RUINORERP.UI.ProductEAV
         private BindingSource _productBindingSource;
         private List<tb_ProdDetail> _allProducts; // 所有可用产品
         private tb_BoxRules _boxRulesEntity; // 箱规实体（用于数据绑定）
+        
+        // 3D预览缩放相关字段
+        private decimal _currentZoomLevel = 1.0m;
+        private decimal _minZoomLevel = 0.1m;
+        private decimal _maxZoomLevel = 5.0m;
+        private Point _lastMousePosition;
 
         #endregion
 
@@ -81,6 +87,9 @@ namespace RUINORERP.UI.ProductEAV
             // 初始化计算模式 - 默认场景1：已知箱规，计算产品能装多少数量
             rdoBoxToQuantity.Checked = true;
             chkMixedPack.Checked = false;
+
+            // 为预览图控件添加鼠标滚轮缩放事件
+            picPreview.MouseWheel += PicPreview_MouseWheel;
         }
 
         private async void LoadAvailableBoxes()
@@ -439,11 +448,14 @@ namespace RUINORERP.UI.ProductEAV
                 return;
             }
 
-            // 按空间利用率排序
+            // 按空间利用率排序（使用两位小数比较）
             _solutions = _solutions.OrderByDescending(s => s.UtilizationRate).ToList();
 
             _solutionBindingSource.ResetBindings(false);
             lblResultCount.Text = $"找到 {_solutions.Count} 个可用箱规 (智能容差: {smartGap:F2}cm)";
+
+            // 场景2：已知产品尺寸计算后，更新标签显示
+            lblTargetQuantity.Text = $"已知产品数量：{numTargetQuantity.Value}";
 
             // 默认选中第一行（最优方案）并显示3D预览图
             SelectFirstRowAndShowPreview();
@@ -627,6 +639,9 @@ namespace RUINORERP.UI.ProductEAV
 
             _solutionBindingSource.ResetBindings(false);
             lblResultCount.Text = $"找到 {_solutions.Count} 个摆放方案 (智能容差: {smartGap:F2}cm)";
+
+            // 场景1：已知外箱尺寸计算能装入多少个产品数量时，更新标签显示
+            lblTargetQuantity.Text = $"目标产品数量：{numTargetQuantity.Value}";
 
             // 默认选中第一行（最优方案）并显示3D预览图
             SelectFirstRowAndShowPreview();
@@ -1197,6 +1212,52 @@ namespace RUINORERP.UI.ProductEAV
 
         #endregion
 
+        #region 3D预览缩放支持
+
+        /// <summary>
+        /// 鼠标滚轮缩放预览图
+        /// </summary>
+        private void PicPreview_MouseWheel(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                // 如果按住Ctrl键，则进行缩放
+                if (Control.ModifierKeys == Keys.Control)
+                {
+                    // 记录鼠标位置
+                    _lastMousePosition = e.Location;
+
+                    // 计算新的缩放级别
+                    if (e.Delta > 0)
+                    {
+                        // 向上滚动，放大
+                        _currentZoomLevel = Math.Min(_maxZoomLevel, _currentZoomLevel * 1.1m);
+                    }
+                    else
+                    {
+                        // 向下滚动，缩小
+                        _currentZoomLevel = Math.Max(_minZoomLevel, _currentZoomLevel / 1.1m);
+                    }
+
+                    // 重新绘制预览图
+                    if (dgvResults.SelectedRows.Count > 0)
+                    {
+                        var solution = dgvResults.SelectedRows[0].DataBoundItem as PackagingSolution;
+                        if (solution != null)
+                        {
+                            DrawBoxPreview(solution);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"缩放预览图出错: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         #region UI更新方法
 
         private void UpdateCalculationMode()
@@ -1254,6 +1315,9 @@ namespace RUINORERP.UI.ProductEAV
 
             lblResultCount.Text = "";
             lblBoxCount.Text = "";
+
+            // 重置缩放级别
+            _currentZoomLevel = 1.0m;
 
             // 清空预览图
             if (picPreview.Image != null)
@@ -1321,16 +1385,19 @@ namespace RUINORERP.UI.ProductEAV
                     int maxDisplayHeight = picPreview.Height - 100;
 
                     // 选择显示方向：长度方向对应X轴，高度方向对应Y轴，宽度方向对应Z轴（深度）
-                    decimal scaleX = maxDisplayWidth / boxLength;
-                    decimal scaleY = maxDisplayHeight / boxHeight;
-                    decimal scale = Math.Min(scaleX, scaleY); // 使用最小缩放比例，确保完整显示
+                    decimal baseScaleX = maxDisplayWidth / boxLength;
+                    decimal baseScaleY = maxDisplayHeight / boxHeight;
+                    decimal baseScale = Math.Min(baseScaleX, baseScaleY); // 使用最小缩放比例，确保完整显示
+
+                    // 应用缩放级别（支持鼠标滚轮缩放）
+                    decimal finalScale = baseScale * _currentZoomLevel;
 
                     // 计算箱子的显示尺寸
-                    int displayBoxLength = (int)(boxLength * scale);
-                    int displayBoxHeight = (int)(boxHeight * scale);
-                    int displayBoxDepth = (int)(boxWidth * scale * 0.3m); // 深度按比例缩小30%用于透视效果
+                    int displayBoxLength = (int)(boxLength * finalScale);
+                    int displayBoxHeight = (int)(boxHeight * finalScale);
+                    int displayBoxDepth = (int)(boxWidth * finalScale * 0.3m); // 深度按比例缩小30%用于透视效果
 
-                    // 绘制3D箱子轮廓（透视效果）
+                    // 计算绘制偏移（居中显示）
                     int boxLeft = 50;
                     int boxTop = 50;
 
@@ -1386,32 +1453,39 @@ namespace RUINORERP.UI.ProductEAV
                     if (solution.Arrangement != null)
                     {
                         arrangementInfo = $"排列: {solution.Arrangement.LengthFit}×{solution.Arrangement.WidthFit}×{solution.Arrangement.HeightFit}\n" +
-                                          $"方向: {solution.Arrangement.Orientation}\n";
+                                           $"方向: {solution.Arrangement.Orientation}\n";
                     }
 
                     // 如果有摆放方案，按实际尺寸比例绘制产品
                     if (solution.Arrangement != null && solution.Arrangement.Layers.Count > 0)
                     {
-                        DrawLayeredProductsScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, displayBoxDepth, scale);
+                        DrawLayeredProductsScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, displayBoxDepth, finalScale);
                     }
                     else
                     {
                         // 简单绘制产品示意（按比例）
-                        DrawSimpleProductGridScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, scale, prodLength, prodWidth, prodHeight);
+                        DrawSimpleProductGridScaled(g, solution, boxLeft, boxTop, displayBoxLength, displayBoxHeight, finalScale, prodLength, prodWidth, prodHeight);
                     }
 
-                    // 显示统计信息（带图标）
+                    // 显示统计信息（带图标） - 使用两位小数格式化利用率
                     string stats = $"📊 每箱数量: {solution.QuantityPerBox}个\n" +
-                                  $"📈 空间利用率: {solution.UtilizationRate:F2}%\n" +
-                                  $"⚖️  重量状态: {solution.WeightStatus}\n" +
-                                  $"📏 箱规: {boxLength:F1}×{boxWidth:F1}×{boxHeight:F1} cm\n" +
-                                  arrangementInfo;
+                                   $"📈 空间利用率: {solution.UtilizationRate:F2}%\n" +
+                                   $"⚖️  重量状态: {solution.WeightStatus}\n" +
+                                   $"📏 箱规: {boxLength:F1}×{boxWidth:F1}×{boxHeight:F1} cm\n" +
+                                   arrangementInfo;
 
                     g.DrawString(stats,
                                new Font(Font.FontFamily, 9),
                                Brushes.Black,
                                boxLeft + displayBoxLength + 30,
                                boxTop);
+
+                    // 显示缩放级别提示
+                    g.DrawString($"缩放: {_currentZoomLevel:P0} (Ctrl+滚轮调整)",
+                               new Font(Font.FontFamily, 7, FontStyle.Italic),
+                               Brushes.Gray,
+                               5,
+                               picPreview.Height - 15);
                 }
 
                 picPreview.Image = bitmap;

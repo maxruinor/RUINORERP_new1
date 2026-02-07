@@ -139,7 +139,7 @@ namespace RUINORERP.UI.ProductEAV
             sb.AppendLine($"📏 有效空间: {effLength:F2}×{effWidth:F2}×{effHeight:F2} cm (扣除间隙)");
             sb.AppendLine($"📊 每箱容量: {solution.QuantityPerBox} 件");
             sb.AppendLine($"⚖️  总重量: {solution.TotalWeight:F0}g ({solution.WeightStatus})");
-            sb.AppendLine($"📈 空间利用率: {solution.UtilizationRate:F1}%");
+            sb.AppendLine($"📈 空间利用率: {solution.UtilizationRate:F2}%");
             sb.AppendLine();
 
             if (config.Products.Count == 1)

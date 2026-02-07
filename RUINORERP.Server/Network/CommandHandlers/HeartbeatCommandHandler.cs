@@ -173,12 +173,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 异步更新用户操作信息（不阻塞响应）
                     if (heartbeatRequest.UserOperationInfo != null)
                     {
-                        _ = Task.Run(async () =>
+                        _ = Task.Run(() =>
                         {
                             try
                             {
                                 UpdateUserInfoBatch(sessionInfo, heartbeatRequest.UserOperationInfo);
-                                await SessionService.UpdateSessionLight(sessionInfo);
+                                SessionService.UpdateSessionLight(sessionInfo);
                             }
                             catch { /* 忽略异步更新错误 */ }
                         });

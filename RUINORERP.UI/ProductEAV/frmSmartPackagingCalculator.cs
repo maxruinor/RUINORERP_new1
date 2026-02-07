@@ -364,7 +364,7 @@ namespace RUINORERP.UI.ProductEAV
         #region 核心计算逻辑
 
         /// <summary>
-        /// 根据目标数量推荐最优箱规
+        /// 场景2：根据产品目标数量和规格，计算所需箱规尺寸或推荐现有箱规
         /// </summary>
         private void CalculateBestBoxes()
         {
@@ -380,32 +380,78 @@ namespace RUINORERP.UI.ProductEAV
 
             _solutions.Clear();
 
-            // 使用用户输入的外箱尺寸创建临时箱规
-            var customBox = new tb_CartoonBox
+            // 首先计算理论最小箱子尺寸（刚好装下目标数量）
+            var minBoxSize = CalculateMinimumBoxSize(config, smartGap);
+            if (minBoxSize == null)
             {
-                CartonName = "自定义箱规",
-                Length = numBoxLength.Value,
-                Width = numBoxWidth.Value,
-                Height = numBoxHeight.Value,
-                MaxLoad = maxWeight // kg，直接使用
-            };
-
-            // 计算单个方案
-            var solution = CalculatePackagingSolution(config, customBox, smartGap, maxWeight);
-            if (solution != null)
-            {
-                solution.UsedGap = smartGap; // 记录实际使用的容差
-                _solutions.Add(solution);
+                MessageBox.Show("无法计算合适的箱规尺寸，请检查产品尺寸是否有效", "提示", 
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            // 对于单个方案,直接使用
+            // 方案1：理论最小箱规（刚好装下，空间利用率最高）
+            var minBox = new tb_CartoonBox
+            {
+                CartonName = $"理论最小箱规(刚好装下{config.TotalTargetQuantity}件)",
+                Length = minBoxSize.Length,
+                Width = minBoxSize.Width,
+                Height = minBoxSize.Height,
+                MaxLoad = maxWeight
+            };
+
+            var solution1 = CalculatePackagingSolution(config, minBox, smartGap, maxWeight);
+            if (solution1 != null)
+            {
+                solution1.UsedGap = smartGap;
+                solution1.Description = $"刚好装下所有产品（{solution1.QuantityPerBox}件/箱），空间利用率{solution1.UtilizationRate:F1}%";
+                _solutions.Add(solution1);
+            }
+
+            // 方案2：标准尺寸箱规（向上取整到标准尺寸）
+            var standardBoxSize = RoundToStandardSize(minBoxSize.Length, minBoxSize.Width, minBoxSize.Height);
+            var standardBox = new tb_CartoonBox
+            {
+                CartonName = $"标准尺寸箱规(装下{config.TotalTargetQuantity}件)",
+                Length = standardBoxSize.Length,
+                Width = standardBoxSize.Width,
+                Height = standardBoxSize.Height,
+                MaxLoad = maxWeight
+            };
+
+            // 只有标准尺寸不同于最小尺寸时才添加
+            if (standardBoxSize.Length > minBoxSize.Length || 
+                standardBoxSize.Width > minBoxSize.Width || 
+                standardBoxSize.Height > minBoxSize.Height)
+            {
+                var solution2 = CalculatePackagingSolution(config, standardBox, smartGap, maxWeight);
+                if (solution2 != null)
+                {
+                    solution2.UsedGap = smartGap;
+                    solution2.Description = $"标准尺寸，装{solution2.QuantityPerBox}件/箱，留有一定余量";
+                    _solutions.Add(solution2);
+                }
+            }
+
+            // 方案3-5：从可用箱规列表中推荐合适的现有箱规
+            if (_availableCartonBoxes != null && _availableCartonBoxes.Count > 0)
+            {
+                var existingSolutions = FindBestExistingBoxes(config, smartGap, maxWeight);
+                _solutions.AddRange(existingSolutions);
+            }
+
+            // 按空间利用率排序
+            _solutions = _solutions.OrderByDescending(s => s.UtilizationRate).ToList();
 
             _solutionBindingSource.ResetBindings(false);
             lblResultCount.Text = $"找到 {_solutions.Count} 个推荐方案 (智能容差: {smartGap:F2}cm)";
+
+            // 默认选中第一行（最优方案）并显示3D预览图
+            SelectFirstRowAndShowPreview();
         }
 
         /// <summary>
-        /// 根据选定箱规计算最大容纳数量
+        /// 场景1：根据选定箱规计算最大容纳数量
+        /// 核心算法：遍历所有6种摆放方向，计算每种方向下最多能装多少个产品
         /// </summary>
         private void CalculateMaxQuantity()
         {
@@ -426,20 +472,152 @@ namespace RUINORERP.UI.ProductEAV
                 Length = numBoxLength.Value,
                 Width = numBoxWidth.Value,
                 Height = numBoxHeight.Value,
-                MaxLoad = maxWeight // kg，直接使用
+                MaxLoad = maxWeight
             };
 
-            var solution = CalculatePackagingSolution(config, customBox, smartGap, maxWeight);
-
             _solutions.Clear();
-            if (solution != null)
+
+            // 考虑间隙后的有效尺寸
+            decimal effectiveLength = customBox.Length - 2 * smartGap;
+            decimal effectiveWidth = customBox.Width - 2 * smartGap;
+            decimal effectiveHeight = customBox.Height - 2 * smartGap;
+
+            if (effectiveLength <= 0 || effectiveWidth <= 0 || effectiveHeight <= 0)
             {
-                solution.UsedGap = smartGap; // 记录实际使用的容差
-                _solutions.Add(solution);
+                MessageBox.Show("间隙过大，无法放置产品", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (config.Products.Count == 1)
+            {
+                // 单产品模式：计算所有摆放方向，选择最优方案
+                var product = config.Products[0];
+                var arrangements = CalculateAllArrangements(product, effectiveLength, effectiveWidth, effectiveHeight);
+                
+                // 为每种摆放方向创建一个方案
+                foreach (var arrangement in arrangements.Where(a => a.TotalFit > 0).OrderByDescending(a => a.TotalFit))
+                {
+                    var solution = CreatePackagingSolution(config, customBox, arrangement, smartGap, maxWeight);
+                    if (solution != null)
+                    {
+                        solution.UsedGap = smartGap;
+                        solution.Description = $"摆放方向: {arrangement.Orientation}, 排列: {arrangement.LengthFit}×{arrangement.WidthFit}×{arrangement.HeightFit}";
+                        _solutions.Add(solution);
+                    }
+                }
+            }
+            else
+            {
+                // 混合包装模式
+                var solution = CalculatePackagingSolution(config, customBox, smartGap, maxWeight);
+                if (solution != null)
+                {
+                    solution.UsedGap = smartGap;
+                    solution.Description = $"混合包装方案，每箱装{solution.QuantityPerBox}件";
+                    _solutions.Add(solution);
+                }
             }
 
             _solutionBindingSource.ResetBindings(false);
-            lblResultCount.Text = $"计算完成 (智能容差: {smartGap:F2}cm)";
+            lblResultCount.Text = $"找到 {_solutions.Count} 个摆放方案 (智能容差: {smartGap:F2}cm)";
+
+            // 默认选中第一行（最优方案）并显示3D预览图
+            SelectFirstRowAndShowPreview();
+        }
+
+        /// <summary>
+        /// 默认选中第一行并显示3D预览图
+        /// </summary>
+        private void SelectFirstRowAndShowPreview()
+        {
+            if (dgvResults.Rows.Count > 0)
+            {
+                // 清除之前的选中状态
+                dgvResults.ClearSelection();
+                // 选中第一行（最优方案）
+                dgvResults.Rows[0].Selected = true;
+                // 将第一行滚动到可视区域
+                dgvResults.FirstDisplayedScrollingRowIndex = 0;
+                
+                // 手动触发预览图绘制
+                var solution = dgvResults.Rows[0].DataBoundItem as PackagingSolution;
+                if (solution != null)
+                {
+                    DrawBoxPreview(solution);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 计算单产品的所有摆放方向
+        /// </summary>
+        private List<BoxArrangement> CalculateAllArrangements(ProductInfo product, decimal effLength, decimal effWidth, decimal effHeight)
+        {
+            var arrangements = new List<BoxArrangement>();
+            
+            // 6种基本摆放方向
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "原始方向 (长×宽×高)"));
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "长宽交换 (宽×长×高)", true, false, false));
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "长高交换 (高×宽×长)", false, true, false));
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "宽高交换 (长×高×宽)", false, false, true));
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "长宽+长高 (宽×高×长)", true, true, false));
+            arrangements.Add(CalculateArrangement(product, effLength, effWidth, effHeight, "全交换 (高×长×宽)", true, false, true));
+            
+            return arrangements;
+        }
+
+        /// <summary>
+        /// 根据摆放方案创建包装解决方案
+        /// </summary>
+        private PackagingSolution CreatePackagingSolution(MixedPackConfiguration config, tb_CartoonBox box, 
+            BoxArrangement arrangement, decimal gap, decimal maxWeight)
+        {
+            try
+            {
+                var solution = new PackagingSolution
+                {
+                    BoxRule = box,
+                    Configuration = config,
+                    Arrangement = arrangement,
+                    QuantityPerBox = arrangement.TotalFit
+                };
+
+                // 考虑间隙后的有效尺寸
+                decimal effectiveLength = box.Length - 2 * gap;
+                decimal effectiveWidth = box.Width - 2 * gap;
+                decimal effectiveHeight = box.Height - 2 * gap;
+
+                solution.BoxVolume = box.Length * box.Width * box.Height;
+                solution.EffectiveVolume = effectiveLength * effectiveWidth * effectiveHeight;
+                
+                // 计算实际占用体积（所有产品体积之和）
+                decimal totalProductVolume = config.Products.Sum(p => p.Volume) * arrangement.TotalFit;
+                solution.OccupiedVolume = totalProductVolume;
+                solution.UtilizationRate = solution.EffectiveVolume > 0 ? 
+                    (solution.OccupiedVolume / solution.EffectiveVolume * 100) : 0;
+                
+                // 剩余空间
+                solution.RemainingSpace = solution.EffectiveVolume - solution.OccupiedVolume;
+
+                // 计算重量
+                decimal totalProductWeight = config.Products.Sum(p => p.Weight) * arrangement.TotalFit;
+                solution.TotalWeight = totalProductWeight;
+                solution.WeightExceeded = solution.TotalWeight > maxWeight;
+                solution.WeightStatus = solution.WeightExceeded ?
+                    $"超重({solution.TotalWeight:F0}g/{maxWeight:F0}g)" :
+                    $"安全({solution.TotalWeight:F0}g/{maxWeight:F0}g)";
+
+                // 生成包装指导
+                GeneratePackingInstructions(solution, config, box, effectiveLength, effectiveWidth, effectiveHeight);
+
+                return solution;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"创建包装方案时出错: {ex.Message}");
+                return null;
+            }
+ 
         }
 
         /// <summary>
@@ -728,14 +906,177 @@ namespace RUINORERP.UI.ProductEAV
                 height = temp;
             }
 
+            // 防止除以零：如果产品尺寸为0或负数，返回0
+            if (length <= 0 || width <= 0 || height <= 0)
+            {
+                return new BoxArrangement
+                {
+                    Orientation = orientation,
+                    LengthFit = 0,
+                    WidthFit = 0,
+                    HeightFit = 0,
+                    TotalFit = 0
+                };
+            }
+
+            int lengthFit = (int)(effLength / length);
+            int widthFit = (int)(effWidth / width);
+            int heightFit = (int)(effHeight / height);
+
             return new BoxArrangement
             {
                 Orientation = orientation,
-                LengthFit = (int)(effLength / length),
-                WidthFit = (int)(effWidth / width),
-                HeightFit = (int)(effHeight / height),
-                TotalFit = (int)(effLength / length) * (int)(effWidth / width) * (int)(effHeight / height)
+                LengthFit = lengthFit,
+                WidthFit = widthFit,
+                HeightFit = heightFit,
+                TotalFit = lengthFit * widthFit * heightFit
             };
+        }
+
+        /// <summary>
+        /// 计算刚好装下目标数量产品的最小箱子尺寸（场景2核心算法）
+        /// 通过尝试所有可能的摆放方向，找到所需的最小体积
+        /// </summary>
+        private BoxDimensions CalculateMinimumBoxSize(MixedPackConfiguration config, decimal gap)
+        {
+            if (config.Products.Count == 0) return null;
+
+            // 获取主产品（体积最大的产品）
+            var mainProduct = config.Products.OrderByDescending(p => p.Volume).First();
+            int targetQuantity = config.TotalTargetQuantity;
+
+            // 计算所有可能的层数和每层数量组合
+            var possibleConfigs = new List<BoxDimensions>();
+
+            // 遍历所有可能的摆放方向
+            var orientations = new[]
+            {
+                (mainProduct.Length, mainProduct.Width, mainProduct.Height, "原始方向"),
+                (mainProduct.Width, mainProduct.Length, mainProduct.Height, "长宽交换"),
+                (mainProduct.Length, mainProduct.Height, mainProduct.Width, "长高交换"),
+                (mainProduct.Height, mainProduct.Width, mainProduct.Length, "宽高交换"),
+                (mainProduct.Width, mainProduct.Height, mainProduct.Length, "长宽+长高交换"),
+                (mainProduct.Height, mainProduct.Length, mainProduct.Width, "全交换")
+            };
+
+            foreach (var (prodLen, prodWid, prodHei, orientName) in orientations)
+            {
+                // 尝试不同的每层摆放数量（从1到目标数量）
+                for (int itemsPerLayer = 1; itemsPerLayer <= Math.Min(targetQuantity, 100); itemsPerLayer++)
+                {
+                    // 计算需要的层数
+                    int layers = (int)Math.Ceiling((decimal)targetQuantity / itemsPerLayer);
+
+                    // 计算每层需要的行列数（尽量接近正方形排列以获得更好的稳定性）
+                    int cols = (int)Math.Ceiling(Math.Sqrt(itemsPerLayer));
+                    int rows = (int)Math.Ceiling((decimal)itemsPerLayer / cols);
+
+                    // 计算所需箱子尺寸（加上间隙和箱壁厚度）
+                    decimal boxLength = cols * prodLen + 2 * gap + 2 * gap; // 间隙+箱壁
+                    decimal boxWidth = rows * prodWid + 2 * gap + 2 * gap;
+                    decimal boxHeight = layers * prodHei + 2 * gap + 2 * gap;
+
+                    // 确保尺寸有效
+                    if (boxLength <= 0 || boxWidth <= 0 || boxHeight <= 0)
+                        continue;
+
+                    // 计算空间利用率
+                    decimal productVolume = mainProduct.Volume * targetQuantity;
+                    decimal boxVolume = boxLength * boxWidth * boxHeight;
+                    decimal utilization = productVolume / boxVolume * 100;
+
+                    possibleConfigs.Add(new BoxDimensions
+                    {
+                        Length = boxLength,
+                        Width = boxWidth,
+                        Height = boxHeight,
+                        UtilizationRate = utilization,
+                        ItemsPerLayer = itemsPerLayer,
+                        Layers = layers,
+                        Orientation = orientName
+                    });
+                }
+            }
+
+            // 选择空间利用率最高的方案
+            return possibleConfigs
+                .Where(c => c.UtilizationRate > 30) // 过滤掉利用率太低的方案
+                .OrderByDescending(c => c.UtilizationRate)
+                .FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 将尺寸向上取整到标准尺寸（便于实际采购）
+        /// 使用常见的标准箱规尺寸：20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80, 90, 100, 120 cm
+        /// </summary>
+        private BoxDimensions RoundToStandardSize(decimal length, decimal width, decimal height)
+        {
+            // 标准尺寸序列
+            var standardSizes = new[] { 20m, 25m, 30m, 35m, 40m, 45m, 50m, 55m, 60m, 70m, 80m, 90m, 100m, 120m };
+
+            decimal RoundUp(decimal value)
+            {
+                foreach (var size in standardSizes)
+                {
+                    if (value <= size)
+                        return size;
+                }
+                return standardSizes.Last(); // 如果超过最大标准尺寸，返回最大尺寸
+            }
+
+            // 将三个尺寸向上取整到标准尺寸
+            decimal roundedLength = RoundUp(length);
+            decimal roundedWidth = RoundUp(width);
+            decimal roundedHeight = RoundUp(height);
+
+            return new BoxDimensions
+            {
+                Length = roundedLength,
+                Width = roundedWidth,
+                Height = roundedHeight
+            };
+        }
+
+        /// <summary>
+        /// 从现有箱规列表中找出能装下所有产品的最佳方案
+        /// </summary>
+        private List<PackagingSolution> FindBestExistingBoxes(MixedPackConfiguration config, decimal gap, decimal maxWeight)
+        {
+            var solutions = new List<PackagingSolution>();
+            int targetQuantity = config.TotalTargetQuantity;
+
+            foreach (var box in _availableCartonBoxes)
+            {
+                // 跳过无效的箱规
+                if (box.Length <= 0 || box.Width <= 0 || box.Height <= 0)
+                    continue;
+
+                // 计算该箱规的容纳数量
+                var solution = CalculatePackagingSolution(config, box, gap, maxWeight);
+                if (solution == null || solution.QuantityPerBox == 0)
+                    continue;
+
+                // 只保留能装下至少目标数量的箱规
+                if (solution.QuantityPerBox >= targetQuantity)
+                {
+                    solution.UsedGap = gap;
+                    solution.Description = $"现有箱规：{box.CartonName}，每箱装{solution.QuantityPerBox}件，刚好装下所有产品";
+                    solutions.Add(solution);
+                }
+                else if (solution.QuantityPerBox >= targetQuantity * 0.8m) // 也能考虑装下80%以上的情况
+                {
+                    solution.UsedGap = gap;
+                    int requiredBoxes = (int)Math.Ceiling((decimal)targetQuantity / solution.QuantityPerBox);
+                    solution.Description = $"现有箱规：{box.CartonName}，每箱装{solution.QuantityPerBox}件，需要{requiredBoxes}箱";
+                    solutions.Add(solution);
+                }
+            }
+
+            // 按空间利用率排序，取前3个最佳方案
+            return solutions
+                .OrderByDescending(s => s.UtilizationRate)
+                .Take(3)
+                .ToList();
         }
 
         #endregion
@@ -991,25 +1332,49 @@ namespace RUINORERP.UI.ProductEAV
             int displayProdHeight;
 
             // 根据实际摆放方向计算显示尺寸
-            if (orientation.Contains("长宽交换"))
+            // 6种摆放方向对应的尺寸映射：
+            // 1. 原始方向: 长×宽×高
+            // 2. 长宽交换: 宽×长×高
+            // 3. 长高交换: 高×宽×长
+            // 4. 宽高交换: 长×高×宽
+            // 5. 长宽+长高: 宽×高×长
+            // 6. 全交换: 高×长×宽
+            if (orientation.Contains("长宽交换") && !orientation.Contains("长高") && !orientation.Contains("全交换"))
             {
+                // 长宽交换 (宽×长×高)
                 displayProdLength = (int)(prodWidth * scale);
                 displayProdWidth = (int)(prodLength * scale * 0.3m);
                 displayProdHeight = (int)(prodHeight * scale);
             }
-            else if (orientation.Contains("竖直摆放"))
+            else if (orientation.Contains("长高交换"))
             {
+                // 长高交换 (高×宽×长)
                 displayProdLength = (int)(prodHeight * scale);
                 displayProdWidth = (int)(prodWidth * scale * 0.3m);
                 displayProdHeight = (int)(prodLength * scale);
             }
-            else if (orientation.Contains("侧放"))
+            else if (orientation.Contains("宽高交换"))
             {
+                // 宽高交换 (长×高×宽)
                 displayProdLength = (int)(prodLength * scale);
                 displayProdWidth = (int)(prodHeight * scale * 0.3m);
                 displayProdHeight = (int)(prodWidth * scale);
             }
-            else // 原始方向
+            else if (orientation.Contains("长宽+长高"))
+            {
+                // 长宽+长高 (宽×高×长)
+                displayProdLength = (int)(prodWidth * scale);
+                displayProdWidth = (int)(prodHeight * scale * 0.3m);
+                displayProdHeight = (int)(prodLength * scale);
+            }
+            else if (orientation.Contains("全交换"))
+            {
+                // 全交换 (高×长×宽)
+                displayProdLength = (int)(prodHeight * scale);
+                displayProdWidth = (int)(prodLength * scale * 0.3m);
+                displayProdHeight = (int)(prodWidth * scale);
+            }
+            else // 原始方向 (长×宽×高)
             {
                 displayProdLength = (int)(prodLength * scale);
                 displayProdWidth = (int)(prodWidth * scale * 0.3m);
@@ -1346,6 +1711,7 @@ namespace RUINORERP.UI.ProductEAV
             public Dictionary<long, int> ProductQuantities { get; set; } = new Dictionary<long, int>();
             public decimal TotalWeight { get; set; }
             public decimal TotalVolume { get; set; }
+            public int TotalTargetQuantity => Products.Sum(p => p.TargetQuantity);
         }
 
         /// <summary>
@@ -1370,6 +1736,22 @@ namespace RUINORERP.UI.ProductEAV
             public string PackingInstructions { get; set; }
             public List<PackingStep> PackingSteps { get; set; }
             public decimal UsedGap { get; set; }
+            public string Description { get; set; } // 方案描述
+        }
+
+        /// <summary>
+        /// 箱子尺寸（用于场景2计算所需箱规）
+        /// </summary>
+        public class BoxDimensions
+        {
+            public decimal Length { get; set; }
+            public decimal Width { get; set; }
+            public decimal Height { get; set; }
+            public decimal Volume => Length * Width * Height;
+            public decimal UtilizationRate { get; set; }
+            public int ItemsPerLayer { get; set; }
+            public int Layers { get; set; }
+            public string Orientation { get; set; }
         }
 
         /// <summary>

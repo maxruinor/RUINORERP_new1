@@ -880,17 +880,17 @@ namespace RUINORERP.UI.ProductEAV
             this.tableLayoutPanel2.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 2;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 32.64402F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 67.35598F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20.08863F));
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 79.91138F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(893, 677);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // picPreview
             // 
             this.picPreview.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.picPreview.Location = new System.Drawing.Point(3, 223);
+            this.picPreview.Location = new System.Drawing.Point(3, 139);
             this.picPreview.Name = "picPreview";
-            this.picPreview.Size = new System.Drawing.Size(887, 451);
+            this.picPreview.Size = new System.Drawing.Size(887, 535);
             this.picPreview.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picPreview.TabIndex = 1;
             this.picPreview.TabStop = false;
@@ -917,7 +917,7 @@ namespace RUINORERP.UI.ProductEAV
             this.dgvResults.ReadOnly = true;
             this.dgvResults.RowHeadersWidth = 51;
             this.dgvResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvResults.Size = new System.Drawing.Size(887, 214);
+            this.dgvResults.Size = new System.Drawing.Size(887, 130);
             this.dgvResults.TabIndex = 0;
             this.dgvResults.SelectionChanged += new System.EventHandler(this.dgvResults_SelectionChanged);
             // 

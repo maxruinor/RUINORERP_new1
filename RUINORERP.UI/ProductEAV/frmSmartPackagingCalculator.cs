@@ -86,8 +86,6 @@ namespace RUINORERP.UI.ProductEAV
 
             // 初始化计算模式 - 默认场景1：已知箱规，计算产品能装多少数量
             rdoBoxToQuantity.Checked = true;
-            chkMixedPack.Checked = false;
-
             // 为预览图控件添加鼠标滚轮缩放事件
             picPreview.MouseWheel += PicPreview_MouseWheel;
         }
@@ -197,14 +195,7 @@ namespace RUINORERP.UI.ProductEAV
                     queryFilterPacking.GetFilterExpression<tb_Packing>(),
                     true);
 
-                // 使用DataBindingHelper标准化绑定产品数据2
-                DataBindingHelper.BindData4Cmb<tb_Packing>(
-                    _boxRulesEntity,
-                    t => t.Pack_ID,
-                    t => t.PackagingName,
-                    cmbProductSelect2,
-                    queryFilterPacking.GetFilterExpression<tb_Packing>(),
-                    true);
+                
 
                 // 初始化过滤控件（支持查询按钮功能）
                 DataBindingHelper.InitFilterForControlByExp<tb_Packing>(
@@ -213,15 +204,10 @@ namespace RUINORERP.UI.ProductEAV
                     c => c.PackagingName,
                     queryFilterPacking);
 
-                DataBindingHelper.InitFilterForControlByExp<tb_Packing>(
-                    _boxRulesEntity,
-                    cmbProductSelect2,
-                    c => c.PackagingName,
-                    queryFilterPacking);
+                
 
                 // 添加选择事件处理
                 cmbProductSelect1.SelectedIndexChanged += cmbProductSelect1_SelectedIndexChanged;
-                cmbProductSelect2.SelectedIndexChanged += cmbProductSelect2_SelectedIndexChanged;
             }
             catch (Exception ex)
             {
@@ -354,19 +340,7 @@ namespace RUINORERP.UI.ProductEAV
             }
         }
 
-        private void cmbProductSelect2_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (cmbProductSelect2.SelectedItem is tb_Packing packing)
-            {
-                if (packing.Pack_ID > 0)
-                {
-                    numProductLength2.Value = packing.Length;
-                    numProductWidth2.Value = packing.Width;
-                    numProductHeight2.Value = packing.Height;
-                    numProductWeight2.Value = packing.NetWeight > 0 ? packing.NetWeight : 5000m;
-                }
-            }
-        }
+       
 
         #endregion
 
@@ -757,28 +731,7 @@ namespace RUINORERP.UI.ProductEAV
         private MixedPackConfiguration GetPackagingConfiguration()
         {
             var config = new MixedPackConfiguration();
-
-            if (chkMixedPack.Checked)
-            {
-                // 混合包装模式 - 使用两个成品包装信息
-                var product1 = CreateProductInfo(cmbProductSelect1, numProductLength1, numProductWidth1, numProductHeight1, numProductWeight1, 100);
-                var product2 = CreateProductInfo(cmbProductSelect2, numProductLength2, numProductWidth2, numProductHeight2, numProductWeight2, 100);
-
-                if (product1 == null && product2 == null)
-                {
-                    MessageBox.Show("请至少选择一个成品", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return null;
-                }
-
-                config.Products.Clear();
-                if (product1 != null) config.Products.Add(product1);
-                if (product2 != null) config.Products.Add(product2);
-
-                config.TotalWeight = config.Products.Sum(p => p.Weight * p.TargetQuantity);
-                config.TotalVolume = config.Products.Sum(p => p.Volume * p.TargetQuantity);
-            }
-            else
-            {
+ 
                 // 单产品模式 - 使用成品包装信息1
                 var productInfo = CreateProductInfo(cmbProductSelect1, numProductLength1, numProductWidth1, numProductHeight1, numProductWeight1, (int)numTargetQuantity.Value);
 
@@ -792,8 +745,7 @@ namespace RUINORERP.UI.ProductEAV
                 config.Products.Add(productInfo);
                 config.TotalWeight = productInfo.Weight * productInfo.TargetQuantity;
                 config.TotalVolume = productInfo.Volume * productInfo.TargetQuantity;
-            }
-
+         
             return config;
         }
 
@@ -1273,34 +1225,8 @@ namespace RUINORERP.UI.ProductEAV
                 lblModeDescription.Text = "选择箱规，系统将计算该箱规最多能装多少产品";
             }
 
-            UpdateMixedPackVisibility();
         }
-
-        private void UpdateMixedPackVisibility()
-        {
-            bool isMixed = chkMixedPack.Checked;
-
-            // 单产品模式控件 - 隐藏
-            lblTargetQuantity.Visible = !isMixed;
-            numTargetQuantity.Visible = !isMixed;
-
-            // 混合包装模式控件 - 显示两个成品包装信息GroupBox
-            grpProductInfo2.Visible = isMixed;
-
-            if (isMixed)
-            {
-                lblModeDescription.Text = "输入两种成品信息，计算混合包装方案";
-            }
-            else
-            {
-                lblModeDescription.Text = "输入成品数量，推荐最优箱规";
-            }
-        }
-
-        private void chkMixedPack_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateMixedPackVisibility();
-        }
+ 
 
         private void ResetForm()
         {
@@ -1308,7 +1234,6 @@ namespace RUINORERP.UI.ProductEAV
             numBoxWeight.Value = 50m; // kg，默认值
             numTargetQuantity.Value = 100;
             rdoQuantityToBox.Checked = true;
-            chkMixedPack.Checked = false;
 
             _solutions.Clear();
             _solutionBindingSource.ResetBindings(false);

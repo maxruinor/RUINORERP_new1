@@ -31,17 +31,6 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonGroupBox1 = new Krypton.Toolkit.KryptonGroupBox();
-            this.grpProductInfo2 = new Krypton.Toolkit.KryptonGroupBox();
-            this.numProductHeight2 = new Krypton.Toolkit.KryptonNumericUpDown();
-            this.lblProductHeight2 = new Krypton.Toolkit.KryptonLabel();
-            this.numProductWeight2 = new Krypton.Toolkit.KryptonNumericUpDown();
-            this.lblProductWeight2 = new Krypton.Toolkit.KryptonLabel();
-            this.numProductWidth2 = new Krypton.Toolkit.KryptonNumericUpDown();
-            this.lblProductWidth2 = new Krypton.Toolkit.KryptonLabel();
-            this.numProductLength2 = new Krypton.Toolkit.KryptonNumericUpDown();
-            this.lblProductLength2 = new Krypton.Toolkit.KryptonLabel();
-            this.cmbProductSelect2 = new Krypton.Toolkit.KryptonComboBox();
-            this.lblProductSelect2 = new Krypton.Toolkit.KryptonLabel();
             this.grpProductInfo1 = new Krypton.Toolkit.KryptonGroupBox();
             this.numProductHeight1 = new Krypton.Toolkit.KryptonNumericUpDown();
             this.lblProductHeight1 = new Krypton.Toolkit.KryptonLabel();
@@ -69,7 +58,6 @@ namespace RUINORERP.UI.ProductEAV
             this.lblGap = new Krypton.Toolkit.KryptonLabel();
             this.numTargetQuantity = new Krypton.Toolkit.KryptonNumericUpDown();
             this.lblTargetQuantity = new Krypton.Toolkit.KryptonLabel();
-            this.chkMixedPack = new Krypton.Toolkit.KryptonCheckBox();
             this.rdoBoxToQuantity = new Krypton.Toolkit.KryptonRadioButton();
             this.rdoQuantityToBox = new Krypton.Toolkit.KryptonRadioButton();
             this.lblModeDescription = new Krypton.Toolkit.KryptonLabel();
@@ -102,11 +90,6 @@ namespace RUINORERP.UI.ProductEAV
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1.Panel)).BeginInit();
             this.kryptonGroupBox1.Panel.SuspendLayout();
             this.kryptonGroupBox1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo2.Panel)).BeginInit();
-            this.grpProductInfo2.Panel.SuspendLayout();
-            this.grpProductInfo2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProductSelect2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo1.Panel)).BeginInit();
             this.grpProductInfo1.Panel.SuspendLayout();
@@ -167,206 +150,18 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // kryptonGroupBox1.Panel
             // 
-            this.kryptonGroupBox1.Panel.Controls.Add(this.grpProductInfo2);
             this.kryptonGroupBox1.Panel.Controls.Add(this.grpProductInfo1);
             this.kryptonGroupBox1.Panel.Controls.Add(this.grpBoxInfo);
             this.kryptonGroupBox1.Panel.Controls.Add(this.numGap);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblGap);
             this.kryptonGroupBox1.Panel.Controls.Add(this.numTargetQuantity);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblTargetQuantity);
-            this.kryptonGroupBox1.Panel.Controls.Add(this.chkMixedPack);
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoBoxToQuantity);
             this.kryptonGroupBox1.Panel.Controls.Add(this.rdoQuantityToBox);
             this.kryptonGroupBox1.Panel.Controls.Add(this.lblModeDescription);
             this.kryptonGroupBox1.Size = new System.Drawing.Size(373, 703);
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "参数设置";
-            // 
-            // grpProductInfo2
-            // 
-            this.grpProductInfo2.Location = new System.Drawing.Point(12, 470);
-            this.grpProductInfo2.Name = "grpProductInfo2";
-            // 
-            // grpProductInfo2.Panel
-            // 
-            this.grpProductInfo2.Panel.Controls.Add(this.numProductHeight2);
-            this.grpProductInfo2.Panel.Controls.Add(this.lblProductHeight2);
-            this.grpProductInfo2.Panel.Controls.Add(this.numProductWeight2);
-            this.grpProductInfo2.Panel.Controls.Add(this.lblProductWeight2);
-            this.grpProductInfo2.Panel.Controls.Add(this.numProductWidth2);
-            this.grpProductInfo2.Panel.Controls.Add(this.lblProductWidth2);
-            this.grpProductInfo2.Panel.Controls.Add(this.numProductLength2);
-            this.grpProductInfo2.Panel.Controls.Add(this.lblProductLength2);
-            this.grpProductInfo2.Panel.Controls.Add(this.cmbProductSelect2);
-            this.grpProductInfo2.Panel.Controls.Add(this.lblProductSelect2);
-            this.grpProductInfo2.Size = new System.Drawing.Size(356, 168);
-            this.grpProductInfo2.TabIndex = 8;
-            this.grpProductInfo2.Values.Heading = "成品包装信息2";
-            this.grpProductInfo2.Visible = false;
-            // 
-            // numProductHeight2
-            // 
-            this.numProductHeight2.AllowDecimals = true;
-            this.numProductHeight2.DecimalPlaces = 2;
-            this.numProductHeight2.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numProductHeight2.Location = new System.Drawing.Point(79, 55);
-            this.numProductHeight2.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.numProductHeight2.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.numProductHeight2.Name = "numProductHeight2";
-            this.numProductHeight2.Size = new System.Drawing.Size(80, 22);
-            this.numProductHeight2.TabIndex = 9;
-            this.numProductHeight2.Value = new decimal(new int[] {
-            15,
-            0,
-            0,
-            0});
-            // 
-            // lblProductHeight2
-            // 
-            this.lblProductHeight2.Location = new System.Drawing.Point(7, 81);
-            this.lblProductHeight2.Name = "lblProductHeight2";
-            this.lblProductHeight2.Size = new System.Drawing.Size(63, 20);
-            this.lblProductHeight2.TabIndex = 8;
-            this.lblProductHeight2.Values.Text = "高度(cm):";
-            // 
-            // numProductWeight2
-            // 
-            this.numProductWeight2.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numProductWeight2.Location = new System.Drawing.Point(80, 112);
-            this.numProductWeight2.Maximum = new decimal(new int[] {
-            100000,
-            0,
-            0,
-            0});
-            this.numProductWeight2.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.numProductWeight2.Name = "numProductWeight2";
-            this.numProductWeight2.Size = new System.Drawing.Size(80, 22);
-            this.numProductWeight2.TabIndex = 7;
-            this.numProductWeight2.Value = new decimal(new int[] {
-            5000,
-            0,
-            0,
-            0});
-            // 
-            // lblProductWeight2
-            // 
-            this.lblProductWeight2.Location = new System.Drawing.Point(8, 109);
-            this.lblProductWeight2.Name = "lblProductWeight2";
-            this.lblProductWeight2.Size = new System.Drawing.Size(54, 20);
-            this.lblProductWeight2.TabIndex = 6;
-            this.lblProductWeight2.Values.Text = "重量(g):";
-            // 
-            // numProductWidth2
-            // 
-            this.numProductWidth2.AllowDecimals = true;
-            this.numProductWidth2.DecimalPlaces = 2;
-            this.numProductWidth2.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numProductWidth2.Location = new System.Drawing.Point(80, 83);
-            this.numProductWidth2.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.numProductWidth2.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.numProductWidth2.Name = "numProductWidth2";
-            this.numProductWidth2.Size = new System.Drawing.Size(80, 22);
-            this.numProductWidth2.TabIndex = 5;
-            this.numProductWidth2.Value = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
-            // 
-            // lblProductWidth2
-            // 
-            this.lblProductWidth2.Location = new System.Drawing.Point(7, 55);
-            this.lblProductWidth2.Name = "lblProductWidth2";
-            this.lblProductWidth2.Size = new System.Drawing.Size(63, 20);
-            this.lblProductWidth2.TabIndex = 4;
-            this.lblProductWidth2.Values.Text = "宽度(cm):";
-            // 
-            // numProductLength2
-            // 
-            this.numProductLength2.AllowDecimals = true;
-            this.numProductLength2.DecimalPlaces = 2;
-            this.numProductLength2.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numProductLength2.Location = new System.Drawing.Point(80, 30);
-            this.numProductLength2.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.numProductLength2.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.numProductLength2.Name = "numProductLength2";
-            this.numProductLength2.Size = new System.Drawing.Size(80, 22);
-            this.numProductLength2.TabIndex = 3;
-            this.numProductLength2.Value = new decimal(new int[] {
-            30,
-            0,
-            0,
-            0});
-            // 
-            // lblProductLength2
-            // 
-            this.lblProductLength2.Location = new System.Drawing.Point(8, 26);
-            this.lblProductLength2.Name = "lblProductLength2";
-            this.lblProductLength2.Size = new System.Drawing.Size(63, 20);
-            this.lblProductLength2.TabIndex = 2;
-            this.lblProductLength2.Values.Text = "长度(cm):";
-            // 
-            // cmbProductSelect2
-            // 
-            this.cmbProductSelect2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbProductSelect2.DropDownWidth = 200;
-            this.cmbProductSelect2.IntegralHeight = false;
-            this.cmbProductSelect2.Location = new System.Drawing.Point(80, 4);
-            this.cmbProductSelect2.Name = "cmbProductSelect2";
-            this.cmbProductSelect2.Size = new System.Drawing.Size(200, 21);
-            this.cmbProductSelect2.TabIndex = 1;
-            // 
-            // lblProductSelect2
-            // 
-            this.lblProductSelect2.Location = new System.Drawing.Point(8, 4);
-            this.lblProductSelect2.Name = "lblProductSelect2";
-            this.lblProductSelect2.Size = new System.Drawing.Size(39, 20);
-            this.lblProductSelect2.TabIndex = 0;
-            this.lblProductSelect2.Values.Text = "选择:";
             // 
             // grpProductInfo1
             // 
@@ -821,15 +616,6 @@ namespace RUINORERP.UI.ProductEAV
             this.lblTargetQuantity.TabIndex = 2;
             this.lblTargetQuantity.Values.Text = "已知产品数量:";
             // 
-            // chkMixedPack
-            // 
-            this.chkMixedPack.Location = new System.Drawing.Point(12, 444);
-            this.chkMixedPack.Name = "chkMixedPack";
-            this.chkMixedPack.Size = new System.Drawing.Size(101, 20);
-            this.chkMixedPack.TabIndex = 1;
-            this.chkMixedPack.Values.Text = "混合包装模式";
-            this.chkMixedPack.CheckedChanged += new System.EventHandler(this.chkMixedPack_CheckedChanged);
-            // 
             // rdoBoxToQuantity
             // 
             this.rdoBoxToQuantity.Location = new System.Drawing.Point(18, 31);
@@ -1063,12 +849,6 @@ namespace RUINORERP.UI.ProductEAV
             this.kryptonGroupBox1.Panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonGroupBox1)).EndInit();
             this.kryptonGroupBox1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo2.Panel)).EndInit();
-            this.grpProductInfo2.Panel.ResumeLayout(false);
-            this.grpProductInfo2.Panel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo2)).EndInit();
-            this.grpProductInfo2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbProductSelect2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.grpProductInfo1.Panel)).EndInit();
             this.grpProductInfo1.Panel.ResumeLayout(false);
             this.grpProductInfo1.Panel.PerformLayout();
@@ -1102,7 +882,6 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonSplitContainer kryptonSplitContainer1;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox1;
         private Krypton.Toolkit.KryptonRadioButton rdoBoxToQuantity;
-        private Krypton.Toolkit.KryptonCheckBox chkMixedPack;
         private Krypton.Toolkit.KryptonLabel lblTargetQuantity;
         private Krypton.Toolkit.KryptonNumericUpDown numTargetQuantity;
         private Krypton.Toolkit.KryptonLabel lblGap;
@@ -1130,17 +909,6 @@ namespace RUINORERP.UI.ProductEAV
         private Krypton.Toolkit.KryptonNumericUpDown numProductHeight1;
         private Krypton.Toolkit.KryptonLabel lblProductWeight1;
         private Krypton.Toolkit.KryptonNumericUpDown numProductWeight1;
-        private Krypton.Toolkit.KryptonGroupBox grpProductInfo2;
-        private Krypton.Toolkit.KryptonLabel lblProductSelect2;
-        private Krypton.Toolkit.KryptonComboBox cmbProductSelect2;
-        private Krypton.Toolkit.KryptonLabel lblProductLength2;
-        private Krypton.Toolkit.KryptonNumericUpDown numProductLength2;
-        private Krypton.Toolkit.KryptonLabel lblProductWidth2;
-        private Krypton.Toolkit.KryptonNumericUpDown numProductWidth2;
-        private Krypton.Toolkit.KryptonLabel lblProductHeight2;
-        private Krypton.Toolkit.KryptonNumericUpDown numProductHeight2;
-        private Krypton.Toolkit.KryptonLabel lblProductWeight2;
-        private Krypton.Toolkit.KryptonNumericUpDown numProductWeight2;
         private Krypton.Toolkit.KryptonGroupBox kryptonGroupBox2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private Krypton.Toolkit.KryptonDataGridView dgvResults;

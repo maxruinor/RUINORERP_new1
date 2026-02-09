@@ -46,6 +46,8 @@ namespace SourceGrid.Cells.Views
         private bool _enableAsyncLoading = true;
         private bool _enableMemoryOptimization = true;
 
+
+
         /// <summary>
         /// 是否启用异步加载
         /// </summary>
@@ -253,14 +255,18 @@ namespace SourceGrid.Cells.Views
             {
                 if (GridImage != null)
                 {
-                    graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                    graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //1Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
                 }
                 else
                 {
                     if (OnLoadImage != null)
                     {
                         OnLoadImage(GridImage, null);
-                        graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                        // 确保GridImage不为null后再绘制
+                        if (GridImage != null)
+                        {
+                            graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                        }
                     }
                 }
             }

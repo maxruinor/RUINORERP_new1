@@ -62,7 +62,7 @@ namespace RUINORERP.UI.PSI.SAL
 {
 
     /// <summary>
-    /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。
+    /// 销售订单时：有运费外币，总金额外币，订单外币。反而出库时不用这么多。外币只是用于记账。出库时只要根据本币和外币及汇率。生成应收时自动算出来。1
     /// </summary>
     [MenuAttrAssemblyInfo("销售订单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.销售管理, BizType.销售订单)]
     public partial class UCSaleOrder : BaseBillEditGeneric<tb_SaleOrder, tb_SaleOrderDetail>, IPublicEntityObject
@@ -88,15 +88,10 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
         }
-
  
-
-
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
-
-
-
+ 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -771,8 +766,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
 
 
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTransAmount);
-            //listCols.SetCol_Summary<tb_SaleOrderDetail>(c => c.SubtotalTaxAmount);
+ 
 
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOrderDetail).Name + "Processor");

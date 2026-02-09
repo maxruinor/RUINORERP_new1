@@ -67,8 +67,6 @@ namespace RUINORERP.UI.BI
             //有默认值
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_PayeeInfo>(entity, t => t.IsDefault, rdbIsDefaultYes, rdbIsDefaultNo);
             DataBindingHelper.BindData4RadioGroupTrueFalse<tb_FM_PayeeInfo>(entity, t => t.Is_enabled, rdbis_enabledYes, rdbis_enabledNo);
-            //有默认值
-            LoadImageData(_EditEntity.PaymentCodeImagePath);
             //后面这些依赖于控件绑定的数据源和字段。所以要在绑定后执行。
             if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
             {
@@ -237,37 +235,7 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID, queryFilterSupplier.GetFilterExpression<tb_CustomerVendor>(), true);
             DataBindingHelper.InitFilterForControlByExp<tb_CustomerVendor>(entity, cmbCustomerVendor_ID, c => c.CVName, queryFilterSupplier);
         }
-        /// <summary>
-        /// 下载图片显示到控件中
-        /// </summary>
-        /// <param name="ImagePath"></param>
-        private async Task LoadImageData(string ImagePath)
-        {
-            if (!string.IsNullOrWhiteSpace(ImagePath))
-            {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                try
-                {
-                    if (PicRowImage.RowImage == null)
-                    {
-                        PicRowImage.RowImage = new DataRowImage();
-                    }
-                    PicRowImage.RowImage.ImageFullName = ImagePath;
-                    string ImageRealPath = string.Join("_", ImagePath.Split('_').Take(1));
-                    byte[] img = await httpWebService.DownloadImgFileAsync(ImageRealPath);
-                    PicRowImage.Image = RUINORERP.Common.Helper.ImageHelper.ByteArrayToImage(img);
-                    PicRowImage.RowImage.image = PicRowImage.Image;
-                    PicRowImage.Visible = true;
-
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                }
-            }
-
-        }
-
+ 
         private void btnCancel_Click(object sender, EventArgs e)
         {
             bindingSourceEdit.CancelEdit();

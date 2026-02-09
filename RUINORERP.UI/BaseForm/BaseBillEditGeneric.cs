@@ -1129,10 +1129,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (EditEntity != null)
                     {
-                        #region  单据数据  后面优化可以多个单?限制5个？
                         await Save(false);
-
-                        #endregion
                     }
                 }
                 catch (Exception ex)
@@ -1141,8 +1138,9 @@ namespace RUINORERP.UI.BaseForm
                 }
                 #endregion
             }
-
         }
+
+
 
         private void button快速录入数据_Click(object sender, EventArgs e)
         {
@@ -1189,6 +1187,80 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #region 图片相关
+
+        /// <summary>
+        /// 删除图片 - 支持按字段删除
+        /// </summary>
+        /// <param name="entity">业务实体</param>
+        /// <param name="magicPicBox">图片控件</param>
+        /// <param name="relatedFieldExpr">关联字段表达式</param>
+        /// <returns>是否删除成功</returns>
+        public async Task<bool> DeleteImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> relatedFieldExpr)
+        {
+            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+            try
+            {
+                // 获取关联字段名
+                MemberInfo memberInfo = relatedFieldExpr.GetMemberInfo();
+                string relatedField = memberInfo.Name;
+
+                // 获取图片信息
+                var imageInfos = magicPicBox.GetImageInfos();
+                if (imageInfos == null || imageInfos.Count == 0)
+                {
+                    logger.LogInformation("没有需要删除的图片");
+                    return true;
+                }
+
+                bool allSuccess = true;
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
+                long billId = entity.GetPropertyValue(EntityInfo.IdField).ToLong();
+
+                // 创建删除请求
+                var deleteRequest = new FileDeleteRequest();
+                deleteRequest.BusinessNo = billNo;
+                deleteRequest.BusinessId = billId;
+                deleteRequest.BusinessType = (int)EntityInfo.BizType;
+                deleteRequest.PhysicalDelete = false; // 逻辑删除
+
+                // 添加要删除的文件信息
+                foreach (var imageInfo in imageInfos)
+                {
+                    if (imageInfo != null && imageInfo.FileId > 0)
+                    {
+                        var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(imageInfo);
+                        if (fileStorageInfo != null)
+                        {
+                            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                        }
+                    }
+                }
+
+                // 调用文件管理服务删除文件
+                var fileService = Startup.GetFromFac<FileManagementService>();
+                var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+
+                if (deleteResponse.IsSuccess)
+                {
+                    // 清空图片控件
+                    magicPicBox.ClearImages();
+                    MainForm.Instance.uclog.AddLog($"图片删除成功：共删除 {imageInfos.Count} 张图片", UILogType.普通消息);
+                    return true;
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"图片删除失败：{deleteResponse.ErrorMessage}", UILogType.错误);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("删除图片出错: {Message}", ex.Message);
+                MainForm.Instance.uclog.AddLog($"删除图片出错: {ex.Message}", UILogType.错误);
+                return false;
+            }
+        }
 
         /// <summary>
         /// 下载并显示图片 - 支持按字段下载
@@ -2406,14 +2478,14 @@ namespace RUINORERP.UI.BaseForm
                                 return;
                             }
                         }
-                        
+
                         // 立即禁用修改按钮，防止重复点击
                         var btnModify = FindToolStripButtonByName("toolStripbtnModify");
                         if (btnModify != null)
                         {
                             btnModify.Enabled = false;
                         }
-                        
+
                         Modify();
                         // 注意：修改成功后保持修改按钮禁用，直到保存或取消后才重新评估状态
                     }
@@ -3253,14 +3325,23 @@ namespace RUINORERP.UI.BaseForm
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                         byte[] bytes = ImageHelper.ImageToByteArray(frm.CloseCaseImage);
-                        HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        ////上传新文件时要加后缀名
-                        string uploadRsult = await httpWebService.UploadImageAsyncOK("", strCloseCaseImagePath + ".jpg", bytes, "upload");
-                        if (uploadRsult.Contains("UploadSuccessful"))
+                        // 使用新的图片处理方式
+                        var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                        try
                         {
-                            EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
-                            //这里更新数据库
-                            await ctr.BaseSaveOrUpdate(EditEntity);
+                            // 上传结案凭证图片
+                            var response = await ctrpay.UploadImageAsync(EditEntity as BaseEntity, "CloseCaseImage.jpg", bytes, "CloseCaseImagePath", null);
+                            if (response != null && response.IsSuccess)
+                            {
+                                EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
+                                //这里更新数据库
+                                await ctr.BaseSaveOrUpdate(EditEntity);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError("上传结案凭证图片出错: {Message}", ex.Message);
+                            MainForm.Instance.uclog.AddLog($"上传结案凭证图片出错: {ex.Message}", UILogType.错误);
                         }
 
                     }
@@ -4195,44 +4276,42 @@ namespace RUINORERP.UI.BaseForm
                         {
                             string oldfileName = valueImageWeb.GetOldRealfileName();
                             string newfileName = valueImageWeb.GetNewRealfileName();
-                            HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                            //如果服务器有旧文件 。可以先删除
-                            if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
+                            var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                            try
                             {
-                                string deleteRsult = await httpWebService.DeleteImageAsync(oldfileName, "delete123");
-                                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-                            }
-                            ////上传新文件时要加后缀名
-                            string uploadRsult = await httpWebService.UploadImageAsync(CurMenuInfo.MenuID.ToString(), (EditEntity as BaseEntity).PrimaryKeyID.ToString(), newfileName + ".jpg", valueImageWeb.CellImageBytes, "upload");
-                            if (uploadRsult.Contains("UploadSuccessful") || uploadRsult.Contains("ImageExists"))
-                            {
-                                // 提取文件名（无论是新上传还是已存在）
-                                string resultFileName = uploadRsult.Contains("UploadSuccessful") ?
-                                    uploadRsult.Replace("UploadSuccessful: ", "").Trim() :
-                                    uploadRsult.Replace("ImageExists: ", "").Trim();
-
-                                valueImageWeb.UpdateImageName(newhash);
-                                grid[i, realIndex].Value = resultFileName;
-
-                                string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                                object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
-                                var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
-                                detail.SetPropertyValue(col.ColName, resultFileName);
-                                rs = true;
-
-                                if (uploadRsult.Contains("UploadSuccessful"))
+                                //如果服务器有旧文件 。可以先删除
+                                if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
                                 {
+                                    // 使用新的图片删除方式
+                                    await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity);
+                                    MainForm.Instance.PrintInfoLog("DeleteImage: 成功");
+                                }
+
+                                ////上传新文件时要加后缀名
+                                var response = await ctrpay.UploadImageAsync(EditEntity as BaseEntity, newfileName + ".jpg", valueImageWeb.CellImageBytes, ImgCols[0].ColName, null);
+                                if (response != null && response.IsSuccess)
+                                {
+                                    // 提取文件名
+                                    string resultFileName = newfileName;
+
+                                    valueImageWeb.UpdateImageName(newhash);
+                                    grid[i, realIndex].Value = resultFileName;
+
+                                    string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                                    object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
+                                    var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
+                                    detail.SetPropertyValue(col.ColName, resultFileName);
+                                    rs = true;
+
                                     MainForm.Instance.PrintInfoLog("UploadSuccessful:" + resultFileName);
                                 }
                                 else
                                 {
-                                    MainForm.Instance.PrintInfoLog("ImageExists - 使用现有图片:" + resultFileName);
+                                    rs = false;
                                 }
                             }
-                            else
-                            {
-                                rs = false;
-                            }
+                            catch
+                            { rs = false; }
                         }
                         #endregion
                     }

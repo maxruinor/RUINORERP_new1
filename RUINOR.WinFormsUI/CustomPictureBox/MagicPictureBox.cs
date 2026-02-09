@@ -790,6 +790,56 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
         /// <summary>
+        /// 获取所有图片信息
+        /// </summary>
+        /// <returns>图片信息列表</returns>
+        public List<ImageInfo> GetImageInfos()
+        {
+            return imageInfos;
+        }
+
+        /// <summary>
+        /// 清空所有图片
+        /// </summary>
+        public void ClearImages()
+        {
+            // 释放图片资源
+            foreach (var image in images)
+            {
+                try
+                {
+                    image.Dispose();
+                }
+                catch { }
+            }
+
+            // 清空图片列表和信息列表
+            images.Clear();
+            imageInfos.Clear();
+            _deletedImages.Clear();
+
+            // 重置当前图片索引
+            currentImageIndex = 0;
+
+            // 清空图片路径
+            imagePaths = "";
+
+            // 清空显示
+            this.Image = null;
+
+            // 更新UI
+            UpdateContextMenu();
+            if (navigationPanel != null)
+            {
+                navigationPanel.Visible = false;
+            }
+            if (infoPanel != null)
+            {
+                infoPanel.Visible = false;
+            }
+        }
+
+        /// <summary>
         /// 从路径加载多张图片
         /// </summary>
         private void LoadImagesFromPaths()

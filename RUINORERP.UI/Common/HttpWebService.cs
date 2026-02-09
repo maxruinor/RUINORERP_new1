@@ -25,6 +25,7 @@ namespace RUINORERP.UI.Common
 {
     /// <summary>
     /// 一个用于访问HttpWeb服务的类
+    /// 所有使用这个类的地方
     /// </summary>
     public class HttpWebService
     {

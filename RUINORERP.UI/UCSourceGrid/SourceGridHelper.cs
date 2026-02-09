@@ -1601,7 +1601,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         case "System.Int64":
                             break;
                         case "System.Byte[]":
-                            c = new SourceGrid.Cells.Image(null);
+                            c = new SourceGrid.Cells.ImageCell(null);
                             c.View = new SourceGrid.Cells.Views.SingleImage();
                             //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
                             //c.AddController(popupMenu);
@@ -1635,7 +1635,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                     if (define[i].CustomFormat == CustomFormatType.Image)
                     {
-                        c = new SourceGrid.Cells.Image(null);
+                        c = new SourceGrid.Cells.ImageCell(null);
                         c.View = new SourceGrid.Cells.Views.SingleImage();
                         //PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
                         //c.AddController(popupMenu);
@@ -2026,7 +2026,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         break;
                     case "image":
                         _editor = new SourceGrid.Cells.Editors.ImagePicker();
-                        // new SourceGrid.Cells.Image(null);
+                        // new SourceGrid.Cells.ImageCell(null);
                         break;
                     case "bit":
                         _editor = new SourceGrid.Cells.Editors.CheckBox(typeof(bool));

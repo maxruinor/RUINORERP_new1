@@ -30,7 +30,7 @@ namespace SourceGrid.Cells
         public ImageWebCell(object value) : base(value)
         {
             // 移除旧的图片模型
-            Model.RemoveModel(Model.FindModel(typeof(Models.Image)));
+            Model.RemoveModel(Model.FindModel(typeof(Models.CellImageModel)));
 
             // 添加ValueImageWeb模型以支持远程图片功能
             var valueImageWeb = new ValueImageWeb();

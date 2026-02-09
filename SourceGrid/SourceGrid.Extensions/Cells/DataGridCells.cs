@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 
 namespace SourceGrid.Cells.DataGrid
@@ -41,9 +41,12 @@ namespace SourceGrid.Cells.DataGrid
 		}
 	}
 
-	public class Image : Cells.Virtual.Image
+    /// <summary>
+    /// 
+    /// </summary>
+	public class DataGridImageCell : Cells.Virtual.ImageCell
 	{
-        public Image()
+        public DataGridImageCell()
 		{
             Model.AddModel(new DataGridValueModel());
 		}

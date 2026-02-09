@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Font Name="Tahoma" Size="8.25" />
   <Class Name="DevAge.Drawing.VisualElements.VisualElementBase" Collapsed="true">
@@ -24,7 +24,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="DevAge.Drawing.VisualElements.Image" Collapsed="true">
+  <Class Name="DevAge.Drawing.VisualElements.VisualImage" Collapsed="true">
     <Position X="3.5" Y="2" Width="1.5" />
     <TypeIdentifier>
       <FileName>Drawing\VisualElements\Image.cs</FileName>

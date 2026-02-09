@@ -31,8 +31,8 @@ namespace SourceGrid.Cells
             Model.ValueModel = new Models.ValueModel();
 
             Model.AddModel(new Models.ToolTip());
-            Model.AddModel(new Models.Image());
-            Model.AddModel(new Models.ValueImageWeb()); //TODO: Ìí¼ÓÒ»ÖÖÄ£Ê½£¬ÓÃÓÚÏÔÊ¾Í¼Æ¬ºÍÎÄ×Ö
+            Model.AddModel(new Models.CellImageModel());
+            Model.AddModel(new Models.ValueImageWeb()); //TODO: ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ä£Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾Í¼Æ¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             Value = cellValue;
             //DisplayText=
         }
@@ -282,14 +282,14 @@ namespace SourceGrid.Cells
         }
         #endregion
 
-        #region Image Õë¶ÔÍ¼Æ¬ÌØÊâ´¦ÀíÁË
-        private Models.Image ImageModel
+        #region Image ï¿½ï¿½ï¿½Í¼Æ¬ï¿½ï¿½ï¿½â´¦ï¿½ï¿½ï¿½ï¿½
+        private Models.CellImageModel ImageModel
         {
-            get { return (Models.Image)Model.FindModel(typeof(Models.Image)); }
+            get { return (Models.CellImageModel)Model.FindModel(typeof(Models.CellImageModel)); }
         }
 
         /// <summary>
-        /// »ñÈ¡»òÉèÖÃÓëµ¥Ôª¸ñ¹ØÁªµÄÍ¼Ïñ¡£ÄÚ²¿Ê¹ÓÃÄ£ÐÍ¡£Í¼ÏñÀà¡£
+        /// ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ëµ¥Ôªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½Ú²ï¿½Ê¹ï¿½ï¿½Ä£ï¿½Í¡ï¿½Í¼ï¿½ï¿½ï¿½à¡£
         /// </summary>
         public System.Drawing.Image Image
         {

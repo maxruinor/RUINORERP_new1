@@ -397,6 +397,7 @@
     <Compile Include="SourceGrid\Cells\Views\CheckBox.cs" />
     <Compile Include="SourceGrid\Cells\Views\ColumnHeader.cs" />
     <Compile Include="SourceGrid\Cells\Views\ComboBox.cs" />
+    <Compile Include="SourceGrid\Cells\Views\GridImageService.cs" />
     <Compile Include="SourceGrid\Cells\Views\Header.cs" />
     <Compile Include="SourceGrid\Cells\Views\IView.cs" />
     <Compile Include="SourceGrid\Cells\Views\Link.cs" />

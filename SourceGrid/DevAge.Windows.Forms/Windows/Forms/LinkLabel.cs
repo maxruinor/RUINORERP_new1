@@ -265,7 +265,7 @@ namespace DevAge.Windows.Forms
 
             DevAge.Drawing.VisualElements.Container container = new DevAge.Drawing.VisualElements.Container();
             DevAge.Drawing.VisualElements.TextGDI textElement = new DevAge.Drawing.VisualElements.TextGDI(Text);
-            DevAge.Drawing.VisualElements.Image imageElement = new DevAge.Drawing.VisualElements.Image(image);
+            DevAge.Drawing.VisualElements.VisualImage imageElement = new DevAge.Drawing.VisualElements.VisualImage(image);
             imageElement.AnchorArea = new DevAge.Drawing.AnchorArea(mImageAlignment, mImageStretch);
             imageElement.Enabled = !disabledImage;
             textElement.AnchorArea = new DevAge.Drawing.AnchorArea(DevAge.Drawing.Utilities.StringFormatToContentAlignment(mStringFormat), false);

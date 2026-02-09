@@ -131,7 +131,7 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
             {
                 //end by watson 2024-08-28 TODO:
                 //PrepareVisualElementImage(context);
@@ -150,7 +150,7 @@ namespace SourceGrid.Cells.Views
                         if (img != null)
                         {
                             GridImage = img;
-                            // context.Cell = new SourceGrid.Cells.Image(img);
+                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
                             //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
                         }
                     }
@@ -193,7 +193,7 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
             {
                 //end by watson 2024-08-28 TODO:
                 //PrepareVisualElementImage(context);
@@ -212,7 +212,7 @@ namespace SourceGrid.Cells.Views
                         if (img != null)
                         {
                             GridImage = img;
-                            // context.Cell = new SourceGrid.Cells.Image(img);
+                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
                             //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
                         }
                     }
@@ -288,7 +288,7 @@ namespace SourceGrid.Cells.Views
         }
         #endregion
 
-        private DevAge.Drawing.VisualElements.IVisualElement mImage = new DevAge.Drawing.VisualElements.Image();
+        private DevAge.Drawing.VisualElements.IVisualElement mImage = new DevAge.Drawing.VisualElements.VisualImage();
         /// <summary>
         /// Images of the cells
         /// </summary>
@@ -529,9 +529,134 @@ namespace SourceGrid.Cells.Views
                 // 清除事件
                 ImageLoaded = null;
                 ImageLoadError = null;
+                ImageUploaded = null;
+                ImageDeleted = null;
 
                 _disposed = true;
             }
+        }
+
+        #endregion
+
+        #region 图片管理功能
+
+        /// <summary>
+        /// 图片上传完成事件
+        /// </summary>
+        public event EventHandler<ImageUploadEventArgs> ImageUploaded;
+
+        /// <summary>
+        /// 图片删除完成事件
+        /// </summary>
+        public event EventHandler<ImageDeleteEventArgs> ImageDeleted;
+
+        /// <summary>
+        /// 上传图片
+        /// </summary>
+        /// <param name="imageBytes">图片字节数据</param>
+        /// <param name="fileName">文件名</param>
+        /// <param name="businessType">业务类型</param>
+        /// <returns>上传结果</returns>
+        public async Task<string> UploadImageAsync(byte[] imageBytes, string fileName, int businessType = 0)
+        {
+            try
+            {
+                // 使用GridImageService上传图片
+                string imageId = await GridImageServiceManager.CurrentService.UploadImageAsync(imageBytes, fileName, businessType);
+                
+                // 触发上传完成事件
+                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, true));
+                return imageId;
+            }
+            catch (Exception ex)
+            {
+                // 触发上传失败事件
+                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, false, ex));
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 删除图片
+        /// </summary>
+        /// <param name="imageId">图片ID</param>
+        /// <returns>删除结果</returns>
+        public async Task<bool> DeleteImageAsync(string imageId)
+        {
+            try
+            {
+                // 使用GridImageService删除图片
+                bool result = await GridImageServiceManager.CurrentService.DeleteImageAsync(imageId);
+                
+                // 触发删除完成事件
+                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, result));
+                return result;
+            }
+            catch (Exception ex)
+            {
+                // 触发删除失败事件
+                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, false, ex));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 下载图片
+        /// </summary>
+        /// <param name="imageId">图片ID</param>
+        /// <returns>图片字节数据</returns>
+        public async Task<byte[]> DownloadImageAsync(string imageId)
+        {
+            try
+            {
+                // 使用GridImageService下载图片
+                return await GridImageServiceManager.CurrentService.DownloadImageAsync(imageId);
+            }
+            catch (Exception ex)
+            {
+                // 触发下载失败事件
+                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 获取图片信息
+        /// </summary>
+        /// <param name="imageId">图片ID</param>
+        /// <returns>图片信息</returns>
+        public async Task<GridImageInfo> GetImageInfoAsync(string imageId)
+        {
+            try
+            {
+                // 使用GridImageService获取图片信息
+                return await GridImageServiceManager.CurrentService.GetImageInfoAsync(imageId);
+            }
+            catch (Exception ex)
+            {
+                // 触发获取信息失败事件
+                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 检查图片是否需要更新
+        /// </summary>
+        /// <returns>是否需要更新</returns>
+        public bool IsImageNeedingUpdate()
+        {
+            // 这里可以实现图片更新检测逻辑
+            // 例如比较图片哈希值等
+            return false;
+        }
+
+        /// <summary>
+        /// 重置图片状态
+        /// </summary>
+        public void ResetImageStatus()
+        {
+            // 这里可以实现重置图片状态的逻辑
         }
 
         #endregion
@@ -563,6 +688,40 @@ namespace SourceGrid.Cells.Views
         public ImageLoadErrorEventArgs(string fileId, Exception error)
         {
             FileId = fileId;
+            Error = error;
+        }
+    }
+
+    /// <summary>
+    /// 图片上传事件参数
+    /// </summary>
+    public class ImageUploadEventArgs : EventArgs
+    {
+        public string FileName { get; }
+        public bool Success { get; }
+        public Exception Error { get; }
+
+        public ImageUploadEventArgs(string fileName, bool success, Exception error = null)
+        {
+            FileName = fileName;
+            Success = success;
+            Error = error;
+        }
+    }
+
+    /// <summary>
+    /// 图片删除事件参数
+    /// </summary>
+    public class ImageDeleteEventArgs : EventArgs
+    {
+        public string ImageId { get; }
+        public bool Success { get; }
+        public Exception Error { get; }
+
+        public ImageDeleteEventArgs(string imageId, bool success, Exception error = null)
+        {
+            ImageId = imageId;
+            Success = success;
             Error = error;
         }
     }

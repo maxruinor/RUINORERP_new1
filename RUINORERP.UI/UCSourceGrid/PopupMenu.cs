@@ -1,4 +1,4 @@
-﻿using Netron.GraphLib;
+using Netron.GraphLib;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -23,6 +23,7 @@ using RUINOR.WinFormsUI.CustomPictureBox;
 using static FastReport.Design.ToolWindows.DictionaryWindow;
 using SqlSugar;
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using System.IO;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -729,13 +730,35 @@ namespace RUINORERP.UI.UCSourceGrid
                                                    // 为 ContextMenuStrip 控件添加 Opening 事件处理程序
             MyMenu.Opening += new CancelEventHandler(MyMenu_Opening);
 
-            //ToolStripSeparator ss = new ToolStripSeparator();
-            //MyMenu.Items.Add(ss);
-            ToolStripMenuItem siCustom = new ToolStripMenuItem("查看大图");
+            // 添加分隔符
+            ToolStripSeparator ss = new ToolStripSeparator();
+            MyMenu.Items.Add(ss);
+            
+            // 查看大图菜单项
+            ToolStripMenuItem siViewLarge = new ToolStripMenuItem("查看大图");
+            siViewLarge.Tag = cell;
+            siViewLarge.Click += SiCustom_Click;
+            MyMenu.Items.Add(siViewLarge);
+            
+            // 添加上传图片菜单项
+            ToolStripMenuItem siUpload = new ToolStripMenuItem("上传图片");
+            siUpload.Tag = cell;
+            siUpload.Click += SiUpload_Click;
+            MyMenu.Items.Add(siUpload);
+            
+            // 添加删除图片菜单项
+            ToolStripMenuItem siDelete = new ToolStripMenuItem("删除图片");
+            siDelete.Tag = cell;
+            siDelete.Click += SiDelete_Click;
+            MyMenu.Items.Add(siDelete);
+            
+            // 添加更新图片菜单项
+            ToolStripMenuItem siUpdate = new ToolStripMenuItem("更新图片");
+            siUpdate.Tag = cell;
+            siUpdate.Click += SiUpdate_Click;
+            MyMenu.Items.Add(siUpdate);
+            
             _cell = cell;
-            siCustom.Tag = cell;
-            siCustom.Click += SiCustom_Click;
-            MyMenu.Items.Add(siCustom);
             grid = _sgdefine.grid;
             sgdefine = _sgdefine;
             MyMenu.Width = 100;
@@ -768,6 +791,100 @@ namespace RUINORERP.UI.UCSourceGrid
             ////强制重绘
             grid.Refresh();
 
+        }
+
+        private async void SiUpload_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
+            if (cell.View is RemoteImageView)
+            {
+                RemoteImageView imageView = cell.View as RemoteImageView;
+                if (imageView != null)
+                {
+                    // 打开文件选择对话框
+                    OpenFileDialog openFileDialog = new OpenFileDialog
+                    {
+                        Filter = "图片文件|*.jpg;*.jpeg;*.png;*.gif;*.bmp",
+                        Title = "选择要上传的图片"
+                    };
+
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        try
+                        {
+                            // 读取图片文件
+                            byte[] imageBytes = File.ReadAllBytes(openFileDialog.FileName);
+                            string fileName = Path.GetFileName(openFileDialog.FileName);
+
+                            // 上传图片
+                            string imageId = await imageView.UploadImageAsync(imageBytes, fileName);
+                            if (!string.IsNullOrEmpty(imageId))
+                            {
+                                // 更新单元格值
+                                cell.Value = imageId;
+                                
+                                // 强制重绘
+                                grid.Refresh();
+                                
+                                MainForm.Instance.PrintInfoLog("图片上传成功: " + fileName);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.PrintInfoLog("图片上传失败: " + ex.Message);
+                        }
+                    }
+                }
+            }
+        }
+
+        private async void SiDelete_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
+            if (cell.View is RemoteImageView)
+            {
+                RemoteImageView imageView = cell.View as RemoteImageView;
+                if (imageView != null)
+                {
+                    // 确认删除
+                    if (MessageBox.Show("确定要删除此图片吗？", "确认删除", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            // 获取图片ID
+                            string imageId = cell.Value as string;
+                            if (!string.IsNullOrEmpty(imageId))
+                            {
+                                // 删除图片
+                                bool result = await imageView.DeleteImageAsync(imageId);
+                                if (result)
+                                {
+                                    // 清空单元格值
+                                    cell.Value = null;
+                                    imageView.GridImage = null;
+                                    
+                                    // 强制重绘
+                                    grid.Refresh();
+                                    
+                                    MainForm.Instance.PrintInfoLog("图片删除成功");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.PrintInfoLog("图片删除失败: " + ex.Message);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SiUpdate_Click(object sender, EventArgs e)
+        {
+            // 更新图片功能可以复用上传图片的逻辑
+            SiUpload_Click(sender, e);
         }
 
         public override void OnClick(CellContext sender, EventArgs e)

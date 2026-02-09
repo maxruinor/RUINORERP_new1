@@ -58,7 +58,7 @@ namespace SourceGrid.Cells.Views
             if (ElementImage != null)
                 yield return ElementImage;
 
-            if (this.GetType() == typeof(SourceGrid.Cells.Image))
+            if (this.GetType() == typeof(SourceGrid.Cells.ImageCell))
             {
 
             }
@@ -72,7 +72,7 @@ namespace SourceGrid.Cells.Views
 
         public override void Refresh(CellContext context)
         {
-            // 在这里实现您的刷新逻辑
+            // 锟斤拷锟斤拷锟斤拷实锟斤拷锟斤拷锟斤拷刷锟斤拷锟竭硷拷
         }
         protected override void PrepareView(CellContext context)
         {
@@ -86,8 +86,8 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             /*
-            //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.Image || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            //锟斤拷示图片  要锟斤拷图片锟叫才达拷锟斤拷
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
             {
                 //end by watson 2024-08-28 TODO:
                 PrepareVisualElementImage(context);
@@ -97,14 +97,14 @@ namespace SourceGrid.Cells.Views
 
                 if (context.Value != null && context.Value is byte[])
                 {
-                    // 使用 MemoryStream 从字节数组创建流
+                    // 使锟斤拷 MemoryStream 锟斤拷锟街斤拷锟斤拷锟介创锟斤拷锟斤拷
                     using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
                     {
-                        // 从流中创建 Image 对象
+                        // 锟斤拷锟斤拷锟叫达拷锟斤拷 Image 锟斤拷锟斤拷
                         img = System.Drawing.Image.FromStream(stream);
                         if (img != null)
                         {
-                            // context.Cell = new SourceGrid.Cells.Image(img);
+                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
                             //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
                         }
                     }
@@ -141,8 +141,8 @@ namespace SourceGrid.Cells.Views
         }
 
         /// <summary>
-        ///将当前视图的图像属性应用于指定的VisualElement。
-        ///派生类可以调用此方法将设置应用于自定义VisualElement。
+        ///锟斤拷锟斤拷前锟斤拷图锟斤拷图锟斤拷锟斤拷锟斤拷应锟斤拷锟斤拷指锟斤拷锟斤拷VisualElement锟斤拷
+        ///锟斤拷锟斤拷锟斤拷锟斤拷缘锟斤拷么朔锟斤拷锟斤拷锟斤拷锟斤拷锟接︼拷锟斤拷锟斤拷远锟斤拷锟絍isualElement锟斤拷
         /// </summary>
         protected virtual void PrepareVisualElementText(CellContext context)
         {
@@ -184,10 +184,10 @@ namespace SourceGrid.Cells.Views
             ElementText.Value = context.DisplayText;
         }
 
-        private DevAge.Drawing.VisualElements.IImage mElementImage = new DevAge.Drawing.VisualElements.Image();
+        private DevAge.Drawing.VisualElements.IImage mElementImage = new DevAge.Drawing.VisualElements.VisualImage();
         /// <summary>
-        ///获取或设置用于绘制单元格图像的IImage视觉元素。
-        ///默认设置为DevAge。绘图。视觉元素。图片
+        ///锟斤拷取锟斤拷锟斤拷锟斤拷锟斤拷锟节伙拷锟狡碉拷元锟斤拷图锟斤拷锟絀Image锟接撅拷元锟截★拷
+        ///默锟斤拷锟斤拷锟斤拷为DevAge锟斤拷锟斤拷图锟斤拷锟接撅拷元锟截★拷图片
         /// </summary>
         public DevAge.Drawing.VisualElements.IImage ElementImage
         {
@@ -196,8 +196,8 @@ namespace SourceGrid.Cells.Views
         }
 
         /// <summary>
-        ///将当前视图的图像属性应用于指定的VisualElement。
-        ///派生类可以调用此方法将设置应用于自定义VisualElement。
+        ///锟斤拷锟斤拷前锟斤拷图锟斤拷图锟斤拷锟斤拷锟斤拷应锟斤拷锟斤拷指锟斤拷锟斤拷VisualElement锟斤拷
+        ///锟斤拷锟斤拷锟斤拷锟斤拷缘锟斤拷么朔锟斤拷锟斤拷锟斤拷锟斤拷锟接︼拷锟斤拷锟斤拷远锟斤拷锟絍isualElement锟斤拷
         /// </summary>
         protected virtual void PrepareVisualElementImage(CellContext context)
         {

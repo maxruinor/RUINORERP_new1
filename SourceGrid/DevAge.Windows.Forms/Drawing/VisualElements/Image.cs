@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel;
@@ -15,14 +15,18 @@ namespace DevAge.Drawing.VisualElements
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+
     [Serializable]
-    public class Image : VisualElementBase, IImage
+    public class VisualImage : VisualElementBase, IImage
     {
         #region Constructor
         /// <summary>
         /// Default constructor
         /// </summary>
-        public Image()
+        public VisualImage()
         {
         }
 
@@ -30,7 +34,7 @@ namespace DevAge.Drawing.VisualElements
         /// Constructor
         /// </summary>
         /// <param name="value"></param>
-        public Image(System.Drawing.Image value)
+        public VisualImage(System.Drawing.Image value)
         {
             Value = value;
         }
@@ -39,7 +43,7 @@ namespace DevAge.Drawing.VisualElements
         /// Copy constructor
         /// </summary>
         /// <param name="other"></param>
-        public Image(Image other)
+        public VisualImage(VisualImage other)
             : base(other)
         {
             if (other.Value != null)
@@ -99,7 +103,7 @@ namespace DevAge.Drawing.VisualElements
 
         public override object Clone()
         {
-            return new Image(this);
+            return new VisualImage(this);
         }
     }
 }

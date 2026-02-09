@@ -1,11 +1,11 @@
-﻿
+
 using System;
 
 namespace SourceGrid.Extensions.PingGrids.Cells
 {
-	public class Image : SourceGrid.Cells.Virtual.Image
+	public class ImageCell : SourceGrid.Cells.Virtual.ImageCell
 	{
-	        public Image()
+	        public ImageCell()
 		{
 	            Model.AddModel(new PingGridValueModel());
 		}

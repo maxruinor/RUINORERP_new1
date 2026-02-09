@@ -568,7 +568,7 @@ namespace RUINORERP.UI.ProductEAV
             this.numGap.Size = new System.Drawing.Size(80, 22);
             this.numGap.TabIndex = 5;
             this.numGap.Value = new decimal(new int[] {
-            3,
+            1,
             0,
             0,
             65536});
@@ -709,7 +709,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // colBoxName
             // 
-            this.colBoxName.DataPropertyName = "BoxRule.CartonName";
+            this.colBoxName.DataPropertyName = "BoxRuleName";
             this.colBoxName.HeaderText = "箱规名称";
             this.colBoxName.MinimumWidth = 6;
             this.colBoxName.Name = "colBoxName";

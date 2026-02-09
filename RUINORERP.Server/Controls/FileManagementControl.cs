@@ -96,7 +96,7 @@ namespace RUINORERP.Server.Controls
         public class FileCategoryInfo
         {
             public string CategoryName { get; set; }
-            public int BusinessType { get; set; }
+            public string OwnerTableName { get; set; }
             public long FileCount { get; set; }
             public long StorageSize { get; set; }
             public DateTime LastModified { get; set; }
@@ -199,13 +199,13 @@ namespace RUINORERP.Server.Controls
                     // 性能优化：使用更高效的分组方式
                     var groupedByBusinessType = filesToProcess
                         .Cast<tb_FS_FileStorageInfo>()
-                        .GroupBy(f => f.BusinessType ?? 0)
+                        .GroupBy(f => f.OwnerTableName)
                         .ToList();
 
                     _fileCategories = groupedByBusinessType.Select(group => new FileCategoryInfo
                     {
-                        BusinessType = group.Key,
-                        CategoryName = GetBusinessTypeName(group.Key),
+                        OwnerTableName = group.Key,
+                        CategoryName = group.Key,//可以用实体中的描述字段替代
                         FileCount = group.Count(),
                         StorageSize = group.Sum(f => f.FileSize > 0 ? f.FileSize : 0),
                         LastModified = group.Max(f => f.Modified_at ?? f.Created_at ?? DateTime.MinValue)
@@ -254,27 +254,7 @@ namespace RUINORERP.Server.Controls
 
 
 
-        /// <summary>
-        /// 根据业务类型代码获取业务类型名称
-        /// </summary>
-        private string GetBusinessTypeName(int businessType)
-        {
-            return businessType switch
-            {
-                1 => "产品图片",
-                2 => "报销凭证",
-                3 => "付款凭证",
-                4 => "合同文件",
-                5 => "技术文档",
-                6 => "客户资料",
-                7 => "财务报表",
-                8 => "人事档案",
-                9 => "采购文件",
-                10 => "销售资料",
-                _ => "其他文件"
-            };
-        }
-
+ 
         private void UpdateStorageSummary()
         {
             if (_currentStorageSummary == null)
@@ -361,7 +341,7 @@ namespace RUINORERP.Server.Controls
 
             foreach (var category in _fileCategories)
             {
-                ListViewItem item = new ListViewItem(category.BusinessType.ToString());
+                ListViewItem item = new ListViewItem(category.OwnerTableName);
                 item.SubItems.Add(category.CategoryName);
                 item.SubItems.Add(category.FileCount.ToString());
                 item.SubItems.Add(FormatBytes(category.StorageSize));
@@ -426,10 +406,9 @@ namespace RUINORERP.Server.Controls
             if (listView1.SelectedItems.Count > 0)
             {
                 var selectedItem = listView1.SelectedItems[0];
-                int businessType = int.Parse(selectedItem.Text);
                 string categoryName = selectedItem.SubItems[1].Text;
 
-                await ShowCategoryDetailsAsync(businessType);
+                await ShowCategoryDetailsAsync(selectedItem.Text);
             }
             else
             {
@@ -440,18 +419,18 @@ namespace RUINORERP.Server.Controls
         /// <summary>
         /// 显示特定业务类型的文件详情
         /// </summary>
-        private async Task ShowCategoryDetailsAsync(int businessType)
+        private async Task ShowCategoryDetailsAsync(string OwnerTableName)
         {
             try
             {
                 // 查询该业务类型下的所有文件及其业务关联信息
-                var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == businessType && c.isdeleted == false);
+                var fileInfos = await _fileStorageInfoController.QueryAsync(c => c.FileStatus == (int)FileStatus.Active && c.OwnerTableName == OwnerTableName && c.isdeleted == false);
 
                 if (fileInfos != null && fileInfos.Count > 0)
                 {
                     var detailForm = new Form
                     {
-                        Text = $"文件分类详情-{(BizType)businessType}",
+                        Text = $"文件分类详情-{OwnerTableName}",
                         Size = new System.Drawing.Size(1100, 700),
                         StartPosition = FormStartPosition.CenterParent
                     };
@@ -540,7 +519,7 @@ namespace RUINORERP.Server.Controls
                 }
                 else
                 {
-                    MessageBox.Show($"分类 '{(BizType)businessType}' 中没有找到任何文件");
+                    MessageBox.Show($"分类 '{OwnerTableName}' 中没有找到任何文件");
                 }
             }
             catch (Exception ex)
@@ -813,8 +792,8 @@ namespace RUINORERP.Server.Controls
                         item.SubItems.Add(file.FileId.ToString());
                         item.SubItems.Add(file.OriginalFileName ?? "未知文件名");
                         item.SubItems.Add(file.FileSizeFormatted);
-                        item.SubItems.Add(file.BusinessNo ?? "");
-                        item.SubItems.Add(file.BusinessTypeName);
+            
+                        item.SubItems.Add(file.OwnerTableName);
                         item.SubItems.Add(file.RelatedField ?? "");
                         item.SubItems.Add(file.BusinessId?.ToString() ?? "");
                         item.SubItems.Add(file.FileStatusName);
@@ -852,8 +831,8 @@ namespace RUINORERP.Server.Controls
                             item.SubItems.Add(file.FileId.ToString());
                             item.SubItems.Add(file.OriginalFileName);
                             item.SubItems.Add(file.FileSizeFormatted);
-                            item.SubItems.Add(file.BusinessNo ?? "");
-                            item.SubItems.Add(file.BusinessTypeName);
+       
+                            item.SubItems.Add(file.OwnerTableName);
                             item.SubItems.Add(file.RelatedField ?? "");
                             item.SubItems.Add(file.BusinessId?.ToString() ?? "");
                             item.SubItems.Add(file.FileStatusName);
@@ -940,8 +919,8 @@ namespace RUINORERP.Server.Controls
                             item.SubItems.Add(file.FileId.ToString());
                             item.SubItems.Add(file.OriginalFileName);
                             item.SubItems.Add(file.FileSizeFormatted);
-                            item.SubItems.Add(file.BusinessNo ?? "");
-                            item.SubItems.Add(file.BusinessTypeName);
+                    
+                            item.SubItems.Add(file.OwnerTableName);
                             item.SubItems.Add(file.RelatedField ?? "");
                             item.SubItems.Add(file.BusinessId?.ToString() ?? "");
                             item.SubItems.Add(file.FileStatusName);
@@ -1002,8 +981,8 @@ namespace RUINORERP.Server.Controls
                             item.SubItems.Add(file.FileId.ToString());
                             item.SubItems.Add(file.OriginalFileName);
                             item.SubItems.Add(file.FileSizeFormatted);
-                            item.SubItems.Add(file.BusinessNo ?? "");
-                            item.SubItems.Add(file.BusinessTypeName);
+      
+                            item.SubItems.Add(file.OwnerTableName);
                             item.SubItems.Add(file.RelatedField ?? "");
                             item.SubItems.Add(file.BusinessId?.ToString() ?? "");
                             item.SubItems.Add(file.FileStatusName);

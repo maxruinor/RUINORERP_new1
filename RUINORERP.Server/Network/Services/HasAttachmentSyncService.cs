@@ -6,6 +6,7 @@ using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -39,14 +40,14 @@ namespace RUINORERP.Server.Network.Services
         /// <summary>
         /// 文件上传后同步HasAttachment标志（支持事务）
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessId">业务ID</param>
         /// <param name="businessNo">业务编号</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="useTransaction">是否使用事务（默认true）</param>
         /// <returns>是否同步成功</returns>
         public async Task<bool> SyncOnFileUploadAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string businessNo,
             CancellationToken cancellationToken = default,
@@ -59,26 +60,24 @@ namespace RUINORERP.Server.Network.Services
             {
                 await _syncLock.WaitAsync(cancellationToken);
 
-                _logger?.LogDebug("开始同步HasAttachment标志（文件上传）: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                    businessType, businessId);
 
                 var db = _unitOfWorkManage.GetDbClient();
 
                 // 根据业务类型确定表名和主键字段
-                var tableName = GetTableNameByBusinessType(businessType);
-                var idFieldName = GetIdFieldNameByBusinessType(businessType);
+                var cols = db.DbMaintenance.GetColumnInfosByTableName(OwnerTableName);
+                var idFieldName = cols.FirstOrDefault(c => c.IsPrimarykey)?.DbColumnName;
 
-                if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(idFieldName))
+                if (string.IsNullOrEmpty(OwnerTableName) || string.IsNullOrEmpty(idFieldName))
                 {
-                    _logger?.LogWarning("未知的业务类型，跳过HasAttachment同步: BusinessType={BusinessType}", businessType);
+                    _logger?.LogWarning("未知的业务类型，跳过HasAttachment同步: OwnerTableName={OwnerTableName}", OwnerTableName);
                     return false;
                 }
 
                 // 检查表是否有HasAttachment字段
-                var hasColumn = db.DbMaintenance.IsAnyColumn(tableName, "HasAttachment");
+                var hasColumn = db.DbMaintenance.IsAnyColumn(OwnerTableName, "HasAttachment");
                 if (!hasColumn)
                 {
-                    _logger?.LogDebug("表 {TableName} 没有HasAttachment字段，跳过同步", tableName);
+                    _logger?.LogDebug("表 {TableName} 没有HasAttachment字段，跳过同步", OwnerTableName);
                     return false;
                 }
 
@@ -91,13 +90,13 @@ namespace RUINORERP.Server.Network.Services
                 try
                 {
                     // 更新HasAttachment标志为true
-                    string updateSql = $"UPDATE {tableName} SET HasAttachment = 1 WHERE {idFieldName} = @BusinessId";
+                    string updateSql = $"UPDATE {OwnerTableName} SET HasAttachment = 1 WHERE {idFieldName} = @BusinessId";
                     int affectedRows = db.Ado.ExecuteCommand(updateSql, new { BusinessId = businessId });
 
                     if (affectedRows > 0)
                     {
                         _logger?.LogDebug("已更新HasAttachment标志: Table={Table}, BusinessId={BusinessId}",
-                            tableName, businessId);
+                            OwnerTableName, businessId);
                     }
 
                     if (useTransaction)
@@ -118,8 +117,8 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "同步HasAttachment标志失败（文件上传）: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                    businessType, businessId);
+                _logger?.LogError(ex, "同步HasAttachment标志失败（文件上传）: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}",
+                    OwnerTableName, businessId);
                 return false;
             }
             finally
@@ -128,16 +127,41 @@ namespace RUINORERP.Server.Network.Services
             }
         }
 
+
+        public static string GetPrimaryKeyColName(Type type)
+        {
+            string PrimaryKeyColName = string.Empty;
+            foreach (PropertyInfo field in type.GetProperties())
+            {
+                foreach (Attribute attr in field.GetCustomAttributes(true))
+                {
+
+                    if (attr is SugarColumn sugarColumnAttr)
+                    {
+
+                        if (sugarColumnAttr.IsPrimaryKey)
+                        {
+                            PrimaryKeyColName = sugarColumnAttr.ColumnName;
+                            break;
+                        }
+
+                    }
+                }
+            }
+            return PrimaryKeyColName;
+        }
+
+
         /// <summary>
         /// 文件删除后同步HasAttachment标志（支持事务）
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessId">业务ID</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="useTransaction">是否使用事务（默认true）</param>
         /// <returns>是否同步成功</returns>
         public async Task<bool> SyncOnFileDeleteAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             CancellationToken cancellationToken = default,
             bool useTransaction = true)
@@ -149,14 +173,17 @@ namespace RUINORERP.Server.Network.Services
             {
                 await _syncLock.WaitAsync(cancellationToken);
 
-                _logger?.LogDebug("开始同步HasAttachment标志（文件删除）: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                    businessType, businessId);
+                _logger?.LogDebug("开始同步HasAttachment标志（文件删除）: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}",
+                    OwnerTableName, businessId);
 
                 var db = _unitOfWorkManage.GetDbClient();
 
                 // 根据业务类型确定表名和主键字段
-                var tableName = GetTableNameByBusinessType(businessType);
-                var idFieldName = GetIdFieldNameByBusinessType(businessType);
+                var tableName = OwnerTableName;
+
+
+                var cols = db.DbMaintenance.GetColumnInfosByTableName(OwnerTableName);
+                var idFieldName = cols.FirstOrDefault(c => c.IsPrimarykey)?.DbColumnName;
 
                 if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(idFieldName))
                 {
@@ -183,14 +210,14 @@ namespace RUINORERP.Server.Network.Services
                         SELECT COUNT(*) 
                         FROM tb_FS_BusinessRelation 
                         WHERE BusinessId = @BusinessId 
-                        AND BusinessType = @BusinessType 
+                        AND OwnerTableName = @OwnerTableName 
                         AND IsActive = 1 
                         AND isdeleted = 0";
 
                     int remainingCount = db.Ado.GetInt(checkSql, new
                     {
                         BusinessId = businessId,
-                        BusinessType = businessType
+                        OwnerTableName = OwnerTableName
                     });
 
                     // 更新HasAttachment标志
@@ -224,8 +251,8 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "同步HasAttachment标志失败（文件删除）: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                    businessType, businessId);
+                _logger?.LogError(ex, "同步HasAttachment标志失败（文件删除）: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}",
+                    OwnerTableName, businessId);
                 return false;
             }
             finally
@@ -238,26 +265,27 @@ namespace RUINORERP.Server.Network.Services
         /// 批量同步HasAttachment标志
         /// 用于初始化或修复数据
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>更新的记录数</returns>
         public async Task<int> BatchSyncHasAttachmentAsync(
-            int businessType,
+            string OwnerTableName,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 await _syncLock.WaitAsync(cancellationToken);
 
-                _logger?.LogDebug("开始批量同步HasAttachment标志: BusinessType={BusinessType}", businessType);
+                _logger?.LogDebug("开始批量同步HasAttachment标志: OwnerTableName={OwnerTableName}", OwnerTableName);
 
                 var db = _unitOfWorkManage.GetDbClient();
-                var tableName = GetTableNameByBusinessType(businessType);
-                var idFieldName = GetIdFieldNameByBusinessType(businessType);
+                var tableName = OwnerTableName;
+                var cols = db.DbMaintenance.GetColumnInfosByTableName(OwnerTableName);
+                var idFieldName = cols.FirstOrDefault(c => c.IsPrimarykey)?.DbColumnName;
 
                 if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(idFieldName))
                 {
-                    _logger?.LogWarning("未知的业务类型，跳过批量同步: BusinessType={BusinessType}", businessType);
+                    _logger?.LogWarning("未知的业务类型，跳过批量同步: OwnerTableName={OwnerTableName}", OwnerTableName);
                     return 0;
                 }
 
@@ -276,13 +304,13 @@ namespace RUINORERP.Server.Network.Services
                         WHEN EXISTS (
                             SELECT 1 FROM tb_FS_BusinessRelation 
                             WHERE BusinessId = {tableName}.{idFieldName}
-                            AND BusinessType = @BusinessType
+                            AND OwnerTableName = @OwnerTableName
                             AND IsActive = 1
                             AND isdeleted = 0
                         ) THEN 1 ELSE 0
                     END";
 
-                int affectedRows = db.Ado.ExecuteCommand(updateSql, new { BusinessType = businessType });
+                int affectedRows = db.Ado.ExecuteCommand(updateSql, new { OwnerTableName = OwnerTableName });
 
                 _logger?.LogDebug("批量同步完成: Table={Table}, UpdatedCount={Count}", tableName, affectedRows);
 
@@ -290,7 +318,7 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "批量同步HasAttachment标志失败: BusinessType={BusinessType}", businessType);
+                _logger?.LogError(ex, "批量同步HasAttachment标志失败: OwnerTableName={OwnerTableName}", OwnerTableName);
                 return 0;
             }
             finally
@@ -303,13 +331,13 @@ namespace RUINORERP.Server.Network.Services
         /// 批量同步指定业务ID的HasAttachment标志
         /// 用于修复指定业务数据
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessIds">业务ID列表</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <param name="useTransaction">是否使用事务</param>
         /// <returns>更新的记录数</returns>
         public async Task<int> BatchSyncByBusinessIdsAsync(
-            int businessType,
+            string OwnerTableName,
             IEnumerable<long> businessIds,
             CancellationToken cancellationToken = default,
             bool useTransaction = true)
@@ -321,16 +349,17 @@ namespace RUINORERP.Server.Network.Services
             {
                 await _syncLock.WaitAsync(cancellationToken);
 
-                _logger?.LogDebug("开始批量同步指定业务ID的HasAttachment标志: BusinessType={BusinessType}, Count={Count}",
-                    businessType, businessIds.Count());
+                _logger?.LogDebug("开始批量同步指定业务ID的HasAttachment标志: OwnerTableName={OwnerTableName}, Count={Count}",
+                    OwnerTableName, businessIds.Count());
 
                 var db = _unitOfWorkManage.GetDbClient();
-                var tableName = GetTableNameByBusinessType(businessType);
-                var idFieldName = GetIdFieldNameByBusinessType(businessType);
+                var tableName = OwnerTableName;
+                var cols = db.DbMaintenance.GetColumnInfosByTableName(OwnerTableName);
+                var idFieldName = cols.FirstOrDefault(c => c.IsPrimarykey)?.DbColumnName;
 
                 if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(idFieldName))
                 {
-                    _logger?.LogWarning("未知的业务类型，跳过批量同步: BusinessType={BusinessType}", businessType);
+                    _logger?.LogWarning("未知的业务类型，跳过批量同步: OwnerTableName={OwnerTableName}", OwnerTableName);
                     return 0;
                 }
 
@@ -358,14 +387,14 @@ namespace RUINORERP.Server.Network.Services
                             SELECT COUNT(*) 
                             FROM tb_FS_BusinessRelation 
                             WHERE BusinessId = @BusinessId 
-                            AND BusinessType = @BusinessType 
+                            AND OwnerTableName = @OwnerTableName 
                             AND IsActive = 1 
                             AND isdeleted = 0";
 
                         int count = db.Ado.GetInt(checkSql, new
                         {
                             BusinessId = businessId,
-                            BusinessType = businessType
+                            OwnerTableName = OwnerTableName
                         });
 
                         // 更新HasAttachment标志
@@ -397,7 +426,7 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "批量同步指定业务ID的HasAttachment标志失败: BusinessType={BusinessType}", businessType);
+                _logger?.LogError(ex, "批量同步指定业务ID的HasAttachment标志失败: OwnerTableName={OwnerTableName}", OwnerTableName);
                 return 0;
             }
             finally
@@ -410,24 +439,27 @@ namespace RUINORERP.Server.Network.Services
         /// 手动触发同步单个业务实体的HasAttachment标志
         /// 用于数据修复和手动同步
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessId">业务ID</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>同步结果（是否有附件）</returns>
         public async Task<bool?> ManualSyncAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 var db = _unitOfWorkManage.GetDbClient();
-                var tableName = GetTableNameByBusinessType(businessType);
-                var idFieldName = GetIdFieldNameByBusinessType(businessType);
+
+                var tableName = OwnerTableName;
+                var cols = db.DbMaintenance.GetColumnInfosByTableName(OwnerTableName);
+                var idFieldName = cols.FirstOrDefault(c => c.IsPrimarykey)?.DbColumnName;
+
 
                 if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(idFieldName))
                 {
-                    _logger?.LogWarning("未知的业务类型，跳过手动同步: BusinessType={BusinessType}", businessType);
+                    _logger?.LogWarning("未知的业务类型，跳过手动同步: OwnerTableName={OwnerTableName}", OwnerTableName);
                     return null;
                 }
 
@@ -444,14 +476,14 @@ namespace RUINORERP.Server.Network.Services
                     SELECT COUNT(*) 
                     FROM tb_FS_BusinessRelation 
                     WHERE BusinessId = @BusinessId 
-                    AND BusinessType = @BusinessType 
+                    AND OwnerTableName = @OwnerTableName 
                     AND IsActive = 1 
                     AND isdeleted = 0";
 
                 int count = db.Ado.GetInt(checkSql, new
                 {
                     BusinessId = businessId,
-                    BusinessType = businessType
+                    OwnerTableName = OwnerTableName
                 });
 
                 // 更新HasAttachment标志
@@ -471,60 +503,16 @@ namespace RUINORERP.Server.Network.Services
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "手动同步HasAttachment标志失败: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                    businessType, businessId);
+                _logger?.LogError(ex, "手动同步HasAttachment标志失败: OwnerTableName={OwnerTableName}, BusinessId={BusinessId}",
+                    OwnerTableName, businessId);
                 return null;
             }
         }
 
         #region 私有辅助方法
 
-        /// <summary>
-        /// 根据业务类型获取表名
-        /// </summary>
-        private string GetTableNameByBusinessType(int businessType)
-        {
-            // TODO: 根据实际业务类型映射表名
-            // 这里是示例映射，需要根据实际配置调整
-            switch (businessType)
-            {
-                case 100: // 销售订单
-                    return "tb_SaleOrder";
-                case 200: // 产品
-                    return "tb_Prod";
-                case 201: // 产品明细
-                    return "tb_ProdDetail";
-                case 300: // 费用报销
-                    return "tb_FM_ExpenseClaim";
-                case 400: // 付款记录
-                    return "tb_FM_PaymentRecord";
-                default:
-                    return null;
-            }
-        }
 
-        /// <summary>
-        /// 根据业务类型获取主键字段名
-        /// </summary>
-        private string GetIdFieldNameByBusinessType(int businessType)
-        {
-            // TODO: 根据实际业务类型映射主键字段
-            switch (businessType)
-            {
-                case 100:
-                    return "SOrder_ID";
-                case 200:
-                    return "Prod_ID";
-                case 201:
-                    return "ProdDetail_ID";
-                case 300:
-                    return "ExpenseClaim_ID";
-                case 400:
-                    return "PaymentRecord_ID";
-                default:
-                    return null;
-            }
-        }
+
 
         #endregion
     }

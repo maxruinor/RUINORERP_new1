@@ -13,19 +13,14 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
     public class FileDeleteRequest : RequestBase
     {
         /// <summary>
-        /// 唯一的业务编号,如订单编号、合同编号,产品SKU码
-        /// </summary>
-        public string BusinessNo { get; set; }
-
-        /// <summary>
         /// 业务主键ID (单据主表ID)
         /// 单表业务时使用此项,默认为主表
         /// </summary>
-        public long? BusinessId { get; set; }
+        public long BusinessId { get; set; }
         /// <summary>
         /// 业务类型
         /// </summary>
-        public int? BusinessType { get; set; }
+        public string OwnerTableName { get; set; }
 
         /// <summary>
         /// 多文件模式下的文件存储信息列表

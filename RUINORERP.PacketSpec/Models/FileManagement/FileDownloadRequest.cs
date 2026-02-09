@@ -22,18 +22,14 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// 方式2: 按业务信息下载
         /// 业务类型 (BizType枚举值)
         /// </summary>
-        public int? BusinessType { get; set; }
+        public string OwnerTableName { get; set; }
 
-        /// <summary>
-        /// 业务编号 (兼容旧版)
-        /// </summary>
-        public string BusinessNo { get; set; }
 
         /// <summary>
         /// 业务主键ID (单据主表ID)
         /// 单表业务时使用此项,默认为主表
         /// </summary>
-        public long? BusinessId { get; set; }
+        public long BusinessId { get; set; }
 
         /// <summary>
         /// 关联字段名 (如 VoucherImage、PaymentImagePath)
@@ -45,16 +41,6 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// </summary>
         public bool DownloadAllImages { get; set; } = false;
 
-        /// <summary>
-        /// 是否明细表文件 (false=主表, true=明细表)
-        /// 默认false(主表)
-        /// </summary>
-        public bool IsDetailTable { get; set; } = false;
-
-        /// <summary>
-        /// 明细表主键ID (仅当IsDetailTable=true时有效)
-        /// </summary>
-        public long? DetailId { get; set; }
 
         /// <summary>
         /// 请求时间戳（用于验证请求有效性）
@@ -69,7 +55,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
             if (FileStorageInfo != null && FileStorageInfo.FileId != 0)
                 return true;
 
-            if (BusinessType.HasValue && (BusinessId.HasValue || !string.IsNullOrEmpty(BusinessNo)))
+            if (!string.IsNullOrEmpty(OwnerTableName))
             {
                 if (DownloadAllImages) return true;
                 if (!string.IsNullOrEmpty(RelatedField)) return true;
@@ -115,7 +101,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// <summary>
         /// 创建成功结果
         /// </summary>
-        public static FileDownloadResponse CreateSuccess(List<tb_FS_FileStorageInfo> fileStorageInfos , string message = "文件下载成功")
+        public static FileDownloadResponse CreateSuccess(List<tb_FS_FileStorageInfo> fileStorageInfos, string message = "文件下载成功")
         {
             return new FileDownloadResponse(true, message, fileStorageInfos, 200);
         }

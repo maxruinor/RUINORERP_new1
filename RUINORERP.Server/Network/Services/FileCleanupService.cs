@@ -418,9 +418,8 @@ namespace RUINORERP.Server.Network.Services
                     OriginalFileName = f.OriginalFileName,
                     FileSize = f.FileSize,
                     StoragePath = f.StoragePath ?? "",
-                    BusinessNo = r.BusinessNo ?? "",
                     BusinessId = r.BusinessId,
-                    BusinessType = r.BusinessType,
+                    OwnerTableName = r.OwnerTableName,
                     RelatedField = r.RelatedField ?? "",
                     FileStatus = f.FileStatus,
                     DeletedTime = r.Modified_at ?? r.Created_at ?? DateTime.MinValue
@@ -686,11 +685,7 @@ namespace RUINORERP.Server.Network.Services
         /// </summary>
         public string StoragePath { get; set; }
 
-        /// <summary>
-        /// 业务编号
-        /// </summary>
-        public string BusinessNo { get; set; }
-
+ 
         /// <summary>
         /// 业务主键ID
         /// </summary>
@@ -699,7 +694,7 @@ namespace RUINORERP.Server.Network.Services
         /// <summary>
         /// 业务类型
         /// </summary>
-        public int? BusinessType { get; set; }
+        public string OwnerTableName { get; set; }
 
         /// <summary>
         /// 关联字段
@@ -739,11 +734,7 @@ namespace RUINORERP.Server.Network.Services
             return $"{size:0.##} {sizes[order]}";
         }
 
-        /// <summary>
-        /// 获取业务类型名称
-        /// </summary>
-        public string BusinessTypeName => BusinessType.HasValue ? GetBusinessTypeName(BusinessType.Value) : "未知";
-
+ 
         /// <summary>
         /// 获取文件状态名称
         /// </summary>

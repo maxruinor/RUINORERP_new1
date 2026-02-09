@@ -4,7 +4,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2026 18:12:14
+// 时间：02/09/2026 20:46:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -33,12 +33,25 @@ namespace RUINORERP.Model.QueryDto
     
      
 
-        private string _OriginalFileName;
+        private string _OwnerTableName;
         /// <summary>
         /// 原始文件名
         /// </summary>
-        [AdvQueryAttribute(ColName = "OriginalFileName",ColDesc = "原始文件名")]
-        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "OriginalFileName",Length=255,IsNullable = false,ColumnDescription = "原始文件名" )]
+        [AdvQueryAttribute(ColName = "OwnerTableName",ColDesc = "原始文件名")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "OwnerTableName",Length=100,IsNullable = false,ColumnDescription = "原始文件名" )]
+        public string OwnerTableName 
+        { 
+            get{return _OwnerTableName;}
+            set{SetProperty(ref _OwnerTableName, value);}
+        }
+     
+
+        private string _OriginalFileName;
+        /// <summary>
+        /// 业务表名
+        /// </summary>
+        [AdvQueryAttribute(ColName = "OriginalFileName",ColDesc = "业务表名")]
+        [SugarColumn(ColumnDataType = "varchar",SqlParameterDbType ="String",ColumnName = "OriginalFileName",Length=255,IsNullable = false,ColumnDescription = "业务表名" )]
         public string OriginalFileName 
         { 
             get{return _OriginalFileName;}
@@ -69,19 +82,6 @@ namespace RUINORERP.Model.QueryDto
         { 
             get{return _FileExtension;}
             set{SetProperty(ref _FileExtension, value);}
-        }
-     
-
-        private int? _BusinessType;
-        /// <summary>
-        /// 业务类型
-        /// </summary>
-        [AdvQueryAttribute(ColName = "BusinessType",ColDesc = "业务类型")]
-        [SugarColumn(ColumnDataType = "int",SqlParameterDbType ="Int32",ColumnName = "BusinessType",IsNullable = true,ColumnDescription = "业务类型" )]
-        public int? BusinessType 
-        { 
-            get{return _BusinessType;}
-            set{SetProperty(ref _BusinessType, value);}
         }
      
 

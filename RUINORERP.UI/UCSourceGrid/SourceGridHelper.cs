@@ -13,6 +13,7 @@ using RUINORERP.Business.Cache;
 //using Google.Protobuf.Reflection;
 //using NetTaste;
 using RUINORERP.Business;
+using RUINORERP.UI.ToolForm;
 using RUINORERP.Business.CommService;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -790,6 +791,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         {
                             currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
                             PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(currContext.Cell as Cell, sgdefine);
+                            popupMenu.IsSingleImageMode = true; // 设置为单图模式
                             currContext.Cell.AddController(popupMenu);
                         }
                     }
@@ -1631,6 +1633,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         c = new SourceGrid.Cells.ImageWebCell(null);
                         c.View = new SourceGrid.Cells.Views.RemoteImageView();
                         PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(c, define);
+                        popupMenu.IsSingleImageMode = true; // 设置为单图模式
                         c.AddController(popupMenu);
                     }
                     if (define[i].CustomFormat == CustomFormatType.Image)
@@ -4437,6 +4440,95 @@ namespace RUINORERP.UI.UCSourceGrid
                 //    grid.Columns[i].Width = grid1.Width - otherColsWidth - 2 * i;
 
             }
+        }
+
+    }
+
+    /// <summary>
+    /// 图片网格辅助工具类
+    /// 提供公共的图片查看功能
+    /// </summary>
+    public static class ImageGridHelper
+    {
+        /// <summary>
+        /// 在图片查看器中显示图片
+        /// </summary>
+        /// <param name="imageBytes">图片字节数组</param>
+        public static void ShowImageInViewer(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                MainForm.Instance.PrintInfoLog("图片数据为空，无法查看");
+                return;
+            }
+
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(imageBytes))
+                {
+                    var image = System.Drawing.Image.FromStream(ms);
+                    // 使用内置的窗体显示图片
+                    using (var viewer = new System.Windows.Forms.Form())
+                    {
+                        viewer.Text = "图片查看器";
+                        viewer.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+                        viewer.ClientSize = new System.Drawing.Size(800, 600);
+                        viewer.MaximizeBox = true;
+                        viewer.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+
+                        var pictureBox = new System.Windows.Forms.PictureBox
+                        {
+                            Dock = System.Windows.Forms.DockStyle.Fill,
+                            SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
+                        };
+                        pictureBox.Image = image;
+                        viewer.Controls.Add(pictureBox);
+
+                        viewer.ShowDialog();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog($"显示图片失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 从单元格获取图片数据
+        /// </summary>
+        /// <param name="cell">表格单元格</param>
+        /// <returns>图片字节数组，如果没有图片返回null</returns>
+        public static byte[] GetImageBytesFromCell(SourceGrid.Cells.ICellVirtual cell)
+        {
+            if (cell == null) return null;
+
+            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                {
+                    return valueImageWeb.CellImageBytes;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 检查单元格是否有图片
+        /// </summary>
+        /// <param name="cell">表格单元格</param>
+        /// <returns>是否有图片</returns>
+        public static bool HasImageInCell(SourceGrid.Cells.Cell cell)
+        {
+            if (cell == null) return false;
+
+            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                return valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0;
+            }
+            return false;
         }
 
     }

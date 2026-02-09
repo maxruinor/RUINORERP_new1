@@ -726,9 +726,6 @@ namespace RUINORERP.UI.FM
             sgh.OnCalculateColumnValue += Sgh_OnCalculateColumnValue;
             sgh.OnAddDataRow += Sgh_OnAddDataRow;
 
-            // 添加网格双击事件处理（用于图片编辑）
-            grid1.MouseDoubleClick += Grid1_MouseDoubleClick;
-
             UIHelper.ControlMasterColumnsInvisible(CurMenuInfo, this);
         }
 
@@ -740,147 +737,8 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 网格鼠标双击事件处理
-        /// 用于处理报销凭证图片的双击编辑
-        /// </summary>
-        private void Grid1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                // 获取点击位置对应的单元格
-                var position = grid1.PositionAtPoint(e.Location);
-                if (position.IsEmpty()) return;
-
-                // 检查是否是报销凭证图片列
-                var col = sgd["EvidenceImagePath"];
-                if (col == null) return;
-
-                var colInfo = grid1.Columns.GetColumnInfo(col.UniqueId);
-                if (colInfo == null || position.Column != colInfo.Index) return;
-
-                // 获取单元格
-                var cell = grid1[position];
-                if (cell == null) return;
-
-                // 检查是否有图片
-                bool hasImage = false;
-                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                {
-                    hasImage = valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0;
-                }
-
-                if (hasImage)
-                {
-                    // 显示右键菜单选项
-                    ShowImageContextMenu(position.Row, position.Column, e.Location);
-                }
-                else
-                {
-                    // 没有图片，进入编辑模式
-                    grid1.Selection.SelectCell(position, true);
-                    // 使用网格的编辑功能启动编辑
-                    var editContext = new SourceGrid.CellContext(grid1, position);
-                    if (cell.Editor != null)
-                    {
-                        cell.Editor.EnableEdit = true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "处理网格双击事件失败");
-            }
-        }
-
-        /// <summary>
-        /// 显示图片右键菜单
-        /// </summary>
-        private void ShowImageContextMenu(int rowIndex, int colIndex, Point location)
-        {
-            ContextMenuStrip menu = new ContextMenuStrip();
-
-            // 查看大图
-            ToolStripMenuItem viewItem = new ToolStripMenuItem("查看大图");
-            viewItem.Click += (s, e) => ViewDetailImage(rowIndex, colIndex);
-            menu.Items.Add(viewItem);
-
-            // 替换图片
-            ToolStripMenuItem replaceItem = new ToolStripMenuItem("替换图片");
-            replaceItem.Click += async (s, e) => await ReplaceDetailImageFromDialog(rowIndex);
-            menu.Items.Add(replaceItem);
-
-            menu.Items.Add(new ToolStripSeparator());
-
-            // 删除图片
-            ToolStripMenuItem deleteItem = new ToolStripMenuItem("删除图片");
-            deleteItem.Click += (s, e) => DeleteDetailImage(rowIndex, colIndex);
-            menu.Items.Add(deleteItem);
-
-            // 显示菜单
-            menu.Show(grid1, location);
-        }
-
-        /// <summary>
-        /// 查看明细大图
-        /// </summary>
-        private void ViewDetailImage(int rowIndex, int colIndex)
-        {
-            try
-            {
-                var cell = grid1[rowIndex, colIndex];
-                if (cell == null) return;
-
-                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                {
-                    if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                    {
-                        using (var ms = new System.IO.MemoryStream(valueImageWeb.CellImageBytes))
-                        {
-                            var image = System.Drawing.Image.FromStream(ms);
-                            frmPictureViewer viewer = new frmPictureViewer();
-                            viewer.PictureBoxViewer.Image = image;
-                            viewer.ShowDialog();
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "查看明细大图失败");
-                MessageBox.Show($"查看图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        /// <summary>
         /// 从对话框替换明细图片
         /// </summary>
-        private async Task ReplaceDetailImageFromDialog(int rowIndex)
-        {
-            try
-            {
-                using (OpenFileDialog dlg = new OpenFileDialog())
-                {
-                    dlg.Filter = "图片文件|*.jpg;*.jpeg;*.png;*.gif;*.bmp|所有文件|*.*";
-                    dlg.Title = "选择新的报销凭证图片";
-
-                    if (dlg.ShowDialog() == DialogResult.OK)
-                    {
-                        // 使用 Task.Run 包装同步方法以实现异步
-                        byte[] imageData = await Task.Run(() => System.IO.File.ReadAllBytes(dlg.FileName));
-                        string fileName = System.IO.Path.GetFileName(dlg.FileName);
-                        await ReplaceDetailImage(rowIndex, imageData, fileName);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "替换图片失败");
-                MessageBox.Show($"替换图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
         private void Sgh_OnCalculateColumnValue(object _rowObj, SourceGridDefine myGridDefine, SourceGrid.Position position)
         {
             if (EditEntity == null)
@@ -1161,7 +1019,7 @@ namespace RUINORERP.UI.FM
                             }
                         }
                         #endregion
-                         
+
                     }
 
                 }
@@ -1276,9 +1134,8 @@ namespace RUINORERP.UI.FM
                         // 构建删除请求
                         var deleteRequest = new FileDeleteRequest
                         {
-                            BusinessNo = EditEntity?.ClaimNo ?? EditEntity?.ClaimMainID.ToString(),
                             BusinessId = EditEntity?.ClaimMainID ?? 0,
-                            BusinessType = (int)BizType.费用报销单,
+                            OwnerTableName = typeof(tb_FM_ExpenseClaim).Name,
                             PhysicalDelete = false // 逻辑删除
                         };
 
@@ -1337,16 +1194,16 @@ namespace RUINORERP.UI.FM
                         AddImageToDeleteList(oldImagePath);
                     }
 
-                        // 设置新图片
-                        string newHash = ImageHashHelper.GenerateHash(newImageData);
-                        valueImageWeb.SetImageNewHash(newHash);
-                        valueImageWeb.CellImageBytes = newImageData;
-                        valueImageWeb.CellImageHashName = fileName;
-                        // 使用 Grid.default 模式自动选择存储方式
-                        var gridObj = grid1 as SourceGrid.Grid;
-                        var imageCellValue = gridObj?.CreateImageCellValue(newImageData, fileName)
-                            ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = newImageData, ImagePath = fileName };
-                        cell.Value = imageCellValue;
+                    // 设置新图片
+                    string newHash = ImageHashHelper.GenerateHash(newImageData);
+                    valueImageWeb.SetImageNewHash(newHash);
+                    valueImageWeb.CellImageBytes = newImageData;
+                    valueImageWeb.CellImageHashName = fileName;
+                    // 使用 Grid.default 模式自动选择存储方式
+                    var gridObj = grid1 as SourceGrid.Grid;
+                    var imageCellValue = gridObj?.CreateImageCellValue(newImageData, fileName)
+                        ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = newImageData, ImagePath = fileName };
+                    cell.Value = imageCellValue;
 
                     // 设置视图
                     if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))

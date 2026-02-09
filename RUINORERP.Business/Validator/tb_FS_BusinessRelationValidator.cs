@@ -3,7 +3,7 @@
 // 项目：信息系统
 // 版权：Copyright RUINOR
 // 作者：Watson
-// 时间：01/21/2026 18:12:14
+// 时间：02/09/2026 20:46:13
 // **************************************
 using System;
 ﻿using SqlSugar;
@@ -36,14 +36,17 @@ namespace RUINORERP.Business
      
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.FileId).Must(CheckForeignKeyValue).WithMessage("文件ID:下拉选择值不正确。");
 
-//***** 
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessId).NotNull().WithMessage(":不能为空。");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableName).MaximumMixedLength(100).WithMessage("业务表名:不能超过最大长度,100.");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableName).NotEmpty().WithMessage("业务表名:不能为空。");
 
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).MaximumMixedLength(50).WithMessage("业务编号:不能超过最大长度,50.");
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).NotEmpty().WithMessage("业务编号:不能为空。");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableDesc).MaximumMixedLength(100).WithMessage("业务表名:不能超过最大长度,100.");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableDesc).NotEmpty().WithMessage("业务表名:不能为空。");
 
 //***** 
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessType).NotNull().WithMessage("业务类型:不能为空。");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessId).NotNull().WithMessage("业务单据:不能为空。");
+
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).MaximumMixedLength(50).WithMessage("单据编号:不能超过最大长度,50.");
+ RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessNo).NotEmpty().WithMessage("单据编号:不能为空。");
 
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.RelatedField).MaximumMixedLength(50).WithMessage("关联字段:不能超过最大长度,50.");
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.RelatedField).NotEmpty().WithMessage("关联字段:不能为空。");

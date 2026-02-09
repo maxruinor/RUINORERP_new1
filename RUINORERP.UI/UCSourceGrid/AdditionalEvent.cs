@@ -11,6 +11,15 @@ namespace RUINORERP.UI.UCSourceGrid
     {
         public override void OnDoubleClick(SourceGrid.CellContext sender, EventArgs e)
         {
+            // 检查是否有 ValueImageWeb 模型，如果有，让 PopupMenuForRemoteImageView 处理
+            var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                // 如果有 ValueImageWeb 模型，说明是远程图片，让 PopupMenuForRemoteImageView 处理
+                // 这里直接返回，不处理
+                return;
+            }
+
             base.OnClick(sender, e);
             if (sender.Value == null) 
             {

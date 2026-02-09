@@ -1213,15 +1213,12 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 bool allSuccess = true;
-                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
-                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-                long billId = entity.GetPropertyValue(EntityInfo.IdField).ToLong();
+                long billId = entity.PrimaryKeyID;
 
                 // 创建删除请求
                 var deleteRequest = new FileDeleteRequest();
-                deleteRequest.BusinessNo = billNo;
                 deleteRequest.BusinessId = billId;
-                deleteRequest.BusinessType = (int)EntityInfo.BizType;
+                deleteRequest.OwnerTableName = typeof(T).Name;
                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                 // 添加要删除的文件信息
@@ -1478,9 +1475,8 @@ namespace RUINORERP.UI.BaseForm
                 bool allSuccess = true;
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
-                string billNo = entity.GetPropertyValue(EntityInfo.NoField).ToString();
-                long billId = entity.GetPropertyValue(EntityInfo.IdField).ToLong();
+
+                long billId = entity.GetType().GetProperty("PrimaryKeyID").GetValue(entity).ToLong();
                 // ========== 第一步：处理已删除的图片 ==========
                 // 场景2：仅删除原图不上传新图
                 if (deletedImages != null && deletedImages.Count > 0)
@@ -1499,9 +1495,8 @@ namespace RUINORERP.UI.BaseForm
 
                                 // 创建删除请求
                                 var deleteRequest = new FileDeleteRequest();
-                                deleteRequest.BusinessNo = billNo;
                                 deleteRequest.BusinessId = billId;
-                                deleteRequest.BusinessType = (int)EntityInfo.BizType;
+                                deleteRequest.OwnerTableName = entity.GetType().Name;
                                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                                 // 添加要删除的文件信息
@@ -6909,31 +6904,13 @@ namespace RUINORERP.UI.BaseForm
                     return false;
                 }
 
-                // 获取实体信息
-                var entityInfo = EntityMappingHelper.GetEntityInfo<T>();
-                if (entityInfo == null)
-                {
-                    MainForm.Instance?.ShowStatusText("无法获取实体信息");
-                    return false;
-                }
-
-                var businessNo = EditEntity.GetPropertyValue(entityInfo.NoField)?.ToString();
-                if (string.IsNullOrEmpty(businessNo))
-                {
-                    MainForm.Instance?.ShowStatusText("业务编号为空");
-                    return false;
-                }
-
-                var businessType = (int)entityInfo.BizType;
-
                 // 读取图片数据
                 var imageData = System.IO.File.ReadAllBytes(imagePath);
                 var fileName = System.IO.Path.GetFileName(imagePath);
 
                 // 执行更新
                 var result = await fileUpdateService.UpdateBusinessFileAsync(
-                    businessType: businessType,
-                    businessNo: businessNo,
+                    OwnerTableName: EditEntity.GetType().Name,
                     businessId: EditEntity.PrimaryKeyID,
                     relatedField: relatedField,
                     newFileData: imageData,
@@ -6944,7 +6921,6 @@ namespace RUINORERP.UI.BaseForm
                 if (result.IsSuccess)
                 {
                     MainForm.Instance?.ShowStatusText("图片更新成功");
-                    logger?.LogInformation($"业务单据[{businessNo}]的关联字段[{relatedField}]图片更新成功,新文件ID:{result.NewFileId}");
 
                     // 标记实体已变更，确保关闭窗体时提示保存
                     EditEntity.HasChanged = true;
@@ -6955,7 +6931,6 @@ namespace RUINORERP.UI.BaseForm
                 else
                 {
                     MainForm.Instance?.ShowStatusText($"图片更新失败: {result.Message}");
-                    logger?.LogWarning($"业务单据[{businessNo}]的关联字段[{relatedField}]图片更新失败: {result.Message}");
                     return false;
                 }
             }
@@ -7029,7 +7004,6 @@ namespace RUINORERP.UI.BaseForm
                     return result;
                 }
 
-                var businessType = (int)entityInfo.BizType;
 
                 // 准备文件数据
                 var files = new List<(byte[], string)>();
@@ -7054,8 +7028,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 执行批量更新
                 var batchResult = await fileUpdateService.BatchUpdateBusinessFilesAsync(
-                    businessType: businessType,
-                    businessNo: businessNo,
+                    OwnerTableName: EditEntity.GetType().Name,
                     businessId: EditEntity.PrimaryKeyID,
                     relatedField: relatedField,
                     newFiles: files,
@@ -7070,7 +7043,6 @@ namespace RUINORERP.UI.BaseForm
                 if (result.IsSuccess)
                 {
                     MainForm.Instance?.ShowStatusText($"批量更新成功: {result.SuccessFiles.Count}个文件");
-                    logger?.LogInformation($"业务单据[{businessNo}]的关联字段[{relatedField}]批量图片更新成功,成功:{result.SuccessFiles.Count},失败:{result.FailedFiles.Count}");
 
                     // 标记实体已变更，确保关闭窗体时提示保存
                     EditEntity.HasChanged = true;

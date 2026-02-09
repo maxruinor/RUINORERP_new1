@@ -66,7 +66,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         /// <returns>更新后的文件信息</returns>
         public async Task<(tb_FS_FileStorageInfo newFileInfo, tb_FS_BusinessRelation newRelation, List<tb_FS_FileStorageInfo> oldFiles)> UpdateBusinessFileAsync(
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             long businessId,
             string relatedField,
@@ -90,7 +90,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 1. 查询当前关联的文件
                 var currentRelations = await db.Queryable<tb_FS_BusinessRelation>()
-                    .Where(r => r.BusinessType == businessType)
+                    .Where(r => r.OwnerTableName == OwnerTableName)
                     .Where(r => r.BusinessId == businessId)
                     .Where(r => r.RelatedField == relatedField)
                     .Where(r => r.IsDetailTable == isDetailTable)
@@ -122,7 +122,7 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 3. 保存新文件
-                var newFileInfo = await SaveNewFileAsync(newFileData, newFileName, businessType, userId);
+                var newFileInfo = await SaveNewFileAsync(newFileData, newFileName, OwnerTableName, userId);
                 if (newFileInfo == null)
                 {
                     throw new Exception("新文件保存失败");
@@ -132,7 +132,7 @@ namespace RUINORERP.Server.Network.Services
                 var newRelation = await CreateNewRelationAsync(
                     db,
                     newFileInfo.FileId,
-                    businessType,
+                    OwnerTableName,
                     businessNo,
                     businessId,
                     relatedField,
@@ -140,15 +140,12 @@ namespace RUINORERP.Server.Network.Services
                     isDetailTable,
                     detailId);
 
-                _logger.LogInformation(
-                    "文件更新成功,Strategy: {Strategy}, BusinessNo: {BusinessNo}, RelatedField: {RelatedField}, OldFileCount: {OldCount}, NewFileId: {NewFileId}",
-                    strategy, businessNo, relatedField, oldFiles.Count, newFileInfo.FileId);
-
+               
                 // 同步HasAttachment标志
                 if (_hasAttachmentSyncService != null)
                 {
                     await _hasAttachmentSyncService.SyncOnFileUploadAsync(
-                        businessType,
+                        OwnerTableName,
                         businessId,
                         businessNo);
                 }
@@ -164,7 +161,7 @@ namespace RUINORERP.Server.Network.Services
         /// <summary>
         /// 批量更新业务单据的多个图片
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessNo">业务编号</param>
         /// <param name="businessId">业务主键ID</param>
         /// <param name="relatedField">关联字段</param>
@@ -176,7 +173,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         /// <returns>更新结果</returns>
         public async Task<FileBatchUpdateResult> BatchUpdateBusinessFilesAsync(
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             long businessId,
             string relatedField,
@@ -202,7 +199,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 1. 查询并处理旧文件
                 var currentRelations = await db.Queryable<tb_FS_BusinessRelation>()
-                    .Where(r => r.BusinessType == businessType)
+                    .Where(r => r.OwnerTableName == OwnerTableName)
                     .Where(r => r.BusinessId == businessId)
                     .Where(r => r.RelatedField == relatedField)
                     .Where(r => r.IsDetailTable == isDetailTable)
@@ -237,7 +234,7 @@ namespace RUINORERP.Server.Network.Services
                 {
                     try
                     {
-                        var newFileInfo = await SaveNewFileAsync(fileData, fileName, businessType, userId);
+                        var newFileInfo = await SaveNewFileAsync(fileData, fileName, OwnerTableName, userId);
                         if (newFileInfo != null)
                         {
                             newFilesList.Add(newFileInfo);
@@ -246,7 +243,7 @@ namespace RUINORERP.Server.Network.Services
                             var relation = await CreateNewRelationAsync(
                                 db,
                                 newFileInfo.FileId,
-                                businessType,
+                                OwnerTableName,
                                 businessNo,
                                 businessId,
                                 relatedField,
@@ -274,15 +271,13 @@ namespace RUINORERP.Server.Network.Services
                 result.OldFiles = oldFiles;
                 result.NewFiles = newFilesList;
 
-                _logger.LogInformation(
-                    "批量文件更新完成,Strategy: {Strategy}, Success: {SuccessCount}, Failed: {FailedCount}",
-                    strategy, result.SuccessFiles.Count, result.FailedFiles.Count);
+               
 
                 // 同步HasAttachment标志
                 if (_hasAttachmentSyncService != null && result.SuccessFiles.Count > 0)
                 {
                     await _hasAttachmentSyncService.SyncOnFileUploadAsync(
-                        businessType,
+                        OwnerTableName,
                         businessId,
                         businessNo);
                 }
@@ -388,7 +383,7 @@ namespace RUINORERP.Server.Network.Services
         private async Task<tb_FS_FileStorageInfo> SaveNewFileAsync(
             byte[] fileData,
             string fileName,
-            int? businessType,
+            string OwnerTableName,
             long? userId)
         {
             try
@@ -400,7 +395,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 确定存储路径
                 var fileCreateTime = DateTime.Now;
-                var categoryPath = GetCategoryPath(businessType?.ToString() ?? "General", fileCreateTime);
+                var categoryPath = GetCategoryPath(OwnerTableName?.ToString() ?? "General", fileCreateTime);
                 if (!Directory.Exists(categoryPath))
                 {
                     Directory.CreateDirectory(categoryPath);
@@ -423,7 +418,7 @@ namespace RUINORERP.Server.Network.Services
                     FileExtension = fileExtension.TrimStart('.'),
                     FileSize = fileData.Length,
                     FileType = System.Net.Mime.MediaTypeNames.Application.Octet,
-                    BusinessType = businessType,
+                    OwnerTableName = OwnerTableName,
                     StorageProvider = "Local",
                     StoragePath = relativePath,
                     HashValue = contentHash,
@@ -456,7 +451,7 @@ namespace RUINORERP.Server.Network.Services
         private async Task<tb_FS_BusinessRelation> CreateNewRelationAsync(
             ISqlSugarClient db,
             long fileId,
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             long businessId,
             string relatedField,
@@ -469,7 +464,7 @@ namespace RUINORERP.Server.Network.Services
                 var relation = new tb_FS_BusinessRelation
                 {
                     FileId = fileId,
-                    BusinessType = businessType,
+                    OwnerTableName = OwnerTableName,
                     BusinessNo = businessNo,
                     BusinessId = businessId,
                     RelatedField = relatedField,
@@ -501,12 +496,12 @@ namespace RUINORERP.Server.Network.Services
         /// <summary>
         /// 获取分类存储路径
         /// </summary>
-        private string GetCategoryPath(string bizCategory, DateTime? dateTime = null)
+        private string GetCategoryPath(string OwnerTableName, DateTime? dateTime = null)
         {
             var now = dateTime ?? DateTime.Now;
             var timeFolder = now.ToString("yyyyMM");
             var storagePath = FileStorageHelper.GetStoragePath();
-            return Path.Combine(storagePath, bizCategory, timeFolder);
+            return Path.Combine(storagePath, OwnerTableName, timeFolder);
         }
 
         /// <summary>
@@ -517,7 +512,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="relatedField">关联字段</param>
         /// <returns>版本历史列表</returns>
         public async Task<List<FileVersionHistory>> GetFileVersionHistoryAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string relatedField)
         {
@@ -526,7 +521,7 @@ namespace RUINORERP.Server.Network.Services
                 var db = _unitOfWorkManage.GetDbClient();
 
                 var relations = await db.Queryable<tb_FS_BusinessRelation>()
-                    .Where(r => r.BusinessType == businessType)
+                    .Where(r => r.OwnerTableName == OwnerTableName)
                     .Where(r => r.BusinessId == businessId)
                     .Where(r => r.RelatedField == relatedField)
                     .Where(r => r.isdeleted == false)
@@ -623,7 +618,7 @@ namespace RUINORERP.Server.Network.Services
         /// <param name="enableVersioning">是否启用版本控制（默认false）</param>
         /// <returns>恢复结果</returns>
         public async Task<bool> RestoreFileVersionAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string relatedField,
             long versionFileId,
@@ -641,7 +636,7 @@ namespace RUINORERP.Server.Network.Services
 
                 // 1. 查询当前活跃的关联
                 var currentRelations = await db.Queryable<tb_FS_BusinessRelation>()
-                    .Where(r => r.BusinessType == businessType)
+                    .Where(r => r.OwnerTableName == OwnerTableName)
                     .Where(r => r.BusinessId == businessId)
                     .Where(r => r.RelatedField == relatedField)
                     .Where(r => r.IsActive == true)
@@ -689,7 +684,7 @@ namespace RUINORERP.Server.Network.Services
                 var newRelation = new tb_FS_BusinessRelation
                 {
                     FileId = versionFileId,
-                    BusinessType = businessType,
+                    OwnerTableName = OwnerTableName,
                     BusinessId = businessId,
                     RelatedField = relatedField,
                     IsActive = true,

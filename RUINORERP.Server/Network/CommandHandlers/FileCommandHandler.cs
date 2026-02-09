@@ -254,7 +254,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                         // 根据分类和当前时间确定存储路径（按YYMM分目录）
                         var fileCreateTime = DateTime.Now;
-                        var categoryPath = GetCategoryPath(FileStorageInfo.BusinessType.ToString(), fileCreateTime);
+                        var categoryPath = GetCategoryPath(FileStorageInfo.OwnerTableName.ToString(), fileCreateTime);
                         if (!Directory.Exists(categoryPath))
                         {
                             Directory.CreateDirectory(categoryPath);
@@ -281,7 +281,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             FileStorageInfo.FileData.Length,   // fileSize
                             fileExtension.TrimStart('.'),     // fileType
                             relativeStoragePath,              // storagePath（保存相对路径）
-                            FileStorageInfo.BusinessType != null ? FileStorageInfo.BusinessType.GetHashCode() : 0, // businessType
+                             FileStorageInfo.OwnerTableName, // businessType
                             executionContext.UserId,          // userId
                             contentHash);                     // contentHash (可选)
 
@@ -301,18 +301,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
 
                         // 在服务器端创建业务关联
-                        if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.BusinessType.HasValue)
+                        if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.OwnerTableName.Trim().Length > 0)
                         {
                             var businessRelation = new tb_FS_BusinessRelation
                             {
-                                BusinessType = uploadRequest.BusinessType.Value,
+                                OwnerTableName = uploadRequest.OwnerTableName,
                                 BusinessNo = uploadRequest.BusinessNo,
                                 BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
                                 FileId = fileStorageInfo.FileId,
                                 IsMainFile = (i == 0), // 第一个文件为主文件
                                 RelatedField = uploadRequest.RelatedField ?? "MainFile", // 设置关联字段，必填项
-                                IsDetailTable = uploadRequest.IsDetailTable, // 新增:是否明细表
-                                DetailId = uploadRequest.DetailId, // 新增:明细表主键
+
                                 Created_at = DateTime.Now,
                                 Created_by = uploadRequest.Created_by ?? executionContext.UserId
                             };
@@ -327,13 +326,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             else
                             {
                                 _logger?.Debug("业务关联创建成功: FileId={FileId}, BusinessNo={BusinessNo}, BusinessId={BusinessId}, BusinessType={BusinessType}, RelatedField={RelatedField}",
-                                    fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.BusinessType.Value, uploadRequest.RelatedField);
+                                    fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.OwnerTableName, uploadRequest.RelatedField);
 
                                 // 同步HasAttachment标志（在事务内执行）
-                                if (_hasAttachmentSyncService != null && uploadRequest.BusinessType.HasValue && uploadRequest.BusinessId.HasValue)
+                                if (_hasAttachmentSyncService != null && uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue)
                                 {
                                     await _hasAttachmentSyncService.SyncOnFileUploadAsync(
-                                        uploadRequest.BusinessType.Value,
+                                        uploadRequest.OwnerTableName,
                                         uploadRequest.BusinessId.Value,
                                         uploadRequest.BusinessNo,
                                         cancellationToken,
@@ -395,29 +394,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                 }
                 // 方式2/3: 按业务信息下载
-                else if (downloadRequest.BusinessType.HasValue)
+                else if (downloadRequest.OwnerTableName.Trim().Length > 0)
                 {
                     if (downloadRequest.DownloadAllImages)
                     {
                         // 方式3: 下载单据所有关联图片
                         fileList = await DownloadAllImagesForBusinessAsync(
-                            downloadRequest.BusinessType.Value,
-                            downloadRequest.BusinessNo,
+                            downloadRequest.OwnerTableName,
                             downloadRequest.BusinessId,
-                            downloadRequest.IsDetailTable,
-                            downloadRequest.DetailId,
                             cancellationToken);
                     }
                     else
                     {
                         // 方式2: 按业务信息+字段下载单个图片
                         var fileInfo = await DownloadByFieldAsync(
-                            downloadRequest.BusinessType.Value,
-                            downloadRequest.BusinessNo,
+                            downloadRequest.OwnerTableName,
                             downloadRequest.BusinessId,
                             downloadRequest.RelatedField,
-                            downloadRequest.IsDetailTable,
-                            downloadRequest.DetailId,
                             cancellationToken);
                         if (fileInfo != null)
                         {
@@ -490,45 +483,27 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 按业务信息+字段下载单个图片
         /// </summary>
         private async Task<tb_FS_FileStorageInfo> DownloadByFieldAsync(
-            int businessType,
-            string businessNo,
-            long? businessId,
+            string OwnerTableName,
+            long businessId,
             string relatedField,
-            bool isDetailTable,
-            long? detailId,
             CancellationToken cancellationToken)
         {
             var db = _unitOfWorkManage.GetDbClient();
 
             // 构建查询条件
             var query = db.Queryable<tb_FS_BusinessRelation>()
-                .Where(c => c.BusinessType == businessType)
+                .Where(c => c.OwnerTableName == OwnerTableName)
                 .Where(c => c.IsActive == true)
                 .Where(c => c.RelatedField == relatedField);
 
             // 优先使用 BusinessId 查询（性能更好）
-            if (businessId.HasValue)
+            if (businessId > 0)
             {
-                query = query.Where(c => c.BusinessId == businessId.Value);
+                query = query.Where(c => c.BusinessId == businessId);
             }
-            else if (!string.IsNullOrEmpty(businessNo))
-            {
-                query = query.Where(c => c.BusinessNo == businessNo);
-            }
+          
 
-            // 明细表相关条件
-            if (isDetailTable)
-            {
-                query = query.Where(c => c.IsDetailTable == true);
-                if (detailId.HasValue)
-                {
-                    query = query.Where(c => c.DetailId == detailId.Value);
-                }
-            }
-            else
-            {
-                query = query.Where(c => c.IsDetailTable == false);
-            }
+           
 
             var relations = await query
                 .Includes(t => t.tb_fs_filestorageinfo)
@@ -548,7 +523,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
             }
 
-            _logger?.LogWarning("未找到文件, 业务类型: {BusinessType}, 字段: {RelatedField}", businessType, relatedField);
+           
             return null;
         }
 
@@ -556,19 +531,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 下载单据所有关联图片
         /// </summary>
         private async Task<List<tb_FS_FileStorageInfo>> DownloadAllImagesForBusinessAsync(
-            int businessType,
-            string businessNo,
+            string OwnerTableName,
             long? businessId,
-            bool isDetailTable,
-            long? detailId,
-            CancellationToken cancellationToken)
+              CancellationToken cancellationToken)
         {
             var fileInfos = new List<tb_FS_FileStorageInfo>();
             var db = _unitOfWorkManage.GetDbClient();
 
             // 构建查询条件
             var query = db.Queryable<tb_FS_BusinessRelation>()
-                .Where(c => c.BusinessType == businessType)
+                .Where(c => c.OwnerTableName == OwnerTableName)
                 .Where(c => c.IsActive == true);
 
             // 优先使用 BusinessId 查询
@@ -576,24 +548,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 query = query.Where(c => c.BusinessId == businessId.Value);
             }
-            else if (!string.IsNullOrEmpty(businessNo))
-            {
-                query = query.Where(c => c.BusinessNo == businessNo);
-            }
 
-            // 明细表相关条件
-            if (isDetailTable)
-            {
-                query = query.Where(c => c.IsDetailTable == true);
-                if (detailId.HasValue)
-                {
-                    query = query.Where(c => c.DetailId == detailId.Value);
-                }
-            }
-            else
-            {
-                query = query.Where(c => c.IsDetailTable == false);
-            }
 
             var relations = await query
                 .Includes(t => t.tb_fs_filestorageinfo)
@@ -702,9 +657,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
 
             // 2. 业务类型目录 - 减少子目录搜索数量，只搜索最近3个月
-            if (fileInfo.BusinessType.HasValue)
+            if (fileInfo.OwnerTableName.Trim().Length>0)
             {
-                var baseBusinessPath = Path.Combine(_fileStoragePath, fileInfo.BusinessType.Value.ToString());
+                var baseBusinessPath = Path.Combine(_fileStoragePath, fileInfo.OwnerTableName.ToString());
                 if (Directory.Exists(baseBusinessPath))
                 {
                     searchDirectories.Add(baseBusinessPath);
@@ -827,11 +782,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         int SelfRelationCount = 0;
                         try
                         {
-                            var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo == deleteRequest.BusinessNo && c.isdeleted == false);
+                            var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId == deleteRequest.BusinessId && c.isdeleted == false);
                             SelfRelationCount = SelfRelations?.Count ?? 0;
                             relationsToDelete.AddRange(SelfRelations);
 
-                            var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessNo != deleteRequest.BusinessNo && c.isdeleted == false);
+                            var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId != deleteRequest.BusinessId && c.isdeleted == false);
                             int OtherRelationCount = OtherRelations?.Count ?? 0;
 
                             // 检查文件是否被其他业务引用
@@ -864,8 +819,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 if (updateResult)
                                 {
                                     relationDeletedCount++;
-                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessNo: {BusinessNo}",
-                                        relation.RelationId, currentFileId, deleteRequest.BusinessNo);
+                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}",
+                                        relation.RelationId, currentFileId, deleteRequest.BusinessId);
                                 }
                                 else
                                 {
@@ -938,10 +893,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
 
                                 // 添加业务类型目录（如果有）
-                                if (fileStorageInfo.BusinessType.HasValue)
+                                if (fileStorageInfo.OwnerTableName.Trim().Length>0)
                                 {
                                     // 获取基础业务目录
-                                    var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.BusinessType.Value.ToString());
+                                    var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.OwnerTableName);
                                     searchPaths.Add(baseBusinessPath);
 
                                     // 如果是较新的文件结构，可能存在于YYMM子目录中
@@ -1064,7 +1019,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         if (firstRelation != null)
                         {
                             await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
-                                firstRelation.BusinessType,
+                                firstRelation.OwnerTableName,
                                 firstRelation.BusinessId,
                                 cancellationToken,
                                 useTransaction: false); // 已经在外部事务中，不需要开启新事务
@@ -1117,20 +1072,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
         {
             try
             {
-                _logger?.Debug("开始处理文件列表查询请求");
-
                 var response = new FileListResponse();
                 var fileInfos = new List<tb_FS_FileStorageInfo>();
 
                 // 如果指定了业务编号,查询业务关联的文件
-                if (!string.IsNullOrEmpty(listRequest.BusinessId))
+                if (listRequest.BusinessId > 0)
                 {
                     // 优化后: 使用 INNER JOIN 一次查询完成,避免 N+1 查询问题
                     var dbClient = _unitOfWorkManage.GetDbClient();
                     var fileQueryResult = await dbClient
                         .Queryable<tb_FS_BusinessRelation>()
                         .InnerJoin<tb_FS_FileStorageInfo>((br, fs) => br.FileId == fs.FileId)
-                        .Where((br, fs) => br.BusinessNo == listRequest.BusinessId
+                        .Where((br, fs) => br.BusinessId == listRequest.BusinessId
                                           && br.IsActive
                                           && fs.FileStatus == (int)FileStatus.Active
                                           && fs.isdeleted == false)
@@ -1141,9 +1094,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     fileInfos = fileQueryResult.Select(x => x.fs).ToList();
                 }
                 // 否则按分类查询所有文件
-                else if (listRequest.BusinessType.HasValue)
+                else if (listRequest.OwnerTableName.Trim().Length > 0)
                 {
-                    var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.BusinessType == listRequest.BusinessType);
+                    var files = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.OwnerTableName == listRequest.OwnerTableName);
 
                     if (files != null)
                     {
@@ -1362,7 +1315,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     if (allFiles != null && allFiles.Count > 0)
                     {
                         var fileGroups = allFiles.Cast<tb_FS_FileStorageInfo>()
-                            .GroupBy(f => f.BusinessType?.ToString() ?? "Unknown");
+                            .GroupBy(f => f.OwnerTableName?.ToString() ?? "Unknown");
 
                         foreach (var group in fileGroups)
                         {

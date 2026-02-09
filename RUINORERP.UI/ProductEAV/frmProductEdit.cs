@@ -2820,9 +2820,8 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     var fileService = Startup.GetFromFac<FileManagementService>();
                                     var deleteRequest = new FileDeleteRequest();
-                                    deleteRequest.BusinessNo = EditEntity.ProductNo ?? EditEntity.ProdBaseID.ToString();
                                     deleteRequest.BusinessId = EditEntity.ProdBaseID;
-                                    deleteRequest.BusinessType = (int)BizType.产品档案;
+                                    deleteRequest.OwnerTableName = EditEntity.GetType().Name;
                                     deleteRequest.PhysicalDelete = false;
 
                                     var ctrpay = Startup.GetFromFac<FileBusinessService>();
@@ -3236,9 +3235,8 @@ namespace RUINORERP.UI.ProductEAV
 
                     var fileService = Startup.GetFromFac<FileManagementService>();
                     var deleteRequest = new FileDeleteRequest();
-                    deleteRequest.BusinessNo = billNo;
                     deleteRequest.BusinessId = billId;
-                    deleteRequest.BusinessType = (int)BizType.产品档案; // 产品明细使用产品档案业务类型
+                    deleteRequest.OwnerTableName = typeof(tb_ProdDetail).Name; // 产品明细使用产品档案业务类型
                     deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                     // 添加要删除的文件信息

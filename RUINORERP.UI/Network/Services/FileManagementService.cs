@@ -158,7 +158,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="bizNo">业务编号</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件删除响应</returns>
-        public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, int BizType, string BizNo, CancellationToken ct = default)
+        public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, long BusinessId, string OwnerTableName, CancellationToken ct = default)
         {
             // 参数验证
             if (fileStorageInfo == null)
@@ -174,8 +174,8 @@ namespace RUINORERP.UI.Network.Services
             // 创建删除请求
             var deleteRequest = new FileDeleteRequest();
             deleteRequest.InitializeCompatibility();
-            deleteRequest.BusinessNo = BizNo;
-            deleteRequest.BusinessType = BizType;
+            deleteRequest.OwnerTableName = OwnerTableName;
+            deleteRequest.BusinessId = BusinessId;
             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
 
             // 调用通用删除方法

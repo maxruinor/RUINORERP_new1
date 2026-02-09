@@ -68,7 +68,7 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="isDetailTable">是否明细表文件(默认false)</param>
         /// <param name="detailId">明细表主键ID(仅明细表时需要)</param>
         /// <returns>上传结果，包含文件ID</returns>
-        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, string relatedField, long? fileId = null, bool isDetailTable = false, long? detailId = null)
+        public async Task<FileUploadResponse> UploadImageAsync(BaseEntity entity, string OriginalFileName, byte[] fileData, string relatedField, long? fileId = null)
         {
             // 参数验证
             if (entity == null)
@@ -85,20 +85,11 @@ namespace RUINORERP.UI.Network.Services
                 // 获取文件管理服务
                 var fileService = _appContext.GetRequiredService<FileManagementService>();
 
-                // 获取实体信息
-                var entityInfo = _mapper.GetEntityInfo(entity.GetType());
-                if (entityInfo == null || string.IsNullOrEmpty(entityInfo.NoField))
-                {
-                    throw new ArgumentException("无效的业务实体类型");
-                }
-
-                // 获取业务编号
-                string businessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
-
+ 
                 tb_FS_FileStorageInfo storageInfo = new tb_FS_FileStorageInfo();
                 storageInfo.OriginalFileName = OriginalFileName;
-                storageInfo.BusinessType = (int)entityInfo.BizType;
                 storageInfo.FileData = fileData;
+                storageInfo.OwnerTableName= entity.GetType().Name;
 
                 // 如果提供了文件ID(更新场景)
                 if (fileId.HasValue)
@@ -106,19 +97,12 @@ namespace RUINORERP.UI.Network.Services
                     storageInfo.FileId = fileId.Value;
                 }
 
-                // 获取实体主键ID(从EntityInfo中获取)
-                //var businessId = entityInfo.IdField != null ?
-                //    entity.GetPropertyValue<long>(entityInfo.IdField) : 0;
-
                 // 准备上传请求
                 var uploadRequest = new FileUploadRequest();
                 uploadRequest.FileStorageInfos.Add(storageInfo);
-                uploadRequest.BusinessNo = businessNo;
-                uploadRequest.BusinessType = (int)entityInfo.BizType;
+                uploadRequest.OwnerTableName = entity.GetType().Name;
                 uploadRequest.BusinessId = entity.PrimaryKeyID;
                 uploadRequest.RelatedField = relatedField;
-                uploadRequest.IsDetailTable = isDetailTable;
-                uploadRequest.DetailId = detailId;
                 // 执行上传
                 var response = await fileService.UploadFileAsync(uploadRequest);
 
@@ -176,55 +160,53 @@ namespace RUINORERP.UI.Network.Services
             var fileService = _appContext.GetRequiredService<FileManagementService>();
             try
             {
-                var entityInfo = _mapper.GetEntityInfo(entity.GetType());
-                if (entityInfo != null && entityInfo.Fields != null)
+
+
+                // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
+                var db = _unitOfWorkManage.GetDbClient().CopyNew();
+
+                // 构建查询条件
+                var query = db.Queryable<tb_FS_BusinessRelation>()
+                    .Where(c => c.OwnerTableName == entity.GetType().Name && c.isdeleted == false);
+
+                query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
+
+                // 如果指定了关联字段，按字段筛选
+                if (!string.IsNullOrEmpty(relatedField))
                 {
+                    query = query.Where(c => c.RelatedField == relatedField);
+                }
 
-                    // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
-                    var db = _unitOfWorkManage.GetDbClient().CopyNew();
+                // 使用新的数据库连接上下文获取业务关联列表
+                var BusinessRelationList = await query
+                    .Includes(t => t.tb_fs_filestorageinfo)
+                    .ToListAsync();
 
-                    // 构建查询条件
-                    var query = db.Queryable<tb_FS_BusinessRelation>()
-                        .Where(c => c.BusinessType == (int)entityInfo.BizType && c.isdeleted == false);
-
-                    query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
-
-                    // 如果指定了关联字段，按字段筛选
-                    if (!string.IsNullOrEmpty(relatedField))
+                // 直接使用查询出来的对象进行下载，避免不必要的复制
+                foreach (var item in BusinessRelationList)
+                {
+                    if (item.tb_fs_filestorageinfo != null)
                     {
-                        query = query.Where(c => c.RelatedField == relatedField);
-                    }
-
-                    // 使用新的数据库连接上下文获取业务关联列表
-                    var BusinessRelationList = await query
-                        .Includes(t => t.tb_fs_filestorageinfo)
-                        .ToListAsync();
-
-                    // 直接使用查询出来的对象进行下载，避免不必要的复制
-                    foreach (var item in BusinessRelationList)
-                    {
-                        if (item.tb_fs_filestorageinfo != null)
+                        // 创建下载请求
+                        var request = new FileDownloadRequest
                         {
-                            // 创建下载请求
-                            var request = new FileDownloadRequest
-                            {
-                                FileStorageInfo = item.tb_fs_filestorageinfo
-                            };
+                            FileStorageInfo = item.tb_fs_filestorageinfo
+                        };
 
-                            // 下载文件
-                            var response = await fileService.DownloadFileAsync(request);
-                            if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                            {
-                                fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
-                            }
-                            else
-                            {
-                                // 记录错误日志
-                                System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
-                            }
+                        // 下载文件
+                        var response = await fileService.DownloadFileAsync(request);
+                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                        {
+                            fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
+                        }
+                        else
+                        {
+                            // 记录错误日志
+                            System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
                         }
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -461,21 +443,14 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 获取文件管理服务
                 var fileService = _appContext.GetRequiredService<FileManagementService>();
-                // 获取实体信息
-                var entityInfo = _mapper.GetEntityInfo(entity.GetType());
-                if (entityInfo == null || string.IsNullOrEmpty(entityInfo.NoField))
-                {
-                    throw new ArgumentException("无效的业务实体类型");
-                }
 
                 // 获取业务编号
-                string businessNo = entity.GetPropertyValue<string>(entityInfo.NoField).ToString();
-                int businessType = (int)entityInfo.BizType;
+                long businessId = entity.PrimaryKeyID;
 
                 // 创建删除请求
                 FileDeleteRequest deleteRequest = new FileDeleteRequest();
-                deleteRequest.BusinessNo = businessNo;
-                deleteRequest.BusinessType = businessType;
+                deleteRequest.BusinessId = businessId;
+                deleteRequest.OwnerTableName = entity.GetType().Name;
                 deleteRequest.PhysicalDelete = physicalDelete;
 
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
@@ -487,7 +462,7 @@ namespace RUINORERP.UI.Network.Services
                     var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     // 获取当前业务实体关联的所有文件关系
                     var businessRelationList = await businessRelationService.QueryByNavAsync(c =>
-                        c.BusinessType == businessType && c.BusinessNo == businessNo);
+                        c.OwnerTableName == entity.GetType().Name && c.BusinessId == businessId);
                     deleteRequest.AddDeleteFileStorageInfo(businessRelationList.Select(x => x.tb_fs_filestorageinfo).ToList());
                 }
                 // 执行删除

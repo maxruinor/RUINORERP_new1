@@ -145,12 +145,27 @@ namespace SourceGrid.Cells.Views
                         System.Drawing.Image img = null;
                         using (MemoryStream stream = new MemoryStream(buffByte))
                         {
-                            img = System.Drawing.Image.FromStream(stream);
-                            if (img != null)
+                            try
                             {
-                                GridImage = img;
+                                System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                                if (tempImg != null)
+                                {
+                                    img = new Bitmap(tempImg);
+                                    tempImg.Dispose();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
                             }
                         }
+
+                        if (GridImage != null)
+                        {
+                            GridImage.Dispose();
+                            GridImage = null;
+                        }
+                        GridImage = img;
                     }
                     else if (!string.IsNullOrEmpty(icv.ImagePath))
                     {
@@ -172,23 +187,40 @@ namespace SourceGrid.Cells.Views
                     byte[] buffByte = context.Value as byte[];
                     System.Drawing.Image img = null;
                     // 使用 MemoryStream 从字节数组创建流
+                    // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
+                    // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
                     using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
                     {
-                        // 从流中创建 Image 对象
-                        img = System.Drawing.Image.FromStream(stream);
-                        if (img != null)
+                        try
                         {
-                            GridImage = img;
-                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
-                            //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
+                            System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                            if (tempImg != null)
+                            {
+                                img = new Bitmap(tempImg);
+                                tempImg.Dispose();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
                         }
                     }
 
+                    if (GridImage != null)
+                    {
+                        GridImage.Dispose();
+                        GridImage = null;
+                    }
+                    GridImage = img;
                 }
 
                 if (context.Value is Bitmap || context.Value is System.Drawing.Image)
                 {
                     // 使用 MemoryStream 从字节数组创建流
+                    if (GridImage != null && GridImage != (System.Drawing.Image)context.Value)
+                    {
+                        GridImage.Dispose();
+                    }
                     GridImage = context.Value as System.Drawing.Image;
                 }
 
@@ -236,12 +268,27 @@ namespace SourceGrid.Cells.Views
                         System.Drawing.Image img = null;
                         using (MemoryStream stream = new MemoryStream(buffByte))
                         {
-                            img = System.Drawing.Image.FromStream(stream);
-                            if (img != null)
+                            try
                             {
-                                GridImage = img;
+                                System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                                if (tempImg != null)
+                                {
+                                    img = new Bitmap(tempImg);
+                                    tempImg.Dispose();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
                             }
                         }
+
+                        if (GridImage != null)
+                        {
+                            GridImage.Dispose();
+                            GridImage = null;
+                        }
+                        GridImage = img;
                     }
                     else if (!string.IsNullOrEmpty(icv.ImagePath))
                     {
@@ -263,22 +310,40 @@ namespace SourceGrid.Cells.Views
                     byte[] buffByte = context.Value as byte[];
                     System.Drawing.Image img = null;
                     // 使用 MemoryStream 从字节数组创建流
+                    // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
+                    // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
                     using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
                     {
-                        // 从流中创建 Image 对象
-                        img = System.Drawing.Image.FromStream(stream);
-                        if (img != null)
+                        try
                         {
-                            GridImage = img;
-                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
-                            //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
+                            System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                            if (tempImg != null)
+                            {
+                                img = new Bitmap(tempImg);
+                                tempImg.Dispose();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
                         }
                     }
+
+                    if (GridImage != null)
+                    {
+                        GridImage.Dispose();
+                        GridImage = null;
+                    }
+                    GridImage = img;
                 }
 
                 if (context.Value is Bitmap || context.Value is System.Drawing.Image)
                 {
                     // 使用 MemoryStream 从字节数组创建流
+                    if (GridImage != null && GridImage != (System.Drawing.Image)context.Value)
+                    {
+                        GridImage.Dispose();
+                    }
                     GridImage = context.Value as System.Drawing.Image;
                 }
 
@@ -311,22 +376,83 @@ namespace SourceGrid.Cells.Views
             base.OnDrawContent(graphics, area);
             using (MeasureHelper measure = new MeasureHelper(graphics))
             {
-                if (GridImage != null)
+                // 使用局部变量避免多线程问题
+                var currentImage = GridImage;
+                
+                // 检查GridImage是否有效
+                if (currentImage != null)
                 {
-                    graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //1Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                    try
+                    {
+                        // 先检查图片是否有效，避免 ArgumentException
+                        if (IsImageValid(currentImage))
+                        {
+                            graphics.Graphics.DrawImage(currentImage, Rectangle.Round(area)); //1Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                        }
+                        else
+                        {
+                            // 图片无效，释放并设置为null
+                            GridImage = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 绘制失败，将GridImage设置为null
+                        GridImage = null;
+                        System.Diagnostics.Debug.WriteLine("绘制图片失败: " + ex.Message);
+                    }
                 }
                 else
                 {
                     if (OnLoadImage != null)
                     {
-                        OnLoadImage(GridImage, null);
+                        OnLoadImage(currentImage, null);
+                        // 重新获取GridImage
+                        currentImage = GridImage;
                         // 确保GridImage不为null后再绘制
-                        if (GridImage != null)
+                        if (currentImage != null)
                         {
-                            graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                            try
+                            {
+                                if (IsImageValid(currentImage))
+                                {
+                                    graphics.Graphics.DrawImage(currentImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                                }
+                                else
+                                {
+                                    GridImage = null;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // 绘制失败，将GridImage设置为null
+                                GridImage = null;
+                                System.Diagnostics.Debug.WriteLine("绘制图片失败: " + ex.Message);
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 检查图片是否有效
+        /// </summary>
+        private bool IsImageValid(System.Drawing.Image image)
+        {
+            if (image == null)
+                return false;
+
+            try
+            {
+                // 尝试访问图片属性，如果无效会抛出异常
+                var size = image.Size;
+                var format = image.RawFormat;
+                return size.Width > 0 && size.Height > 0;
+            }
+            catch
+            {
+                return false;
             }
         }
         protected override void OnDrawBackground(GraphicsCache graphics, RectangleF area)

@@ -722,6 +722,13 @@ namespace RUINORERP.UI.UCSourceGrid
         private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
+        
+        /// <summary>
+        /// 是否单图模式（true:单图，false:多图）
+        /// 单图模式下，有图片时显示"替换图片"，无图片时显示"上传图片"
+        /// 多图模式下，始终显示"上传图片"和"删除图片"
+        /// </summary>
+        public bool IsSingleImageMode { get; set; } = true;
         public PopupMenuForRemoteImageView(SourceGrid.Cells.Cell cell, SourceGridDefine _sgdefine)
         {
             MyMenu.ShowCheckMargin = false;
@@ -729,34 +736,6 @@ namespace RUINORERP.UI.UCSourceGrid
             MyMenu.MinimumSize = new Size(120, 0); // 设置最小宽度为 120，高度不限
                                                    // 为 ContextMenuStrip 控件添加 Opening 事件处理程序
             MyMenu.Opening += new CancelEventHandler(MyMenu_Opening);
-
-            // 添加分隔符
-            ToolStripSeparator ss = new ToolStripSeparator();
-            MyMenu.Items.Add(ss);
-            
-            // 查看大图菜单项
-            ToolStripMenuItem siViewLarge = new ToolStripMenuItem("查看大图");
-            siViewLarge.Tag = cell;
-            siViewLarge.Click += SiCustom_Click;
-            MyMenu.Items.Add(siViewLarge);
-            
-            // 添加上传图片菜单项
-            ToolStripMenuItem siUpload = new ToolStripMenuItem("上传图片");
-            siUpload.Tag = cell;
-            siUpload.Click += SiUpload_Click;
-            MyMenu.Items.Add(siUpload);
-            
-            // 添加删除图片菜单项
-            ToolStripMenuItem siDelete = new ToolStripMenuItem("删除图片");
-            siDelete.Tag = cell;
-            siDelete.Click += SiDelete_Click;
-            MyMenu.Items.Add(siDelete);
-            
-            // 添加更新图片菜单项
-            ToolStripMenuItem siUpdate = new ToolStripMenuItem("更新图片");
-            siUpdate.Tag = cell;
-            siUpdate.Click += SiUpdate_Click;
-            MyMenu.Items.Add(siUpdate);
             
             _cell = cell;
             grid = _sgdefine.grid;
@@ -764,33 +743,121 @@ namespace RUINORERP.UI.UCSourceGrid
             MyMenu.Width = 100;
         }
 
+        /// <summary>
+        /// 双击事件处理：有图片查看大图，无图片进入编辑模式
+        /// </summary>
+        public override void OnDoubleClick(SourceGrid.CellContext sender, EventArgs e)
+        {
+            if (sender.Cell != null)
+            {
+                // 尝试从多个来源获取图片数据
+                byte[] imageBytes = null;
+
+                // 方法1：从 ValueImageWeb 的 CellImageBytes 获取
+                var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                {
+                    if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                    {
+                        imageBytes = valueImageWeb.CellImageBytes;
+                        MainForm.Instance.PrintInfoLog($"找到图片数据，大小: {imageBytes.Length} bytes");
+                    }
+                    else
+                    {
+                        MainForm.Instance.PrintInfoLog("ValueImageWeb.CellImageBytes 为空或长度为0");
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog("未找到 ValueImageWeb 模型");
+                }
+
+                // 方法2：从 sender.Value 获取（如果是 byte[] 类型）
+                if (imageBytes == null && sender.Value is byte[] valueBytes && valueBytes.Length > 0)
+                {
+                    imageBytes = valueBytes;
+                    MainForm.Instance.PrintInfoLog($"从 sender.Value 找到图片数据，大小: {imageBytes.Length} bytes");
+                }
+
+                // 方法3：从 sender.Value 获取（如果是 Bitmap 类型）
+                if (imageBytes == null && sender.Value is System.Drawing.Bitmap bitmap)
+                {
+                    using (var ms = new System.IO.MemoryStream())
+                    {
+                        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                        imageBytes = ms.ToArray();
+                        MainForm.Instance.PrintInfoLog($"从 sender.Value(Bitmap) 转换图片数据，大小: {imageBytes.Length} bytes");
+                    }
+                }
+
+                // 检查 GridImage 是否也有数据
+                if (sender.Cell.View is RemoteImageView imageView && imageView.GridImage != null)
+                {
+                    MainForm.Instance.PrintInfoLog($"RemoteImageView.GridImage 存在: {imageView.GridImage.Size}");
+                }
+
+                if (imageBytes != null && imageBytes.Length > 0)
+                {
+                    // 有图片，查看大图，不调用基类方法（避免进入编辑模式）
+                    MainForm.Instance.PrintInfoLog("双击：有图片，显示大图，不进入编辑模式");
+                    ImageGridHelper.ShowImageInViewer(imageBytes);
+                    return;
+                }
+                else
+                {
+                    MainForm.Instance.PrintInfoLog("双击：无图片数据，准备进入编辑模式");
+                }
+            }
+            // 没有图片，调用基类方法进入编辑模式
+            base.OnDoubleClick(sender, e);
+        }
+
+        /// <summary>
+        /// 鼠标松开事件：右键显示菜单
+        /// </summary>
+        public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
+        {
+            base.OnMouseUp(sender, e);
+
+            if (e.Button == MouseButtons.Right)
+            {
+                MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
+            }
+        }
+
         private void SiCustom_Click(object sender, EventArgs e)
         {
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
-            if (cell.View is RemoteImageView)
+
+            // 尝试从多个来源获取图片数据
+            byte[] imageBytes = null;
+
+            // 方法1：从 ValueImageWeb 的 CellImageBytes 获取
+            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
             {
-                RemoteImageView imageView = cell.View as RemoteImageView;
-                if (imageView != null)
+                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                 {
-                    if (imageView.GridImage != null)
-                    {
-                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                        {
-                            frmPictureViewer frmPictureViewer = new frmPictureViewer();
-                            frmPictureViewer.PictureBoxViewer.Image = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
-                            frmPictureViewer.ShowDialog();
-                        }
-                    }
+                    imageBytes = valueImageWeb.CellImageBytes;
                 }
-
             }
-            //return;
-            ////强制重绘
-            grid.Refresh();
 
+            // 注意：无法直接访问 Cell.Value，因为 ICellVirtual 没有此属性
+            // 只能通过 ValueImageWeb.CellImageBytes 获取图片数据
+
+            // 显示图片
+            if (imageBytes != null && imageBytes.Length > 0)
+            {
+                ImageGridHelper.ShowImageInViewer(imageBytes);
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("未找到图片数据");
+            }
+
+            // 强制重绘
+            grid.Refresh();
         }
 
         private async void SiUpload_Click(object sender, EventArgs e)
@@ -881,6 +948,50 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+        private async void SiReplace_Click(object sender, EventArgs e)
+        {
+            // 替换图片：先删除旧图片，再上传新图片
+            System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
+            
+            // 先删除旧图片
+            string oldImageId = cell.Value as string;
+            if (!string.IsNullOrEmpty(oldImageId))
+            {
+                try
+                {
+                    var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                    {
+                        if (cell.View is RemoteImageView imageView)
+                        {
+                            // 删除旧图片
+                            bool deleteResult = await imageView.DeleteImageAsync(oldImageId);
+                            if (!deleteResult)
+                            {
+                                MainForm.Instance.PrintInfoLog("删除旧图片失败，取消替换操作");
+                                return;
+                            }
+                            
+                            // 清空单元格值和图片数据
+                            cell.Value = null;
+                            valueImageWeb.CellImageBytes = null;
+                            valueImageWeb.CellImageHashName = null;
+                            imageView.GridImage = null;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.PrintInfoLog("删除旧图片失败: " + ex.Message);
+                    return;
+                }
+            }
+            
+            // 再上传新图片
+            SiUpload_Click(sender, e);
+        }
+
         private void SiUpdate_Click(object sender, EventArgs e)
         {
             // 更新图片功能可以复用上传图片的逻辑
@@ -892,56 +1003,130 @@ namespace RUINORERP.UI.UCSourceGrid
             base.OnClick(sender, e);
         }
 
-        public override void OnMouseUp(SourceGrid.CellContext sender, MouseEventArgs e)
-        {
-            base.OnMouseUp(sender, e);
-
-            if (e.Button == MouseButtons.Right)
-                MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
-        }
-
 
 
 
         private void MyMenu_Opening(object sender, CancelEventArgs e)
         {
-            // 假设我们有一个条件判断，例如某个控件的状态
+            // 先清空现有菜单项
+            MyMenu.Items.Clear();
+            
+            // 检查是否应该显示菜单
             bool shouldShowMenu = CheckConditionToShowMenu();
-            // 如果不满足条件，则取消显示菜单
             if (!shouldShowMenu)
             {
                 e.Cancel = true;
+                return;
+            }
+            
+            // 动态创建菜单项
+            CreateDynamicMenuItems();
+        }
+        
+        /// <summary>
+        /// 动态创建菜单项
+        /// </summary>
+        private void CreateDynamicMenuItems()
+        {
+            // 查看大图菜单项（始终显示）
+            ToolStripMenuItem siViewLarge = new ToolStripMenuItem("查看大图");
+            siViewLarge.Tag = _cell;
+            siViewLarge.Click += SiCustom_Click;
+            MyMenu.Items.Add(siViewLarge);
+            
+            MyMenu.Items.Add(new ToolStripSeparator());
+            
+            bool hasImage = HasImageInCell();
+            
+            if (IsSingleImageMode)
+            {
+                // 单图模式
+                if (hasImage)
+                {
+                    // 有图片时显示"替换图片"
+                    ToolStripMenuItem siReplace = new ToolStripMenuItem("替换图片");
+                    siReplace.Tag = _cell;
+                    siReplace.Click += SiReplace_Click;
+                    MyMenu.Items.Add(siReplace);
+                    
+                    // 删除图片
+                    ToolStripMenuItem siDelete = new ToolStripMenuItem("删除图片");
+                    siDelete.Tag = _cell;
+                    siDelete.Click += SiDelete_Click;
+                    MyMenu.Items.Add(siDelete);
+                }
+                else
+                {
+                    // 无图片时显示"上传图片"
+                    ToolStripMenuItem siUpload = new ToolStripMenuItem("上传图片");
+                    siUpload.Tag = _cell;
+                    siUpload.Click += SiUpload_Click;
+                    MyMenu.Items.Add(siUpload);
+                }
+            }
+            else
+            {
+                // 多图模式
+                // 始终显示"上传图片"
+                ToolStripMenuItem siUpload = new ToolStripMenuItem("上传图片");
+                siUpload.Tag = _cell;
+                siUpload.Click += SiUpload_Click;
+                MyMenu.Items.Add(siUpload);
+                
+                if (hasImage)
+                {
+                    // 有图片时显示"删除图片"
+                    ToolStripMenuItem siDelete = new ToolStripMenuItem("删除图片");
+                    siDelete.Tag = _cell;
+                    siDelete.Click += SiDelete_Click;
+                    MyMenu.Items.Add(siDelete);
+                }
             }
         }
+        
+        /// <summary>
+        /// 检查单元格是否有图片
+        /// </summary>
+        private bool HasImageInCell()
+        {
+            // 检查 ValueImageWeb 的 CellImageBytes
+            var model = _cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                {
+                    return true;
+                }
+            }
 
-        // 这里是你的条件检查逻辑
+            // 检查 Cell 的 ValueModel 中的值
+            if (_cell.Model.ValueModel is SourceGrid.Cells.Models.IValueModel valueModel)
+            {
+                try
+                {
+                    // 从ValueModel获取值
+                    // 注意：这里无法直接获取值，需要通过CellContext
+                    // 所以我们简化逻辑，只检查ValueImageWeb.CellImageBytes
+                }
+                catch
+                {
+                    // 忽略异常
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 检查是否应该显示右键菜单
+        /// 有图片时显示（查看大图、替换、删除）
+        /// 无图片时也显示（上传图片）
+        /// </summary>
         private bool CheckConditionToShowMenu()
         {
-            //如果图片为空则不显示右键菜单
-            bool rs = false;
             SourceGrid.Cells.Cell cell = _cell;
-            if (cell.View is RemoteImageView)
-            {
-                RemoteImageView imageView = cell.View as RemoteImageView;
-                if (imageView != null)
-                {
-                    if (imageView.GridImage != null)
-                    {
-                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                        SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                        {
-                            rs = true;
-                        }
-                        else
-                        {
-                            rs = false;
-                        }
-                    }
-                }
-
-            }
-            return rs;
+            // 只要是 RemoteImageView 类型的单元格，就显示右键菜单
+            return cell.View is RemoteImageView;
         }
 
     }

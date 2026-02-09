@@ -25,7 +25,7 @@ namespace RUINORERP.Server.Helpers
         /// <param name="fileSize">文件大小</param>
         /// <param name="fileType">文件类型</param>
         /// <param name="storagePath">存储路径</param>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="userId">用户ID</param>
         /// <param name="contentHash">文件内容哈希值（可选）</param>
         /// <returns>文件存储信息实体</returns>
@@ -34,7 +34,7 @@ namespace RUINORERP.Server.Helpers
             long fileSize,
             string fileType,
             string storagePath,
-            int businessType,
+            string OwnerTableName,
             long userId,
             string contentHash = null)
         {
@@ -48,7 +48,7 @@ namespace RUINORERP.Server.Helpers
             {
                 OriginalFileName = fileName,
                 StorageFileName = GenerateStorageFileName(fileName),
-                BusinessType = businessType,
+                OwnerTableName = OwnerTableName,
                 FileType = fileType,
                 FileExtension = fileExtension, // 设置文件扩展名
                 FileSize = fileSize,
@@ -112,35 +112,35 @@ namespace RUINORERP.Server.Helpers
         /// 检查业务关联是否已存在
         /// </summary>
         /// <param name="fileId">文件ID</param>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessNo">业务编号</param>
         /// <param name="businessRelationController">业务关联控制器</param>
         /// <returns>是否存在</returns>
         public static async Task<bool> CheckBusinessRelationExistsAsync(
             long fileId,
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController)
         {
             var relations = await businessRelationController.BaseQueryAsync(
-                $"FileId = {fileId} AND BusinessType = {businessType} AND BusinessNo = '{businessNo}'");
+                $"FileId = {fileId} AND OwnerTableName = {OwnerTableName} AND BusinessNo = '{businessNo}'");
             return relations != null && relations.Count > 0;
         }
 
         /// <summary>
         /// 获取指定业务的所有关联文件
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessNo">业务编号</param>
         /// <param name="businessRelationController">业务关联控制器</param>
         /// <returns>业务关联列表</returns>
         public static async Task<List<tb_FS_BusinessRelation>> GetBusinessRelationsAsync(
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             tb_FS_BusinessRelationController<tb_FS_BusinessRelation> businessRelationController)
         {
             var relations = await businessRelationController.BaseQueryAsync(
-                $"BusinessType = {businessType} AND BusinessNo = '{businessNo}' AND IsActive = 1");
+                $"OwnerTableName = {OwnerTableName} AND BusinessNo = '{businessNo}' AND IsActive = 1");
             return relations?.Cast<tb_FS_BusinessRelation>().ToList() ?? new List<tb_FS_BusinessRelation>();
         }
 
@@ -296,13 +296,13 @@ namespace RUINORERP.Server.Helpers
                 {
                     var exists = await CheckBusinessRelationExistsAsync(
                         businessRelation.FileId,
-                        businessRelation.BusinessType,
+                        businessRelation.OwnerTableName,
                         businessRelation.BusinessNo,
                         businessRelationController);
                     if (exists)
                     {
-                        logger?.LogWarning("业务关联已存在: FileId={FileId}, BusinessType={BusinessType}, BusinessNo={BusinessNo}",
-                            businessRelation.FileId, businessRelation.BusinessType, businessRelation.BusinessNo);
+                        logger?.LogWarning("业务关联已存在: FileId={FileId}, OwnerTableName={OwnerTableName}, BusinessNo={BusinessNo}",
+                            businessRelation.FileId, businessRelation.OwnerTableName, businessRelation.BusinessNo);
                         return false;
                     }
                 }
@@ -311,7 +311,7 @@ namespace RUINORERP.Server.Helpers
                 if (businessRelation.IsMainFile && setAsMain)
                 {
                     await UpdateOtherMainFilesAsync(
-                        businessRelation.BusinessType,
+                        businessRelation.OwnerTableName,
                         businessRelation.BusinessNo,
                         businessRelation.FileId, // 排除当前文件
                         businessRelationController,
@@ -326,8 +326,8 @@ namespace RUINORERP.Server.Helpers
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "保存业务关联信息到数据库时出错: FileId={FileId}, BusinessType={BusinessType}, BusinessNo={BusinessNo}",
-                    businessRelation?.FileId, businessRelation?.BusinessType, businessRelation?.BusinessNo);
+                logger?.LogError(ex, "保存业务关联信息到数据库时出错: FileId={FileId}, OwnerTableName={OwnerTableName}, BusinessNo={BusinessNo}",
+                    businessRelation?.FileId, businessRelation?.OwnerTableName, businessRelation?.BusinessNo);
                 return false;
             }
         }
@@ -388,7 +388,7 @@ namespace RUINORERP.Server.Helpers
         /// 更新同一业务的其他主文件为非主文件
         /// </summary>
         private static async Task UpdateOtherMainFilesAsync(
-            int businessType,
+            string OwnerTableName,
             string businessNo,
             long excludeFileId,
             tb_FS_BusinessRelationController<tb_FS_BusinessRelation> relationController,
@@ -397,7 +397,7 @@ namespace RUINORERP.Server.Helpers
             try
             {
                 var otherRelations = await relationController.BaseQueryAsync(
-                    $"BusinessType = {businessType} AND BusinessNo = '{businessNo}' AND IsMainFile = 1 AND FileId != {excludeFileId} AND IsActive = 1");
+                    $"OwnerTableName = {OwnerTableName} AND BusinessNo = '{businessNo}' AND IsMainFile = 1 AND FileId != {excludeFileId} AND IsActive = 1");
 
                 foreach (var relation in otherRelations)
                 {
@@ -413,8 +413,8 @@ namespace RUINORERP.Server.Helpers
             }
             catch (Exception ex)
             {
-                logger?.LogError(ex, "更新其他主文件状态时出错: BusinessType={BusinessType}, BusinessNo={BusinessNo}",
-                    businessType, businessNo);
+                logger?.LogError(ex, "更新其他主文件状态时出错: OwnerTableName={OwnerTableName}, BusinessNo={BusinessNo}",
+                    OwnerTableName, businessNo);
                 // 不抛出异常，避免影响主要操作
             }
         }

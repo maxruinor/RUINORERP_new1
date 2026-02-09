@@ -21,17 +21,12 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// <summary>
         /// 业务类型 (BizType枚举值)
         /// </summary>
-        public int? BusinessType { get; set; }
+        public string OwnerTableName { get; set; }
 
         /// <summary>
         /// 关联字段 - 支持按字段关联(如 VoucherImage、PaymentImagePath)
         /// </summary>
         public string RelatedField { get; set; }
-
-        /// <summary>
-        /// 业务编号 (兼容旧版)
-        /// </summary>
-        public string BusinessNo { get; set; }
 
         /// <summary>
         /// 业务主键ID (单据主表ID)
@@ -40,22 +35,14 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         public long? BusinessId { get; set; }
 
         /// <summary>
-        /// 是否明细表文件 (false=主表, true=明细表)
-        /// 默认false(主表)
-        /// </summary>
-        public bool IsDetailTable { get; set; } = false;
-
-        /// <summary>
-        /// 明细表主键ID (仅当IsDetailTable=true时有效)
-        /// </summary>
-        public long? DetailId { get; set; }
-
-        /// <summary>
         /// 是否启用版本控制(默认false)
         /// </summary>
         public bool EnableVersioning { get; set; } = false;
 
         public long? Created_by { get; set; }
+
+        /// 业务单据编号(如订单号、单据号等) 有就保存
+        public string BusinessNo { get; set; }
     }
 
 
@@ -191,13 +178,11 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
     /// </summary>
     public class FileListRequest : RequestBase
     {
-        public int? BusinessType { get; set; }
-
-        public string BusinessId { get; set; }
-
+        public long BusinessId { get; set; }
         public int PageSize { get; set; } = 10;
 
         public int PageIndex { get; set; } = 1;
+        public string OwnerTableName { get; set; }
     }
 
     /// <summary>

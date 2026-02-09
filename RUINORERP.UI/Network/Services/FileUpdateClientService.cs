@@ -54,15 +54,13 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>更新结果</returns>
         public async Task<FileUpdateResult> UpdateBusinessFileAsync(
-            int businessType,
-            string businessNo,
+            string OwnerTableName,
             long businessId,
             string relatedField,
             byte[] newFileData,
             string newFileName,
             FileUpdateStrategy strategy = FileUpdateStrategy.Replace,
-            bool isDetailTable = false,
-            long? detailId = null,
+             string businessNo = null,
             CancellationToken ct = default)
         {
             // 参数验证
@@ -98,25 +96,24 @@ namespace RUINORERP.UI.Network.Services
                 // 创建上传请求
                 var uploadRequest = new FileUploadRequest
                 {
-                    BusinessType = businessType,
+                    OwnerTableName = OwnerTableName,
                     BusinessNo = businessNo,
                     BusinessId = businessId,
                     RelatedField = relatedField,
-                    IsDetailTable = isDetailTable,
-                    DetailId = detailId
                 };
 
                 // 根据策略处理旧文件
                 if (strategy != FileUpdateStrategy.AppendOnly)
                 {
                     // 先删除旧文件的关联关系
-                    await DeleteOldFileRelationsAsync(businessType, businessId, relatedField, isDetailTable, detailId, ct);
+                    await DeleteOldFileRelationsAsync(OwnerTableName, businessId, relatedField, ct);
                 }
 
                 // 添加新文件
                 var fileStorageInfo = new tb_FS_FileStorageInfo
                 {
                     OriginalFileName = newFileName,
+                    OwnerTableName=OwnerTableName,
                     FileData = newFileData
                 };
                 uploadRequest.FileStorageInfos.Add(fileStorageInfo);
@@ -178,14 +175,11 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>批量更新结果</returns>
         public async Task<FileBatchUpdateResult> BatchUpdateBusinessFilesAsync(
-            int businessType,
-            string businessNo,
+            string OwnerTableName,
             long businessId,
             string relatedField,
             List<(byte[] fileData, string fileName)> newFiles,
             FileUpdateStrategy strategy = FileUpdateStrategy.Replace,
-            bool isDetailTable = false,
-            long? detailId = null,
             CancellationToken ct = default)
         {
             // 参数验证
@@ -216,7 +210,7 @@ namespace RUINORERP.UI.Network.Services
                 // 根据策略处理旧文件
                 if (strategy != FileUpdateStrategy.AppendOnly)
                 {
-                    await DeleteOldFileRelationsAsync(businessType, businessId, relatedField, isDetailTable, detailId, ct);
+                    await DeleteOldFileRelationsAsync(OwnerTableName, businessId, relatedField, ct);
                 }
 
                 // 使用注入的文件管理服务
@@ -229,17 +223,15 @@ namespace RUINORERP.UI.Network.Services
                     {
                         var uploadRequest = new FileUploadRequest
                         {
-                            BusinessType = businessType,
-                            BusinessNo = businessNo,
+                            OwnerTableName = OwnerTableName,
                             BusinessId = businessId,
                             RelatedField = relatedField,
-                            IsDetailTable = isDetailTable,
-                            DetailId = detailId
                         };
 
                         uploadRequest.FileStorageInfos.Add(new tb_FS_FileStorageInfo
                         {
                             OriginalFileName = fileName,
+                            OwnerTableName = OwnerTableName,
                             FileData = fileData
                         });
 
@@ -296,23 +288,20 @@ namespace RUINORERP.UI.Network.Services
         /// 删除旧文件的关联关系(不删除物理文件,保留历史)
         /// </summary>
         private async Task DeleteOldFileRelationsAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string relatedField,
-            bool isDetailTable,
-            long? detailId,
             CancellationToken ct)
         {
             try
             {
-                _logger?.LogDebug("准备删除旧文件关联,BusinessType:{BusinessType},BusinessId:{BusinessId},RelatedField:{RelatedField}",
-                    businessType, businessId, relatedField);
+       
 
                 // 查询当前业务关联的旧文件
                 var listRequest = new FileListRequest
                 {
-                    BusinessType = businessType,
-                    BusinessId = businessId.ToString() // 使用BusinessId查询
+                    OwnerTableName = OwnerTableName,
+                    BusinessId = businessId // 使用BusinessId查询
                 };
 
                 var listResponse = await _fileManagementService.GetFileListAsync(listRequest, ct);
@@ -321,7 +310,8 @@ namespace RUINORERP.UI.Network.Services
                 {
                     // 构建删除请求，仅删除关联关系
                     var deleteRequest = new FileDeleteRequest();
-                    deleteRequest.BusinessType = businessType;
+                    deleteRequest.BusinessId = businessId;
+                    deleteRequest.OwnerTableName = OwnerTableName; // 明细表使用特殊表名
                     deleteRequest.PhysicalDelete = false; // 不物理删除文件，只删除关联
 
                     // 添加所有旧文件到删除列表
@@ -336,7 +326,7 @@ namespace RUINORERP.UI.Network.Services
                         var deleteResponse = await _fileManagementService.DeleteFileAsync(deleteRequest, ct);
                         if (deleteResponse.IsSuccess)
                         {
-                            _logger?.LogInformation("成功删除{Count}个旧文件关联", deleteRequest.FileStorageInfos.Count);
+                            //_logger?.LogInformation("成功删除{Count}个旧文件关联", deleteRequest.FileStorageInfos.Count);
                         }
                         else
                         {
@@ -360,21 +350,19 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="ct">取消令牌</param>
         /// <returns>版本历史列表</returns>
         public async Task<List<FileVersionHistory>> GetFileVersionHistoryAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string relatedField,
             CancellationToken ct = default)
         {
             try
             {
-                _logger?.LogDebug("获取文件版本历史,BusinessType:{BusinessType},BusinessId:{BusinessId},RelatedField:{RelatedField}",
-                    businessType, businessId, relatedField);
 
                 // 查询当前业务关联的所有文件
                 var listRequest = new FileListRequest
                 {
-                    BusinessType = businessType,
-                    BusinessId = businessId.ToString()
+                    OwnerTableName = OwnerTableName,
+                    BusinessId = businessId
                 };
 
                 var listResponse = await _fileManagementService.GetFileListAsync(listRequest, ct);
@@ -420,14 +408,14 @@ namespace RUINORERP.UI.Network.Services
         /// <summary>
         /// 恢复到指定版本
         /// </summary>
-        /// <param name="businessType">业务类型</param>
+        /// <param name="OwnerTableName">业务类型</param>
         /// <param name="businessId">业务主键ID</param>
         /// <param name="relatedField">关联字段</param>
         /// <param name="fileId">要恢复的文件ID</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>是否恢复成功</returns>
         public async Task<bool> RestoreFileVersionAsync(
-            int businessType,
+            string OwnerTableName,
             long businessId,
             string relatedField,
             long fileId,
@@ -441,7 +429,7 @@ namespace RUINORERP.UI.Network.Services
                 // 先下载要恢复的文件数据
                 var downloadRequest = new FileDownloadRequest
                 {
-                    FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
+                    FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId ,OwnerTableName=OwnerTableName}
                 };
 
                 var downloadResponse = await _fileManagementService.DownloadFileAsync(downloadRequest, ct);
@@ -458,15 +446,13 @@ namespace RUINORERP.UI.Network.Services
 
                 // 使用Replace策略重新上传旧文件
                 var updateResult = await UpdateBusinessFileAsync(
-                    businessType,
-                    null, // BusinessNo，服务器会自动处理
+                    OwnerTableName,
                     businessId,
                     relatedField,
                     oldFileInfo.FileData,
                     oldFileInfo.OriginalFileName,
                     FileUpdateStrategy.Replace,
-                    false,
-                    null,
+                    string.Empty,
                     ct);
 
                 if (updateResult.IsSuccess)

@@ -131,13 +131,42 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
             {
                 //end by watson 2024-08-28 TODO:
                 //PrepareVisualElementImage(context);
 
                 //Read the image
-                if (context.Value is byte[])
+                if (context.Value is ImageCellValue icv)
+                {
+                    if (icv.IsBinary && icv.ImageData != null)
+                    {
+                        byte[] buffByte = icv.ImageData;
+                        System.Drawing.Image img = null;
+                        using (MemoryStream stream = new MemoryStream(buffByte))
+                        {
+                            img = System.Drawing.Image.FromStream(stream);
+                            if (img != null)
+                            {
+                                GridImage = img;
+                            }
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(icv.ImagePath))
+                    {
+                        _pendingFileId = icv.ImagePath;
+                        CurrentFileId = _pendingFileId;
+                        if (_enableAsyncLoading)
+                        {
+                            LoadImageAsync(_pendingFileId, context);
+                        }
+                        else
+                        {
+                            LoadImageSync(_pendingFileId, context);
+                        }
+                    }
+                }
+                else if (context.Value is byte[])
                 {
                     //将图像读入到字节数组
                     byte[] buffByte = context.Value as byte[];
@@ -165,9 +194,9 @@ namespace SourceGrid.Cells.Views
 
             }
             else if (context.Value is string && GridImage == null)
-            {
-                _pendingFileId = context.Value.ToString();
-                CurrentFileId = _pendingFileId;
+                {
+                    _pendingFileId = context.Value.ToString();
+                    CurrentFileId = _pendingFileId;
 
                 if (_enableAsyncLoading)
                 {
@@ -193,13 +222,42 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
             {
                 //end by watson 2024-08-28 TODO:
                 //PrepareVisualElementImage(context);
 
                 //Read the image
-                if (context.Value is byte[])
+                if (context.Value is ImageCellValue icv)
+                {
+                    if (icv.IsBinary && icv.ImageData != null)
+                    {
+                        byte[] buffByte = icv.ImageData;
+                        System.Drawing.Image img = null;
+                        using (MemoryStream stream = new MemoryStream(buffByte))
+                        {
+                            img = System.Drawing.Image.FromStream(stream);
+                            if (img != null)
+                            {
+                                GridImage = img;
+                            }
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(icv.ImagePath))
+                    {
+                        _pendingFileId = icv.ImagePath;
+                        CurrentFileId = _pendingFileId;
+                        if (_enableAsyncLoading)
+                        {
+                            LoadImageAsync(_pendingFileId, context);
+                        }
+                        else
+                        {
+                            LoadImageSync(_pendingFileId, context);
+                        }
+                    }
+                }
+                else if (context.Value is byte[])
                 {
                     //将图像读入到字节数组
                     byte[] buffByte = context.Value as byte[];

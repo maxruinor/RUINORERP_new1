@@ -9,6 +9,7 @@ namespace SourceGrid
 {
     /// <summary>
     /// The main grid control with static data.
+    /// 表格控件
     /// </summary>
     [System.ComponentModel.ToolboxItem(true)]
     public partial class Grid : GridVirtual
@@ -21,6 +22,40 @@ namespace SourceGrid
         private bool _hasSummary = true;
 
         public bool HasSummary { get => _hasSummary; set => _hasSummary = value; }
+
+        // Image storage mode: Binary data inside cells or Path reference
+        public enum ImageStorageMode
+        {
+            Binary, // store image as binary data in the cell value
+            Path    // store image as a path/reference in the cell value
+        }
+
+        private ImageStorageMode _defaultImageStorageMode = ImageStorageMode.Binary;
+        /// <summary>
+        /// Default storage mode used by grid image cells when creating values.
+        /// This acts as a global switch for new image cell values.
+        /// </summary>
+        [DefaultValue(ImageStorageMode.Binary)]
+        public ImageStorageMode DefaultImageStorageMode
+        {
+            get => _defaultImageStorageMode;
+            set => _defaultImageStorageMode = value;
+        }
+
+        /// <summary>
+        /// Helper to create an ImageCellValue according to the current default mode.
+        /// </summary>
+        public SourceGrid.Cells.Editors.ImageCellValue CreateImageCellValue(byte[] data, string path)
+        {
+            if (DefaultImageStorageMode == ImageStorageMode.Binary)
+            {
+                return new SourceGrid.Cells.Editors.ImageCellValue { ImageData = data, ImagePath = path };
+            }
+            else
+            {
+                return new SourceGrid.Cells.Editors.ImageCellValue { ImagePath = path };
+            }
+        }
 
 
         #endregion

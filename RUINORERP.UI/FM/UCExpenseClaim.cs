@@ -551,8 +551,11 @@ namespace RUINORERP.UI.FM
                             valueImageWeb.CellImageBytes = imageData;
                             valueImageWeb.CellImageHashName = imagePath;
 
-                            // 设置单元格值
-                            cell.Value = imagePath;
+                            // 设置单元格值，使用 Grid.default 模式自动选择存储方式
+                            var gridObj = grid1 as SourceGrid.Grid;
+                            var imageCellValue = gridObj?.CreateImageCellValue(imageData, imagePath)
+                                ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = imageData, ImagePath = imagePath };
+                            cell.Value = imageCellValue;
 
                             // 设置视图
                             if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
@@ -1334,12 +1337,16 @@ namespace RUINORERP.UI.FM
                         AddImageToDeleteList(oldImagePath);
                     }
 
-                    // 设置新图片
-                    string newHash = ImageHashHelper.GenerateHash(newImageData);
-                    valueImageWeb.SetImageNewHash(newHash);
-                    valueImageWeb.CellImageBytes = newImageData;
-                    valueImageWeb.CellImageHashName = fileName;
-                    cell.Value = fileName;
+                        // 设置新图片
+                        string newHash = ImageHashHelper.GenerateHash(newImageData);
+                        valueImageWeb.SetImageNewHash(newHash);
+                        valueImageWeb.CellImageBytes = newImageData;
+                        valueImageWeb.CellImageHashName = fileName;
+                        // 使用 Grid.default 模式自动选择存储方式
+                        var gridObj = grid1 as SourceGrid.Grid;
+                        var imageCellValue = gridObj?.CreateImageCellValue(newImageData, fileName)
+                            ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = newImageData, ImagePath = fileName };
+                        cell.Value = imageCellValue;
 
                     // 设置视图
                     if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))

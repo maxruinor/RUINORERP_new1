@@ -729,14 +729,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
             sgd = new SourceGridDefine(grid1, listCols, true);
             sgd.GridMasterData = EditEntity;
-            /*
-            //具体审核权限的人才显示
-            if (AppContext.CurUserInfo.UserButtonList.Where(c => c.BtnText == MenuItemEnums.审核.ToString()).Any())
-            {
-                listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.TotalCostAmount, true);
-                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.Cost);
-                listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalCostAmount);
-            }*/
+ 
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.Quantity);
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.SubtotalTransAmount);
             listCols.SetCol_Summary<tb_SaleOutReDetail>(c => c.CommissionAmount);
@@ -751,13 +744,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.UnitCommissionAmount * b.Quantity, c => c.CommissionAmount);
             listCols.SetCol_FormulaReverse<tb_SaleOutReDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
 
-
-            // listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b, c) => a.TransactionPrice * b.Quantity - c.TaxSubtotalAmount, d => d.UntaxedAmount);
-
-            //应该是审核时要处理的逻辑暂时隐藏
-            //将数量默认为已出库数量
-            //listCols.SetCol_Formula<tb_SaleOutReDetail>((a, b) => a.Quantity, c => c.TotalReturnedQty);
-            //listCols.SetCol_NeverVisible<tb_SaleOutReDetail>(c => c.TotalReturnedQty);
+ 
 
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.Inv_Cost, t => t.Cost);
             sgh.SetPointToColumnPairs<ProductSharePart, tb_SaleOutReDetail>(sgd, f => f.Standard_Price, t => t.TransactionPrice);

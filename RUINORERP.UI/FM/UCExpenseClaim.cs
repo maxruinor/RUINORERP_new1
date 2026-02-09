@@ -695,7 +695,7 @@ namespace RUINORERP.UI.FM
             listCols.SetCol_ReadOnly<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxRate, CustomFormatType.PercentFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount, CustomFormatType.CurrencyFormat);
-                listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
+            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.TaxAmount, CustomFormatType.CurrencyFormat);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.UntaxedAmount, CustomFormatType.CurrencyFormat);
             //            listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImage, CustomFormatType.Image);
             listCols.SetCol_Format<tb_FM_ExpenseClaimDetail>(c => c.EvidenceImagePath, CustomFormatType.WebPathImage);
@@ -707,7 +707,7 @@ namespace RUINORERP.UI.FM
             sgd = new SourceGridDefine(grid1, listCols, true);
 
             sgd.GridMasterData = EditEntity;
-    
+
             listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b, c) => a.SingleAmount / (1 + b.TaxRate) * c.TaxRate, d => d.TaxAmount);
             listCols.SetCol_Formula<tb_FM_ExpenseClaimDetail>((a, b) => a.SingleAmount - b.TaxAmount, c => c.UntaxedAmount);
             listCols.SetCol_Summary<tb_FM_ExpenseClaimDetail>(c => c.SingleAmount);
@@ -1008,20 +1008,7 @@ namespace RUINORERP.UI.FM
                     }
                 }
 
-                if (NeedValidated)
-                {
-                    // 处理明细凭证图片上传（使用文件服务器方式）
-                    bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
-                    if (uploadImg)
-                    {
-                        MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
-                        return false;
-                    }
-                }
+
 
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
@@ -1032,15 +1019,29 @@ namespace RUINORERP.UI.FM
                         EditEntity.AcceptChanges();
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
-                        MainForm.Instance.PrintInfoLog($"保存成功,{EditEntity.ClaimNo}。");
+                        MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
 
+                        if (NeedValidated)
+                        {
+                            // 处理明细凭证图片上传（使用文件服务器方式）
+                            bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                            if (uploadImg)
+                            {
+                                MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
+                            }
+                            else
+                            {
+                                MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
+                                return false;
+                            }
+                        }
                         // 保存成功后上传结案凭证图片（只上传变更的图片）
                         if (picboxCloseCaseImagePath != null)
                         {
                             var updatedImages = picboxCloseCaseImagePath.GetImagesNeedingUpdate();
                             if (updatedImages.Count > 0)
                             {
-                                await UploadImageAsync(EditEntity, picboxCloseCaseImagePath, "结案凭证");
+                                await UploadImageAsync(EditEntity, picboxCloseCaseImagePath, c => c.CloseCaseImagePath, true);
                             }
                         }
 
@@ -1135,7 +1136,6 @@ namespace RUINORERP.UI.FM
                 {
                     if (!string.IsNullOrWhiteSpace(btninfo.Tag.ToString()))
                     {
-                        //tb_FM_PayeeInfo payeeInfo = btninfo.Tag as tb_FM_PayeeInfo;
 
                         #region 显示收款详情信息
 
@@ -1158,18 +1158,7 @@ namespace RUINORERP.UI.FM
                             }
                         }
                         #endregion
-                        //HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                        //try
-                        //{
-                        //    byte[] img = await httpWebService.DownloadImgFileAsync(btninfo.Tag.ToString());
-                        //    frmPictureViewer pictureViewer = new frmPictureViewer();
-                        //    pictureViewer.PictureBoxViewer.Image = ImageHelper.byteArrayToImage(img);
-                        //    pictureViewer.ShowDialog();
-                        //}
-                        //catch (Exception ex)
-                        //{
-                        //    MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
-                        //}
+                         
                     }
 
                 }
@@ -1203,7 +1192,7 @@ namespace RUINORERP.UI.FM
                 if (cell == null) return;
 
                 // 确认删除
-                if (MessageBox.Show("确定要删除这张报销凭证图片吗？", "确认删除", 
+                if (MessageBox.Show("确定要删除这张报销凭证图片吗？", "确认删除",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                 {
                     return;

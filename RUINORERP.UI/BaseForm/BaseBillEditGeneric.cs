@@ -1,5 +1,7 @@
 using DevAge.Windows.Forms;
 using ExCSS;
+using System.Linq.Expressions;
+using System.Reflection;
 using FastReport.DevComponents.AdvTree;
 using FastReport.DevComponents.DotNetBar;
 using FastReport.Table;
@@ -1260,7 +1262,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 上传图片 - 支持指定关联字段
+        /// 上传图片 - 支持指定关联字段1
         /// </summary>
         /// <param name="entity">业务实体</param>
         /// <param name="magicPicBox">图片控件</param>
@@ -1361,6 +1363,24 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog($"上传图片出错：{ex.Message}", UILogType.错误);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 上传图片 - 支持表达式参数指定关联字段
+        /// </summary>
+        /// <param name="entity">业务实体</param>
+        /// <param name="magicPicBox">图片控件</param>
+        /// <param name="relatedFieldExpr">关联字段表达式</param>
+        /// <param name="onlyUpdated">是否仅上传变更的图片</param>
+        /// <returns>是否全部上传成功</returns>
+        public async Task<bool> UploadImageAsync(T entity, MagicPictureBox magicPicBox, Expression<Func<T, object>> relatedFieldExpr, bool onlyUpdated = true)
+        {
+            // 获取关联字段名
+            MemberInfo memberInfo = relatedFieldExpr.GetMemberInfo();
+            string relatedField = memberInfo.Name;
+
+            // 调用原有方法
+            return await UploadImageAsync(entity, magicPicBox, relatedField, onlyUpdated);
         }
 
         /// <summary>

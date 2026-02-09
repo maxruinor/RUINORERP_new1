@@ -642,7 +642,6 @@ namespace RUINORERP.UI.FM
 
 
 
-
                     tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment> ctr = Startup.GetFromFac<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
                     bool rs = await ctr.BaseDeleteAsync(EditEntity as tb_FM_PreReceivedPayment);
                     if (rs)

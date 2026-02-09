@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UCExpenseClaim));
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
+            this.lblCloseCaseImagePath = new Krypton.Toolkit.KryptonLabel();
             this.lblStore_ID = new Krypton.Toolkit.KryptonLabel();
             this.cmbProjectGroup = new Krypton.Toolkit.KryptonComboBox();
             this.lblPrintStatus = new Krypton.Toolkit.KryptonLabel();
@@ -70,7 +71,6 @@
             this.lblstatus = new Krypton.Toolkit.KryptonLabel();
             this.txtUntaxedAmount = new Krypton.Toolkit.KryptonTextBox();
             this.lblUntaxedAmount = new Krypton.Toolkit.KryptonLabel();
-            this.lblCloseCaseImagePath = new Krypton.Toolkit.KryptonLabel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
@@ -147,6 +147,14 @@
             this.kryptonPanel1.Name = "kryptonPanel1";
             this.kryptonPanel1.Size = new System.Drawing.Size(1171, 252);
             this.kryptonPanel1.TabIndex = 4;
+            // 
+            // lblCloseCaseImagePath
+            // 
+            this.lblCloseCaseImagePath.Location = new System.Drawing.Point(859, 148);
+            this.lblCloseCaseImagePath.Name = "lblCloseCaseImagePath";
+            this.lblCloseCaseImagePath.Size = new System.Drawing.Size(62, 20);
+            this.lblCloseCaseImagePath.TabIndex = 171;
+            this.lblCloseCaseImagePath.Values.Text = "结案凭证";
             // 
             // lblStore_ID
             // 
@@ -504,14 +512,6 @@
             this.lblUntaxedAmount.Size = new System.Drawing.Size(75, 20);
             this.lblUntaxedAmount.TabIndex = 153;
             this.lblUntaxedAmount.Values.Text = "未税本位币";
-            // 
-            // lblCloseCaseImagePath
-            // 
-            this.lblCloseCaseImagePath.Location = new System.Drawing.Point(859, 148);
-            this.lblCloseCaseImagePath.Name = "lblCloseCaseImagePath";
-            this.lblCloseCaseImagePath.Size = new System.Drawing.Size(62, 20);
-            this.lblCloseCaseImagePath.TabIndex = 171;
-            this.lblCloseCaseImagePath.Values.Text = "审批意见";
             // 
             // UCExpenseClaim
             // 

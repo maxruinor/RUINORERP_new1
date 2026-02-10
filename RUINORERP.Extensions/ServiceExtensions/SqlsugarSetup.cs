@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.SqlClient;
@@ -58,7 +59,7 @@ namespace RUINORERP.Extensions
         /// <param name="services">服务集合</param>
         /// <param name="appContextData">应用上下文数据</param>
         /// <param name="connectString">数据库连接字符串</param>
-        public static void AddSqlsugarSetup(this IServiceCollection services, ApplicationContext appContextData, string connectString)
+        public static void AddSqlsugarSetup(this IServiceCollection services, ApplicationContext appContextData, string connectString, IConfiguration configuration = null)
         {
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (appContextData == null) throw new ArgumentNullException(nameof(appContextData));
@@ -88,7 +89,7 @@ namespace RUINORERP.Extensions
                         IsAutoRemoveDataCache = true,
                     }
                 },
-                db => ConfigureDbAop(db, logger, appContextData)
+                db => ConfigureDbAop(db, logger, appContextData, configuration)
             );
 
             services.AddSingleton<ISqlSugarClient>(sqlSugar); // SqlSugarScope 应当使用单例模式
@@ -126,7 +127,7 @@ namespace RUINORERP.Extensions
                         DataInfoCacheService = new SqlSugarMemoryCacheService(memoryCache)
                     }
                 },
-                db => ConfigureDbAop(db, null, null) // 没有logger和appContextData
+                db => ConfigureDbAop(db, null, null, configuration) // 没有logger和appContextData
             );
 
             services.AddSingleton<ISqlSugarClient>(sqlSugar);
@@ -138,26 +139,35 @@ namespace RUINORERP.Extensions
         /// <param name="db">SqlSugar数据库对象</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="appContextData">应用上下文数据</param>
-        private static void ConfigureDbAop(SqlSugarClient db, ILogger logger, ApplicationContext appContextData)
+        private static void ConfigureDbAop(SqlSugarClient db, ILogger logger, ApplicationContext appContextData, IConfiguration configuration = null)
         {
             db.Ado.CommandTimeOut = 30; // 单位秒
 
-            // 配置SQL执行前事件
+            // 配置SQL执行前事件1
+            // 从配置读取是否启用调用方法名记录
+            bool enableCallerMethod = configuration?.GetValue<bool>("SqlSugar:EnableCallerMethod", false) ?? false;
+            
             db.Aop.OnLogExecuting = (sql, pars) =>
             {
-                // 获取调用堆栈以识别调用方法
-                string callerMethod = GetCallerMethodName();
+                string callerMethod = string.Empty;
+                
+                // 只有在启用时才获取调用方法名
+                if (enableCallerMethod)
+                {
+                    // 获取调用堆栈以识别调用方法
+                    callerMethod = GetCallerMethodName();
+                }
 
                 // 获取原生SQL并添加调用方法信息
                 string nativeSql = UtilMethods.GetNativeSql(sql, pars);
-                string sqlWithCaller = $"{callerMethod}:{nativeSql}";
+                string sqlWithCaller = string.IsNullOrEmpty(callerMethod) ? nativeSql : $"{callerMethod}:{nativeSql}";
                 //System.Diagnostics.Debug.WriteLine(sqlWithCaller);
 
                 // 触发自定义检查事件
                 if (CheckEvent != null)
                 {
                     string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
-                    string formattedSqlWithCaller = $"{callerMethod}:     {formattedSql}";
+                    string formattedSqlWithCaller = string.IsNullOrEmpty(callerMethod) ? formattedSql : $"{callerMethod}:     {formattedSql}";
                     //System.Diagnostics.Debug.WriteLine(formattedSqlWithCaller);
                     CheckEvent(formattedSqlWithCaller);
                 }
@@ -240,6 +250,9 @@ namespace RUINORERP.Extensions
         /// 获取调用方法名称
         /// </summary>
         /// <returns>调用方法的名称</returns>
+        // 使用缓存减少堆栈跟踪计算
+        private static readonly ConcurrentDictionary<string, string> _methodNameCache = new();
+        
         private static string GetCallerMethodName()
         {
             string callerMethod = "未知方法";
@@ -250,7 +263,7 @@ namespace RUINORERP.Extensions
                 if (stackTrace.FrameCount > 0)
                 {
                     // 获取第一个非框架方法
-                    for (int i = 0; i < stackTrace.FrameCount; i++)
+                    for (int i = 0; i < Math.Min(stackTrace.FrameCount, 10); i++) // 限制最多检查10层
                     {
                         StackFrame frame = stackTrace.GetFrame(i);
                         MethodBase method = frame.GetMethod();
@@ -259,7 +272,18 @@ namespace RUINORERP.Extensions
                             !method.DeclaringType.FullName.StartsWith("System") &&
                             !method.DeclaringType.FullName.StartsWith("Microsoft"))
                         {
-                            callerMethod = $"{method.DeclaringType.Name}.{method.Name}";
+                            string key = $"{method.DeclaringType.FullName}.{method.Name}";
+                            
+                            // 使用缓存
+                            if (_methodNameCache.TryGetValue(key, out var cachedName))
+                            {
+                                callerMethod = cachedName;
+                            }
+                            else
+                            {
+                                callerMethod = $"{method.DeclaringType.Name}.{method.Name}";
+                                _methodNameCache.TryAdd(key, callerMethod);
+                            }
                             break;
                         }
                     }

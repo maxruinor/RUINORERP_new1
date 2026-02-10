@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static StackExchange.Redis.Role;
@@ -203,103 +204,137 @@ namespace RUINORERP.UI.Report
             bool rs = false;
             try
             {
-                if (!CheckPrinterAndData(EditEntitys, rptMode))
+                if (!await CheckPrinterAndDataAsync(EditEntitys, rptMode))
                 {
                     return rs;
                 }
-                List<CurrentUserInfo> currUserInfos = new List<CurrentUserInfo>();
-                currUserInfos.Add(MainForm.Instance.AppContext.CurUserInfo);
-
-                List<tb_Company> companyInfos = new List<tb_Company>();
-                companyInfos.Add(MainForm.Instance.AppContext.CompanyInfo);
-                BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-                #region 要打印的数据源
-
-                List<object> objlist = new List<object>();
-                List<M> mlist = new List<M>();
-
-                FastReport.Report FReport = new FastReport.Report();
-                int counter = 0;
-
-                try
+                
+                // 在后台线程执行打印操作，避免阻塞UI
+                rs = await Task.Run(async () =>
                 {
-                    foreach (var item in EditEntitys)
+                    try
                     {
-                        counter++;
-                        mlist = new List<M>();
-                        long keyid = (item as BaseEntity).PrimaryKeyID;
-                        //没有取到主键值时
-                        string PrimaryKey = RUINORERP.UI.Common.UIHelper.GetPrimaryKeyColName(typeof(M));
-                        if (keyid == 0 && !string.IsNullOrEmpty(PrimaryKey))
+                        return await ExecutePrintAsync(EditEntitys, rptMode, printConfig);
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "后台打印任务执行失败");
+                        MessageBox.Show($"打印失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return false;
+                    }
+                }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "打印任务启动失败");
+                MessageBox.Show($"打印失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return rs;
+        }
+
+        /// <summary>
+        /// 在后台线程执行实际的打印操作
+        /// </summary>
+        private static async Task<bool> ExecutePrintAsync(List<M> EditEntitys, RptMode rptMode, tb_PrintConfig printConfig)
+        {
+            bool rs = false;
+            List<CurrentUserInfo> currUserInfos = new List<CurrentUserInfo>();
+            currUserInfos.Add(MainForm.Instance.AppContext.CurUserInfo);
+
+            List<tb_Company> companyInfos = new List<tb_Company>();
+            companyInfos.Add(MainForm.Instance.AppContext.CompanyInfo);
+            BaseController<M> ctr = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+            #region 要打印的数据源
+
+            List<object> objlist = new List<object>();
+            List<M> mlist = new List<M>();
+
+            FastReport.Report FReport = new FastReport.Report();
+            int counter = 0;
+
+            try
+            {
+                foreach (var item in EditEntitys)
+                {
+                    counter++;
+                    mlist = new List<M>();
+                    long keyid = (item as BaseEntity).PrimaryKeyID;
+                    //没有取到主键值时
+                    string PrimaryKey = RUINORERP.UI.Common.UIHelper.GetPrimaryKeyColName(typeof(M));
+                    if (keyid == 0 && !string.IsNullOrEmpty(PrimaryKey))
+                    {
+                        long.TryParse(item.GetPropertyValue(PrimaryKey).ToString(), out keyid);
+                    }
+                    var PrintData = await ctr.GetPrintDataSource(keyid).ConfigureAwait(false) as List<M>;
+                    if (PrintData.Count == 0)
+                    {
+                        MessageBox.Show("请联系管理员，确认打印的数据是否能正常查询到。");
+                        return false;
+                    }
+                    mlist.Add(PrintData[0]);//按主键查的。一行一个
+                    if (rptMode == RptMode.DESIGN)
+                    {
+                        objlist.Add(mlist[0]);
+                        string PKFieldName = BaseUIHelper.GetEntityPrimaryKey(PrintData[0].GetType());
+                        // 设计模式需要在UI线程执行
+                        MainForm.Instance.Invoke(new Action(() => 
                         {
-                            long.TryParse(item.GetPropertyValue(PrimaryKey).ToString(), out keyid);
-                        }
-                        var PrintData = await ctr.GetPrintDataSource(keyid) as List<M>;
-                        if (PrintData.Count == 0)
-                        {
-                            MessageBox.Show("请联系管理员，确认打印的数据是否能正常查询到。");
-                            return false;
-                        }
-                        mlist.Add(PrintData[0]);//按主键查的。一行一个
-                        if (rptMode == RptMode.DESIGN)
-                        {
-                            objlist.Add(mlist[0]);
-                            string PKFieldName = BaseUIHelper.GetEntityPrimaryKey(PrintData[0].GetType());
                             DESIGN(printConfig, objlist, companyInfos, currUserInfos, PKFieldName);
+                        }));
+                        ////释放资源
+                        FReport.Dispose();
+                        return rs;
+                    }
+                    else
+                    {
+                        //注意  数据源中的子对象 必须是   [Browsable(false)] 不能有这个特性。否则无法显示，
+                        //报表控件注册数据
+                        FReport.RegisterData(mlist, "rd");
+                        FReport.RegisterData(currUserInfos, "currUserInfo");
+
+                        //如果打印的实际中有项目小组，就去项目小组找他的上级部门，他的部分属性哪个公司，就打印哪个公司的抬头
+                        //TODO by watson
+
+                        FReport.RegisterData(companyInfos, "companyInfo");
+                        if (printConfig.tb_PrintTemplates == null)
+                        {
+                            MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             ////释放资源
                             FReport.Dispose();
                             return rs;
                         }
+                        var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
+                        if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
+                        {
+                            printTemplate = printConfig.tb_PrintTemplates[0];
+                            MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                        }
+
+                        if (printTemplate != null && printTemplate.TemplateFileStream != null)
+                        {
+                            byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
+                            using (System.IO.MemoryStream Stream = new System.IO.MemoryStream(ReportBytes))
+                            {
+                                FReport.Load(Stream);
+                            }
+                        }
                         else
                         {
-                            //注意  数据源中的子对象 必须是   [Browsable(false)] 不能有这个特性。否则无法显示，
-                            //报表控件注册数据
-                            FReport.RegisterData(mlist, "rd");
-                            FReport.RegisterData(currUserInfos, "currUserInfo");
-
-                            //如果打印的实际中有项目小组，就去项目小组找他的上级部门，他的部分属性哪个公司，就打印哪个公司的抬头
-                            //TODO by watson
-
-                            FReport.RegisterData(companyInfos, "companyInfo");
-                            if (printConfig.tb_PrintTemplates == null)
-                            {
-                                MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                ////释放资源
-                                FReport.Dispose();
-                                return rs;
-                            }
-                            var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
-                            if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
-                            {
-                                printTemplate = printConfig.tb_PrintTemplates[0];
-                                MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
-                            }
-
-                            if (printTemplate != null && printTemplate.TemplateFileStream != null)
-                            {
-                                byte[] ReportBytes = (byte[])printTemplate.TemplateFileStream;
-                                using (System.IO.MemoryStream Stream = new System.IO.MemoryStream(ReportBytes))
-                                {
-                                    FReport.Load(Stream);
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                ////释放资源
-                                FReport.Dispose();
-                                return rs;
-                            }
-                            if (counter == 1)
-                            {
-                                //准备
-                                FReport.Prepare();
-                            }
-                            else
-                            {
-                                //准备合并上次的
-                                FReport.Prepare(true);
-                            }
+                            MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            ////释放资源
+                            FReport.Dispose();
+                            return rs;
+                        }
+                        if (counter == 1)
+                        {
+                            //准备
+                            FReport.Prepare();
+                        }
+                        else
+                        {
+                            //准备合并上次的
+                            FReport.Prepare(true);
+                        }
                             ////////打印////////
                             if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
                                 && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
@@ -326,38 +361,56 @@ namespace RUINORERP.UI.Report
                         }
                     }
 
-                    if (rptMode == RptMode.PREVIEW)
+                if (rptMode == RptMode.PREVIEW)
+                {
+                    // 预览需要在UI线程显示窗体
+                    MainForm.Instance.Invoke(new Action(() =>
                     {
-                        RptPreviewForm frm = new RptPreviewForm();
-                        frm.Text = printConfig.BizName + "打印预览";
-                        frm.MyReport = FReport;
-                        frm.ShowDialog();
-                    }
-                    else
+                        try
+                        {
+                            RptPreviewForm frm = new RptPreviewForm();
+                            frm.Text = printConfig.BizName + "打印预览";
+                            frm.MyReport = FReport;
+                            frm.ShowDialog();
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.LogError(ex, "打印预览窗体显示失败");
+                            MessageBox.Show($"预览失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }));
+                }
+                else
+                {
+                    try
                     {
+                        // 实际打印操作
                         FReport.PrintPrepared();
-                        UpdatePrintStatus(EditEntitys);
+                        await UpdatePrintStatusAsync(EditEntitys).ConfigureAwait(false);
                     }
-
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError("打印报表异常。", ex);
-                }
-                finally
-                {
-                    ////释放资源
-                    FReport.Dispose();
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, "实际打印操作失败");
+                        MessageBox.Show($"打印失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
 
-
-                rs = true;
-                #endregion
             }
             catch (Exception ex)
             {
-                MainForm.Instance.logger.Error(ex);
+                MainForm.Instance.logger.LogError("打印报表异常。", ex);
+                MessageBox.Show($"打印过程发生异常: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                ////释放资源
+                FReport?.Dispose();
+            }
+
+
+            rs = true;
+            #endregion
+            
             return rs;
         }
 
@@ -365,32 +418,44 @@ namespace RUINORERP.UI.Report
         //更新打印状态，打印次数加1
         public static async Task UpdatePrintStatus(List<M> EditEntitys, string PKFieldName = null)
         {
-            //打印状态更新
-            foreach (var editEntity in EditEntitys)
+            // 在后台线程更新打印状态
+            await Task.Run(async () =>
             {
-                if (editEntity.ContainsProperty("PrintStatus"))
+                //打印状态更新
+                foreach (var editEntity in EditEntitys)
                 {
-                    int PrintStatus = (int)ReflectionHelper.GetPropertyValue(editEntity, "PrintStatus");
-                    PrintStatus++;
-                    editEntity.SetPropertyValue("PrintStatus", PrintStatus);
-                    var dt = new Dictionary<string, object>();
-                    string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
-                    if (string.IsNullOrEmpty(PKCol))
+                    if (editEntity.ContainsProperty("PrintStatus"))
                     {
-                        PKCol = PKFieldName;
-                        //PKCol = "PrimaryKeyID";
+                        int PrintStatus = (int)ReflectionHelper.GetPropertyValue(editEntity, "PrintStatus");
+                        PrintStatus++;
+                        editEntity.SetPropertyValue("PrintStatus", PrintStatus);
+                        var dt = new Dictionary<string, object>();
+                        string PKCol = BaseUIHelper.GetEntityPrimaryKey<M>();
+                        if (string.IsNullOrEmpty(PKCol))
+                        {
+                            PKCol = PKFieldName;
+                            //PKCol = "PrimaryKeyID";
+                        }
+                        //视图就会传空过来
+                        if (string.IsNullOrEmpty(PKCol))
+                        {
+                            continue;
+                        }
+                        long pkid = (long)ReflectionHelper.GetPropertyValue(editEntity, PKCol);
+                        dt.Add(PKCol, pkid);
+                        dt.Add("PrintStatus", PrintStatus);
+                        await MainForm.Instance.AppContext.Db.Updateable(dt).AS(editEntity.GetType().Name).WhereColumns(PKCol).ExecuteCommandAsync();
                     }
-                    //视图就会传空过来
-                    if (string.IsNullOrEmpty(PKCol))
-                    {
-                        continue;
-                    }
-                    long pkid = (long)ReflectionHelper.GetPropertyValue(editEntity, PKCol);
-                    dt.Add(PKCol, pkid);
-                    dt.Add("PrintStatus", PrintStatus);
-                    await MainForm.Instance.AppContext.Db.Updateable(dt).AS(editEntity.GetType().Name).WhereColumns(PKCol).ExecuteCommandAsync();
                 }
-            }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// 异步更新打印状态，避免阻塞UI线程
+        /// </summary>
+        public static async Task UpdatePrintStatusAsync(List<M> EditEntitys, string PKFieldName = null)
+        {
+            await UpdatePrintStatus(EditEntitys, PKFieldName).ConfigureAwait(false);
         }
 
 
@@ -742,12 +807,58 @@ namespace RUINORERP.UI.Report
 
 
         /// <summary>
+        /// 异步打印前的检测工作，避免阻塞UI线程
+        /// </summary>
+        private static async Task<bool> CheckPrinterAndDataAsync(List<M> EditEntitys, RptMode rptMode)
+        {
+            bool rs = false;
+            if (EditEntitys == null || EditEntitys.Count == 0)
+            {
+                MessageBox.Show("没有要打印的数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return rs;
+            }
+            foreach (var item in EditEntitys)
+            {
+                if (item == null)
+                {
+                    MessageBox.Show("打印的数据不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    rs = false;
+                    break;
+                }
+            }
+            
+            // 如果是打印模式，检查打印机状态
+            if (rptMode == RptMode.PRINT && EditEntitys != null && EditEntitys.Count > 0)
+            {
+                // 获取打印配置
+                CommBillData cbd = EntityMappingHelper.GetBillData(typeof(M), EditEntitys[0]);
+                var printConfig = await Task.Run(() => GetPrintConfig(cbd)).ConfigureAwait(false);
+                
+                if (printConfig != null && !string.IsNullOrEmpty(printConfig.PrinterName))
+                {
+                    // 在后台线程检查打印机状态，避免阻塞UI
+                    bool printerOk = await Task.Run(() => CheckPrinter(printConfig.PrinterName)).ConfigureAwait(false);
+                    if (!printerOk)
+                    {
+                        MessageBox.Show($"系统检测到打印机 {printConfig.PrinterName} 的状态无法正常工作，请检查确认！", 
+                            "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return false;
+                    }
+                }
+            }
+            
+            rs = true;
+            return rs;
+        }
+
+        /// <summary>
         /// 打印前的检测工作
         /// 为真才打印
         /// </summary>
         /// <param name="EditEntitys"></param>
         /// <param name="rptMode"></param>
         /// <returns></returns>
+        [Obsolete("请使用异步版本 CheckPrinterAndDataAsync")]
         private static bool CheckPrinterAndData(List<M> EditEntitys, RptMode rptMode)
         {
             bool rs = false;
@@ -806,35 +917,65 @@ namespace RUINORERP.UI.Report
             {
                 return false;
             }
-            System.Management.ManagementScope scope = new System.Management.ManagementScope(@"\root\cimv2");
-            scope.Connect();
 
-            // Select Printers from WMI Object Collections
-            System.Management.ManagementObjectSearcher searcher = new
-             System.Management.ManagementObjectSearcher("SELECT * FROM Win32_Printer");
-
-            string printerName = "";
-            foreach (System.Management.ManagementObject printer in searcher.Get())
+            try
             {
-                printerName = printer["Name"].ToString().ToLower();
-                if (printerName.IndexOf(printerName1.ToLower()) > -1)
+                // 增加超时控制，避免WMI查询长时间阻塞
+                using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(5)))
                 {
-
-                    if (printer["WorkOffline"].ToString().ToLower().Equals("true"))
+                    return Task.Run(() =>
                     {
-                        return false;
-                        // printer is offline by user
+                        try
+                        {
+                            System.Management.ManagementScope scope = new System.Management.ManagementScope(@"\root\cimv2");
+                            scope.Connect();
 
-                    }
-                    else
-                    {
-                        // printer is not offline
+                            // Select Printers from WMI Object Collections
+                            System.Management.ManagementObjectSearcher searcher = new
+                             System.Management.ManagementObjectSearcher("SELECT * FROM Win32_Printer");
 
-                        return true;
-                    }
+                            string printerName = "";
+                            foreach (System.Management.ManagementObject printer in searcher.Get())
+                            {
+                                printerName = printer["Name"].ToString().ToLower();
+                                if (printerName.IndexOf(printerName1.ToLower()) > -1)
+                                {
+
+                                    if (printer["WorkOffline"].ToString().ToLower().Equals("true"))
+                                    {
+                                        return false;
+                                        // printer is offline by user
+
+                                    }
+                                    else
+                                    {
+                                        // printer is not offline
+
+                                        return true;
+                                    }
+                                }
+                            }
+                            return false;
+                        }
+                        catch (Exception ex)
+                        {
+                            MainForm.Instance.logger.LogWarning(ex, $"检查打印机状态时发生异常: {printerName1}");
+                            // 如果检查失败，默认返回true，允许继续打印
+                            return true;
+                        }
+                    }, cts.Token).Result;
                 }
             }
-            return false;
+            catch (TimeoutException)
+            {
+                MainForm.Instance.logger.LogWarning($"检查打印机 {printerName1} 超时，默认认为打印机可用");
+                return true; // 超时情况下默认允许打印，避免阻塞业务
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"检查打印机状态失败: {printerName1}");
+                return true; // 发生异常时默认允许打印
+            }
         }
     }
 }

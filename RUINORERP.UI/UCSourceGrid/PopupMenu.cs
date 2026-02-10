@@ -741,6 +741,9 @@ namespace RUINORERP.UI.UCSourceGrid
             grid = _sgdefine.grid;
             sgdefine = _sgdefine;
             MyMenu.Width = 100;
+
+            // 初始化编辑状态
+            UpdateCellEditState();
         }
 
         /// <summary>
@@ -790,10 +793,23 @@ namespace RUINORERP.UI.UCSourceGrid
                     }
                 }
 
-                // 检查 GridImage 是否也有数据
-                if (sender.Cell.View is RemoteImageView imageView && imageView.GridImage != null)
+                // 方法4：从 RemoteImageView.GridImage 获取（异步加载的图片）
+                if (imageBytes == null && sender.Cell.View is RemoteImageView imageView && imageView.GridImage != null)
                 {
-                    MainForm.Instance.PrintInfoLog($"RemoteImageView.GridImage 存在: {imageView.GridImage.Size}");
+                    MainForm.Instance.PrintInfoLog($"从 RemoteImageView.GridImage 转换图片数据: {imageView.GridImage.Size}");
+                    try
+                    {
+                        using (var ms = new System.IO.MemoryStream())
+                        {
+                            imageView.GridImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                            imageBytes = ms.ToArray();
+                            MainForm.Instance.PrintInfoLog($"GridImage 转换成功，大小: {imageBytes.Length} bytes");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.PrintInfoLog($"GridImage 转换失败: {ex.Message}");
+                    }
                 }
 
                 if (imageBytes != null && imageBytes.Length > 0)
@@ -888,11 +904,14 @@ namespace RUINORERP.UI.UCSourceGrid
                             string imageId = await imageView.UploadImageAsync(imageBytes, fileName);
                             if (!string.IsNullOrEmpty(imageId))
                             {
-                                // 更新单元格值
+                            // 更新单元格值
                                 cell.Value = imageId;
                                 
                                 // 强制重绘
                                 grid.Refresh();
+
+                                // 更新编辑状态
+                                UpdateCellEditState();
                                 
                                 MainForm.Instance.PrintInfoLog("图片上传成功: " + fileName);
                             }
@@ -924,16 +943,27 @@ namespace RUINORERP.UI.UCSourceGrid
                             string imageId = cell.Value as string;
                             if (!string.IsNullOrEmpty(imageId))
                             {
-                                // 删除图片
+                            // 删除图片
                                 bool result = await imageView.DeleteImageAsync(imageId);
                                 if (result)
                                 {
-                                    // 清空单元格值
+                                    // 清空单元格值和图片数据
                                     cell.Value = null;
+                                    
+                                    var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                                    {
+                                        valueImageWeb.CellImageBytes = null;
+                                        valueImageWeb.CellImageHashName = null;
+                                    }
+                                    
                                     imageView.GridImage = null;
                                     
                                     // 强制重绘
                                     grid.Refresh();
+
+                                    // 更新编辑状态
+                                    UpdateCellEditState();
                                     
                                     MainForm.Instance.PrintInfoLog("图片删除成功");
                                 }
@@ -1099,19 +1129,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
 
-            // 检查 Cell 的 ValueModel 中的值
-            if (_cell.Model.ValueModel is SourceGrid.Cells.Models.IValueModel valueModel)
+            // 检查 RemoteImageView.GridImage
+            if (_cell.View is RemoteImageView imageView && imageView.GridImage != null)
             {
-                try
-                {
-                    // 从ValueModel获取值
-                    // 注意：这里无法直接获取值，需要通过CellContext
-                    // 所以我们简化逻辑，只检查ValueImageWeb.CellImageBytes
-                }
-                catch
-                {
-                    // 忽略异常
-                }
+                return true;
             }
 
             return false;
@@ -1129,8 +1150,27 @@ namespace RUINORERP.UI.UCSourceGrid
             return cell.View is RemoteImageView;
         }
 
-    }
+        /// <summary>
+        /// 根据图片状态更新单元格的编辑状态
+        /// 有图片时禁止编辑（通过右键菜单替换），无图片时允许编辑
+        /// </summary>
+        private void UpdateCellEditState()
+        {
+            if (_cell == null)
+                return;
 
+            bool hasImage = HasImageInCell();
+
+            // 如果是 ImageWebPickEditor，设置其 EditableMode
+            if (_cell.Editor is SourceGrid.Cells.Editors.ImageWebPickEditor imageEditor)
+            {
+                // 有图片时禁止直接编辑，替换通过右键菜单
+                // 无图片时允许编辑（可以双击进入编辑模式上传图片）
+                imageEditor.EnableEdit = !hasImage;
+            }
+        }
+
+    }
 
 
 

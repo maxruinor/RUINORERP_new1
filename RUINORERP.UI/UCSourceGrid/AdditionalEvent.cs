@@ -1,4 +1,4 @@
-﻿using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +20,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 return;
             }
 
-            base.OnClick(sender, e);
+            base.OnDoubleClick(sender, e);
             if (sender.Value == null) 
             {
                 return;

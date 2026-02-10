@@ -44,7 +44,7 @@ namespace RUINORERP.Server.Controls
             _monitorService = Program.ServiceProvider.GetService<FileStorageMonitorService>();
 
             // 设置定时器，定期更新存储信息
-            _updateTimer = new Timer { Interval = 60000 }; // 每分钟更新一次
+            _updateTimer = new Timer { Interval = 300000 }; // 每5分钟更新一次，减少数据库压力
             _updateTimer.Tick += UpdateTimer_Tick;
             _updateTimer.Start();
 

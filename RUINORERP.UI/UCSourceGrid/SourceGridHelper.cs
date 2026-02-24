@@ -615,6 +615,11 @@ namespace RUINORERP.UI.UCSourceGrid
                                     {
                                         valueImageWeb.CellImageBytes = null;
                                         valueImageWeb.CellImageHashName = null;
+                                        // 同时清空ImageCacheManager中的对应缓存
+                                        if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                                        {
+                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
+                                        }
                                     }
                                 }
                                 #endregion
@@ -667,6 +672,11 @@ namespace RUINORERP.UI.UCSourceGrid
                                         {
                                             valueImageWeb.CellImageBytes = null;
                                             valueImageWeb.CellImageHashName = null;
+                                            // 同时清空ImageCacheManager中的对应缓存
+                                            if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                                            {
+                                                SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
+                                            }
                                         }
                                         currContext.Tag = v_ProductSharePart;
                                     }
@@ -813,6 +823,11 @@ namespace RUINORERP.UI.UCSourceGrid
                         {
                             valueImageWeb.CellImageBytes = null;
                             valueImageWeb.CellImageHashName = null;
+                            // 同时清空ImageCacheManager中的对应缓存
+                            if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                            {
+                                SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
+                            }
                         }
                     }
                     if (dc.ColName == "Selected")

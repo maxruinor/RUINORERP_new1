@@ -953,8 +953,17 @@ namespace RUINORERP.UI.UCSourceGrid
                                     var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                                     {
+                                        // 保存要删除的缓存键
+                                        string cacheKey = valueImageWeb.CellImageHashName;
+                                        
                                         valueImageWeb.CellImageBytes = null;
                                         valueImageWeb.CellImageHashName = null;
+                                        
+                                        // 同时清空ImageCacheManager中的对应缓存
+                                        if (!string.IsNullOrEmpty(cacheKey))
+                                        {
+                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(cacheKey);
+                                        }
                                     }
                                     
                                     imageView.GridImage = null;
@@ -992,24 +1001,33 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                    {
-                        if (cell.View is RemoteImageView imageView)
-                        {
-                            // 删除旧图片
-                            bool deleteResult = await imageView.DeleteImageAsync(oldImageId);
-                            if (!deleteResult)
                             {
-                                MainForm.Instance.PrintInfoLog("删除旧图片失败，取消替换操作");
-                                return;
+                                if (cell.View is RemoteImageView imageView)
+                                {
+                                    // 保存要删除的缓存键
+                                    string cacheKey = valueImageWeb.CellImageHashName;
+                                    
+                                    // 删除旧图片
+                                    bool deleteResult = await imageView.DeleteImageAsync(oldImageId);
+                                    if (!deleteResult)
+                                    {
+                                        MainForm.Instance.PrintInfoLog("删除旧图片失败，取消替换操作");
+                                        return;
+                                    }
+                                    
+                                    // 清空单元格值和图片数据
+                                    cell.Value = null;
+                                    valueImageWeb.CellImageBytes = null;
+                                    valueImageWeb.CellImageHashName = null;
+                                    imageView.GridImage = null;
+                                    
+                                    // 同时清空ImageCacheManager中的对应缓存
+                                    if (!string.IsNullOrEmpty(cacheKey))
+                                    {
+                                        SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(cacheKey);
+                                    }
+                                }
                             }
-                            
-                            // 清空单元格值和图片数据
-                            cell.Value = null;
-                            valueImageWeb.CellImageBytes = null;
-                            valueImageWeb.CellImageHashName = null;
-                            imageView.GridImage = null;
-                        }
-                    }
                 }
                 catch (Exception ex)
                 {

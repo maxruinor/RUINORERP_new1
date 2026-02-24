@@ -39,21 +39,6 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         public long MaxImageCacheSize { get; set; } = 5 * 1024 * 1024;
 
-        /// <summary>
-        /// 磁盘缓存目录
-        /// </summary>
-        public string DiskCacheDirectory { get; set; }
-
-        /// <summary>
-        /// 磁盘缓存过期时间（默认7天）
-        /// </summary>
-        public TimeSpan DiskCacheExpiry { get; set; } = TimeSpan.FromDays(7);
-
-        /// <summary>
-        /// 是否启用磁盘缓存
-        /// </summary>
-        public bool EnableDiskCache { get; set; } = true;
-
         #endregion
 
         #region 缓存存储
@@ -97,31 +82,7 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         private void InitializeCache()
         {
-            // 设置默认磁盘缓存目录
-            if (string.IsNullOrEmpty(DiskCacheDirectory))
-            {
-                DiskCacheDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SourceGrid",
-                    "ImageCache"
-                );
-            }
-
-            // 确保缓存目录存在
-            if (EnableDiskCache && !Directory.Exists(DiskCacheDirectory))
-            {
-                Directory.CreateDirectory(DiskCacheDirectory);
-            }
-
-            // 启动定期清理任务
-            Task.Run(async () =>
-            {
-                while (!_disposed)
-                {
-                    await Task.Delay(TimeSpan.FromHours(1));
-                    CleanupExpiredCache();
-                }
-            });
+            // 内存缓存初始化
         }
 
         #endregion
@@ -185,24 +146,12 @@ namespace SourceGrid.Cells.Editors
                 return cachedImage.Image;
             }
 
-            // 检查磁盘缓存
-            if (TryGetFromDiskCache(fileId, out byte[] diskData))
-            {
-                var image = ImageProcessor.ByteArrayToImage(diskData);
-                AddToMemoryCache(fileId, image);
-                return image;
-            }
-
             // 直接加载
             byte[] imageData = imageLoader(fileId);
             var loadedImage = ImageProcessor.ByteArrayToImage(imageData);
 
             // 添加到缓存
             AddToMemoryCache(fileId, loadedImage);
-            if (EnableDiskCache)
-            {
-                SaveToDiskCache(fileId, imageData);
-            }
 
             return loadedImage;
         }
@@ -242,23 +191,6 @@ namespace SourceGrid.Cells.Editors
 
             // 更新访问记录
             UpdateAccessOrder(fileId, remove: true);
-
-            // 清除磁盘缓存
-            if (EnableDiskCache)
-            {
-                try
-                {
-                    var diskPath = GetDiskCachePath(fileId);
-                    if (File.Exists(diskPath))
-                    {
-                        File.Delete(diskPath);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"删除磁盘缓存失败: {ex.Message}");
-                }
-            }
         }
 
         /// <summary>
@@ -281,23 +213,6 @@ namespace SourceGrid.Cells.Editors
             finally
             {
                 _cacheLock.ExitWriteLock();
-            }
-
-            // 清除磁盘缓存
-            if (EnableDiskCache && Directory.Exists(DiskCacheDirectory))
-            {
-                try
-                {
-                    var cacheFiles = Directory.GetFiles(DiskCacheDirectory, "*.cache");
-                    foreach (var file in cacheFiles)
-                    {
-                        File.Delete(file);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"清除磁盘缓存失败: {ex.Message}");
-                }
             }
         }
 
@@ -351,54 +266,10 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// 从磁盘缓存获取图片
-        /// </summary>
-        private bool TryGetFromDiskCache(string fileId, out byte[] imageData)
-        {
-            imageData = null;
-
-            if (!EnableDiskCache)
-                return false;
-
-            try
-            {
-                var diskPath = GetDiskCachePath(fileId);
-                if (File.Exists(diskPath))
-                {
-                    var fileInfo = new FileInfo(diskPath);
-                    if (DateTime.Now - fileInfo.LastWriteTime < DiskCacheExpiry)
-                    {
-                        imageData = File.ReadAllBytes(diskPath);
-                        return true;
-                    }
-                    else
-                    {
-                        // 过期文件，删除
-                        File.Delete(diskPath);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"读取磁盘缓存失败: {ex.Message}");
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// 内部图片加载方法
         /// </summary>
         private async Task<System.Drawing.Image> LoadImageInternal(string fileId, Func<string, Task<byte[]>> imageLoader, CancellationToken cancellationToken)
         {
-            // 检查磁盘缓存
-            if (TryGetFromDiskCache(fileId, out byte[] diskData))
-            {
-                var image = ImageProcessor.ByteArrayToImage(diskData);
-                AddToMemoryCache(fileId, image);
-                return image;
-            }
-
             // 从外部加载
             byte[] imageData = await imageLoader(fileId);
             if (imageData == null || imageData.Length == 0)
@@ -408,10 +279,6 @@ namespace SourceGrid.Cells.Editors
 
             // 添加到缓存
             AddToMemoryCache(fileId, loadedImage);
-            if (EnableDiskCache)
-            {
-                SaveToDiskCache(fileId, imageData);
-            }
 
             return loadedImage;
         }
@@ -457,35 +324,6 @@ namespace SourceGrid.Cells.Editors
         }
 
         /// <summary>
-        /// 保存到磁盘缓存
-        /// </summary>
-        private void SaveToDiskCache(string fileId, byte[] imageData)
-        {
-            if (!EnableDiskCache || imageData == null)
-                return;
-
-            try
-            {
-                var diskPath = GetDiskCachePath(fileId);
-                ImageProcessor.SaveBytesAsImage(imageData, diskPath);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"保存磁盘缓存失败: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// 获取磁盘缓存路径
-        /// </summary>
-        private string GetDiskCachePath(string fileId)
-        {
-            // 将文件ID中的斜杠替换为下划线
-            var safeFileName = fileId.Replace('/', '_');
-            return Path.Combine(DiskCacheDirectory, $"{safeFileName}.cache");
-        }
-
-        /// <summary>
         /// 更新访问顺序
         /// </summary>
         private void UpdateAccessOrder(string fileId, bool remove = false)
@@ -526,32 +364,6 @@ namespace SourceGrid.Cells.Editors
         private bool IsInMemoryCache(string fileId)
         {
             return _memoryCache.ContainsKey(fileId);
-        }
-
-        /// <summary>
-        /// 清理过期缓存
-        /// </summary>
-        private void CleanupExpiredCache()
-        {
-            if (!EnableDiskCache || !Directory.Exists(DiskCacheDirectory))
-                return;
-
-            try
-            {
-                var cacheFiles = Directory.GetFiles(DiskCacheDirectory, "*.cache");
-                foreach (var file in cacheFiles)
-                {
-                    var fileInfo = new FileInfo(file);
-                    if (DateTime.Now - fileInfo.LastWriteTime > DiskCacheExpiry)
-                    {
-                        File.Delete(file);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"清理过期缓存失败: {ex.Message}");
-            }
         }
 
         /// <summary>

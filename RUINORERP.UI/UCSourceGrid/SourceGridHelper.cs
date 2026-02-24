@@ -59,6 +59,7 @@ using static OpenTK.Graphics.OpenGL.GL;
 //using ZXing.Common;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -4502,8 +4503,8 @@ namespace RUINORERP.UI.UCSourceGrid
                 using (var ms = new System.IO.MemoryStream(imageBytes))
                 {
                     var image = System.Drawing.Image.FromStream(ms);
-                    // 使用内置的窗体显示图片
-                    using (var viewer = new System.Windows.Forms.Form())
+                    // 使用功能完整的 frmPictureViewer 显示图片
+                    using (var viewer = new frmPictureViewer())
                     {
                         viewer.Text = "图片查看器";
                         viewer.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -4511,13 +4512,8 @@ namespace RUINORERP.UI.UCSourceGrid
                         viewer.MaximizeBox = true;
                         viewer.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
 
-                        var pictureBox = new System.Windows.Forms.PictureBox
-                        {
-                            Dock = System.Windows.Forms.DockStyle.Fill,
-                            SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom
-                        };
-                        pictureBox.Image = image;
-                        viewer.Controls.Add(pictureBox);
+                        // 设置图片
+                        viewer.PictureBoxViewer.Image = image;
 
                         viewer.ShowDialog();
                     }

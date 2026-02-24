@@ -609,7 +609,13 @@ namespace RUINORERP.UI.UCSourceGrid
                                 if (dc.CustomFormat == CustomFormatType.WebPathImage)
                                 {
                                     //grid1[pt].View = sgdefine.ImagesWebViewModel ;
-
+                                    // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
+                                    var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
+                                    if (valueImageWeb != null)
+                                    {
+                                        valueImageWeb.CellImageBytes = null;
+                                        valueImageWeb.CellImageHashName = null;
+                                    }
                                 }
                                 #endregion
                             }
@@ -654,6 +660,13 @@ namespace RUINORERP.UI.UCSourceGrid
                                         else
                                         {
                                             //  currContext.Cell.View = sgdefine.ViewNormal;
+                                        }
+                                        // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
+                                        var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
+                                        if (valueImageWeb != null)
+                                        {
+                                            valueImageWeb.CellImageBytes = null;
+                                            valueImageWeb.CellImageHashName = null;
                                         }
                                         currContext.Tag = v_ProductSharePart;
                                     }
@@ -793,6 +806,13 @@ namespace RUINORERP.UI.UCSourceGrid
                             PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(currContext.Cell as Cell, sgdefine);
                             popupMenu.IsSingleImageMode = true; // 设置为单图模式
                             currContext.Cell.AddController(popupMenu);
+                        }
+                        // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
+                        var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
+                        if (valueImageWeb != null)
+                        {
+                            valueImageWeb.CellImageBytes = null;
+                            valueImageWeb.CellImageHashName = null;
                         }
                     }
                     if (dc.ColName == "Selected")

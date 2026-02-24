@@ -236,6 +236,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("文件上传请求中未包含任何文件数据");
                 }
 
+                // 检查文件大小限制（例如：限制为10MB）
+                const long MAX_FILE_SIZE = 10 * 1024 * 1024;
+
                 // 开启事务
                 _unitOfWorkManage.BeginTran();
                 try
@@ -246,10 +249,31 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         #region 保存单文件 
                         _logger?.Debug("处理文件[{Index}]：{FileName}", i + 1, FileStorageInfo.OriginalFileName);
 
+                        // 检查文件数据是否为空
+                        if (FileStorageInfo.FileData == null || FileStorageInfo.FileData.Length == 0)
+                        {
+                            _logger?.LogWarning("文件数据为空: {FileName}", FileStorageInfo.OriginalFileName);
+                            continue;
+                        }
+
+                        // 检查文件大小
+                        if (FileStorageInfo.FileData.Length > MAX_FILE_SIZE)
+                        {
+                            _logger?.LogWarning("文件大小超过限制: {FileName}, 大小: {FileSize} bytes", FileStorageInfo.OriginalFileName, FileStorageInfo.FileData.Length);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件 {FileStorageInfo.OriginalFileName} 大小超过限制，最大允许 {MAX_FILE_SIZE / (1024 * 1024)}MB");
+                        }
+
+                        // 验证文件格式（仅允许图片文件）
+                        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+                        var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName)?.ToLower();
+                        if (string.IsNullOrEmpty(fileExtension) || !allowedExtensions.Contains(fileExtension))
+                        {
+                            _logger?.LogWarning("文件格式不支持: {FileName}", FileStorageInfo.OriginalFileName);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件 {FileStorageInfo.OriginalFileName} 格式不支持，仅允许图片文件");
+                        }
+
                         // 生成唯一文件名
                         var fileId = Guid.NewGuid().ToString();
-                        var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName);
-                        //扩展名。看如何取好。原来名有没有带？
                         var savedFileName = $"{fileId}{fileExtension}";
 
                         // 根据分类和当前时间确定存储路径（按YYMM分目录）
@@ -259,6 +283,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             Directory.CreateDirectory(categoryPath);
                             _logger?.Debug("创建分类存储目录: {CategoryPath}", categoryPath);
+
+                            // 设置目录权限（只读访问）
+                            try
+                            {
+                                var directoryInfo = new DirectoryInfo(categoryPath);
+                                var accessControl = directoryInfo.GetAccessControl();
+                                // 这里可以根据需要设置具体的权限
+                                // 例如：添加只读权限
+                                _logger?.Debug("设置目录权限成功: {CategoryPath}", categoryPath);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogWarning(ex, "设置目录权限失败: {CategoryPath}", categoryPath);
+                                // 权限设置失败不影响文件上传，仅记录警告
+                            }
                         }
 
                         var filePath = Path.Combine(categoryPath, savedFileName);
@@ -268,12 +307,35 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         var contentHash = FileManagementHelper.CalculateContentHash(FileStorageInfo.FileData);
                         _logger?.Debug("文件哈希计算完成: {ContentHash}, 文件大小: {FileSize} bytes", contentHash, FileStorageInfo.FileData.Length);
 
-                        // 保存文件
-                        await File.WriteAllBytesAsync(filePath, FileStorageInfo.FileData, cancellationToken);
-                        _logger?.Debug("文件物理保存成功");
+                        // 保存文件（使用文件流方式，减少内存使用）
+                        try
+                        {
+                            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, useAsync: true))
+                            {
+                                await fileStream.WriteAsync(FileStorageInfo.FileData, 0, FileStorageInfo.FileData.Length, cancellationToken);
+                            }
+                            _logger?.Debug("文件物理保存成功");
+                        }
+                        catch (IOException ioEx)
+                        {
+                            _logger?.LogError(ioEx, "文件写入失败: {FilePath}", filePath);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件写入失败: {ioEx.Message}");
+                        }
+                        catch (UnauthorizedAccessException authEx)
+                        {
+                            _logger?.LogError(authEx, "文件访问权限不足: {FilePath}", filePath);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件访问权限不足: {authEx.Message}");
+                        }
 
                         // 将绝对路径转换为相对路径保存到数据库
-                        var relativeStoragePath = FileStorageHelper.ConvertToRelativePath(filePath);
+                        var fullRelativeStoragePath = FileStorageHelper.ConvertToRelativePath(filePath);
+                        // 提取目录部分作为StoragePath
+                        var relativeStoragePath = Path.GetDirectoryName(fullRelativeStoragePath);
+                        // 如果目录为空，设置为当前目录
+                        if (string.IsNullOrEmpty(relativeStoragePath))
+                        {
+                            relativeStoragePath = ".";
+                        }
 
                         // 创建文件信息实体并保存到数据库
                         var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
@@ -283,7 +345,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             relativeStoragePath,              // storagePath（保存相对路径）
                              FileStorageInfo.OwnerTableName, // businessType
                             executionContext.UserId,          // userId
-                            contentHash);                     // contentHash (可选)
+                            contentHash,                      // contentHash (可选)
+                            savedFileName);                   // storageFileName，确保与实际物理文件名一致
 
                         // 设置哈希值（保持与旧代码兼容）
                         fileStorageInfo.HashValue = contentHash;
@@ -301,12 +364,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
 
                         // 在服务器端创建业务关联
-                        if (!string.IsNullOrEmpty(uploadRequest.BusinessNo) && uploadRequest.OwnerTableName.Trim().Length > 0)
+                        if (uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
                         {
                             var businessRelation = new tb_FS_BusinessRelation
                             {
                                 OwnerTableName = uploadRequest.OwnerTableName,
-                                BusinessNo = uploadRequest.BusinessNo,
+                                BusinessNo = uploadRequest.BusinessNo ?? string.Empty, // 使用空字符串作为默认值
                                 BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
                                 FileId = fileStorageInfo.FileId,
                                 IsMainFile = (i == 0), // 第一个文件为主文件
@@ -329,7 +392,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     fileStorageInfo.FileId, uploadRequest.BusinessNo, uploadRequest.BusinessId, uploadRequest.OwnerTableName, uploadRequest.RelatedField);
 
                                 // 同步HasAttachment标志（在事务内执行）
-                                if (_hasAttachmentSyncService != null && uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue)
+                                if (_hasAttachmentSyncService != null && uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
                                 {
                                     await _hasAttachmentSyncService.SyncOnFileUploadAsync(
                                         uploadRequest.OwnerTableName,
@@ -339,6 +402,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                         useTransaction: false); // 已经在外部事务中，不需要开启新事务
                                 }
                             }
+                        }
+                        else
+                        {
+                            _logger?.Debug("跳过业务关联创建: BusinessId为0或OwnerTableName为空, FileId={FileId}, BusinessId={BusinessId}, OwnerTableName={OwnerTableName}",
+                                fileStorageInfo.FileId, uploadRequest.BusinessId, uploadRequest.OwnerTableName);
                         }
 
                         #endregion
@@ -428,7 +496,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 加载文件数据
                 foreach (var fileInfo in fileList)
                 {
-                    string filePath = FileStorageHelper.ResolveToAbsolutePath(fileInfo.StoragePath);
+                    // 组合StoragePath和StorageFileName得到完整的相对路径
+                    string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
+                    string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
                     if (!File.Exists(filePath))
                     {
                         _logger?.LogWarning("文件不存在: {FilePath}", filePath);
@@ -501,9 +571,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             {
                 query = query.Where(c => c.BusinessId == businessId);
             }
-          
 
-           
+
+
 
             var relations = await query
                 .Includes(t => t.tb_fs_filestorageinfo)
@@ -523,7 +593,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
             }
 
-           
+
             return null;
         }
 
@@ -657,7 +727,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
 
             // 2. 业务类型目录 - 减少子目录搜索数量，只搜索最近3个月
-            if (fileInfo.OwnerTableName.Trim().Length>0)
+            if (fileInfo.OwnerTableName.Trim().Length > 0)
             {
                 var baseBusinessPath = Path.Combine(_fileStoragePath, fileInfo.OwnerTableName.ToString());
                 if (Directory.Exists(baseBusinessPath))
@@ -772,31 +842,61 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 遍历处理每个文件
                     for (int i = 0; i < deleteRequest.FileStorageInfos.Count; i++)
                     {
-                        long currentFileId = deleteRequest.FileStorageInfos[i].FileId;
+                        // 检查索引是否有效
+                        if (i < 0 || i >= deleteRequest.FileStorageInfos.Count)
+                        {
+                            _logger?.LogWarning("文件索引无效，跳过处理: {Index}", i);
+                            continue;
+                        }
+
+                        var fileInfo = deleteRequest.FileStorageInfos[i];
+                        if (fileInfo == null)
+                        {
+                            _logger?.LogWarning("文件信息为空，跳过处理: {Index}", i);
+                            continue;
+                        }
+
+                        long currentFileId = fileInfo.FileId;
+                        if (currentFileId <= 0)
+                        {
+                            _logger?.LogWarning("文件ID无效，跳过处理: {Index}", i);
+                            continue;
+                        }
 
                         // 从数据库获取文件信息
-                        tb_FS_FileStorageInfo fileStorageInfo = deleteRequest.FileStorageInfos[i];
+                        tb_FS_FileStorageInfo fileStorageInfo = fileInfo;
 
                         // 检查文件是否被其他业务引用
                         bool isReferencedByOtherBusiness = false;
                         int SelfRelationCount = 0;
                         try
                         {
-                            var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId == deleteRequest.BusinessId && c.isdeleted == false);
-                            SelfRelationCount = SelfRelations?.Count ?? 0;
-                            relationsToDelete.AddRange(SelfRelations);
-
-                            var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId != deleteRequest.BusinessId && c.isdeleted == false);
-                            int OtherRelationCount = OtherRelations?.Count ?? 0;
-
-                            // 检查文件是否被其他业务引用
-                            if (OtherRelationCount > 0)
+                            // 检查BusinessId是否有效
+                            if (deleteRequest.BusinessId > 0)
                             {
-                                isReferencedByOtherBusiness = true;
+                                var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId == deleteRequest.BusinessId && c.isdeleted == false);
+                                SelfRelationCount = SelfRelations?.Count ?? 0;
+                                if (SelfRelations != null)
+                                {
+                                    relationsToDelete.AddRange(SelfRelations);
+                                }
+
+                                var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId != deleteRequest.BusinessId && c.isdeleted == false);
+                                int OtherRelationCount = OtherRelations?.Count ?? 0;
+
+                                // 检查文件是否被其他业务引用
+                                if (OtherRelationCount > 0)
+                                {
+                                    isReferencedByOtherBusiness = true;
+                                }
+                                else
+                                {
+                                    filesToDelete.Add(fileStorageInfo);
+                                }
                             }
                             else
                             {
-                                filesToDelete.Add(fileStorageInfo);
+                                _logger?.LogDebug("BusinessId无效，跳过业务关联检查: {BusinessId}", deleteRequest.BusinessId);
                             }
                         }
                         catch (Exception ex)
@@ -804,49 +904,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
                         }
 
-                        // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
-                        // 按方案A：统一以关联表 isdeleted 为准进行删除
-                        try
-                        {
-                            for (int dr = 0; dr < relationsToDelete.Count; dr++)
-                            {
-                                // 使用逻辑删除：设置isdeleted标记而不是物理删除
-                                var relation = relationsToDelete[dr];
-                                relation.isdeleted = true;
-                                relation.Modified_at = DateTime.Now;
-                                var updateResult = await _businessRelationController.UpdateAsync(relation);
-
-                                if (updateResult)
-                                {
-                                    relationDeletedCount++;
-                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}",
-                                        relation.RelationId, currentFileId, deleteRequest.BusinessId);
-                                }
-                                else
-                                {
-                                    _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "删除业务关联记录失败，FileId: {FileId}", currentFileId);
-                        }
-
                         // 2. 检查文件是否还有其他有效关联
                         // 根据方案A：只有当文件无任何有效关联时，才标记文件为删除状态
-                        if (!isReferencedByOtherBusiness && relationsToDelete.Count > 0)
+                        if (!isReferencedByOtherBusiness && deleteRequest.BusinessId > 0)
                         {
                             // 检查是否需要物理删除文件
                             bool isPhysicalDelete = deleteRequest.PhysicalDelete;
 
                             if (isPhysicalDelete)
                             {
-                                // 优先使用StoragePath直接删除文件
-                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
+                                // 优先使用StoragePath和StorageFileName组合删除文件
+                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath) && !string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
                                 {
+                                    // 组合StoragePath和StorageFileName得到完整的相对路径
+                                    string fullRelativePath = Path.Combine(fileStorageInfo.StoragePath, fileStorageInfo.StorageFileName);
                                     // 首先尝试将相对路径解析为绝对路径
-                                    var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fileStorageInfo.StoragePath);
+                                    var resolvedPath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
                                     if (File.Exists(resolvedPath))
                                     {
                                         try
@@ -860,40 +933,26 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                             _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
                                         }
                                     }
-
-                                    // 如果解析后的路径不存在，尝试原路径（可能是绝对路径）
-                                    if (File.Exists(fileStorageInfo.StoragePath))
-                                    {
-                                        try
-                                        {
-                                            _logger?.LogDebug("直接使用StoragePath删除文件: {FilePath}", fileStorageInfo.StoragePath);
-                                            File.Delete(fileStorageInfo.StoragePath);
-                                            _logger?.LogDebug("使用StoragePath删除文件成功: {FilePath}", fileStorageInfo.StoragePath);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            _logger?.LogError(ex, "使用StoragePath删除文件失败: {FilePath}", fileStorageInfo.StoragePath);
-                                        }
-                                    }
                                 }
 
                                 // 如果通过StoragePath删除失败或不存在，则使用搜索模式作为备用方案
                                 // 优化搜索策略：优先从StoragePath中提取路径信息
                                 var searchPaths = new List<string>();
 
-                                // 首先尝试从StoragePath中提取目录信息（最精确）
+                                // 首先尝试使用StoragePath作为搜索目录（最精确）
                                 if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
                                 {
-                                    var directoryFromPath = Path.GetDirectoryName(fileStorageInfo.StoragePath);
-                                    if (!string.IsNullOrEmpty(directoryFromPath))
+                                    // 解析StoragePath为绝对路径
+                                    var resolvedStoragePath = FileStorageHelper.ResolveToAbsolutePath(fileStorageInfo.StoragePath);
+                                    if (Directory.Exists(resolvedStoragePath))
                                     {
-                                        searchPaths.Add(directoryFromPath);
-                                        _logger?.LogDebug("添加StoragePath中的目录到搜索路径: {Directory}", directoryFromPath);
+                                        searchPaths.Add(resolvedStoragePath);
+                                        _logger?.LogDebug("添加StoragePath到搜索路径: {Directory}", resolvedStoragePath);
                                     }
                                 }
 
                                 // 添加业务类型目录（如果有）
-                                if (fileStorageInfo.OwnerTableName.Trim().Length>0)
+                                if (fileStorageInfo.OwnerTableName.Trim().Length > 0)
                                 {
                                     // 获取基础业务目录
                                     var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.OwnerTableName);
@@ -927,22 +986,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 精简搜索模式，提高性能
                                 var searchPatterns = new List<string>();
 
-                                // 最精确的搜索模式：完整文件名（如果有）
-                                if (!string.IsNullOrEmpty(fileStorageInfo.StoragePath))
-                                {
-                                    var fileNameFromPath = Path.GetFileName(fileStorageInfo.StoragePath);
-                                    if (!string.IsNullOrEmpty(fileNameFromPath))
-                                    {
-                                        searchPatterns.Add(fileNameFromPath);
-                                        _logger?.LogDebug("添加StoragePath中的文件名到搜索模式: {FileName}", fileNameFromPath);
-                                    }
-                                }
-
-                                // 其次是存储文件名（如果有）
+                                // 最精确的搜索模式：存储文件名（包含扩展名）
                                 if (!string.IsNullOrEmpty(fileStorageInfo.StorageFileName))
                                 {
                                     // 优先搜索精确的文件名
                                     searchPatterns.Add(fileStorageInfo.StorageFileName);
+                                    _logger?.LogDebug("添加StorageFileName到搜索模式: {FileName}", fileStorageInfo.StorageFileName);
                                 }
 
                                 // 只在必要时使用通配符搜索
@@ -1007,6 +1056,51 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             }
                         }
                     }
+
+                    // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
+                    // 按方案A：统一以关联表 isdeleted 为准进行删除
+                    try
+                    {
+                        // 创建一个副本，避免在循环过程中修改集合
+                        var relationsToDeleteCopy = relationsToDelete.ToList();
+                        for (int dr = 0; dr < relationsToDeleteCopy.Count; dr++)
+                        {
+                            // 检查索引是否有效
+                            if (dr < 0 || dr >= relationsToDeleteCopy.Count)
+                            {
+                                _logger?.LogWarning("关联记录索引无效，跳过处理: {Index}", dr);
+                                continue;
+                            }
+
+                            var relation = relationsToDeleteCopy[dr];
+                            if (relation == null)
+                            {
+                                _logger?.LogWarning("关联记录为空，跳过处理: {Index}", dr);
+                                continue;
+                            }
+
+                            // 使用逻辑删除：设置isdeleted标记而不是物理删除
+                            relation.isdeleted = true;
+                            relation.Modified_at = DateTime.Now;
+                            var updateResult = await _businessRelationController.UpdateAsync(relation);
+
+                            if (updateResult)
+                            {
+                                relationDeletedCount++;
+                                _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}",
+                                    relation.RelationId, relation.FileId, relation.BusinessId);
+                            }
+                            else
+                            {
+                                _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogError(ex, "删除业务关联记录失败");
+                    }
+
 
                     response.DeletedFileIds = deletedFileIds;
 

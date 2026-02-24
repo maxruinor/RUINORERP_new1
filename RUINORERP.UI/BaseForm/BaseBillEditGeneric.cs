@@ -4259,6 +4259,7 @@ namespace RUINORERP.UI.BaseForm
                         continue;
                     }
                     var model = grid[i, realIndex].Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model == null) continue;
                     SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
                     //比较是否更新了图片数据
                     string newhash = valueImageWeb.GetImageNewHash();
@@ -4266,24 +4267,37 @@ namespace RUINORERP.UI.BaseForm
                     {
                         #region 需要上传
 
-                        if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase)
-                        && grid[i, realIndex].Value.ToString() == valueImageWeb.CellImageHashName)
+                        if (!valueImageWeb.GetImageoldHash().Equals(newhash, StringComparison.OrdinalIgnoreCase))
                         {
                             string oldfileName = valueImageWeb.GetOldRealfileName();
                             string newfileName = valueImageWeb.GetNewRealfileName();
                             var ctrpay = Startup.GetFromFac<FileBusinessService>();
                             try
                             {
-                                //如果服务器有旧文件 。可以先删除
-                                if (!string.IsNullOrEmpty(valueImageWeb.GetImageoldHash()))
+                                // 获取明细实体
+                                string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
+                                object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
+                                if (PKValue == null)
                                 {
-                                    // 使用新的图片删除方式
-                                    await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity);
-                                    MainForm.Instance.PrintInfoLog("DeleteImage: 成功");
+                                    continue;
+                                }
+                                var detail = Details.Where(x => 
+                                {
+                                    var xValue = x.GetPropertyValue(detailPKName);
+                                    return xValue != null && xValue.ToString().Equals(PKValue.ToString());
+                                }).FirstOrDefault();
+                                if (detail == null)
+                                {
+                                    continue;
                                 }
 
-                                ////上传新文件时要加后缀名
-                                var response = await ctrpay.UploadImageAsync(EditEntity as BaseEntity, newfileName + ".jpg", valueImageWeb.CellImageBytes, ImgCols[0].ColName, null);
+                                // 上传新文件时使用原始文件的扩展名
+                                string fileExtension = Path.GetExtension(newfileName);
+                                if (string.IsNullOrEmpty(fileExtension))
+                                {
+                                    fileExtension = ".jpg";
+                                }
+                                var response = await ctrpay.UploadImageAsync(detail as BaseEntity, newfileName + fileExtension, valueImageWeb.CellImageBytes, col.ColName, null);
                                 if (response != null && response.IsSuccess)
                                 {
                                     // 提取文件名
@@ -4292,9 +4306,6 @@ namespace RUINORERP.UI.BaseForm
                                     valueImageWeb.UpdateImageName(newhash);
                                     grid[i, realIndex].Value = resultFileName;
 
-                                    string detailPKName = UIHelper.GetPrimaryKeyColName(typeof(C));
-                                    object PKValue = grid[i, realIndex].Row.RowData.GetPropertyValue(detailPKName);
-                                    var detail = Details.Where(x => x.GetPropertyValue(detailPKName).ToString().Equals(PKValue.ToString())).FirstOrDefault();
                                     detail.SetPropertyValue(col.ColName, resultFileName);
                                     rs = true;
 
@@ -4305,8 +4316,11 @@ namespace RUINORERP.UI.BaseForm
                                     rs = false;
                                 }
                             }
-                            catch
-                            { rs = false; }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.PrintInfoLog("上传图片失败: " + ex.Message);
+                                rs = false;
+                            }
                         }
                         #endregion
                     }

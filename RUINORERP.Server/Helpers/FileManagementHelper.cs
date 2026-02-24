@@ -28,6 +28,7 @@ namespace RUINORERP.Server.Helpers
         /// <param name="OwnerTableName">业务类型</param>
         /// <param name="userId">用户ID</param>
         /// <param name="contentHash">文件内容哈希值（可选）</param>
+        /// <param name="storageFileName">存储文件名（可选）</param>
         /// <returns>文件存储信息实体</returns>
         public static tb_FS_FileStorageInfo CreateFileStorageInfo(
             string fileName,
@@ -36,7 +37,8 @@ namespace RUINORERP.Server.Helpers
             string storagePath,
             string OwnerTableName,
             long userId,
-            string contentHash = null)
+            string contentHash = null,
+            string storageFileName = null)
         {
 
             // 如果未提供内容哈希值，则使用传统的哈希码生成方式
@@ -47,7 +49,7 @@ namespace RUINORERP.Server.Helpers
             var fileStorageInfo = new tb_FS_FileStorageInfo
             {
                 OriginalFileName = fileName,
-                StorageFileName = GenerateStorageFileName(fileName),
+                StorageFileName = storageFileName ?? GenerateStorageFileName(fileName),
                 OwnerTableName = OwnerTableName,
                 FileType = fileType,
                 FileExtension = fileExtension, // 设置文件扩展名
@@ -193,16 +195,15 @@ namespace RUINORERP.Server.Helpers
 
         /// <summary>
         /// 生成存储文件名
-        /// 不带扩展名
+        /// 包含扩展名
         /// </summary>
         /// <param name="originalFileName">原始文件名</param>
         /// <returns>存储文件名</returns>
         public static string GenerateStorageFileName(string originalFileName)
         {
-            // var fileExtension = Path.GetExtension(originalFileName);
-            var fileId = Guid.NewGuid().ToString("N");
-            return $"{fileId}";
-            //return $"{fileId}{fileExtension}";
+            var fileExtension = Path.GetExtension(originalFileName);
+            var fileId = Guid.NewGuid().ToString();
+            return $"{fileId}{fileExtension}";
         }
 
         /// <summary>

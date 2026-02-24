@@ -103,6 +103,8 @@ namespace RUINORERP.UI.Network.Services
                 uploadRequest.OwnerTableName = entity.GetType().Name;
                 uploadRequest.BusinessId = entity.PrimaryKeyID;
                 uploadRequest.RelatedField = relatedField;
+                // 确保BusinessNo有值，避免关联表创建失败
+                uploadRequest.BusinessNo = uploadRequest.BusinessNo ?? string.Empty;
                 // 执行上传
                 var response = await fileService.UploadFileAsync(uploadRequest);
 

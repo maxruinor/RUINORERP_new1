@@ -249,13 +249,13 @@ namespace RUINORERP.UI.Network
                 // 连接前进行网络健康检查
                 if (_healthCheckService != null && !_healthCheckService.IsNetworkHealthy)
                 {
-                    _logger?.LogWarning("网络健康检查失败，延迟连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
+                   // _logger?.LogWarning("网络健康检查失败，延迟连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
 
                     // 尝试进行一次即时网络检查
                     var immediateCheck = await _healthCheckService.CheckOnceAsync();
                     if (!immediateCheck)
                     {
-                        _logger?.LogError("网络连接不可用，取消连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
+                        //_logger?.LogError("网络连接不可用，取消连接尝试，目标：{ServerIp}:{Port}", serverUrl, port);
                         return false;
                     }
                 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
@@ -647,6 +647,11 @@ namespace RUINORERP.Common.Extensions
                 {
                     NullableConverter nullableConverter = new NullableConverter(targetType);
                     return nullableConverter.ConvertFrom(obj);
+                }
+                else if (obj is SourceGrid.Cells.Editors.ImageCellValue imageCellValue && targetType == typeof(string))
+                {
+                    // 处理ImageCellValue类型，返回ImagePath属性
+                    return imageCellValue.ImagePath;
                 }
                 else
                 {

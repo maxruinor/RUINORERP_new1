@@ -337,9 +337,16 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             relativeStoragePath = ".";
                         }
 
+                        // 确定原始文件名：如果OriginalFileName为空或不包含扩展名，则使用生成的文件名
+                        string originalFileName = FileStorageInfo.OriginalFileName;
+                        if (string.IsNullOrEmpty(originalFileName) || string.IsNullOrEmpty(Path.GetExtension(originalFileName)))
+                        {
+                            originalFileName = savedFileName;
+                        }
+
                         // 创建文件信息实体并保存到数据库
                         var fileStorageInfo = FileManagementHelper.CreateFileStorageInfo(
-                            FileStorageInfo.OriginalFileName,  // fileName
+                            originalFileName,  // fileName
                             FileStorageInfo.FileData.Length,   // fileSize
                             fileExtension.TrimStart('.'),     // fileType
                             relativeStoragePath,              // storagePath（保存相对路径）

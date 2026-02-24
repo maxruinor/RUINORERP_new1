@@ -648,10 +648,22 @@ namespace RUINORERP.Common.Extensions
                     NullableConverter nullableConverter = new NullableConverter(targetType);
                     return nullableConverter.ConvertFrom(obj);
                 }
-                else if (obj is SourceGrid.Cells.Editors.ImageCellValue imageCellValue && targetType == typeof(string))
+                else if (obj != null && obj.GetType().FullName == "SourceGrid.Cells.Editors.ImageCellValue" && targetType == typeof(string))
                 {
-                    // 处理ImageCellValue类型，返回ImagePath属性
-                    return imageCellValue.ImagePath;
+                    // 使用反射处理ImageCellValue类型，返回ImagePath属性
+                    try
+                    {
+                        var imagePathProperty = obj.GetType().GetProperty("ImagePath");
+                        if (imagePathProperty != null)
+                        {
+                            return imagePathProperty.GetValue(obj);
+                        }
+                    }
+                    catch
+                    {
+                        // 反射失败，返回null
+                    }
+                    return null;
                 }
                 else
                 {

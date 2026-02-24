@@ -816,7 +816,22 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     // 有图片，查看大图，不调用基类方法（避免进入编辑模式）
                     MainForm.Instance.PrintInfoLog("双击：有图片，显示大图，不进入编辑模式");
-                    ImageGridHelper.ShowImageInViewer(imageBytes);
+                    
+                    // 临时禁用编辑器，避免进入编辑模式
+                    var originalEditor = sender.Cell.Editor;
+                    sender.Cell.Editor = null;
+                    
+                    try
+                    {
+                        // 显示图片查看器
+                        ImageGridHelper.ShowImageInViewer(imageBytes);
+                    }
+                    finally
+                    {
+                        // 恢复编辑器
+                        sender.Cell.Editor = originalEditor;
+                    }
+                    
                     return;
                 }
                 else
@@ -987,13 +1002,13 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-        private async void SiReplace_Click(object sender, EventArgs e)
+        private void SiReplace_Click(object sender, EventArgs e)
         {
-            // 替换图片：先删除旧图片，再上传新图片
+            // 替换图片：将旧图片标记为待删除，将新图片标记为待上传
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
             
-            // 先删除旧图片
+            // 先处理旧图片
             string oldImageId = cell.Value as string;
             if (!string.IsNullOrEmpty(oldImageId))
             {
@@ -1001,43 +1016,57 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                            {
-                                if (cell.View is RemoteImageView imageView)
-                                {
-                                    // 保存要删除的缓存键
-                                    string cacheKey = valueImageWeb.CellImageHashName;
-                                    
-                                    // 删除旧图片
-                                    bool deleteResult = await imageView.DeleteImageAsync(oldImageId);
-                                    if (!deleteResult)
-                                    {
-                                        MainForm.Instance.PrintInfoLog("删除旧图片失败，取消替换操作");
-                                        return;
-                                    }
-                                    
-                                    // 清空单元格值和图片数据
-                                    cell.Value = null;
-                                    valueImageWeb.CellImageBytes = null;
-                                    valueImageWeb.CellImageHashName = null;
-                                    imageView.GridImage = null;
-                                    
-                                    // 同时清空ImageCacheManager中的对应缓存
-                                    if (!string.IsNullOrEmpty(cacheKey))
-                                    {
-                                        SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(cacheKey);
-                                    }
-                                }
-                            }
+                    {
+                        // 将旧图片标记为待删除状态
+                        ImageStateManager.Instance.UpdateImageStatus(oldImageId, ImageStatus.PendingDelete);
+                        
+                        MainForm.Instance.PrintInfoLog($"旧图片已标记为待删除: {oldImageId}");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MainForm.Instance.PrintInfoLog("删除旧图片失败: " + ex.Message);
+                    MainForm.Instance.PrintInfoLog("标记旧图片失败: " + ex.Message);
                     return;
                 }
             }
             
-            // 再上传新图片
-            SiUpload_Click(sender, e);
+            // 再选择新图片
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Filter = "图片文件|*.jpg;*.jpeg;*.png;*.gif;*.bmp",
+                Title = "选择要替换的图片"
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    // 读取图片文件
+                    byte[] imageBytes = File.ReadAllBytes(openFileDialog.FileName);
+                    string fileName = Path.GetFileName(openFileDialog.FileName);
+                    
+                    // 生成临时图片ID
+                    string tempImageId = Guid.NewGuid().ToString();
+                    
+                    // 将新图片标记为待上传状态
+                    ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, ImageStatus.PendingUpload);
+                    
+                    // 更新单元格值为临时ID
+                    cell.Value = tempImageId;
+                    
+                    // 强制重绘
+                    grid.Refresh();
+
+                    // 更新编辑状态
+                    UpdateCellEditState();
+                    
+                    MainForm.Instance.PrintInfoLog($"新图片已标记为待上传: {fileName}");
+                }
+                catch (Exception ex)
+                {
+                    MainForm.Instance.PrintInfoLog("标记新图片失败: " + ex.Message);
+                }
+            }
         }
 
         private void SiUpdate_Click(object sender, EventArgs e)

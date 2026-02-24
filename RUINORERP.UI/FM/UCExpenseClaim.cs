@@ -50,15 +50,58 @@ using static RUINORERP.UI.Common.GUIUtils;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
 using RUINORERP.PacketSpec.Models.FileManagement;
+using RUINOR.WinFormsUI.CustomPictureBox;
 
 namespace RUINORERP.UI.FM
 {
+    
     [MenuAttrAssemblyInfo("费用报销单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用报销, BizType.费用报销单)]
     public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>, IToolStripMenuInfoAuth
     {
         public UCExpenseClaim()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// 取消操作，恢复原始图片状态
+        /// </summary>
+        protected override void Cancel()
+        {
+            base.Cancel();
+
+            // 恢复图片状态
+            try
+            {
+                // 检查是否已加载 ImageStateManager 类型
+                var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
+                if (imageStateManagerType != null)
+                {
+                    // 使用反射获取单例实例
+                    var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (instanceProperty != null)
+                    {
+                        var instance = instanceProperty.GetValue(null);
+                        if (instance != null)
+                        {
+                            // 使用反射调用 ResetStatus 方法
+                            var resetStatusMethod = imageStateManagerType.GetMethod("ResetStatus");
+                            if (resetStatusMethod != null)
+                            {
+                                resetStatusMethod.Invoke(instance, null);
+                                MainForm.Instance.PrintInfoLog("图片状态已重置");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.PrintInfoLog($"恢复图片状态失败: {ex.Message}");
+            }
+
+            // 刷新网格显示
+            grid1.Refresh();
         }
         public override void AddExcludeMenuList()
         {
@@ -874,6 +917,46 @@ namespace RUINORERP.UI.FM
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
                 if (NeedValidated)
                 {
+                    // 保存前获取待删除和待上传的图片
+                    var pendingDeleteImages = new List<string>();
+                    var pendingUploadImages = new List<object>();
+
+                    // 检查是否已加载 ImageStateManager 类型
+                    var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
+                    if (imageStateManagerType != null)
+                    {
+                        // 使用反射获取单例实例
+                        var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                        if (instanceProperty != null)
+                        {
+                            var instance = instanceProperty.GetValue(null);
+                            if (instance != null)
+                            {
+                                // 获取待删除图片
+                                var getPendingDeleteImagesMethod = imageStateManagerType.GetMethod("GetPendingDeleteImages");
+                                if (getPendingDeleteImagesMethod != null)
+                                {
+                                    var deleteImages = getPendingDeleteImagesMethod.Invoke(instance, null) as List<string>;
+                                    if (deleteImages != null)
+                                    {
+                                        pendingDeleteImages.AddRange(deleteImages);
+                                    }
+                                }
+
+                                // 获取待上传图片
+                                var getPendingUploadImagesMethod = imageStateManagerType.GetMethod("GetPendingUploadImages");
+                                if (getPendingUploadImagesMethod != null)
+                                {
+                                    var uploadImages = getPendingUploadImagesMethod.Invoke(instance, null) as List<object>;
+                                    if (uploadImages != null)
+                                    {
+                                        pendingUploadImages.AddRange(uploadImages);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
@@ -881,6 +964,73 @@ namespace RUINORERP.UI.FM
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
+
+                        // 处理待删除的图片
+                        if (pendingDeleteImages.Count > 0)
+                        {
+                            var fileService = Startup.GetFromFac<FileBusinessService>();
+                            try
+                            {
+                                var deleteResult = await fileService.DeleteImagesAsync(EditEntity, false);
+                                if (deleteResult != null && deleteResult.IsSuccess)
+                                {
+                                    MainForm.Instance.PrintInfoLog($"删除旧图片成功: {pendingDeleteImages.Count} 张");
+                                }
+                                else
+                                {
+                                    MainForm.Instance.PrintInfoLog($"删除旧图片失败");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MainForm.Instance.PrintInfoLog($"删除旧图片失败: {ex.Message}");
+                            }
+                        }
+
+                        // 处理待上传的图片
+                        if (pendingUploadImages.Count > 0)
+                        {
+                            var fileService = Startup.GetFromFac<FileBusinessService>();
+                            foreach (var uploadImage in pendingUploadImages)
+                            {
+                                try
+                                {
+                                    // 使用反射获取必要的属性
+                                    var imageDataProperty = uploadImage.GetType().GetProperty("ImageData");
+                                    var baseImageInfoProperty = uploadImage.GetType().GetProperty("BaseImageInfo");
+                                    
+                                    if (imageDataProperty != null && baseImageInfoProperty != null)
+                                    {
+                                        var imageData = (byte[])imageDataProperty.GetValue(uploadImage);
+                                        var baseImageInfo = baseImageInfoProperty.GetValue(uploadImage);
+                                        
+                                        if (baseImageInfo != null)
+                                        {
+                                            var originalFileNameProperty = baseImageInfo.GetType().GetProperty("OriginalFileName");
+                                            if (originalFileNameProperty != null)
+                                            {
+                                                var originalFileName = (string)originalFileNameProperty.GetValue(baseImageInfo);
+                                                
+                                                // 上传新图片
+                                                var uploadResponse = await fileService.UploadImageAsync(EditEntity, originalFileName, imageData, "EvidenceImagePath");
+                                                if (uploadResponse != null && uploadResponse.IsSuccess)
+                                                {
+                                                    MainForm.Instance.PrintInfoLog($"上传新图片成功: {originalFileName}");
+                                                }
+                                                else
+                                                {
+                                                    MainForm.Instance.PrintInfoLog($"上传新图片失败: {originalFileName}");
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MainForm.Instance.PrintInfoLog($"上传新图片失败: {ex.Message}");
+                                }
+                            }
+                        }
 
                         if (NeedValidated)
                         {
@@ -908,6 +1058,27 @@ namespace RUINORERP.UI.FM
 
                         // 清理已替换的旧图片
                         await CleanupOldImagesAsync();
+
+                        // 清除图片状态标记
+                        if (imageStateManagerType != null)
+                        {
+                            var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                            if (instanceProperty != null)
+                            {
+                                var instance = instanceProperty.GetValue(null);
+                                if (instance != null)
+                                {
+                                    var clearStatusMethod = imageStateManagerType.GetMethod("ClearStatus");
+                                    if (clearStatusMethod != null)
+                                    {
+                                        clearStatusMethod.Invoke(instance, null);
+                                    }
+                                }
+                            }
+                        }
+
+                        // 刷新网格显示
+                        grid1.Refresh();
                     }
                     else
                     {

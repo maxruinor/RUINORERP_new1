@@ -313,7 +313,7 @@ namespace RUINORERP.UI.Network
                 else
                 {
                     _isConnected = false;
-                    _logger?.LogWarning("连接服务器 {ServerIp}:{Port} 失败", serverUrl, port);
+                    //_logger?.LogWarning("连接服务器 {ServerIp}:{Port} 失败", serverUrl, port);
                 }
 
                 return _isConnected;

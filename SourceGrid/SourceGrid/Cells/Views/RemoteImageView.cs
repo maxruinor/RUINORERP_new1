@@ -432,7 +432,177 @@ namespace SourceGrid.Cells.Views
                         }
                     }
                 }
+
+                // 绘制图片状态标记
+                DrawImageStatus(graphics, area);
             }
+        }
+
+        /// <summary>
+        /// 绘制图片状态标记
+        /// </summary>
+        /// <param name="graphics">图形对象</param>
+        /// <param name="area">绘制区域</param>
+        private void DrawImageStatus(GraphicsCache graphics, RectangleF area)
+        {
+            try
+            {
+                // 获取图片状态
+                var status = GetImageStatus();
+                
+                // 根据状态绘制不同的标记
+                switch (status)
+                {
+                    case ImageStatus.PendingDelete:
+                        // 绘制待删除标记
+                        DrawPendingDeleteMark(graphics, area);
+                        break;
+                    case ImageStatus.PendingUpload:
+                        // 绘制待上传标记
+                        DrawPendingUploadMark(graphics, area);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("绘制图片状态标记失败: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 获取图片状态
+        /// </summary>
+        /// <returns>图片状态</returns>
+        private ImageStatus GetImageStatus()
+        {
+            try
+            {
+                // 检查是否已加载 ImageStateManager 类型
+                var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
+                if (imageStateManagerType != null)
+                {
+                    // 使用反射获取单例实例
+                    var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (instanceProperty != null)
+                    {
+                        var instance = instanceProperty.GetValue(null);
+                        if (instance != null)
+                        {
+                            // 使用反射获取 GetImageInfo 方法
+                            var getImageInfoMethod = imageStateManagerType.GetMethod("GetImageInfo");
+                            if (getImageInfoMethod != null)
+                            {
+                                var imageInfo = getImageInfoMethod.Invoke(instance, new object[] { CurrentFileId });
+                                if (imageInfo != null)
+                                {
+                                    // 使用反射获取 Status 属性
+                                    var statusProperty = imageInfo.GetType().GetProperty("Status");
+                                    if (statusProperty != null)
+                                    {
+                                        return (ImageStatus)statusProperty.GetValue(imageInfo);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("获取图片状态失败: " + ex.Message);
+            }
+
+            return ImageStatus.Normal;
+        }
+
+        /// <summary>
+        /// 绘制待删除标记
+        /// </summary>
+        /// <param name="graphics">图形对象</param>
+        /// <param name="area">绘制区域</param>
+        private void DrawPendingDeleteMark(GraphicsCache graphics, RectangleF area)
+        {
+            // 绘制红色边框
+            using (var pen = new Pen(Color.Red, 2))
+            {
+                graphics.Graphics.DrawRectangle(pen, Rectangle.Round(area));
+            }
+
+            // 绘制红色对角线
+            using (var pen = new Pen(Color.Red, 2))
+            {
+                var rect = Rectangle.Round(area);
+                var topLeft = new System.Drawing.Point(rect.X, rect.Y);
+                var bottomRight = new System.Drawing.Point(rect.X + rect.Width, rect.Y + rect.Height);
+                var topRight = new System.Drawing.Point(rect.X + rect.Width, rect.Y);
+                var bottomLeft = new System.Drawing.Point(rect.X, rect.Y + rect.Height);
+                graphics.Graphics.DrawLine(pen, topLeft, bottomRight);
+                graphics.Graphics.DrawLine(pen, topRight, bottomLeft);
+            }
+
+            // 绘制"待删除"文字
+            using (var font = new Font("Arial", 10, FontStyle.Bold))
+            using (var brush = new SolidBrush(Color.Red))
+            {
+                var text = "待删除";
+                var textSize = graphics.Graphics.MeasureString(text, font);
+                var textX = area.X + (area.Width - textSize.Width) / 2;
+                var textY = area.Y + (area.Height - textSize.Height) / 2;
+                graphics.Graphics.DrawString(text, font, brush, textX, textY);
+            }
+        }
+
+        /// <summary>
+        /// 绘制待上传标记
+        /// </summary>
+        /// <param name="graphics">图形对象</param>
+        /// <param name="area">绘制区域</param>
+        private void DrawPendingUploadMark(GraphicsCache graphics, RectangleF area)
+        {
+            // 绘制蓝色边框
+            using (var pen = new Pen(Color.Blue, 2))
+            {
+                graphics.Graphics.DrawRectangle(pen, Rectangle.Round(area));
+            }
+
+            // 绘制蓝色点状边框
+            using (var pen = new Pen(Color.Blue, 1))
+            {
+                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                var rect = Rectangle.Round(area);
+                rect.Inflate(-2, -2);
+                graphics.Graphics.DrawRectangle(pen, rect);
+            }
+
+            // 绘制"待上传"文字
+            using (var font = new Font("Arial", 10, FontStyle.Bold))
+            using (var brush = new SolidBrush(Color.Blue))
+            {
+                var text = "待上传";
+                var textSize = graphics.Graphics.MeasureString(text, font);
+                var textX = area.X + (area.Width - textSize.Width) / 2;
+                var textY = area.Y + (area.Height - textSize.Height) / 2;
+                graphics.Graphics.DrawString(text, font, brush, textX, textY);
+            }
+        }
+
+        /// <summary>
+        /// 图片状态枚举
+        /// </summary>
+        private enum ImageStatus
+        {
+            /// <summary>
+            /// 正常状态
+            /// </summary>
+            Normal,
+            /// <summary>
+            /// 待删除状态
+            /// </summary>
+            PendingDelete,
+            /// <summary>
+            /// 待上传状态
+            /// </summary>
+            PendingUpload
         }
 
         /// <summary>

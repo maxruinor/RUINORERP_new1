@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -80,19 +80,7 @@ namespace RUINORERP.Model
                         }
         }
 
-        private string _OwnerTableDesc;
-        /// <summary>
-        /// 业务表名
-        /// </summary>
-        [AdvQueryAttribute(ColName = "OwnerTableDesc",ColDesc = "业务表名")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "OwnerTableDesc" ,Length=100,IsNullable = false,ColumnDescription = "业务表名" )]
-        public string OwnerTableDesc
-        { 
-            get{return _OwnerTableDesc;}
-            set{
-            SetProperty(ref _OwnerTableDesc, value);
-                        }
-        }
+
 
         private long _BusinessId;
         /// <summary>

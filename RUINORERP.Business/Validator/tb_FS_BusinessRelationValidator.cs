@@ -39,9 +39,7 @@ namespace RUINORERP.Business
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableName).MaximumMixedLength(100).WithMessage("业务表名:不能超过最大长度,100.");
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableName).NotEmpty().WithMessage("业务表名:不能为空。");
 
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableDesc).MaximumMixedLength(100).WithMessage("业务表名:不能超过最大长度,100.");
- RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.OwnerTableDesc).NotEmpty().WithMessage("业务表名:不能为空。");
-
+ 
 //***** 
  RuleFor(tb_FS_BusinessRelation =>tb_FS_BusinessRelation.BusinessId).NotNull().WithMessage("业务单据:不能为空。");
 

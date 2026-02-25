@@ -50,7 +50,6 @@ using static RUINORERP.UI.Common.GUIUtils;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
 using RUINORERP.PacketSpec.Models.FileManagement;
-using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.UI.UCSourceGrid;
 
 namespace RUINORERP.UI.FM

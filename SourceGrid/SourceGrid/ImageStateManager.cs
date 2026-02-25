@@ -134,15 +134,7 @@ namespace SourceGrid
                     _cellToImageDict[cell].Add(imageId);
                 }
 
-                // 触发状态变更事件
-                OnImageStateChanged?.Invoke(this, new ImageStateChangedEventArgs
-                {
-                    Cell = cell,
-                    ImageId = imageId,
-                    FileName = fileName,
-                    ImageData = imageData,
-                    Status = status
-                });
+                 
             }
         }
 
@@ -193,15 +185,7 @@ namespace SourceGrid
                 {
                     imageInfo.Status = newStatus;
                     
-                    // 触发状态变更事件
-                    OnImageStateChanged?.Invoke(this, new ImageStateChangedEventArgs
-                    {
-                        Cell = imageInfo.Cell,
-                        ImageId = imageId,
-                        FileName = imageInfo.FileName,
-                        ImageData = imageInfo.ImageData,
-                        Status = newStatus
-                    });
+                   
                 }
             }
         }
@@ -226,15 +210,7 @@ namespace SourceGrid
                         }
                     }
 
-                    // 触发删除事件
-                    OnImageStateChanged?.Invoke(this, new ImageStateChangedEventArgs
-                    {
-                        Cell = imageInfo.Cell,
-                        ImageId = imageId,
-                        FileName = imageInfo.FileName,
-                        ImageData = imageInfo.ImageData,
-                        Status = ImageStatus.PendingDelete
-                    });
+                    
                 }
             }
         }

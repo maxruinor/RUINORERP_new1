@@ -320,7 +320,8 @@ namespace SourceGrid.Cells.Editors
                     {
                         // 获取图像
                         System.Drawing.Image image = Clipboard.GetImage();
-                        fileName = $"Clipboard_{DateTime.Now:yyyyMMddHHmmss}";
+                        // 生成带扩展名的文件名
+                        fileName = $"Clipboard_{DateTime.Now:yyyyMMddHHmmss}.jpg";
                         
                         bool success = await SetImageToPathAsync(image);
                         if (success)
@@ -447,7 +448,7 @@ namespace SourceGrid.Cells.Editors
                 }
 
                 // 11. 与图片状态管理系统集成
-                await RegisterImageWithStateManager(fileId, compressedBytes, fileName);
+                 RegisterImageWithStateManager(fileId, compressedBytes, fileName);
 
                 // 12. 更新控件值
                 Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
@@ -612,7 +613,8 @@ namespace SourceGrid.Cells.Editors
                         try
                         {
                             var img = System.Drawing.Image.FromFile(filePath);
-                            fileName = Path.GetFileNameWithoutExtension(filePath);
+                            // 保留完整的文件名（包含扩展名）
+                            fileName = Path.GetFileName(filePath);
                             
                             bool success = await SetImageToPathAsync(img);
                             if (success)
@@ -686,10 +688,12 @@ namespace SourceGrid.Cells.Editors
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
             //这里取值。要判断比较哪个最新通过哈希值比较一下。
+            string selectedFilePath = string.Empty;
             if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
             {
                 if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
                 {
+                    selectedFilePath = txtWebImage.SelectedFilePath;
                     byte[] NewbuffByte = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
                     string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
 
@@ -707,7 +711,7 @@ namespace SourceGrid.Cells.Editors
                     //return valueImageWeb.CellImageName;
                 }
             }
-            //三种形式都将byte[]保存到tag中
+            //三种形式都将byte[]保存到tag中1
             if (Control.Value != null && !string.IsNullOrEmpty(Control.Value.ToString()) && valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
             {
                 Control.Tag = valueImageWeb.CellImageBytes;
@@ -725,20 +729,120 @@ namespace SourceGrid.Cells.Editors
             }
             else if (val is byte[] buffByte)
             {
+                byte[] destination;
+                string fileExtension = string.Empty;
+                
                 //实际上比较一下。如果还是相同的图片不用赋值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
                 //看原来有不有哈希值或新旧是否相同，如果不同则更新
                 if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                 {
                     byte[] NewbuffByte = val as byte[];
-                    byte[] destination = new byte[NewbuffByte.Length];
+                    destination = new byte[NewbuffByte.Length];
                     Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
                     valueImageWeb.CellImageBytes = destination;
                     valueImageWeb.SetImageNewHash(NewHash);
                     Control.Tag = destination;
+                    
+                    // 提取文件名和扩展名（如果是通过文件选择器选择的）
+                    if (!string.IsNullOrEmpty(selectedFilePath))
+                    {
+                        fileName = Path.GetFileName(selectedFilePath);
+                        fileExtension = Path.GetExtension(selectedFilePath);
+                    }
+                    else if (string.IsNullOrEmpty(fileName))
+                    {
+                        fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}";
+                        fileExtension = ".jpg"; // 默认扩展名
+                    }
+                    else
+                    {
+                        // 如果 fileName 已有值但没有扩展名，添加默认扩展名
+                        if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
+                        {
+                            fileExtension = ".jpg";
+                            fileName += fileExtension;
+                        }
+                    }
+                    
+                    // 生成文件ID
+                    string fileId;
+                    if (UseNewNamingStrategy)
+                    {
+                        fileId = ImageNamingStrategy.GenerateUniqueFileId(destination, fileName);
+                        CurrentFileId = fileId;
+                    }
+                    else
+                    {
+                        fileId = valueImageWeb.realName + "-" + NewHash;
+                    }
+                    
+                    // 直接注册到图片状态管理器（同步调用，确保添加到待上传列表）
+                    if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
+                    {
+                        // 保存完整文件名（包含扩展名）到状态管理器
+                        ImageStateManager.Instance.AddImage(cell, fileId, fileName, destination, ImageStatus.PendingUpload);
+                        System.Diagnostics.Debug.WriteLine($"[ImageWebPicker] 通过文件选择器添加图片，已注册到状态管理器: {fileId}, 文件名: {fileName}");
+                    }
+                    
+                    // 更新控件值
+                    Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
+                    
+                    // 设置显示图片
                     using (MemoryStream ms = new MemoryStream(NewbuffByte))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
+                    }
+                }
+                else
+                {
+                    // 哈希相同，说明图片已经处理过，使用现有的图片数据
+                    destination = valueImageWeb.CellImageBytes;
+                    
+                    // 检查是否需要注册到状态管理器
+                    if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
+                    {
+                        // 提取文件名和扩展名
+                        if (!string.IsNullOrEmpty(selectedFilePath))
+                        {
+                            fileName = Path.GetFileName(selectedFilePath);
+                            fileExtension = Path.GetExtension(selectedFilePath);
+                        }
+                        else if (string.IsNullOrEmpty(fileName))
+                        {
+                            fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}";
+                            fileExtension = ".jpg";
+                        }
+                        else
+                        {
+                            // 如果 fileName 已有值但没有扩展名，添加默认扩展名
+                            if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
+                            {
+                                fileExtension = ".jpg";
+                                fileName += fileExtension;
+                            }
+                        }
+                        
+                        // 生成文件ID
+                        string fileId;
+                        if (UseNewNamingStrategy)
+                        {
+                            fileId = ImageNamingStrategy.GenerateUniqueFileId(destination, fileName);
+                            CurrentFileId = fileId;
+                        }
+                        else
+                        {
+                            fileId = valueImageWeb.realName + "-" + NewHash;
+                        }
+                        
+                        // 检查是否已在状态管理器中
+                        var existingImage = ImageStateManager.Instance.GetImageInfo(fileId);
+                        if (existingImage == null)
+                        {
+                            // 保存完整文件名（包含扩展名）到状态管理器
+                            ImageStateManager.Instance.AddImage(cell, fileId, fileName, destination, ImageStatus.PendingUpload);
+                            System.Diagnostics.Debug.WriteLine($"[ImageWebPicker] 图片已存在但未注册，补充注册到状态管理器: {fileId}, 文件名: {fileName}");
+                        }
                     }
                 }
             }
@@ -936,7 +1040,7 @@ namespace SourceGrid.Cells.Editors
         /// <param name="fileId">文件ID</param>
         /// <param name="imageData">图片数据</param>
         /// <param name="fileName">文件名</param>
-        private async Task RegisterImageWithStateManager(string fileId, byte[] imageData, string fileName)
+        private void RegisterImageWithStateManager(string fileId, byte[] imageData, string fileName)
         {
             try
             {
@@ -968,38 +1072,8 @@ namespace SourceGrid.Cells.Editors
             {
                 System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 状态管理器注册失败: {ex.Message}");
             }
-            
-            await Task.CompletedTask;
         }
-
-        /*
-        public override object GetEditedTagValue()
-        {
-            var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-            Control.Tag = valueImageWeb.CellImageBytes;
-            if (valueImageWeb.CellImageBytes != null)
-            {
-                return valueImageWeb.CellImageBytes;
-            }
-            else
-            {
-
-            }
-            object val = Control.Value;
-            if (val is System.Drawing.Image)
-            {
-                DevAge.ComponentModel.Validator.ValidatorTypeConverter imageValidator = new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(System.Drawing.Image));
-                return imageValidator.ValueToObject(val, typeof(byte[]));
-            }
-            else if (val is byte[])
-                return val;
-            else if (val is string)
-            {
-            }
-            return val;  
-        }
-        */
+ 
     }
 
 

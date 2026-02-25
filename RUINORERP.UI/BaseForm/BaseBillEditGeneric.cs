@@ -4217,10 +4217,10 @@ namespace RUINORERP.UI.BaseForm
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
             
             // 获取所有待上传图片
-            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            var pendingUploadImages = SourceGrid.ImageStateManager.Instance.GetPendingUploadImages();
             
             // 如果没有待上传图片，直接返回成功
-            if (pendingUploadImages.Count == 0)
+            if (pendingUploadImages == null || pendingUploadImages.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog("没有需要上传的图片，跳过图片上传处理");
                 return true;
@@ -4258,7 +4258,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
         /// </summary>
-        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<ExtendedImageInfo> pendingUploadImages)
+        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<SourceGrid.ExtendedImageInfo> pendingUploadImages)
         {
             bool rs = true;
             int processedCount = 0;
@@ -4273,21 +4273,71 @@ namespace RUINORERP.UI.BaseForm
                 {
                     try
                     {
-                        // 查找对应的单元格和明细数据
-                        var cellAndDetail = FindCellAndDetailByImageId(grid, Details, imageInfo.ImageId);
-                        if (cellAndDetail.cell != null && cellAndDetail.detail != null)
+                        // 直接使用 imageInfo.Cell 引用，而不是重新查找
+                        SourceGrid.Cells.Cell cell = imageInfo.Cell;
+                        C detail = null;
+                        
+                        if (cell != null)
                         {
+                            // 通过单元格获取对应的明细数据
+                            var range = cell.Range;
+                            if (!range.IsEmpty())
+                            {
+                                var rowData = grid.Rows[range.Start.Row].RowData;
+                                if (rowData is C matchedDetail)
+                                {
+                                    detail = matchedDetail;
+                                }
+                            }
+                        }
+                        
+                        // 如果通过 Cell 引用找不到，尝试通过 Details 列表匹配
+                        if (detail == null)
+                        {
+                            // 尝试通过图片ID在 Details 中查找
+                            foreach (var detailItem in Details)
+                            {
+                                // 检查明细的图片字段是否包含此 imageId
+                                PropertyInfo[] props = typeof(C).GetProperties();
+                                foreach (PropertyInfo prop in props)
+                                {
+                                    var value = prop.GetValue(detailItem);
+                                    if (value?.ToString() == imageInfo.ImageId)
+                                    {
+                                        detail = detailItem;
+                                        break;
+                                    }
+                                }
+                                if (detail != null)
+                                {
+                                    // 找到明细后，还需要找到对应的单元格
+                                    cell = FindCellByImageId(grid, imageInfo.ImageId);
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (cell != null && detail != null)
+                        {
+                            // 确保文件名包含扩展名
+                            string uploadFileName = imageInfo.FileName;
+                            if (string.IsNullOrEmpty(Path.GetExtension(uploadFileName)))
+                            {
+                                // 如果文件名没有扩展名，添加默认扩展名
+                                uploadFileName = Path.ChangeExtension(uploadFileName, ".jpg");
+                            }
+                            
                             // 上传图片到文件服务器
                             var uploadResult = await fileService.UploadImageAsync(
-                                cellAndDetail.detail as BaseEntity, 
-                                imageInfo.FileName, 
+                                detail as BaseEntity, 
+                                uploadFileName, 
                                 imageInfo.ImageData, 
                                 "EvidenceImagePath");
                             
                             if (uploadResult != null && uploadResult.IsSuccess)
                             {
                                 // 更新明细对象中的图片路径
-                                if (cellAndDetail.detail is tb_FM_ExpenseClaimDetail expenseDetail)
+                                if (detail is tb_FM_ExpenseClaimDetail expenseDetail)
                                 {
                                     var detailFileInfo = uploadResult.FileStorageInfos?.FirstOrDefault();
                                     if (detailFileInfo != null)
@@ -4299,7 +4349,7 @@ namespace RUINORERP.UI.BaseForm
                                 // 更新单元格显示
                                 var cellFileInfo = uploadResult.FileStorageInfos?.FirstOrDefault();
                                 string fileIdStr = cellFileInfo != null ? cellFileInfo.FileId.ToString() : null;
-                                UpdateCellImageDisplay(cellAndDetail.cell, imageInfo.ImageData, fileIdStr);
+                                UpdateCellImageDisplay(cell, imageInfo.ImageData, fileIdStr);
                                 
                                 processedCount++;
                                 MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
@@ -4309,6 +4359,10 @@ namespace RUINORERP.UI.BaseForm
                                 MainForm.Instance.PrintInfoLog($"图片上传失败: {imageInfo.FileName}", Color.Red);
                                 rs = false;
                             }
+                        }
+                        else
+                        {
+                            MainForm.Instance.PrintInfoLog($"找不到图片对应的单元格或明细数据: {imageInfo.ImageId}", Color.Orange);
                         }
                     }
                     catch (Exception ex)
@@ -4322,7 +4376,7 @@ namespace RUINORERP.UI.BaseForm
                 if (processedCount > 0)
                 {
                     var processedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
-                    ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
+                    SourceGrid.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
                     MainForm.Instance.PrintInfoLog($"成功上传 {processedCount} 张图片");
                 }
             }
@@ -4336,8 +4390,46 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 根据图片ID查找对应的单元格和明细数据
+        /// 根据图片ID查找对应的单元格（遍历所有列）
         /// </summary>
+        private SourceGrid.Cells.Cell FindCellByImageId(Grid grid, string imageId)
+        {
+            try
+            {
+                // 遍历网格的所有行
+                for (int rowIndex = 1; rowIndex < grid.RowsCount; rowIndex++)
+                {
+                    // 遍历所有列
+                    for (int colIndex = 0; colIndex < grid.ColumnsCount; colIndex++)
+                    {
+                        var cell = grid[rowIndex, colIndex] as SourceGrid.Cells.Cell;
+                        if (cell != null)
+                        {
+                            // 检查单元格的图片ID是否匹配
+                            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                            {
+                                if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
+                                {
+                                    return cell;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "根据图片ID查找单元格失败");
+            }
+            
+            return null;
+        }
+
+        /// <summary>
+        /// 根据图片ID查找对应的单元格和明细数据（已弃用，改用直接引用）
+        /// </summary>
+        [Obsolete("请使用 ExtendedImageInfo.Cell 直接获取单元格引用")]
         private (SourceGrid.Cells.Cell cell, C detail) FindCellAndDetailByImageId(Grid grid, List<C> Details, string imageId)
         {
             try

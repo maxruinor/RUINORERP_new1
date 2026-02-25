@@ -263,7 +263,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件 {FileStorageInfo.OriginalFileName} 大小超过限制，最大允许 {MAX_FILE_SIZE / (1024 * 1024)}MB");
                         }
 
-                        // 验证文件格式（仅允许图片文件）
+                        // 验证文件格式（仅允许图片文件）1
                         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
                         var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName)?.ToLower();
                         if (string.IsNullOrEmpty(fileExtension) || !allowedExtensions.Contains(fileExtension))

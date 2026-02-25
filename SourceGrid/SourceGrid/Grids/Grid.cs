@@ -17,7 +17,7 @@ namespace SourceGrid
         private ISpannedCellRangesController spannedCellReferences = null;
 
 
-        #region �ϼ�
+        #region 
 
         private bool _hasSummary = true;
 
@@ -45,11 +45,16 @@ namespace SourceGrid
         /// <summary>
         /// Helper to create an ImageCellValue according to the current default mode.
         /// </summary>
-        public SourceGrid.Cells.Editors.ImageCellValue CreateImageCellValue(byte[] data, string path)
+        public SourceGrid.Cells.Editors.ImageCellValue CreateImageCellValue(byte[] data, string path, long fileid = 0)
         {
             if (DefaultImageStorageMode == ImageStorageMode.Binary)
             {
-                return new SourceGrid.Cells.Editors.ImageCellValue { ImageData = data, ImagePath = path };
+                return new SourceGrid.Cells.Editors.ImageCellValue
+                {
+                    ImageData = data,
+                    ImagePath = path,
+                    FileStorageId = fileid
+                };
             }
             else
             {
@@ -437,25 +442,25 @@ namespace SourceGrid
             EnsureNoOtherCellsExist(row, col, p_cell);
 
             /*
-			for (int y = row; y < row + p_cell.RowSpan; y++)
-			{
-				for (int x = col; x < col + p_cell.ColumnSpan; x++)
-				{
-					if (x == col && y == row)
-						continue;
-					Cells.ICell existingSpannedCell = this[y, x];
-					if (existingSpannedCell != null)
-						if (existingSpannedCell != p_cell)
-							throw new OverlappingCellException(string.Format(
-								"Given cell at position ({0}, {1}), " +
-								"intersects with another cell " +
-								"at position ({2}, {3}) '{4}'",
-								row, col,
-								existingSpannedCell.Row.Index,
-								existingSpannedCell.Column.Index,
-								existingSpannedCell.DisplayText));
-				}
-			}*/
+            for (int y = row; y < row + p_cell.RowSpan; y++)
+            {
+                for (int x = col; x < col + p_cell.ColumnSpan; x++)
+                {
+                    if (x == col && y == row)
+                        continue;
+                    Cells.ICell existingSpannedCell = this[y, x];
+                    if (existingSpannedCell != null)
+                        if (existingSpannedCell != p_cell)
+                            throw new OverlappingCellException(string.Format(
+                                "Given cell at position ({0}, {1}), " +
+                                "intersects with another cell " +
+                                "at position ({2}, {3}) '{4}'",
+                                row, col,
+                                existingSpannedCell.Row.Index,
+                                existingSpannedCell.Column.Index,
+                                existingSpannedCell.DisplayText));
+                }
+            }*/
         }
 
         private void EnsureDestinationSpannedAreaisCompletelyEmpty(int row, int col, int rowSpan, int colSpan)
@@ -660,7 +665,7 @@ namespace SourceGrid
             base.OnRangePaint(e);
         }
 
-        protected override void PaintCell( DevAge.Drawing.GraphicsCache graphics, CellContext cellContext, RectangleF drawRectangle)
+        protected override void PaintCell(DevAge.Drawing.GraphicsCache graphics, CellContext cellContext, RectangleF drawRectangle)
         {
             Range cellRange = PositionToCellRange(cellContext.Position);
             if (cellRange.ColumnsCount == 1 && cellRange.RowsCount == 1)

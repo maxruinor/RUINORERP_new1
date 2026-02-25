@@ -692,7 +692,7 @@ namespace RUINORERP.UI.Network
                     {
                         _logger?.LogDebug("存在未完成的心跳请求，跳过本次心跳");
                         consecutiveTimeouts++;
-                        
+
                         // 如果连续多次跳过，说明可能存在问题
                         if (consecutiveTimeouts >= MAX_CONSECUTIVE_TIMEOUTS)
                         {
@@ -833,7 +833,7 @@ namespace RUINORERP.UI.Network
                 using (var heartbeatCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {
                     heartbeatCts.CancelAfter(heartbeatTimeout);
-                    
+
                     try
                     {
                         var response = await SendCommandWithResponseAsync<HeartbeatResponse>(
@@ -894,7 +894,7 @@ namespace RUINORERP.UI.Network
             var random = Interlocked.Increment(ref _requestIdCounter);
             return $"{_socketClient.ClientID}_{timestamp}_{random:X4}";
         }
-        
+
         // 请求ID计数器，用于生成唯一ID
         private long _requestIdCounter = 0;
 
@@ -1237,7 +1237,7 @@ namespace RUINORERP.UI.Network
 
 
 
-                // 等待响应或超时
+                // 等待响应或超时11
                 var timeoutTask = Task.Delay(timeoutMs, cts.Token);
                 var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
 
@@ -1429,7 +1429,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 {
                     if (HandleResponsePacket(packet))
                     {
-                        _logger.LogDebug("数据包作为响应处理完成，请求ID: {RequestId}", packet.Request?.RequestId);
                         return;
                     }
                 }
@@ -1459,8 +1458,10 @@ SendCommandWithResponseAsync 恢复执行并返回响应
         private bool IsResponsePacket(PacketModel packet)
         {
             // 响应包通常包含请求ID，并且是服务器对客户端请求的响应
+            // 放宽方向检查，避免因服务器配置问题导致响应包被错误识别
             return !string.IsNullOrEmpty(packet?.ExecutionContext?.RequestId) &&
-                   packet.Direction == PacketDirection.ServerResponse;
+                   (packet.Direction == PacketDirection.ServerResponse || 
+                    packet.Direction == PacketDirection.ClientRequest); // 允许双向识别
         }
 
         /// <summary>
@@ -1491,7 +1492,6 @@ SendCommandWithResponseAsync 恢复执行并返回响应
 
                 if (_pendingRequests.TryRemove(requestId, out var pendingRequest))
                 {
-                    //会到后面执行：
                     return pendingRequest.Tcs.TrySetResult(packet);
                 }
 
@@ -1926,6 +1926,20 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 }
 
                 // 确保必要的上下文属性被设置
+                // 在发送前统一使用CommandId生成规范的请求ID
+                var originalRequestId = request.RequestId;
+                request.RequestId = IdGenerator.GenerateRequestId(commandId);
+                
+                // 如果请求ID发生变化，需要更新待处理队列
+                if (!string.IsNullOrEmpty(originalRequestId) && originalRequestId != request.RequestId)
+                {
+                    _pendingRequests.TryRemove(originalRequestId, out var oldPendingRequest);
+                    if (oldPendingRequest != null)
+                    {
+                        _pendingRequests.TryAdd(request.RequestId, oldPendingRequest);
+                    }
+                }
+                
                 packet.ExecutionContext.RequestId = request.RequestId;
                 packet.CommandId = commandId;
                 packet.ExecutionContext.SessionId = MainForm.Instance.AppContext.SessionId;

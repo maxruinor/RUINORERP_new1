@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 文件信息元数据表
+    /// 文件信息元数据表1
     /// </summary>
     [Serializable()]
     [Description("文件信息元数据表")]

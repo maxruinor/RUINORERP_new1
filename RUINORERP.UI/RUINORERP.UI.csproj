@@ -3323,7 +3323,6 @@
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
     <Compile Include="UCSourceGrid\CollectionExtensions.cs" />
     <Compile Include="UCSourceGrid\ExtendedQueryColumnMapping.cs" />
-    <Compile Include="UCSourceGrid\ImageStateManager.cs" />
     <Compile Include="UCSourceGrid\QueryColumnMapping.cs" />
     <Compile Include="UCSourceGrid\SGColDisplayHandler.cs" />
     <Compile Include="UCSourceGrid\ComputingController.cs" />

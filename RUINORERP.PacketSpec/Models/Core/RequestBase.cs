@@ -31,7 +31,9 @@ namespace RUINORERP.PacketSpec.Models.Core
         /// </summary>
         public RequestBase()
         {
-            RequestId = IdGenerator.GenerateRequestId();
+            // 延迟生成请求ID，确保在SendPacketCoreAsync中能够基于正确的CommandId生成
+            // 使用默认的Guid生成器，避免空值导致TryAdd失败
+            RequestId = Guid.NewGuid().ToString();
         }
 
         /// <summary>

@@ -888,6 +888,14 @@ namespace RUINORERP.UI
             .InstancePerLifetimeScope()
             .EnableInterfaceInterceptors().InterceptedBy(typeof(BaseDataCacheAOP));
 
+            // 图片管理服务注册已移除 - 相关类不存在
+            // builder.RegisterType<RUINORERP.UI.Common.ImageManager.ImageManagerService>()
+            //     .As<RUINORERP.UI.Common.ImageManager.IImageManagerService>()
+            //     .InstancePerLifetimeScope();
+
+            // builder.RegisterType<RUINORERP.UI.Common.ImageManager.ImageManagerFactory>()
+            //     .AsSelf()
+            //     .InstancePerLifetimeScope();
 
             builder.Populate(Services);//将自带的也注入到autofac
 

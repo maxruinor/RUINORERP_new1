@@ -26,7 +26,7 @@ using RUINORERP.UI.MRP.MP;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.SysConfig;
-using RUINORERP.UI.UCSourceGrid;
+// using RUINORERP.UI.UCSourceGrid; // 注释掉，避免与SourceGrid.ImageStateManager冲突
 using SourceGrid;
 using SourceGrid.Cells.Editors;
 using SourceGrid.Cells.Models;
@@ -51,10 +51,11 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
 using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.UI.UCSourceGrid;
 
 namespace RUINORERP.UI.FM
 {
-    
+
     [MenuAttrAssemblyInfo("费用报销单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用报销, BizType.费用报销单)]
     public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>, IToolStripMenuInfoAuth
     {
@@ -462,11 +463,11 @@ namespace RUINORERP.UI.FM
                                 if (colIndex >= 0)
                                 {
                                     // 下载图片
-                                    var imageData = await DownloadDetailImageAsync(detail, fileService);
-                                    if (imageData != null && imageData.Length > 0)
+                                    var fileStorageInfos = await DownloadDetailImageAsync(detail, fileService);
+                                    if (fileStorageInfos != null && fileStorageInfos.Count > 0)
                                     {
                                         // 更新单元格显示
-                                        await UpdateGridCellImageAsync(rowIndex, colIndex, imageData, detail.EvidenceImagePath);
+                                        await UpdateGridCellImageAsync(rowIndex, colIndex, fileStorageInfos[0]);
                                         loadedCount++;
                                     }
                                 }
@@ -542,31 +543,35 @@ namespace RUINORERP.UI.FM
         /// <summary>
         /// 下载明细图片
         /// </summary>
-        private async Task<byte[]> DownloadDetailImageAsync(tb_FM_ExpenseClaimDetail detail, FileBusinessService fileService)
+        private async Task<List<tb_FS_FileStorageInfo>> DownloadDetailImageAsync(tb_FM_ExpenseClaimDetail detail, FileBusinessService fileService)
         {
+            List<tb_FS_FileStorageInfo> fileStorageInfos = new List<tb_FS_FileStorageInfo>();
             try
             {
-                var downloadResponse = await fileService.DownloadImageAsync(detail, "EvidenceImagePath");
+                var downloadResponse = await fileService.DownloadImageAsync<tb_FM_ExpenseClaimDetail>(detail, c => c.EvidenceImagePath);
                 if (downloadResponse != null && downloadResponse.Count > 0)
                 {
-                    var firstResponse = downloadResponse[0];
-                    if (firstResponse.IsSuccess && firstResponse.FileStorageInfos != null && firstResponse.FileStorageInfos.Count > 0)
+                    foreach (var response in downloadResponse)
                     {
-                        return firstResponse.FileStorageInfos[0].FileData;
+                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                        {
+                            fileStorageInfos.AddRange(response.FileStorageInfos);
+                        }
                     }
+                    return fileStorageInfos;
                 }
             }
             catch (Exception ex)
             {
                 MainForm.Instance.logger.LogError(ex, $"下载明细 {detail.ClaimSubID} 图片失败");
             }
-            return null;
+            return fileStorageInfos;
         }
 
         /// <summary>
         /// 更新网格单元格图片
         /// </summary>
-        private async Task UpdateGridCellImageAsync(int rowIndex, int colIndex, byte[] imageData, string imagePath)
+        private async Task UpdateGridCellImageAsync(int rowIndex, int colIndex, tb_FS_FileStorageInfo fileStorageInfo)
         {
             await Task.Run(() =>
             {
@@ -591,13 +596,13 @@ namespace RUINORERP.UI.FM
                             }
 
                             // 设置图片数据
-                            valueImageWeb.CellImageBytes = imageData;
-                            valueImageWeb.CellImageHashName = imagePath;
+                            valueImageWeb.CellImageBytes = fileStorageInfo.FileData;
+                            valueImageWeb.CellImageHashName = fileStorageInfo.StoragePath;
 
                             // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                             var gridObj = grid1 as SourceGrid.Grid;
-                            var imageCellValue = gridObj?.CreateImageCellValue(imageData, imagePath)
-                                ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = imageData, ImagePath = imagePath };
+                            var imageCellValue = gridObj?.CreateImageCellValue(fileStorageInfo.FileData, fileStorageInfo.StoragePath, fileStorageInfo.FileId)
+                                ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = fileStorageInfo.FileData, ImagePath = fileStorageInfo.StoragePath };
                             cell.Value = imageCellValue;
 
                             // 设置视图
@@ -895,67 +900,14 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-                // 处理结案凭证图片上传
-                if (NeedValidated && picboxCloseCaseImagePath.Image != null)
-                {
-                    string fileName = $"CloseCase_{EditEntity.ClaimNo}_{DateTime.Now:yyyyMMddHHmmss}.png";
-                    string fileId = "";// await UploadCloseCaseImage(magicPictureBox1.Image, fileName);
-                    if (!string.IsNullOrEmpty(fileId))
-                    {
-                        EditEntity.CloseCaseImagePath = fileId;
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("结案凭证图片上传失败。", Global.UILogType.错误);
-                        // 根据业务需求决定是否阻止保存
-                        // return false;
-                    }
-                }
-
-
-
+                // 使用事务处理保存和图片操作
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
+
                 if (NeedValidated)
                 {
-                    // 保存前获取待删除和待上传的图片
-                    var pendingDeleteImages = new List<string>();
-                    var pendingUploadImages = new List<object>();
-
-                    // 检查是否已加载 ImageStateManager 类型
-                    var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
-                    if (imageStateManagerType != null)
-                    {
-                        // 使用反射获取单例实例
-                        var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                        if (instanceProperty != null)
-                        {
-                            var instance = instanceProperty.GetValue(null);
-                            if (instance != null)
-                            {
-                                // 获取待删除图片
-                                var getPendingDeleteImagesMethod = imageStateManagerType.GetMethod("GetPendingDeleteImages");
-                                if (getPendingDeleteImagesMethod != null)
-                                {
-                                    var deleteImages = getPendingDeleteImagesMethod.Invoke(instance, null) as List<string>;
-                                    if (deleteImages != null)
-                                    {
-                                        pendingDeleteImages.AddRange(deleteImages);
-                                    }
-                                }
-
-                                // 获取待上传图片
-                                var getPendingUploadImagesMethod = imageStateManagerType.GetMethod("GetPendingUploadImages");
-                                if (getPendingUploadImagesMethod != null)
-                                {
-                                    var uploadImages = getPendingUploadImagesMethod.Invoke(instance, null) as List<object>;
-                                    if (uploadImages != null)
-                                    {
-                                        pendingUploadImages.AddRange(uploadImages);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // 直接调用ImageStateManager，不再使用反射
+                    var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImageIds();
+                    var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
 
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
@@ -968,114 +920,31 @@ namespace RUINORERP.UI.FM
                         // 处理待删除的图片
                         if (pendingDeleteImages.Count > 0)
                         {
-                            var fileService = Startup.GetFromFac<FileBusinessService>();
-                            try
+                            bool deleteSuccess = await DeletePendingImagesAsync(pendingDeleteImages);
+                            if (!deleteSuccess)
                             {
-                                var deleteResult = await fileService.DeleteImagesAsync(EditEntity, false);
-                                if (deleteResult != null && deleteResult.IsSuccess)
-                                {
-                                    MainForm.Instance.PrintInfoLog($"删除旧图片成功: {pendingDeleteImages.Count} 张");
-                                }
-                                else
-                                {
-                                    MainForm.Instance.PrintInfoLog($"删除旧图片失败");
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                MainForm.Instance.PrintInfoLog($"删除旧图片失败: {ex.Message}");
-                            }
-                        }
-
-                        // 处理待上传的图片
-                        if (pendingUploadImages.Count > 0)
-                        {
-                            var fileService = Startup.GetFromFac<FileBusinessService>();
-                            foreach (var uploadImage in pendingUploadImages)
-                            {
-                                try
-                                {
-                                    // 使用反射获取必要的属性
-                                    var imageDataProperty = uploadImage.GetType().GetProperty("ImageData");
-                                    var baseImageInfoProperty = uploadImage.GetType().GetProperty("BaseImageInfo");
-                                    
-                                    if (imageDataProperty != null && baseImageInfoProperty != null)
-                                    {
-                                        var imageData = (byte[])imageDataProperty.GetValue(uploadImage);
-                                        var baseImageInfo = baseImageInfoProperty.GetValue(uploadImage);
-                                        
-                                        if (baseImageInfo != null)
-                                        {
-                                            var originalFileNameProperty = baseImageInfo.GetType().GetProperty("OriginalFileName");
-                                            if (originalFileNameProperty != null)
-                                            {
-                                                var originalFileName = (string)originalFileNameProperty.GetValue(baseImageInfo);
-                                                
-                                                // 上传新图片
-                                                var uploadResponse = await fileService.UploadImageAsync(EditEntity, originalFileName, imageData, "EvidenceImagePath");
-                                                if (uploadResponse != null && uploadResponse.IsSuccess)
-                                                {
-                                                    MainForm.Instance.PrintInfoLog($"上传新图片成功: {originalFileName}");
-                                                }
-                                                else
-                                                {
-                                                    MainForm.Instance.PrintInfoLog($"上传新图片失败: {originalFileName}");
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    MainForm.Instance.PrintInfoLog($"上传新图片失败: {ex.Message}");
-                                }
-                            }
-                        }
-
-                        if (NeedValidated)
-                        {
-                            // 处理明细凭证图片上传（使用文件服务器方式）
-                            bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
-                            if (uploadImg)
-                            {
-                                MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
-                            }
-                            else
-                            {
-                                MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
+                                MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
                                 return false;
                             }
-                        }
-                        // 保存成功后上传结案凭证图片（只上传变更的图片）
-                        if (picboxCloseCaseImagePath != null)
-                        {
-                            var updatedImages = picboxCloseCaseImagePath.GetImagesNeedingUpdate();
-                            if (updatedImages.Count > 0)
-                            {
-                                await UploadImageAsync(EditEntity, picboxCloseCaseImagePath, c => c.CloseCaseImagePath, true);
-                            }
+                            MainForm.Instance.PrintInfoLog($"成功删除 {pendingDeleteImages.Count} 张待删除图片。");
                         }
 
-                        // 清理已替换的旧图片
-                        await CleanupOldImagesAsync();
-
-                        // 清除图片状态标记
-                        if (imageStateManagerType != null)
+                        // 处理明细凭证图片上传（使用文件服务器方式）
+                        bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
+                        if (uploadImg)
                         {
-                            var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                            if (instanceProperty != null)
-                            {
-                                var instance = instanceProperty.GetValue(null);
-                                if (instance != null)
-                                {
-                                    var clearStatusMethod = imageStateManagerType.GetMethod("ClearStatus");
-                                    if (clearStatusMethod != null)
-                                    {
-                                        clearStatusMethod.Invoke(instance, null);
-                                    }
-                                }
-                            }
+                            MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
                         }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
+                            return false;
+                        }
+
+                        // 清理已处理的图片状态
+                        var processedImageIds = new List<string>(pendingDeleteImages);
+                        processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
+                        ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
 
                         // 刷新网格显示
                         grid1.Refresh();
@@ -1337,7 +1206,57 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 替换明细图片
+        /// 删除待删除图片
+        /// </summary>
+        /// <param name="pendingDeleteImageIds">待删除图片ID列表</param>
+        /// <returns>删除是否成功</returns>
+        private async Task<bool> DeletePendingImagesAsync(List<string> pendingDeleteImageIds)
+        {
+            try
+            {
+                if (pendingDeleteImageIds == null || pendingDeleteImageIds.Count == 0)
+                    return true;
+
+                // 获取文件管理服务
+                var fileService = Startup.GetFromFac<FileManagementService>();
+                int successCount = 0;
+
+                foreach (var imageId in pendingDeleteImageIds)
+                {
+                    try
+                    {
+                        // 简化处理：根据图片ID删除对应的文件
+                        // 这里假设imageId就是文件ID，需要根据实际情况调整
+                        if (long.TryParse(imageId, out long fileId))
+                        {
+                            // 构建文件删除请求
+                            var deleteRequest = new FileDeleteRequest();
+                            deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = fileId });
+                            var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
+                            
+                            if (deleteResult != null && deleteResult.IsSuccess)
+                            {
+                                successCount++;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, $"删除图片 {imageId} 失败");
+                    }
+                }
+
+                return successCount == pendingDeleteImageIds.Count;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "删除待删除图片异常");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 替换明细图片1
         /// </summary>
         /// <param name="rowIndex">行索引</param>
         /// <param name="newImageData">新图片数据</param>

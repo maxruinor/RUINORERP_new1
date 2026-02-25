@@ -408,6 +408,7 @@
     <Compile Include="SourceGrid\Cells\Views\RichTextBox.cs" />
     <Compile Include="SourceGrid\Cells\Views\RowHeader.cs" />
     <Compile Include="SourceGrid\Cells\Views\ViewBase.cs" />
+    <Compile Include="SourceGrid\ImageStateManager.cs" />
     <Compile Include="SourceGrid\Common\ColumnInfo.cs" />
     <Compile Include="SourceGrid\Common\ColumnInfoCollection.cs" />
     <Compile Include="SourceGrid\Common\ColumnsBase.cs" />

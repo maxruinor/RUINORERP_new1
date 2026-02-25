@@ -809,15 +809,24 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         // currContext.Cell.View = sgdefine.ViewNormal;
                     }
-                    if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
-                    {
-                        if ((currContext.Cell.View is SourceGrid.Cells.Views.RemoteImageView) == false)
+                        if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
                         {
-                            currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
-                            PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(currContext.Cell as Cell, sgdefine);
-                            popupMenu.IsSingleImageMode = true; // 设置为单图模式
-                            currContext.Cell.AddController(popupMenu);
-                        }
+                            if ((currContext.Cell.View is SourceGrid.Cells.Views.RemoteImageView) == false)
+                            {
+                                currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                            }
+
+                            // 检查是否已经存在 PopupMenuForRemoteImageView Controller，避免重复添加
+                            if (currContext.Cell is Cell cell)
+                            {
+                                var existingController = cell.Controller.FindController(typeof(PopupMenuForRemoteImageView));
+                                if (existingController == null)
+                                {
+                                    PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(cell, sgdefine);
+                                    popupMenu.IsSingleImageMode = true; // 设置为单图模式
+                                    cell.AddController(popupMenu);
+                                }
+                            }
                         // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
                         var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
                         if (valueImageWeb != null)
@@ -2192,7 +2201,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     _editor = SetComboxEditor(dci);
                     break;
                 case CustomFormatType.WebPathImage:
-                    SourceGrid.Cells.Editors.ImageWebPickEditor imageWebPicker = new SourceGrid.Cells.Editors.ImageWebPickEditor(typeof(string));
+                    var imageWebPicker = SourceGrid.Cells.Editors.ImageWebPickEditor.Default;
                     imageWebPicker.TypeConverter = new DevAge.ComponentModel.Converter.ImagePathTypeConverter(typeof(string));
                     _editor = imageWebPicker;
                     break;

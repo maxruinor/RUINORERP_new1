@@ -751,96 +751,99 @@ namespace RUINORERP.UI.UCSourceGrid
         /// </summary>
         public override void OnDoubleClick(SourceGrid.CellContext sender, EventArgs e)
         {
-            if (sender.Cell != null)
+            if (sender.Cell == null)
             {
-                // 尝试从多个来源获取图片数据
-                byte[] imageBytes = null;
+                return;
+            }
 
-                // 方法1：从 ValueImageWeb 的 CellImageBytes 获取
-                var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            // 尝试从多个来源获取图片数据
+            byte[] imageBytes = null;
+
+            // 方法1：从 ValueImageWeb 的 CellImageBytes 获取
+            var model = sender.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                 {
-                    if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                    {
-                        imageBytes = valueImageWeb.CellImageBytes;
-                        MainForm.Instance.PrintInfoLog($"找到图片数据，大小: {imageBytes.Length} bytes");
-                    }
-                    else
-                    {
-                        MainForm.Instance.PrintInfoLog("ValueImageWeb.CellImageBytes 为空或长度为0");
-                    }
+                    imageBytes = valueImageWeb.CellImageBytes;
+                    MainForm.Instance.PrintInfoLog($"找到图片数据，大小: {imageBytes.Length} bytes");
                 }
                 else
                 {
-                    MainForm.Instance.PrintInfoLog("未找到 ValueImageWeb 模型");
+                    MainForm.Instance.PrintInfoLog("ValueImageWeb.CellImageBytes 为空或长度为0");
                 }
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("未找到 ValueImageWeb 模型");
+            }
 
-                // 方法2：从 sender.Value 获取（如果是 byte[] 类型）
-                if (imageBytes == null && sender.Value is byte[] valueBytes && valueBytes.Length > 0)
+            // 方法2：从 sender.Value 获取（如果是 byte[] 类型）
+            if (imageBytes == null && sender.Value is byte[] valueBytes && valueBytes.Length > 0)
+            {
+                imageBytes = valueBytes;
+                MainForm.Instance.PrintInfoLog($"从 sender.Value 找到图片数据，大小: {imageBytes.Length} bytes");
+            }
+
+            // 方法3：从 sender.Value 获取（如果是 Bitmap 类型）
+            if (imageBytes == null && sender.Value is System.Drawing.Bitmap bitmap)
+            {
+                using (var ms = new System.IO.MemoryStream())
                 {
-                    imageBytes = valueBytes;
-                    MainForm.Instance.PrintInfoLog($"从 sender.Value 找到图片数据，大小: {imageBytes.Length} bytes");
+                    bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                    imageBytes = ms.ToArray();
+                    MainForm.Instance.PrintInfoLog($"从 sender.Value(Bitmap) 转换图片数据，大小: {imageBytes.Length} bytes");
                 }
+            }
 
-                // 方法3：从 sender.Value 获取（如果是 Bitmap 类型）
-                if (imageBytes == null && sender.Value is System.Drawing.Bitmap bitmap)
+            // 方法4：从 RemoteImageView.GridImage 获取（异步加载的图片）
+            if (imageBytes == null && sender.Cell.View is RemoteImageView imageView && imageView.GridImage != null)
+            {
+                MainForm.Instance.PrintInfoLog($"从 RemoteImageView.GridImage 转换图片数据: {imageView.GridImage.Size}");
+                try
                 {
                     using (var ms = new System.IO.MemoryStream())
                     {
-                        bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                        imageView.GridImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
                         imageBytes = ms.ToArray();
-                        MainForm.Instance.PrintInfoLog($"从 sender.Value(Bitmap) 转换图片数据，大小: {imageBytes.Length} bytes");
+                        MainForm.Instance.PrintInfoLog($"GridImage 转换成功，大小: {imageBytes.Length} bytes");
                     }
                 }
-
-                // 方法4：从 RemoteImageView.GridImage 获取（异步加载的图片）
-                if (imageBytes == null && sender.Cell.View is RemoteImageView imageView && imageView.GridImage != null)
+                catch (Exception ex)
                 {
-                    MainForm.Instance.PrintInfoLog($"从 RemoteImageView.GridImage 转换图片数据: {imageView.GridImage.Size}");
-                    try
-                    {
-                        using (var ms = new System.IO.MemoryStream())
-                        {
-                            imageView.GridImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                            imageBytes = ms.ToArray();
-                            MainForm.Instance.PrintInfoLog($"GridImage 转换成功，大小: {imageBytes.Length} bytes");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.PrintInfoLog($"GridImage 转换失败: {ex.Message}");
-                    }
-                }
-
-                if (imageBytes != null && imageBytes.Length > 0)
-                {
-                    // 有图片，查看大图，不调用基类方法（避免进入编辑模式）
-                    MainForm.Instance.PrintInfoLog("双击：有图片，显示大图，不进入编辑模式");
-                    
-                    // 临时禁用编辑器，避免进入编辑模式
-                    var originalEditor = sender.Cell.Editor;
-                    sender.Cell.Editor = null;
-                    
-                    try
-                    {
-                        // 显示图片查看器
-                        ImageGridHelper.ShowImageInViewer(imageBytes);
-                    }
-                    finally
-                    {
-                        // 恢复编辑器
-                        sender.Cell.Editor = originalEditor;
-                    }
-                    
-                    return;
-                }
-                else
-                {
-                    MainForm.Instance.PrintInfoLog("双击：无图片数据，准备进入编辑模式");
+                    MainForm.Instance.PrintInfoLog($"GridImage 转换失败: {ex.Message}");
                 }
             }
-            // 没有图片，调用基类方法进入编辑模式
-            base.OnDoubleClick(sender, e);
+
+            if (imageBytes != null && imageBytes.Length > 0)
+            {
+                // 有图片，查看大图，不调用基类方法（避免进入编辑模式）
+                MainForm.Instance.PrintInfoLog("双击：有图片，显示大图，不进入编辑模式");
+
+                // 临时禁用编辑器，避免进入编辑模式
+                var originalEditor = sender.Cell.Editor;
+                sender.Cell.Editor = null;
+
+                try
+                {
+                    // 显示图片查看器
+                    ImageGridHelper.ShowImageInViewer(imageBytes);
+                }
+                finally
+                {
+                    // 恢复编辑器
+                    sender.Cell.Editor = originalEditor;
+                }
+
+                // 不调用基类方法，避免事件继续传播导致重复执行
+                return;
+            }
+            else
+            {
+                MainForm.Instance.PrintInfoLog("双击：无图片数据，准备进入编辑模式");
+                // 调用基类方法进入编辑模式
+                base.OnDoubleClick(sender, e);
+            }
         }
 
         /// <summary>
@@ -954,48 +957,55 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         try
                         {
-                            // 获取图片ID
-                            string imageId = cell.Value as string;
-                            if (!string.IsNullOrEmpty(imageId))
+                            // 获取图片信息 - cell.Value是ImageCellValue对象
+                            var imageCellValue = cell.Value as SourceGrid.Cells.Editors.ImageCellValue;
+                            if (imageCellValue != null)
                             {
-                            // 删除图片
-                                bool result = await imageView.DeleteImageAsync(imageId);
-                                if (result)
+                                // 获取图片ID（ImagePath）
+                                string imageId = imageCellValue.ImagePath;
+                                // 获取图片数据
+                                byte[] imageData = imageCellValue.ImageData;
+                                
+                                if (!string.IsNullOrEmpty(imageId) || imageData != null)
                                 {
-                                    // 清空单元格值和图片数据
-                                    cell.Value = null;
-                                    
+                                    // 获取ValueImageWeb模型以访问图片数据
                                     var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                                     {
-                                        // 保存要删除的缓存键
-                                        string cacheKey = valueImageWeb.CellImageHashName;
+                                        // 获取图片文件名
+                                        string fileName = valueImageWeb.CellImageHashName ?? imageId;
                                         
+                                        // 将图片标记为待删除状态，而不是立即删除
+                                        // 注册到ImageStateManager，状态为PendingDelete
+                                        ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete);
+                                        
+                                        // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
+                                        cell.Value = null;
                                         valueImageWeb.CellImageBytes = null;
                                         valueImageWeb.CellImageHashName = null;
                                         
-                                        // 同时清空ImageCacheManager中的对应缓存
-                                        if (!string.IsNullOrEmpty(cacheKey))
+                                        // 清空ImageCacheManager中的对应缓存
+                                        if (!string.IsNullOrEmpty(fileName))
                                         {
-                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(cacheKey);
+                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(fileName);
                                         }
-                                    }
-                                    
-                                    imageView.GridImage = null;
-                                    
-                                    // 强制重绘
-                                    grid.Refresh();
+                                        
+                                        imageView.GridImage = null;
+                                        
+                                        // 强制重绘
+                                        grid.Refresh();
 
-                                    // 更新编辑状态
-                                    UpdateCellEditState();
-                                    
-                                    MainForm.Instance.PrintInfoLog("图片删除成功");
+                                        // 更新编辑状态
+                                        UpdateCellEditState();
+                                        
+                                        MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
+                                    }
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            MainForm.Instance.PrintInfoLog("图片删除失败: " + ex.Message);
+                            MainForm.Instance.PrintInfoLog("图片标记删除失败: " + ex.Message);
                         }
                     }
                 }

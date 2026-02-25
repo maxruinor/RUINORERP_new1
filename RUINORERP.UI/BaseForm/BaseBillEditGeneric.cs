@@ -4206,14 +4206,27 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 保存图片到服务器。所有图片都保存到服务器。即使草稿换电脑还可以看到
+        /// 保存图片到服务器。智能识别待上传图片，跳过未变更图片，提升性能
         /// </summary>
-        /// <param name="RemoteSave"></param>
-        /// <returns></returns>
+        /// <param name="sgd">网格定义</param>
+        /// <param name="Details">明细数据列表</param>
+        /// <returns>保存结果</returns>
         public async Task<bool> SaveFileToServer(SourceGridDefine sgd, List<C> Details)
         {
             bool result = true;
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
+            
+            // 获取所有待上传图片
+            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            
+            // 如果没有待上传图片，直接返回成功
+            if (pendingUploadImages.Count == 0)
+            {
+                MainForm.Instance.PrintInfoLog("没有需要上传的图片，跳过图片上传处理");
+                return true;
+            }
+            
+            // 识别包含图片的列
             foreach (C detail in Details)
             {
                 PropertyInfo[] props = typeof(C).GetProperties();
@@ -4229,15 +4242,177 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
+            
             try
             {
-                result = await UploadImageAsync(ImgCols, sgd.grid, Details);
+                // 使用优化的上传方法，只处理待上传图片
+                result = await UploadImageAsyncOptimized(ImgCols, sgd.grid, Details, pendingUploadImages);
             }
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
             }
             return result;
+        }
+
+        /// <summary>
+        /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
+        /// </summary>
+        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<ExtendedImageInfo> pendingUploadImages)
+        {
+            bool rs = true;
+            int processedCount = 0;
+            
+            try
+            {
+                // 获取文件服务
+                var fileService = Startup.GetFromFac<FileBusinessService>();
+                
+                // 批量处理待上传图片
+                foreach (var imageInfo in pendingUploadImages)
+                {
+                    try
+                    {
+                        // 查找对应的单元格和明细数据
+                        var cellAndDetail = FindCellAndDetailByImageId(grid, Details, imageInfo.ImageId);
+                        if (cellAndDetail.cell != null && cellAndDetail.detail != null)
+                        {
+                            // 上传图片到文件服务器
+                            var uploadResult = await fileService.UploadImageAsync(
+                                cellAndDetail.detail as BaseEntity, 
+                                imageInfo.FileName, 
+                                imageInfo.ImageData, 
+                                "EvidenceImagePath");
+                            
+                            if (uploadResult != null && uploadResult.IsSuccess)
+                            {
+                                // 更新明细对象中的图片路径
+                                if (cellAndDetail.detail is tb_FM_ExpenseClaimDetail expenseDetail)
+                                {
+                                    var detailFileInfo = uploadResult.FileStorageInfos?.FirstOrDefault();
+                                    if (detailFileInfo != null)
+                                    {
+                                        expenseDetail.EvidenceImagePath = detailFileInfo.FileId.ToString();
+                                    }
+                                }
+                                
+                                // 更新单元格显示
+                                var cellFileInfo = uploadResult.FileStorageInfos?.FirstOrDefault();
+                                string fileIdStr = cellFileInfo != null ? cellFileInfo.FileId.ToString() : null;
+                                UpdateCellImageDisplay(cellAndDetail.cell, imageInfo.ImageData, fileIdStr);
+                                
+                                processedCount++;
+                                MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
+                            }
+                            else
+                            {
+                                MainForm.Instance.PrintInfoLog($"图片上传失败: {imageInfo.FileName}", Color.Red);
+                                rs = false;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, $"处理图片 {imageInfo.ImageId} 上传失败");
+                        rs = false;
+                    }
+                }
+                
+                // 清理已处理的待上传状态
+                if (processedCount > 0)
+                {
+                    var processedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
+                    ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
+                    MainForm.Instance.PrintInfoLog($"成功上传 {processedCount} 张图片");
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "批量上传图片异常");
+                rs = false;
+            }
+            
+            return rs;
+        }
+
+        /// <summary>
+        /// 根据图片ID查找对应的单元格和明细数据
+        /// </summary>
+        private (SourceGrid.Cells.Cell cell, C detail) FindCellAndDetailByImageId(Grid grid, List<C> Details, string imageId)
+        {
+            try
+            {
+                // 遍历网格的所有行
+                for (int rowIndex = 1; rowIndex < grid.RowsCount; rowIndex++)
+                {
+                    var cell = grid[rowIndex, 0] as SourceGrid.Cells.Cell; // 假设第一列包含图片
+                    if (cell != null)
+                    {
+                        // 检查单元格的图片ID是否匹配
+                        var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                        if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                        {
+                            if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
+                            {
+                                // 获取对应的明细数据
+                                var rowData = grid.Rows[rowIndex].RowData;
+                                if (rowData is C detail)
+                                {
+                                    return (cell, detail);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "查找图片对应的单元格失败");
+            }
+            
+            return (null, null);
+        }
+
+        /// <summary>
+        /// 更新单元格图片显示
+        /// </summary>
+        private void UpdateCellImageDisplay(SourceGrid.Cells.Cell cell, byte[] imageData, string imageHash)
+        {
+            try
+            {
+                // 获取或创建 ValueImageWeb 模型
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb;
+                if (model == null)
+                {
+                    valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                    cell.Model.AddModel(valueImageWeb);
+                }
+                else
+                {
+                    valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                }
+
+                // 设置图片数据
+                valueImageWeb.CellImageBytes = imageData;
+                valueImageWeb.CellImageHashName = imageHash;
+
+                // 设置视图
+                if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
+                {
+                    cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                }
+
+                // 标记为已修改
+                if (cell is SourceGrid.Cells.Cell)
+                {
+                    cell.Grid.Invalidate();
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "更新单元格图片显示失败");
+            }
         }
 
         private async Task<bool> UploadImageAsync(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details)

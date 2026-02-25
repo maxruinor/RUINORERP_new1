@@ -353,7 +353,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 处理图片上传前的准备工作
         /// 包括：图片验证、压缩、格式转换、哈希计算、智能优化等
-        /// 增强版：集成新的命名策略和智能处理功能
+        /// 增强版：集成新的命名策略和智能处理功能，并与状态管理系统集成
         /// </summary>
         /// <param name="image">原始图片对象</param>
         /// <returns>处理是否成功</returns>
@@ -446,7 +446,10 @@ namespace SourceGrid.Cells.Editors
                     }
                 }
 
-                // 11. 更新控件值
+                // 11. 与图片状态管理系统集成
+                await RegisterImageWithStateManager(fileId, compressedBytes, fileName);
+
+                // 12. 更新控件值
                 Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
                 ValueType = typeof(string);
 
@@ -924,6 +927,49 @@ namespace SourceGrid.Cells.Editors
         public override object GetEditedTagValue()
         {
             return Control.Tag;
+        }
+
+        /// <summary>
+        /// 与图片状态管理系统集成
+        /// 将图片注册到状态管理器，统一管理上传队列
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <param name="imageData">图片数据</param>
+        /// <param name="fileName">文件名</param>
+        private async Task RegisterImageWithStateManager(string fileId, byte[] imageData, string fileName)
+        {
+            try
+            {
+                // 获取当前单元格上下文
+                if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
+                {
+                    // 直接调用ImageStateManager注册图片，确保与删除时使用相同的方式
+                    ImageStateManager.Instance.AddImage(cell, fileId, fileName, imageData, ImageStatus.PendingUpload);
+                    
+                    // 获取单元格位置信息（通过EditCellContext）
+                    if (this.EditCellContext != null && !this.EditCellContext.IsEmpty())
+                    {
+                        var grid = this.EditCellContext.Grid;
+                        var position = this.EditCellContext.Position;
+                        if (grid != null && !position.IsEmpty())
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 单元格位置: Row={position.Row}, Column={position.Column}, ImageId={fileId}");
+                        }
+                    }
+                    
+                    System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 图片已注册为待上传状态: {fileId}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[ImageStateManager] 无法获取单元格上下文，状态注册失败");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 状态管理器注册失败: {ex.Message}");
+            }
+            
+            await Task.CompletedTask;
         }
 
         /*

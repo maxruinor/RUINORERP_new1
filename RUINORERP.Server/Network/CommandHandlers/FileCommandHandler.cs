@@ -917,6 +917,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         {
                             // 检查是否需要物理删除文件
                             bool isPhysicalDelete = deleteRequest.PhysicalDelete;
+                            // 若没有其他引用，强制执行物理删除以清理磁盘与关联
+                            if (!isReferencedByOtherBusiness)
+                            {
+                                isPhysicalDelete = true;
+                            }
 
                             if (isPhysicalDelete)
                             {

@@ -1224,19 +1224,30 @@ namespace RUINORERP.UI.FM
                 {
                     try
                     {
-                        // 简化处理：根据图片ID删除对应的文件
-                        // 这里假设imageId就是文件ID，需要根据实际情况调整
+                        // 构建文件删除请求
+                        var deleteRequest = new FileDeleteRequest();
+                        deleteRequest.BusinessId = EditEntity?.ClaimMainID ?? 0;
+                        deleteRequest.OwnerTableName = typeof(tb_FM_ExpenseClaim).Name;
+                        deleteRequest.PhysicalDelete = true; // 允许物理删除
+
+                        // 尝试解析为文件ID
                         if (long.TryParse(imageId, out long fileId))
                         {
-                            // 构建文件删除请求
-                            var deleteRequest = new FileDeleteRequest();
+                            // 如果是数字ID，直接使用
                             deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = fileId });
-                            var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
-                            
-                            if (deleteResult != null && deleteResult.IsSuccess)
-                            {
-                                successCount++;
-                            }
+                        }
+                        else
+                        {
+                            // 如果是路径，记录警告但继续处理
+                            MainForm.Instance.logger.LogWarning($"图片ID不是有效的数字格式: {imageId}");
+                            continue;
+                        }
+
+                        var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
+                        
+                        if (deleteResult != null && deleteResult.IsSuccess)
+                        {
+                            successCount++;
                         }
                     }
                     catch (Exception ex)

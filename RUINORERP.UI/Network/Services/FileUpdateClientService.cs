@@ -285,7 +285,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 删除旧文件的关联关系(不删除物理文件,保留历史)
+        /// 删除旧文件的关联关系
         /// </summary>
         private async Task DeleteOldFileRelationsAsync(
             string OwnerTableName,
@@ -295,7 +295,7 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-       
+        
 
                 // 查询当前业务关联的旧文件
                 var listRequest = new FileListRequest
@@ -308,11 +308,11 @@ namespace RUINORERP.UI.Network.Services
 
                 if (listResponse.IsSuccess && listResponse.Data?.FileStorageInfos != null)
                 {
-                    // 构建删除请求，仅删除关联关系
+                    // 构建删除请求
                     var deleteRequest = new FileDeleteRequest();
                     deleteRequest.BusinessId = businessId;
                     deleteRequest.OwnerTableName = OwnerTableName; // 明细表使用特殊表名
-                    deleteRequest.PhysicalDelete = false; // 不物理删除文件，只删除关联
+                    deleteRequest.PhysicalDelete = true; // 设置为物理删除，让服务器端根据引用情况决定是否删除文件
 
                     // 添加所有旧文件到删除列表
                     foreach (var fileInfo in listResponse.Data.FileStorageInfos)
@@ -320,7 +320,7 @@ namespace RUINORERP.UI.Network.Services
                         deleteRequest.AddDeleteFileStorageInfo(fileInfo);
                     }
 
-                    // 执行删除（仅删除关联）
+                    // 执行删除
                     if (deleteRequest.FileStorageInfos.Count > 0)
                     {
                         var deleteResponse = await _fileManagementService.DeleteFileAsync(deleteRequest, ct);

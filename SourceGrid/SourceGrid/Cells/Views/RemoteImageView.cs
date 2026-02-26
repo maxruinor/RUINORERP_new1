@@ -124,19 +124,34 @@ namespace SourceGrid.Cells.Views
             else
                 Background = SecondBackground;
 
-            //start by watson 2024-1-11
+            // 关键修复：确保正确获取和显示图片数据
+            var valueModel = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+            if (valueModel is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+            {
+                // 优先使用字节数据
+                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
+                {
+                    DisplayImageFromBytes(context, valueImageWeb.CellImageBytes);
+                }
+                // 其次使用路径数据
+                else if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                {
+                    LoadAndDisplayImageFromPath(context, valueImageWeb.CellImageHashName);
+                }
+                return; // 处理完ValueImageWeb后直接返回
+            }
+
+            // 兼容原有的处理逻辑
             if (context.Value == null)
             {
                 GridImage = null;
                 return;
             }
-            //显示图片  要是图片列才处理
+            
+            // 显示图片  要是图片列才处理
             if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
             {
-                //end by watson 2024-08-28 TODO:
-                //PrepareVisualElementImage(context);
-
-                //Read the image
+                // Read the image
                 if (context.Value is ImageCellValue icv)
                 {
                     if (icv.IsBinary && icv.ImageData != null)
@@ -183,7 +198,7 @@ namespace SourceGrid.Cells.Views
                 }
                 else if (context.Value is byte[])
                 {
-                    //将图像读入到字节数组
+                    // 将图像读入到字节数组
                     byte[] buffByte = context.Value as byte[];
                     System.Drawing.Image img = null;
                     // 使用 MemoryStream 从字节数组创建流
@@ -241,7 +256,84 @@ namespace SourceGrid.Cells.Views
                     LoadImageSync(_pendingFileId, context);
                 }
             }
+        }
 
+        /// <summary>
+        /// 从字节数据显示图片
+        /// </summary>
+        /// <param name="context">单元格上下文</param>
+        /// <param name="imageData">图片字节数据</param>
+        private void DisplayImageFromBytes(CellContext context, byte[] imageData)
+        {
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(imageData))
+                {
+                    var image = System.Drawing.Image.FromStream(ms);
+                    
+                    // 创建图片视图并应用到单元格
+                    var imageView = new SourceGrid.Cells.Views.SingleImage(image)
+                    {
+                        ImageAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter,
+                        ImageStretch = false
+                    };
+                    
+                    context.Cell.View = imageView;
+                    
+                    // 强制刷新显示
+                    context.Grid?.InvalidateCell(context.Position);
+                    
+                    // 同时更新内部GridImage属性
+                    if (GridImage != null)
+                    {
+                        GridImage.Dispose();
+                    }
+                    GridImage = new Bitmap(image);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示图片失败: {ex.Message}");
+                // 显示错误状态
+                context.Cell.View = new SourceGrid.Cells.Views.Cell()
+                {
+                    BackColor = Color.LightGray
+                };
+                context.Grid?.InvalidateCell(context.Position);
+            }
+        }
+
+        /// <summary>
+        /// 异步加载并显示图片路径
+        /// </summary>
+        /// <param name="context">单元格上下文</param>
+        /// <param name="imagePath">图片路径</param>
+        private async void LoadAndDisplayImageFromPath(CellContext context, string imagePath)
+        {
+            try
+            {
+                var imageService = GridImageServiceManager.CurrentService;
+                if (imageService != null && long.TryParse(System.IO.Path.GetFileNameWithoutExtension(imagePath), out long imageId))
+                {
+                    var imageData = await imageService.DownloadImageAsync(imageId);
+                    if (imageData != null && imageData.Length > 0)
+                    {
+                        // 确保在UI线程中更新
+                        if (context.Grid.InvokeRequired)
+                        {
+                            context.Grid.Invoke(new Action(() => DisplayImageFromBytes(context, imageData)));
+                        }
+                        else
+                        {
+                            DisplayImageFromBytes(context, imageData);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载远程图片失败: {ex.Message}");
+            }
         }
 
         /// <summary>

@@ -25,6 +25,11 @@ namespace SourceGrid
         public string FileName { get; set; }
 
         /// <summary>
+        /// 存储的相对路径（不带文件名），用于服务器搜索
+        /// </summary>
+        public string StoragePath { get; set; }
+
+        /// <summary>
         /// 图片字节数据
         /// </summary>
         public byte[] ImageData { get; set; }
@@ -105,7 +110,7 @@ namespace SourceGrid
         /// <param name="fileName">文件名</param>
         /// <param name="imageData">图片数据</param>
         /// <param name="status">图片状态</param>
-        public void AddImage(Cell cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal, long BusinessId = 0)
+        public void AddImage(Cell cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal, long BusinessId = 0, string StoragePath = null)
         {
             lock (_lockObject)
             {
@@ -117,6 +122,7 @@ namespace SourceGrid
                     FileName = fileName,
                     ImageData = imageData,
                     Status = status,
+                    StoragePath = StoragePath,
                     Cell = cell,
                     CreateTime = DateTime.Now
                 };
@@ -240,18 +246,6 @@ namespace SourceGrid
                 .ToList();
         }
 
-        /// <summary>
-        /// 获取所有待删除的图片ID列表
-        /// </summary>
-        /// <returns>待删除图片ID列表</returns>
-        public List<long> GetPendingDeleteImageIds()
-        {
-            return _imageInfoDict.Values
-                .Where(x => x.Status == ImageStatus.PendingDelete)
-                .Select(x => x.ImageId)
-                .OrderBy(x => x)
-                .ToList();
-        }
 
 
         /// <summary>

@@ -979,7 +979,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 {
                                     // 将图片标记为待删除状态，而不是立即删除
                                     // 注册到ImageStateManager，状态为PendingDelete
-                                    ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete, valueImageWeb.BusinessId);
+                                    ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.StoragePath);
                                 }
 
                                 // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）

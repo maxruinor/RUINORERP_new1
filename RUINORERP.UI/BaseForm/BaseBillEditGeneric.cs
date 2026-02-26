@@ -1217,7 +1217,7 @@ namespace RUINORERP.UI.BaseForm
                 // 创建删除请求
                 var deleteRequest = new FileDeleteRequest();
                 deleteRequest.BusinessId = billId;
-           
+
                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                 // 添加要删除的文件信息
@@ -1227,7 +1227,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(imageInfo);
                         fileStorageInfo.OwnerTableName = typeof(T).Name;
-                        
+
                         // 确保所有必要的属性都有值
                         fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
                         fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
@@ -1235,7 +1235,7 @@ namespace RUINORERP.UI.BaseForm
                         fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
                         fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
                         fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
-                        
+
                         if (fileStorageInfo != null)
                         {
                             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
@@ -1304,7 +1304,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                               // fileStorageInfo.OwnerTableName= typeof(T).Name;
+                                // fileStorageInfo.OwnerTableName= typeof(T).Name;
                                 AddFileStorageInfo(entity as BaseEntity, fileStorageInfo);
                             }
                         }
@@ -1504,7 +1504,7 @@ namespace RUINORERP.UI.BaseForm
                                 // 创建删除请求
                                 var deleteRequest = new FileDeleteRequest();
                                 deleteRequest.BusinessId = billId;
-                          
+
                                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                                 // 添加要删除的文件信息
@@ -4224,17 +4224,17 @@ namespace RUINORERP.UI.BaseForm
         {
             bool result = true;
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
-            
+
             // 获取所有待上传图片
             var pendingUploadImages = SourceGrid.ImageStateManager.Instance.GetPendingUploadImages();
-            
+
             // 如果没有待上传图片，直接返回成功
             if (pendingUploadImages == null || pendingUploadImages.Count == 0)
             {
                 MainForm.Instance.PrintInfoLog("没有需要上传的图片，跳过图片上传处理");
                 return true;
             }
-            
+
             // 识别包含图片的列
             foreach (C detail in Details)
             {
@@ -4251,7 +4251,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                 }
             }
-            
+
             try
             {
                 // 使用优化的上传方法，只处理待上传图片
@@ -4272,12 +4272,12 @@ namespace RUINORERP.UI.BaseForm
         {
             bool rs = true;
             int processedCount = 0;
-            
+
             try
             {
                 // 获取文件服务
                 var fileService = Startup.GetFromFac<FileBusinessService>();
-                
+
                 // 批量处理待上传图片
                 foreach (var imageInfo in pendingUploadImages)
                 {
@@ -4286,7 +4286,7 @@ namespace RUINORERP.UI.BaseForm
                         // 直接使用 imageInfo.Cell 引用，而不是重新查找
                         SourceGrid.Cells.Cell cell = imageInfo.Cell;
                         C detail = null;
-                        
+
                         if (cell != null)
                         {
                             // 通过单元格获取对应的明细数据
@@ -4300,7 +4300,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        
+
                         // 如果通过 Cell 引用找不到，尝试通过 Details 列表匹配
                         if (detail == null)
                         {
@@ -4326,7 +4326,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        
+
                         if (cell != null && detail != null)
                         {
                             // 确保文件名包含扩展名
@@ -4336,14 +4336,14 @@ namespace RUINORERP.UI.BaseForm
                                 // 如果文件名没有扩展名，添加默认扩展名
                                 uploadFileName = Path.ChangeExtension(uploadFileName, ".jpg");
                             }
-                            
+
                             // 上传图片到文件服务器
                             var uploadResult = await fileService.UploadImageAsync(
-                                detail as BaseEntity, 
-                                uploadFileName, 
-                                imageInfo.ImageData, 
+                                detail as BaseEntity,
+                                uploadFileName,
+                                imageInfo.ImageData,
                                 "EvidenceImagePath");
-                            
+
                             if (uploadResult != null && uploadResult.IsSuccess)
                             {
                                 // 更新明细对象中的图片路径
@@ -4355,12 +4355,12 @@ namespace RUINORERP.UI.BaseForm
                                         expenseDetail.EvidenceImagePath = detailFileInfo.FileId.ToString();
                                     }
                                 }
-                                
+
                                 // 更新单元格显示
                                 var cellFileInfo = uploadResult.FileStorageInfos?.FirstOrDefault();
                                 string fileIdStr = cellFileInfo != null ? cellFileInfo.FileId.ToString() : null;
                                 UpdateCellImageDisplay(cell, imageInfo.ImageData, fileIdStr);
-                                
+
                                 processedCount++;
                                 MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
                             }
@@ -4381,7 +4381,7 @@ namespace RUINORERP.UI.BaseForm
                         rs = false;
                     }
                 }
-                
+
                 // 清理已处理的待上传状态
                 if (processedCount > 0)
                 {
@@ -4395,7 +4395,7 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.logger.LogError(ex, "批量上传图片异常");
                 rs = false;
             }
-            
+
             return rs;
         }
 
@@ -4406,23 +4406,21 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="imageIdToBusinessIdMap">图片ID到业务主键ID的映射</param>
         /// <param name="ownerTableName">拥有者表名</param>
         /// <returns>删除是否成功</returns>
-        protected async Task<bool> DeletePendingImagesAsync(Dictionary<long, long> imageIdToBusinessIdMap, string ownerTableName)
+        protected async Task<bool> DeletePendingImagesAsync(List<ExtendedImageInfo> extendedImageInfoList, string ownerTableName)
         {
             try
             {
-                if (imageIdToBusinessIdMap == null || imageIdToBusinessIdMap.Count == 0)
-                    return true;
 
                 // 获取文件管理服务
                 var fileService = Startup.GetFromFac<FileManagementService>();
                 int successCount = 0;
 
-                foreach (var kvp in imageIdToBusinessIdMap)
+                foreach (var kvp in extendedImageInfoList)
                 {
                     try
                     {
-                        long imageId = kvp.Key;
-                        long businessId = kvp.Value;
+                        long imageId = kvp.ImageId;
+                        long businessId = kvp.BusinessId;
 
                         // 构建文件删除请求
                         var deleteRequest = new FileDeleteRequest();
@@ -4430,7 +4428,7 @@ namespace RUINORERP.UI.BaseForm
                         deleteRequest.PhysicalDelete = true; // 允许物理删除
 
                         // 如果是数字ID，直接使用
-                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId ,OwnerTableName=ownerTableName});
+                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId, OwnerTableName = ownerTableName, StoragePath = kvp.StoragePath });
 
                         var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
 
@@ -4441,11 +4439,11 @@ namespace RUINORERP.UI.BaseForm
                     }
                     catch (Exception ex)
                     {
-                        MainForm.Instance.logger.LogError(ex, $"删除图片 {kvp.Key} 失败");
+                        MainForm.Instance.logger.LogError(ex, $"删除图片 {kvp.FileName} 失败");
                     }
                 }
 
-                return successCount == imageIdToBusinessIdMap.Count;
+                return successCount == extendedImageInfoList.Count;
             }
             catch (Exception ex)
             {
@@ -4476,7 +4474,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 //if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
                                 //{
-                                    return cell;
+                                return cell;
                                 //}
                             }
                         }
@@ -4487,7 +4485,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.logger.LogError(ex, "根据图片ID查找单元格失败");
             }
-            
+
             return null;
         }
 
@@ -4526,7 +4524,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 MainForm.Instance.logger.LogError(ex, "查找图片对应的单元格失败");
             }
-            
+
             return (null, null);
         }
 
@@ -4572,7 +4570,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
- 
+
         protected override void Add()
         {
             List<T> list = new List<T>();
@@ -7120,7 +7118,7 @@ namespace RUINORERP.UI.BaseForm
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
- 
+
 
 
 

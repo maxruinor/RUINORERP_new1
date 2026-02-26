@@ -927,7 +927,8 @@ namespace RUINORERP.UI.FM
                         // 处理待删除的图片
                         if (pendingDeleteImages.Count > 0)
                         {
-                            bool deleteSuccess = await DeletePendingImagesAsync(pendingDeleteImages);
+                            // 调用基类的删除方法
+                            bool deleteSuccess = await base.DeletePendingImagesAsync(pendingDeleteImages, typeof(tb_FM_ExpenseClaim).Name);
                             if (!deleteSuccess)
                             {
                                 MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
@@ -1173,42 +1174,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
- 
-        /// <summary>
-        /// 删除待删除图片
-        /// 要提供明细表的主键作为业务ID
-        /// </summary>
-        /// <param name="pendingDeleteImageIds">待删除图片ID列表</param>
-        /// <returns>删除是否成功</returns>
-        private async Task<bool> DeletePendingImagesAsync(List<ExtendedImageInfo> imageInfos)
-        {
-            try
-            {
-                if (imageInfos == null || imageInfos.Count == 0)
-                    return true;
-
-                // 构建图片ID到业务主键ID的映射
-                var imageIdToBusinessIdMap = new Dictionary<long, long>();
-
-                foreach (var imageinfo in imageInfos)
-                {
-                    if (imageinfo != null && imageinfo.Cell != null)
-                    {
-                        // 使用明细的主键作为业务ID
-                        imageIdToBusinessIdMap[imageinfo.ImageId] = imageinfo.BusinessId;
-                    }
-                }
-
-                // 调用基类的删除方法
-                return await base.DeletePendingImagesAsync(imageIdToBusinessIdMap, typeof(tb_FM_ExpenseClaim).Name);
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "删除待删除图片异常");
-                return false;
-            }
-        }
-
+  
  
 
         #endregion

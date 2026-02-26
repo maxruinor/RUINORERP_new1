@@ -1173,56 +1173,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 删除服务器上的旧图片
-        /// </summary>
-        private async Task DeleteOldImagesAsync()
-        {
-            if (_imagesToDelete == null || _imagesToDelete.Count == 0) return;
-
-            try
-            {
-                var fileService = Startup.GetFromFac<FileBusinessService>();
-                int successCount = 0;
-
-                foreach (var imagePath in _imagesToDelete.ToList())
-                {
-                    try
-                    {
-                        // 构建删除请求
-                        var deleteRequest = new FileDeleteRequest
-                        {
-                            BusinessId = EditEntity?.ClaimMainID ?? 0,
-                            OwnerTableName = typeof(tb_FM_ExpenseClaim).Name,
-                            PhysicalDelete = false // 逻辑删除
-                        };
-
-                        // 注意：这里需要根据实际的文件存储信息构建FileStorageInfo
-                        // 简化处理：直接调用删除方法
-                        var deleteResult = await fileService.DeleteImagesAsync(EditEntity, false);
-                        if (deleteResult != null && deleteResult.IsSuccess)
-                        {
-                            successCount++;
-                            _imagesToDelete.Remove(imagePath);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger.LogError(ex, $"删除图片 {imagePath} 失败");
-                    }
-                }
-
-                if (successCount > 0)
-                {
-                    MainForm.Instance.uclog.AddLog($"成功删除 {successCount} 张旧图片");
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "删除旧图片异常");
-            }
-        }
-
+ 
         /// <summary>
         /// 删除待删除图片
         /// 要提供明细表的主键作为业务ID
@@ -1258,13 +1209,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 检查并删除已替换的旧图片（在保存后调用）
-        /// </summary>
-        public async Task CleanupOldImagesAsync()
-        {
-            await DeleteOldImagesAsync();
-        }
+ 
 
         #endregion
 

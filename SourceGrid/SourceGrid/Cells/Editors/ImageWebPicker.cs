@@ -820,12 +820,7 @@ namespace SourceGrid.Cells.Editors
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
                     
-                    Control.Value = newFileId;
-                }
-                else
-                {
-                    // 图片未发生变化，保持原有状态
-                    Control.Value = valueImageWeb.FileId > 0 ? (object)valueImageWeb.FileId : valueImageWeb.OriginalFileName;
+                    Control.Value = valueImageWeb.OriginalFileName;
                 }
             }
             else if (val is string)

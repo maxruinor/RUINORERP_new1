@@ -452,7 +452,7 @@ namespace RUINORERP.UI.Network.Services
                 // 创建删除请求
                 FileDeleteRequest deleteRequest = new FileDeleteRequest();
                 deleteRequest.BusinessId = businessId;
-                deleteRequest.OwnerTableName = entity.GetType().Name;
+                
                 deleteRequest.PhysicalDelete = physicalDelete;
 
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)

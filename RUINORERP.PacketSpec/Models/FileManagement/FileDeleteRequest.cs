@@ -17,10 +17,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// 单表业务时使用此项,默认为主表
         /// </summary>
         public long BusinessId { get; set; }
-        /// <summary>
-        /// 业务类型
-        /// </summary>
-        public string OwnerTableName { get; set; }
+
 
         /// <summary>
         /// 多文件模式下的文件存储信息列表

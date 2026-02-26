@@ -1208,7 +1208,6 @@ namespace RUINORERP.UI.BaseForm
                 var imageInfos = magicPicBox.GetImageInfos();
                 if (imageInfos == null || imageInfos.Count == 0)
                 {
-                    logger.LogInformation("没有需要删除的图片");
                     return true;
                 }
 
@@ -1218,7 +1217,7 @@ namespace RUINORERP.UI.BaseForm
                 // 创建删除请求
                 var deleteRequest = new FileDeleteRequest();
                 deleteRequest.BusinessId = billId;
-                deleteRequest.OwnerTableName = typeof(T).Name;
+           
                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                 // 添加要删除的文件信息
@@ -1227,6 +1226,7 @@ namespace RUINORERP.UI.BaseForm
                     if (imageInfo != null && imageInfo.FileId > 0)
                     {
                         var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(imageInfo);
+                        fileStorageInfo.OwnerTableName = typeof(T).Name;
                         if (fileStorageInfo != null)
                         {
                             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
@@ -1295,6 +1295,7 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 imageDataList.Add(fileStorageInfo.FileData);
                                 imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                               // fileStorageInfo.OwnerTableName= typeof(T).Name;
                                 AddFileStorageInfo(entity as BaseEntity, fileStorageInfo);
                             }
                         }
@@ -1320,7 +1321,7 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
-                    logger.LogInformation("未找到有效的图片数据");
+                    //logger.LogInformation("未找到有效的图片数据");
                 }
             }
             catch (Exception ex)
@@ -1346,7 +1347,7 @@ namespace RUINORERP.UI.BaseForm
                 // 检查是否有图片需要上传
                 if (magicPicBox.Image == null)
                 {
-                    logger.LogInformation("没有需要上传的图片");
+                    //logger.LogInformation("没有需要上传的图片");
                     return true;
                 }
 
@@ -1357,7 +1358,7 @@ namespace RUINORERP.UI.BaseForm
 
                 if (imageBytesWithInfoList == null || imageBytesWithInfoList.Count == 0)
                 {
-                    logger.LogInformation("没有需要上传的图片数据");
+                    //logger.LogInformation("没有需要上传的图片数据");
                     return true;
                 }
 
@@ -1481,7 +1482,6 @@ namespace RUINORERP.UI.BaseForm
                 // 场景2：仅删除原图不上传新图
                 if (deletedImages != null && deletedImages.Count > 0)
                 {
-                    logger.LogInformation("开始处理 {Count} 张已删除的图片", deletedImages.Count);
 
                     foreach (var deletedImage in deletedImages)
                     {
@@ -1490,19 +1490,19 @@ namespace RUINORERP.UI.BaseForm
                         {
                             try
                             {
-                                logger.LogInformation("删除服务器上的图片：FileId={FileId}, FileName={FileName}",
-                                    deletedImage.FileId, deletedImage.OriginalFileName);
+
 
                                 // 创建删除请求
                                 var deleteRequest = new FileDeleteRequest();
                                 deleteRequest.BusinessId = billId;
-                                deleteRequest.OwnerTableName = entity.GetType().Name;
+                          
                                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                                 // 添加要删除的文件信息
                                 var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
                                 if (fileStorageInfo != null)
                                 {
+                                    fileStorageInfo.OwnerTableName = entity.GetType().Name;
                                     deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
                                 }
 
@@ -1535,7 +1535,7 @@ namespace RUINORERP.UI.BaseForm
                 // 场景1：删除原图后上传新图片 或 普通的新图片上传
                 if (updatedImages != null && updatedImages.Count > 0)
                 {
-                    logger.LogInformation("开始处理 {Count} 张需要更新的图片", updatedImages.Count);
+                    //logger.LogInformation("开始处理 {Count} 张需要更新的图片", updatedImages.Count);
 
                     int successCount = 0;
 
@@ -4418,11 +4418,10 @@ namespace RUINORERP.UI.BaseForm
                         // 构建文件删除请求
                         var deleteRequest = new FileDeleteRequest();
                         deleteRequest.BusinessId = businessId;
-                        deleteRequest.OwnerTableName = ownerTableName;
                         deleteRequest.PhysicalDelete = true; // 允许物理删除
 
                         // 如果是数字ID，直接使用
-                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId });
+                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId ,OwnerTableName=ownerTableName});
 
                         var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
 
@@ -7112,273 +7111,7 @@ namespace RUINORERP.UI.BaseForm
             QueryConditionFilter = baseProcessor.GetQueryFilter();
         }
 
-        #region 文件管理集成
-
-        /// <summary>
-        /// 更新业务单据图片的通用方法
-        /// </summary>
-        /// <param name="relatedField">关联字段名</param>
-        /// <param name="imagePath">图片路径</param>
-        /// <param name="strategy">更新策略,默认为Replace(替换模式)</param>
-        /// <returns>是否更新成功</returns>
-        protected async Task<bool> UpdateBillImageAsync(
-            string relatedField,
-            string imagePath,
-            FileUpdateStrategy strategy = FileUpdateStrategy.Replace)
-        {
-            if (EditEntity == null)
-            {
-                MainForm.Instance?.ShowStatusText("当前没有加载的业务单据");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(relatedField))
-            {
-                MainForm.Instance?.ShowStatusText("关联字段名不能为空");
-                return false;
-            }
-
-            if (!System.IO.File.Exists(imagePath))
-            {
-                MainForm.Instance?.ShowStatusText("图片文件不存在");
-                return false;
-            }
-
-            try
-            {
-                // 获取文件更新服务
-                var fileUpdateService = Startup.GetFromFac<FileUpdateClientService>();
-                if (fileUpdateService == null)
-                {
-                    MainForm.Instance?.ShowStatusText("文件更新服务未初始化");
-                    return false;
-                }
-
-                // 读取图片数据
-                var imageData = System.IO.File.ReadAllBytes(imagePath);
-                var fileName = System.IO.Path.GetFileName(imagePath);
-
-                // 执行更新
-                var result = await fileUpdateService.UpdateBusinessFileAsync(
-                    OwnerTableName: EditEntity.GetType().Name,
-                    businessId: EditEntity.PrimaryKeyID,
-                    relatedField: relatedField,
-                    newFileData: imageData,
-                    newFileName: fileName,
-                    strategy: strategy
-                );
-
-                if (result.IsSuccess)
-                {
-                    MainForm.Instance?.ShowStatusText("图片更新成功");
-
-                    // 标记实体已变更，确保关闭窗体时提示保存
-                    EditEntity.HasChanged = true;
-                    Edited = true;
-
-                    return true;
-                }
-                else
-                {
-                    MainForm.Instance?.ShowStatusText($"图片更新失败: {result.Message}");
-                    return false;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                logger?.LogError(ex, "更新业务图片失败");
-                MainForm.Instance?.ShowStatusText($"图片更新失败: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 批量更新业务单据图片的通用方法
-        /// </summary>
-        /// <param name="relatedField">关联字段名</param>
-        /// <param name="imagePaths">图片路径列表</param>
-        /// <param name="strategy">更新策略,默认为AppendOnly(仅新增模式)</param>
-        /// <returns>更新结果对象</returns>
-        protected async Task<FileBatchUpdateResult> BatchUpdateBillImagesAsync(
-            string relatedField,
-            List<string> imagePaths,
-            FileUpdateStrategy strategy = FileUpdateStrategy.AppendOnly)
-        {
-            var result = new FileBatchUpdateResult
-            {
-                IsSuccess = true,
-                SuccessFiles = new List<string>(),
-                FailedFiles = new List<string>(),
-                Message = "批量更新完成"
-            };
-
-            if (EditEntity == null)
-            {
-                result.IsSuccess = false;
-                result.Message = "当前没有加载的业务单据";
-                return result;
-            }
-
-            if (imagePaths == null || imagePaths.Count == 0)
-            {
-                result.IsSuccess = false;
-                result.Message = "图片路径列表为空";
-                return result;
-            }
-
-            try
-            {
-                // 获取文件更新服务
-                var fileUpdateService = Startup.GetFromFac<FileUpdateClientService>();
-                if (fileUpdateService == null)
-                {
-                    result.IsSuccess = false;
-                    result.Message = "文件更新服务未初始化";
-                    return result;
-                }
-
-                // 获取实体信息
-                var entityInfo = EntityMappingHelper.GetEntityInfo<T>();
-                if (entityInfo == null)
-                {
-                    result.IsSuccess = false;
-                    result.Message = "无法获取实体信息";
-                    return result;
-                }
-
-                var businessNo = EditEntity.GetPropertyValue(entityInfo.NoField)?.ToString();
-                if (string.IsNullOrEmpty(businessNo))
-                {
-                    result.IsSuccess = false;
-                    result.Message = "业务编号为空";
-                    return result;
-                }
-
-
-                // 准备文件数据
-                var files = new List<(byte[], string)>();
-                foreach (var imagePath in imagePaths)
-                {
-                    if (System.IO.File.Exists(imagePath))
-                    {
-                        files.Add((System.IO.File.ReadAllBytes(imagePath), System.IO.Path.GetFileName(imagePath)));
-                    }
-                    else
-                    {
-                        result.FailedFiles.Add(imagePath);
-                    }
-                }
-
-                if (files.Count == 0)
-                {
-                    result.IsSuccess = false;
-                    result.Message = "没有有效的图片文件";
-                    return result;
-                }
-
-                // 执行批量更新
-                var batchResult = await fileUpdateService.BatchUpdateBusinessFilesAsync(
-                    OwnerTableName: EditEntity.GetType().Name,
-                    businessId: EditEntity.PrimaryKeyID,
-                    relatedField: relatedField,
-                    newFiles: files,
-                    strategy: strategy
-                );
-
-                result.IsSuccess = batchResult.IsSuccess;
-                result.SuccessFiles.AddRange(batchResult.SuccessFiles);
-                result.FailedFiles.AddRange(batchResult.FailedFiles);
-                result.Message = batchResult.Message;
-
-                if (result.IsSuccess)
-                {
-                    MainForm.Instance?.ShowStatusText($"批量更新成功: {result.SuccessFiles.Count}个文件");
-
-                    // 标记实体已变更，确保关闭窗体时提示保存
-                    EditEntity.HasChanged = true;
-                    Edited = true;
-                }
-                else
-                {
-                    MainForm.Instance?.ShowStatusText($"批量更新完成,成功:{result.SuccessFiles.Count},失败:{result.FailedFiles.Count}");
-                    logger?.LogWarning($"业务单据[{businessNo}]的关联字段[{relatedField}]批量图片更新部分失败: {result.Message}");
-
-                    // 即使部分失败，只要有成功的也标记为已变更
-                    if (result.SuccessFiles.Count > 0)
-                    {
-                        EditEntity.HasChanged = true;
-                        Edited = true;
-                    }
-                }
-
-                return result;
-            }
-            catch (System.Exception ex)
-            {
-                result.IsSuccess = false;
-                result.Message = $"批量更新失败: {ex.Message}";
-                logger?.LogError(ex, "批量更新业务图片失败");
-                MainForm.Instance?.ShowStatusText($"批量更新失败: {ex.Message}");
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// 通过文件选择器更新图片
-        /// </summary>
-        /// <param name="relatedField">关联字段名</param>
-        /// <param name="strategy">更新策略</param>
-        /// <param name="filter">文件过滤器,默认为图片文件</param>
-        /// <param name="multiSelect">是否允许选择多个文件</param>
-        /// <returns>是否更新成功</returns>
-        protected async Task<bool> UpdateBillImageViaDialogAsync(
-            string relatedField,
-            FileUpdateStrategy strategy = FileUpdateStrategy.Replace,
-            string filter = "图片文件|*.jpg;*.jpeg;*.png;*.bmp;*.gif|所有文件|*.*",
-            bool multiSelect = false)
-        {
-            try
-            {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
-                {
-                    openFileDialog.Filter = filter;
-                    openFileDialog.Multiselect = multiSelect;
-                    openFileDialog.Title = "选择图片文件";
-
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        if (multiSelect && openFileDialog.FileNames.Length > 1)
-                        {
-                            // 批量更新
-                            var result = await BatchUpdateBillImagesAsync(
-                                relatedField,
-                                openFileDialog.FileNames.ToList(),
-                                strategy
-                            );
-
-                            return result.IsSuccess && result.FailedFiles.Count == 0;
-                        }
-                        else
-                        {
-                            // 单个更新
-                            return await UpdateBillImageAsync(
-                                relatedField,
-                                openFileDialog.FileName,
-                                strategy
-                            );
-                        }
-                    }
-                    return false;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                logger?.LogError(ex, "通过文件选择器更新图片失败");
-                return false;
-            }
-        }
-
-        #endregion
+ 
 
 
 

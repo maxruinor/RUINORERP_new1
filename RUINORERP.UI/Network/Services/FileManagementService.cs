@@ -174,7 +174,7 @@ namespace RUINORERP.UI.Network.Services
             // 创建删除请求
             var deleteRequest = new FileDeleteRequest();
             deleteRequest.InitializeCompatibility();
-            deleteRequest.OwnerTableName = OwnerTableName;
+            fileStorageInfo.OwnerTableName = OwnerTableName;
             deleteRequest.BusinessId = BusinessId;
             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
 

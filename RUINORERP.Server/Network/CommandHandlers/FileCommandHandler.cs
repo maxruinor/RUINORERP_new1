@@ -813,6 +813,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 2. 如果有别的业务引用文件，则只删除关联记录
         /// 所有数据库操作逻辑都在服务器端处理
         /// 集成事务处理，确保删除操作的原子性
+        /// 如果没有其它业务引用则删除文件本身和tb_FS_FileStorageInfo的文件存储信息的数据行
         /// </summary>
         private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
@@ -968,11 +969,12 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 {
                                     // 获取基础业务目录
                                     var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.OwnerTableName);
-                                    searchPaths.Add(baseBusinessPath);
-
-                                    // 如果是较新的文件结构，可能存在于YYMM子目录中
                                     if (Directory.Exists(baseBusinessPath))
                                     {
+                                        searchPaths.Add(baseBusinessPath);
+                                        _logger?.LogDebug("添加业务目录到搜索路径: {Directory}", baseBusinessPath);
+
+                                        // 如果是较新的文件结构，可能存在于YYMM子目录中
                                         try
                                         {
                                             // 获取业务目录下的所有YYMM子目录（按时间倒序排列，优先搜索较新的目录）
@@ -981,6 +983,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                                                  .OrderByDescending(dir => dir)
                                                                  .Take(6); // 只搜索最近6个月的目录
                                             searchPaths.AddRange(subDirs);
+                                            _logger?.LogDebug("添加业务子目录到搜索路径，数量: {Count}", subDirs.Count());
                                         }
                                         catch (Exception ex)
                                         {
@@ -993,6 +996,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 if (!searchPaths.Contains(_fileStoragePath))
                                 {
                                     searchPaths.Add(_fileStoragePath);
+                                    _logger?.LogDebug("添加根目录到搜索路径: {Directory}", _fileStoragePath);
                                 }
 
                                 // 精简搜索模式，提高性能
@@ -1010,18 +1014,30 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 if (fileStorageInfo.FileId > 0)
                                 {
                                     searchPatterns.Add($"{fileStorageInfo.FileId}.*");
+                                    _logger?.LogDebug("添加FileId通配符到搜索模式: {Pattern}", $"{fileStorageInfo.FileId}.*");
                                 }
                                 if (!string.IsNullOrEmpty(fileStorageInfo.HashValue))
                                 {
                                     searchPatterns.Add($"{fileStorageInfo.HashValue}.*");
+                                    _logger?.LogDebug("添加HashValue通配符到搜索模式: {Pattern}", $"{fileStorageInfo.HashValue}.*");
+                                }
+
+                                // 验证搜索模式是否有效
+                                if (searchPatterns.Count == 0)
+                                {
+                                    _logger?.LogWarning("没有有效的搜索模式，跳过文件删除: FileId={FileId}, StorageFileName={StorageFileName}, HashValue={HashValue}",
+                                        fileStorageInfo.FileId, fileStorageInfo.StorageFileName, fileStorageInfo.HashValue);
+                                    continue;
                                 }
 
                                 // 在所有搜索路径中查找并删除文件，一旦找到并删除就停止搜索
                                 bool fileDeleted = false;
+                                string deletedFilePath = null;
                                 foreach (var searchPath in searchPaths)
                                 {
                                     if (!Directory.Exists(searchPath))
                                     {
+                                        _logger?.LogDebug("搜索路径不存在，跳过: {Directory}", searchPath);
                                         continue; // 静默跳过不存在的目录，减少日志输出
                                     }
 
@@ -1033,22 +1049,41 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                             var files = Directory.GetFiles(searchPath, pattern);
                                             if (files.Length > 0)
                                             {
-                                                _logger?.LogDebug("在目录{Directory}中找到匹配模式{Pattern}的文件", searchPath, pattern);
+                                                _logger?.LogDebug("在目录{Directory}中找到匹配模式{Pattern}的文件数量: {Count}", searchPath, pattern, files.Length);
 
-                                                // 物理删除：删除实际文件
-                                                foreach (var filePath in files)
+                                                // 优先选择最可能的文件
+                                                string targetFile = null;
+                                                if (files.Length == 1)
                                                 {
+                                                    // 只有一个文件，直接使用
+                                                    targetFile = files[0];
+                                                }
+                                                else
+                                                {
+                                                    // 多个文件，优先选择与StorageFileName匹配的
+                                                    targetFile = files.FirstOrDefault(f => Path.GetFileName(f) == fileStorageInfo.StorageFileName);
+                                                    if (targetFile == null)
+                                                    {
+                                                        // 如果没有匹配的StorageFileName，选择第一个文件
+                                                        targetFile = files[0];
+                                                    }
+                                                }
+
+                                                if (targetFile != null)
+                                                {
+                                                    // 物理删除：删除实际文件
                                                     try
                                                     {
-                                                        _logger?.LogDebug("物理删除文件: {FilePath}", filePath);
-                                                        File.Delete(filePath);
+                                                        _logger?.LogDebug("物理删除文件: {FilePath}", targetFile);
+                                                        File.Delete(targetFile);
                                                         fileDeleted = true;
-                                                        _logger?.LogDebug("物理删除文件成功: {FilePath}", filePath);
+                                                        deletedFilePath = targetFile;
+                                                        _logger?.LogDebug("物理删除文件成功: {FilePath}", targetFile);
                                                     }
                                                     catch (Exception ex)
                                                     {
                                                         // 记录错误但继续删除其他文件
-                                                        _logger?.LogError(ex, "物理删除文件失败: {FilePath}", filePath);
+                                                        _logger?.LogError(ex, "物理删除文件失败: {FilePath}", targetFile);
                                                     }
                                                 }
 
@@ -1065,6 +1100,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     // 如果已找到并删除文件，提前退出目录搜索
                                     if (fileDeleted) break;
                                 }
+
+                                // 记录删除结果
+                                if (fileDeleted)
+                                {
+                                    _logger?.LogInformation("文件删除成功: {FilePath}, FileId: {FileId}", deletedFilePath, fileStorageInfo.FileId);
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("文件删除失败，未找到文件: FileId={FileId}, StorageFileName={StorageFileName}, HashValue={HashValue}",
+                                        fileStorageInfo.FileId, fileStorageInfo.StorageFileName, fileStorageInfo.HashValue);
+                                }
                             }
                         }
                     }
@@ -1075,38 +1121,51 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         // 创建一个副本，避免在循环过程中修改集合
                         var relationsToDeleteCopy = relationsToDelete.ToList();
-                        for (int dr = 0; dr < relationsToDeleteCopy.Count; dr++)
+                        
+                        _logger?.LogDebug("开始处理业务关联记录，数量: {Count}", relationsToDeleteCopy.Count);
+                        
+                        foreach (var relation in relationsToDeleteCopy)
                         {
-                            // 检查索引是否有效
-                            if (dr < 0 || dr >= relationsToDeleteCopy.Count)
-                            {
-                                _logger?.LogWarning("关联记录索引无效，跳过处理: {Index}", dr);
-                                continue;
-                            }
-
-                            var relation = relationsToDeleteCopy[dr];
                             if (relation == null)
                             {
-                                _logger?.LogWarning("关联记录为空，跳过处理: {Index}", dr);
+                                _logger?.LogWarning("关联记录为空，跳过处理");
                                 continue;
                             }
 
-                            // 使用逻辑删除：设置isdeleted标记而不是物理删除
-                            relation.isdeleted = true;
-                            relation.Modified_at = DateTime.Now;
-                            var updateResult = await _businessRelationController.UpdateAsync(relation);
+                            try
+                            {
+                                // 验证关联记录的必要字段
+                                if (relation.RelationId <= 0)
+                                {
+                                    _logger?.LogWarning("关联记录ID无效，跳过处理: {RelationId}", relation.RelationId);
+                                    continue;
+                                }
 
-                            if (updateResult)
-                            {
-                                relationDeletedCount++;
-                                _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}",
-                                    relation.RelationId, relation.FileId, relation.BusinessId);
+                                // 使用逻辑删除：设置isdeleted标记而不是物理删除
+                                relation.isdeleted = true;
+                                relation.Modified_at = DateTime.Now;
+                                var updateResult = await _businessRelationController.UpdateAsync(relation);
+
+                                if (updateResult)
+                                {
+                                    relationDeletedCount++;
+                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}, OwnerTableName: {OwnerTableName}",
+                                        relation.RelationId, relation.FileId, relation.BusinessId, relation.OwnerTableName);
+                                }
+                                else
+                                {
+                                    _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
-                                _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                _logger?.LogError(ex, "处理业务关联记录失败: RelationId={RelationId}, FileId={FileId}, BusinessId={BusinessId}",
+                                    relation.RelationId, relation.FileId, relation.BusinessId);
+                                // 记录错误但继续处理其他关联记录
                             }
                         }
+                        
+                        _logger?.LogInformation("业务关联记录处理完成，成功删除: {Count}条", relationDeletedCount);
                     }
                     catch (Exception ex)
                     {
@@ -1117,18 +1176,34 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     response.DeletedFileIds = deletedFileIds;
 
                     // 同步HasAttachment标志（在删除关联后，事务内执行）
-                    // 从关联记录中获取BusinessType和BusinessId（用于单据级别的HasAttachment同步）
+                    // 对所有受影响的业务实体进行同步
                     if (relationDeletedCount > 0 && _hasAttachmentSyncService != null && relationsToDelete.Count > 0)
                     {
-                        // 获取第一个关联记录的BusinessType和BusinessId
-                        var firstRelation = relationsToDelete.FirstOrDefault();
-                        if (firstRelation != null)
+                        // 按业务类型和业务ID分组，避免重复同步
+                        var businessEntities = relationsToDelete
+                            .Where(r => !string.IsNullOrEmpty(r.OwnerTableName) && r.BusinessId > 0)
+                            .GroupBy(r => new { r.OwnerTableName, r.BusinessId })
+                            .Select(g => g.Key)
+                            .ToList();
+
+                        foreach (var entity in businessEntities)
                         {
-                            await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
-                                firstRelation.OwnerTableName,
-                                firstRelation.BusinessId,
-                                cancellationToken,
-                                useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                            try
+                            {
+                                await _hasAttachmentSyncService.SyncOnFileDeleteAsync(
+                                    entity.OwnerTableName,
+                                    entity.BusinessId,
+                                    cancellationToken,
+                                    useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                                _logger?.LogDebug("同步HasAttachment标志成功: BusinessType={BusinessType}, BusinessId={BusinessId}",
+                                    entity.OwnerTableName, entity.BusinessId);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogError(ex, "同步HasAttachment标志失败: BusinessType={BusinessType}, BusinessId={BusinessId}",
+                                    entity.OwnerTableName, entity.BusinessId);
+                                // 记录错误但继续同步其他实体
+                            }
                         }
                     }
 

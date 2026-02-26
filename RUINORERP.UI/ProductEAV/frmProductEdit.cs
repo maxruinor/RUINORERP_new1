@@ -2821,13 +2821,13 @@ namespace RUINORERP.UI.ProductEAV
                                     var fileService = Startup.GetFromFac<FileManagementService>();
                                     var deleteRequest = new FileDeleteRequest();
                                     deleteRequest.BusinessId = EditEntity.ProdBaseID;
-                                    deleteRequest.OwnerTableName = EditEntity.GetType().Name;
                                     deleteRequest.PhysicalDelete = false;
 
                                     var ctrpay = Startup.GetFromFac<FileBusinessService>();
                                     var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
                                     if (fileStorageInfo != null)
                                     {
+                                        fileStorageInfo.OwnerTableName = EditEntity.GetType().Name;
                                         deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
                                     }
 
@@ -3236,7 +3236,7 @@ namespace RUINORERP.UI.ProductEAV
                     var fileService = Startup.GetFromFac<FileManagementService>();
                     var deleteRequest = new FileDeleteRequest();
                     deleteRequest.BusinessId = billId;
-                    deleteRequest.OwnerTableName = typeof(tb_ProdDetail).Name; // 产品明细使用产品档案业务类型
+                   
                     deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                     // 添加要删除的文件信息
@@ -3247,6 +3247,7 @@ namespace RUINORERP.UI.ProductEAV
                             var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
                             if (fileStorageInfo != null)
                             {
+                                fileStorageInfo.OwnerTableName = typeof(tb_ProdDetail).Name; // 产品明细使用产品档案业务类型
                                 deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
                             }
                         }

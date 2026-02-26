@@ -18,7 +18,7 @@ namespace SourceGrid
         /// 图片ID
         /// </summary>
         public long ImageId { get; set; }
-
+        public long BusinessId { get; set; }
         /// <summary>
         /// 图片文件名
         /// </summary>
@@ -57,7 +57,7 @@ namespace SourceGrid
     public class ImageStateManager
     {
         #region 单例模式
-        
+
         private static ImageStateManager _instance;
         private static readonly object _lockObject = new object();
 
@@ -105,7 +105,7 @@ namespace SourceGrid
         /// <param name="fileName">文件名</param>
         /// <param name="imageData">图片数据</param>
         /// <param name="status">图片状态</param>
-        public void AddImage(Cell cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal)
+        public void AddImage(Cell cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal, long BusinessId = 0)
         {
             lock (_lockObject)
             {
@@ -113,6 +113,7 @@ namespace SourceGrid
                 var extendedInfo = new ExtendedImageInfo
                 {
                     ImageId = imageId,
+                    BusinessId = BusinessId,
                     FileName = fileName,
                     ImageData = imageData,
                     Status = status,
@@ -128,13 +129,13 @@ namespace SourceGrid
                 {
                     _cellToImageDict[cell] = new List<long>();
                 }
-                
+
                 if (!_cellToImageDict[cell].Contains(imageId))
                 {
                     _cellToImageDict[cell].Add(imageId);
                 }
 
-                 
+
             }
         }
 
@@ -157,7 +158,7 @@ namespace SourceGrid
         public List<ExtendedImageInfo> GetImagesByCell(Cell cell)
         {
             var result = new List<ExtendedImageInfo>();
-            
+
             if (_cellToImageDict.TryGetValue(cell, out var imageIds))
             {
                 foreach (var imageId in imageIds)
@@ -168,7 +169,7 @@ namespace SourceGrid
                     }
                 }
             }
-            
+
             return result;
         }
 
@@ -184,8 +185,8 @@ namespace SourceGrid
                 if (_imageInfoDict.TryGetValue(imageId, out var imageInfo))
                 {
                     imageInfo.Status = newStatus;
-                    
-                   
+
+
                 }
             }
         }
@@ -210,7 +211,7 @@ namespace SourceGrid
                         }
                     }
 
-                    
+
                 }
             }
         }
@@ -252,7 +253,7 @@ namespace SourceGrid
                 .ToList();
         }
 
- 
+
         /// <summary>
         /// 获取指定单元格的待删除图片ID列表
         /// </summary>
@@ -261,19 +262,19 @@ namespace SourceGrid
         public List<long> GetPendingDeleteImagesByCell(Cell cell)
         {
             var result = new List<long>();
-            
+
             if (_cellToImageDict.TryGetValue(cell, out var imageIds))
             {
                 foreach (var imageId in imageIds)
                 {
-                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) && 
+                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) &&
                         imageInfo.Status == ImageStatus.PendingDelete)
                     {
                         result.Add(imageId);
                     }
                 }
             }
-            
+
             return result;
         }
 
@@ -285,19 +286,19 @@ namespace SourceGrid
         public List<ExtendedImageInfo> GetPendingUploadImagesByCell(Cell cell)
         {
             var result = new List<ExtendedImageInfo>();
-            
+
             if (_cellToImageDict.TryGetValue(cell, out var imageIds))
             {
                 foreach (var imageId in imageIds)
                 {
-                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) && 
+                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) &&
                         imageInfo.Status == ImageStatus.PendingUpload)
                     {
                         result.Add(imageInfo);
                     }
                 }
             }
-            
+
             return result;
         }
 

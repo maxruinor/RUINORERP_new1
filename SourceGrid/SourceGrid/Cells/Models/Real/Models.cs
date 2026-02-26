@@ -398,11 +398,17 @@ namespace SourceGrid.Cells.Models
             get { return _storageFileName; }
             set { _storageFileName = value ?? string.Empty; }
         }
-        
+
         #endregion
-        
+
+        /// <summary>
+        /// 业务主键，删除时会用到这个字段来删除对应的图片文件，通常是业务表的主键值
+        /// </summary>
+        public long BusinessId { get; set; }
+
+
         #region 兼容性属性（为向后兼容保留）
-        
+
         /// <summary>
         /// 兼容性属性：图片的原始文件名
         /// </summary>

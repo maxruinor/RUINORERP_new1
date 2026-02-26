@@ -466,7 +466,7 @@ namespace RUINORERP.UI.FM
                                     if (fileStorageInfos != null && fileStorageInfos.Count > 0)
                                     {
                                         // 更新单元格显示
-                                        await UpdateGridCellImageAsync(rowIndex, colIndex, fileStorageInfos[0]);
+                                        await UpdateGridCellImageAsync(detail.PrimaryKeyID, rowIndex, colIndex, fileStorageInfos[0]);
                                         loadedCount++;
                                     }
                                 }
@@ -571,7 +571,7 @@ namespace RUINORERP.UI.FM
         /// <summary>
         /// 更新网格单元格图片
         /// </summary>
-        private async Task UpdateGridCellImageAsync(int rowIndex, int colIndex, tb_FS_FileStorageInfo fileStorageInfo)
+        private async Task UpdateGridCellImageAsync(long bizid, int rowIndex, int colIndex, tb_FS_FileStorageInfo fileStorageInfo)
         {
             await Task.Run(() =>
             {
@@ -605,6 +605,7 @@ namespace RUINORERP.UI.FM
                             valueImageWeb.ImageData = fileStorageInfo.FileData;
                             valueImageWeb.StoragePath = fileStorageInfo.StoragePath;
                             valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
+                            valueImageWeb.BusinessId = bizid;
                             // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                             var gridObj = grid1 as SourceGrid.Grid;
                             cell.Value = valueImageWeb;
@@ -912,7 +913,7 @@ namespace RUINORERP.UI.FM
                 if (NeedValidated)
                 {
                     // 直接调用ImageStateManager，不再使用反射
-                    var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImageIds();
+                    var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
                     var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
 
                     SaveResult = await base.Save(EditEntity);
@@ -939,30 +940,18 @@ namespace RUINORERP.UI.FM
                         bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
                         if (uploadImg)
                         {
-                            // 确保明细中的图片列存储的是相对路径（含扩展名）
-                            foreach (var detail in EditEntity.tb_FM_ExpenseClaimDetails)
+                            // 保存到数据库。因为明细中的图片路径对应的字段数据更新为id了
+                            // 重新保存明细数据，确保图片ID已更新
+                            var saveDetailResult = await base.Save(EditEntity);
+                            if (saveDetailResult.Succeeded)
                             {
-                                if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
-                                {
-                                    // 确保路径包含文件扩展名
-                                    string ext = System.IO.Path.GetExtension(detail.EvidenceImagePath);
-                                    if (string.IsNullOrEmpty(ext))
-                                    {
-                                        // 如果没有扩展名，尝试从原始文件名获取
-                                        var fileService = Startup.GetFromFac<FileBusinessService>();
-                                        var fileInfo = await fileService.GetFileInfoByPath(detail.EvidenceImagePath);
-                                        if (fileInfo != null && !string.IsNullOrEmpty(fileInfo.OriginalFileName))
-                                        {
-                                            string originalExt = System.IO.Path.GetExtension(fileInfo.OriginalFileName);
-                                            if (!string.IsNullOrEmpty(originalExt))
-                                            {
-                                                detail.EvidenceImagePath += originalExt;
-                                            }
-                                        }
-                                    }
-                                }
+                                MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
                             }
-                            MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
+                            else
+                            {
+                                MainForm.Instance.uclog.AddLog("更新明细图片ID失败。");
+                                return false;
+                            }
                         }
                         else
                         {
@@ -971,7 +960,7 @@ namespace RUINORERP.UI.FM
                         }
 
                         // 清理已处理的图片状态
-                        var processedImageIds = new List<long>(pendingDeleteImages);
+                        var processedImageIds = new List<long>(pendingDeleteImages.Select(c => c.ImageId));
                         processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
                         ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
 
@@ -1236,48 +1225,31 @@ namespace RUINORERP.UI.FM
 
         /// <summary>
         /// 删除待删除图片
+        /// 要提供明细表的主键作为业务ID
         /// </summary>
         /// <param name="pendingDeleteImageIds">待删除图片ID列表</param>
         /// <returns>删除是否成功</returns>
-        private async Task<bool> DeletePendingImagesAsync(List<long> pendingDeleteImageIds)
+        private async Task<bool> DeletePendingImagesAsync(List<ExtendedImageInfo> imageInfos)
         {
             try
             {
-                if (pendingDeleteImageIds == null || pendingDeleteImageIds.Count == 0)
+                if (imageInfos == null || imageInfos.Count == 0)
                     return true;
 
-                // 获取文件管理服务
-                var fileService = Startup.GetFromFac<FileManagementService>();
-                int successCount = 0;
+                // 构建图片ID到业务主键ID的映射
+                var imageIdToBusinessIdMap = new Dictionary<long, long>();
 
-                foreach (var imageId in pendingDeleteImageIds)
+                foreach (var imageinfo in imageInfos)
                 {
-                    try
+                    if (imageinfo != null && imageinfo.Cell != null)
                     {
-                        // 构建文件删除请求
-                        var deleteRequest = new FileDeleteRequest();
-                        deleteRequest.BusinessId = EditEntity?.ClaimMainID ?? 0;
-                        deleteRequest.OwnerTableName = typeof(tb_FM_ExpenseClaim).Name;
-                        deleteRequest.PhysicalDelete = true; // 允许物理删除
-
-                        // 如果是数字ID，直接使用
-                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId });
-
-
-                        var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
-
-                        if (deleteResult != null && deleteResult.IsSuccess)
-                        {
-                            successCount++;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MainForm.Instance.logger.LogError(ex, $"删除图片 {imageId} 失败");
+                        // 使用明细的主键作为业务ID
+                        imageIdToBusinessIdMap[imageinfo.ImageId] = imageinfo.BusinessId;
                     }
                 }
 
-                return successCount == pendingDeleteImageIds.Count;
+                // 调用基类的删除方法
+                return await base.DeletePendingImagesAsync(imageIdToBusinessIdMap, typeof(tb_FM_ExpenseClaim).Name);
             }
             catch (Exception ex)
             {
@@ -1285,7 +1257,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
- 
+
         /// <summary>
         /// 检查并删除已替换的旧图片（在保存后调用）
         /// </summary>

@@ -4257,6 +4257,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
+        /// 上传图片。要返回图片ID的主键
         /// </summary>
         private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<SourceGrid.ExtendedImageInfo> pendingUploadImages)
         {
@@ -4387,6 +4388,62 @@ namespace RUINORERP.UI.BaseForm
             }
             
             return rs;
+        }
+
+        /// <summary>
+        /// 删除待删除图片
+        /// 要提供明细表的主键作为业务ID
+        /// </summary>
+        /// <param name="imageIdToBusinessIdMap">图片ID到业务主键ID的映射</param>
+        /// <param name="ownerTableName">拥有者表名</param>
+        /// <returns>删除是否成功</returns>
+        protected async Task<bool> DeletePendingImagesAsync(Dictionary<long, long> imageIdToBusinessIdMap, string ownerTableName)
+        {
+            try
+            {
+                if (imageIdToBusinessIdMap == null || imageIdToBusinessIdMap.Count == 0)
+                    return true;
+
+                // 获取文件管理服务
+                var fileService = Startup.GetFromFac<FileManagementService>();
+                int successCount = 0;
+
+                foreach (var kvp in imageIdToBusinessIdMap)
+                {
+                    try
+                    {
+                        long imageId = kvp.Key;
+                        long businessId = kvp.Value;
+
+                        // 构建文件删除请求
+                        var deleteRequest = new FileDeleteRequest();
+                        deleteRequest.BusinessId = businessId;
+                        deleteRequest.OwnerTableName = ownerTableName;
+                        deleteRequest.PhysicalDelete = true; // 允许物理删除
+
+                        // 如果是数字ID，直接使用
+                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId });
+
+                        var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
+
+                        if (deleteResult != null && deleteResult.IsSuccess)
+                        {
+                            successCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.logger.LogError(ex, $"删除图片 {kvp.Key} 失败");
+                    }
+                }
+
+                return successCount == imageIdToBusinessIdMap.Count;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "删除待删除图片异常");
+                return false;
+            }
         }
 
         /// <summary>

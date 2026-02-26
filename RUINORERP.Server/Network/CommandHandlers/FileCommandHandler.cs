@@ -964,7 +964,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
 
                                 // 添加业务类型目录（如果有）
-                                if (fileStorageInfo.OwnerTableName.Trim().Length > 0)
+                                if (!string.IsNullOrEmpty(fileStorageInfo.OwnerTableName))
                                 {
                                     // 获取基础业务目录
                                     var baseBusinessPath = Path.Combine(_fileStoragePath, fileStorageInfo.OwnerTableName);

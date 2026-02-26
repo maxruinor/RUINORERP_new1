@@ -723,6 +723,7 @@ namespace SourceGrid.Cells.Editors
 
         /// <summary>
         /// 对话框会直接到这里
+        /// 修复：正确处理相同图片在编辑后退出的情况
         /// </summary>
         /// <returns></returns>
         public override object GetEditedValue()
@@ -730,160 +731,108 @@ namespace SourceGrid.Cells.Editors
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
-            //这里取值。要判断比较哪个最新通过哈希值比较一下。
+            // 记录编辑前的状态
+            string originalHash = valueImageWeb.GetImageNewHash();
+            byte[] originalImageData = valueImageWeb.ImageData;
+            
             string selectedFilePath = string.Empty;
+            
+            // 处理文件选择器选择的图片
             if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
             {
                 if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
                 {
                     selectedFilePath = txtWebImage.SelectedFilePath;
-                    byte[] NewbuffByte = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
-                    string NewHash = ImageHashHelper.GenerateHash(NewbuffByte);
+                    byte[] newImageBytes = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
+                    string newHash = ImageHashHelper.GenerateHash(newImageBytes);
 
-                    //看原来有不有哈希值或新旧是否相同，如果不同则更新
-                    if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
+                    // 只有当图片真正发生变化时才更新
+                    if (!AreHashesEqual(originalHash, newHash))
                     {
-                        //将图片保存到内存中。用于后面的显示，或保存到本地临时文件夹中，或上传到服务器
-                        byte[] destination = new byte[NewbuffByte.Length];
-                        Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
-                        valueImageWeb.CellImageBytes = destination;
-                        valueImageWeb.SetImageNewHash(NewHash);
-                        Control.Tag = destination;
+                        // 更新图片数据
+                        valueImageWeb.ImageData = newImageBytes;
+                        valueImageWeb.OriginalFileName = Path.GetFileName(selectedFilePath);
+                        Control.Tag = newImageBytes;
                     }
-                    txtWebImage.SelectedFilePath = string.Empty;//用完了清空。
-                    //return valueImageWeb.CellImageName;
+                    txtWebImage.SelectedFilePath = string.Empty; // 用完了清空
                 }
             }
-            //三种形式都将byte[]保存到tag中1
-            if (Control.Value != null && !string.IsNullOrEmpty(Control.Value.ToString()) && valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-            {
-                Control.Tag = valueImageWeb.CellImageBytes;
-            }
-
+            
+            // 处理控件中的数据
             object val = Control.Tag;
             if (val == null)
-                return null;
-            else if (val is System.Drawing.Image img)
             {
+                // 如果没有新数据且原有数据存在，保持原有数据
+                if (originalImageData != null && originalImageData.Length > 0)
+                {
+                    Control.Tag = originalImageData;
+                    return valueImageWeb.FileId > 0 ? (object)valueImageWeb.FileId : valueImageWeb.OriginalFileName;
+                }
+                return null;
+            }
+            
+            if (val is System.Drawing.Image img)
+            {
+                // 处理图片对象
                 SetImageToPathAsync(img);
-                //ValueType = typeof(string);
-                Control.Tag = null;//清空。让第二个单元格可以选择新的图片。
-
+                Control.Tag = null; // 清空，让第二个单元格可以选择新的图片
             }
             else if (val is byte[] buffByte)
             {
-                byte[] destination;
-                string fileExtension = string.Empty;
-
-                //实际上比较一下。如果还是相同的图片不用赋值
-                string NewHash = ImageHashHelper.GenerateHash(buffByte);
-                //看原来有不有哈希值或新旧是否相同，如果不同则更新1
-                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
+                string newHash = ImageHashHelper.GenerateHash(buffByte);
+                
+                // 只有当图片真正发生变化时才更新
+                if (!AreHashesEqual(originalHash, newHash))
                 {
-                    byte[] NewbuffByte = val as byte[];
-                    destination = new byte[NewbuffByte.Length];
-                    Buffer.BlockCopy(NewbuffByte, 0, destination, 0, NewbuffByte.Length);
-                    valueImageWeb.CellImageBytes = destination;
-                    valueImageWeb.SetImageNewHash(NewHash);
-                    Control.Tag = destination;
-
-                    // 提取文件名和扩展名（如果是通过文件选择器选择的）
+                    // 更新图片数据
+                    valueImageWeb.ImageData = buffByte;
+                    
+                    // 设置文件名
                     if (!string.IsNullOrEmpty(selectedFilePath))
                     {
                         fileName = Path.GetFileName(selectedFilePath);
-                        fileExtension = Path.GetExtension(selectedFilePath);
                     }
                     else if (string.IsNullOrEmpty(fileName))
                     {
-                        fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}";
-                        fileExtension = ".jpg"; // 默认扩展名
+                        fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}.jpg";
                     }
-                    else
+                    else if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
                     {
-                        // 如果 fileName 已有值但没有扩展名，添加默认扩展名
-                        if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
-                        {
-                            fileExtension = ".jpg";
-                            fileName += fileExtension;
-                        }
+                        fileName += ".jpg";
                     }
-
-                    // 生成文件ID
-                    string fileId;
-                    long fileIdLong;
-
-                    // 生成唯一的long型ID
-                    fileIdLong = GenerateUniqueLongId();
-                    CurrentFileIdLong = fileIdLong;
-
-
-                    // 直接注册到图片状态管理器（同步调用，确保添加到待上传列表）
+                    
+                    valueImageWeb.OriginalFileName = fileName;
+                    
+                    // 生成新的文件ID
+                    long newFileId = GenerateUniqueLongId();
+                    valueImageWeb.FileId = newFileId;
+                    CurrentFileIdLong = newFileId;
+                    
+                    // 注册到状态管理器
                     if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
                     {
-                        // 保存完整文件名（包含扩展名）到状态管理器
-                        ImageStateManager.Instance.AddImage(cell, 0, fileName, destination, ImageStatus.PendingUpload);
+                        ImageStateManager.Instance.AddImage(cell, newFileId, fileName, buffByte, ImageStatus.PendingUpload);
                     }
-
-                    // 更新控件值
-                    Control.Value = CurrentFileIdLong;//: valueImageWeb.CellImageHashName
-
-                    // 设置显示图片
-                    using (MemoryStream ms = new MemoryStream(NewbuffByte))
+                    
+                    // 更新显示
+                    using (MemoryStream ms = new MemoryStream(buffByte))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
+                    
+                    Control.Value = newFileId;
                 }
                 else
                 {
-                    // 哈希相同，说明图片已经处理过，使用现有的图片数据
-                    destination = valueImageWeb.CellImageBytes;
-
-                    // 检查是否需要注册到状态管理器
-                    if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
-                    {
-                        // 提取文件名和扩展名
-                        if (!string.IsNullOrEmpty(selectedFilePath))
-                        {
-                            fileName = Path.GetFileName(selectedFilePath);
-                            fileExtension = Path.GetExtension(selectedFilePath);
-                        }
-                        else if (string.IsNullOrEmpty(fileName))
-                        {
-                            fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}";
-                            fileExtension = ".jpg";
-                        }
-                        else
-                        {
-                            // 如果 fileName 已有值但没有扩展名，添加默认扩展名
-                            if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
-                            {
-                                fileExtension = ".jpg";
-                                fileName += fileExtension;
-                            }
-                        }
-
-                        // 生成文件ID
-                        long fileIdLong;
-
-                        // 生成唯一的long型ID
-                        fileIdLong = GenerateUniqueLongId();
-
-
-                        // 检查是否已在状态管理器中
-                        var existingImage = ImageStateManager.Instance.GetImageInfo(fileIdLong);
-                        if (existingImage == null)
-                        {
-                            // 保存完整文件名（包含扩展名）到状态管理器
-                            ImageStateManager.Instance.AddImage(cell, fileIdLong, fileName, destination, ImageStatus.PendingUpload);
-                        }
-                    }
+                    // 图片未发生变化，保持原有状态
+                    Control.Value = valueImageWeb.FileId > 0 ? (object)valueImageWeb.FileId : valueImageWeb.OriginalFileName;
                 }
             }
             else if (val is string)
             {
                 return val;
             }
-            Control.Value = valueImageWeb.CellImageHashName;
+            
             return Control.Value;
         }
 

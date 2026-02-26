@@ -567,6 +567,7 @@ namespace RUINORERP.UI.FM
             return fileStorageInfos;
         }
 
+
         /// <summary>
         /// 更新网格单元格图片
         /// </summary>
@@ -598,6 +599,12 @@ namespace RUINORERP.UI.FM
                             valueImageWeb.CellImageBytes = fileStorageInfo.FileData;
                             valueImageWeb.CellImageHashName = fileStorageInfo.StoragePath;
                             valueImageWeb.FileId = fileStorageInfo.FileId;
+                            valueImageWeb.OriginalFileName = fileStorageInfo.OriginalFileName;
+                            valueImageWeb.FileExtension = fileStorageInfo.FileExtension;
+                            valueImageWeb.FileType = fileStorageInfo.FileType;
+                            valueImageWeb.ImageData = fileStorageInfo.FileData;
+                            valueImageWeb.StoragePath = fileStorageInfo.StoragePath;
+                            valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
                             // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                             var gridObj = grid1 as SourceGrid.Grid;
                             var imageCellValue = gridObj?.CreateImageCellValue(fileStorageInfo.FileData, fileStorageInfo.StoragePath, fileStorageInfo.FileId)
@@ -618,6 +625,8 @@ namespace RUINORERP.UI.FM
                 }
             });
         }
+
+
 
         /// <summary>
         /// 加载图片数据

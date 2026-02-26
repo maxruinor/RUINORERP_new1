@@ -706,7 +706,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
     /// <summary>
-    /// 远程图片单元视图的右键菜单
+    /// 远程图片单元视图的右键菜单1
     /// </summary>
     public class PopupMenuForRemoteImageView : SourceGrid.Cells.Controllers.ControllerBase
     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using SourceGrid.Cells.Editors;
 
 namespace SourceGrid.Cells.Models
@@ -305,36 +306,141 @@ namespace SourceGrid.Cells.Models
 
     /// <summary>
     /// 为了对应 远程图片单元格实现的。里面有一个转换器后面再看否也重新写一个。
+    /// 1
     /// </summary>
     public class ValueImageWeb : IImageWeb
     {
-     
+        #region 核心图片数据属性
+        
+        private byte[] _imageData;
+        /// <summary>
+        /// 图片的二进制数据
+        /// 设置时会自动计算并更新哈希值和其他相关属性
+        /// </summary>
+        public byte[] ImageData 
+        { 
+            get { return _imageData; }
+            set 
+            { 
+                _imageData = value;
+                UpdateImageProperties();
+            } 
+        }
+        
+        /// <summary>
         /// 图片内容的哈希值，用于快速比较图片是否发生变化
-        public string ContentHash { get; set; } = string.Empty;
-
+        /// </summary>
+        public string ContentHash { get; private set; } = string.Empty;
+        
+        #endregion
+        
+        #region 文件信息属性
+        
         /// <summary>
         /// 文件ID，用于识别和分辨图片的唯一性
         /// </summary>
         public long FileId { get; set; }
-
-        private string _CellImageHashName;
-
+        
+        private string _originalFileName = string.Empty;
         /// <summary>
-        /// 图片的原始文件名，用于显示和标识
+        /// 原始文件名（包含扩展名）
+        /// </summary>
+        public string OriginalFileName
+        {
+            get { return _originalFileName; }
+            set 
+            { 
+                _originalFileName = value ?? string.Empty;
+                UpdateFileExtension();
+            }
+        }
+        
+        private string _fileExtension = string.Empty;
+        /// <summary>
+        /// 文件扩展名（如 .jpg, .png）
+        /// </summary>
+        public string FileExtension
+        {
+            get { return _fileExtension; }
+            set { _fileExtension = value ?? string.Empty; }
+        }
+        
+        /// <summary>
+        /// 文件大小（字节）
+        /// </summary>
+        public long FileSize { get; private set; }
+        
+        /// <summary>
+        /// 文件类型（MIME类型）
+        /// </summary>
+        public string FileType { get; set; } = string.Empty;
+        
+        #endregion
+        
+        #region 存储路径属性
+        
+        private string _storagePath = string.Empty;
+        /// <summary>
+        /// 存储路径（相对路径）
+        /// </summary>
+        public string StoragePath
+        {
+            get { return _storagePath; }
+            set { _storagePath = value ?? string.Empty; }
+        }
+        
+        private string _storageFileName = string.Empty;
+        /// <summary>
+        /// 存储文件名（不包含路径）
+        /// </summary>
+        public string StorageFileName
+        {
+            get { return _storageFileName; }
+            set { _storageFileName = value ?? string.Empty; }
+        }
+        
+        #endregion
+        
+        #region 兼容性属性（为向后兼容保留）
+        
+        /// <summary>
+        /// 兼容性属性：图片的原始文件名
         /// </summary>
         public string CellImageHashName
         {
-            get
-            {
-                return _CellImageHashName;
-            }
-            set
-            {
-                this._CellImageHashName = value;
-            }
+            get { return OriginalFileName; }
+            set { OriginalFileName = value ?? string.Empty; }
         }
-
-
+        
+        /// <summary>
+        /// 兼容性属性：图片的二进制数据
+        /// </summary>
+        public byte[] CellImageBytes
+        {
+            get { return ImageData; }
+            set { ImageData = value; }
+        }
+        
+        #endregion
+        
+        #region 构造函数
+        
+        public static readonly ValueImageWeb Default = new ValueImageWeb();
+        
+        public ValueImageWeb()
+        {
+        }
+        
+        public ValueImageWeb(byte[] imageData, string originalFileName = null)
+        {
+            ImageData = imageData;
+            OriginalFileName = originalFileName ?? $"Image_{DateTime.Now:yyyyMMddHHmmss}";
+        }
+        
+        #endregion
+        
+        #region 公共方法
+        
         /// <summary>
         /// 获取图片内容的哈希值
         /// </summary>
@@ -343,49 +449,105 @@ namespace SourceGrid.Cells.Models
         {
             return ContentHash ?? string.Empty;
         }
-
-
-
+        
         /// <summary>
-        /// 手动设置图片哈希值（通常不需要直接调用，设置CellImageBytes会自动更新）
+        /// 手动设置图片哈希值（通常不需要直接调用）
         /// </summary>
         /// <param name="paraNewHash"></param>
         public void SetImageNewHash(string paraNewHash)
         {
             ContentHash = paraNewHash ?? string.Empty;
         }
-
-
-        private byte[] _cellImageBytes;
         
         /// <summary>
-        /// 单元格的图片数据，以base64的形式保存
-        /// 设置时会自动计算并更新ContentHash
+        /// 判断图片数据是否为空
         /// </summary>
-        public byte[] CellImageBytes 
-        { 
-            get { return _cellImageBytes; }
-            set 
-            { 
-                _cellImageBytes = value;
-                // 自动更新ContentHash
-                if (value != null && value.Length > 0)
-                {
-                    ContentHash = ImageHashHelper.GenerateHash(value);
-                }
-                else
-                {
-                    ContentHash = string.Empty;
-                }
-            } 
-        }
-
-
-        public static readonly ValueImageWeb Default = new ValueImageWeb();
-        public ValueImageWeb()
+        /// <returns></returns>
+        public bool IsEmpty()
         {
-
+            return ImageData == null || ImageData.Length == 0;
         }
+        
+        /// <summary>
+        /// 清空所有图片数据
+        /// </summary>
+        public void Clear()
+        {
+            _imageData = null;
+            ContentHash = string.Empty;
+            FileSize = 0;
+            OriginalFileName = string.Empty;
+            FileExtension = string.Empty;
+            StoragePath = string.Empty;
+            StorageFileName = string.Empty;
+            FileId = 0;
+        }
+        
+        /// <summary>
+        /// 克隆当前对象
+        /// </summary>
+        /// <returns></returns>
+        public ValueImageWeb Clone()
+        {
+            var clone = new ValueImageWeb
+            {
+                FileId = this.FileId,
+                OriginalFileName = this.OriginalFileName,
+                FileExtension = this.FileExtension,
+                FileSize = this.FileSize,
+                FileType = this.FileType,
+                StoragePath = this.StoragePath,
+                StorageFileName = this.StorageFileName,
+                ContentHash = this.ContentHash
+            };
+            
+            if (this.ImageData != null)
+            {
+                clone.ImageData = new byte[this.ImageData.Length];
+                Buffer.BlockCopy(this.ImageData, 0, clone.ImageData, 0, this.ImageData.Length);
+            }
+            
+            return clone;
+        }
+        
+        #endregion
+        
+        #region 私有辅助方法
+        
+        /// <summary>
+        /// 更新图片相关属性（哈希值、文件大小等）
+        /// </summary>
+        private void UpdateImageProperties()
+        {
+            if (_imageData != null && _imageData.Length > 0)
+            {
+                ContentHash = ImageHashHelper.GenerateHash(_imageData);
+                FileSize = _imageData.Length;
+            }
+            else
+            {
+                ContentHash = string.Empty;
+                FileSize = 0;
+            }
+        }
+        
+        /// <summary>
+        /// 根据原始文件名更新文件扩展名
+        /// </summary>
+        private void UpdateFileExtension()
+        {
+            if (!string.IsNullOrEmpty(_originalFileName))
+            {
+                _fileExtension = Path.GetExtension(_originalFileName)?.ToLowerInvariant() ?? string.Empty;
+            }
+            else
+            {
+                _fileExtension = string.Empty;
+            }
+        }
+        
+        #endregion
+        
         //这一行确定了这个值的类型，所以这里不用再写一个转换器了
         private DevAge.ComponentModel.Validator.ValidatorTypeConverter imageConverter =
             new DevAge.ComponentModel.Validator.ValidatorTypeConverter(typeof(string));

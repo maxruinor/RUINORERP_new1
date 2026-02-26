@@ -796,14 +796,16 @@ namespace RUINORERP.UI.Network
                 }
 
                 // 创建心跳请求，只包含必要信息
+                var tokenInfo = await _tokenManager.TokenStorage.GetTokenAsync();
+                var sessionToken = tokenInfo?.AccessToken;
+                
                 var heartbeatRequest = new HeartbeatRequest
                 {
                     UserId = userId,
                     ClientId = _socketClient.ClientID,
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
-                        //
-                        //SessionToken=
+                    SessionToken = sessionToken,
                     ResourceUsage = CollectClientResourceUsage()
                 };
 

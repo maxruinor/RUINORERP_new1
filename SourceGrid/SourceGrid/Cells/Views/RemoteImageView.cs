@@ -115,7 +115,7 @@ namespace SourceGrid.Cells.Views
         public event LoadImageDelegate OnLoadImage;
 
         //不显示图片的原因是第一次加载时先执行了 PrepareView，再draw内容。但是目前是值的变化事件中用了刷新
-
+        //是否能实现不重复预览。如果数据相同
 
         protected override void PrepareView(CellContext context)
         {

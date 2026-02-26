@@ -1227,6 +1227,15 @@ namespace RUINORERP.UI.BaseForm
                     {
                         var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(imageInfo);
                         fileStorageInfo.OwnerTableName = typeof(T).Name;
+                        
+                        // 确保所有必要的属性都有值
+                        fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
+                        fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
+                        fileStorageInfo.StorageFileName = fileStorageInfo.StorageFileName;
+                        fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
+                        fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
+                        fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
+                        
                         if (fileStorageInfo != null)
                         {
                             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);

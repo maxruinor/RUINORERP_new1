@@ -154,8 +154,8 @@ namespace RUINORERP.UI.Network.Services
         /// 删除图片文件（重载方法，直接使用文件存储信息对象）
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息对象</param>
-        /// <param name="bizType">业务类型</param>
-        /// <param name="bizNo">业务编号</param>
+        /// <param name="BusinessId">业务ID</param>
+        /// <param name="OwnerTableName">业务表名</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件删除响应</returns>
         public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, long BusinessId, string OwnerTableName, CancellationToken ct = default)
@@ -171,10 +171,20 @@ namespace RUINORERP.UI.Network.Services
             if (!IsValidImageFile(fileStorageInfo))
                 return FileDeleteResponse.CreateFailure("只能删除图片文件");
 
+            // 确保文件存储信息的所有必要属性都有值
+            fileStorageInfo.OwnerTableName = OwnerTableName;
+            fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
+            fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
+            fileStorageInfo.StorageFileName = fileStorageInfo.StorageFileName ?? $"{fileStorageInfo.FileId}_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileStorageInfo.OriginalFileName)}";
+            fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
+            fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
+            fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
+            fileStorageInfo.Description = fileStorageInfo.Description ?? string.Empty;
+            fileStorageInfo.Metadata = fileStorageInfo.Metadata ?? string.Empty;
+
             // 创建删除请求
             var deleteRequest = new FileDeleteRequest();
             deleteRequest.InitializeCompatibility();
-            fileStorageInfo.OwnerTableName = OwnerTableName;
             deleteRequest.BusinessId = BusinessId;
             deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
 

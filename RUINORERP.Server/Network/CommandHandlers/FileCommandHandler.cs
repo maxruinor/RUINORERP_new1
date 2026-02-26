@@ -814,6 +814,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 所有数据库操作逻辑都在服务器端处理
         /// 集成事务处理，确保删除操作的原子性
         /// 如果没有其它业务引用则删除文件本身和tb_FS_FileStorageInfo的文件存储信息的数据行
+        /// 要先删除业务性的再删除文件信息。因为数据库有引用外键约束，如果先删除文件信息，业务性的关联记录会因为找不到文件信息而无法删除，导致数据不一致。
         /// </summary>
         private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {

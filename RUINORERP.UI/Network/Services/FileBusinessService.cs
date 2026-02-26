@@ -333,12 +333,22 @@ namespace RUINORERP.UI.Network.Services
                 Created_at = imageInfo.CreateTime,
                 Modified_at = imageInfo.ModifiedAt,
 
-                // 设置默认值
+                // 存储相关属性
                 StorageProvider = "Local", // 默认本地存储
+                StoragePath = string.Empty,
+                StorageFileName = string.Empty,
+                
+                // 版本和状态
                 CurrentVersion = 1,         // 初始版本
-                FileStatus = (int)FileStatus.Active,                 // 正常状态
+                FileStatus = (int)FileStatus.Active, // 正常状态
                 ExpireTime = DateTime.MaxValue, // 永不过期
-                StoragePath = string.Empty
+                
+                // 其他属性
+                Description = string.Empty,
+                Created_by = null,
+                Modified_by = null,
+                Metadata = string.Empty,
+                isdeleted = false
             };
 
             // 处理元数据
@@ -355,7 +365,7 @@ namespace RUINORERP.UI.Network.Services
                     {
                         // 可以根据实际需要将字典转换为JSON格式或其他格式
                         // 这里简单地存储一些关键信息
-                        fileStorageInfo.Metadata = string.Join(";", imageInfo.Metadata.Select(kv => $"{kv.Key}={kv.Value}"));
+                        fileStorageInfo.Metadata = string.Join("; ", imageInfo.Metadata.Select(kv => $"{kv.Key}={kv.Value}"));
                     }
 
                     // 从元数据中提取存储信息
@@ -367,6 +377,32 @@ namespace RUINORERP.UI.Network.Services
                     if (imageInfo.Metadata.TryGetValue("StoragePath", out string storagePath))
                     {
                         fileStorageInfo.StoragePath = storagePath;
+                    }
+                    
+                    if (imageInfo.Metadata.TryGetValue("StorageFileName", out string storageFileName))
+                    {
+                        fileStorageInfo.StorageFileName = storageFileName;
+                    }
+                    
+                    if (imageInfo.Metadata.TryGetValue("Description", out string description))
+                    {
+                        fileStorageInfo.Description = description;
+                    }
+                    
+                    if (imageInfo.Metadata.TryGetValue("Created_by", out string createdBy))
+                    {
+                        if (long.TryParse(createdBy, out long createdByValue))
+                        {
+                            fileStorageInfo.Created_by = createdByValue;
+                        }
+                    }
+                    
+                    if (imageInfo.Metadata.TryGetValue("Modified_by", out string modifiedBy))
+                    {
+                        if (long.TryParse(modifiedBy, out long modifiedByValue))
+                        {
+                            fileStorageInfo.Modified_by = modifiedByValue;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -448,6 +484,7 @@ namespace RUINORERP.UI.Network.Services
 
                 // 获取业务编号
                 long businessId = entity.PrimaryKeyID;
+                string ownerTableName = entity.GetType().Name;
 
                 // 创建删除请求
                 FileDeleteRequest deleteRequest = new FileDeleteRequest();
@@ -455,9 +492,11 @@ namespace RUINORERP.UI.Network.Services
                 
                 deleteRequest.PhysicalDelete = physicalDelete;
 
+                List<tb_FS_FileStorageInfo> fileStorageInfos = new List<tb_FS_FileStorageInfo>();
+                
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
                 {
-                    deleteRequest.AddDeleteFileStorageInfo(entity.FileStorageInfoList);
+                    fileStorageInfos = entity.FileStorageInfoList;
                 }
                 else
                 {
@@ -465,9 +504,29 @@ namespace RUINORERP.UI.Network.Services
                     var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     // 获取当前业务实体关联的所有文件关系
                     var businessRelationList = await businessRelationService.QueryByNavAsync(c =>
-                        c.OwnerTableName == entity.GetType().Name && c.BusinessId == businessId);
-                    deleteRequest.AddDeleteFileStorageInfo(businessRelationList.Select(x => x.tb_fs_filestorageinfo).ToList());
+                        c.OwnerTableName == ownerTableName && c.BusinessId == businessId);
+                    fileStorageInfos = businessRelationList.Select(x => x.tb_fs_filestorageinfo).ToList();
                 }
+                
+                // 确保所有文件存储信息的必要属性都有值
+                foreach (var fileStorageInfo in fileStorageInfos)
+                {
+                    if (fileStorageInfo != null)
+                    {
+                        fileStorageInfo.OwnerTableName = ownerTableName;
+                        fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
+                        fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
+                        fileStorageInfo.StorageFileName = fileStorageInfo.StorageFileName ?? $"{fileStorageInfo.FileId}_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileStorageInfo.OriginalFileName)}";
+                        fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
+                        fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
+                        fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
+                        fileStorageInfo.Description = fileStorageInfo.Description ?? string.Empty;
+                        fileStorageInfo.Metadata = fileStorageInfo.Metadata ?? string.Empty;
+                        
+                        deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                    }
+                }
+                
                 // 执行删除
                 deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
                 return deleteResponse;

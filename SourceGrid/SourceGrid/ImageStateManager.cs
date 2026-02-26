@@ -17,7 +17,7 @@ namespace SourceGrid
         /// <summary>
         /// 图片ID
         /// </summary>
-        public string ImageId { get; set; }
+        public long ImageId { get; set; }
 
         /// <summary>
         /// 图片文件名
@@ -82,16 +82,16 @@ namespace SourceGrid
 
         private ImageStateManager()
         {
-            _imageInfoDict = new ConcurrentDictionary<string, ExtendedImageInfo>();
-            _cellToImageDict = new ConcurrentDictionary<Cell, List<string>>();
+            _imageInfoDict = new ConcurrentDictionary<long, ExtendedImageInfo>();
+            _cellToImageDict = new ConcurrentDictionary<Cell, List<long>>();
         }
 
         #endregion
 
         #region 私有字段
 
-        private readonly ConcurrentDictionary<string, ExtendedImageInfo> _imageInfoDict;
-        private readonly ConcurrentDictionary<Cell, List<string>> _cellToImageDict;
+        private readonly ConcurrentDictionary<long, ExtendedImageInfo> _imageInfoDict;
+        private readonly ConcurrentDictionary<Cell, List<long>> _cellToImageDict;
 
         #endregion
 
@@ -105,7 +105,7 @@ namespace SourceGrid
         /// <param name="fileName">文件名</param>
         /// <param name="imageData">图片数据</param>
         /// <param name="status">图片状态</param>
-        public void AddImage(Cell cell, string imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal)
+        public void AddImage(Cell cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal)
         {
             lock (_lockObject)
             {
@@ -126,7 +126,7 @@ namespace SourceGrid
                 // 建立单元格到图片的映射
                 if (!_cellToImageDict.ContainsKey(cell))
                 {
-                    _cellToImageDict[cell] = new List<string>();
+                    _cellToImageDict[cell] = new List<long>();
                 }
                 
                 if (!_cellToImageDict[cell].Contains(imageId))
@@ -143,7 +143,7 @@ namespace SourceGrid
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片信息</returns>
-        public ExtendedImageInfo GetImageInfo(string imageId)
+        public ExtendedImageInfo GetImageInfo(long imageId)
         {
             _imageInfoDict.TryGetValue(imageId, out var imageInfo);
             return imageInfo;
@@ -177,7 +177,7 @@ namespace SourceGrid
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <param name="newStatus">新状态</param>
-        public void UpdateImageStatus(string imageId, ImageStatus newStatus)
+        public void UpdateImageStatus(long imageId, ImageStatus newStatus)
         {
             lock (_lockObject)
             {
@@ -194,7 +194,7 @@ namespace SourceGrid
         /// 删除图片信息
         /// </summary>
         /// <param name="imageId">图片ID</param>
-        public void RemoveImage(string imageId)
+        public void RemoveImage(long imageId)
         {
             lock (_lockObject)
             {
@@ -243,7 +243,7 @@ namespace SourceGrid
         /// 获取所有待删除的图片ID列表
         /// </summary>
         /// <returns>待删除图片ID列表</returns>
-        public List<string> GetPendingDeleteImageIds()
+        public List<long> GetPendingDeleteImageIds()
         {
             return _imageInfoDict.Values
                 .Where(x => x.Status == ImageStatus.PendingDelete)
@@ -258,9 +258,9 @@ namespace SourceGrid
         /// </summary>
         /// <param name="cell">单元格</param>
         /// <returns>待删除图片ID列表</returns>
-        public List<string> GetPendingDeleteImagesByCell(Cell cell)
+        public List<long> GetPendingDeleteImagesByCell(Cell cell)
         {
-            var result = new List<string>();
+            var result = new List<long>();
             
             if (_cellToImageDict.TryGetValue(cell, out var imageIds))
             {
@@ -355,7 +355,7 @@ namespace SourceGrid
         /// 批量删除已处理的图片
         /// </summary>
         /// <param name="processedImageIds">已处理的图片ID列表</param>
-        public void RemoveProcessedImages(List<string> processedImageIds)
+        public void RemoveProcessedImages(List<long> processedImageIds)
         {
             if (processedImageIds == null || processedImageIds.Count == 0)
                 return;

@@ -460,7 +460,8 @@ namespace RUINORERP.UI.Network.Services
                     deleteRequest.AddDeleteFileStorageInfo(entity.FileStorageInfoList);
                 }
                 else
-                {  // 获取文件关联服务
+                {
+                    // 获取文件关联服务
                     var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
                     // 获取当前业务实体关联的所有文件关系
                     var businessRelationList = await businessRelationService.QueryByNavAsync(c =>
@@ -475,6 +476,35 @@ namespace RUINORERP.UI.Network.Services
             {
                 _logger?.LogError(ex, "批量删除图片失败");
                 return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>("批量删除图片失败");
+            }
+        }
+
+        /// <summary>
+        /// 根据路径获取文件信息
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>文件存储信息</returns>
+        public async Task<tb_FS_FileStorageInfo> GetFileInfoByPath(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return null;
+
+            try
+            {
+                // 使用db.CopyNew()创建独立的数据库连接上下文
+                var db = _unitOfWorkManage.GetDbClient().CopyNew();
+
+                // 尝试根据路径查找文件信息
+                var fileInfo = await db.Queryable<tb_FS_FileStorageInfo>()
+                    .Where(c => c.StoragePath == filePath || c.StorageFileName == filePath)
+                    .FirstAsync();
+
+                return fileInfo;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "根据路径获取文件信息失败");
+                return null;
             }
         }
 

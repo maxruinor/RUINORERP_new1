@@ -32,7 +32,7 @@ namespace SourceGrid.Cells
 
             Model.AddModel(new Models.ToolTip());
             Model.AddModel(new Models.CellImageModel());
-            Model.AddModel(new Models.ValueImageWeb()); //TODO: ����һ��ģʽ��������ʾͼƬ������
+            Model.AddModel(new Models.ValueImageWeb()); //为什么要添加呢？有原因的，不太记得了
             Value = cellValue;
             //DisplayText=
         }

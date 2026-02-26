@@ -4302,7 +4302,7 @@ namespace RUINORERP.UI.BaseForm
                                 foreach (PropertyInfo prop in props)
                                 {
                                     var value = prop.GetValue(detailItem);
-                                    if (value?.ToString() == imageInfo.ImageId)
+                                    if (value.ToLong() == imageInfo.ImageId)
                                     {
                                         detail = detailItem;
                                         break;
@@ -4392,7 +4392,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 根据图片ID查找对应的单元格（遍历所有列）
         /// </summary>
-        private SourceGrid.Cells.Cell FindCellByImageId(Grid grid, string imageId)
+        private SourceGrid.Cells.Cell FindCellByImageId(Grid grid, long imageId)
         {
             try
             {
@@ -4409,10 +4409,10 @@ namespace RUINORERP.UI.BaseForm
                             var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                             if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                             {
-                                if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
-                                {
+                                //if (valueImageWeb.CellImageHashName == imageId || cell.Value?.ToString() == imageId)
+                                //{
                                     return cell;
-                                }
+                                //}
                             }
                         }
                     }

@@ -15,7 +15,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片字节数据</returns>
-        Task<byte[]> DownloadImageAsync(string imageId);
+        Task<byte[]> DownloadImageAsync(long imageId);
 
         /// <summary>
         /// 上传图片
@@ -31,14 +31,14 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>删除结果</returns>
-        Task<bool> DeleteImageAsync(string imageId);
+        Task<bool> DeleteImageAsync(long imageId);
 
         /// <summary>
         /// 获取图片信息
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片信息</returns>
-        Task<GridImageInfo> GetImageInfoAsync(string imageId);
+        Task<GridImageInfo> GetImageInfoAsync(long imageId);
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ namespace SourceGrid.Cells.Views
         /// <summary>
         /// 图片ID
         /// </summary>
-        public string ImageId { get; set; }
+        public long ImageId { get; set; }
 
         /// <summary>
         /// 文件名
@@ -93,7 +93,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片字节数据</returns>
-        public async Task<byte[]> DownloadImageAsync(string imageId)
+        public async Task<byte[]> DownloadImageAsync(long imageId)
         {
             // 这里实现默认的下载逻辑
             // 例如从本地文件系统或默认位置加载图片
@@ -124,7 +124,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>删除结果</returns>
-        public async Task<bool> DeleteImageAsync(string imageId)
+        public async Task<bool> DeleteImageAsync(long imageId)
         {
             // 这里实现默认的删除逻辑
             // 例如从本地文件系统或默认位置删除图片
@@ -138,7 +138,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片信息</returns>
-        public async Task<GridImageInfo> GetImageInfoAsync(string imageId)
+        public async Task<GridImageInfo> GetImageInfoAsync(long imageId)
         {
             // 这里实现默认的获取图片信息逻辑
             // 例如从本地文件系统或默认位置获取图片信息

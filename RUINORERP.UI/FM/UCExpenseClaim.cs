@@ -932,6 +932,29 @@ namespace RUINORERP.UI.FM
                         bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
                         if (uploadImg)
                         {
+                            // 确保明细中的图片列存储的是相对路径（含扩展名）
+                            foreach (var detail in EditEntity.tb_FM_ExpenseClaimDetails)
+                            {
+                                if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
+                                {
+                                    // 确保路径包含文件扩展名
+                                    string ext = System.IO.Path.GetExtension(detail.EvidenceImagePath);
+                                    if (string.IsNullOrEmpty(ext))
+                                    {
+                                        // 如果没有扩展名，尝试从原始文件名获取
+                                        var fileService = Startup.GetFromFac<FileBusinessService>();
+                                        var fileInfo = await fileService.GetFileInfoByPath(detail.EvidenceImagePath);
+                                        if (fileInfo != null && !string.IsNullOrEmpty(fileInfo.OriginalFileName))
+                                        {
+                                            string originalExt = System.IO.Path.GetExtension(fileInfo.OriginalFileName);
+                                            if (!string.IsNullOrEmpty(originalExt))
+                                            {
+                                                detail.EvidenceImagePath += originalExt;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
                         }
                         else
@@ -941,7 +964,7 @@ namespace RUINORERP.UI.FM
                         }
 
                         // 清理已处理的图片状态
-                        var processedImageIds = new List<string>(pendingDeleteImages);
+                        var processedImageIds = new List<long>(pendingDeleteImages);
                         processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
                         ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
 
@@ -1209,7 +1232,7 @@ namespace RUINORERP.UI.FM
         /// </summary>
         /// <param name="pendingDeleteImageIds">待删除图片ID列表</param>
         /// <returns>删除是否成功</returns>
-        private async Task<bool> DeletePendingImagesAsync(List<string> pendingDeleteImageIds)
+        private async Task<bool> DeletePendingImagesAsync(List<long> pendingDeleteImageIds)
         {
             try
             {
@@ -1230,21 +1253,12 @@ namespace RUINORERP.UI.FM
                         deleteRequest.OwnerTableName = typeof(tb_FM_ExpenseClaim).Name;
                         deleteRequest.PhysicalDelete = true; // 允许物理删除
 
-                        // 尝试解析为文件ID
-                        if (long.TryParse(imageId, out long fileId))
-                        {
-                            // 如果是数字ID，直接使用
-                            deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = fileId });
-                        }
-                        else
-                        {
-                            // 如果是路径，记录警告但继续处理
-                            MainForm.Instance.logger.LogWarning($"图片ID不是有效的数字格式: {imageId}");
-                            continue;
-                        }
+                        // 如果是数字ID，直接使用
+                        deleteRequest.AddDeleteFileStorageInfo(new tb_FS_FileStorageInfo { FileId = imageId });
+
 
                         var deleteResult = await fileService.DeleteFileAsync(deleteRequest);
-                        
+
                         if (deleteResult != null && deleteResult.IsSuccess)
                         {
                             successCount++;

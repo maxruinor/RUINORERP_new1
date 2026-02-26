@@ -1,4 +1,4 @@
-﻿﻿using System;
+using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -41,7 +41,7 @@ namespace SourceGrid.Cells.Views
 
         private System.Drawing.Image _GridImage;
         private bool _disposed = false;
-        private string _pendingFileId;
+        private long _pendingFileId;
         private Task<System.Drawing.Image> _imageLoadTask;
         private bool _enableAsyncLoading = true;
         private bool _enableMemoryOptimization = true;
@@ -69,7 +69,7 @@ namespace SourceGrid.Cells.Views
         /// <summary>
         /// 当前文件ID
         /// </summary>
-        public string CurrentFileId { get; private set; }
+        public long CurrentFileId { get; private set; }
 
         /// <summary>
         /// 图片加载完成事件
@@ -169,7 +169,7 @@ namespace SourceGrid.Cells.Views
                     }
                     else if (!string.IsNullOrEmpty(icv.ImagePath))
                     {
-                        _pendingFileId = icv.ImagePath;
+                        _pendingFileId = icv.FileStorageId.Value;
                         CurrentFileId = _pendingFileId;
                         if (_enableAsyncLoading)
                         {
@@ -225,10 +225,10 @@ namespace SourceGrid.Cells.Views
                 }
 
             }
-            else if (context.Value is string && GridImage == null)
-                {
-                    _pendingFileId = context.Value.ToString();
-                    CurrentFileId = _pendingFileId;
+            else if (context.Value is long && GridImage == null)
+            {
+                _pendingFileId = long.Parse(context.Value.ToString());
+                CurrentFileId = _pendingFileId;
 
                 if (_enableAsyncLoading)
                 {
@@ -256,9 +256,6 @@ namespace SourceGrid.Cells.Views
             //显示图片  要是图片列才处理
             if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
             {
-                //end by watson 2024-08-28 TODO:
-                //PrepareVisualElementImage(context);
-
                 //Read the image
                 if (context.Value is ImageCellValue icv)
                 {
@@ -290,9 +287,9 @@ namespace SourceGrid.Cells.Views
                         }
                         GridImage = img;
                     }
-                    else if (!string.IsNullOrEmpty(icv.ImagePath))
+                    else if (icv.FileStorageId.HasValue && icv.FileStorageId.Value>0)
                     {
-                        _pendingFileId = icv.ImagePath;
+                        _pendingFileId = icv.FileStorageId.Value;
                         CurrentFileId = _pendingFileId;
                         if (_enableAsyncLoading)
                         {
@@ -348,9 +345,9 @@ namespace SourceGrid.Cells.Views
                 }
 
             }
-            else if (context.Value is string && GridImage == null)
+            else if (context.Value is long && GridImage == null)
             {
-                _pendingFileId = context.Value.ToString();
+                _pendingFileId =long.Parse(context.Value.ToString());
                 CurrentFileId = _pendingFileId;
 
                 if (_enableAsyncLoading)
@@ -378,7 +375,7 @@ namespace SourceGrid.Cells.Views
             {
                 // 使用局部变量避免多线程问题
                 var currentImage = GridImage;
-                
+
                 // 检查GridImage是否有效
                 if (currentImage != null)
                 {
@@ -449,7 +446,7 @@ namespace SourceGrid.Cells.Views
             {
                 // 获取图片状态
                 var status = GetImageStatus();
-                
+
                 // 根据状态绘制不同的标记
                 switch (status)
                 {
@@ -654,9 +651,9 @@ namespace SourceGrid.Cells.Views
         /// <summary>
         /// 图片对象（优化内存管理）
         /// </summary>
-        public System.Drawing.Image GridImage 
-        { 
-            get => _GridImage; 
+        public System.Drawing.Image GridImage
+        {
+            get => _GridImage;
             set
             {
                 // 释放旧图片
@@ -704,9 +701,9 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <param name="context">单元格上下文</param>
-        private async void LoadImageAsync(string fileId, CellContext context)
+        private async void LoadImageAsync(long fileId, CellContext context)
         {
-            if (string.IsNullOrEmpty(fileId))
+            if (fileId == 0)
                 return;
 
             // 取消之前的加载任务
@@ -726,7 +723,13 @@ namespace SourceGrid.Cells.Views
                     // 使用缓存管理器异步加载图片
                     return await ImageCacheManager.Instance.GetImageAsync(
                         fileId,
-                        async (id) => await LoadImageDataAsync(id, context)
+                        async (id) =>
+                        {
+
+                            return await LoadImageDataAsync(fileId, context);
+
+
+                        }
                     );
                 }
                 catch (Exception ex)
@@ -766,7 +769,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <param name="context">单元格上下文</param>
-        private void LoadImageSync(string fileId, CellContext context)
+        private void LoadImageSync(long fileId, CellContext context)
         {
             try
             {
@@ -784,7 +787,13 @@ namespace SourceGrid.Cells.Views
                             // 尝试从缓存加载
                             GridImage = ImageCacheManager.Instance.GetImage(
                                 fileId,
-                                (id) => LoadImageDataSync(id, context)
+                                (id) =>
+                                {
+                                    // 尝试将string转换为long
+                                     
+                                        return LoadImageDataSync(id, context);
+                                   
+                                }
                             );
                         }
                     }
@@ -802,7 +811,7 @@ namespace SourceGrid.Cells.Views
         /// <param name="fileId">文件ID</param>
         /// <param name="context">单元格上下文</param>
         /// <returns>图片字节数据</returns>
-        private async Task<byte[]> LoadImageDataAsync(string fileId, CellContext context)
+        private async Task<byte[]> LoadImageDataAsync(long fileId, CellContext context)
         {
             return await Task.Run(() => LoadImageDataSync(fileId, context));
         }
@@ -813,7 +822,7 @@ namespace SourceGrid.Cells.Views
         /// <param name="fileId">文件ID</param>
         /// <param name="context">单元格上下文</param>
         /// <returns>图片字节数据</returns>
-        private byte[] LoadImageDataSync(string fileId, CellContext context)
+        private byte[] LoadImageDataSync(long fileId, CellContext context)
         {
             try
             {
@@ -823,14 +832,19 @@ namespace SourceGrid.Cells.Views
                     var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                     {
-                        return valueImageWeb.CellImageBytes;
+                        // 检查FileId是否匹配，确保获取正确的图片数据
+                        if (valueImageWeb.FileId == fileId || valueImageWeb.FileId == 0) // 0表示未设置
+                        {
+                            return valueImageWeb.CellImageBytes;
+                        }
                     }
                 }
 
                 // 尝试从本地文件加载
-                if (File.Exists(fileId))
+                string filePath = fileId.ToString();
+                if (File.Exists(filePath))
                 {
-                    return File.ReadAllBytes(fileId);
+                    return File.ReadAllBytes(filePath);
                 }
 
                 return null;
@@ -917,7 +931,7 @@ namespace SourceGrid.Cells.Views
             {
                 // 使用GridImageService上传图片
                 string imageId = await GridImageServiceManager.CurrentService.UploadImageAsync(imageBytes, fileName, businessType);
-                
+
                 // 触发上传完成事件
                 ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, true));
                 return imageId;
@@ -935,13 +949,13 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>删除结果</returns>
-        public async Task<bool> DeleteImageAsync(string imageId)
+        public async Task<bool> DeleteImageAsync(long imageId)
         {
             try
             {
                 // 使用GridImageService删除图片
                 bool result = await GridImageServiceManager.CurrentService.DeleteImageAsync(imageId);
-                
+
                 // 触发删除完成事件
                 ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, result));
                 return result;
@@ -959,7 +973,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片字节数据</returns>
-        public async Task<byte[]> DownloadImageAsync(string imageId)
+        public async Task<byte[]> DownloadImageAsync(long imageId)
         {
             try
             {
@@ -979,7 +993,7 @@ namespace SourceGrid.Cells.Views
         /// </summary>
         /// <param name="imageId">图片ID</param>
         /// <returns>图片信息</returns>
-        public async Task<GridImageInfo> GetImageInfoAsync(string imageId)
+        public async Task<GridImageInfo> GetImageInfoAsync(long imageId)
         {
             try
             {
@@ -1021,10 +1035,10 @@ namespace SourceGrid.Cells.Views
     /// </summary>
     public class ImageLoadEventArgs : EventArgs
     {
-        public string FileId { get; }
+        public long FileId { get; }
         public System.Drawing.Image Image { get; }
 
-        public ImageLoadEventArgs(string fileId, System.Drawing.Image image)
+        public ImageLoadEventArgs(long fileId, System.Drawing.Image image)
         {
             FileId = fileId;
             Image = image;
@@ -1036,10 +1050,10 @@ namespace SourceGrid.Cells.Views
     /// </summary>
     public class ImageLoadErrorEventArgs : EventArgs
     {
-        public string FileId { get; }
+        public long FileId { get; }
         public Exception Error { get; }
 
-        public ImageLoadErrorEventArgs(string fileId, Exception error)
+        public ImageLoadErrorEventArgs(long fileId, Exception error)
         {
             FileId = fileId;
             Error = error;
@@ -1068,11 +1082,11 @@ namespace SourceGrid.Cells.Views
     /// </summary>
     public class ImageDeleteEventArgs : EventArgs
     {
-        public string ImageId { get; }
+        public long ImageId { get; }
         public bool Success { get; }
         public Exception Error { get; }
 
-        public ImageDeleteEventArgs(string imageId, bool success, Exception error = null)
+        public ImageDeleteEventArgs(long imageId, bool success, Exception error = null)
         {
             ImageId = imageId;
             Success = success;

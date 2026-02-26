@@ -31,7 +31,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 支持的图片文件扩展名
         /// </summary>
-        private static readonly string[] SupportedImageExtensions = 
+        private static readonly string[] SupportedImageExtensions =
             { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".ico" };
 
         /// <summary>
@@ -70,14 +70,63 @@ namespace SourceGrid.Cells.Editors
         public bool EnableImageEnhancement { get; set; } = true;
 
         /// <summary>
-        /// 当前文件ID
+        /// 当前文件ID（long型）
         /// </summary>
-        public string CurrentFileId { get; private set; }
+        public long CurrentFileIdLong { get; private set; }
+
+
+
+        #endregion
+
+        #region 静态方法
 
         /// <summary>
-        /// 是否使用新的命名策略
+        /// 随机数生成器
         /// </summary>
-        public bool UseNewNamingStrategy { get; set; } = true;
+        private static readonly Random _random = new Random();
+
+        /// <summary>
+        /// 生成唯一的long型ID
+        /// </summary>
+        /// <returns>唯一的long型ID</returns>
+        public static long GenerateUniqueLongId()
+        {
+            // 使用时间戳作为基础
+            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            // 添加随机数以确保唯一性
+            int randomPart = _random.Next(1000, 9999);
+
+            // 组合时间戳和随机数
+            long uniqueId = timestamp * 10000 + randomPart;
+
+            return uniqueId;
+        }
+
+        /// <summary>
+        /// 生成唯一的long型ID（带前缀）
+        /// </summary>
+        /// <param name="prefix">前缀数字（1-999）</param>
+        /// <returns>唯一的long型ID</returns>
+        public static long GenerateUniqueLongId(int prefix)
+        {
+            // 确保前缀在有效范围内
+            if (prefix < 1)
+                prefix = 1;
+            else if (prefix > 999)
+                prefix = 999;
+
+            // 使用时间戳作为基础
+            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            // 添加随机数以确保唯一性
+            int randomPart = _random.Next(10, 99);
+
+            // 组合前缀、时间戳和随机数
+            long uniqueId = prefix * 10000000000000000L + timestamp * 100 + randomPart;
+
+            return uniqueId;
+        }
 
         #endregion
 
@@ -86,7 +135,7 @@ namespace SourceGrid.Cells.Editors
         public readonly static ImageWebPickEditor Default = new ImageWebPickEditor(typeof(string));
 
         #region Constructor
-        
+
         ///web下载图片 只是显示图片名称
         public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
@@ -322,14 +371,14 @@ namespace SourceGrid.Cells.Editors
                         System.Drawing.Image image = Clipboard.GetImage();
                         // 生成带扩展名的文件名
                         fileName = $"Clipboard_{DateTime.Now:yyyyMMddHHmmss}.jpg";
-                        
+
                         bool success = await SetImageToPathAsync(image);
                         if (success)
                         {
                             ValueType = typeof(string);
                             Control.Value = fileName;
                         }
-                        
+
                         // 释放剪贴板图片资源
                         image.Dispose();
                     }
@@ -407,18 +456,10 @@ namespace SourceGrid.Cells.Editors
 
                 // 5. 生成文件ID（使用新策略）
                 string newHash = ImageHashHelper.GenerateHash(compressedBytes);
-                string fileId;
-                
-                if (UseNewNamingStrategy)
-                {
-                    fileId = ImageNamingStrategy.GenerateUniqueFileId(compressedBytes, fileName);
-                    CurrentFileId = fileId;
-                }
-                else
-                {
-                    // 使用原有策略，保持兼容性
-                    fileId = valueImageWeb.realName + "-" + newHash;
-                }
+                long fileIdLong;
+
+                // 生成唯一的long型ID
+                fileIdLong = GenerateUniqueLongId();
 
                 // 6. 检查是否需要更新
                 if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), newHash))
@@ -426,6 +467,7 @@ namespace SourceGrid.Cells.Editors
                     // 7. 保存处理后的图片数据
                     valueImageWeb.SetImageNewHash(newHash);
                     valueImageWeb.CellImageBytes = compressedBytes;
+                    valueImageWeb.FileId = fileIdLong; // 设置FileId属性
                     Control.Tag = compressedBytes;
 
                     // 8. 更新显示图片
@@ -441,18 +483,19 @@ namespace SourceGrid.Cells.Editors
                     }
 
                     // 10. 添加到缓存
-                    if (UseNewNamingStrategy)
-                    {
-                        await AddToCacheAsync(fileId, compressedBytes);
-                    }
+                    await AddToCacheAsync(fileIdLong, compressedBytes);
+
                 }
 
                 // 11. 与图片状态管理系统集成
-                 RegisterImageWithStateManager(fileId, compressedBytes, fileName);
+                RegisterImageWithStateManager(fileIdLong, compressedBytes, fileName);
 
                 // 12. 更新控件值
-                Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
+                Control.Value = fileIdLong;
                 ValueType = typeof(string);
+                
+                // 更新CurrentFileIdLong属性
+                CurrentFileIdLong = fileIdLong;
 
                 return true;
             }
@@ -461,7 +504,7 @@ namespace SourceGrid.Cells.Editors
                 MessageBox.Show($"处理图片时发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-           
+
         }
 
         /// <summary>
@@ -615,14 +658,14 @@ namespace SourceGrid.Cells.Editors
                             var img = System.Drawing.Image.FromFile(filePath);
                             // 保留完整的文件名（包含扩展名）
                             fileName = Path.GetFileName(filePath);
-                            
+
                             bool success = await SetImageToPathAsync(img);
                             if (success)
                             {
                                 ValueType = typeof(string);
                                 Control.Value = fileName;
                             }
-                            
+
                             // 释放图片资源
                             img.Dispose();
                         }
@@ -731,7 +774,7 @@ namespace SourceGrid.Cells.Editors
             {
                 byte[] destination;
                 string fileExtension = string.Empty;
-                
+
                 //实际上比较一下。如果还是相同的图片不用赋值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
                 //看原来有不有哈希值或新旧是否相同，如果不同则更新
@@ -743,7 +786,7 @@ namespace SourceGrid.Cells.Editors
                     valueImageWeb.CellImageBytes = destination;
                     valueImageWeb.SetImageNewHash(NewHash);
                     Control.Tag = destination;
-                    
+
                     // 提取文件名和扩展名（如果是通过文件选择器选择的）
                     if (!string.IsNullOrEmpty(selectedFilePath))
                     {
@@ -764,30 +807,26 @@ namespace SourceGrid.Cells.Editors
                             fileName += fileExtension;
                         }
                     }
-                    
+
                     // 生成文件ID
                     string fileId;
-                    if (UseNewNamingStrategy)
-                    {
-                        fileId = ImageNamingStrategy.GenerateUniqueFileId(destination, fileName);
-                        CurrentFileId = fileId;
-                    }
-                    else
-                    {
-                        fileId = valueImageWeb.realName + "-" + NewHash;
-                    }
-                    
+                    long fileIdLong;
+
+                    // 生成唯一的long型ID
+                    fileIdLong = GenerateUniqueLongId();
+                    CurrentFileIdLong = fileIdLong;
+
+
                     // 直接注册到图片状态管理器（同步调用，确保添加到待上传列表）
                     if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
                     {
                         // 保存完整文件名（包含扩展名）到状态管理器
-                        ImageStateManager.Instance.AddImage(cell, fileId, fileName, destination, ImageStatus.PendingUpload);
-                        System.Diagnostics.Debug.WriteLine($"[ImageWebPicker] 通过文件选择器添加图片，已注册到状态管理器: {fileId}, 文件名: {fileName}");
+                        ImageStateManager.Instance.AddImage(cell, 0, fileName, destination, ImageStatus.PendingUpload);
                     }
-                    
+
                     // 更新控件值
-                    Control.Value = UseNewNamingStrategy ? fileId : valueImageWeb.CellImageHashName;
-                    
+                    Control.Value = CurrentFileIdLong;//: valueImageWeb.CellImageHashName
+
                     // 设置显示图片
                     using (MemoryStream ms = new MemoryStream(NewbuffByte))
                     {
@@ -798,7 +837,7 @@ namespace SourceGrid.Cells.Editors
                 {
                     // 哈希相同，说明图片已经处理过，使用现有的图片数据
                     destination = valueImageWeb.CellImageBytes;
-                    
+
                     // 检查是否需要注册到状态管理器
                     if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
                     {
@@ -822,36 +861,26 @@ namespace SourceGrid.Cells.Editors
                                 fileName += fileExtension;
                             }
                         }
-                        
+
                         // 生成文件ID
-                        string fileId;
-                        if (UseNewNamingStrategy)
-                        {
-                            fileId = ImageNamingStrategy.GenerateUniqueFileId(destination, fileName);
-                            CurrentFileId = fileId;
-                        }
-                        else
-                        {
-                            fileId = valueImageWeb.realName + "-" + NewHash;
-                        }
-                        
+                        long fileIdLong;
+
+                        // 生成唯一的long型ID
+                        fileIdLong = GenerateUniqueLongId();
+
+
                         // 检查是否已在状态管理器中
-                        var existingImage = ImageStateManager.Instance.GetImageInfo(fileId);
+                        var existingImage = ImageStateManager.Instance.GetImageInfo(fileIdLong);
                         if (existingImage == null)
                         {
                             // 保存完整文件名（包含扩展名）到状态管理器
-                            ImageStateManager.Instance.AddImage(cell, fileId, fileName, destination, ImageStatus.PendingUpload);
-                            System.Diagnostics.Debug.WriteLine($"[ImageWebPicker] 图片已存在但未注册，补充注册到状态管理器: {fileId}, 文件名: {fileName}");
+                            ImageStateManager.Instance.AddImage(cell, fileIdLong, fileName, destination, ImageStatus.PendingUpload);
                         }
                     }
                 }
             }
             else if (val is string)
             {
-                //保存为图片
-                //string newIamgeFilePath = @"../temp/" + new Guid().ToString();
-                //System.IO.File.Exists(newIamgeFilePath);
-                //Control.Value = val;//= newIamgeFilePath;
                 return val;
             }
             Control.Value = valueImageWeb.CellImageHashName;
@@ -876,7 +905,7 @@ namespace SourceGrid.Cells.Editors
                         return image;
 
                     var bitmap = new Bitmap(image);
-                    
+
                     // 简单的亮度调整
                     return AdjustBrightness(bitmap, 1.1f);
                 }
@@ -906,12 +935,12 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         /// <param name="fileId">文件ID</param>
         /// <param name="imageData">图片数据</param>
-        private async Task AddToCacheAsync(string fileId, byte[] imageData)
+        private async Task AddToCacheAsync(long fileId, byte[] imageData)
         {
             try
             {
                 await ImageCacheManager.Instance.GetImageAsync(
-                    fileId, 
+                    fileId,
                     async (id) => await Task.FromResult(imageData)
                 );
             }
@@ -934,16 +963,17 @@ namespace SourceGrid.Cells.Editors
             {
                 using (var attributes = new System.Drawing.Imaging.ImageAttributes())
                 {
-                    var matrix = new System.Drawing.Imaging.ColorMatrix {
+                    var matrix = new System.Drawing.Imaging.ColorMatrix
+                    {
                         Matrix00 = brightness,
                         Matrix11 = brightness,
                         Matrix22 = brightness,
                         Matrix33 = 1.0f,
                         Matrix44 = 1.0f
                     };
-                    
+
                     attributes.SetColorMatrix(matrix);
-                    graphics.DrawImage(image, new Rectangle(0, 0, result.Width, result.Height), 
+                    graphics.DrawImage(image, new Rectangle(0, 0, result.Width, result.Height),
                         0, 0, image.Width, image.Height, GraphicsUnit.Pixel, attributes);
                 }
             }
@@ -1040,7 +1070,7 @@ namespace SourceGrid.Cells.Editors
         /// <param name="fileId">文件ID</param>
         /// <param name="imageData">图片数据</param>
         /// <param name="fileName">文件名</param>
-        private void RegisterImageWithStateManager(string fileId, byte[] imageData, string fileName)
+        private void RegisterImageWithStateManager(long fileId, byte[] imageData, string fileName)
         {
             try
             {
@@ -1049,7 +1079,7 @@ namespace SourceGrid.Cells.Editors
                 {
                     // 直接调用ImageStateManager注册图片，确保与删除时使用相同的方式
                     ImageStateManager.Instance.AddImage(cell, fileId, fileName, imageData, ImageStatus.PendingUpload);
-                    
+
                     // 获取单元格位置信息（通过EditCellContext）
                     if (this.EditCellContext != null && !this.EditCellContext.IsEmpty())
                     {
@@ -1060,7 +1090,7 @@ namespace SourceGrid.Cells.Editors
                             System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 单元格位置: Row={position.Row}, Column={position.Column}, ImageId={fileId}");
                         }
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 图片已注册为待上传状态: {fileId}");
                 }
                 else
@@ -1073,7 +1103,7 @@ namespace SourceGrid.Cells.Editors
                 System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 状态管理器注册失败: {ex.Message}");
             }
         }
- 
+
     }
 
 

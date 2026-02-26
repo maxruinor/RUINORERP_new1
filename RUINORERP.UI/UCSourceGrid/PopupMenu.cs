@@ -500,7 +500,7 @@ namespace RUINORERP.UI.UCSourceGrid
                             case "全不选":
                                 grid[row.Index, selectRealIndex].Value = false;
                                 break;
-                            case "反选": 
+                            case "反选":
                                 if (grid[row.Index, selectRealIndex].Value is Boolean bl)
                                 {
                                     grid[row.Index, selectRealIndex].Value = !bl;
@@ -722,7 +722,7 @@ namespace RUINORERP.UI.UCSourceGrid
         private List<KeyValuePair<string, SGDefineColumnItem>> items = new List<KeyValuePair<string, SGDefineColumnItem>>();
 
         SourceGridDefine sgdefine;
-        
+
         /// <summary>
         /// 是否单图模式（true:单图，false:多图）
         /// 单图模式下，有图片时显示"替换图片"，无图片时显示"上传图片"
@@ -736,7 +736,7 @@ namespace RUINORERP.UI.UCSourceGrid
             MyMenu.MinimumSize = new Size(120, 0); // 设置最小宽度为 120，高度不限
                                                    // 为 ContextMenuStrip 控件添加 Opening 事件处理程序
             MyMenu.Opening += new CancelEventHandler(MyMenu_Opening);
-            
+
             _cell = cell;
             grid = _sgdefine.grid;
             sgdefine = _sgdefine;
@@ -922,15 +922,15 @@ namespace RUINORERP.UI.UCSourceGrid
                             string imageId = await imageView.UploadImageAsync(imageBytes, fileName);
                             if (!string.IsNullOrEmpty(imageId))
                             {
-                            // 更新单元格值
+                                // 更新单元格值
                                 cell.Value = imageId;
-                                
+
                                 // 强制重绘
                                 grid.Refresh();
 
                                 // 更新编辑状态
                                 UpdateCellEditState();
-                                
+
                                 MainForm.Instance.PrintInfoLog("图片上传成功: " + fileName);
                             }
                         }
@@ -957,49 +957,55 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         try
                         {
-                            // 获取图片信息 - cell.Value是ImageCellValue对象
-                            var imageCellValue = cell.Value as SourceGrid.Cells.Editors.ImageCellValue;
-                            if (imageCellValue != null)
+                            // 获取ValueImageWeb模型以访问图片数据
+                            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                            if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                             {
-                                // 获取图片ID（ImagePath）
-                                string imageId = imageCellValue.ImagePath;
-                                // 获取图片数据
-                                byte[] imageData = imageCellValue.ImageData;
-                                
-                                if (!string.IsNullOrEmpty(imageId) || imageData != null)
-                                {
-                                    // 获取ValueImageWeb模型以访问图片数据
-                                    var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                                    {
-                                        // 获取图片文件名
-                                        string fileName = valueImageWeb.CellImageHashName ?? imageId;
-                                        
-                                        // 将图片标记为待删除状态，而不是立即删除
-                                        // 注册到ImageStateManager，状态为PendingDelete
-                                        ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete);
-                                        
-                                        // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
-                                        cell.Value = null;
-                                        valueImageWeb.CellImageBytes = null;
-                                        valueImageWeb.CellImageHashName = null;
-                                        
-                                        // 清空ImageCacheManager中的对应缓存
-                                        if (!string.IsNullOrEmpty(fileName))
-                                        {
-                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(fileName);
-                                        }
-                                        
-                                        imageView.GridImage = null;
-                                        
-                                        // 强制重绘
-                                        grid.Refresh();
+                                // 尝试获取图片ID
+                                long imageId = 0;
+                                byte[] imageData = valueImageWeb.CellImageBytes;
+                                string fileName = valueImageWeb.CellImageHashName;
 
-                                        // 更新编辑状态
-                                        UpdateCellEditState();
-                                        
-                                        MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
+                                // 从ImageCellValue中获取图片ID
+                                var imageCellValue = cell.Value as SourceGrid.Cells.Editors.ImageCellValue;
+                                if (imageCellValue != null)
+                                {
+                                    // 检查ImageCellValue是否有FileId属性
+                                    if (imageCellValue.FileStorageId.HasValue)
+                                    {
+                                        imageId = imageCellValue.FileStorageId.Value;
                                     }
+                                }
+
+                                // 确保有有效的图片ID
+                                if (imageId > 0)
+                                {
+                                    // 将图片标记为待删除状态，而不是立即删除
+                                    // 注册到ImageStateManager，状态为PendingDelete
+                                    ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete);
+
+                                    // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
+                                    cell.Value = null;
+                                    valueImageWeb.CellImageBytes = null;
+                                    valueImageWeb.CellImageHashName = null;
+
+                                    // 清空ImageCacheManager中的对应缓存
+                                    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(imageId);
+
+
+                                    imageView.GridImage = null;
+
+                                    // 强制重绘
+                                    grid.Refresh();
+
+                                    // 更新编辑状态
+                                    UpdateCellEditState();
+
+                                    MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
+                                }
+                                else
+                                {
+                                    MainForm.Instance.PrintInfoLog("无法获取图片ID，删除操作失败");
                                 }
                             }
                         }
@@ -1017,7 +1023,7 @@ namespace RUINORERP.UI.UCSourceGrid
             // 替换图片：将旧图片标记为待删除，将新图片标记为待上传
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
-            
+
             // 先处理旧图片
             string oldImageId = cell.Value as string;
             if (!string.IsNullOrEmpty(oldImageId))
@@ -1028,8 +1034,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                     {
                         // 将旧图片标记为待删除状态
-                        ImageStateManager.Instance.UpdateImageStatus(oldImageId, ImageStatus.PendingDelete);
-                        
+                        // ImageStateManager.Instance.UpdateImageStatus(oldImageId, ImageStatus.PendingDelete);
+
                         MainForm.Instance.PrintInfoLog($"旧图片已标记为待删除: {oldImageId}");
                     }
                 }
@@ -1039,7 +1045,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     return;
                 }
             }
-            
+
             // 再选择新图片
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
@@ -1054,22 +1060,22 @@ namespace RUINORERP.UI.UCSourceGrid
                     // 读取图片文件
                     byte[] imageBytes = File.ReadAllBytes(openFileDialog.FileName);
                     string fileName = Path.GetFileName(openFileDialog.FileName);
-                    
+
                     // 生成临时图片ID
-                    string tempImageId = Guid.NewGuid().ToString();
-                    
+                    long tempImageId = GenerateUniqueLongId();
+
                     // 将新图片标记为待上传状态
                     ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, ImageStatus.PendingUpload);
-                    
+
                     // 更新单元格值为临时ID
                     cell.Value = tempImageId;
-                    
+
                     // 强制重绘
                     grid.Refresh();
 
                     // 更新编辑状态
                     UpdateCellEditState();
-                    
+
                     MainForm.Instance.PrintInfoLog($"新图片已标记为待上传: {fileName}");
                 }
                 catch (Exception ex)
@@ -1079,6 +1085,33 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
+
+        #region 静态方法
+
+        /// <summary>
+        /// 随机数生成器
+        /// </summary>
+        private static readonly Random _random = new Random();
+
+        /// <summary>
+        /// 生成唯一的long型ID
+        /// </summary>
+        /// <returns>唯一的long型ID</returns>
+        public static long GenerateUniqueLongId()
+        {
+            // 使用时间戳作为基础
+            long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+            // 添加随机数以确保唯一性
+            int randomPart = _random.Next(1000, 9999);
+
+            // 组合时间戳和随机数
+            long uniqueId = timestamp * 10000 + randomPart;
+
+            return uniqueId;
+        }
+
+        #endregion
         private void SiUpdate_Click(object sender, EventArgs e)
         {
             // 更新图片功能可以复用上传图片的逻辑
@@ -1097,7 +1130,7 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             // 先清空现有菜单项
             MyMenu.Items.Clear();
-            
+
             // 检查是否应该显示菜单
             bool shouldShowMenu = CheckConditionToShowMenu();
             if (!shouldShowMenu)
@@ -1105,11 +1138,11 @@ namespace RUINORERP.UI.UCSourceGrid
                 e.Cancel = true;
                 return;
             }
-            
+
             // 动态创建菜单项
             CreateDynamicMenuItems();
         }
-        
+
         /// <summary>
         /// 动态创建菜单项
         /// </summary>
@@ -1120,11 +1153,11 @@ namespace RUINORERP.UI.UCSourceGrid
             siViewLarge.Tag = _cell;
             siViewLarge.Click += SiCustom_Click;
             MyMenu.Items.Add(siViewLarge);
-            
+
             MyMenu.Items.Add(new ToolStripSeparator());
-            
+
             bool hasImage = HasImageInCell();
-            
+
             if (IsSingleImageMode)
             {
                 // 单图模式
@@ -1135,7 +1168,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     siReplace.Tag = _cell;
                     siReplace.Click += SiReplace_Click;
                     MyMenu.Items.Add(siReplace);
-                    
+
                     // 删除图片
                     ToolStripMenuItem siDelete = new ToolStripMenuItem("删除图片");
                     siDelete.Tag = _cell;
@@ -1159,7 +1192,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 siUpload.Tag = _cell;
                 siUpload.Click += SiUpload_Click;
                 MyMenu.Items.Add(siUpload);
-                
+
                 if (hasImage)
                 {
                     // 有图片时显示"删除图片"
@@ -1170,7 +1203,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 }
             }
         }
-        
+
         /// <summary>
         /// 检查单元格是否有图片
         /// </summary>

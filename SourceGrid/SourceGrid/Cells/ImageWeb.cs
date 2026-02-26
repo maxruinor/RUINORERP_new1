@@ -28,13 +28,16 @@ namespace SourceGrid.Cells
         /// </summary>
         /// <param name="value">单元格值</param>
         public ImageWebCell(object value) : base(value)
-        {
+            {
             // 移除旧的图片模型
-            Model.RemoveModel(Model.FindModel(typeof(Models.CellImageModel)));
-
-            // 添加ValueImageWeb模型以支持远程图片功能
-            var valueImageWeb = new ValueImageWeb();
-            Model.AddModel(valueImageWeb);
+            //Model.RemoveModel(Model.FindModel(typeof(Models.CellImageModel)));
+            //新的远程图片模型。没有则添加。实际 在cell 构造函数中就有添加了一个空的。添加ValueImageWeb模型以支持远程图片功能
+            var valueImageWeb = Model.FindModel(typeof(Models.ValueImageWeb));
+            if (valueImageWeb == null)
+            {
+                valueImageWeb = new ValueImageWeb();
+                Model.AddModel(valueImageWeb);
+            }
 
             // 设置增强的图片编辑器
             if (Editor == null)
@@ -56,7 +59,7 @@ namespace SourceGrid.Cells
             // 如果传入了初始值，进行初始化
             if (value != null)
             {
-                InitializeCellValue(value, valueImageWeb);
+                InitializeCellValue(value, valueImageWeb as ValueImageWeb);
             }
         }
 
@@ -79,7 +82,7 @@ namespace SourceGrid.Cells
                     // Image对象
                     byte[] imageBytes = ImageProcessor.ImageToByteArray(image);
                     string hash = ImageHashHelper.GenerateHash(imageBytes);
-                    
+
                     valueImageWeb.SetImageNewHash(hash);
                     valueImageWeb.CellImageBytes = imageBytes;
                     valueImageWeb.CellImageHashName = hash;
@@ -88,7 +91,7 @@ namespace SourceGrid.Cells
                 {
                     // 字节数组
                     string hash = ImageHashHelper.GenerateHash(imageBytes);
-                    
+
                     valueImageWeb.SetImageNewHash(hash);
                     valueImageWeb.CellImageBytes = imageBytes;
                     valueImageWeb.CellImageHashName = hash;
@@ -105,7 +108,7 @@ namespace SourceGrid.Cells
                             {
                                 byte[] fileImageBytes = ImageProcessor.ImageToByteArray(fileImage);
                                 string hash = ImageHashHelper.GenerateHash(fileImageBytes);
-                                
+
                                 valueImageWeb.SetImageNewHash(hash);
                                 valueImageWeb.CellImageBytes = fileImageBytes;
                                 valueImageWeb.CellImageHashName = hash;
@@ -118,7 +121,7 @@ namespace SourceGrid.Cells
                         }
                     }
                 }
-                
+
                 // 更新单元格的显示值
                 Value = valueImageWeb.CellImageHashName;
             }

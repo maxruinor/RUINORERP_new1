@@ -46,22 +46,22 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 内存缓存：文件ID -> 图片对象
         /// </summary>
-        private readonly ConcurrentDictionary<string, CachedImage> _memoryCache = new ConcurrentDictionary<string, CachedImage>();
+        private readonly ConcurrentDictionary<long, CachedImage> _memoryCache = new ConcurrentDictionary<long, CachedImage>();
 
         /// <summary>
         /// 加载任务缓存：文件ID -> 任务
         /// </summary>
-        private readonly ConcurrentDictionary<string, Task<System.Drawing.Image>> _loadingTasks = new ConcurrentDictionary<string, Task<System.Drawing.Image>>();
+        private readonly ConcurrentDictionary<long, Task<System.Drawing.Image>> _loadingTasks = new ConcurrentDictionary<long, Task<System.Drawing.Image>>();
 
         /// <summary>
         /// 访问记录（用于LRU清理）
         /// </summary>
-        private readonly LinkedList<string> _accessOrder = new LinkedList<string>();
+        private readonly LinkedList<long> _accessOrder = new LinkedList<long>();
 
         /// <summary>
         /// 访问记录的映射：文件ID -> 链表节点
         /// </summary>
-        private readonly ConcurrentDictionary<string, LinkedListNode<string>> _accessNodes = new ConcurrentDictionary<string, LinkedListNode<string>>();
+        private readonly ConcurrentDictionary<long, LinkedListNode<long>> _accessNodes = new ConcurrentDictionary<long, LinkedListNode<long>>();
 
         /// <summary>
         /// 缓存锁
@@ -96,9 +96,9 @@ namespace SourceGrid.Cells.Editors
         /// <param name="imageLoader">图片加载器</param>
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>图片对象</returns>
-        public async Task<System.Drawing.Image> GetImageAsync(string fileId, Func<string, Task<byte[]>> imageLoader, CancellationToken cancellationToken = default)
+        public async Task<System.Drawing.Image> GetImageAsync(long fileId, Func<long, Task<byte[]>> imageLoader, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(fileId))
+            if (fileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(fileId));
 
             if (imageLoader == null)
@@ -132,9 +132,9 @@ namespace SourceGrid.Cells.Editors
         /// <param name="fileId">文件ID</param>
         /// <param name="imageLoader">图片加载器</param>
         /// <returns>图片对象</returns>
-        public System.Drawing.Image GetImage(string fileId, Func<string, byte[]> imageLoader)
+        public System.Drawing.Image GetImage(long fileId, Func<long, byte[]> imageLoader)
         {
-            if (string.IsNullOrEmpty(fileId))
+            if (fileId == 0)
                 throw new ArgumentException("文件ID不能为空", nameof(fileId));
 
             if (imageLoader == null)
@@ -161,13 +161,13 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         /// <param name="fileIds">要预加载的文件ID列表</param>
         /// <param name="imageLoader">图片加载器</param>
-        public async Task PreloadImagesAsync(IEnumerable<string> fileIds, Func<string, Task<byte[]>> imageLoader)
+        public async Task PreloadImagesAsync(IEnumerable<long> fileIds, Func<long, Task<byte[]>> imageLoader)
         {
             if (fileIds == null || imageLoader == null)
                 return;
 
             var preloadTasks = fileIds
-                .Where(fileId => !string.IsNullOrEmpty(fileId) && !IsInMemoryCache(fileId))
+                .Where(fileId => fileId > 0 && !IsInMemoryCache(fileId))
                 .Select(fileId => GetImageAsync(fileId, imageLoader))
                 .ToList();
 
@@ -178,9 +178,9 @@ namespace SourceGrid.Cells.Editors
         /// 清除指定图片的缓存
         /// </summary>
         /// <param name="fileId">文件ID</param>
-        public void ClearCache(string fileId)
+        public void ClearCache(long fileId)
         {
-            if (string.IsNullOrEmpty(fileId))
+            if (fileId == 0)
                 return;
 
             // 清除内存缓存
@@ -246,7 +246,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 从内存缓存获取图片
         /// </summary>
-        private bool TryGetFromMemoryCache(string fileId, out CachedImage cachedImage)
+        private bool TryGetFromMemoryCache(long fileId, out CachedImage cachedImage)
         {
             _cacheLock.EnterUpgradeableReadLock();
             try
@@ -268,7 +268,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 内部图片加载方法
         /// </summary>
-        private async Task<System.Drawing.Image> LoadImageInternal(string fileId, Func<string, Task<byte[]>> imageLoader, CancellationToken cancellationToken)
+        private async Task<System.Drawing.Image> LoadImageInternal(long fileId, Func<long, Task<byte[]>> imageLoader, CancellationToken cancellationToken)
         {
             // 从外部加载
             byte[] imageData = await imageLoader(fileId);
@@ -286,7 +286,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 添加到内存缓存
         /// </summary>
-        private void AddToMemoryCache(string fileId, System.Drawing.Image image)
+        private void AddToMemoryCache(long fileId, System.Drawing.Image image)
         {
             if (image == null)
                 return;
@@ -326,7 +326,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 更新访问顺序
         /// </summary>
-        private void UpdateAccessOrder(string fileId, bool remove = false)
+        private void UpdateAccessOrder(long fileId, bool remove = false)
         {
             if (_accessNodes.TryRemove(fileId, out var node))
             {
@@ -361,7 +361,7 @@ namespace SourceGrid.Cells.Editors
         /// <summary>
         /// 检查是否在内存缓存中
         /// </summary>
-        private bool IsInMemoryCache(string fileId)
+        private bool IsInMemoryCache(long fileId)
         {
             return _memoryCache.ContainsKey(fileId);
         }

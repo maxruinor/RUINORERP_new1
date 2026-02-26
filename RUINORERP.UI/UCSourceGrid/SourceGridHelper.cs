@@ -612,15 +612,15 @@ namespace RUINORERP.UI.UCSourceGrid
                                     //grid1[pt].View = sgdefine.ImagesWebViewModel ;
                                     // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
                                     var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
-                                    if (valueImageWeb != null)
+                                    if (valueImageWeb != null && valueImageWeb.CellImageBytes != null)
                                     {
                                         valueImageWeb.CellImageBytes = null;
                                         valueImageWeb.CellImageHashName = null;
                                         // 同时清空ImageCacheManager中的对应缓存
-                                        if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                                        {
-                                            SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
-                                        }
+                                        //if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                                        //{
+                                        //    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.f);
+                                        //}
                                     }
                                 }
                                 #endregion
@@ -674,10 +674,10 @@ namespace RUINORERP.UI.UCSourceGrid
                                             valueImageWeb.CellImageBytes = null;
                                             valueImageWeb.CellImageHashName = null;
                                             // 同时清空ImageCacheManager中的对应缓存
-                                            if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                                            {
-                                                SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
-                                            }
+                                            //if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                                            //{
+                                            //    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
+                                            //}
                                         }
                                         currContext.Tag = v_ProductSharePart;
                                     }
@@ -809,35 +809,35 @@ namespace RUINORERP.UI.UCSourceGrid
                     {
                         // currContext.Cell.View = sgdefine.ViewNormal;
                     }
-                        if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
+                    if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
+                    {
+                        if ((currContext.Cell.View is SourceGrid.Cells.Views.RemoteImageView) == false)
                         {
-                            if ((currContext.Cell.View is SourceGrid.Cells.Views.RemoteImageView) == false)
-                            {
-                                currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
-                            }
+                            currContext.Cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                        }
 
-                            // 检查是否已经存在 PopupMenuForRemoteImageView Controller，避免重复添加
-                            if (currContext.Cell is Cell cell)
+                        // 检查是否已经存在 PopupMenuForRemoteImageView Controller，避免重复添加
+                        if (currContext.Cell is Cell cell)
+                        {
+                            var existingController = cell.Controller.FindController(typeof(PopupMenuForRemoteImageView));
+                            if (existingController == null)
                             {
-                                var existingController = cell.Controller.FindController(typeof(PopupMenuForRemoteImageView));
-                                if (existingController == null)
-                                {
-                                    PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(cell, sgdefine);
-                                    popupMenu.IsSingleImageMode = true; // 设置为单图模式
-                                    cell.AddController(popupMenu);
-                                }
+                                PopupMenuForRemoteImageView popupMenu = new PopupMenuForRemoteImageView(cell, sgdefine);
+                                popupMenu.IsSingleImageMode = true; // 设置为单图模式
+                                cell.AddController(popupMenu);
                             }
+                        }
                         // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
                         var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
-                        if (valueImageWeb != null)
+                        if (valueImageWeb != null && valueImageWeb.CellImageBytes != null)
                         {
                             valueImageWeb.CellImageBytes = null;
                             valueImageWeb.CellImageHashName = null;
                             // 同时清空ImageCacheManager中的对应缓存
-                            if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                            {
-                                SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
-                            }
+                            //if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
+                            //{
+                            //    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(valueImageWeb.CellImageHashName);
+                            //}
                         }
                     }
                     if (dc.ColName == "Selected")
@@ -3150,10 +3150,10 @@ namespace RUINORERP.UI.UCSourceGrid
                 //cmb.ValueMember = ValueMember;
                 //cmb.DataSource = OutNames;
                 cmb.DropDownStyle = ComboBoxStyle.DropDown;
-                
+
                 // 检查是否在STA线程中设置AutoCompleteMode
                 try
-                {   
+                {
                     cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
                     cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
                     cmb.AutoCompleteCustomSource = autoscList;
@@ -3163,7 +3163,8 @@ namespace RUINORERP.UI.UCSourceGrid
                     // 如果当前线程不是STA线程，在UI线程中执行
                     if (cmb.InvokeRequired)
                     {
-                        cmb.Invoke(new Action(() => {
+                        cmb.Invoke(new Action(() =>
+                        {
                             cmb.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.SuggestAppend;
                             cmb.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.CustomSource;
                             cmb.AutoCompleteCustomSource = autoscList;
@@ -3256,7 +3257,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                     JObject jObject = (JObject)item;
                                     string id = null;
                                     string displayName = null;
-                                    
+
                                     // 尝试获取ID值，优先使用schemaInfo.PrimaryKeyField，其次使用PrimaryKeyID
                                     if (jObject.ContainsKey(schemaInfo.PrimaryKeyField))
                                     {
@@ -3266,13 +3267,13 @@ namespace RUINORERP.UI.UCSourceGrid
                                     {
                                         id = jObject["PrimaryKeyID"]?.ToString();
                                     }
-                                    
+
                                     // 获取显示名称
                                     if (jObject.ContainsKey(schemaInfo.DisplayField))
                                     {
                                         displayName = jObject[schemaInfo.DisplayField]?.ToString();
                                     }
-                                    
+
                                     // 只有当ID有效时才添加到集合
                                     if (!string.IsNullOrEmpty(id))
                                     {

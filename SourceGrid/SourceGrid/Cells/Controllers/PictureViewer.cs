@@ -63,13 +63,13 @@ namespace SourceGrid.Cells.Controllers
         public override void OnMouseEnter(CellContext sender, EventArgs e)
         {
             base.OnMouseEnter(sender, e);
-            
+
             // 取消之前的预加载任务
             _preloadTask?.Dispose();
-            
+
             // 保存当前上下文
             _currentContext = sender;
-            
+
             if (PreviewDelayMs > 0)
             {
                 // 延迟预览，避免快速移动鼠标时频繁触发
@@ -91,11 +91,11 @@ namespace SourceGrid.Cells.Controllers
         public override void OnMouseLeave(CellContext sender, EventArgs e)
         {
             base.OnMouseLeave(sender, e);
-            
+
             // 取消预加载任务
             _preloadTask?.Dispose();
             _preloadTask = null;
-            
+
             ResetPreviewImage(sender, e);
         }
         #endregion
@@ -129,7 +129,7 @@ namespace SourceGrid.Cells.Controllers
             try
             {
                 System.Drawing.Image image = await GetImageAsync(sender);
-                
+
                 if (image != null)
                 {
                     // 在UI线程中更新预览
@@ -229,10 +229,13 @@ namespace SourceGrid.Cells.Controllers
                 if (EnableCache && stringValue.Contains("/"))
                 {
                     // 看起来像文件ID，使用缓存加载
-                    return await ImageCacheManager.Instance.GetImageAsync(
-                        stringValue, 
-                        async (fileId) => await LoadImageFromSourceAsync(fileId)
-                    );
+                    if (long.TryParse(stringValue, out long fileIdLong))
+                    {
+                        return await ImageCacheManager.Instance.GetImageAsync(
+                            fileIdLong,
+                            async (id) => await LoadImageFromSourceAsync(id)
+                        );
+                    }
                 }
                 else if (File.Exists(stringValue))
                 {
@@ -247,42 +250,33 @@ namespace SourceGrid.Cells.Controllers
         /// <summary>
         /// 从源加载图片数据
         /// </summary>
-        private async Task<byte[]> LoadImageFromSourceAsync(string fileId)
+        private async Task<byte[]> LoadImageFromSourceAsync(long fileId)
         {
             try
             {
                 // 这里应该根据实际的图片源来实现加载逻辑
                 // 可能是从服务器、数据库或文件系统加载
-                
-                // 检查是否为临时文件
-                if (fileId.StartsWith("TEMP_"))
+
+                // 从ValueImageWeb模型获取
+                if (_currentContext.Cell.Editor is ImageWebPickEditor webPicker)
                 {
-                    // 从临时目录加载
-                    var tempPath = Path.Combine(Path.GetTempPath(), "ImageCache", fileId);
-                    if (File.Exists(tempPath))
+                    var model = _currentContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                     {
-                        return await Task.Run(() => File.ReadAllBytes(tempPath));
-                    }
-                }
-                else
-                {
-                    // 从ValueImageWeb模型获取
-                    if (_currentContext.Cell.Editor is ImageWebPickEditor webPicker)
-                    {
-                        var model = _currentContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                        if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                        // 检查FileId是否匹配，确保获取正确的图片数据
+                        if (valueImageWeb.FileId == fileId || valueImageWeb.FileId == 0) // 0表示未设置
                         {
-                            return valueImageWeb.CellImageBytes;
+                            return await Task.FromResult(valueImageWeb.CellImageBytes);
                         }
                     }
                 }
-                
-                return null;
+
+                return await Task.FromResult<byte[]>(null);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"加载图片失败: {ex.Message}");
-                return null;
+                return await Task.FromResult<byte[]>(null);
             }
         }
 

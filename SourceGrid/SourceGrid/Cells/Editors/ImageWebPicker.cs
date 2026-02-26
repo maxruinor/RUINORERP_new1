@@ -493,7 +493,7 @@ namespace SourceGrid.Cells.Editors
                 // 12. 更新控件值
                 Control.Value = fileIdLong;
                 ValueType = typeof(string);
-                
+
                 // 更新CurrentFileIdLong属性
                 CurrentFileIdLong = fileIdLong;
 
@@ -777,7 +777,7 @@ namespace SourceGrid.Cells.Editors
 
                 //实际上比较一下。如果还是相同的图片不用赋值
                 string NewHash = ImageHashHelper.GenerateHash(buffByte);
-                //看原来有不有哈希值或新旧是否相同，如果不同则更新
+                //看原来有不有哈希值或新旧是否相同，如果不同则更新1
                 if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), NewHash))
                 {
                     byte[] NewbuffByte = val as byte[];

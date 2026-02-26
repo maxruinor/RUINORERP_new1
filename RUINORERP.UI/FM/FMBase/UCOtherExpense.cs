@@ -232,65 +232,6 @@ namespace RUINORERP.UI.FM.FMBase
         }
 
 
-        public override async Task<bool> DeleteRemoteImages()
-        {
-
-            if (EditEntity == null || EditEntity.tb_FM_OtherExpenseDetails == null)
-            {
-                return false;
-            }
-
-            #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
-
-            if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
-            {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                string deleteRsult = await httpWebService.DeleteImageAsync(EditEntity.CloseCaseImagePath, "delete123");
-                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-            }
-            #endregion
-
-            bool result = true;
-            foreach (tb_FM_OtherExpenseDetail detail in EditEntity.tb_FM_OtherExpenseDetails)
-            {
-                PropertyInfo[] props = typeof(tb_FM_OtherExpenseDetail).GetProperties();
-                foreach (PropertyInfo prop in props)
-                {
-                    var col = sgd[prop.Name];
-                    if (col != null)
-                    {
-                        if (col.CustomFormat == CustomFormatType.WebPathImage)
-                        {
-                            if (detail.GetPropertyValue(prop.Name) != null
-                                && detail.GetPropertyValue(prop.Name).ToString().Contains("-"))
-                            {
-                                string imageNameValue = detail.GetPropertyValue(prop.Name).ToString();
-                                //比较是否更新了图片数据
-                                //old_new 无后缀文件名
-                                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
-                                valueImageWeb.CellImageHashName = imageNameValue;
-                                string oldfileName = valueImageWeb.GetOldRealfileName();
-                                string newfileName = valueImageWeb.GetNewRealfileName();
-                                string TempFileName = string.Empty;
-                                //fileName = System.IO.Path.Combine(Application.StartupPath + @"\temp\", fileName);
-                                //保存在本地临时目录 删除
-                                if (System.IO.File.Exists(TempFileName))
-                                {
-                                    System.IO.File.Delete(TempFileName);
-                                }
-                                //上传到服务器，删除本地
-                                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                                string deleteRsult = await httpWebService.DeleteImageAsync(newfileName, "delete123");
-                                MainForm.Instance.PrintInfoLog(deleteRsult);
-                            }
-                        }
-                    }
-
-                }
-            }
-            return result;
-        }
-
 
         SourceGridDefine sgd = null;
         SourceGridHelper sgh = new SourceGridHelper();

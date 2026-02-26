@@ -374,28 +374,6 @@ namespace RUINORERP.UI.FM
 
        
 
-        public override async Task<bool> DeleteRemoteImages()
-        {
-
-            if (EditEntity == null)
-            {
-                return false;
-            }
-
-            #region 删除主图的结案图。一般没有结案是没有的。结案就不会有结案图了。也有特殊情况。
-
-            if (!string.IsNullOrEmpty(EditEntity.CloseCaseImagePath))
-            {
-                HttpWebService httpWebService = Startup.GetFromFac<HttpWebService>();
-                string deleteRsult = await httpWebService.DeleteImageAsync(EditEntity.CloseCaseImagePath, "delete123");
-                MainForm.Instance.PrintInfoLog("DeleteImage:" + deleteRsult);
-            }
-            #endregion
-
-            bool result = true;
-
-            return result;
-        }
 
         protected async override Task<ReturnResults<tb_FM_PaymentApplication>> Delete()
         {

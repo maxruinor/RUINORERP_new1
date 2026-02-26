@@ -597,7 +597,7 @@ namespace RUINORERP.UI.FM
                             // 设置图片数据
                             valueImageWeb.CellImageBytes = fileStorageInfo.FileData;
                             valueImageWeb.CellImageHashName = fileStorageInfo.StoragePath;
-
+                            valueImageWeb.FileId = fileStorageInfo.FileId;
                             // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                             var gridObj = grid1 as SourceGrid.Grid;
                             var imageCellValue = gridObj?.CreateImageCellValue(fileStorageInfo.FileData, fileStorageInfo.StoragePath, fileStorageInfo.FileId)

@@ -1,4 +1,5 @@
 ﻿using System;
+using SourceGrid.Cells.Editors;
 
 namespace SourceGrid.Cells.Models
 {
@@ -307,22 +308,9 @@ namespace SourceGrid.Cells.Models
     /// </summary>
     public class ValueImageWeb : IImageWeb
     {
-        /// <summary>
-        /// 创建这个cell时就给一个默认的名称，唯一的
-        /// 保存图片的hash值，用于判断图片是否已经存在并且没有改变
-        /// 为了方便比较是否修改过。直接用hash值作为名称。并不长。
-        /// TODO:重点: 因为修改后。要删除旧文件。所以文件名保存了新旧新的hash值。如果hash值相同，则不删除。不同则上传新的删除旧的。
-        /// 格式为: oldhash_newhash 无后缀 默认.jpg
-        ///24/09/01J91AT48VF0PV0D08YEE3BMYK-595b739fa14a661a47afb827184eb0a9_595b739fa14a661a47afb827184eb0a9
-        ///24/09/01J91AT48VF0PV0D08YEE3BMYK-595b739fa14a661a47afb827184eb0a9_f7705f09bb2ca50b31660fa3221d9dd6 --更新后 中间是旧，最后是新
-        ///旧的hash值，除了第一次和数据库取出。其他都是修改newhash.实际作用是文件名。用于判断是否修改过
-        ///2026-02-25 添加一个long类型的属性：fileid
-        public string oldhash = string.Empty;
-
-        //以新的为标准，旧的是用来比较的。
-        public string newhash = string.Empty;
-
-        public string realName = string.Empty;
+     
+        /// 图片内容的哈希值，用于快速比较图片是否发生变化
+        public string ContentHash { get; set; } = string.Empty;
 
         /// <summary>
         /// 文件ID，用于识别和分辨图片的唯一性
@@ -332,7 +320,7 @@ namespace SourceGrid.Cells.Models
         private string _CellImageHashName;
 
         /// <summary>
-        /// 保存了新旧两个hash值，用于判断图片是否已经存在并且没有改变.oldhash同时也是文件名oldhash_newhash
+        /// 图片的原始文件名，用于显示和标识
         /// </summary>
         public string CellImageHashName
         {
@@ -343,107 +331,54 @@ namespace SourceGrid.Cells.Models
             set
             {
                 this._CellImageHashName = value;
-                if (_CellImageHashName != null)
-                {
-                    int realnameIndex = _CellImageHashName.IndexOf("-");
-                    if (string.IsNullOrEmpty(oldhash))
-                    {
-                        oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
-                    }
-                    if (string.IsNullOrEmpty(newhash))
-                    {
-                        newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
-                    }
-                    if (string.IsNullOrEmpty(realName))
-                    {
-                        realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        if (string.IsNullOrEmpty(realName))
-                        {
-                            realName = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                        }
-                    }
-                }
-
             }
         }
 
 
-        public string GetImageoldHash()
-        {
-            return oldhash;
-        }
-
         /// <summary>
-        /// 主要是获取hash值，用于判断图片是否已经存在并且没有改变 newhash
+        /// 获取图片内容的哈希值
         /// </summary>
         /// <returns></returns>
         public string GetImageNewHash()
         {
-            if (!string.IsNullOrEmpty(CellImageHashName))
-            {
-                return CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : CellImageHashName;
-            }
-            else
-            {
-                return string.Empty;
-            }
+            return ContentHash ?? string.Empty;
         }
 
-        public string GetNewRealfileName()
-        {
-            return realName + "-" + newhash;
-        }
 
-        public string GetOldRealfileName()
-        {
-            return realName + "-" + oldhash;
-        }
 
         /// <summary>
-        /// 当newhash改变时，更新hash值，这时应该是图片上传成功。要覆盖旧名，新旧一样。方便后面更新
+        /// 手动设置图片哈希值（通常不需要直接调用，设置CellImageBytes会自动更新）
         /// </summary>
-        /// <param name="_newhash"></param>
-        public string UpdateImageName(string _newhash)
+        /// <param name="paraNewHash"></param>
+        public void SetImageNewHash(string paraNewHash)
         {
-            oldhash = _newhash;
-            CellImageHashName = realName + "-" + oldhash + "_" + newhash;
-            return CellImageHashName;
-        }
-
-        public void SetImageNewHash(string ParaNewHash)
-        {
-            newhash = ParaNewHash;
-            int realnameIndex = 0;
-            if (!string.IsNullOrEmpty(_CellImageHashName))
-            {
-                realnameIndex = _CellImageHashName.IndexOf("-");
-                if (string.IsNullOrEmpty(oldhash))
-                {
-                    oldhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(realnameIndex + 1, CellImageHashName.IndexOf("_") - realnameIndex - 1) : "";
-                }
-                if (string.IsNullOrEmpty(newhash))
-                {
-                    newhash = _CellImageHashName.IndexOf("_") >= 0 ? CellImageHashName.Substring(CellImageHashName.IndexOf("_") + 1) : "";
-                }
-                if (string.IsNullOrEmpty(realName))
-                {
-                    realName = _CellImageHashName.IndexOf("-") >= 0 ? CellImageHashName.Substring(0, CellImageHashName.IndexOf("-")) : System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-                }
-            }
-
-            if (string.IsNullOrEmpty(realName))
-            {
-                realName = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
-            }
-
-            CellImageHashName = realName + "-" + oldhash + "_" + newhash;
+            ContentHash = paraNewHash ?? string.Empty;
         }
 
 
+        private byte[] _cellImageBytes;
+        
         /// <summary>
         /// 单元格的图片数据，以base64的形式保存
+        /// 设置时会自动计算并更新ContentHash
         /// </summary>
-        public byte[] CellImageBytes { get; set; }
+        public byte[] CellImageBytes 
+        { 
+            get { return _cellImageBytes; }
+            set 
+            { 
+                _cellImageBytes = value;
+                // 自动更新ContentHash
+                if (value != null && value.Length > 0)
+                {
+                    ContentHash = ImageHashHelper.GenerateHash(value);
+                }
+                else
+                {
+                    ContentHash = string.Empty;
+                }
+            } 
+        }
 
 
         public static readonly ValueImageWeb Default = new ValueImageWeb();

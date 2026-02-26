@@ -162,6 +162,16 @@ namespace RUINORERP.UI
         /// 正在加载的程序集列表,用于防止AssemblyResolve事件中的无限递归
         /// </summary>
         private static readonly System.Collections.Generic.HashSet<string> _loadingAssemblies = new System.Collections.Generic.HashSet<string>();
+        
+        /// <summary>
+        /// 已解析程序集的缓存,用于提高性能,避免重复解析
+        /// </summary>
+        private static readonly System.Collections.Generic.Dictionary<string, System.Reflection.Assembly> _resolvedAssembliesCache = new System.Collections.Generic.Dictionary<string, System.Reflection.Assembly>();
+        
+        /// <summary>
+        /// 程序集搜索路径缓存,避免重复计算
+        /// </summary>
+        private static readonly System.Collections.Generic.HashSet<string> _assemblySearchPaths = new System.Collections.Generic.HashSet<string>();
 
         /// <summary>
         /// 应用程序的主入口点。
@@ -193,24 +203,43 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
-        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题22
+        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题
+        /// 优化版本：添加缓存、减少文件系统操作、优化搜索逻辑
         /// </summary>
         private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
+            // 生产环境减少日志输出，只记录关键信息
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"程序集解析请求: {args.Name}");
+#endif
+            
             // 避免无限递归:检查当前是否已经在处理此程序集
             string assemblyKey = args.Name?.ToLower();
             if (_loadingAssemblies.Contains(assemblyKey))
             {
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"程序集 {args.Name} 正在加载中，避免递归");
+#endif
                 return null; // 正在加载中,避免递归
             }
 
             try
             {
-                // 尝试从已加载的程序集中查找
+                // 1. 首先检查缓存中是否已有解析结果
+                if (_resolvedAssembliesCache.TryGetValue(assemblyKey, out var cachedAssembly))
+                {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"程序集从缓存加载: {args.Name}");
+#endif
+                    return cachedAssembly;
+                }
+
+                // 2. 尝试从已加载的程序集中查找
                 var assemblyName = new System.Reflection.AssemblyName(args.Name);
 
-                // 跳过资源程序集(.resources) - 这些程序集应该由.NET Framework自动加载
-                if (assemblyName.Name.EndsWith(".resources"))
+                // 3. 更精确的资源程序集过滤
+                if (assemblyName.Name.EndsWith(".resources") || 
+                    args.Name.Contains(".resources,"))
                 {
                     return null;
                 }
@@ -220,51 +249,119 @@ namespace RUINORERP.UI
 
                 if (loadedAssembly != null)
                 {
+#if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"程序集已加载: {args.Name}");
+#endif
+                    // 添加到缓存
+                    _resolvedAssembliesCache[assemblyKey] = loadedAssembly;
                     return loadedAssembly;
                 }
 
-                // 标记为正在加载,防止递归
+                // 4. 标记为正在加载,防止递归
                 _loadingAssemblies.Add(assemblyKey);
 
-                // 尝试使用Load加载(优先使用Load避免LoadFrom的问题)
                 try
                 {
+                    // 5. 尝试使用Load加载(优先使用Load避免LoadFrom的问题)
                     var result = System.Reflection.Assembly.Load(assemblyName);
-                    _loadingAssemblies.Remove(assemblyKey);
-                    return result;
+                    if (result != null)
+                    {
+                        // 添加到缓存
+                        _resolvedAssembliesCache[assemblyKey] = result;
+#if DEBUG
+                        System.Diagnostics.Debug.WriteLine($"程序集Load加载成功: {args.Name}");
+#endif
+                        return result;
+                    }
                 }
                 catch
                 {
                     // Load失败,继续尝试其他方式
-                    _loadingAssemblies.Remove(assemblyKey);
                 }
-
-                // 尝试从当前目录加载
-                string assemblyPath = Path.Combine(Application.StartupPath, $"{assemblyName.Name}.dll");
-                if (File.Exists(assemblyPath))
+                finally
                 {
-                    var result = RUINORERP.Common.Helper.AssemblyLoader.LoadFromPath(assemblyPath);
                     _loadingAssemblies.Remove(assemblyKey);
-                    return result;
                 }
 
-                // 尝试从可执行文件路径加载
-                assemblyPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), $"{assemblyName.Name}.dll");
-                if (File.Exists(assemblyPath))
+                // 6. 尝试从搜索路径加载
+                foreach (var searchPath in GetAssemblySearchPaths())
                 {
-                    var result = RUINORERP.Common.Helper.AssemblyLoader.LoadFromPath(assemblyPath);
-                    _loadingAssemblies.Remove(assemblyKey);
-                    return result;
+                    string assemblyPath = Path.Combine(searchPath, $"{assemblyName.Name}.dll");
+                    if (File.Exists(assemblyPath))
+                    {
+                        try
+                        {
+                            var result = RUINORERP.Common.Helper.AssemblyLoader.LoadFromPath(assemblyPath);
+                            if (result != null)
+                            {
+                                // 添加到缓存
+                                _resolvedAssembliesCache[assemblyKey] = result;
+#if DEBUG
+                                System.Diagnostics.Debug.WriteLine($"程序集从路径加载成功: {args.Name} 路径: {assemblyPath}");
+#endif
+                                return result;
+                            }
+                        }
+                        catch
+                        {
+                            // 加载失败,继续尝试下一个路径
+                        }
+                    }
                 }
 
-                _loadingAssemblies.Remove(assemblyKey);
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"程序集解析完成(未找到): {args.Name}");
+#endif
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
                 _loadingAssemblies.Remove(assemblyKey);
+#if DEBUG
+                System.Diagnostics.Debug.WriteLine($"程序集解析异常: {args.Name}, 错误: {ex.Message}");
+#endif
                 return null;
             }
+        }
+        
+        /// <summary>
+        /// 获取程序集搜索路径列表
+        /// 缓存搜索路径，避免重复计算
+        /// </summary>
+        private static System.Collections.Generic.IEnumerable<string> GetAssemblySearchPaths()
+        {
+            // 初始化搜索路径（仅第一次调用时）
+            if (_assemblySearchPaths.Count == 0)
+            {
+                // 添加当前目录
+                _assemblySearchPaths.Add(Application.StartupPath);
+                
+                // 添加可执行文件目录
+                string exeDir = Path.GetDirectoryName(Application.ExecutablePath);
+                if (!string.IsNullOrEmpty(exeDir) && exeDir != Application.StartupPath)
+                {
+                    _assemblySearchPaths.Add(exeDir);
+                }
+                
+                // 添加常见的程序集目录
+                string[] commonPaths = new[]
+                {
+                    Path.Combine(Application.StartupPath, "bin"),
+                    Path.Combine(Application.StartupPath, "lib"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Common Files"),
+                    Environment.GetFolderPath(Environment.SpecialFolder.System32)
+                };
+                
+                foreach (var path in commonPaths)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        _assemblySearchPaths.Add(path);
+                    }
+                }
+            }
+            
+            return _assemblySearchPaths;
         }
 
         /// <summary>

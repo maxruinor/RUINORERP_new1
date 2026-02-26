@@ -254,6 +254,7 @@ namespace RUINORERP.UI
         /// <summary>
         /// 处理心跳失败达到阈值事件
         /// 当连续心跳失败次数达到阈值时，仅通知用户，不强制锁定系统
+        /// 这个要全面分析。为什么状态一直是登陆中，并且显示不稳定。实现不可能不稳定。在局域网中。基本都是稳定的
         /// </summary>
         private void OnHeartbeatFailureThresholdReached()
         {

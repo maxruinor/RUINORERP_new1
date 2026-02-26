@@ -46,6 +46,7 @@ namespace SourceGrid.Cells.Views
         private Task<System.Drawing.Image> _imageLoadTask;
         private bool _enableAsyncLoading = true;
         private bool _enableMemoryOptimization = true;
+        private string _currentImageHash = string.Empty;
 
 
 
@@ -132,12 +133,33 @@ namespace SourceGrid.Cells.Views
                 // 优先使用字节数据
                 if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
                 {
-                    DisplayImageFromBytes(context, valueImageWeb.CellImageBytes);
+                    // 计算哈希值，避免重复生成预览
+                    string newHash = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                    if (newHash != _currentImageHash)
+                    {
+                        DisplayImageFromBytes(context, valueImageWeb.CellImageBytes);
+                        _currentImageHash = newHash;
+                    }
                 }
                 // 其次使用路径数据
                 else if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
                 {
-                    LoadAndDisplayImageFromPath(context, valueImageWeb.CellImageHashName);
+                    // 使用哈希名称作为标识，避免重复加载
+                    if (valueImageWeb.CellImageHashName != _currentImageHash)
+                    {
+                        LoadAndDisplayImageFromPath(context, valueImageWeb.CellImageHashName);
+                        _currentImageHash = valueImageWeb.CellImageHashName;
+                    }
+                }
+                else
+                {
+                    // 没有图片数据，清空预览
+                    if (!string.IsNullOrEmpty(_currentImageHash))
+                    {
+                        GridImage = null;
+                        _currentImageHash = string.Empty;
+                        context.Grid?.InvalidateCell(context.Position);
+                    }
                 }
                 return; // 处理完ValueImageWeb后直接返回
             }
@@ -145,7 +167,12 @@ namespace SourceGrid.Cells.Views
             // 兼容原有的处理逻辑
             if (context.Value == null)
             {
-                GridImage = null;
+                if (!string.IsNullOrEmpty(_currentImageHash))
+                {
+                    GridImage = null;
+                    _currentImageHash = string.Empty;
+                    context.Grid?.InvalidateCell(context.Position);
+                }
                 return;
             }
             
@@ -157,9 +184,71 @@ namespace SourceGrid.Cells.Views
                 {
                     if (icv.ImageData != null)
                     {
-                        byte[] buffByte = icv.ImageData;
+                        // 计算哈希值，避免重复生成预览
+                        string newHash = ImageHashHelper.GenerateHash(icv.ImageData);
+                        if (newHash != _currentImageHash)
+                        {
+                            byte[] buffByte = icv.ImageData;
+                            System.Drawing.Image img = null;
+                            using (MemoryStream stream = new MemoryStream(buffByte))
+                            {
+                                try
+                                {
+                                    System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                                    if (tempImg != null)
+                                    {
+                                        img = new Bitmap(tempImg);
+                                        tempImg.Dispose();
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
+                                }
+                            }
+
+                            if (GridImage != null)
+                            {
+                                GridImage.Dispose();
+                                GridImage = null;
+                            }
+                            GridImage = img;
+                            _currentImageHash = newHash;
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(icv.StoragePath))
+                    {
+                        // 使用FileId作为标识，避免重复加载
+                        string newHash = icv.FileId.ToString();
+                        if (newHash != _currentImageHash)
+                        {
+                            _pendingFileId = icv.FileId;
+                            CurrentFileId = _pendingFileId;
+                            if (_enableAsyncLoading)
+                            {
+                                LoadImageAsync(_pendingFileId, context);
+                            }
+                            else
+                            {
+                                LoadImageSync(_pendingFileId, context);
+                            }
+                            _currentImageHash = newHash;
+                        }
+                    }
+                }
+                else if (context.Value is byte[])
+                {
+                    // 计算哈希值，避免重复生成预览
+                    string newHash = ImageHashHelper.GenerateHash(context.Value as byte[]);
+                    if (newHash != _currentImageHash)
+                    {
+                        // 将图像读入到字节数组
+                        byte[] buffByte = context.Value as byte[];
                         System.Drawing.Image img = null;
-                        using (MemoryStream stream = new MemoryStream(buffByte))
+                        // 使用 MemoryStream 从字节数组创建流
+                        // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
+                        // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
+                        using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
                         {
                             try
                             {
@@ -172,7 +261,7 @@ namespace SourceGrid.Cells.Views
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
+                                System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
                             }
                         }
 
@@ -182,79 +271,45 @@ namespace SourceGrid.Cells.Views
                             GridImage = null;
                         }
                         GridImage = img;
+                        _currentImageHash = newHash;
                     }
-                    else if (!string.IsNullOrEmpty(icv.StoragePath))
-                    {
-                        _pendingFileId = icv.FileId;
-                        CurrentFileId = _pendingFileId;
-                        if (_enableAsyncLoading)
-                        {
-                            LoadImageAsync(_pendingFileId, context);
-                        }
-                        else
-                        {
-                            LoadImageSync(_pendingFileId, context);
-                        }
-                    }
-                }
-                else if (context.Value is byte[])
-                {
-                    // 将图像读入到字节数组
-                    byte[] buffByte = context.Value as byte[];
-                    System.Drawing.Image img = null;
-                    // 使用 MemoryStream 从字节数组创建流
-                    // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
-                    // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
-                    using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
-                    {
-                        try
-                        {
-                            System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                            if (tempImg != null)
-                            {
-                                img = new Bitmap(tempImg);
-                                tempImg.Dispose();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
-                        }
-                    }
-
-                    if (GridImage != null)
-                    {
-                        GridImage.Dispose();
-                        GridImage = null;
-                    }
-                    GridImage = img;
                 }
 
                 if (context.Value is Bitmap || context.Value is System.Drawing.Image)
                 {
-                    // 使用 MemoryStream 从字节数组创建流
-                    if (GridImage != null && GridImage != (System.Drawing.Image)context.Value)
+                    // 使用对象引用作为标识，避免重复赋值
+                    if (GridImage != (System.Drawing.Image)context.Value)
                     {
-                        GridImage.Dispose();
+                        if (GridImage != null)
+                        {
+                            GridImage.Dispose();
+                        }
+                        GridImage = context.Value as System.Drawing.Image;
+                        _currentImageHash = context.Value.GetHashCode().ToString();
                     }
-                    GridImage = context.Value as System.Drawing.Image;
                 }
 
             }
             else if (context.Value is long && GridImage == null)
             {
-                _pendingFileId = long.Parse(context.Value.ToString());
-                CurrentFileId = _pendingFileId;
+                // 使用long值作为标识，避免重复加载
+                string newHash = context.Value.ToString();
+                if (newHash != _currentImageHash)
+                {
+                    _pendingFileId = long.Parse(context.Value.ToString());
+                    CurrentFileId = _pendingFileId;
 
-                if (_enableAsyncLoading)
-                {
-                    // 异步加载图片
-                    LoadImageAsync(_pendingFileId, context);
-                }
-                else
-                {
-                    // 同步加载图片
-                    LoadImageSync(_pendingFileId, context);
+                    if (_enableAsyncLoading)
+                    {
+                        // 异步加载图片
+                        LoadImageAsync(_pendingFileId, context);
+                    }
+                    else
+                    {
+                        // 同步加载图片
+                        LoadImageSync(_pendingFileId, context);
+                    }
+                    _currentImageHash = newHash;
                 }
             }
         }
@@ -272,34 +327,25 @@ namespace SourceGrid.Cells.Views
                 {
                     var image = System.Drawing.Image.FromStream(ms);
                     
-                    // 创建图片视图并应用到单元格
-                    var imageView = new SourceGrid.Cells.Views.RemoteImageView(image)
-                    {
-                        ImageAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter,
-                        ImageStretch = false
-                    };
+                    // 直接更新当前视图的属性，而不是创建新实例
+                    // 这样可以保持_currentImageHash的值
+                    GridImage = new Bitmap(image);
                     
-                    context.Cell.View = imageView;
+                    // 更新哈希值
+                    _currentImageHash = ImageHashHelper.GenerateHash(imageData);
                     
                     // 强制刷新显示
                     context.Grid?.InvalidateCell(context.Position);
-                    
-                    // 同时更新内部GridImage属性
-                    if (GridImage != null)
-                    {
-                        GridImage.Dispose();
-                    }
-                    GridImage = new Bitmap(image);
                 }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"显示图片失败: {ex.Message}");
-                // 显示错误状态
-                context.Cell.View = new SourceGrid.Cells.Views.Cell()
-                {
-                    BackColor = Color.LightGray
-                };
+                // 清空图片和哈希值
+                GridImage = null;
+                _currentImageHash = string.Empty;
+                
+                // 强制刷新显示
                 context.Grid?.InvalidateCell(context.Position);
             }
         }
@@ -319,14 +365,19 @@ namespace SourceGrid.Cells.Views
                     var imageData = await imageService.DownloadImageAsync(imageId);
                     if (imageData != null && imageData.Length > 0)
                     {
-                        // 确保在UI线程中更新
-                        if (context.Grid.InvokeRequired)
+                        // 计算哈希值，避免重复生成预览
+                        string newHash = ImageHashHelper.GenerateHash(imageData);
+                        if (newHash != _currentImageHash)
                         {
-                            context.Grid.Invoke(new Action(() => DisplayImageFromBytes(context, imageData)));
-                        }
-                        else
-                        {
-                            DisplayImageFromBytes(context, imageData);
+                            // 确保在UI线程中更新
+                            if (context.Grid.InvokeRequired)
+                            {
+                                context.Grid.Invoke(new Action(() => DisplayImageFromBytes(context, imageData)));
+                            }
+                            else
+                            {
+                                DisplayImageFromBytes(context, imageData);
+                            }
                         }
                     }
                 }
@@ -344,6 +395,12 @@ namespace SourceGrid.Cells.Views
         {
             if (context.Value == null)
             {
+                if (!string.IsNullOrEmpty(_currentImageHash))
+                {
+                    GridImage = null;
+                    _currentImageHash = string.Empty;
+                    context.Grid?.InvalidateCell(context.Position);
+                }
                 return;
             }
             //显示图片  要是图片列才处理
@@ -354,9 +411,71 @@ namespace SourceGrid.Cells.Views
                 {
                     if (icv.ImageData != null)
                     {
-                        byte[] buffByte = icv.ImageData;
+                        // 计算哈希值，避免重复生成预览
+                        string newHash = ImageHashHelper.GenerateHash(icv.ImageData);
+                        if (newHash != _currentImageHash)
+                        {
+                            byte[] buffByte = icv.ImageData;
+                            System.Drawing.Image img = null;
+                            using (MemoryStream stream = new MemoryStream(buffByte))
+                            {
+                                try
+                                {
+                                    System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
+                                    if (tempImg != null)
+                                    {
+                                        img = new Bitmap(tempImg);
+                                        tempImg.Dispose();
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
+                                }
+                            }
+
+                            if (GridImage != null)
+                            {
+                                GridImage.Dispose();
+                                GridImage = null;
+                            }
+                            GridImage = img;
+                            _currentImageHash = newHash;
+                        }
+                    }
+                    else if (icv.FileId>0)
+                    {
+                        // 使用FileId作为标识，避免重复加载
+                        string newHash = icv.FileId.ToString();
+                        if (newHash != _currentImageHash)
+                        {
+                            _pendingFileId = icv.FileId;
+                            CurrentFileId = _pendingFileId;
+                            if (_enableAsyncLoading)
+                            {
+                                LoadImageAsync(_pendingFileId, context);
+                            }
+                            else
+                            {
+                                LoadImageSync(_pendingFileId, context);
+                            }
+                            _currentImageHash = newHash;
+                        }
+                    }
+                }
+                else if (context.Value is byte[])
+                {
+                    // 计算哈希值，避免重复生成预览
+                    string newHash = ImageHashHelper.GenerateHash(context.Value as byte[]);
+                    if (newHash != _currentImageHash)
+                    {
+                        //将图像读入到字节数组
+                        byte[] buffByte = context.Value as byte[];
                         System.Drawing.Image img = null;
-                        using (MemoryStream stream = new MemoryStream(buffByte))
+                        // 使用 MemoryStream 从字节数组创建流
+                        // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
+                        // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
+                        using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
                         {
                             try
                             {
@@ -369,7 +488,7 @@ namespace SourceGrid.Cells.Views
                             }
                             catch (Exception ex)
                             {
-                                System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
+                                System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
                             }
                         }
 
@@ -379,79 +498,45 @@ namespace SourceGrid.Cells.Views
                             GridImage = null;
                         }
                         GridImage = img;
+                        _currentImageHash = newHash;
                     }
-                    else if (icv.FileId>0)
-                    {
-                        _pendingFileId = icv.FileId;
-                        CurrentFileId = _pendingFileId;
-                        if (_enableAsyncLoading)
-                        {
-                            LoadImageAsync(_pendingFileId, context);
-                        }
-                        else
-                        {
-                            LoadImageSync(_pendingFileId, context);
-                        }
-                    }
-                }
-                else if (context.Value is byte[])
-                {
-                    //将图像读入到字节数组
-                    byte[] buffByte = context.Value as byte[];
-                    System.Drawing.Image img = null;
-                    // 使用 MemoryStream 从字节数组创建流
-                    // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
-                    // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
-                    using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
-                    {
-                        try
-                        {
-                            System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                            if (tempImg != null)
-                            {
-                                img = new Bitmap(tempImg);
-                                tempImg.Dispose();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
-                        }
-                    }
-
-                    if (GridImage != null)
-                    {
-                        GridImage.Dispose();
-                        GridImage = null;
-                    }
-                    GridImage = img;
                 }
 
                 if (context.Value is Bitmap || context.Value is System.Drawing.Image)
                 {
-                    // 使用 MemoryStream 从字节数组创建流
-                    if (GridImage != null && GridImage != (System.Drawing.Image)context.Value)
+                    // 使用对象引用作为标识，避免重复赋值
+                    if (GridImage != (System.Drawing.Image)context.Value)
                     {
-                        GridImage.Dispose();
+                        if (GridImage != null)
+                        {
+                            GridImage.Dispose();
+                        }
+                        GridImage = context.Value as System.Drawing.Image;
+                        _currentImageHash = context.Value.GetHashCode().ToString();
                     }
-                    GridImage = context.Value as System.Drawing.Image;
                 }
 
             }
             else if (context.Value is long && GridImage == null)
             {
-                _pendingFileId =long.Parse(context.Value.ToString());
-                CurrentFileId = _pendingFileId;
+                // 使用long值作为标识，避免重复加载
+                string newHash = context.Value.ToString();
+                if (newHash != _currentImageHash)
+                {
+                    _pendingFileId = long.Parse(context.Value.ToString());
+                    CurrentFileId = _pendingFileId;
 
-                if (_enableAsyncLoading)
-                {
-                    // 异步加载图片
-                    LoadImageAsync(_pendingFileId, context);
-                }
-                else
-                {
-                    // 同步加载图片
-                    LoadImageSync(_pendingFileId, context);
+                    if (_enableAsyncLoading)
+                    {
+                        // 异步加载图片
+                        LoadImageAsync(_pendingFileId, context);
+                    }
+                    else
+                    {
+                        // 同步加载图片
+                        LoadImageSync(_pendingFileId, context);
+                    }
+                    _currentImageHash = newHash;
                 }
             }
         }
@@ -952,6 +1037,9 @@ namespace SourceGrid.Cells.Views
                 ImageLoadError = null;
                 ImageUploaded = null;
                 ImageDeleted = null;
+
+                // 清空哈希值
+                _currentImageHash = string.Empty;
 
                 _disposed = true;
             }

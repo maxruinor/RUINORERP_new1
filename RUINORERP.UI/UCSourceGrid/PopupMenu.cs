@@ -980,30 +980,33 @@ namespace RUINORERP.UI.UCSourceGrid
                                     // 将图片标记为待删除状态，而不是立即删除
                                     // 注册到ImageStateManager，状态为PendingDelete
                                     ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete);
-
-                                    // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
-                                    cell.Value = null;
-                                    valueImageWeb.CellImageBytes = null;
-                                    valueImageWeb.CellImageHashName = null;
-
-                                    // 清空ImageCacheManager中的对应缓存
-                                    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(imageId);
-
-
-                                    imageView.GridImage = null;
-
-                                    // 强制重绘
-                                    grid.Refresh();
-
-                                    // 更新编辑状态
-                                    UpdateCellEditState();
-
-                                    MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
                                 }
-                                else
+
+                                // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
+                                cell.Value = null;
+                                valueImageWeb.CellImageBytes = null;
+                                valueImageWeb.CellImageHashName = null;
+                                valueImageWeb.SetImageNewHash(string.Empty);
+
+                                // 清空ImageCacheManager中的对应缓存
+                                if (imageId > 0)
                                 {
-                                    MainForm.Instance.PrintInfoLog("无法获取图片ID，删除操作失败");
+                                    SourceGrid.Cells.Editors.ImageCacheManager.Instance.ClearCache(imageId);
                                 }
+
+                                // 清空图片视图数据
+                                imageView.GridImage = null;
+                                // 反射设置_currentImageHash为string.Empty，确保下次加载时重新生成预览
+                                valueImageWeb.CellImageBytes = null;
+                                valueImageWeb.CellImageHashName = null;
+
+                                // 强制重绘
+                                grid.Refresh();
+
+                                // 更新编辑状态
+                                UpdateCellEditState();
+
+                                MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
                             }
                         }
                         catch (Exception ex)

@@ -1,16 +1,17 @@
-using System;
-using System.Drawing;
-using System.Collections.Generic;
-using System.Windows.Forms;
 using DevAge.Drawing;
-using System.IO;
 using DevAge.Drawing.VisualElements;
-using System.Drawing.Imaging;
 using SourceGrid.Cells.Editors;
-using System.Runtime.CompilerServices;
+using SourceGrid.Cells.Models;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Contexts;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SourceGrid.Cells.Views
 {
@@ -149,12 +150,12 @@ namespace SourceGrid.Cells.Views
             }
             
             // 显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ValueImageWeb)
             {
                 // Read the image
-                if (context.Value is ImageCellValue icv)
+                if (context.Value is ValueImageWeb icv)
                 {
-                    if (icv.IsBinary && icv.ImageData != null)
+                    if (icv.ImageData != null)
                     {
                         byte[] buffByte = icv.ImageData;
                         System.Drawing.Image img = null;
@@ -182,9 +183,9 @@ namespace SourceGrid.Cells.Views
                         }
                         GridImage = img;
                     }
-                    else if (!string.IsNullOrEmpty(icv.ImagePath))
+                    else if (!string.IsNullOrEmpty(icv.StoragePath))
                     {
-                        _pendingFileId = icv.FileStorageId.Value;
+                        _pendingFileId = icv.FileId;
                         CurrentFileId = _pendingFileId;
                         if (_enableAsyncLoading)
                         {
@@ -272,7 +273,7 @@ namespace SourceGrid.Cells.Views
                     var image = System.Drawing.Image.FromStream(ms);
                     
                     // 创建图片视图并应用到单元格
-                    var imageView = new SourceGrid.Cells.Views.SingleImage(image)
+                    var imageView = new SourceGrid.Cells.Views.RemoteImageView(image)
                     {
                         ImageAlignment = DevAge.Drawing.ContentAlignment.MiddleCenter,
                         ImageStretch = false
@@ -346,12 +347,12 @@ namespace SourceGrid.Cells.Views
                 return;
             }
             //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ImageCellValue)
+            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ValueImageWeb)
             {
                 //Read the image
-                if (context.Value is ImageCellValue icv)
+                if (context.Value is ValueImageWeb icv)
                 {
-                    if (icv.IsBinary && icv.ImageData != null)
+                    if (icv.ImageData != null)
                     {
                         byte[] buffByte = icv.ImageData;
                         System.Drawing.Image img = null;
@@ -379,9 +380,9 @@ namespace SourceGrid.Cells.Views
                         }
                         GridImage = img;
                     }
-                    else if (icv.FileStorageId.HasValue && icv.FileStorageId.Value>0)
+                    else if (icv.FileId>0)
                     {
-                        _pendingFileId = icv.FileStorageId.Value;
+                        _pendingFileId = icv.FileId;
                         CurrentFileId = _pendingFileId;
                         if (_enableAsyncLoading)
                         {
@@ -542,7 +543,7 @@ namespace SourceGrid.Cells.Views
                 // 根据状态绘制不同的标记
                 switch (status)
                 {
-                    case ImageStatus.PendingDelete:
+                    case SourceGrid.Cells.Editors.ImageStatus.PendingDelete:
                         // 绘制待删除标记
                         DrawPendingDeleteMark(graphics, area);
                         break;
@@ -562,38 +563,15 @@ namespace SourceGrid.Cells.Views
         /// 获取图片状态
         /// </summary>
         /// <returns>图片状态</returns>
-        private ImageStatus GetImageStatus()
+        private SourceGrid.Cells.Editors.ImageStatus GetImageStatus()
         {
             try
             {
-                // 检查是否已加载 ImageStateManager 类型
-                var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
-                if (imageStateManagerType != null)
+                // 直接调用 ImageStateManager 获取图片信息
+                var imageInfo = ImageStateManager.Instance.GetImageInfo(CurrentFileId);
+                if (imageInfo != null)
                 {
-                    // 使用反射获取单例实例
-                    var instanceProperty = imageStateManagerType.GetProperty("Instance", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                    if (instanceProperty != null)
-                    {
-                        var instance = instanceProperty.GetValue(null);
-                        if (instance != null)
-                        {
-                            // 使用反射获取 GetImageInfo 方法
-                            var getImageInfoMethod = imageStateManagerType.GetMethod("GetImageInfo");
-                            if (getImageInfoMethod != null)
-                            {
-                                var imageInfo = getImageInfoMethod.Invoke(instance, new object[] { CurrentFileId });
-                                if (imageInfo != null)
-                                {
-                                    // 使用反射获取 Status 属性
-                                    var statusProperty = imageInfo.GetType().GetProperty("Status");
-                                    if (statusProperty != null)
-                                    {
-                                        return (ImageStatus)statusProperty.GetValue(imageInfo);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    return imageInfo.Status;
                 }
             }
             catch (Exception ex)
@@ -601,7 +579,7 @@ namespace SourceGrid.Cells.Views
                 System.Diagnostics.Debug.WriteLine("获取图片状态失败: " + ex.Message);
             }
 
-            return ImageStatus.Normal;
+            return SourceGrid.Cells.Editors.ImageStatus.Normal;
         }
 
         /// <summary>
@@ -675,24 +653,7 @@ namespace SourceGrid.Cells.Views
             }
         }
 
-        /// <summary>
-        /// 图片状态枚举
-        /// </summary>
-        private enum ImageStatus
-        {
-            /// <summary>
-            /// 正常状态
-            /// </summary>
-            Normal,
-            /// <summary>
-            /// 待删除状态
-            /// </summary>
-            PendingDelete,
-            /// <summary>
-            /// 待上传状态
-            /// </summary>
-            PendingUpload
-        }
+
 
         /// <summary>
         /// 检查图片是否有效

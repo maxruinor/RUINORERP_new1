@@ -193,7 +193,7 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
-        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题
+        /// 程序集解析事件,避免Assembly.LoadFrom导致的重复加载问题22
         /// </summary>
         private static System.Reflection.Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {

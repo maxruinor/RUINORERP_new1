@@ -665,6 +665,38 @@ namespace RUINORERP.Common.Extensions
                     }
                     return null;
                 }
+                else if (obj != null && obj.GetType().FullName == "SourceGrid.Cells.Models.ValueImageWeb" && targetType == typeof(string))
+                {
+                    // 使用反射处理ValueImageWeb类型，返回StoragePath属性
+                    try
+                    {
+                        var storagePathProperty = obj.GetType().GetProperty("StoragePath");
+                        if (storagePathProperty != null)
+                        {
+                            var storagePath = storagePathProperty.GetValue(obj);
+                            if (storagePath != null)
+                            {
+                                return storagePath.ToString();
+                            }
+                        }
+                        
+                        // 如果StoragePath为空，尝试返回OriginalFileName
+                        var originalFileNameProperty = obj.GetType().GetProperty("OriginalFileName");
+                        if (originalFileNameProperty != null)
+                        {
+                            var originalFileName = originalFileNameProperty.GetValue(obj);
+                            if (originalFileName != null)
+                            {
+                                return originalFileName.ToString();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // 反射失败，返回null
+                    }
+                    return null;
+                }
                 else
                 {
                     return Convert.ChangeType(obj, targetType);

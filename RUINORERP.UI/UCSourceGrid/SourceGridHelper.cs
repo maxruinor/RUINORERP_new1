@@ -608,7 +608,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                     //grid1[pt].View = new SourceGrid.Cells.Views.SingleImage();
                                 }
                                 if (dc.CustomFormat == CustomFormatType.WebPathImage)
-                                {
+                                {   
                                     //grid1[pt].View = sgdefine.ImagesWebViewModel ;
                                     // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
                                     var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
@@ -829,7 +829,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         }
                         // 清空ValueImageWeb模型中的CellImageBytes，避免使用旧的缓存数据
                         var valueImageWeb = currContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb)) as SourceGrid.Cells.Models.ValueImageWeb;
-                        if (valueImageWeb != null && valueImageWeb.CellImageBytes != null)
+                        if (valueImageWeb != null && valueImageWeb.CellImageBytes    != null)
                         {
                             valueImageWeb.CellImageBytes = null;
                             valueImageWeb.CellImageHashName = null;
@@ -871,7 +871,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
             int i = 1;
-            InsertItemData<C>(grid1, sgdefine, _details, BizKeyTargetColExp, i, true);
+                InsertItemData<C>(grid1, sgdefine, _details, BizKeyTargetColExp, i, true);
         }
 
 

@@ -355,7 +355,7 @@
     <Compile Include="SourceGrid\Cells\Editors\EditorControlBase.cs" />
     <Compile Include="SourceGrid\Cells\Editors\Factory.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImageCacheManager.cs" />
-    <Compile Include="SourceGrid\Cells\Editors\ImageCellValue.cs" />
+    <Compile Include="SourceGrid\Cells\Editors\ImageStatus.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImageNamingStrategy.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePicker.cs" />
     <Compile Include="SourceGrid\Cells\Editors\ImagePickerHelper.cs" />

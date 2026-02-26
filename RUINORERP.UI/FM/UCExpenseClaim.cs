@@ -74,7 +74,7 @@ namespace RUINORERP.UI.FM
             try
             {
                 // 检查是否已加载 ImageStateManager 类型
-                var imageStateManagerType = Type.GetType("RUINORERP.UI.UCSourceGrid.ImageStateManager, RUINORERP.UI");
+                var imageStateManagerType = Type.GetType("SourceGrid.ImageStateManager, SourceGrid");
                 if (imageStateManagerType != null)
                 {
                     // 使用反射获取单例实例
@@ -607,9 +607,7 @@ namespace RUINORERP.UI.FM
                             valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
                             // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                             var gridObj = grid1 as SourceGrid.Grid;
-                            var imageCellValue = gridObj?.CreateImageCellValue(fileStorageInfo.FileData, fileStorageInfo.StoragePath, fileStorageInfo.FileId)
-                                ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = fileStorageInfo.FileData, ImagePath = fileStorageInfo.StoragePath };
-                            cell.Value = imageCellValue;
+                            cell.Value = valueImageWeb;
 
                             // 设置视图
                             if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
@@ -1287,74 +1285,7 @@ namespace RUINORERP.UI.FM
                 return false;
             }
         }
-
-        /// <summary>
-        /// 替换明细图片1
-        /// </summary>
-        /// <param name="rowIndex">行索引</param>
-        /// <param name="newImageData">新图片数据</param>
-        /// <param name="fileName">文件名</param>
-        public async Task ReplaceDetailImage(int rowIndex, byte[] newImageData, string fileName)
-        {
-            try
-            {
-                if (rowIndex <= 0 || rowIndex >= grid1.RowsCount) return;
-
-                int colIndex = GetEvidenceImageColumnIndex();
-                if (colIndex < 0) return;
-
-                var cell = grid1[rowIndex, colIndex];
-                if (cell == null) return;
-
-                // 获取旧图片路径
-                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                {
-                    string oldImagePath = valueImageWeb.CellImageHashName;
-                    if (!string.IsNullOrEmpty(oldImagePath))
-                    {
-                        // 将旧文件添加到待删除列表
-                        AddImageToDeleteList(oldImagePath);
-                    }
-
-                    // 设置新图片
-                    string newHash = ImageHashHelper.GenerateHash(newImageData);
-                    valueImageWeb.SetImageNewHash(newHash);
-                    valueImageWeb.CellImageBytes = newImageData;
-                    valueImageWeb.CellImageHashName = fileName;
-                    // 使用 Grid.default 模式自动选择存储方式
-                    var gridObj = grid1 as SourceGrid.Grid;
-                    var imageCellValue = gridObj?.CreateImageCellValue(newImageData, fileName)
-                        ?? new SourceGrid.Cells.Editors.ImageCellValue { ImageData = newImageData, ImagePath = fileName };
-                    cell.Value = imageCellValue;
-
-                    // 设置视图
-                    if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
-                    {
-                        cell.View = new SourceGrid.Cells.Views.RemoteImageView();
-                    }
-
-                    // 更新明细对象
-                    var rowData = grid1.Rows[rowIndex].RowData;
-                    if (rowData is tb_FM_ExpenseClaimDetail detail)
-                    {
-                        detail.EvidenceImagePath = fileName;
-                    }
-
-                    // 刷新单元格
-                    var position = new SourceGrid.Position(rowIndex, colIndex);
-                    grid1.InvalidateCell(position);
-
-                    MainForm.Instance.uclog.AddLog("报销凭证图片已替换");
-                }
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "替换明细图片失败");
-                MessageBox.Show($"替换图片失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
+ 
         /// <summary>
         /// 检查并删除已替换的旧图片（在保存后调用）
         /// </summary>

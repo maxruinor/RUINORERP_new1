@@ -1,4 +1,6 @@
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using Netron.GraphLib;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
@@ -6,24 +8,23 @@ using RUINORERP.UI.ToolForm;
 using RUINORERP.UI.UControls;
 using SourceGrid;
 using SourceGrid.Cells.Editors;
+using SourceGrid.Cells.Models;
 using SourceGrid.Cells.Views;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Winista.Text.HtmlParser.Data;
+using static FastReport.Design.ToolWindows.DictionaryWindow;
 using static RUINORERP.UI.Log.UClog;
 using Color = System.Drawing.Color;
-using RUINOR.WinFormsUI.CustomPictureBox;
-using static FastReport.Design.ToolWindows.DictionaryWindow;
-using SqlSugar;
-using MathNet.Numerics.LinearAlgebra.Factorization;
-using System.IO;
 
 namespace RUINORERP.UI.UCSourceGrid
 {
@@ -855,6 +856,10 @@ namespace RUINORERP.UI.UCSourceGrid
 
             if (e.Button == MouseButtons.Right)
             {
+                // 更新当前单元格引用
+                _cell = sender.Cell as SourceGrid.Cells.Cell;
+
+                // 显示菜单
                 MyMenu.Show(sender.Grid, new Point(e.X, e.Y));
             }
         }
@@ -967,15 +972,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 string fileName = valueImageWeb.CellImageHashName;
 
                                 // 从ImageCellValue中获取图片ID
-                                var imageCellValue = cell.Value as SourceGrid.Cells.Editors.ImageCellValue;
-                                if (imageCellValue != null)
-                                {
-                                    // 检查ImageCellValue是否有FileId属性
-                                    if (imageCellValue.FileStorageId.HasValue)
-                                    {
-                                        imageId = imageCellValue.FileStorageId.Value;
-                                    }
-                                }
+                                imageId = valueImageWeb.FileId;
 
                                 // 确保有有效的图片ID
                                 if (imageId > 0)
@@ -1237,6 +1234,8 @@ namespace RUINORERP.UI.UCSourceGrid
         {
             SourceGrid.Cells.Cell cell = _cell;
             // 只要是 RemoteImageView 类型的单元格，就显示右键菜单
+            //如
+            return cell.Value is ValueImageWeb;
             return cell.View is RemoteImageView;
         }
 

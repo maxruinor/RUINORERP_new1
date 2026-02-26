@@ -55,6 +55,10 @@ namespace SourceGrid.Cells
             {
                 View = new RemoteImageView();
             }
+            if (!(View is RemoteImageView))
+            {
+                View = new RemoteImageView();
+            }
 
             // 如果传入了初始值，进行初始化
             if (value != null)

@@ -52,7 +52,7 @@ namespace SourceGrid
 
     /// <summary>
     /// 图片状态管理器
-    /// 统一管理表格控件中图片的状态和上传队列
+    /// 统一管理表格控件中图片的状态和上传队列2
     /// </summary>
     public class ImageStateManager
     {

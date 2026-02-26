@@ -151,7 +151,7 @@ namespace SourceGrid.Cells
             {
                 //      return GetContext().DisplayText;
                 //}
-                if (string.IsNullOrEmpty(_DisplayText))
+                if (string.IsNullOrEmpty(_DisplayText) && Value != null)
                 {
 
                     return Value.ToString();
@@ -296,7 +296,7 @@ namespace SourceGrid.Cells
             get { return ImageModel.ImageValue; }
             set { ImageModel.ImageValue = value; }
         }
- 
+
 
         #endregion
     }

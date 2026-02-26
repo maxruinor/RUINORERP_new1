@@ -42,25 +42,25 @@ namespace SourceGrid
             set => _defaultImageStorageMode = value;
         }
 
-        /// <summary>
-        /// Helper to create an ImageCellValue according to the current default mode.
-        /// </summary>
-        public SourceGrid.Cells.Editors.ImageCellValue CreateImageCellValue(byte[] data, string path, long fileid = 0)
-        {
-            if (DefaultImageStorageMode == ImageStorageMode.Binary)
-            {
-                return new SourceGrid.Cells.Editors.ImageCellValue
-                {
-                    ImageData = data,
-                    ImagePath = path,
-                    FileStorageId = fileid
-                };
-            }
-            else
-            {
-                return new SourceGrid.Cells.Editors.ImageCellValue { ImagePath = path };
-            }
-        }
+        ///// <summary>
+        ///// Helper to create an ImageCellValue according to the current default mode.
+        ///// </summary>
+        //public SourceGrid.Cells.Editors.ImageCellValue CreateImageCellValue(byte[] data, string path, long fileid = 0)
+        //{
+        //    if (DefaultImageStorageMode == ImageStorageMode.Binary)
+        //    {
+        //        return new SourceGrid.Cells.Editors.ImageCellValue
+        //        {
+        //            ImageData = data,
+        //            ImagePath = path,
+        //            FileStorageId = fileid
+        //        };
+        //    }
+        //    else
+        //    {
+        //        return new SourceGrid.Cells.Editors.ImageCellValue { ImagePath = path };
+        //    }
+        //}
 
 
         #endregion

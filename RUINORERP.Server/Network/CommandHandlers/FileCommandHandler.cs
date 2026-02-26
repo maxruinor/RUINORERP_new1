@@ -1104,7 +1104,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 记录删除结果
                                 if (fileDeleted)
                                 {
-                                    _logger?.LogInformation("文件删除成功: {FilePath}, FileId: {FileId}", deletedFilePath, fileStorageInfo.FileId);
+                                     
                                 }
                                 else
                                 {
@@ -1165,7 +1165,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             }
                         }
                         
-                        _logger?.LogInformation("业务关联记录处理完成，成功删除: {Count}条", relationDeletedCount);
+                        
                     }
                     catch (Exception ex)
                     {
@@ -1174,6 +1174,40 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
 
                     response.DeletedFileIds = deletedFileIds;
+
+                    // 删除文件存储信息数据行（如果没有其他业务引用）
+                    if (filesToDelete.Count > 0)
+                    {
+                        _logger?.LogDebug("开始删除文件存储信息数据行，数量: {Count}", filesToDelete.Count);
+                        foreach (var fileToDelete in filesToDelete)
+                        {
+                            try
+                            {
+                                if (fileToDelete.FileId > 0)
+                                {
+                                    // 物理删除文件存储信息
+                                    var deleteResult = await _fileStorageInfoController.DeleteAsync(fileToDelete.FileId);
+                                    if (deleteResult)
+                                    {
+                                        deletedCount++;
+                                        deletedFileIds.Add(fileToDelete.FileId.ToString());
+                                        _logger?.LogDebug("删除文件存储信息成功: FileId={FileId}, FileName={FileName}",
+                                            fileToDelete.FileId, fileToDelete.StorageFileName);
+                                    }
+                                    else
+                                    {
+                                        _logger?.LogWarning("删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger?.LogError(ex, "删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                // 记录错误但继续删除其他文件存储信息
+                            }
+                        }
+                
+                    }
 
                     // 同步HasAttachment标志（在删除关联后，事务内执行）
                     // 对所有受影响的业务实体进行同步

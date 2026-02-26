@@ -495,7 +495,7 @@ namespace RUINORERP.Server.Network.Services
                             fileInfo.isdeleted = true;
                             fileInfo.Modified_at = DateTime.Now;
                             await db.Updateable(fileInfo).ExecuteCommandAsync();
-                            _logger?.LogInformation("逻辑删除文件记录成功, FileId: {FileId}", fileId);
+                     
 
                             deletedCount++;
                         }

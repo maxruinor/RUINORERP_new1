@@ -8,7 +8,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
 {
     /// <summary>
     /// 文件删除请求 - 支持单文件和多文件删除
-    /// 删除的图片是来自一个单据下的文件
+    /// 删除的图片是来自一个单据下的文件1
     /// </summary>
     public class FileDeleteRequest : RequestBase
     {

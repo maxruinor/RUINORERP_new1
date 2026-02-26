@@ -349,7 +349,6 @@ namespace RUINORERP.UI
                     Path.Combine(Application.StartupPath, "bin"),
                     Path.Combine(Application.StartupPath, "lib"),
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Common Files"),
-                    Environment.GetFolderPath(Environment.SpecialFolder.System32)
                 };
                 
                 foreach (var path in commonPaths)

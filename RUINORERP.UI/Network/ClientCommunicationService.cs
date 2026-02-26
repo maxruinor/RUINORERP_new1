@@ -94,8 +94,8 @@ namespace RUINORERP.UI.Network
         private readonly TokenManager _tokenManager;
 
         // 心跳相关字段（优化后）
-        private readonly int _heartbeatIntervalMs = 15000; // 固定心跳间隔15秒，符合主流ERP系统实践
-        private readonly int _heartbeatTimeoutMs = 30000; // 心跳超时时间30秒，给予适当响应时间
+        private readonly int _heartbeatIntervalMs = 10000; // 固定心跳间隔15秒，符合主流ERP系统实践
+        private readonly int _heartbeatTimeoutMs = 20000; // 心跳超时时间30秒，给予适当响应时间
         private CancellationTokenSource _heartbeatCts; // 心跳取消令牌源
         private Model.Context.ApplicationContext _applicationContext;
         private Task _heartbeatTask;
@@ -168,9 +168,9 @@ namespace RUINORERP.UI.Network
         /// <summary>
         /// 心跳失败阈值
         /// 连续心跳失败达到此阈值时触发客户端锁定
-        /// 调整为3次，避免过长的不确定状态
+        /// 调整为8次，避免过长的不确定状态和误判
         /// </summary>
-        public const int HEARTBEAT_FAILURE_THRESHOLD = 5; // 增加心跳失败阈值，给予更多容错机会
+        public const int HEARTBEAT_FAILURE_THRESHOLD = 8; // 增加心跳失败阈值，给予更多容错机会
 
         /// <summary>
         /// 心跳失败事件
@@ -725,7 +725,12 @@ namespace RUINORERP.UI.Network
 
                         if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                         {
-                            Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                            // 增加额外检查，确保网络真的有问题
+                            bool isNetworkActuallyDown = !_connectionManager.IsConnected;
+                            if (isNetworkActuallyDown)
+                            {
+                                Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                            }
                         }
                     }
                 }
@@ -739,7 +744,12 @@ namespace RUINORERP.UI.Network
                     int currentFailures = Interlocked.Increment(ref _heartbeatFailedAttempts);
                     if (currentFailures >= HEARTBEAT_FAILURE_THRESHOLD)
                     {
-                        Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                        // 增加额外检查，确保网络真的有问题
+                        bool isNetworkActuallyDown = !_connectionManager.IsConnected;
+                        if (isNetworkActuallyDown)
+                        {
+                            Task.Run(() => HeartbeatFailureThresholdReached?.Invoke()).ConfigureAwait(false);
+                        }
                     }
                 }
             }
@@ -792,6 +802,8 @@ namespace RUINORERP.UI.Network
                     ClientId = _socketClient.ClientID,
                     ClientTime = DateTime.Now,
                     ClientStatus = "Normal",
+                        //
+                        //SessionToken=
                     ResourceUsage = CollectClientResourceUsage()
                 };
 

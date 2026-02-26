@@ -265,17 +265,22 @@ namespace RUINORERP.UI
                 // 仅在已登录状态下通知用户
                 if (CurrentLoginStatus == LoginStatus.LoggedIn)
                 {
-                    // 在UI线程上显示网络状态提示
-                    if (InvokeRequired)
+                    // 增加额外的连接状态检查
+                    bool isActuallyConnected = communicationService?.ConnectionManager.IsConnected ?? false;
+                    if (!isActuallyConnected)
                     {
-                        BeginInvoke(new Action(() =>
+                        // 在UI线程上显示网络状态提示
+                        if (InvokeRequired)
+                        {
+                            BeginInvoke(new Action(() =>
+                            {
+                                ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
+                            }));
+                        }
+                        else
                         {
                             ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
-                        }));
-                    }
-                    else
-                    {
-                        ShowStatusText("网络连接不稳定，请检查网络，系统保持工作状态");
+                        }
                     }
                 }
             }

@@ -203,15 +203,18 @@ namespace RUINORERP.UI.Network
                     return true;
                 }
 
-                // 3. 如果是局域网地址（192.168.x.x, 10.x.x.x, 172.16-31.x.x），使用更宽松的检查
+                // 3. 如果是局域网地址，使用更宽松的检查策略
                 if (IsPrivateNetworkAddress(_targetHost))
                 {
-                    // 局域网环境下，优先使用Ping检查而非TCP连接检查
-                    // 因为TCP连接检查可能因为服务器负载或连接池限制而失败
-                    var pingResult = await TestPingAsync();
-                    if (pingResult)
+                    // 局域网环境下，优先使用Ping检查，但增加重试机制
+                    for (int i = 0; i < 2; i++)
                     {
-                        return true;
+                        var pingResult = await TestPingAsync();
+                        if (pingResult)
+                        {
+                            return true;
+                        }
+                        await Task.Delay(100); // 短暂延迟后重试
                     }
                     
                     // Ping失败后，再尝试TCP连接

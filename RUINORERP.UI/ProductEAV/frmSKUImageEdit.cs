@@ -8,6 +8,7 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.Network.Services;
 using Krypton.Toolkit;
+using RUINORERP.Common.BusinessImage;
 
 namespace RUINORERP.UI.ProductEAV
 {
@@ -25,7 +26,7 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 预加载的图片数据（从父窗口传递）
         /// </summary>
-        private List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> preloadedImages;
+        private List<Tuple<byte[], ImageInfo>> preloadedImages;
 
         /// <summary>
         /// 是否从服务器加载了图片
@@ -38,7 +39,7 @@ namespace RUINORERP.UI.ProductEAV
         /// <param name="detail">产品明细实体</param>
         /// <param name="existingImages">预加载的图片数据（可选，用于显示已缓存的图片）</param>
         public frmSKUImageEdit(tb_ProdDetail detail,
-            List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> existingImages = null)
+            List<Tuple<byte[], ImageInfo>> existingImages = null)
         {
             this.prodDetail = detail ?? throw new ArgumentNullException(nameof(detail));
             this.preloadedImages = existingImages;
@@ -88,14 +89,14 @@ namespace RUINORERP.UI.ProductEAV
 
                 // 提取图片数据和元数据
                 List<byte[]> imageDataList = new List<byte[]>();
-                List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> imageInfos = new List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>();
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
 
                 foreach (var item in preloadedImages)
                 {
                     if (item.Item1 != null && item.Item1.Length > 0)
                     {
                         imageDataList.Add(item.Item1);
-                        imageInfos.Add(item.Item2 ?? new RUINOR.WinFormsUI.CustomPictureBox.ImageInfo());
+                        imageInfos.Add(item.Item2 ?? new ImageInfo());
                     }
                 }
 
@@ -197,7 +198,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 List<byte[]> imageDataList = new List<byte[]>();
-                List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> imageInfos = new List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>();
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
 
                 foreach (var response in downloadResponse)
                 {
@@ -317,7 +318,7 @@ namespace RUINORERP.UI.ProductEAV
         /// 获取需要上传的图片
         /// </summary>
         /// <returns>需要上传的图片列表</returns>
-        public List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> GetUpdatedImages()
+        public List<Tuple<byte[], ImageInfo>> GetUpdatedImages()
         {
             return magicPictureBox.GetImagesNeedingUpdate();
         }
@@ -326,7 +327,7 @@ namespace RUINORERP.UI.ProductEAV
         /// 获取已删除的图片
         /// </summary>
         /// <returns>已删除的图片列表</returns>
-        public List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> GetDeletedImages()
+        public List<ImageInfo> GetDeletedImages()
         {
             return magicPictureBox.GetDeletedImages();
         }

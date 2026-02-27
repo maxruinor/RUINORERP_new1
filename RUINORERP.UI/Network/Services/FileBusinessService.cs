@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
+using RUINORERP.Common.BusinessImage;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Global;
 using RUINORERP.Model;

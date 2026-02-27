@@ -1,6 +1,7 @@
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using Netron.GraphLib;
 using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Common.BusinessImage;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;

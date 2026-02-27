@@ -1,5 +1,6 @@
 using DevAge.Drawing;
 using DevAge.Drawing.VisualElements;
+using RUINORERP.Common.BusinessImage;
 using SourceGrid.Cells.Editors;
 using SourceGrid.Cells.Models;
 using System;
@@ -628,7 +629,7 @@ namespace SourceGrid.Cells.Views
                 // 根据状态绘制不同的标记
                 switch (status)
                 {
-                    case SourceGrid.Cells.Editors.ImageStatus.PendingDelete:
+                    case  ImageStatus.PendingDelete:
                         // 绘制待删除标记
                         DrawPendingDeleteMark(graphics, area);
                         break;
@@ -648,7 +649,7 @@ namespace SourceGrid.Cells.Views
         /// 获取图片状态
         /// </summary>
         /// <returns>图片状态</returns>
-        private SourceGrid.Cells.Editors.ImageStatus GetImageStatus()
+        private ImageStatus GetImageStatus()
         {
             try
             {
@@ -664,7 +665,7 @@ namespace SourceGrid.Cells.Views
                 System.Diagnostics.Debug.WriteLine("获取图片状态失败: " + ex.Message);
             }
 
-            return SourceGrid.Cells.Editors.ImageStatus.Normal;
+            return ImageStatus.Normal;
         }
 
         /// <summary>

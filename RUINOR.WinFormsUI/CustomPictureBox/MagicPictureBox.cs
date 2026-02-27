@@ -10,6 +10,7 @@ using System.IO;
 using System.ComponentModel;
 using RUINOR.WinFormsUI.CustomPictureBox.Implementations;
 using RUINORERP.Common.Helper;
+using RUINORERP.Common.BusinessImage;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {

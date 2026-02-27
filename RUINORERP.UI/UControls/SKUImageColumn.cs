@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RUINORERP.Common.BusinessImage;
 using RUINORERP.Model;
 using RUINORERP.UI.Network.Services;
 
@@ -141,7 +142,7 @@ namespace RUINORERP.UI.UControls
                         BindingFlags.NonPublic | BindingFlags.Instance);
                     if (cacheField != null)
                     {
-                        var cache = cacheField.GetValue(frmProductEdit) as System.Collections.Generic.Dictionary<tb_ProdDetail, System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>>;
+                        var cache = cacheField.GetValue(frmProductEdit) as System.Collections.Generic.Dictionary<tb_ProdDetail, System.Collections.Generic.List<System.Tuple<byte[], ImageInfo>>>;
                         if (cache != null && cache.TryGetValue(detail, out var cachedImages) && cachedImages.Count > 0)
                         {
                             // 绘制缓存的图片
@@ -394,7 +395,7 @@ namespace RUINORERP.UI.UControls
         /// 优化：在单元格内合理缩放和定位，不超出边界
         /// </summary>
         private void DrawCachedImage(Graphics graphics, Rectangle cellBounds,
-            System.Collections.Generic.List<System.Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> cachedImages,
+            System.Collections.Generic.List<System.Tuple<byte[], ImageInfo>> cachedImages,
             bool hasUnsavedChanges)
         {
             try

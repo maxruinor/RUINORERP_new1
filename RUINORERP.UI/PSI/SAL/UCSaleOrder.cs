@@ -1742,19 +1742,20 @@ namespace RUINORERP.UI.PSI.SAL
         }
 
         /// <summary>
-        /// 上传或删除图片（如果需要）
-        /// 重写基类方法，实现销售订单凭证图片的上传和删除逻辑
+        /// 同步图片（如果需要）
+        /// 重写基类方法，实现销售订单凭证图片的同步逻辑
         /// </summary>
-        /// <returns>操作是否成功</returns>
-        protected override async Task<bool> UploadImagesIfNeeded()
+        /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
+        protected override async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
+            var syncResults = new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
             try
             {
                 // 检查实体是否已保存（必须有主键ID）
                 if (EditEntity == null || EditEntity.PrimaryKeyID <= 0)
                 {
                     MainForm.Instance.uclog.AddLog("单据尚未保存，无法操作图片");
-                    return false;
+                    return syncResults;
                 }
 
                 if (magicPictureBox订金付款凭证 != null)
@@ -1777,13 +1778,20 @@ namespace RUINORERP.UI.PSI.SAL
                         if (!deleteSuccess)
                         {
                             MainForm.Instance.uclog.AddLog("图片删除失败", Global.UILogType.错误);
-                            return false;
+                            return syncResults;
                         }
                         else
                         {
                             MainForm.Instance.uclog.AddLog("图片删除成功", Global.UILogType.成功提示消息);
                             // 删除成功后清空删除列表
                             magicPictureBox订金付款凭证.ClearDeletedImagesList();
+                            // 添加删除同步结果
+                            var deletedImageIds = deletedImages.Select(img => img.FileId).ToList();
+                            syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(
+                                EditEntity.PrimaryKeyID, 
+                                deletedImageIds, 
+                                RUINORERP.Common.BusinessImage.ImageSyncType.Delete
+                            ));
                         }
                     }
 
@@ -1802,29 +1810,31 @@ namespace RUINORERP.UI.PSI.SAL
                         if (!uploadSuccess)
                         {
                             MainForm.Instance.uclog.AddLog("图片上传失败", Global.UILogType.错误);
-                            return false;
+                            return syncResults;
                         }
                         else
                         {
                             MainForm.Instance.uclog.AddLog("图片上传成功", Global.UILogType.成功提示消息);
+                            // 添加上传同步结果
+                            var uploadedImageIds = updatedImages.Select(img => img.Item2.FileId).ToList();
+                            syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(
+                                EditEntity.PrimaryKeyID, 
+                                uploadedImageIds, 
+                                RUINORERP.Common.BusinessImage.ImageSyncType.Add
+                            ));
                         }
                     }
 
-                    // 如果有图片操作（上传或删除），都返回true
-                    if ((updatedImages != null && updatedImages.Count > 0) || 
-                        (deletedImages != null && deletedImages.Count > 0))
-                    {
-                        return true;
-                    }
+                    // 如果有图片操作（上传或删除），都会在前面添加到syncResults中
                 }
 
-                return true;
+                return syncResults;
             }
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
                 logger.LogError(ex, "上传图片异常");
-                return false;
+                return syncResults;
             }
         }
     }

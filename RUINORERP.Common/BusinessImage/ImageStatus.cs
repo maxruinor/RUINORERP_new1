@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace SourceGrid.Cells.Editors
+namespace RUINORERP.Common.BusinessImage
 {
     /// <summary>
     /// 图片状态枚举
@@ -22,5 +22,4 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         PendingUpload
     }
-
 }

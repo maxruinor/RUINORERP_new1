@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using RUINOR.WinFormsUI.CustomPictureBox; // 用于访问ImageInfo类
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Common.BusinessImage; // 用于访问ImageInfo类
 
 namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 {

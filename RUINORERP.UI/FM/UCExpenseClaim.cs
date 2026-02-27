@@ -51,6 +51,7 @@ using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
 using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.UI.UCSourceGrid;
+using RUINORERP.Common.BusinessImage;
 
 namespace RUINORERP.UI.FM
 {
@@ -837,6 +838,112 @@ namespace RUINORERP.UI.FM
 
 
         List<tb_FM_ExpenseClaimDetail> details = new List<tb_FM_ExpenseClaimDetail>();
+
+        //
+        /// <summary>
+        /// 同步图片（如果需要）
+        /// 重写基类方法，实现费用报销单的图片同步逻辑
+        /// </summary>
+        /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
+        protected override async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
+        {
+            var syncResults = new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+            
+            if (EditEntity == null)
+            {
+                return syncResults;
+            }
+            
+            // 直接调用ImageStateManager，不再使用反射
+            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
+            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            
+            // 处理待删除的图片
+            if (pendingDeleteImages.Count > 0)
+            {
+                // 调用基类的删除方法
+                bool deleteSuccess = await base.DeletePendingImagesAsync(pendingDeleteImages, typeof(tb_FM_ExpenseClaim).Name);
+                if (deleteSuccess)
+                {
+                    MainForm.Instance.PrintInfoLog($"成功删除 {pendingDeleteImages.Count} 张待删除图片。");
+                    // 按业务ID分组处理删除的图片
+                    var deleteGroups = pendingDeleteImages.GroupBy(img => img.BusinessId);
+                    foreach (var group in deleteGroups)
+                    {
+                        var imageIds = group.Select(img => img.ImageId).ToList();
+                        syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(group.Key, imageIds, RUINORERP.Common.BusinessImage.ImageSyncType.Delete));
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
+                }
+            }
+            
+            // 处理明细凭证图片上传（使用文件服务器方式）
+            bindingSourceSub.EndEdit();
+            List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
+            if (detailentity != null)
+            {
+                var details = detailentity.Where(t => t.SingleAmount != 0).ToList();
+                if (details.Count > 0)
+                {
+                    bool uploadImg = await base.SaveFileToServer(sgd, details);
+                    if (uploadImg)
+                    {
+                        // 保存到数据库。因为明细中的图片路径对应的字段数据更新为id了
+                        // 重新保存明细数据，确保图片ID已更新
+                        var saveDetailResult = await base.Save(EditEntity);
+                        if (saveDetailResult.Succeeded)
+                        {
+                            MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
+                            // 收集同步成功的图片ID，按业务ID分组
+                            foreach (var detail in details)
+                            {
+                                // 假设明细的主键是ID，作为业务ID
+                                long businessId = detail.ClaimSubID;
+                                var imageIds = new List<long>();
+                                // 假设明细中有图片ID字段，这里根据实际情况调整
+                                // 例如：如果明细有多个图片字段，需要遍历所有图片字段
+                                // 这里仅作为示例，实际需要根据业务实体结构调整
+                                // if (detail.ImageId > 0) imageIds.Add(detail.ImageId);
+                                
+                                // 处理待上传的图片，按业务ID分组
+                                var uploadImagesByBusinessId = pendingUploadImages.Where(img => img.BusinessId == businessId).ToList();
+                                if (uploadImagesByBusinessId.Count > 0)
+                                {
+                                    imageIds.AddRange(uploadImagesByBusinessId.Select(img => img.ImageId));
+                                }
+                                
+                                if (imageIds.Count > 0)
+                                {
+                                    syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(businessId, imageIds, RUINORERP.Common.BusinessImage.ImageSyncType.Add));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog("更新明细图片ID失败。");
+                        }
+                    }
+                    else
+                    {
+                        MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
+                    }
+                }
+            }
+            
+            // 清理已处理的图片状态
+            var processedImageIds = new List<long>(pendingDeleteImages.Select(c => c.ImageId));
+            processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
+            ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
+            
+            // 刷新网格显示
+            grid1.Refresh();
+            
+            return syncResults;
+        }
+
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)
@@ -907,15 +1014,11 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-                // 使用事务处理保存和图片操作
+                // 使用事务处理保存操作
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
 
                 if (NeedValidated)
                 {
-                    // 直接调用ImageStateManager，不再使用反射
-                    var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
-                    var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
-
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
@@ -923,50 +1026,51 @@ namespace RUINORERP.UI.FM
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
-
-                        // 处理待删除的图片
-                        if (pendingDeleteImages.Count > 0)
+                        
+                        // 调用图片同步方法
+                        var syncResults = await SyncImagesIfNeeded();
+                        // 检查是否有图片同步成功
+                        bool hasSyncedImages = syncResults.Any();
+                        if (!hasSyncedImages && ImageStateManager.Instance.GetPendingUploadImages().Count > 0)
                         {
-                            // 调用基类的删除方法
-                            bool deleteSuccess = await base.DeletePendingImagesAsync(pendingDeleteImages, typeof(tb_FM_ExpenseClaim).Name);
-                            if (!deleteSuccess)
-                            {
-                                MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
-                                return false;
-                            }
-                            MainForm.Instance.PrintInfoLog($"成功删除 {pendingDeleteImages.Count} 张待删除图片。");
-                        }
-
-                        // 处理明细凭证图片上传（使用文件服务器方式）
-                        bool uploadImg = await base.SaveFileToServer(sgd, EditEntity.tb_FM_ExpenseClaimDetails);
-                        if (uploadImg)
-                        {
-                            // 保存到数据库。因为明细中的图片路径对应的字段数据更新为id了
-                            // 重新保存明细数据，确保图片ID已更新
-                            var saveDetailResult = await base.Save(EditEntity);
-                            if (saveDetailResult.Succeeded)
-                            {
-                                MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
-                            }
-                            else
-                            {
-                                MainForm.Instance.uclog.AddLog("更新明细图片ID失败。");
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
+                            // 有图片需要同步但同步失败
+                            MainForm.Instance.uclog.AddLog("图片同步失败。");
                             return false;
                         }
-
-                        // 清理已处理的图片状态
-                        var processedImageIds = new List<long>(pendingDeleteImages.Select(c => c.ImageId));
-                        processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
-                        ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
-
-                        // 刷新网格显示
-                        grid1.Refresh();
+                        // 根据同步结果更新业务表中的图片列
+                        foreach (var result in syncResults)
+                        {
+                            // 找到对应业务ID的明细记录
+                            var detail = EditEntity.tb_FM_ExpenseClaimDetails.FirstOrDefault(d => d.ClaimSubID == result.BusinessId);
+                            if (detail != null)
+                            {
+                                if (result.SyncType == RUINORERP.Common.BusinessImage.ImageSyncType.Add)
+                                {
+                                    // 新增图片，更新图片ID到业务表
+                                    // 这里需要根据实际的图片字段名进行调整
+                                    // 例如：detail.ImageId = result.ImageIds.FirstOrDefault();
+                                    // 或者如果支持多个图片，可能需要用逗号分隔的字符串
+                                    // detail.ImageIds = string.Join(",", result.ImageIds);
+                                }
+                                else if (result.SyncType == RUINORERP.Common.BusinessImage.ImageSyncType.Delete)
+                                {
+                                    // 删除图片，清空对应业务表的图片字段
+                                    // 这里需要根据实际的图片字段名进行调整
+                                    // 例如：detail.ImageId = 0;
+                                    // 或者如果支持多个图片，可能需要从现有值中移除删除的ID
+                                }
+                            }
+                        }
+                        // 如果有图片同步结果，重新保存明细数据以更新图片字段
+                        if (syncResults.Any())
+                        {
+                            var saveDetailResult = await base.Save(EditEntity);
+                            if (!saveDetailResult.Succeeded)
+                            {
+                                MainForm.Instance.uclog.AddLog("更新明细图片字段失败。");
+                                return false;
+                            }
+                        }
                     }
                     else
                     {

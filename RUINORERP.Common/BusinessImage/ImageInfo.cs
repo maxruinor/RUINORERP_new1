@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Drawing;
 
-namespace RUINOR.WinFormsUI.CustomPictureBox
+namespace RUINORERP.Common.BusinessImage
 {
-
     /// <summary>
     /// 图片信息类
     /// </summary>
@@ -52,14 +48,5 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 图片高度
         /// </summary>
         public int Height { get; set; } = 0;
-    }
-    /// <summary>
-    /// 缓存的图片类
-    /// </summary>
-    public class CachedImage
-    {
-        public Image Image { get; set; }
-        public byte[] ImageBytes { get; set; }
-        public DateTime LastAccessTime { get; set; }
     }
 }

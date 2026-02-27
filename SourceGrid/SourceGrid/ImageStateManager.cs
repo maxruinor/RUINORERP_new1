@@ -4,59 +4,16 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using RUINORERP.Common.BusinessImage;
 using SourceGrid.Cells;
 using SourceGrid.Cells.Editors;
 
 namespace SourceGrid
 {
-    /// <summary>
-    /// 扩展的图片信息类，添加状态管理功能
-    /// </summary>
-    public class ExtendedImageInfo
-    {
-        /// <summary>
-        /// 图片ID
-        /// </summary>
-        public long ImageId { get; set; }
-        public long BusinessId { get; set; }
-        /// <summary>
-        /// 图片文件名
-        /// </summary>
-        public string FileName { get; set; }
-
-        /// <summary>
-        /// 存储的相对路径（不带文件名），用于服务器搜索
-        /// </summary>
-        public string StoragePath { get; set; }
-
-        /// <summary>
-        /// 图片字节数据
-        /// </summary>
-        public byte[] ImageData { get; set; }
-
-        /// <summary>
-        /// 图片状态
-        /// </summary>
-        public ImageStatus Status { get; set; }
-
-        /// <summary>
-        /// 图片预览
-        /// </summary>
-        public Image PreviewImage { get; set; }
-
-        /// <summary>
-        /// 单元格引用
-        /// </summary>
-        public Cell Cell { get; set; }
-
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-        public DateTime CreateTime { get; set; }
-    }
 
     /// <summary>
     /// 图片状态管理器
+    /// 目前是主要处理的是表格明细的图片。将来要主表单个图片也用这种方式管理的话，可以考虑增加一个图片类型字段来区分不同用途的图片。
     /// 统一管理表格控件中图片的状态和上传队列2
     /// </summary>
     public class ImageStateManager
@@ -88,7 +45,7 @@ namespace SourceGrid
         private ImageStateManager()
         {
             _imageInfoDict = new ConcurrentDictionary<long, ExtendedImageInfo>();
-            _cellToImageDict = new ConcurrentDictionary<Cell, List<long>>();
+            _cellToImageDict = new ConcurrentDictionary<object, List<long>>();
         }
 
         #endregion
@@ -96,7 +53,7 @@ namespace SourceGrid
         #region 私有字段
 
         private readonly ConcurrentDictionary<long, ExtendedImageInfo> _imageInfoDict;
-        private readonly ConcurrentDictionary<Cell, List<long>> _cellToImageDict;
+        private readonly ConcurrentDictionary<object, List<long>> _cellToImageDict;
 
         #endregion
 

@@ -102,7 +102,6 @@
     <Compile Include="CustomPictureBox\ImageCroppingBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="CustomPictureBox\ImageInfo.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageProcessor.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageUpdateManager.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageUtils.cs" />

@@ -13,6 +13,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
+using RUINORERP.Common.BusinessImage;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -2573,7 +2574,7 @@ namespace RUINORERP.UI.ProductEAV
                 try
                 {
                     // 准备传递给编辑器的缓存图片数据
-                    List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> cachedImages = null;
+                    List<Tuple<byte[], ImageInfo>> cachedImages = null;
                     if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail].Count > 0)
                     {
                         cachedImages = skuImageDataCache[detail];
@@ -3027,7 +3028,7 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 // 将下载的图片转换为缓存格式
-                var imageDataList = new List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>>();
+                var imageDataList = new List<Tuple<byte[], ImageInfo>>();
 
                 foreach (var downloadResponse in list)
                 {
@@ -3038,7 +3039,7 @@ namespace RUINORERP.UI.ProductEAV
                             if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                             {
                                 var imageInfo = ctrpay.ConvertToImageInfo(fileStorageInfo);
-                                imageDataList.Add(new Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>(
+                                imageDataList.Add(new Tuple<byte[], ImageInfo>(
                                     fileStorageInfo.FileData, imageInfo));
                             }
                         }
@@ -3083,7 +3084,7 @@ namespace RUINORERP.UI.ProductEAV
 
                 // 简化处理逻辑，直接处理文件存储信息
                 List<byte[]> imageDataList = new List<byte[]>();
-                List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> imageInfos = new List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>();
+                List<ImageInfo> imageInfos = new List<ImageInfo>();
 
                 foreach (var downloadResponse in list)
                 {
@@ -3159,7 +3160,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="detail">SKU明细对象</param>
         /// <returns>需要更新的图片列表</returns>
-        private List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
+        private List<Tuple<byte[], ImageInfo>> GetSKUImagesNeedingUpdate(tb_ProdDetail detail)
         {
             // 检查缓存中是否有待上传的图片
             if (skuImageDataCache.ContainsKey(detail) && skuImageDataCache[detail] != null)
@@ -3176,7 +3177,7 @@ namespace RUINORERP.UI.ProductEAV
         /// </summary>
         /// <param name="detail">SKU明细对象</param>
         /// <returns>需要删除的图片列表</returns>
-        private List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
+        private List<ImageInfo> GetSKUImagesToDelete(tb_ProdDetail detail)
         {
             // 检查缓存中是否有待删除的图片
             if (skuImageDeletedCache.ContainsKey(detail) && skuImageDeletedCache[detail] != null)
@@ -3200,8 +3201,8 @@ namespace RUINORERP.UI.ProductEAV
         /// <returns>操作是否成功</returns>
         public async Task<bool> UploadUpdatedImagesAsync<Target>(
             Target entity,
-            List<Tuple<byte[], RUINOR.WinFormsUI.CustomPictureBox.ImageInfo>> updatedImages,
-            List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> deletedImages,
+            List<Tuple<byte[], ImageInfo>> updatedImages,
+            List<ImageInfo> deletedImages,
             Expression<Func<Target, object>> TargetField)
         {
             var ctrpay = Startup.GetFromFac<FileBusinessService>();
@@ -3410,7 +3411,7 @@ namespace RUINORERP.UI.ProductEAV
                             skuImageDataCacheById[savedDetail.ProdDetailID] = imagesToUpload;
 
                             // 获取需要删除的图片
-                            List<RUINOR.WinFormsUI.CustomPictureBox.ImageInfo> deletedImages = null;
+                            List<ImageInfo> deletedImages = null;
                             if (skuImageDeletedCache.TryGetValue(originalDetail, out var cachedDeletions))
                             {
                                 deletedImages = cachedDeletions;

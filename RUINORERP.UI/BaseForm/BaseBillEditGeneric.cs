@@ -105,6 +105,7 @@ using static RUINORERP.UI.Common.GUIUtils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
 using RUINORERP.UI.BaseForm.Helpers;
+using RUINORERP.Common.BusinessImage;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -1650,15 +1651,15 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 上传图片（如果需要）
-        /// 子类可以重写此方法以支持自定义的图片上传逻辑
+        /// 同步图片（如果需要）
+        /// 子类可以重写此方法以支持自定义的图片同步逻辑
         /// </summary>
-        /// <returns>上传是否成功</returns>
-        protected virtual async Task<bool> UploadImagesIfNeeded()
+        /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
+        protected virtual async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
-            // 子类可以重写此方法，实现具体的图片上传逻辑
-            // 默认返回true，子类可以根据需要实现
-            return await Task.FromResult(true);
+            // 子类可以重写此方法，实现具体的图片同步逻辑
+            // 默认返回空列表，子类可以根据需要实现
+            return await Task.FromResult(new List<RUINORERP.Common.BusinessImage.ImageSyncResult>());
         }
 
 
@@ -2608,11 +2609,13 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else if (hasImagesToUpload)
                         {
-                            // 实体没有变化但有图片需要上传，直接调用上传图片方法
-                            MainForm.Instance.uclog.AddLog("单据数据未变更，但检测到有图片需要上传");
-                            await UploadImagesIfNeeded();
+                            // 实体没有变化但有图片需要同步，直接调用同步图片方法
+                            MainForm.Instance.uclog.AddLog("单据数据未变更，但检测到有图片需要同步");
+                            var syncResults = await SyncImagesIfNeeded();
 
-                            rsSave = true; // 图片上传成功视为保存成功
+                            // 检查是否有图片同步成功
+                            bool hasSyncedImages = syncResults.Any();
+                            rsSave = hasSyncedImages; // 有图片同步成功视为保存成功
                         }
 
                     }
@@ -4274,7 +4277,7 @@ namespace RUINORERP.UI.BaseForm
         /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
         /// 上传图片。要返回图片ID的主键
         /// </summary>
-        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<SourceGrid.ExtendedImageInfo> pendingUploadImages)
+        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<ExtendedImageInfo> pendingUploadImages)
         {
             bool rs = true;
             int processedCount = 0;
@@ -4290,7 +4293,7 @@ namespace RUINORERP.UI.BaseForm
                     try
                     {
                         // 直接使用 imageInfo.Cell 引用，而不是重新查找
-                        SourceGrid.Cells.Cell cell = imageInfo.Cell;
+                        SourceGrid.Cells.Cell cell = imageInfo.Cell as SourceGrid.Cells.Cell;
                         C detail = null;
 
                         if (cell != null)

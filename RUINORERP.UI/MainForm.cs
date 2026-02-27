@@ -3495,9 +3495,17 @@ namespace RUINORERP.UI
         /// <summary>
         /// 显示信息到状态栏
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">要显示的文本</param>
         public void ShowStatusText(string text)
         {
+            // 检查是否在UI线程中执行
+            if (this.InvokeRequired)
+            {
+                // 如果不在UI线程，通过Invoke在UI线程中执行
+                this.Invoke(new Action<string>(ShowStatusText), text);
+                return;
+            }
+            
             this.lblStatusGlobal.Text = text;
             this.lblStatusGlobal.Visible = true;
             statusTimer.Start();
@@ -3505,6 +3513,14 @@ namespace RUINORERP.UI
 
         private void statusTimer_Tick(object sender, EventArgs e)
         {
+            // 检查是否在UI线程中执行
+            if (this.InvokeRequired)
+            {
+                // 如果不在UI线程，通过Invoke在UI线程中执行
+                this.Invoke(new Action(() => statusTimer_Tick(sender, e)));
+                return;
+            }
+            
             statusTimer.Stop();
             this.lblStatusGlobal.Visible = false;
             GetAutoUpdateConfig();

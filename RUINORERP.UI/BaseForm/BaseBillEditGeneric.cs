@@ -1640,6 +1640,12 @@ namespace RUINORERP.UI.BaseForm
         {
             // 子类可以重写此方法，检查其MagicPictureBox控件
             // 默认返回false，子类可以根据需要实现
+            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
+            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            if (pendingDeleteImages.Count > 0 || pendingUploadImages.Count > 0)
+            {
+                return true;
+            }
             return false;
         }
 
@@ -2462,7 +2468,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.修改:
@@ -2505,7 +2511,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.查询:
@@ -2525,7 +2531,7 @@ namespace RUINORERP.UI.BaseForm
                         if (btnQuery != null)
                         {
                             btnQuery.Enabled = true;
-                            MainForm.Instance?.ShowStatusText(string.Empty);
+    
                         }
                     }
                     break;
@@ -2549,7 +2555,7 @@ namespace RUINORERP.UI.BaseForm
                         // 检查是否有图片需要上传（支持编辑单据后补传图片的场景）
                         bool hasImagesToUpload = HasImagesToUpload();
 
-                        // 如果实体没有变化且没有图片需要上传，则提示并返回
+                        // 如果实体没有变化且没有图片需要上传，则提示并返回1
                         if (!EditEntity.HasChanged && !hasImagesToUpload)
                         {
                             MainForm.Instance.ShowStatusText("数据没有变化，没有要保存的数据");
@@ -2640,7 +2646,7 @@ namespace RUINORERP.UI.BaseForm
                                 }
                             }
                         }
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.提交:
@@ -2709,7 +2715,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.撤回提交:
@@ -2769,7 +2775,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.关闭:
@@ -2792,7 +2798,7 @@ namespace RUINORERP.UI.BaseForm
                         if (btnRefresh != null)
                         {
                             btnRefresh.Enabled = true;
-                            MainForm.Instance?.ShowStatusText(string.Empty);
+    
                         }
                     }
                     break;
@@ -2855,7 +2861,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.反审:
@@ -2914,7 +2920,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.结案:
@@ -2960,7 +2966,7 @@ namespace RUINORERP.UI.BaseForm
                     }
                     finally
                     {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
+
                     }
                     break;
                 case MenuItemEnums.反结案:
@@ -6643,7 +6649,6 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 提交成功后保持禁用，失败后重新启用
                     btnSubmit.Enabled = false;
-                    MainForm.Instance?.ShowStatusText(string.Empty);
                 }
             }
         }
@@ -6843,7 +6848,6 @@ namespace RUINORERP.UI.BaseForm
                 if (btnCancelSubmit != null)
                 {
                     btnCancelSubmit.Enabled = false;
-                    MainForm.Instance?.ShowStatusText(string.Empty);
                 }
             }
 

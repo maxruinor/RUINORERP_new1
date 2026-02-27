@@ -460,7 +460,6 @@ namespace RUINORERP.UI.BaseForm
                         if (btnQuery != null)
                         {
                             btnQuery.Enabled = true;
-                            MainForm.Instance?.ShowStatusText(string.Empty);
                         }
                     }
                     break;
@@ -527,10 +526,7 @@ namespace RUINORERP.UI.BaseForm
                             btnSubmit.Enabled = true;
                         }
                     }
-                    finally
-                    {
-                        MainForm.Instance?.ShowStatusText(string.Empty);
-                    }
+                     
                     break;
                 case MenuItemEnums.属性:
                     Property();
@@ -573,7 +569,6 @@ namespace RUINORERP.UI.BaseForm
                             if (btnReview != null)
                             {
                                 btnReview.Enabled = true;
-                                MainForm.Instance?.ShowStatusText(string.Empty);
                             }
                         }
                     }
@@ -620,7 +615,6 @@ namespace RUINORERP.UI.BaseForm
                             if (btnReverseReview != null)
                             {
                                 btnReverseReview.Enabled = true;
-                                MainForm.Instance?.ShowStatusText(string.Empty);
                             }
                         }
                     }
@@ -667,7 +661,6 @@ namespace RUINORERP.UI.BaseForm
                             if (btnCloseCase != null)
                             {
                                 btnCloseCase.Enabled = true;
-                                MainForm.Instance?.ShowStatusText(string.Empty);
                             }
                         }
                     }
@@ -723,7 +716,6 @@ namespace RUINORERP.UI.BaseForm
                         if (btnDelete != null)
                         {
                             btnDelete.Enabled = true;
-                            MainForm.Instance?.ShowStatusText(string.Empty);
                         }
                     }
                     break;

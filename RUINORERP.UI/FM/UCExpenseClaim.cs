@@ -651,7 +651,7 @@ namespace RUINORERP.UI.FM
                     try
                     {
                         var ctrpay = Startup.GetFromFac<FileBusinessService>();
-                        var downloadResponse = await ctrpay.DownloadImageAsync(EditEntity);
+                        var downloadResponse = await ctrpay.DownloadImageAsync<tb_FM_ExpenseClaim>(EditEntity, c => c.CloseCaseImagePath);
 
                         if (downloadResponse != null && !downloadResponse.IsSuccess)
                         {

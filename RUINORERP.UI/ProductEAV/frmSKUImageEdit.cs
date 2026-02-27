@@ -181,7 +181,7 @@ namespace RUINORERP.UI.ProductEAV
                 lblInfo.Values.Text = "正在从服务器加载图片...";
 
                 var fileService = Startup.GetFromFac<FileBusinessService>();
-                var downloadResponse = await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
+                var downloadResponse = await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail,c=>c.ImagesPath);
 
                 if (downloadResponse == null || !downloadResponse.IsSuccess)
                 {

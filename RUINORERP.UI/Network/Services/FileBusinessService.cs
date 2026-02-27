@@ -151,62 +151,76 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 下载图片文件1
+        /// 下载图片
+        /// 通过反射获取实体关联字段的图片ID，然后下载图片
         /// </summary>
         /// <param name="entity">业务实体</param>
-        /// <param name="relatedField">关联字段名(可选，不传则下载所有字段)</param>
-        /// <returns>文件下载响应列表</returns>
-        public async Task<FileDownloadResponse> DownloadImageAsync(BaseEntity entity, string relatedField = null)
+        /// <param name="relatedField">关联字段名</param>
+        /// <returns>文件下载响应</returns>
+        public async Task<FileDownloadResponse> DownloadImageAsync(BaseEntity entity, string relatedField)
         {
-            FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
             // 获取文件管理服务
             var fileService = _appContext.GetRequiredService<FileManagementService>();
             try
             {
-                // 直接使用实体中已有的图片ID信息，不再查询数据库
-                // 假设实体已经在加载时包含了图片ID信息
-                // 这里需要根据实际的实体结构来获取图片ID
-
-                // 示例：从实体的FileStorageInfoList中获取图片ID
-                if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
+                // 通过反射获取关联字段的图片ID
+                if (!string.IsNullOrEmpty(relatedField) && entity != null)
                 {
-                    foreach (var fileStorageInfo in entity.FileStorageInfoList)
+                    // 反射获取关联字段的属性
+                    var propertyInfo = entity.GetType().GetProperty(relatedField);
+                    if (propertyInfo != null)
                     {
-                        if (fileStorageInfo.FileId > 0)
+                        // 获取关联字段的值
+                        var fieldValue = propertyInfo.GetValue(entity);
+                        if (fieldValue != null)
                         {
-                            // 创建下载请求 - 只传递文件ID
-                            var request = new FileDownloadRequest
+                            // 尝试将字段值转换为long类型的图片ID
+                            if (long.TryParse(fieldValue.ToString(), out long fileId) && fileId > 0)
                             {
-                                FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileStorageInfo.FileId }
-                            };
+                                // 创建下载请求 - 只传递文件ID
+                                var request = new FileDownloadRequest
+                                {
+                                    FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
+                                };
 
-                            // 下载文件
-                            var response = await fileService.DownloadFileAsync(request);
-                            if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                            {
-                                fileDownloadResponse = (FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
+                                // 下载文件
+                                var response = await fileService.DownloadFileAsync(request);
+                                return response;
                             }
                             else
                             {
-                                // 记录错误日志
-                                System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
+                                // 记录警告日志
+                                _logger.LogWarning($"关联字段 {relatedField} 的值不是有效的图片ID: {fieldValue}");
+                                return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值不是有效的图片ID");
                             }
                         }
+                        else
+                        {
+                            // 记录警告日志
+                            _logger.LogWarning($"关联字段 {relatedField} 的值为 null");
+                            return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值为 null");
+                        }
+                    }
+                    else
+                    {
+                        // 记录警告日志
+                        _logger.LogWarning($"实体 {entity.GetType().Name} 中不存在关联字段 {relatedField}");
+                        return FileDownloadResponse.CreateFailure($"实体中不存在关联字段 {relatedField}");
                     }
                 }
                 else
                 {
-                    // 如果实体中没有图片信息，记录警告
-                    System.Diagnostics.Debug.WriteLine("实体中没有图片信息，无法下载图片");
+                    // 记录警告日志
+                    _logger.LogWarning("未指定关联字段或实体，无法下载图片");
+                    return FileDownloadResponse.CreateFailure("未指定关联字段或实体，无法下载图片");
                 }
-
             }
             catch (Exception ex)
             {
                 // 记录异常日志
-                System.Diagnostics.Debug.WriteLine($"图片下载异常: {ex.Message}\n{ex.StackTrace}");
+                _logger.LogError(ex, "图片下载异常");
+                return FileDownloadResponse.CreateFailure($"图片下载异常: {ex.Message}");
             }
-            return fileDownloadResponse;
         }
 
         public async Task<FileDownloadResponse> DownloadImageAsync<T>(BaseEntity entity, Expression<Func<T, object>> exp)

@@ -612,7 +612,7 @@ namespace RUINORERP.UI.ProductEAV
                     try
                     {
                         var prodDetail = new tb_ProdDetail { ProdDetailID = prodDetailId };
-                        await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
+                        await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail, c => c.ImagesPath);
                     }
                     catch (Exception ex)
                     {
@@ -642,7 +642,7 @@ namespace RUINORERP.UI.ProductEAV
                 if (fileService != null && row.ProdDetailID > 0)
                 {
                     var prodDetail = new tb_ProdDetail { ProdDetailID = row.ProdDetailID };
-                    var downloadResponse = await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
+                    var downloadResponse = await fileService.DownloadImageAsync<tb_ProdDetail>(prodDetail, c => c.ImagesPath);
 
                     if (downloadResponse != null && downloadResponse.IsSuccess)
                     {

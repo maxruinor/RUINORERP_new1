@@ -3089,7 +3089,7 @@ namespace RUINORERP.UI.ProductEAV
             try
             {
                 // 下载ImagesPath字段关联的图片
-                var downloadResponse = await ctrpay.DownloadImageAsync(entity, "ImagesPath");
+                var downloadResponse = await ctrpay.DownloadImageAsync<tb_Prod>(entity, c => c.ImagesPath);
 
                 if (downloadResponse == null || !downloadResponse.IsSuccess)
                 {

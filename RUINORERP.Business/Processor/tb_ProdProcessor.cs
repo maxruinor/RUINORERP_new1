@@ -35,7 +35,7 @@ namespace RUINORERP.Business.Processor
     /// <summary>
     /// 产品基本信息表
     /// </summary>
-    public partial class tb_ProdProcessor:BaseProcessor 
+    public partial class tb_ProdProcessor : BaseProcessor
     {
         public override QueryFilter GetQueryFilter()
         {
@@ -56,13 +56,15 @@ namespace RUINORERP.Business.Processor
             queryFilter.SetQueryField<tb_Prod>(c => c.Specifications);
             queryFilter.SetQueryField<tb_Prod>(c => c.Location_ID);
             queryFilter.SetQueryField<tb_Prod>(c => c.DepartmentID);
-            queryFilter.SetQueryField<tb_Prod>(c => c.Rack_ID,false);
+            queryFilter.SetQueryField<tb_Prod>(c => c.Rack_ID, false);
             queryFilter.SetQueryField<tb_Prod>(c => c.Type_ID);
             queryFilter.SetQueryField<tb_Prod>(c => c.ShortCode);
+            queryFilter.SetQueryField<tb_Prod>(c => c.SalePublish);
             queryFilter.SetQueryField<tb_Prod>(c => c.Category_ID, true);
             queryFilter.SetQueryField<tb_Prod>(c => c.PropertyType, QueryFieldType.CmbEnum, typeof(ProductAttributeType));
             queryFilter.SetQueryField<tb_Prod>(c => c.SourceType, QueryFieldType.CmbEnum, typeof(GoodsSource));
             queryFilter.SetQueryField<tb_Prod>(c => c.DataStatus, QueryFieldType.CmbEnum, typeof(DataStatus));
+            queryFilter.SetQueryField<tb_Prod>(c => c.Created_at, AdvQueryProcessType.datetimeRange, false);
             queryFilter.SetQueryField<tb_Prod>(c => c.Notes);
             return queryFilter;
 

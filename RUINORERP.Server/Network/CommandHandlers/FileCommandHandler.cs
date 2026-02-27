@@ -1,4 +1,5 @@
 using Azure;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Business.Config;
@@ -52,6 +53,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private readonly FileUpdateService _fileUpdateService;
         private readonly FileCleanupService _fileCleanupService;
         private readonly HasAttachmentSyncService _hasAttachmentSyncService;
+        private readonly ImageCacheService _imageCacheService;
         /// <summary>
         /// 解析路径中的环境变量
         /// 支持 %ENV_VAR% 的格式
@@ -86,7 +88,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
             tb_FS_FileStorageVersionController<tb_FS_FileStorageVersion> fileStorageVersionController = null,
             FileUpdateService fileUpdateService = null,
             FileCleanupService fileCleanupService = null,
-            HasAttachmentSyncService hasAttachmentSyncService = null)
+            HasAttachmentSyncService hasAttachmentSyncService = null,
+            ImageCacheService imageCacheService = null)
         {
             _applicationContext = applicationContext;
             _sessionService = sessionService;
@@ -125,6 +128,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _fileUpdateService = fileUpdateService ?? throw new ArgumentNullException(nameof(fileUpdateService));
             _fileCleanupService = fileCleanupService ?? throw new ArgumentNullException(nameof(fileCleanupService));
             _hasAttachmentSyncService = hasAttachmentSyncService;
+            _imageCacheService = imageCacheService ?? throw new ArgumentNullException(nameof(imageCacheService));
 
             // 初始化文件存储路径
             FileStorageHelper.InitializeStoragePath(_serverConfig);
@@ -442,7 +446,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 处理文件下载
+        /// 处理文件下载1
         /// 方式1: 按文件ID下载
         /// 方式2: 按业务信息下载 (BusinessId/BusinessNo + RelatedField)
         /// 方式3: 下载单据所有图片 (DownloadAllImages=true)
@@ -548,10 +552,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         private async Task<tb_FS_FileStorageInfo> DownloadByFileIdAsync(long fileId, CancellationToken cancellationToken)
         {
+            // 先从缓存获取
+            var cachedImageInfo = _imageCacheService.GetImageInfo(fileId);
+            if (cachedImageInfo != null)
+            {
+                _logger?.LogDebug("从缓存获取图片信息: FileId={FileId}", fileId);
+                return cachedImageInfo;
+            }
+
+            // 缓存未命中，从数据库查询
             var fileInfos = await _fileStorageInfoController.QueryByNavAsync(c => c.FileStatus == (int)FileStatus.Active && c.FileId == fileId && c.isdeleted == false);
             if (fileInfos != null && fileInfos.Count > 0)
             {
-                return fileInfos[0] as tb_FS_FileStorageInfo;
+                var imageInfo = fileInfos[0] as tb_FS_FileStorageInfo;
+                // 添加到缓存
+                _imageCacheService.AddImageInfo(imageInfo);
+                _logger?.LogDebug("从数据库获取图片信息并缓存: FileId={FileId}", fileId);
+                return imageInfo;
             }
             return null;
         }

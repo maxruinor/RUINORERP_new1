@@ -47,6 +47,11 @@ using Image = System.Drawing.Image;
 
 namespace RUINORERP.UI.ProductEAV
 {
+
+
+    /// <summary>
+    /// 查询时UI上添加了一个参与销售 功能还没有实现。将来数据行限制来实现，让销售业务录入时不显示这么多内容，但是能通过条件设置可查到，在权限组中来控制参考销售的条件的默认勾选情况
+    /// </summary>
     [MenuAttrAssemblyInfo("产品查询", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCProdQuery : BaseUControl
     {
@@ -639,16 +644,15 @@ namespace RUINORERP.UI.ProductEAV
                     var prodDetail = new tb_ProdDetail { ProdDetailID = row.ProdDetailID };
                     var downloadResponse = await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
 
-                    if (downloadResponse != null && downloadResponse.Count > 0)
+                    if (downloadResponse != null && downloadResponse.IsSuccess)
                     {
                         int imageCount = 0;
-                        foreach (var response in downloadResponse)
-                        {
-                            if (response.IsSuccess && response.FileStorageInfos != null)
+                     
+                            if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
                             {
-                                imageCount += response.FileStorageInfos.Count;
+                                imageCount += downloadResponse.FileStorageInfos.Count;
                             }
-                        }
+                        
 
                         if (imageCount > 0)
                         {

@@ -311,7 +311,7 @@ namespace RUINORERP.UI.FM
                         }
                     };
                 }
-                    sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
+                sgh.LoadItemDataToGrid<tb_FM_ExpenseClaimDetail>(grid1, sgd, entity.tb_FM_ExpenseClaimDetails, c => c.ClaimSubID);
                 // 模拟按下 Tab 键
                 SendKeys.Send("{TAB}");//为了显示远程图片列
             }
@@ -550,15 +550,14 @@ namespace RUINORERP.UI.FM
             try
             {
                 var downloadResponse = await fileService.DownloadImageAsync<tb_FM_ExpenseClaimDetail>(detail, c => c.EvidenceImagePath);
-                if (downloadResponse != null && downloadResponse.Count > 0)
+                if (downloadResponse != null && !downloadResponse.IsSuccess)
                 {
-                    foreach (var response in downloadResponse)
+
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null && downloadResponse.FileStorageInfos.Count > 0)
                     {
-                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                        {
-                            fileStorageInfos.AddRange(response.FileStorageInfos);
-                        }
+                        fileStorageInfos.AddRange(downloadResponse.FileStorageInfos);
                     }
+
                     return fileStorageInfos;
                 }
             }
@@ -652,24 +651,21 @@ namespace RUINORERP.UI.FM
                     try
                     {
                         var ctrpay = Startup.GetFromFac<FileBusinessService>();
-                        var list = await ctrpay.DownloadImageAsync(EditEntity);
+                        var downloadResponse = await ctrpay.DownloadImageAsync(EditEntity);
 
-                        if (list != null && list.Count > 0)
+                        if (downloadResponse != null && !downloadResponse.IsSuccess)
                         {
                             List<byte[]> imageDataList = new List<byte[]>();
                             List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-                            foreach (var downloadResponse in list)
+                            if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
                             {
-                                if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                                foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                                 {
-                                    foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                                    if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                                     {
-                                        if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
-                                        {
-                                            imageDataList.Add(fileStorageInfo.FileData);
-                                            imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                                        }
+                                        imageDataList.Add(fileStorageInfo.FileData);
+                                        imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
                                     }
                                 }
                             }
@@ -849,16 +845,16 @@ namespace RUINORERP.UI.FM
         protected override async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
             var syncResults = new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
-            
+
             if (EditEntity == null)
             {
                 return syncResults;
             }
-            
+
             // 直接调用ImageStateManager，不再使用反射
             var pendingDeleteImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
             var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
-            
+
             // 处理待删除的图片
             if (pendingDeleteImages.Count > 0)
             {
@@ -880,7 +876,7 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
                 }
             }
-            
+
             // 处理明细凭证图片上传（使用文件服务器方式）
             bindingSourceSub.EndEdit();
             List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
@@ -908,14 +904,14 @@ namespace RUINORERP.UI.FM
                                 // 例如：如果明细有多个图片字段，需要遍历所有图片字段
                                 // 这里仅作为示例，实际需要根据业务实体结构调整
                                 // if (detail.ImageId > 0) imageIds.Add(detail.ImageId);
-                                
+
                                 // 处理待上传的图片，按业务ID分组
                                 var uploadImagesByBusinessId = pendingUploadImages.Where(img => img.BusinessId == businessId).ToList();
                                 if (uploadImagesByBusinessId.Count > 0)
                                 {
                                     imageIds.AddRange(uploadImagesByBusinessId.Select(img => img.ImageId));
                                 }
-                                
+
                                 if (imageIds.Count > 0)
                                 {
                                     syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(businessId, imageIds, RUINORERP.Common.BusinessImage.ImageSyncType.Add));
@@ -933,15 +929,15 @@ namespace RUINORERP.UI.FM
                     }
                 }
             }
-            
+
             // 清理已处理的图片状态
             var processedImageIds = new List<long>(pendingDeleteImages.Select(c => c.ImageId));
             processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
             RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
-            
+
             // 刷新网格显示
             grid1.Refresh();
-            
+
             return syncResults;
         }
 
@@ -1027,7 +1023,7 @@ namespace RUINORERP.UI.FM
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
-                        
+
                         // 调用图片同步方法
                         var syncResults = await SyncImagesIfNeeded();
                         // 检查是否有图片同步成功
@@ -1279,8 +1275,8 @@ namespace RUINORERP.UI.FM
             }
         }
 
-  
- 
+
+
 
         #endregion
 

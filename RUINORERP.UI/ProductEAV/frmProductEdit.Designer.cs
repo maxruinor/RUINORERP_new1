@@ -368,15 +368,15 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblSalePublish
             // 
-            this.lblSalePublish.Location = new System.Drawing.Point(366, 336);
+            this.lblSalePublish.Location = new System.Drawing.Point(379, 336);
             this.lblSalePublish.Name = "lblSalePublish";
             this.lblSalePublish.Size = new System.Drawing.Size(62, 20);
             this.lblSalePublish.TabIndex = 137;
-            this.lblSalePublish.Values.Text = "参与分销";
+            this.lblSalePublish.Values.Text = "参与销售";
             // 
             // chkSalePublish
             // 
-            this.chkSalePublish.Location = new System.Drawing.Point(433, 340);
+            this.chkSalePublish.Location = new System.Drawing.Point(449, 340);
             this.chkSalePublish.Name = "chkSalePublish";
             this.chkSalePublish.Size = new System.Drawing.Size(19, 13);
             this.chkSalePublish.TabIndex = 138;
@@ -424,7 +424,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // txtis_enabled
             // 
-            this.txtis_enabled.Location = new System.Drawing.Point(520, 340);
+            this.txtis_enabled.Location = new System.Drawing.Point(540, 340);
             this.txtis_enabled.Name = "txtis_enabled";
             this.txtis_enabled.Size = new System.Drawing.Size(19, 13);
             this.txtis_enabled.TabIndex = 132;
@@ -610,7 +610,7 @@ namespace RUINORERP.UI.ProductEAV
             // 
             // lblis_enabled
             // 
-            this.lblis_enabled.Location = new System.Drawing.Point(461, 336);
+            this.lblis_enabled.Location = new System.Drawing.Point(481, 336);
             this.lblis_enabled.Name = "lblis_enabled";
             this.lblis_enabled.Size = new System.Drawing.Size(62, 20);
             this.lblis_enabled.TabIndex = 68;

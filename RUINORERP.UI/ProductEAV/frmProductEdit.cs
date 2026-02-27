@@ -871,6 +871,7 @@ namespace RUINORERP.UI.ProductEAV
             }
 
             base.BindData(entity);
+
             dataGridView1.NeedSaveColumnsXml = true;
 
             // 等待数据加载完成，然后再加载SKU列表
@@ -891,6 +892,23 @@ namespace RUINORERP.UI.ProductEAV
 
             EditEntity.PropertyChanged += async (sender, s2) =>
             {
+                // 监听产品类目变更事件
+                if (EditEntity.Type_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Type_ID))
+                {
+                    var obj = _cacheManager.GetEntity<tb_ProductType>(EditEntity.Type_ID);
+                    if (obj != null && obj.ToString() != "System.Object")
+                    {
+                        if (obj is tb_ProductType prodType)
+                        {
+                            if (prodType.ForSale)
+                            {
+                                chkSalePublish.Checked = true;
+                            }
+                        }
+                    }
+                }
+
+
                 // 监听产品类目变更事件
                 if (EditEntity.Category_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_Prod>(c => c.Category_ID))
                 {
@@ -3019,9 +3037,9 @@ namespace RUINORERP.UI.ProductEAV
                 var ctrpay = Startup.GetFromFac<FileBusinessService>();
 
                 // 下载该SKU关联的图片
-                var list = await ctrpay.DownloadImageAsync<tb_ProdDetail>(detail, c => c.ImagesPath);
+                var fileDownloadResponse = await ctrpay.DownloadImageAsync<tb_ProdDetail>(detail, c => c.ImagesPath);
 
-                if (list == null || list.Count == 0)
+                if (fileDownloadResponse == null || !fileDownloadResponse.IsSuccess)
                 {
                     return;
                 }
@@ -3029,18 +3047,15 @@ namespace RUINORERP.UI.ProductEAV
                 // 将下载的图片转换为缓存格式
                 var imageDataList = new List<Tuple<byte[], ImageInfo>>();
 
-                foreach (var downloadResponse in list)
+                if (fileDownloadResponse.IsSuccess && fileDownloadResponse.FileStorageInfos != null)
                 {
-                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    foreach (var fileStorageInfo in fileDownloadResponse.FileStorageInfos)
                     {
-                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                         {
-                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
-                            {
-                                var imageInfo = ctrpay.ConvertToImageInfo(fileStorageInfo);
-                                imageDataList.Add(new Tuple<byte[], ImageInfo>(
-                                    fileStorageInfo.FileData, imageInfo));
-                            }
+                            var imageInfo = ctrpay.ConvertToImageInfo(fileStorageInfo);
+                            imageDataList.Add(new Tuple<byte[], ImageInfo>(
+                                fileStorageInfo.FileData, imageInfo));
                         }
                     }
                 }
@@ -3074,9 +3089,9 @@ namespace RUINORERP.UI.ProductEAV
             try
             {
                 // 下载ImagesPath字段关联的图片
-                var list = await ctrpay.DownloadImageAsync(entity, "ImagesPath");
+                var downloadResponse = await ctrpay.DownloadImageAsync(entity, "ImagesPath");
 
-                if (list == null || list.Count == 0)
+                if (downloadResponse == null || !downloadResponse.IsSuccess)
                 {
                     return;
                 }
@@ -3085,20 +3100,19 @@ namespace RUINORERP.UI.ProductEAV
                 List<byte[]> imageDataList = new List<byte[]>();
                 List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-                foreach (var downloadResponse in list)
+
+                if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
                 {
-                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                    foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                     {
-                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                         {
-                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
-                            {
-                                imageDataList.Add(fileStorageInfo.FileData);
-                                imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                            }
+                            imageDataList.Add(fileStorageInfo.FileData);
+                            imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
                         }
                     }
                 }
+
 
                 if (imageDataList.Count > 0)
                 {
@@ -3236,7 +3250,7 @@ namespace RUINORERP.UI.ProductEAV
                     var fileService = Startup.GetFromFac<FileManagementService>();
                     var deleteRequest = new FileDeleteRequest();
                     deleteRequest.BusinessId = billId;
-                   
+
                     deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                     // 添加要删除的文件信息

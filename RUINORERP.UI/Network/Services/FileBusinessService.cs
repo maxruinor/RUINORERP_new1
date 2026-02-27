@@ -86,11 +86,11 @@ namespace RUINORERP.UI.Network.Services
                 // 获取文件管理服务
                 var fileService = _appContext.GetRequiredService<FileManagementService>();
 
- 
+
                 tb_FS_FileStorageInfo storageInfo = new tb_FS_FileStorageInfo();
                 storageInfo.OriginalFileName = OriginalFileName;
                 storageInfo.FileData = fileData;
-                storageInfo.OwnerTableName= entity.GetType().Name;
+                storageInfo.OwnerTableName = entity.GetType().Name;
 
                 // 如果提供了文件ID(更新场景)
                 if (fileId.HasValue)
@@ -151,63 +151,53 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 下载图片文件
+        /// 下载图片文件1
         /// </summary>
         /// <param name="entity">业务实体</param>
         /// <param name="relatedField">关联字段名(可选，不传则下载所有字段)</param>
         /// <returns>文件下载响应列表</returns>
-        public async Task<List<FileDownloadResponse>> DownloadImageAsync(BaseEntity entity, string relatedField = null)
+        public async Task<FileDownloadResponse> DownloadImageAsync(BaseEntity entity, string relatedField = null)
         {
-            List<FileDownloadResponse> fileDownloadResponses = new List<FileDownloadResponse>();
+            FileDownloadResponse fileDownloadResponse = new FileDownloadResponse();
             // 获取文件管理服务
             var fileService = _appContext.GetRequiredService<FileManagementService>();
             try
             {
+                // 直接使用实体中已有的图片ID信息，不再查询数据库
+                // 假设实体已经在加载时包含了图片ID信息
+                // 这里需要根据实际的实体结构来获取图片ID
 
-
-                // 使用db.CopyNew()创建独立的数据库连接上下文，避免连接共享导致的关闭问题
-                var db = _unitOfWorkManage.GetDbClient().CopyNew();
-
-                // 构建查询条件
-                var query = db.Queryable<tb_FS_BusinessRelation>()
-                    .Where(c => c.OwnerTableName == entity.GetType().Name && c.isdeleted == false);
-
-                query = query.Where(c => c.BusinessId == entity.PrimaryKeyID);
-
-                // 如果指定了关联字段，按字段筛选
-                if (!string.IsNullOrEmpty(relatedField))
+                // 示例：从实体的FileStorageInfoList中获取图片ID
+                if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
                 {
-                    query = query.Where(c => c.RelatedField == relatedField);
-                }
-
-                // 使用新的数据库连接上下文获取业务关联列表
-                var BusinessRelationList = await query
-                    .Includes(t => t.tb_fs_filestorageinfo)
-                    .ToListAsync();
-
-                // 直接使用查询出来的对象进行下载，避免不必要的复制
-                foreach (var item in BusinessRelationList)
-                {
-                    if (item.tb_fs_filestorageinfo != null)
+                    foreach (var fileStorageInfo in entity.FileStorageInfoList)
                     {
-                        // 创建下载请求
-                        var request = new FileDownloadRequest
+                        if (fileStorageInfo.FileId > 0)
                         {
-                            FileStorageInfo = item.tb_fs_filestorageinfo
-                        };
+                            // 创建下载请求 - 只传递文件ID
+                            var request = new FileDownloadRequest
+                            {
+                                FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileStorageInfo.FileId }
+                            };
 
-                        // 下载文件
-                        var response = await fileService.DownloadFileAsync(request);
-                        if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
-                        {
-                            fileDownloadResponses.Add(FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
-                        }
-                        else
-                        {
-                            // 记录错误日志
-                            System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
+                            // 下载文件
+                            var response = await fileService.DownloadFileAsync(request);
+                            if (response.IsSuccess && response.FileStorageInfos != null && response.FileStorageInfos.Count > 0)
+                            {
+                                fileDownloadResponse = (FileDownloadResponse.CreateSuccess(response.FileStorageInfos, "文件下载成功"));
+                            }
+                            else
+                            {
+                                // 记录错误日志
+                                System.Diagnostics.Debug.WriteLine($"图片下载失败: {response.ErrorMessage}");
+                            }
                         }
                     }
+                }
+                else
+                {
+                    // 如果实体中没有图片信息，记录警告
+                    System.Diagnostics.Debug.WriteLine("实体中没有图片信息，无法下载图片");
                 }
 
             }
@@ -215,21 +205,15 @@ namespace RUINORERP.UI.Network.Services
             {
                 // 记录异常日志
                 System.Diagnostics.Debug.WriteLine($"图片下载异常: {ex.Message}\n{ex.StackTrace}");
-                // 如果是阅读器关闭错误，提供更详细的错误信息
-                if (ex.Message.Contains("阅读器关闭") || ex.Message.Contains("FieldCount"))
-                {
-                    System.Diagnostics.Debug.WriteLine("错误原因：数据库连接已关闭但仍尝试访问数据。请检查异步操作中的数据加载方式。");
-                }
             }
-            return fileDownloadResponses;
+            return fileDownloadResponse;
         }
 
-        public async Task<List<FileDownloadResponse>> DownloadImageAsync<T>(BaseEntity entity, Expression<Func<T, object>> exp)
+        public async Task<FileDownloadResponse> DownloadImageAsync<T>(BaseEntity entity, Expression<Func<T, object>> exp)
         {
             string relatedField = exp.GetMemberInfo().Name;
             return await DownloadImageAsync(entity, relatedField);
         }
-
 
 
         /// <summary>
@@ -338,12 +322,12 @@ namespace RUINORERP.UI.Network.Services
                 StorageProvider = "Local", // 默认本地存储
                 StoragePath = string.Empty,
                 StorageFileName = string.Empty,
-                
+
                 // 版本和状态
                 CurrentVersion = 1,         // 初始版本
                 FileStatus = (int)FileStatus.Active, // 正常状态
                 ExpireTime = DateTime.MaxValue, // 永不过期
-                
+
                 // 其他属性
                 Description = string.Empty,
                 Created_by = null,
@@ -379,17 +363,17 @@ namespace RUINORERP.UI.Network.Services
                     {
                         fileStorageInfo.StoragePath = storagePath;
                     }
-                    
+
                     if (imageInfo.Metadata.TryGetValue("StorageFileName", out string storageFileName))
                     {
                         fileStorageInfo.StorageFileName = storageFileName;
                     }
-                    
+
                     if (imageInfo.Metadata.TryGetValue("Description", out string description))
                     {
                         fileStorageInfo.Description = description;
                     }
-                    
+
                     if (imageInfo.Metadata.TryGetValue("Created_by", out string createdBy))
                     {
                         if (long.TryParse(createdBy, out long createdByValue))
@@ -397,7 +381,7 @@ namespace RUINORERP.UI.Network.Services
                             fileStorageInfo.Created_by = createdByValue;
                         }
                     }
-                    
+
                     if (imageInfo.Metadata.TryGetValue("Modified_by", out string modifiedBy))
                     {
                         if (long.TryParse(modifiedBy, out long modifiedByValue))
@@ -490,44 +474,38 @@ namespace RUINORERP.UI.Network.Services
                 // 创建删除请求
                 FileDeleteRequest deleteRequest = new FileDeleteRequest();
                 deleteRequest.BusinessId = businessId;
-                
+
                 deleteRequest.PhysicalDelete = physicalDelete;
 
-                List<tb_FS_FileStorageInfo> fileStorageInfos = new List<tb_FS_FileStorageInfo>();
-                
+                // 直接使用实体中已有的图片信息，不再查询数据库
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
                 {
-                    fileStorageInfos = entity.FileStorageInfoList;
+                    // 确保所有文件存储信息的必要属性都有值
+                    foreach (var fileStorageInfo in entity.FileStorageInfoList)
+                    {
+                        if (fileStorageInfo != null && fileStorageInfo.FileId > 0)
+                        {
+                            fileStorageInfo.OwnerTableName = ownerTableName;
+                            fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
+                            fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
+                            fileStorageInfo.StorageFileName = fileStorageInfo.StorageFileName ?? $"{fileStorageInfo.FileId}_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileStorageInfo.OriginalFileName)}";
+                            fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
+                            fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
+                            fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
+                            fileStorageInfo.Description = fileStorageInfo.Description ?? string.Empty;
+                            fileStorageInfo.Metadata = fileStorageInfo.Metadata ?? string.Empty;
+
+                            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                        }
+                    }
                 }
                 else
                 {
-                    // 获取文件关联服务
-                    var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
-                    // 获取当前业务实体关联的所有文件关系
-                    var businessRelationList = await businessRelationService.QueryByNavAsync(c =>
-                        c.OwnerTableName == ownerTableName && c.BusinessId == businessId);
-                    fileStorageInfos = businessRelationList.Select(x => x.tb_fs_filestorageinfo).ToList();
+                    // 如果实体中没有图片信息，记录警告
+                    System.Diagnostics.Debug.WriteLine("实体中没有图片信息，无法删除图片");
+                    return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>("实体中没有图片信息，无法删除图片");
                 }
-                
-                // 确保所有文件存储信息的必要属性都有值
-                foreach (var fileStorageInfo in fileStorageInfos)
-                {
-                    if (fileStorageInfo != null)
-                    {
-                        fileStorageInfo.OwnerTableName = ownerTableName;
-                        fileStorageInfo.StorageProvider = fileStorageInfo.StorageProvider ?? "Local";
-                        fileStorageInfo.StoragePath = fileStorageInfo.StoragePath ?? string.Empty;
-                        fileStorageInfo.StorageFileName = fileStorageInfo.StorageFileName ?? $"{fileStorageInfo.FileId}_{DateTime.Now:yyyyMMddHHmmssfff}{Path.GetExtension(fileStorageInfo.OriginalFileName)}";
-                        fileStorageInfo.FileStatus = fileStorageInfo.FileStatus > 0 ? fileStorageInfo.FileStatus : (int)FileStatus.Active;
-                        fileStorageInfo.CurrentVersion = fileStorageInfo.CurrentVersion > 0 ? fileStorageInfo.CurrentVersion : 1;
-                        fileStorageInfo.ExpireTime = fileStorageInfo.ExpireTime > DateTime.MinValue ? fileStorageInfo.ExpireTime : DateTime.MaxValue;
-                        fileStorageInfo.Description = fileStorageInfo.Description ?? string.Empty;
-                        fileStorageInfo.Metadata = fileStorageInfo.Metadata ?? string.Empty;
-                        
-                        deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
-                    }
-                }
-                
+
                 // 执行删除
                 deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
                 return deleteResponse;

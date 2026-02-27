@@ -1284,9 +1284,9 @@ namespace RUINORERP.UI.BaseForm
             {
                 MemberInfo memberInfo = TargetField.GetMemberInfo();
                 string columnName = memberInfo.Name;
-                var list = await ctrpay.DownloadImageAsync(entity as BaseEntity, columnName);
+                var downloadResponse = await ctrpay.DownloadImageAsync(entity as BaseEntity, columnName);
 
-                if (list == null || list.Count == 0)
+                if (downloadResponse == null || !downloadResponse.IsSuccess)
                 {
                     return;
                 }
@@ -1296,8 +1296,7 @@ namespace RUINORERP.UI.BaseForm
                 List<string> imageNames = new List<string>();
                 List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-                foreach (var downloadResponse in list)
-                {
+               
                     if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
                     {
                         foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
@@ -1315,7 +1314,7 @@ namespace RUINORERP.UI.BaseForm
                     {
                         logger.LogWarning("图片下载失败: {ErrorMessage}", downloadResponse.ErrorMessage ?? "未知错误");
                     }
-                }
+                
 
                 if (imageDataList.Count > 0)
                 {

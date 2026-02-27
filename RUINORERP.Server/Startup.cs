@@ -407,6 +407,8 @@ namespace RUINORERP.Server
                 .AddEnvironmentVariables(prefix: "RUINOR_")
                 .Build();
 
+
+
             // 将IConfiguration注册到服务容器，供ConfigManagerService使用
             services.AddSingleton<IConfiguration>(builder);
 

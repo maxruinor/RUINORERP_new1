@@ -183,7 +183,7 @@ namespace RUINORERP.UI.ProductEAV
                 var fileService = Startup.GetFromFac<FileBusinessService>();
                 var downloadResponse = await fileService.DownloadImageAsync(prodDetail, "ImagesPath");
 
-                if (downloadResponse == null || downloadResponse.Count == 0)
+                if (downloadResponse == null || !downloadResponse.IsSuccess)
                 {
                     // 如果没有从服务器下载到图片，但有预加载图片
                     if (preloadedImages != null && preloadedImages.Count > 0)
@@ -200,11 +200,10 @@ namespace RUINORERP.UI.ProductEAV
                 List<byte[]> imageDataList = new List<byte[]>();
                 List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-                foreach (var response in downloadResponse)
-                {
-                    if (response.IsSuccess && response.FileStorageInfos != null)
+               
+                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
                     {
-                        foreach (var fileStorageInfo in response.FileStorageInfos)
+                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                         {
                             if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                             {
@@ -213,7 +212,7 @@ namespace RUINORERP.UI.ProductEAV
                             }
                         }
                     }
-                }
+                
 
                 if (imageDataList.Count > 0)
                 {

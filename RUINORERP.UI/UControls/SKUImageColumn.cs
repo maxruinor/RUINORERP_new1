@@ -699,11 +699,11 @@ namespace RUINORERP.UI.UControls
                     new tb_ProdDetail { ProdDetailID = prodDetailId, ImagesPath = imagesPath },
                     "ImagesPath");
 
-                if (response == null || response.Count == 0)
+                if (response == null || !response.IsSuccess)
                     return new List<byte[]>();
 
                 // 转换为byte[]列表
-                return response.SelectMany(r => r.FileStorageInfos)
+                return response.FileStorageInfos
                               .Where(f => f.FileData != null)
                               .Select(f => f.FileData)
                               .ToList();

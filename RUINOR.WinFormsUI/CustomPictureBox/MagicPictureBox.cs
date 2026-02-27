@@ -95,9 +95,34 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 多图片支持
         private List<Image> images = new List<Image>();
         private List<ImageInfo> imageInfos = new List<ImageInfo>();
-        private readonly List<ImageInfo> _deletedImages = new List<ImageInfo>(); // 已删除但未同步到服务器的图片
+        private List<ImageInfo> _deletedImages = new List<ImageInfo>(); // 存储已删除的图片信息
         private int currentImageIndex = 0;
         private string imagePaths = ""; // 存储图片路径，用;分隔
+        private long _controlInstanceId = 0; // 控件实例ID，用于唯一标识当前控件
+
+        /// <summary>
+        /// 控件实例ID
+        /// </summary>
+        public long ControlInstanceId
+        {
+            get
+            {
+                if (_controlInstanceId == 0)
+                {
+                    _controlInstanceId = GenerateUniqueId();
+                }
+                return _controlInstanceId;
+            }
+        }
+
+        /// <summary>
+        /// 生成唯一ID
+        /// </summary>
+        /// <returns>唯一ID</returns>
+        private long GenerateUniqueId()
+        {
+            return DateTime.Now.Ticks + Environment.TickCount;
+        }
 
         // 导航控件
         private Panel navigationPanel;
@@ -293,7 +318,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     FileExtension = formatExtension,
                                     FileType = formatExtension,
                                     HashValue = CalculateImageHash(imageBytes),
-                                    IsUpdated = true,
+                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                                     Width = images[i]?.Width ?? 0,
                                     Height = images[i]?.Height ?? 0
                                 };
@@ -312,7 +337,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             else if (this.Image != null && (imageInfos.Count == 0 ||
                                            (imageInfos.Count > 0 &&
-                                            (imageInfos[0].IsUpdated ||
+                                            (imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload ||
                                              IsImageNeedingUpdate(0) ||
                                              imageInfos[0].FileId == 0 ||
                                              string.IsNullOrEmpty(imageInfos[0].HashValue)))))
@@ -356,7 +381,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileType = formatExtension,
                             FileExtension = formatExtension,
                             HashValue = CalculateImageHash(imageBytes),
-                            IsUpdated = true,
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                             Width = this.Image?.Width ?? 0,
                             Height = this.Image?.Height ?? 0
                         };
@@ -566,7 +591,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         /// <param name="imageBytesList">图片字节数组列表</param>
         /// <param name="imageInfosList">图片信息列表，包含原始文件名等详细信息</param>
-        /// <param name="isFromServer">是否从服务器加载，影响IsUpdated初始值</param>
+        /// <param name="isFromServer">是否从服务器加载，影响Status初始值</param>
         private void LoadImagesInternal(List<byte[]> imageBytesList, List<ImageInfo> imageInfosList = null, bool isFromServer = false)
         {
             images.Clear();
@@ -649,7 +674,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileExtension = imageInfosList[i].FileExtension,
                             HashValue = hashValue, // 更新哈希值
                             Metadata = imageInfosList[i].Metadata != null ? new Dictionary<string, string>(imageInfosList[i].Metadata) : new Dictionary<string, string>(),
-                            IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
+                            Status = isFromServer ? RUINORERP.Common.BusinessImage.ImageStatus.Normal : RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
                         };
                     }
                     else
@@ -665,7 +690,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             Metadata = new Dictionary<string, string>(),
                             FileType = "",
                             ModifiedAt = null,
-                            IsUpdated = !isFromServer // 如果是从服务器加载，标记为未更新
+                            Status = isFromServer ? RUINORERP.Common.BusinessImage.ImageStatus.Normal : RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
                         };
                     }
 
@@ -737,7 +762,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 确保ImageUpdateManager中的更新状态与imageInfos同步
                 foreach (var imageInfo in imageInfos)
                 {
-                    if (imageInfo.IsUpdated)
+                    if (imageInfo.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload)
                     {
                         _updateManager.MarkImageAsUpdated(imageInfo);
                     }
@@ -880,7 +905,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 HashValue = hashValue,
                                 Metadata = new Dictionary<string, string>(),
                                 ModifiedAt = null,
-                                IsUpdated = true // 标记为已更新
+                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
                             });
                         }
                         else
@@ -895,7 +920,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 imageInfos[0].HashValue = hashValue;
                                 imageInfos[0].Metadata = new Dictionary<string, string>();
                                 imageInfos[0].ModifiedAt = null;
-                                imageInfos[0].IsUpdated = true;
+                                imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
                                 // 添加Width和Height属性
                                 if (images.Count > 0)
                                 {
@@ -915,7 +940,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     HashValue = hashValue,
                                     Metadata = new Dictionary<string, string>(),
                                     ModifiedAt = null,
-                                    IsUpdated = true, // 标记为已更新
+                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
                                     Width = images[images.Count - 1]?.Width ?? 0,
                                     Height = images[images.Count - 1]?.Height ?? 0
                                 });
@@ -1318,7 +1343,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 
         /// 处理逻辑：
         /// 1. 保存当前图片的信息（在删除前）
-        /// 2. 如果图片有 FileId，设置 IsDeleted=true 和 IsUpdated=true
+        /// 2. 如果图片有 FileId，设置 Status=PendingDelete
         /// 3. 将图片信息添加到 _deletedImages 列表（避免重复添加）
         /// 4. 从显示列表中移除图片（images 和 imageInfos）
         /// 5. 调整当前索引（确保指向有效图片）
@@ -1348,14 +1373,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 标记图片为已删除（如果有FileId表示是已上传的图片）
                     if (deletedImageInfo != null && deletedImageInfo.FileId > 0)
                     {
-                        deletedImageInfo.IsDeleted = true;
-                        deletedImageInfo.IsUpdated = true; // 标记为需要更新
+                        deletedImageInfo.Status = ImageStatus.PendingDelete;
                         
-                        // 保存到删除列表，用于后续处理
-                        if (!_deletedImages.Contains(deletedImageInfo))
+                        // 如果图片还没有ImageId，生成一个
+                        if (deletedImageInfo.ImageId == 0)
                         {
-                            _deletedImages.Add(deletedImageInfo);
+                            deletedImageInfo.ImageId = GenerateUniqueId();
                         }
+                        
+                        // 将图片添加到ImageStateManager
+                        ImageStateManager.Instance.AddImage(this, deletedImageInfo.ImageId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId, deletedImageInfo.StoragePath);
                         
                         System.Diagnostics.Debug.WriteLine($"单图模式:标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
                     }
@@ -1399,15 +1426,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 标记图片为已删除（如果有FileId表示是已上传的图片）
                 if (multiDeletedImageInfo != null && multiDeletedImageInfo.FileId > 0)
                 {
-                    multiDeletedImageInfo.IsDeleted = true;
-                    multiDeletedImageInfo.IsUpdated = true; // 标记为需要更新
+                    multiDeletedImageInfo.Status = ImageStatus.PendingDelete;
                     
-                    // 保存到删除列表，用于后续处理
-                    // 使用 Contains 检查避免重复添加同一图片引用
-                    if (!_deletedImages.Contains(multiDeletedImageInfo))
+                    // 如果图片还没有ImageId，生成一个
+                    if (multiDeletedImageInfo.ImageId == 0)
                     {
-                        _deletedImages.Add(multiDeletedImageInfo);
+                        multiDeletedImageInfo.ImageId = GenerateUniqueId();
                     }
+                    
+                    // 将图片添加到ImageStateManager
+                    ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.ImageId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.StoragePath);
                     
                     System.Diagnostics.Debug.WriteLine($"多图模式:标记图片为已删除: {multiDeletedImageInfo.OriginalFileName}, FileId: {multiDeletedImageInfo.FileId}");
                 }
@@ -1471,14 +1499,16 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     if (imageInfo != null && imageInfo.FileId > 0)
                     {
-                        imageInfo.IsDeleted = true;
-                        imageInfo.IsUpdated = true;
+                        imageInfo.Status = ImageStatus.PendingDelete;
                         
-                        // 保存到删除列表，用于后续处理
-                        if (!_deletedImages.Contains(imageInfo))
+                        // 如果图片还没有ImageId，生成一个
+                        if (imageInfo.ImageId == 0)
                         {
-                            _deletedImages.Add(imageInfo);
+                            imageInfo.ImageId = GenerateUniqueId();
                         }
+                        
+                        // 将图片添加到ImageStateManager
+                        ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
                         
                         System.Diagnostics.Debug.WriteLine($"ClearImage: 标记图片为已删除: {imageInfo.OriginalFileName}, FileId: {imageInfo.FileId}");
                     }
@@ -1506,8 +1536,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         if (imageInfo != null && imageInfo.FileId > 0)
                         {
-                            imageInfo.IsDeleted = true;
-                            imageInfo.IsUpdated = true;
+                            imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete;
                             _deletedImages.Add(imageInfo);
                         }
                     }
@@ -1597,7 +1626,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     CreateTime = fileInfo.CreationTime,
                                     FileType = Path.GetExtension(fileName).TrimStart('.'),
                                     HashValue = hashValue,
-                                    IsUpdated = true // 标记为已更新
+                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
                                 });
 
                                 // 如果是第一张图片，显示它
@@ -1622,7 +1651,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     imageInfos[0].CreateTime = fileInfo.CreationTime;
                                     imageInfos[0].FileType = Path.GetExtension(fileName).TrimStart('.');
                                     imageInfos[0].HashValue = hashValue;
-                                    imageInfos[0].IsUpdated = true;
+                                    imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
                                 }
                                 else
                                 {
@@ -1634,7 +1663,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                         CreateTime = fileInfo.CreationTime,
                                         FileType = Path.GetExtension(fileName).TrimStart('.'),
                                         HashValue = hashValue,
-                                        IsUpdated = true
+                                        Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload
                                     });
                                 }
                                 UpdateInfoPanel();
@@ -1731,7 +1760,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 CreateTime = fileInfo.CreationTime,
                                 FileType = Path.GetExtension(fileInfo.Name).TrimStart('.'),
                                 HashValue = hashValue,
-                                IsUpdated = true,
+                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             });
@@ -1781,7 +1810,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 Metadata = new Dictionary<string, string>(),
                                 FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
                                 HashValue = newhash,
-                                IsUpdated = true,
+                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             };
@@ -1798,7 +1827,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 Metadata = new Dictionary<string, string>(),
                                 FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
                                 HashValue = newhash,
-                                IsUpdated = true,
+                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             });
@@ -1894,7 +1923,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileExtension = GetImageFormatExtension(image),
                             Width = image?.Width ?? 0,
                             Height = image?.Height ?? 0,
-                            IsUpdated = true,
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
                             HashValue = newhash
                         };
                         imageInfos.Add(newImageInfo);
@@ -1916,7 +1945,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             imageInfos[0].FileType = GetImageFormatExtension(image);
                             imageInfos[0].FileExtension = GetImageFormatExtension(image);
                             imageInfos[0].HashValue = newhash; // 设置哈希值
-                            imageInfos[0].IsUpdated = true; // 标记为需要更新
+                            imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload; // 标记为待上传
                             _updateManager.MarkImageAsUpdated(imageInfos[0]); // 标记为需要更新
                         }
                         else
@@ -1931,7 +1960,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileType = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0,
-                                IsUpdated = true, // 标记为需要更新
+                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
                                 HashValue = newhash // 设置哈希值
                             };
                             imageInfos.Add(newImageInfo);
@@ -2176,7 +2205,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             HashValue = CalculateImageHash(newImage),
                             Width = newImage?.Width ?? 0,
                             Height = newImage?.Height ?? 0,
-                            IsUpdated = true // 标记为已更新
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
                         };
                         imageInfos.Add(newImageInfo);
                         // 标记图片需要更新
@@ -2198,7 +2227,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         {
                             OriginalFileName = fileInfo.Name,
                             FileSize = fileInfo.Length,
-                            IsUpdated = true, // 标记为已更新
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
                             CreateTime = fileInfo.CreationTime,
                             FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
                             HashValue = CalculateImageHash(this.Image),
@@ -2502,7 +2531,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             CreateTime = DateTime.Now,
                             Metadata = new Dictionary<string, string>(),
                             HashValue = hashValue,
-                            IsUpdated = true, // 标记为已更新
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
                             Width = imageList[i]?.Width ?? 0,
                             Height = imageList[i]?.Height ?? 0
                         };
@@ -2521,7 +2550,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             CreateTime = DateTime.Now,
                             Metadata = new Dictionary<string, string> { { "Error", "加载失败" } },
                             HashValue = "",
-                            IsUpdated = false,
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal,
                             Width = 0,
                             Height = 0
                         });
@@ -3008,10 +3037,19 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             if (index >= 0 && index < imageInfos.Count)
             {
-                // 使用UpdateManager标记图片为需要更新，确保与ImageUpdateManager中的实现保持一致
-                _updateManager.MarkImageAsUpdated(imageInfos[index]);
-                imageInfos[index].ModifiedAt = DateTime.Now;
-                imageInfos[index].IsUpdated = true; // 确保同时设置IsUpdated为true
+                var imageInfo = imageInfos[index];
+                // 使用ImageStateManager标记图片为待上传状态
+                imageInfo.Status = ImageStatus.PendingUpload;
+                imageInfo.ModifiedAt = DateTime.Now;
+                
+                // 如果图片还没有ImageId，生成一个
+                if (imageInfo.ImageId == 0)
+                {
+                    imageInfo.ImageId = GenerateUniqueId();
+                }
+                
+                // 将图片添加到ImageStateManager
+                ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
             }
         }
 
@@ -3024,8 +3062,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             if (index >= 0 && index < imageInfos.Count)
             {
-                // 统一使用ImageUpdateManager的判断逻辑
-                return _updateManager.IsImageNeedingUpdate(imageInfos[index]);
+                var imageInfo = imageInfos[index];
+                // 检查图片状态是否为待上传
+                return imageInfo.Status == ImageStatus.PendingUpload ||
+                       imageInfo.FileId == 0 ||
+                       string.IsNullOrEmpty(imageInfo.HashValue);
             }
             return false;
         }
@@ -3079,7 +3120,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 bool needsUpdate = IsImageNeedingUpdate(0) ||
                                     imageInfos[0].FileId == 0 ||
                                    string.IsNullOrEmpty(imageInfos[0].HashValue) ||
-                                   imageInfos[0].IsUpdated;
+                                   imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
 
                 if (needsUpdate)
                 {
@@ -3108,6 +3149,85 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
         /// <summary>
+        /// 获取需要更新的图片信息列表
+        /// </summary>
+        /// <returns>需要更新的图片信息列表</returns>
+        public List<ImageInfo> GetImageInfosNeedingUpdate()
+        {
+            List<ImageInfo> updateList = new List<ImageInfo>();
+
+            if (MultiImageSupport && images.Count > 0)
+            {
+                for (int i = 0; i < images.Count; i++)
+                {
+                    // 检查图片是否有效
+                    if (images[i] == null)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"跳过空图片 (索引 {i})");
+                        continue;
+                    }
+
+                    // 检查是否需要更新，同时确保索引有效
+                    if (i < imageInfos.Count && imageInfos[i] != null && IsImageNeedingUpdate(i))
+                    {
+                        try
+                        {
+                            byte[] imageBytes = null;
+                            using (var ms = new MemoryStream())
+                            {
+                                images[i].Save(ms, ImageFormat.Jpeg);
+                                imageBytes = ms.ToArray();
+                            }
+
+                            // 更新图片信息中的文件大小和数据
+                            imageInfos[i].FileSize = imageBytes.Length;
+                            imageInfos[i].ImageData = imageBytes;
+
+                            updateList.Add(imageInfos[i]);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"获取待更新图片数据失败 (索引 {i}): {ex.Message}");
+                        }
+                    }
+                }
+            }
+            else if (this.Image != null && imageInfos.Count > 0 && imageInfos[0] != null)
+            {
+                // 单图片模式下，检查是否需要更新（包括新添加的图片）
+                bool needsUpdate = IsImageNeedingUpdate(0) ||
+                                    imageInfos[0].FileId == 0 ||
+                                   string.IsNullOrEmpty(imageInfos[0].HashValue) ||
+                                   imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+
+                if (needsUpdate)
+                {
+                    try
+                    {
+                        byte[] imageBytes = null;
+                        using (var ms = new MemoryStream())
+                        {
+                            this.Image.Save(ms, ImageFormat.Jpeg);
+                            imageBytes = ms.ToArray();
+                        }
+
+                        // 更新图片信息中的文件大小和数据
+                        imageInfos[0].FileSize = imageBytes.Length;
+                        imageInfos[0].ImageData = imageBytes;
+
+                        updateList.Add(imageInfos[0]);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"获取待更新单张图片数据失败: {ex.Message}");
+                    }
+                }
+            }
+
+            return updateList;
+        }
+
+        /// <summary>
         /// 获取已删除但尚未同步到服务器的图片列表
         /// 
         /// 功能说明：
@@ -3116,8 +3236,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// - 需要在保存时从服务器上删除这些文件
         /// 
         /// 返回值说明：
-        /// - 返回列表的副本（new List<ImageInfo>()），避免外部修改内部列表
-        /// - 每个图片信息的 IsDeleted=true 和 IsUpdated=true
+        /// - 返回列表的副本，避免外部修改内部列表
+        /// - 每个图片信息的 Status=PendingDelete
         /// - 每个图片信息的 FileId > 0（表示已上传到服务器）
         /// 
         /// 使用场景：
@@ -3133,15 +3253,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// <returns>已删除的图片信息列表（副本）</returns>
         public List<ImageInfo> GetDeletedImages()
         {
-            // 返回副本，避免外部代码直接修改内部列表
-            return new List<ImageInfo>(_deletedImages);
+            // 从ImageStateManager获取待删除的图片
+            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
+            // 过滤出当前控件相关的图片
+            var deletedImages = pendingDeleteImages.Where(img => img.Cell == this).ToList();
+            return deletedImages;
         }
 
         /// <summary>
         /// 清空已删除图片列表
         /// 
         /// 功能说明：
-        /// - 清空 _deletedImages 列表
+        /// - 从ImageStateManager中移除已处理的待删除图片
         /// - 表示所有已删除的图片都已成功从服务器删除
         /// 
         /// 调用时机：
@@ -3161,7 +3284,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         public void ClearDeletedImagesList()
         {
-            _deletedImages.Clear();
+            // 从ImageStateManager获取待删除的图片
+            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
+            // 过滤出当前控件相关的图片
+            var deletedImages = pendingDeleteImages.Where(img => img.Cell == this).ToList();
+            // 移除这些图片
+            var imageIds = deletedImages.Select(img => img.ImageId).ToList();
+            ImageStateManager.Instance.RemoveProcessedImages(imageIds);
         }
 
         /// <summary>
@@ -3169,8 +3298,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 在从服务器重新加载图片后调用此方法
         /// 
         /// 功能说明：
-        /// 1. 重置当前图片列表中所有图片的 IsUpdated 和 IsDeleted 标记
-        /// 2. 清空删除图片列表
+        /// 1. 重置当前图片列表中所有图片的状态为Normal
+        /// 2. 从ImageStateManager中移除当前控件相关的所有图片
         /// 3. 确保显示当前图片
         /// 
         /// 调用时机：
@@ -3179,18 +3308,20 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         public void InitializeImageControl()
         {
-            // 重置所有图片的更新和删除状态
+            // 重置所有图片的状态为Normal
             foreach (var imageInfo in imageInfos)
             {
                 if (imageInfo != null)
                 {
-                    imageInfo.IsUpdated = false;
-                    imageInfo.IsDeleted = false;
-                    _updateManager.ResetImageUpdateStatus(imageInfo);
+                    imageInfo.Status = ImageStatus.Normal;
                 }
             }
-            // 清空删除列表
-            _deletedImages.Clear();
+            
+            // 从ImageStateManager中移除当前控件相关的所有图片
+            var allImages = ImageStateManager.Instance.GetImagesByCell(this);
+            var imageIds = allImages.Select(img => img.ImageId).ToList();
+            ImageStateManager.Instance.RemoveProcessedImages(imageIds);
+            
             // 确保显示当前图片
             ShowCurrentImage();
             // 更新导航和信息面板
@@ -3204,7 +3335,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// 在成功保存并同步到服务器后调用此方法
         /// 
         /// 功能说明：
-        /// 1. 重置当前图片列表中所有图片的 IsUpdated 和 IsDeleted 标记
+        /// 1. 重置当前图片列表中所有图片的 Status 为 Normal
         /// 2. 清空删除图片列表（因为这些图片已经成功从服务器删除）
         /// 
         /// 调用时机：
@@ -3220,13 +3351,22 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             foreach (var imageInfo in imageInfos)
             {
                 if (imageInfo != null)
-                {
-                    imageInfo.IsUpdated = false;
-                    imageInfo.IsDeleted = false;
-                    _updateManager.ResetImageUpdateStatus(imageInfo);
-                }
+                    {
+                        imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                        _updateManager.ResetImageUpdateStatus(imageInfo);
+                    }
             }
             // 清空删除列表：因为所有已删除的图片都已经成功从服务器删除
+            _deletedImages.Clear();
+        }
+
+        /// <summary>
+        /// 移除已删除的图片
+        /// 在服务器删除成功后调用此方法
+        /// </summary>
+        public void RemoveDeletedImages()
+        {
+            // 清空删除列表
             _deletedImages.Clear();
         }
 

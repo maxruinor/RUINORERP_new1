@@ -1201,10 +1201,6 @@ namespace RUINORERP.UI.BaseForm
             var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
-                // 获取关联字段名
-                MemberInfo memberInfo = relatedFieldExpr.GetMemberInfo();
-                string relatedField = memberInfo.Name;
-
                 // 获取图片信息
                 var imageInfos = magicPicBox.GetImageInfos();
                 if (imageInfos == null || imageInfos.Count == 0)
@@ -1212,17 +1208,22 @@ namespace RUINORERP.UI.BaseForm
                     return true;
                 }
 
-                bool allSuccess = true;
+                // 过滤出待删除的图片
+                var imagesToDelete = imageInfos.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete).ToList();
+                if (imagesToDelete.Count == 0)
+                {
+                    return true;
+                }
+
                 long billId = entity.PrimaryKeyID;
 
                 // 创建删除请求
                 var deleteRequest = new FileDeleteRequest();
                 deleteRequest.BusinessId = billId;
-
                 deleteRequest.PhysicalDelete = false; // 逻辑删除
 
                 // 添加要删除的文件信息
-                foreach (var imageInfo in imageInfos)
+                foreach (var imageInfo in imagesToDelete)
                 {
                     if (imageInfo != null && imageInfo.FileId > 0)
                     {
@@ -1250,9 +1251,9 @@ namespace RUINORERP.UI.BaseForm
 
                 if (deleteResponse.IsSuccess)
                 {
-                    // 清空图片控件
-                    magicPicBox.ClearImages();
-                    MainForm.Instance.uclog.AddLog($"图片删除成功：共删除 {imageInfos.Count} 张图片", UILogType.普通消息);
+                    // 从控件中移除已删除的图片
+                    magicPicBox.RemoveDeletedImages();
+                    MainForm.Instance.uclog.AddLog($"图片删除成功：共删除 {imagesToDelete.Count} 张图片", UILogType.普通消息);
                     return true;
                 }
                 else
@@ -1354,21 +1355,20 @@ namespace RUINORERP.UI.BaseForm
             var ctrpay = Startup.GetFromFac<FileBusinessService>();
             try
             {
-                // 检查是否有图片需要上传
-                if (magicPicBox.Image == null)
+                // 获取图片信息
+                var imageInfos = magicPicBox.GetImageInfos();
+                if (imageInfos == null || imageInfos.Count == 0)
                 {
-                    //logger.LogInformation("没有需要上传的图片");
                     return true;
                 }
 
-                // 获取图片数据
-                var imageBytesWithInfoList = onlyUpdated ?
-                    magicPicBox.GetUpdatedImageBytesWithInfo() :
-                    magicPicBox.GetAllImageBytesWithInfo();
+                // 过滤需要上传的图片
+                var imagesToUpload = onlyUpdated ?
+                    imageInfos.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload).ToList() :
+                    imageInfos;
 
-                if (imageBytesWithInfoList == null || imageBytesWithInfoList.Count == 0)
+                if (imagesToUpload.Count == 0)
                 {
-                    //logger.LogInformation("没有需要上传的图片数据");
                     return true;
                 }
 
@@ -1376,11 +1376,9 @@ namespace RUINORERP.UI.BaseForm
                 int successCount = 0;
 
                 // 遍历上传所有图片
-                foreach (var imageDataWithInfo in imageBytesWithInfoList)
+                foreach (var imageInfo in imagesToUpload)
                 {
-                    byte[] imageData = imageDataWithInfo.Item1;
-                    ImageInfo imageInfo = imageDataWithInfo.Item2;
-
+                    byte[] imageData = imageInfo.ImageData;
                     if (imageData == null || imageData.Length == 0)
                     {
                         logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
@@ -1416,17 +1414,13 @@ namespace RUINORERP.UI.BaseForm
                         successCount++;
                         MainForm.Instance.uclog.AddLog($"图片上传成功：{imageInfo.OriginalFileName}");
 
-                        // 上传成功后，将图片标记为未更新
-                        if (imageInfo.IsUpdated)
-                        {
-                            imageInfo.IsUpdated = false;
-                        }
+                        // 上传成功后，将图片标记为正常状态
+                        imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
                     }
                     else
                     {
                         allSuccess = false;
                         MainForm.Instance.uclog.AddLog($"图片上传失败：{imageInfo.OriginalFileName}，原因：{response.Message}", UILogType.错误);
-
                     }
                 }
 
@@ -1439,7 +1433,6 @@ namespace RUINORERP.UI.BaseForm
             }
             catch (Exception ex)
             {
-
                 MainForm.Instance.uclog.AddLog($"上传图片出错：{ex.Message}", UILogType.错误);
                 return false;
             }
@@ -1469,14 +1462,14 @@ namespace RUINORERP.UI.BaseForm
         /// 1. 删除原图后上传新图片：先删除服务器上的旧文件，再上传新文件
         /// 2. 仅删除原图不上传新图：删除服务器上的文件
         /// </summary>
-        /// <param name="entity">销售订单实体</param>
+        /// <param name="entity">业务实体</param>
         /// <param name="updatedImages">需要更新的图片列表（包含新上传的图片）</param>
         /// <param name="deletedImages">已删除的图片列表（需要从服务器删除的图片）</param>
         /// <param name="TargetField">关联字段表达式</param>
         /// <returns>操作是否成功</returns>
         public async Task<bool> UploadUpdatedImagesAsync<Target>(
             Target entity,
-            List<Tuple<byte[], ImageInfo>> updatedImages,
+            List<ImageInfo> updatedImages,
             List<ImageInfo> deletedImages,
             Expression<Func<Target, object>> TargetField)
         {
@@ -1492,51 +1485,41 @@ namespace RUINORERP.UI.BaseForm
                 // 场景2：仅删除原图不上传新图
                 if (deletedImages != null && deletedImages.Count > 0)
                 {
-
-                    foreach (var deletedImage in deletedImages)
+                    // 过滤出待删除的图片
+                    var imagesToDelete = deletedImages.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete).ToList();
+                    if (imagesToDelete.Count > 0)
                     {
-                        // 只有有FileId的图片才是已上传到服务器的，需要删除
-                        if (deletedImage != null && deletedImage.FileId > 0)
+                        // 创建删除请求
+                        var deleteRequest = new FileDeleteRequest();
+                        deleteRequest.BusinessId = billId;
+                        deleteRequest.PhysicalDelete = false; // 逻辑删除
+
+                        // 添加要删除的文件信息
+                        foreach (var deletedImage in imagesToDelete)
                         {
-                            try
+                            if (deletedImage != null && deletedImage.FileId > 0)
                             {
-
-
-                                // 创建删除请求
-                                var deleteRequest = new FileDeleteRequest();
-                                deleteRequest.BusinessId = billId;
-
-                                deleteRequest.PhysicalDelete = false; // 逻辑删除
-
-                                // 添加要删除的文件信息
                                 var fileStorageInfo = ctrpay.ConvertToFileStorageInfo(deletedImage);
                                 if (fileStorageInfo != null)
                                 {
                                     fileStorageInfo.OwnerTableName = entity.GetType().Name;
                                     deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
                                 }
-
-                                // 调用文件管理服务删除文件
-                                var fileService = Startup.GetFromFac<FileManagementService>();
-                                var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
-
-                                if (deleteResponse.IsSuccess)
-                                {
-                                    MainForm.Instance.uclog.AddLog($"图片删除成功：{deletedImage.OriginalFileName}", UILogType.普通消息);
-
-                                }
-                                else
-                                {
-                                    allSuccess = false;
-                                    MainForm.Instance.uclog.AddLog($"图片删除失败：{deletedImage.OriginalFileName}，原因：{deleteResponse.ErrorMessage}", UILogType.错误);
-                                }
                             }
-                            catch (Exception ex)
-                            {
-                                allSuccess = false;
-                                MainForm.Instance.uclog.AddLog($"删除图片出错：{deletedImage.OriginalFileName}，{ex.Message}", UILogType.错误);
+                        }
 
-                            }
+                        // 调用文件管理服务删除文件
+                        var fileService = Startup.GetFromFac<FileManagementService>();
+                        var deleteResponse = await fileService.DeleteFileAsync(deleteRequest);
+
+                        if (!deleteResponse.IsSuccess)
+                        {
+                            allSuccess = false;
+                            MainForm.Instance.uclog.AddLog($"图片删除失败：{deleteResponse.ErrorMessage}", UILogType.错误);
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog($"图片删除成功：共删除 {imagesToDelete.Count} 张图片", UILogType.普通消息);
                         }
                     }
                 }
@@ -1545,66 +1528,67 @@ namespace RUINORERP.UI.BaseForm
                 // 场景1：删除原图后上传新图片 或 普通的新图片上传
                 if (updatedImages != null && updatedImages.Count > 0)
                 {
-                    //logger.LogInformation("开始处理 {Count} 张需要更新的图片", updatedImages.Count);
-
-                    int successCount = 0;
-
-                    // 遍历上传所有需要更新的图片
-                    foreach (var imageDataWithInfo in updatedImages)
+                    // 过滤出待上传的图片
+                    var imagesToUpload = updatedImages.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload).ToList();
+                    if (imagesToUpload.Count > 0)
                     {
-                        byte[] imageData = imageDataWithInfo.Item1;
-                        ImageInfo imageInfo = imageDataWithInfo.Item2;
 
-                        if (imageData == null || imageData.Length == 0)
+                        int successCount = 0;
+
+                        // 遍历上传所有需要更新的图片
+                        foreach (var imageInfo in imagesToUpload)
                         {
-                            logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
-                            continue;
+                            byte[] imageData = imageInfo.ImageData;
+                            if (imageData == null || imageData.Length == 0)
+                            {
+                                logger.LogWarning("跳过空图片数据: {FileName}", imageInfo.OriginalFileName);
+                                continue;
+                            }
+
+                            // 检查文件大小限制
+                            if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                            {
+                                logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB", imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
+                                MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
+                                allSuccess = false;
+                                continue;
+                            }
+
+                            // 准备参数
+                            // 如果图片有FileId，说明这是替换操作，服务器会更新现有文件
+                            long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
+
+                            // 上传图片(使用新的接口)
+                            var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
+
+                            // 检查响应是否为空
+                            if (response == null)
+                            {
+                                allSuccess = false;
+                                logger.LogError("图片更新返回空响应：{FileName}", imageInfo.OriginalFileName);
+                                continue;
+                            }
+
+                            if (response.IsSuccess)
+                            {
+                                successCount++;
+                                MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
+                                // 上传成功后，将图片标记为正常状态
+                                imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                            }
+                            else
+                            {
+                                allSuccess = false;
+                                MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
+                                logger.LogError("图片更新失败: {FileName}, Error: {Error}",
+                                    imageInfo.OriginalFileName, response.Message);
+                            }
                         }
 
-                        // 检查文件大小限制
-                        if (imageData.Length > 10 * 1024 * 1024) // 10MB限制
+                        if (successCount > 0)
                         {
-                            logger.LogWarning("图片文件过大: {FileName}, Size: {Size}MB", imageInfo.OriginalFileName, imageData.Length / 1024 / 1024);
-                            MainForm.Instance.uclog.AddLog($"图片 {imageInfo.OriginalFileName} 超过大小限制(10MB)");
-                            allSuccess = false;
-                            continue;
+                            MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
                         }
-
-                        // 准备参数
-                        // 如果图片有FileId，说明这是替换操作，服务器会更新现有文件
-                        long? existingFileId = imageInfo.FileId > 0 ? imageInfo.FileId : null;
-
-                        // 上传图片(使用新的接口)
-                        var response = await ctrpay.UploadImageAsync(entity as BaseEntity, imageInfo.OriginalFileName, imageData, columnName, existingFileId);
-
-                        // 检查响应是否为空
-                        if (response == null)
-                        {
-                            allSuccess = false;
-                            logger.LogError("图片更新返回空响应：{FileName}", imageInfo.OriginalFileName);
-                            continue;
-                        }
-
-                        if (response.IsSuccess)
-                        {
-                            successCount++;
-                            MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
-                            // 上传成功后，将图片标记为未更新
-                            imageInfo.IsUpdated = false;
-                            imageInfo.IsDeleted = false; // 重置删除标记
-                        }
-                        else
-                        {
-                            allSuccess = false;
-                            MainForm.Instance.uclog.AddLog($"凭证图片更新失败：{imageInfo.OriginalFileName}，原因：{response.Message}");
-                            logger.LogError("图片更新失败: {FileName}, Error: {Error}",
-                                imageInfo.OriginalFileName, response.Message);
-                        }
-                    }
-
-                    if (successCount > 0)
-                    {
-                        MainForm.Instance.uclog.AddLog($"成功更新 {successCount} 张凭证图片");
                     }
                 }
 
@@ -1622,14 +1606,21 @@ namespace RUINORERP.UI.BaseForm
         /// 专门处理已更新图片的上传 - 兼容旧版本的重载方法
         /// 当不需要处理删除图片时使用此方法
         /// </summary>
-        /// <param name="entity">销售订单实体</param>
+        /// <param name="entity">业务实体</param>
         /// <param name="updatedImages">需要更新的图片列表</param>
         /// <param name="TargetField">关联字段表达式</param>
         /// <returns>上传是否成功</returns>
         public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
         {
+            // 转换为新版本的参数格式
+            var imageInfos = updatedImages.Select(tuple => {
+                var imageInfo = tuple.Item2;
+                imageInfo.ImageData = tuple.Item1;
+                return imageInfo;
+            }).ToList();
+            
             // 调用新版本方法，deletedImages参数传入null
-            return await UploadUpdatedImagesAsync(entity, updatedImages, null, TargetField);
+            return await UploadUpdatedImagesAsync(entity, imageInfos, null, TargetField);
         }
 
         /// <summary>
@@ -1641,8 +1632,8 @@ namespace RUINORERP.UI.BaseForm
         {
             // 子类可以重写此方法，检查其MagicPictureBox控件
             // 默认返回false，子类可以根据需要实现
-            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
-            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            var pendingDeleteImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
+            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
             if (pendingDeleteImages.Count > 0 || pendingUploadImages.Count > 0)
             {
                 return true;
@@ -4235,7 +4226,7 @@ namespace RUINORERP.UI.BaseForm
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
 
             // 获取所有待上传图片
-            var pendingUploadImages = SourceGrid.ImageStateManager.Instance.GetPendingUploadImages();
+            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
 
             // 如果没有待上传图片，直接返回成功
             if (pendingUploadImages == null || pendingUploadImages.Count == 0)
@@ -4277,7 +4268,7 @@ namespace RUINORERP.UI.BaseForm
         /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
         /// 上传图片。要返回图片ID的主键
         /// </summary>
-        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<ExtendedImageInfo> pendingUploadImages)
+        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<RUINORERP.Common.BusinessImage.ImageInfo> pendingUploadImages)
         {
             bool rs = true;
             int processedCount = 0;
@@ -4395,7 +4386,7 @@ namespace RUINORERP.UI.BaseForm
                 if (processedCount > 0)
                 {
                     var processedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
-                    SourceGrid.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
+                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
                     MainForm.Instance.PrintInfoLog($"成功上传 {processedCount} 张图片");
                 }
             }
@@ -4415,7 +4406,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="imageIdToBusinessIdMap">图片ID到业务主键ID的映射</param>
         /// <param name="ownerTableName">拥有者表名</param>
         /// <returns>删除是否成功</returns>
-        protected async Task<bool> DeletePendingImagesAsync(List<ExtendedImageInfo> extendedImageInfoList, string ownerTableName)
+        protected async Task<bool> DeletePendingImagesAsync(List<RUINORERP.Common.BusinessImage.ImageInfo> extendedImageInfoList, string ownerTableName)
         {
             try
             {
@@ -4501,7 +4492,7 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 根据图片ID查找对应的单元格和明细数据（已弃用，改用直接引用）
         /// </summary>
-        [Obsolete("请使用 ExtendedImageInfo.Cell 直接获取单元格引用")]
+        [Obsolete("请使用 ImageInfo.Cell 直接获取单元格引用")]
         private (SourceGrid.Cells.Cell cell, C detail) FindCellAndDetailByImageId(Grid grid, List<C> Details, string imageId)
         {
             try

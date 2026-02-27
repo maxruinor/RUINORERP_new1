@@ -855,8 +855,8 @@ namespace RUINORERP.UI.FM
             }
             
             // 直接调用ImageStateManager，不再使用反射
-            var pendingDeleteImages = ImageStateManager.Instance.GetPendingDeleteImages();
-            var pendingUploadImages = ImageStateManager.Instance.GetPendingUploadImages();
+            var pendingDeleteImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
+            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
             
             // 处理待删除的图片
             if (pendingDeleteImages.Count > 0)
@@ -936,7 +936,7 @@ namespace RUINORERP.UI.FM
             // 清理已处理的图片状态
             var processedImageIds = new List<long>(pendingDeleteImages.Select(c => c.ImageId));
             processedImageIds.AddRange(pendingUploadImages.Select(p => p.ImageId));
-            ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
+            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
             
             // 刷新网格显示
             grid1.Refresh();
@@ -1031,7 +1031,7 @@ namespace RUINORERP.UI.FM
                         var syncResults = await SyncImagesIfNeeded();
                         // 检查是否有图片同步成功
                         bool hasSyncedImages = syncResults.Any();
-                        if (!hasSyncedImages && ImageStateManager.Instance.GetPendingUploadImages().Count > 0)
+                        if (!hasSyncedImages && RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages().Count > 0)
                         {
                             // 有图片需要同步但同步失败
                             MainForm.Instance.uclog.AddLog("图片同步失败。");

@@ -44,7 +44,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 
             // 无论是否有哈希值，都标记为需要更新
             imageInfo.Metadata["UpdateMarker"] = UPDATE_MARKER;
-            imageInfo.IsUpdated = true;
+            imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
             imageInfo.ModifiedAt = DateTime.Now;
             
             // 如果有哈希值，也添加到需要更新的集合中
@@ -69,12 +69,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             // 2. 有哈希值且在需要更新的集合中
             // 3. 没有FileId（新添加的图片）
             // 4. 没有哈希值（新添加的图片）
-            // 5. IsUpdated标志为true
+            // 5. Status为PendingUpload（需要上传的图片）
             return imageInfo.Metadata.ContainsKey("UpdateMarker") && imageInfo.Metadata["UpdateMarker"] == UPDATE_MARKER || 
                    (!string.IsNullOrEmpty(imageInfo.HashValue) && _imagesNeedingUpdate.ContainsKey(imageInfo.HashValue)) ||
                   imageInfo.FileId==0 || 
                    string.IsNullOrEmpty(imageInfo.HashValue) ||
-                   imageInfo.IsUpdated;
+                   imageInfo.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
         }
 
         /// <summary>

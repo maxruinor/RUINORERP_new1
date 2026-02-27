@@ -1330,7 +1330,7 @@ namespace RUINORERP.UI.PSI.SAL
                         if (magicPictureBox订金付款凭证 != null)
                         {
                             // 获取需要更新的图片（新上传或修改的图片）
-                            var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                            var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
                             
                             // 获取已删除的图片（需要从服务器删除的图片）
                             var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
@@ -1731,7 +1731,7 @@ namespace RUINORERP.UI.PSI.SAL
             // 检查凭证图片控件是否有需要上传的图片
             if (magicPictureBox订金付款凭证 != null)
             {
-                var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
                 var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
                 
                 // 检查是否有需要上传的图片或需要删除的图片
@@ -1760,7 +1760,7 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (magicPictureBox订金付款凭证 != null)
                 {
-                    var updatedImages = magicPictureBox订金付款凭证.GetImagesNeedingUpdate();
+                    var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
                     var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
 
                     // 第一步：处理需要删除的图片
@@ -1816,7 +1816,7 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             MainForm.Instance.uclog.AddLog("图片上传成功", Global.UILogType.成功提示消息);
                             // 添加上传同步结果
-                            var uploadedImageIds = updatedImages.Select(img => img.Item2.FileId).ToList();
+                            var uploadedImageIds = updatedImages.Select(img => img.FileId).ToList();
                             syncResults.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult(
                                 EditEntity.PrimaryKeyID, 
                                 uploadedImageIds, 

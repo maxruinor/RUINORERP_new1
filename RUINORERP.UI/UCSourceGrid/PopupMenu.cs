@@ -980,7 +980,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 {
                                     // 将图片标记为待删除状态，而不是立即删除
                                     // 注册到ImageStateManager，状态为PendingDelete
-                                    ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.StoragePath);
+                                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(cell, imageId, fileName, imageData, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.StoragePath);
                                 }
 
                                 // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
@@ -1065,7 +1065,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     long tempImageId = GenerateUniqueLongId();
 
                     // 将新图片标记为待上传状态
-                    ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, ImageStatus.PendingUpload);
+                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
 
                     // 更新单元格值为临时ID
                     cell.Value = tempImageId;

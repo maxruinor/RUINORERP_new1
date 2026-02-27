@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Contexts;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -45,9 +46,15 @@ namespace SourceGrid.Cells.Views
         private bool _disposed = false;
         private long _pendingFileId;
         private Task<System.Drawing.Image> _imageLoadTask;
+        private CancellationTokenSource _cancellationTokenSource;
         private bool _enableAsyncLoading = true;
         private bool _enableMemoryOptimization = true;
         private string _currentImageHash = string.Empty;
+        private RUINORERP.Common.BusinessImage.ImageStatus _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+        // 任务字典，用于管理并发任务
+        private static readonly Dictionary<long, Task<System.Drawing.Image>> _taskDictionary = new Dictionary<long, Task<System.Drawing.Image>>();
+        // 并发锁，用于线程安全地访问任务字典
+        private static readonly object _taskDictionaryLock = new object();
 
 
 
@@ -162,6 +169,8 @@ namespace SourceGrid.Cells.Views
                         context.Grid?.InvalidateCell(context.Position);
                     }
                 }
+                // 缓存图片状态
+                CacheImageStatus();
                 return; // 处理完ValueImageWeb后直接返回
             }
 
@@ -174,6 +183,8 @@ namespace SourceGrid.Cells.Views
                     _currentImageHash = string.Empty;
                     context.Grid?.InvalidateCell(context.Position);
                 }
+                // 缓存图片状态
+                CacheImageStatus();
                 return;
             }
             
@@ -312,6 +323,35 @@ namespace SourceGrid.Cells.Views
                     }
                     _currentImageHash = newHash;
                 }
+            }
+            
+            // 缓存图片状态
+            CacheImageStatus();
+        }
+
+        /// <summary>
+        /// 缓存图片状态
+        /// 在数据准备阶段缓存，避免在绘制时同步访问ImageStateManager
+        /// </summary>
+        private void CacheImageStatus()
+        {
+            try
+            {
+                // 直接调用 ImageStateManager 获取图片信息
+                var imageInfo = ImageStateManager.Instance.GetImageInfo(CurrentFileId);
+                if (imageInfo != null)
+                {
+                    _cachedImageStatus = imageInfo.Status;
+                }
+                else
+                {
+                    _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("缓存图片状态失败: " + ex.Message);
+                _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
             }
         }
 
@@ -623,8 +663,8 @@ namespace SourceGrid.Cells.Views
         {
             try
             {
-                // 获取图片状态
-                var status = GetImageStatus();
+                // 使用缓存的图片状态，避免在绘制时访问 ImageStateManager
+                var status = _cachedImageStatus;
 
                 // 根据状态绘制不同的标记
                 switch (status)
@@ -643,29 +683,6 @@ namespace SourceGrid.Cells.Views
             {
                 System.Diagnostics.Debug.WriteLine("绘制图片状态标记失败: " + ex.Message);
             }
-        }
-
-        /// <summary>
-        /// 获取图片状态
-        /// </summary>
-        /// <returns>图片状态</returns>
-        private ImageStatus GetImageStatus()
-        {
-            try
-            {
-                // 直接调用 ImageStateManager 获取图片信息
-                var imageInfo = ImageStateManager.Instance.GetImageInfo(CurrentFileId);
-                if (imageInfo != null)
-                {
-                    return imageInfo.Status;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("获取图片状态失败: " + ex.Message);
-            }
-
-            return ImageStatus.Normal;
         }
 
         /// <summary>
@@ -846,56 +863,110 @@ namespace SourceGrid.Cells.Views
                 return;
 
             // 取消之前的加载任务
-            if (_imageLoadTask != null)
+            if (_cancellationTokenSource != null)
             {
                 try
                 {
-                    _imageLoadTask.Dispose();
+                    _cancellationTokenSource.Cancel();
+                    _cancellationTokenSource.Dispose();
                 }
                 catch { }
             }
 
-            _imageLoadTask = System.Threading.Tasks.Task.Run(async () =>
+            // 创建新的取消令牌源
+            _cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _cancellationTokenSource.Token;
+
+            // 检查任务字典中是否已有该文件的加载任务
+            Task<System.Drawing.Image> existingTask = null;
+            lock (_taskDictionaryLock)
             {
-                try
+                if (_taskDictionary.TryGetValue(fileId, out existingTask) && !existingTask.IsCompleted)
                 {
-                    // 使用缓存管理器异步加载图片
-                    return await ImageCacheManager.Instance.GetImageAsync(
-                        fileId,
-                        async (id) =>
+                    // 使用现有任务
+                    _imageLoadTask = existingTask;
+                }
+                else
+                {
+                    // 创建新任务并添加到字典
+                    _imageLoadTask = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        try
                         {
-
-                            return await LoadImageDataAsync(fileId, context);
-
-
+                            // 检查取消令牌
+                            cancellationToken.ThrowIfCancellationRequested();
+                            
+                            // 使用缓存管理器异步加载图片
+                            return await ImageCacheManager.Instance.GetImageAsync(
+                                fileId,
+                                async (id) =>
+                                {
+                                    // 检查取消令牌
+                                    cancellationToken.ThrowIfCancellationRequested();
+                                    return await LoadImageDataAsync(fileId, context);
+                                }
+                            );
                         }
-                    );
+                        catch (OperationCanceledException)
+                        {
+                            // 任务被取消，正常退出
+                            return null;
+                        }
+                        catch (Exception ex)
+                        {
+                            // 触发错误事件
+                            ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
+                            return null;
+                        }
+                        finally
+                        {
+                            // 任务完成后从字典中移除
+                            lock (_taskDictionaryLock)
+                            {
+                                _taskDictionary.Remove(fileId);
+                            }
+                        }
+                    }, cancellationToken);
+
+                    // 将新任务添加到字典
+                    _taskDictionary[fileId] = _imageLoadTask;
                 }
-                catch (Exception ex)
-                {
-                    // 触发错误事件
-                    ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
-                    return null;
-                }
-            });
+            }
 
             try
             {
                 var image = await _imageLoadTask;
-                if (image != null && !_disposed)
+                if (image != null && !_disposed && !cancellationToken.IsCancellationRequested)
                 {
                     // 在UI线程中更新
-                    context.Grid.Invoke((Action)(() =>
+                    if (context.Grid.InvokeRequired)
                     {
-                        if (!_disposed)
+                        context.Grid.Invoke((Action)(() =>
+                        {
+                            if (!_disposed && !cancellationToken.IsCancellationRequested)
+                            {
+                                GridImage = image;
+                                ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
+                                // 触发重绘
+                                context.Grid.InvalidateCell(context.Position);
+                            }
+                        }));
+                    }
+                    else
+                    {
+                        if (!_disposed && !cancellationToken.IsCancellationRequested)
                         {
                             GridImage = image;
                             ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
                             // 触发重绘
                             context.Grid.InvalidateCell(context.Position);
                         }
-                    }));
+                    }
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // 任务被取消，正常退出
             }
             catch (Exception ex)
             {
@@ -1017,6 +1088,16 @@ namespace SourceGrid.Cells.Views
             if (!_disposed && disposing)
             {
                 // 取消加载任务
+                if (_cancellationTokenSource != null)
+                {
+                    try
+                    {
+                        _cancellationTokenSource.Cancel();
+                        _cancellationTokenSource.Dispose();
+                    }
+                    catch { }
+                }
+
                 if (_imageLoadTask != null)
                 {
                     try

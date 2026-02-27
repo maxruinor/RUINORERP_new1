@@ -224,12 +224,12 @@ namespace RUINORERP.UI.Network.Services
             return fileDownloadResponses;
         }
 
-
         public async Task<List<FileDownloadResponse>> DownloadImageAsync<T>(BaseEntity entity, Expression<Func<T, object>> exp)
         {
             string relatedField = exp.GetMemberInfo().Name;
             return await DownloadImageAsync(entity, relatedField);
         }
+
 
 
         /// <summary>

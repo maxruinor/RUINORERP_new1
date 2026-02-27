@@ -883,24 +883,28 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             // 检查BusinessId是否有效
                             if (deleteRequest.BusinessId > 0)
                             {
-                                var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId == deleteRequest.BusinessId && c.isdeleted == false);
+                                // 物理删除时不需要检查isdeleted字段，直接查询所有关联记录
+                                var SelfRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId == deleteRequest.BusinessId);
                                 SelfRelationCount = SelfRelations?.Count ?? 0;
                                 if (SelfRelations != null)
                                 {
                                     relationsToDelete.AddRange(SelfRelations);
                                 }
 
-                                var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId != deleteRequest.BusinessId && c.isdeleted == false);
+                                // 检查是否被其他业务引用
+                                var OtherRelations = await _businessRelationController.QueryByNavAsync(c => c.FileId == currentFileId && c.BusinessId != deleteRequest.BusinessId);
                                 int OtherRelationCount = OtherRelations?.Count ?? 0;
 
                                 // 检查文件是否被其他业务引用
                                 if (OtherRelationCount > 0)
                                 {
                                     isReferencedByOtherBusiness = true;
+                                    _logger?.LogDebug("文件被其他业务引用，仅删除当前业务关联: FileId={FileId}, OtherRelationCount={Count}", currentFileId, OtherRelationCount);
                                 }
                                 else
                                 {
                                     filesToDelete.Add(fileStorageInfo);
+                                    _logger?.LogDebug("文件未被其他业务引用，将删除文件及存储信息: FileId={FileId}", currentFileId);
                                 }
                             }
                             else
@@ -914,16 +918,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
 
                         // 2. 检查文件是否还有其他有效关联
-                        // 根据方案A：只有当文件无任何有效关联时，才标记文件为删除状态
+                        // 根据方案：只有当文件无任何有效关联时，才物理删除文件
                         if (!isReferencedByOtherBusiness && deleteRequest.BusinessId > 0)
                         {
-                            // 检查是否需要物理删除文件
-                            bool isPhysicalDelete = deleteRequest.PhysicalDelete;
                             // 若没有其他引用，强制执行物理删除以清理磁盘与关联
-                            if (!isReferencedByOtherBusiness)
-                            {
-                                isPhysicalDelete = true;
-                            }
+                            bool isPhysicalDelete = true;
 
                             if (isPhysicalDelete)
                             {
@@ -1072,7 +1071,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                                                 if (targetFile != null)
                                                 {
-                                                    // 物理删除：删除实际文件
+                                                    // 物理删除：删除实际文件1
                                                     try
                                                     {
                                                         _logger?.LogDebug("物理删除文件: {FilePath}", targetFile);
@@ -1105,7 +1104,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 记录删除结果
                                 if (fileDeleted)
                                 {
-                                     
+                                    _logger?.LogDebug("文件物理删除完成: FileId={FileId}", fileStorageInfo.FileId);
                                 }
                                 else
                                 {
@@ -1116,8 +1115,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                     }
 
-                    // 1. 删除业务关联记录（使用逻辑删除，标记isdeleted=true）
-                    // 按方案A：统一以关联表 isdeleted 为准进行删除
+                    // 1. 删除业务关联记录（使用物理删除，以避免外键约束错误）
                     try
                     {
                         // 创建一个副本，避免在循环过程中修改集合
@@ -1142,20 +1140,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     continue;
                                 }
 
-                                // 使用逻辑删除：设置isdeleted标记而不是物理删除
-                                relation.isdeleted = true;
-                                relation.Modified_at = DateTime.Now;
-                                var updateResult = await _businessRelationController.UpdateAsync(relation);
+                                // 使用物理删除：直接删除关联记录，以避免外键约束错误
+                                var deleteResult = await _businessRelationController.DeleteAsync(relation.RelationId);
 
-                                if (updateResult)
+                                if (deleteResult)
                                 {
                                     relationDeletedCount++;
-                                    _logger?.LogDebug("逻辑删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}, OwnerTableName: {OwnerTableName}",
+                                    _logger?.LogDebug("物理删除业务关联成功，RelationId: {RelationId}, FileId: {FileId}, BusinessId: {BusinessId}, OwnerTableName: {OwnerTableName}",
                                         relation.RelationId, relation.FileId, relation.BusinessId, relation.OwnerTableName);
                                 }
                                 else
                                 {
-                                    _logger?.LogWarning("逻辑删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                    _logger?.LogWarning("物理删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
                                 }
                             }
                             catch (Exception ex)

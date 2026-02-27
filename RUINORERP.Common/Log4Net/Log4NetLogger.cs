@@ -21,8 +21,17 @@ namespace RUINORERP.Common.Log4Net
         public Log4NetLogger(string categoryName)
         {
             _categoryName = categoryName;
-            // 使用共享日志仓库获取日志记录器
-            _log = LogManager.GetLogger(Log4NetConfiguration.SHARED_REPOSITORY_NAME, categoryName);
+            try
+            {
+                // 尝试使用共享日志仓库获取日志记录器
+                _log = LogManager.GetLogger(Log4NetConfiguration.SHARED_REPOSITORY_NAME, categoryName);
+            }
+            catch (Exception ex)
+            {
+                // 仓库不存在时，使用默认仓库
+                System.Diagnostics.Debug.WriteLine($"日志仓库初始化失败: {ex.Message}，使用默认仓库");
+                _log = LogManager.GetLogger(categoryName);
+            }
         }
 
         /// <summary>

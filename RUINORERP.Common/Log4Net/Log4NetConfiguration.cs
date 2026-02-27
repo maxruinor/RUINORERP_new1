@@ -16,7 +16,7 @@ namespace RUINORERP.Common.Log4Net
     public static class Log4NetConfiguration
     {
         /// <summary>
-        /// 共享日志仓库名称,用于客户端和服务器统一日志配置
+        /// 共享日志仓库名称,用于客户端和服务器统一日志配置1
         /// </summary>
         public const string SHARED_REPOSITORY_NAME = "RUINORERP_Shared_LoggerRepository";
 

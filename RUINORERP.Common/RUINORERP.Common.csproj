@@ -4,6 +4,7 @@
     <TargetFramework>net48</TargetFramework>
     <OutputType>Library</OutputType>
     <Platforms>AnyCPU;x86</Platforms>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 <PropertyGroup>
 <LangVersion>latest</LangVersion>

@@ -87,7 +87,7 @@ namespace RUINORERP.Common.BusinessImage
         public ImageStatus Status { get; set; } = ImageStatus.Normal;
         
         /// <summary>
-        /// 图片预览
+        /// 图片预览1
         /// </summary>
         public Image PreviewImage { get; set; }
         

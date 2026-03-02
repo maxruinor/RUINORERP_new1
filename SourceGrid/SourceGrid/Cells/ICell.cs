@@ -57,8 +57,11 @@ namespace SourceGrid.Cells
             get;
             set;
         }
- 
 
+        Models.CellImageModel ImageModel
+        {
+            get;
+        }
 
         #endregion
 

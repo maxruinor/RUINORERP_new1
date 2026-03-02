@@ -947,6 +947,12 @@ namespace RUINORERP.UI.FM
             return syncResults;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="NeedValidated"></param>
+        /// <returns></returns>
         protected async override Task<bool> Save(bool NeedValidated)
         {
             if (EditEntity == null)

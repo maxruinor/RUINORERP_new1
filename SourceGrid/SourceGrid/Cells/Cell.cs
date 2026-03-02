@@ -282,14 +282,18 @@ namespace SourceGrid.Cells
         }
         #endregion
 
-        #region Image ���ͼƬ���⴦����
-        private Models.CellImageModel ImageModel
+        #region Image  
+
+       /// <summary>
+       /// 获取或设置单元格的图片 by watson
+       /// </summary>
+        public Models.CellImageModel ImageModel
         {
             get { return (Models.CellImageModel)Model.FindModel(typeof(Models.CellImageModel)); }
         }
 
         /// <summary>
-        /// ��ȡ�������뵥Ԫ�������ͼ���ڲ�ʹ��ģ�͡�ͼ���ࡣ
+        ///  原来的图片
         /// </summary>
         public System.Drawing.Image Image
         {

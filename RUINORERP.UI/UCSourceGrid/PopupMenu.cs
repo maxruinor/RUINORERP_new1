@@ -1,4 +1,5 @@
 using MathNet.Numerics.LinearAlgebra.Factorization;
+using Microsoft.IdentityModel.Tokens;
 using Netron.GraphLib;
 using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Common.BusinessImage;
@@ -8,6 +9,7 @@ using RUINORERP.UI.Common;
 using RUINORERP.UI.ToolForm;
 using RUINORERP.UI.UControls;
 using SourceGrid;
+using SourceGrid.Cells;
 using SourceGrid.Cells.Editors;
 using SourceGrid.Cells.Models;
 using SourceGrid.Cells.Views;
@@ -1024,9 +1026,24 @@ namespace RUINORERP.UI.UCSourceGrid
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
 
+            ValueImageWeb imageWeb = new ValueImageWeb();
             // 先处理旧图片
-            string oldImageId = cell.Value as string;
-            if (!string.IsNullOrEmpty(oldImageId))
+            if (cell.Value is ValueImageWeb valueImage)
+            {
+                imageWeb = valueImage;
+            }
+            else
+            {
+                if (cell is ImageWebCell imageWebCell)
+                {
+                    if (imageWebCell.ImageWebModel.FileId > 0)
+                    {
+                        imageWeb = imageWebCell.ImageWebModel;
+                    }
+                }
+            }
+            #region 旧图片处理
+            if (imageWeb.FileId > 0)
             {
                 try
                 {
@@ -1034,9 +1051,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                     {
                         // 将旧图片标记为待删除状态
-                        // ImageStateManager.Instance.UpdateImageStatus(oldImageId, ImageStatus.PendingDelete);
-
-                        MainForm.Instance.PrintInfoLog($"旧图片已标记为待删除: {oldImageId}");
+                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(cell, imageWeb.FileId, imageWeb.StorageFileName, imageWeb.ImageData, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.StoragePath);
                     }
                 }
                 catch (Exception ex)
@@ -1045,6 +1060,12 @@ namespace RUINORERP.UI.UCSourceGrid
                     return;
                 }
             }
+
+            #endregion
+
+
+
+
 
             // 再选择新图片
             OpenFileDialog openFileDialog = new OpenFileDialog
@@ -1070,6 +1091,46 @@ namespace RUINORERP.UI.UCSourceGrid
                     // 更新单元格值为临时ID
                     cell.Value = tempImageId;
 
+                    // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
+                    var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                    {
+                        // 清空旧图片数据
+                        valueImageWeb.CellImageBytes = null;
+                        valueImageWeb.CellImageHashName = null;
+                        valueImageWeb.SetImageNewHash(string.Empty);
+                    }
+
+                    // 再画新图片
+                    if (cell.View is RemoteImageView imageView)
+                    {
+                        // 尝试从ImageStateManager获取新图片数据
+                        var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
+                        var newImageInfo = pendingUploadImages.FirstOrDefault(img => img.ImageId == tempImageId);
+                        if (newImageInfo != null && newImageInfo.ImageData != null)
+                        {
+                            // 使用预览图片功能显示新图片
+                            using (var ms = new System.IO.MemoryStream(newImageInfo.ImageData))
+                            {
+                                try
+                                {
+                                    var previewImage = System.Drawing.Image.FromStream(ms);
+                                    imageView.GridImage = previewImage;
+                                    // 同时更新ValueImageWeb的图片数据
+                                    if (model is SourceGrid.Cells.Models.ValueImageWeb NewValueImageWeb)
+                                    {
+                                        NewValueImageWeb.CellImageBytes = newImageInfo.ImageData;
+                                        NewValueImageWeb.CellImageHashName = fileName;
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    MainForm.Instance.PrintInfoLog("显示新图片失败: " + ex.Message);
+                                }
+                            }
+                        }
+                    }
+
                     // 强制重绘
                     grid.Refresh();
 
@@ -1082,6 +1143,12 @@ namespace RUINORERP.UI.UCSourceGrid
                 {
                     MainForm.Instance.PrintInfoLog("标记新图片失败: " + ex.Message);
                 }
+            }
+            else
+            {
+                //如果用户不替换了，则清除上面添加到删除集合中的文件 
+                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveImage(imageWeb.FileId);
+                
             }
         }
 
@@ -1238,8 +1305,8 @@ namespace RUINORERP.UI.UCSourceGrid
             SourceGrid.Cells.Cell cell = _cell;
             // 只要是 RemoteImageView 类型的单元格，就显示右键菜单
             //如
-            return cell.Value is ValueImageWeb;
-            return cell.View is RemoteImageView;
+            return cell.Value is ValueImageWeb || cell.View is RemoteImageView;
+
         }
 
         /// <summary>

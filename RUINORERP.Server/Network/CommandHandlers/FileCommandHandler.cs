@@ -822,7 +822,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 处理文件删除
+        /// 处理文件删除1
         /// 删除逻辑：
         /// 1. 如果没有其它业务再引用，根据PhysicalDelete属性决定删除方式
         ///    - PhysicalDelete=true：物理删除（删除文件元数据、关联记录和物理文件）
@@ -857,6 +857,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var deletedFileIds = new List<string>();
                     var deletedCount = 0;
                     var relationDeletedCount = 0;
+                    bool hasError = false;
 
                     var response = new FileDeleteResponse
                     {
@@ -890,7 +891,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
 
                         // 从数据库获取文件信息
-                        tb_FS_FileStorageInfo fileStorageInfo = fileInfo;
+                        var dbFileInfo = await _fileStorageInfoController.QueryByNavAsync(c => c.FileId == currentFileId && c.isdeleted == false);
+                        tb_FS_FileStorageInfo fileStorageInfo = dbFileInfo != null && dbFileInfo.Count > 0 ? dbFileInfo[0] as tb_FS_FileStorageInfo : fileInfo;
 
                         // 检查文件是否被其他业务引用
                         bool isReferencedByOtherBusiness = false;
@@ -932,6 +934,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         catch (Exception ex)
                         {
                             _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
+                            hasError = true;
                         }
 
                         // 2. 检查文件是否还有其他有效关联
@@ -961,6 +964,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                         catch (Exception ex)
                                         {
                                             _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
+                                            hasError = true;
                                         }
                                     }
                                 }
@@ -1101,6 +1105,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                                     {
                                                         // 记录错误但继续删除其他文件
                                                         _logger?.LogError(ex, "物理删除文件失败: {FilePath}", targetFile);
+                                                        hasError = true;
                                                     }
                                                 }
 
@@ -1127,6 +1132,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 {
                                     _logger?.LogWarning("文件删除失败，未找到文件: FileId={FileId}, StorageFileName={StorageFileName}, HashValue={HashValue}",
                                         fileStorageInfo.FileId, fileStorageInfo.StorageFileName, fileStorageInfo.HashValue);
+                                    hasError = true;
                                 }
                             }
                         }
@@ -1169,12 +1175,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 else
                                 {
                                     _logger?.LogWarning("物理删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                    hasError = true;
                                 }
                             }
                             catch (Exception ex)
                             {
                                 _logger?.LogError(ex, "处理业务关联记录失败: RelationId={RelationId}, FileId={FileId}, BusinessId={BusinessId}",
                                     relation.RelationId, relation.FileId, relation.BusinessId);
+                                hasError = true;
                                 // 记录错误但继续处理其他关联记录
                             }
                         }
@@ -1184,6 +1192,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     catch (Exception ex)
                     {
                         _logger?.LogError(ex, "删除业务关联记录失败");
+                        hasError = true;
                     }
 
 
@@ -1211,12 +1220,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     else
                                     {
                                         _logger?.LogWarning("删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                        hasError = true;
                                     }
                                 }
                             }
                             catch (Exception ex)
                             {
                                 _logger?.LogError(ex, "删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                hasError = true;
                                 // 记录错误但继续删除其他文件存储信息
                             }
                         }
@@ -1278,6 +1289,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         _logger?.LogWarning("未找到或未能删除任何业务关联记录");
                     }
 
+                    // 设置响应状态
+                    response.IsSuccess = !hasError && (deletedCount > 0 || relationDeletedCount > 0);
+
+                    _logger?.LogDebug("文件删除处理完成，成功删除 {DeletedCount} 个文件和 {RelationDeletedCount} 个业务关联，是否有错误: {HasError}", deletedCount, relationDeletedCount, hasError);
                     return response;
                 }
                 catch (Exception ex)

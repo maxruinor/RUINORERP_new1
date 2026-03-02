@@ -448,7 +448,7 @@ namespace RUINORERP.UI.FM
             {
                 var fileService = Startup.GetFromFac<FileBusinessService>();
                 var imageColumn = sgd["EvidenceImagePath"];
-                
+
                 if (imageColumn == null) return;
 
                 // 获取图片列的索引
@@ -480,7 +480,7 @@ namespace RUINORERP.UI.FM
                             var fileStorageInfos = await DownloadDetailImageAsync(detail, fileService);
                             if (fileStorageInfos != null && fileStorageInfos.Count > 0)
                             {
-                                UpdateCellImage(cell, fileStorageInfos[0]);
+                                UpdateCellImage(cell, fileStorageInfos[0],detail.ClaimSubID);
                                 loadedCount++;
                             }
                         }
@@ -548,7 +548,7 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 下载明细图片1
+        /// 下载明细图片
         /// </summary>
         private async Task<List<tb_FS_FileStorageInfo>> DownloadDetailImageAsync(tb_FM_ExpenseClaimDetail detail, FileBusinessService fileService)
         {
@@ -556,10 +556,9 @@ namespace RUINORERP.UI.FM
             try
             {
                 var downloadResponse = await fileService.DownloadImageAsync<tb_FM_ExpenseClaimDetail>(detail, c => c.EvidenceImagePath);
-                if (downloadResponse != null && !downloadResponse.IsSuccess)
+                if (downloadResponse != null && downloadResponse.IsSuccess)
                 {
-
-                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null && downloadResponse.FileStorageInfos.Count > 0)
+                    if (downloadResponse.FileStorageInfos != null && downloadResponse.FileStorageInfos.Count > 0)
                     {
                         fileStorageInfos.AddRange(downloadResponse.FileStorageInfos);
                     }
@@ -575,30 +574,7 @@ namespace RUINORERP.UI.FM
         }
 
 
-        /// <summary>
-        /// 更新网格单元格图片
-        /// </summary>
-        private async Task UpdateGridCellImageAsync(long bizid, int rowIndex, int colIndex, tb_FS_FileStorageInfo fileStorageInfo)
-        {
-            await Task.Run(() =>
-            {
-                try
-                {
-                    this.Invoke(new Action(() =>
-                    {
-                        var cellVirtual = grid1[rowIndex, colIndex];
-                        if (cellVirtual is SourceGrid.Cells.Cell cell)
-                        {
-                            UpdateCellImage(cell, fileStorageInfo, bizid);
-                        }
-                    }));
-                }
-                catch (Exception ex)
-                {
-                    MainForm.Instance.logger.LogError(ex, "更新网格单元格图片失败");
-                }
-            });
-        }
+       
 
         /// <summary>
         /// 更新单元格图片（新增辅助方法）
@@ -606,7 +582,7 @@ namespace RUINORERP.UI.FM
         /// <param name="cell">单元格</param>
         /// <param name="fileStorageInfo">文件存储信息</param>
         /// <param name="bizid">业务ID</param>
-        private void UpdateCellImage(SourceGrid.Cells.Cell cell, tb_FS_FileStorageInfo fileStorageInfo, long? bizid = null)
+        private void UpdateCellImage(SourceGrid.Cells.Cell cell, tb_FS_FileStorageInfo fileStorageInfo, long BusinessId)
         {
             if (cell == null || fileStorageInfo == null) return;
 
@@ -635,12 +611,11 @@ namespace RUINORERP.UI.FM
                 valueImageWeb.ImageData = fileStorageInfo.FileData;
                 valueImageWeb.StoragePath = fileStorageInfo.StoragePath;
                 valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
-                
-                if (bizid.HasValue)
-                {
-                    valueImageWeb.BusinessId = bizid.Value;
-                }
-                
+
+
+                valueImageWeb.BusinessId = BusinessId;
+
+
                 // 设置单元格值，使用 Grid.default 模式自动选择存储方式
                 var gridObj = grid1 as SourceGrid.Grid;
                 cell.Value = valueImageWeb;
@@ -684,12 +659,12 @@ namespace RUINORERP.UI.FM
                         var ctrpay = Startup.GetFromFac<FileBusinessService>();
                         var downloadResponse = await ctrpay.DownloadImageAsync<tb_FM_ExpenseClaim>(EditEntity, c => c.CloseCaseImagePath);
 
-                        if (downloadResponse != null && !downloadResponse.IsSuccess)
+                        if (downloadResponse != null && downloadResponse.IsSuccess)
                         {
                             List<byte[]> imageDataList = new List<byte[]>();
                             List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-                            if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                            if (downloadResponse.FileStorageInfos != null)
                             {
                                 foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                                 {

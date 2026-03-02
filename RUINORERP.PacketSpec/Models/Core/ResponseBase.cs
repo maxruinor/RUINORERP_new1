@@ -28,7 +28,7 @@ namespace RUINORERP.PacketSpec.Models.Core
         public string ErrorMessage { get; set; }
 
         /// <summary>
-        /// 操作是否成功
+        /// 操作是否成功1
         /// </summary>
         public bool IsSuccess { get; set; }
 

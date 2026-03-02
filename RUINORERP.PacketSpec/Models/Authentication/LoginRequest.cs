@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
@@ -47,6 +47,11 @@ namespace RUINORERP.PacketSpec.Models.Requests
         /// 客户端Token信息（用于Token刷新场景）
         /// </summary>
         public TokenInfo Token { get; set; }
+
+        /// <summary>
+        /// 会话ID
+        /// </summary>
+        public string SessionId { get; set; }
 
         /// <summary>
         /// 创建登录请求

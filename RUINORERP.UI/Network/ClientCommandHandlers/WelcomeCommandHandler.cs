@@ -64,7 +64,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
         /// <returns>处理结果</returns>
         public override async Task HandleAsync(PacketModel packet)
         {
-            if (packet == null || packet.CommandId == null)
+            if (packet == null || packet.CommandId == 0)
             {
                 _logger.LogError("收到无效的数据包");
                 return;
@@ -77,7 +77,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     // 收集客户端系统信息
                     var systemInfo = CollectClientSystemInfo();
 
-                    _logger.LogInformation($"[欢迎响应] 版本={systemInfo.ClientVersion}, OS={systemInfo.ClientOS}");
+                    // 存储session ID到应用上下文
+                    if (!string.IsNullOrEmpty(welcomeRequest.SessionId) && MainForm.Instance != null && MainForm.Instance.AppContext != null)
+                    {
+                        MainForm.Instance.AppContext.SessionId = welcomeRequest.SessionId;
+                    }
 
                     // 创建欢迎响应（使用请求的RequestId以便服务器匹配）
                     var welcomeResponse = WelcomeResponse.Create(

@@ -174,18 +174,22 @@ namespace RUINORERP.UI.Network.Services
                         var fieldValue = propertyInfo.GetValue(entity);
                         if (fieldValue != null)
                         {
-                            // 尝试将字段值转换为long类型的图片ID
-                            if (long.TryParse(fieldValue.ToString(), out long fileId) && fileId > 0)
+                            long fileId;
+                            
+                            // 优化后的类型判断和转换
+                            if (fieldValue is long longValue && longValue > 0)
                             {
-                                // 创建下载请求 - 只传递文件ID
-                                var request = new FileDownloadRequest
-                                {
-                                    FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
-                                };
-
-                                // 下载文件
-                                var response = await fileService.DownloadFileAsync(request);
-                                return response;
+                                // 直接使用 long 类型，无需转换
+                                fileId = longValue;
+                            }
+                            else if (fieldValue is int intValue && intValue > 0)
+                            {
+                                // int 可以直接转换为 long
+                                fileId = intValue;
+                            }
+                            else if (long.TryParse(fieldValue.ToString(), out fileId) && fileId > 0)
+                            {
+                                // 字符串转换
                             }
                             else
                             {
@@ -193,6 +197,16 @@ namespace RUINORERP.UI.Network.Services
                                 _logger.LogWarning($"关联字段 {relatedField} 的值不是有效的图片ID: {fieldValue}");
                                 return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值不是有效的图片ID");
                             }
+
+                            // 创建下载请求 - 只传递文件ID
+                            var request = new FileDownloadRequest
+                            {
+                                FileStorageInfo = new tb_FS_FileStorageInfo { FileId = fileId }
+                            };
+
+                            // 下载文件
+                            var response = await fileService.DownloadFileAsync(request);
+                            return response;
                         }
                         else
                         {

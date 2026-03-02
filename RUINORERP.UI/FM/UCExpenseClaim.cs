@@ -437,7 +437,7 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 异步加载明细报销凭证图片
+        /// 异步加载明细报销凭证图片 - 使用字典优化
         /// </summary>
         /// <param name="details">报销明细列表</param>
         private async Task LoadDetailImagesAsync(List<tb_FM_ExpenseClaimDetail> details)
@@ -446,32 +446,42 @@ namespace RUINORERP.UI.FM
 
             try
             {
-                int loadedCount = 0;
                 var fileService = Startup.GetFromFac<FileBusinessService>();
+                var imageColumn = sgd["EvidenceImagePath"];
+                
+                if (imageColumn == null) return;
 
+                // 获取图片列的索引
+                int colIndex = GetEvidenceImageColumnIndex();
+                if (colIndex < 0) return;
+
+                // 构建主键到单元格的映射字典（一次性遍历，O(n)）
+                var cellMap = new Dictionary<long, SourceGrid.Cells.Cell>();
+                for (int i = 1; i < grid1.RowsCount; i++)
+                {
+                    var rowData = grid1.Rows[i].RowData;
+                    if (rowData is tb_FM_ExpenseClaimDetail rowDetail)
+                    {
+                        var cellVirtual = grid1.GetCell(i, colIndex);
+                        if (cellVirtual is SourceGrid.Cells.Cell cell)
+                        {
+                            cellMap[rowDetail.ClaimSubID] = cell;
+                        }
+                    }
+                }
+
+                int loadedCount = 0;
                 foreach (var detail in details)
                 {
-                    //实际保存的是图片ID，图片功能是后面完善的。名称不好
-                    if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
+                    if (!string.IsNullOrEmpty(detail.EvidenceImagePath) && cellMap.TryGetValue(detail.ClaimSubID, out var cell))
                     {
                         try
                         {
-                            // 查找对应的网格行
-                            int rowIndex = FindGridRowIndex(detail);
-                            if (rowIndex > 0)
+                            var fileStorageInfos = await DownloadDetailImageAsync(detail, fileService);
+                            if (fileStorageInfos != null && fileStorageInfos.Count > 0)
                             {
-                                int colIndex = GetEvidenceImageColumnIndex();
-                                if (colIndex >= 0)
-                                {
-                                    // 下载图片
-                                    var fileStorageInfos = await DownloadDetailImageAsync(detail, fileService);
-                                    if (fileStorageInfos != null && fileStorageInfos.Count > 0)
-                                    {
-                                        // 更新单元格显示
-                                        await UpdateGridCellImageAsync(detail.PrimaryKeyID, rowIndex, colIndex, fileStorageInfos[0]);
-                                        loadedCount++;
-                                    }
-                                }
+                                UpdateCellImage(cell, fileStorageInfos[0]);
+                                loadedCount++;
                             }
                         }
                         catch (Exception ex)
@@ -484,11 +494,7 @@ namespace RUINORERP.UI.FM
                 if (loadedCount > 0)
                 {
                     MainForm.Instance.uclog.AddLog($"成功加载 {loadedCount} 张明细报销凭证图片");
-                    // 刷新网格显示
-                    this.Invoke(new Action(() =>
-                    {
-                        grid1.Invalidate();
-                    }));
+                    this.Invoke(new Action(() => grid1.Invalidate()));
                 }
             }
             catch (Exception ex)
@@ -542,7 +548,7 @@ namespace RUINORERP.UI.FM
         }
 
         /// <summary>
-        /// 下载明细图片
+        /// 下载明细图片1
         /// </summary>
         private async Task<List<tb_FS_FileStorageInfo>> DownloadDetailImageAsync(tb_FM_ExpenseClaimDetail detail, FileBusinessService fileService)
         {
@@ -580,42 +586,10 @@ namespace RUINORERP.UI.FM
                 {
                     this.Invoke(new Action(() =>
                     {
-                        var cell = grid1[rowIndex, colIndex];
-                        if (cell != null)
+                        var cellVirtual = grid1[rowIndex, colIndex];
+                        if (cellVirtual is SourceGrid.Cells.Cell cell)
                         {
-                            // 获取或创建 ValueImageWeb 模型
-                            var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb;
-                            if (model == null)
-                            {
-                                valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
-                                cell.Model.AddModel(valueImageWeb);
-                            }
-                            else
-                            {
-                                valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                            }
-
-                            // 设置图片数据
-                            valueImageWeb.CellImageBytes = fileStorageInfo.FileData;
-                            valueImageWeb.CellImageHashName = fileStorageInfo.StoragePath;
-                            valueImageWeb.FileId = fileStorageInfo.FileId;
-                            valueImageWeb.OriginalFileName = fileStorageInfo.OriginalFileName;
-                            valueImageWeb.FileExtension = fileStorageInfo.FileExtension;
-                            valueImageWeb.FileType = fileStorageInfo.FileType;
-                            valueImageWeb.ImageData = fileStorageInfo.FileData;
-                            valueImageWeb.StoragePath = fileStorageInfo.StoragePath;
-                            valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
-                            valueImageWeb.BusinessId = bizid;
-                            // 设置单元格值，使用 Grid.default 模式自动选择存储方式
-                            var gridObj = grid1 as SourceGrid.Grid;
-                            cell.Value = valueImageWeb;
-
-                            // 设置视图
-                            if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
-                            {
-                                cell.View = new SourceGrid.Cells.Views.RemoteImageView();
-                            }
+                            UpdateCellImage(cell, fileStorageInfo, bizid);
                         }
                     }));
                 }
@@ -624,6 +598,63 @@ namespace RUINORERP.UI.FM
                     MainForm.Instance.logger.LogError(ex, "更新网格单元格图片失败");
                 }
             });
+        }
+
+        /// <summary>
+        /// 更新单元格图片（新增辅助方法）
+        /// </summary>
+        /// <param name="cell">单元格</param>
+        /// <param name="fileStorageInfo">文件存储信息</param>
+        /// <param name="bizid">业务ID</param>
+        private void UpdateCellImage(SourceGrid.Cells.Cell cell, tb_FS_FileStorageInfo fileStorageInfo, long? bizid = null)
+        {
+            if (cell == null || fileStorageInfo == null) return;
+
+            try
+            {
+                // 获取或创建 ValueImageWeb 模型
+                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb;
+                if (model == null)
+                {
+                    valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
+                    cell.Model.AddModel(valueImageWeb);
+                }
+                else
+                {
+                    valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
+                }
+
+                // 设置图片数据
+                valueImageWeb.CellImageBytes = fileStorageInfo.FileData;
+                valueImageWeb.CellImageHashName = fileStorageInfo.StoragePath;
+                valueImageWeb.FileId = fileStorageInfo.FileId;
+                valueImageWeb.OriginalFileName = fileStorageInfo.OriginalFileName;
+                valueImageWeb.FileExtension = fileStorageInfo.FileExtension;
+                valueImageWeb.FileType = fileStorageInfo.FileType;
+                valueImageWeb.ImageData = fileStorageInfo.FileData;
+                valueImageWeb.StoragePath = fileStorageInfo.StoragePath;
+                valueImageWeb.StorageFileName = fileStorageInfo.StorageFileName;
+                
+                if (bizid.HasValue)
+                {
+                    valueImageWeb.BusinessId = bizid.Value;
+                }
+                
+                // 设置单元格值，使用 Grid.default 模式自动选择存储方式
+                var gridObj = grid1 as SourceGrid.Grid;
+                cell.Value = valueImageWeb;
+
+                // 设置视图
+                if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
+                {
+                    cell.View = new SourceGrid.Cells.Views.RemoteImageView();
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, "更新网格单元格图片失败");
+            }
         }
 
 

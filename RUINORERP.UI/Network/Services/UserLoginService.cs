@@ -96,6 +96,12 @@ namespace RUINORERP.UI.Network.Services
 
 
                 var loginRequest = LoginRequest.Create(username, password);
+                // 附加session ID到登录请求
+                if (MainForm.Instance != null && MainForm.Instance.AppContext != null)
+                {
+                    loginRequest.SessionId = MainForm.Instance.AppContext.SessionId;
+                }
+                _logger?.LogInformation($"[登录请求] 用户名: {username}, SessionId: {loginRequest.SessionId}");
 
                 // 发送登录命令并获取响应 - 移除复杂重试逻辑，依赖ClientCommunicationService的可靠性
                 var response = await _communicationService.SendCommandWithResponseAsync<LoginResponse>(

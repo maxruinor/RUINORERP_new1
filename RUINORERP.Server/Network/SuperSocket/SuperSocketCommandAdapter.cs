@@ -259,11 +259,15 @@ namespace RUINORERP.Server.Network.SuperSocket
                         _commandDispatcher.HandlerCount);
                 }
 
-                // 获取现有会话信息,服务器的会话与客户端请求的id不匹配则断开了连接
-                var sessionInfo = SessionService.GetSession(session.SessionID);
+                // 获取现有会话信息
+                var sessionId = session.SessionID;
+                var sessionInfo = SessionService.GetSession(sessionId);
+                
+                // 检查会话是否存在
                 if (sessionInfo == null)
                 {
-                    // 如果会话不存在，可能是连接已断开或会话已过期
+                    // 会话不存在，可能是连接已断开或会话已过期
+                    _logger?.LogWarning("会话不存在或已过期: SessionId={SessionId}", sessionId);
                     await SendErrorResponseAsync(session, package, UnifiedErrorCodes.Auth_SessionExpired, CancellationToken.None);
                     return;
                 }

@@ -495,7 +495,7 @@ namespace RUINORERP.UI
                     UserGlobalConfig.Instance.ServerIP = txtServerIP.Text;
                     UserGlobalConfig.Instance.ServerPort = txtPort.Text;
 
-                    // 执行新的登录流程
+                    // 执行新的登录流程1
                     await ExecuteNewLoginFlow(isInitPwd, serverPort, needsReconnect);
                 }
             }

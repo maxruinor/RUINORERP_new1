@@ -228,10 +228,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                 // 获取或创建会话信息
                 var sessionInfo = SessionService.GetSession(executionContext.SessionId);
+                
+                // 如果从执行上下文获取失败，尝试从登录请求获取
+                if (sessionInfo == null && loginRequest != null && !string.IsNullOrEmpty(loginRequest.SessionId))
+                {
+                    sessionInfo = SessionService.GetSession(loginRequest.SessionId);
+                }
+                
+                // 如果仍然获取失败，创建新会话
                 if (sessionInfo == null)
                 {
                     sessionInfo = SessionService.CreateSession(executionContext.SessionId);
-
+                    
                     if (sessionInfo == null)
                     {
                         return ResponseFactory.CreateSpecificErrorResponse(executionContext, "创建会话失败");

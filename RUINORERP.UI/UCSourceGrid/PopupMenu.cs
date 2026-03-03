@@ -1088,7 +1088,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     // 将新图片标记为待上传状态
                     RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
 
-                    // 更新单元格值为临时ID
+                    // 更新单元格值为临时ID，确保只存储图片ID
                     cell.Value = tempImageId;
 
                     // 清空单元格显示（视觉上删除，但实际在保存时才真正删除）
@@ -1099,6 +1099,7 @@ namespace RUINORERP.UI.UCSourceGrid
                         valueImageWeb.CellImageBytes = null;
                         valueImageWeb.CellImageHashName = null;
                         valueImageWeb.SetImageNewHash(string.Empty);
+                        valueImageWeb.FileId = tempImageId;
                     }
 
                     // 再画新图片

@@ -724,7 +724,7 @@ namespace SourceGrid.Cells.Editors
 
         /// <summary>
         /// 对话框会直接到这里
-        /// 修复：正确处理相同图片在编辑后退出的情况
+        /// 修复：正确处理相同图片在编辑后退出的情况1
         /// </summary>
         /// <returns></returns>
         public override object GetEditedValue()

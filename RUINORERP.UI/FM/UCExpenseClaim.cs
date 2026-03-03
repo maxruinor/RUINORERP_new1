@@ -616,10 +616,9 @@ namespace RUINORERP.UI.FM
                 valueImageWeb.BusinessId = BusinessId;
 
 
-                // 设置单元格值，使用 Grid.default 模式自动选择存储方式
-                var gridObj = grid1 as SourceGrid.Grid;
-                cell.Value = valueImageWeb;
-
+                // 设置单元格值为图片ID，确保只存储图片ID而不是整个对象
+                cell.Value = fileStorageInfo.FileId;
+                cell.Tag=valueImageWeb;
                 // 设置视图
                 if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
                 {
@@ -1056,17 +1055,18 @@ namespace RUINORERP.UI.FM
                                 if (result.SyncType == RUINORERP.Common.BusinessImage.ImageSyncType.Add)
                                 {
                                     // 新增图片，更新图片ID到业务表
-                                    // 这里需要根据实际的图片字段名进行调整
-                                    // 例如：detail.ImageId = result.ImageIds.FirstOrDefault();
-                                    // 或者如果支持多个图片，可能需要用逗号分隔的字符串
-                                    // detail.ImageIds = string.Join(",", result.ImageIds);
+                                    // 只存储第一个图片ID，因为当前是单图模式
+                                    if (result.ImageIds.Any())
+                                    {
+                                        detail.EvidenceImagePath = result.ImageIds.FirstOrDefault().ToString();
+                                        detail.SetPropertyValue("EvidenceImagePath", detail.EvidenceImagePath);
+                                    }
                                 }
                                 else if (result.SyncType == RUINORERP.Common.BusinessImage.ImageSyncType.Delete)
                                 {
                                     // 删除图片，清空对应业务表的图片字段
-                                    // 这里需要根据实际的图片字段名进行调整
-                                    // 例如：detail.ImageId = 0;
-                                    // 或者如果支持多个图片，可能需要从现有值中移除删除的ID
+                                    detail.EvidenceImagePath = null;
+                                    detail.SetPropertyValue("EvidenceImagePath", null);
                                 }
                             }
                         }
@@ -1141,9 +1141,38 @@ namespace RUINORERP.UI.FM
                             picboxCloseCaseImagePath.ClearImage();
                         }
 
-                        // 删除远程图片
+                        // 删除远程图片 - 包括主表和子表的图片
                         var ctrpay = Startup.GetFromFac<FileBusinessService>();
+                        
+                        // 先删除主表图片
                         await ctrpay.DeleteImagesAsync(EditEntity, false);
+                        
+                        // 再删除子表图片
+                        if (EditEntity.tb_FM_ExpenseClaimDetails != null && EditEntity.tb_FM_ExpenseClaimDetails.Count > 0)
+                        {
+                            foreach (var detail in EditEntity.tb_FM_ExpenseClaimDetails)
+                            {
+                                if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
+                                {
+                                    try
+                                    {
+                                        // 创建一个临时实体用于删除子表图片
+                                        var tempDetail = new tb_FM_ExpenseClaimDetail
+                                        {
+                                            ClaimSubID = detail.ClaimSubID,
+                                            EvidenceImagePath = detail.EvidenceImagePath
+                                        };
+                                        
+                                        // 调用删除方法删除子表图片
+                                        await ctrpay.DeleteImagesAsync(tempDetail, false);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        MainForm.Instance.logger.LogError(ex, $"删除子表图片失败: {detail.ClaimSubID}");
+                                    }
+                                }
+                            }
+                        }
 
                         //提示一下删除成功
                         MainForm.Instance.uclog.AddLog("提示", "删除成功");

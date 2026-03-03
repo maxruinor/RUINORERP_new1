@@ -504,8 +504,8 @@ namespace RUINORERP.UI.Network.Services
                 deleteRequest.BusinessId = businessId;
 
                 deleteRequest.PhysicalDelete = physicalDelete;
-
-                // 直接使用实体中已有的图片信息，不再查询数据库
+                
+                // 处理实体中已有的图片信息
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
                 {
                     // 确保所有文件存储信息的必要属性都有值
@@ -527,9 +527,14 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
                 }
-                else
+                
+                // 处理实体中的图片路径字段（如EvidenceImagePath）
+                ProcessImagePathFields(entity, ownerTableName, deleteRequest);
+
+                // 检查是否有图片需要删除
+                if (deleteRequest.FileStorageInfos.Count == 0)
                 {
-                    // 如果实体中没有图片信息，记录警告
+                    // 如果没有图片需要删除，记录警告
                     System.Diagnostics.Debug.WriteLine("实体中没有图片信息，无法删除图片");
                     return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>("实体中没有图片信息，无法删除图片");
                 }
@@ -542,6 +547,74 @@ namespace RUINORERP.UI.Network.Services
             {
                 _logger?.LogError(ex, "批量删除图片失败");
                 return ResponseFactory.CreateSpecificErrorResponse<FileDeleteResponse>("批量删除图片失败");
+            }
+        }
+
+        /// <summary>
+        /// 处理实体中的图片路径字段，解析图片ID并添加到删除请求中
+        /// </summary>
+        /// <param name="entity">业务实体</param>
+        /// <param name="ownerTableName">表名</param>
+        /// <param name="deleteRequest">删除请求</param>
+        private void ProcessImagePathFields(BaseEntity entity, string ownerTableName, FileDeleteRequest deleteRequest)
+        {
+            // 常见的图片路径字段名
+            string[] imagePathFields = { "EvidenceImagePath", "CloseCaseImagePath", "ImagePath", "ImageId", "PicturePath" };
+            
+            foreach (var fieldName in imagePathFields)
+            {
+                try
+                {
+                    // 反射获取字段值
+                    var propertyInfo = entity.GetType().GetProperty(fieldName);
+                    if (propertyInfo != null)
+                    {
+                        var fieldValue = propertyInfo.GetValue(entity);
+                        if (fieldValue != null)
+                        {
+                            // 解析图片ID
+                            long fileId;
+                            if (fieldValue is long longValue && longValue > 0)
+                            {
+                                fileId = longValue;
+                            }
+                            else if (fieldValue is int intValue && intValue > 0)
+                            {
+                                fileId = intValue;
+                            }
+                            else if (long.TryParse(fieldValue.ToString(), out fileId) && fileId > 0)
+                            {
+                                // 字符串转换
+                            }
+                            else
+                            {
+                                // 不是有效的图片ID，跳过
+                                continue;
+                            }
+                            
+                            // 创建文件存储信息并添加到删除请求
+                            tb_FS_FileStorageInfo fileStorageInfo = new tb_FS_FileStorageInfo
+                            {
+                                FileId = fileId,
+                                OwnerTableName = ownerTableName,
+                                StorageProvider = "Local",
+                                StoragePath = string.Empty,
+                                StorageFileName = $"{fileId}_{DateTime.Now:yyyyMMddHHmmssfff}",
+                                FileStatus = (int)FileStatus.Active,
+                                CurrentVersion = 1,
+                                ExpireTime = DateTime.MaxValue,
+                                Description = string.Empty,
+                                Metadata = string.Empty
+                            };
+                            
+                            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, $"处理图片路径字段 {fieldName} 失败");
+                }
             }
         }
 

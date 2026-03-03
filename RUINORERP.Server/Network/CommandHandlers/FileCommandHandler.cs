@@ -822,7 +822,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         }
 
         /// <summary>
-        /// 处理文件删除1
+        /// 处理文件删除2
         /// 删除逻辑：
         /// 1. 如果没有其它业务再引用，根据PhysicalDelete属性决定删除方式
         ///    - PhysicalDelete=true：物理删除（删除文件元数据、关联记录和物理文件）
@@ -858,12 +858,14 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     var deletedCount = 0;
                     var relationDeletedCount = 0;
                     bool hasError = false;
+                    var errorMessages = new List<string>();
 
                     var response = new FileDeleteResponse
                     {
                         IsSuccess = true,
                         DeletedFileIds = deletedFileIds,
-                        Message = ""
+                        Message = "",
+                        ErrorMessages = errorMessages
                     };
 
                     // 遍历处理每个文件
@@ -933,8 +935,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                         catch (Exception ex)
                         {
-                            _logger?.LogError(ex, "检查文件业务关联失败，FileId: {FileId}", currentFileId);
+                            string errorMsg = $"检查文件业务关联失败，FileId: {currentFileId}，错误: {ex.Message}";
+                            _logger?.LogError(ex, errorMsg);
                             hasError = true;
+                            errorMessages.Add(errorMsg);
                         }
 
                         // 2. 检查文件是否还有其他有效关联
@@ -963,8 +967,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                         }
                                         catch (Exception ex)
                                         {
-                                            _logger?.LogError(ex, "使用解析后的路径删除文件失败: {FilePath}", resolvedPath);
+                                            string errorMsg = $"使用解析后的路径删除文件失败: {resolvedPath}，错误: {ex.Message}";
+                                            _logger?.LogError(ex, errorMsg);
                                             hasError = true;
+                                            errorMessages.Add(errorMsg);
                                         }
                                     }
                                 }
@@ -1104,8 +1110,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                                     catch (Exception ex)
                                                     {
                                                         // 记录错误但继续删除其他文件
-                                                        _logger?.LogError(ex, "物理删除文件失败: {FilePath}", targetFile);
+                                                        string errorMsg = $"物理删除文件失败: {targetFile}，错误: {ex.Message}";
+                                                        _logger?.LogError(ex, errorMsg);
                                                         hasError = true;
+                                                        errorMessages.Add(errorMsg);
                                                     }
                                                 }
 
@@ -1130,9 +1138,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
                                 else
                                 {
-                                    _logger?.LogWarning("文件删除失败，未找到文件: FileId={FileId}, StorageFileName={StorageFileName}, HashValue={HashValue}",
-                                        fileStorageInfo.FileId, fileStorageInfo.StorageFileName, fileStorageInfo.HashValue);
+                                    string errorMsg = $"文件删除失败，未找到文件: FileId={fileStorageInfo.FileId}, StorageFileName={fileStorageInfo.StorageFileName}, HashValue={fileStorageInfo.HashValue}";
+                                    _logger?.LogWarning(errorMsg);
                                     hasError = true;
+                                    errorMessages.Add(errorMsg);
                                 }
                             }
                         }
@@ -1174,15 +1183,18 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 }
                                 else
                                 {
-                                    _logger?.LogWarning("物理删除业务关联失败，RelationId: {RelationId}", relation.RelationId);
+                                    string errorMsg = $"物理删除业务关联失败，RelationId: {relation.RelationId}";
+                                    _logger?.LogWarning(errorMsg);
                                     hasError = true;
+                                    errorMessages.Add(errorMsg);
                                 }
                             }
                             catch (Exception ex)
                             {
-                                _logger?.LogError(ex, "处理业务关联记录失败: RelationId={RelationId}, FileId={FileId}, BusinessId={BusinessId}",
-                                    relation.RelationId, relation.FileId, relation.BusinessId);
+                                string errorMsg = $"处理业务关联记录失败: RelationId={relation.RelationId}, FileId={relation.FileId}, BusinessId={relation.BusinessId}，错误: {ex.Message}";
+                                _logger?.LogError(ex, errorMsg);
                                 hasError = true;
+                                errorMessages.Add(errorMsg);
                                 // 记录错误但继续处理其他关联记录
                             }
                         }
@@ -1191,8 +1203,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogError(ex, "删除业务关联记录失败");
+                        string errorMsg = $"删除业务关联记录失败，错误: {ex.Message}";
+                        _logger?.LogError(ex, errorMsg);
                         hasError = true;
+                        errorMessages.Add(errorMsg);
                     }
 
 
@@ -1219,15 +1233,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                     }
                                     else
                                     {
-                                        _logger?.LogWarning("删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                        string errorMsg = $"删除文件存储信息失败: FileId={fileToDelete.FileId}";
+                                        _logger?.LogWarning(errorMsg);
                                         hasError = true;
+                                        errorMessages.Add(errorMsg);
                                     }
                                 }
                             }
                             catch (Exception ex)
                             {
-                                _logger?.LogError(ex, "删除文件存储信息失败: FileId={FileId}", fileToDelete.FileId);
+                                string errorMsg = $"删除文件存储信息失败: FileId={fileToDelete.FileId}，错误: {ex.Message}";
+                                _logger?.LogError(ex, errorMsg);
                                 hasError = true;
+                                errorMessages.Add(errorMsg);
                                 // 记录错误但继续删除其他文件存储信息
                             }
                         }
@@ -1291,6 +1309,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     // 设置响应状态
                     response.IsSuccess = !hasError && (deletedCount > 0 || relationDeletedCount > 0);
+                    
+                    // 如果有错误，设置错误消息
+                    if (hasError && errorMessages.Count > 0)
+                    {
+                        response.Message = "文件删除过程中出现错误";
+                        response.ErrorMessages = errorMessages;
+                    }
 
                     _logger?.LogDebug("文件删除处理完成，成功删除 {DeletedCount} 个文件和 {RelationDeletedCount} 个业务关联，是否有错误: {HasError}", deletedCount, relationDeletedCount, hasError);
                     return response;
@@ -1304,8 +1329,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "文件删除处理失败");
-                return FileDeleteResponse.CreateFailure($"文件删除失败: {ex.Message}");
+                string errorMsg = $"文件删除处理失败: {ex.Message}";
+                _logger?.LogError(ex, errorMsg);
+                var errorMessages = new List<string> { errorMsg };
+                return FileDeleteResponse.CreateFailure("文件删除失败", errorMessages);
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using RUINORERP.PacketSpec.Models.Core;
@@ -92,11 +92,19 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// 成功删除的文件ID列表
         /// </summary>
         public List<string> DeletedFileIds { get; set; } = new List<string>();
+        
+        /// <summary>
+        /// 错误信息列表
+        /// </summary>
+        public List<string> ErrorMessages { get; set; } = new List<string>();
 
         /// <summary>
         /// 默认构造函数
         /// </summary>
-        public FileDeleteResponse() : base() { }
+        public FileDeleteResponse() : base() 
+        {
+            ErrorMessages = new List<string>();
+        }
 
         /// <summary>
         /// 带参数的构造函数
@@ -109,6 +117,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
             IsSuccess = success;
             Message = message;
             Timestamp = DateTime.Now;
+            ErrorMessages = new List<string>();
         }
 
         /// <summary>
@@ -131,6 +140,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         {
             var response = new FileDeleteResponse(true, message, 200);
             response.DeletedFileIds = deletedFileIds ?? new List<string>();
+            response.ErrorMessages = new List<string>();
             return response;
         }
 
@@ -142,7 +152,23 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// <returns>删除响应</returns>
         public static FileDeleteResponse CreateFailure(string message, int code = 500)
         {
-            return new FileDeleteResponse(false, message, code);
+            var response = new FileDeleteResponse(false, message, code);
+            response.ErrorMessages = new List<string>();
+            return response;
+        }
+        
+        /// <summary>
+        /// 创建带错误信息的失败结果
+        /// </summary>
+        /// <param name="message">失败消息</param>
+        /// <param name="errorMessages">错误信息列表</param>
+        /// <param name="code">状态码</param>
+        /// <returns>删除响应</returns>
+        public static FileDeleteResponse CreateFailure(string message, List<string> errorMessages, int code = 500)
+        {
+            var response = new FileDeleteResponse(false, message, code);
+            response.ErrorMessages = errorMessages ?? new List<string>();
+            return response;
         }
     }
 }

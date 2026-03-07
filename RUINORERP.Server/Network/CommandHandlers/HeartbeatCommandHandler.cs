@@ -111,6 +111,11 @@ namespace RUINORERP.Server.Network.CommandHandlers
             new ConcurrentDictionary<string, DateTime>();
 
         /// <summary>
+        /// 清理定时器，用于定期清理过期的心跳记录
+        /// </summary>
+        private static readonly Timer _cleanupTimer = new Timer(CleanupExpiredHeartbeatResponses, null, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+
+        /// <summary>
         /// 处理心跳命令（优化版 - 快速响应）
         /// 修复：简化处理逻辑，快速响应客户端，避免超时
         /// </summary>
@@ -433,6 +438,45 @@ namespace RUINORERP.Server.Network.CommandHandlers
             return queueCondition || performanceCondition || loadCondition;
         }
 
+        /// <summary>
+        /// 清理过期的心跳记录
+        /// 防止_lastHeartbeatResponses字典无限增长
+        /// </summary>
+        private static void CleanupExpiredHeartbeatResponses(object state)
+        {
+            try
+            {
+                var expiredSessions = new List<string>();
+                var now = DateTime.Now;
+                var expirationThreshold = TimeSpan.FromHours(1); // 1小时过期
+
+                // 查找过期的心跳记录
+                foreach (var kvp in _lastHeartbeatResponses)
+                {
+                    if (now - kvp.Value > expirationThreshold)
+                    {
+                        expiredSessions.Add(kvp.Key);
+                    }
+                }
+
+                // 移除过期的记录
+                foreach (var sessionId in expiredSessions)
+                {
+                    _lastHeartbeatResponses.TryRemove(sessionId, out _);
+                }
+
+                if (expiredSessions.Count > 0)
+                {
+                    // 使用静态日志记录，因为这是静态方法
+                    Console.WriteLine($"清理了 {expiredSessions.Count} 个过期的心跳记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 使用静态日志记录，因为这是静态方法
+                Console.WriteLine($"清理过期心跳记录时发生异常: {ex.Message}");
+            }
+        }
 
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,8 +65,8 @@ namespace RUINORERP.UI.Common
             AppDomain domain = AppDomain.CurrentDomain;
             AssemblyBuilder builder =
                 domain.DefineDynamicAssembly(new AssemblyName("CombinedAssembly"),
-                AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder moduleBuilder = builder.DefineDynamicModule("DynamicModule");
+                AssemblyBuilderAccess.RunAndCollect); // 启用调试
+            ModuleBuilder moduleBuilder = builder.DefineDynamicModule("DynamicModule", "DynamicModule.pdb", true); // 生成pdb文件，启用调试符号
             TypeBuilder typeBuilder = moduleBuilder.DefineType("CombinedType");
 
             //这里构建SugarColumn一个构造函数，注意参数个数
@@ -111,8 +111,8 @@ namespace RUINORERP.UI.Common
         {
             AppDomain domain = AppDomain.CurrentDomain;
             AssemblyBuilder builder = domain.DefineDynamicAssembly(new AssemblyName("CombinedAssembly"),
-                AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder moduleBuilder = builder.DefineDynamicModule("DynamicModule");
+                AssemblyBuilderAccess.RunAndCollect); // 启用调试
+            ModuleBuilder moduleBuilder = builder.DefineDynamicModule("DynamicModule", "DynamicModule.pdb", true); // 生成pdb文件，启用调试符号
             TypeBuilder typeBuilder = moduleBuilder.DefineType("CombinedType");
             foreach (var type in types)
             {
@@ -139,8 +139,8 @@ namespace RUINORERP.UI.Common
         public static Type MergeTypes(bool MergeAll, params Type[] types)
         {
             AppDomain domain = AppDomain.CurrentDomain;
-            AssemblyBuilder asmbuilder = domain.DefineDynamicAssembly(new AssemblyName("CombinedAssembly"), AssemblyBuilderAccess.RunAndSave);
-            ModuleBuilder moduleBuilder = asmbuilder.DefineDynamicModule("DynamicModule");
+            AssemblyBuilder asmbuilder = domain.DefineDynamicAssembly(new AssemblyName("CombinedAssembly"), AssemblyBuilderAccess.RunAndCollect); // 启用调试
+            ModuleBuilder moduleBuilder = asmbuilder.DefineDynamicModule("DynamicModule", "DynamicModule.pdb", true); // 生成pdb文件，启用调试符号
             TypeBuilder typeBuilder = moduleBuilder.DefineType("CombinedType");
 
 
@@ -607,13 +607,13 @@ namespace RUINORERP.UI.Common
 
 
 
-            //创建一个永久程序集，设置为AssemblyBuilderAccess.RunAndSave。
+            //创建一个永久程序集，设置为AssemblyBuilderAccess.RunAndCollect以支持调试。
             AssemblyBuilder myAsmBuilder = myDomain.DefineDynamicAssembly(myAsmName,
-                                                            AssemblyBuilderAccess.RunAndSave);
+                                                            AssemblyBuilderAccess.RunAndCollect); // 启用调试
 
             //创建一个永久单模程序块。
             ModuleBuilder myModBuilder =
-                myAsmBuilder.DefineDynamicModule(myAsmName.Name, myAsmName.Name + ".dll");
+                myAsmBuilder.DefineDynamicModule(myAsmName.Name, myAsmName.Name + ".dll", true); // 生成pdb文件，启用调试符号
             //创建TypeBuilder。
             TypeBuilder myTypeBuilder = myModBuilder.DefineType(className,
                                                             TypeAttributes.Public);
@@ -652,12 +652,12 @@ namespace RUINORERP.UI.Common
             DllName = dllname;
             assmblyname = new AssemblyName(DllName);
             ///2程序集生成器
-            assemblybuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assmblyname, AssemblyBuilderAccess.RunAndSave);
+            assemblybuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assmblyname, AssemblyBuilderAccess.RunAndCollect); // 启用调试
 
             // For a single-module assembly, the module name is usually
             // the assembly name plus an extension.
             ////3动态创建模块
-            modulebuilder = assemblybuilder.DefineDynamicModule(assmblyname.Name, assmblyname.Name + ".dll");
+            modulebuilder = assemblybuilder.DefineDynamicModule(assmblyname.Name, assmblyname.Name + ".dll", true); // 生成pdb文件，启用调试符号
         }
         public static void CreateClass(string NsClassName)
         {

@@ -689,7 +689,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             HashValue = hashValue, // 设置哈希值
                             Metadata = new Dictionary<string, string>(),
                             FileType = "",
-                            ModifiedAt = null,
+                            ModifiedAt = DateTime.Now,
                             Status = isFromServer ? RUINORERP.Common.BusinessImage.ImageStatus.Normal : RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
                         };
                     }
@@ -904,7 +904,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileType = Path.GetExtension(path).TrimStart('.'),
                                 HashValue = hashValue,
                                 Metadata = new Dictionary<string, string>(),
-                                ModifiedAt = null,
+                                ModifiedAt = DateTime.Now,
                                 Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
                             });
                         }
@@ -919,7 +919,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 imageInfos[0].FileType = Path.GetExtension(path).TrimStart('.');
                                 imageInfos[0].HashValue = hashValue;
                                 imageInfos[0].Metadata = new Dictionary<string, string>();
-                                imageInfos[0].ModifiedAt = null;
+                                imageInfos[0].ModifiedAt = DateTime.Now;
                                 imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
                                 // 添加Width和Height属性
                                 if (images.Count > 0)
@@ -939,7 +939,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     FileType = Path.GetExtension(path).TrimStart('.'),
                                     HashValue = hashValue,
                                     Metadata = new Dictionary<string, string>(),
-                                    ModifiedAt = null,
+                                    ModifiedAt = System.DateTime.Now,
                                     Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
                                     Width = images[images.Count - 1]?.Width ?? 0,
                                     Height = images[images.Count - 1]?.Height ?? 0
@@ -1369,21 +1369,21 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 {
                     // 保存当前图片信息
                     ImageInfo deletedImageInfo = imageInfos.Count > 0 ? imageInfos[0] : null;
-                    
+
                     // 标记图片为已删除（如果有FileId表示是已上传的图片）
                     if (deletedImageInfo != null && deletedImageInfo.FileId > 0)
                     {
                         deletedImageInfo.Status = ImageStatus.PendingDelete;
-                        
+
                         // 如果图片还没有ImageId，生成一个
                         if (deletedImageInfo.ImageId == 0)
                         {
                             deletedImageInfo.ImageId = GenerateUniqueId();
                         }
-                        
+
                         // 将图片添加到ImageStateManager
                         ImageStateManager.Instance.AddImage(this, deletedImageInfo.ImageId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId, deletedImageInfo.StoragePath);
-                        
+
                         System.Diagnostics.Debug.WriteLine($"单图模式:标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
                     }
                     else if (deletedImageInfo != null)
@@ -1391,52 +1391,52 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         // 新添加的图片（无 FileId），直接删除
                         System.Diagnostics.Debug.WriteLine($"单图模式:删除新图片（未上传）: {deletedImageInfo.OriginalFileName}");
                     }
-                    
+
                     // 清空图片
                     this.Image = null;
                     imagePaths = "";
-                    
+
                     // 清空列表
                     images.Clear();
                     imageInfos.Clear();
-                    
+
                     // 更新UI
                     UpdateInfoPanel();
                     if (infoPanel != null)
                     {
                         infoPanel.Visible = false;
                     }
-                    
+
                     // 更新上下文菜单
                     UpdateContextMenu();
                     // 重绘 PictureBox
                     this.Invalidate();
                     return;
                 }
-                
+
                 // 多图模式处理
                 if (currentImageIndex >= imageInfos.Count)
                 {
                     return;
                 }
-                
+
                 // 保存被删除图片的信息（必须在删除前保存）
                 ImageInfo multiDeletedImageInfo = imageInfos[currentImageIndex];
-                
+
                 // 标记图片为已删除（如果有FileId表示是已上传的图片）
                 if (multiDeletedImageInfo != null && multiDeletedImageInfo.FileId > 0)
                 {
                     multiDeletedImageInfo.Status = ImageStatus.PendingDelete;
-                    
+
                     // 如果图片还没有ImageId，生成一个
                     if (multiDeletedImageInfo.ImageId == 0)
                     {
                         multiDeletedImageInfo.ImageId = GenerateUniqueId();
                     }
-                    
+
                     // 将图片添加到ImageStateManager
                     ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.ImageId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.StoragePath);
-                    
+
                     System.Diagnostics.Debug.WriteLine($"多图模式:标记图片为已删除: {multiDeletedImageInfo.OriginalFileName}, FileId: {multiDeletedImageInfo.FileId}");
                 }
                 else
@@ -1444,7 +1444,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     // 新添加的图片（无 FileId），直接删除，不需要标记为待删除
                     System.Diagnostics.Debug.WriteLine($"多图模式:删除新图片（未上传）: {multiDeletedImageInfo?.OriginalFileName}");
                 }
-                
+
                 // 从显示列表中删除当前图片
                 images.RemoveAt(currentImageIndex);
                 imageInfos.RemoveAt(currentImageIndex);
@@ -1482,7 +1482,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         {
             ClearImage();
         }
-        
+
         /// <summary>
         /// 清空所有图片
         /// 标记所有已有图片为已删除状态
@@ -1500,20 +1500,20 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     if (imageInfo != null && imageInfo.FileId > 0)
                     {
                         imageInfo.Status = ImageStatus.PendingDelete;
-                        
+
                         // 如果图片还没有ImageId，生成一个
                         if (imageInfo.ImageId == 0)
                         {
                             imageInfo.ImageId = GenerateUniqueId();
                         }
-                        
+
                         // 将图片添加到ImageStateManager
                         ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
-                        
+
                         System.Diagnostics.Debug.WriteLine($"ClearImage: 标记图片为已删除: {imageInfo.OriginalFileName}, FileId: {imageInfo.FileId}");
                     }
                 }
-                
+
                 // 清空图片列表，但保留删除列表（因为需要上传删除操作到服务器）
                 images.Clear();
                 imageInfos.Clear();
@@ -1642,7 +1642,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             {
                                 // 单图片模式:直接设置Image属性显示图片
                                 this.Image = image;
-                                
+
                                 // 保存图片信息
                                 if (imageInfos.Count > 0)
                                 {
@@ -1706,7 +1706,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         }
 
 
-        
+
 
         // 拖拽事件
         protected override void OnDragDrop(DragEventArgs e)
@@ -2152,7 +2152,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         // 双击事件
         private void CustomPictureBox_DoubleClick(object sender, EventArgs e)
         {
-            
+
 
             // 检查是否已有图片
             bool hasImage = (this.Image != null) || (MultiImageSupport && images.Count > 0);
@@ -2303,7 +2303,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     panOffset = e.Location;
                     lastMousePosition = e.Location;
                 }
-                
+
             }
 
         }
@@ -2329,7 +2329,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
 
             }
-           
+
         }
 
         private void CustomPictureBox_MouseUp(object sender, MouseEventArgs e)
@@ -2338,7 +2338,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 isPanning = false;
             }
-            
+
         }
 
         /// <summary>
@@ -2442,8 +2442,8 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
         /// </summary>
         /// <param name="img">原始图像</param>
         /// <param name="angle">旋转角度</param>
-        /// <returns>旋转后的图像</returns>
-        private Image RotateImage(Image img, float angle)
+        /// <returns>旋转后的Bitmap对象，调用方需负责释放</returns>
+        private Bitmap RotateImage(Image img, float angle)
         {
             // 创建一个新的位图用于旋转，避免修改原图
             Bitmap bmp = new Bitmap(img.Width, img.Height);
@@ -3041,13 +3041,13 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 使用ImageStateManager标记图片为待上传状态
                 imageInfo.Status = ImageStatus.PendingUpload;
                 imageInfo.ModifiedAt = DateTime.Now;
-                
+
                 // 如果图片还没有ImageId，生成一个
                 if (imageInfo.ImageId == 0)
                 {
                     imageInfo.ImageId = GenerateUniqueId();
                 }
-                
+
                 // 将图片添加到ImageStateManager
                 ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
             }
@@ -3316,12 +3316,12 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     imageInfo.Status = ImageStatus.Normal;
                 }
             }
-            
+
             // 从ImageStateManager中移除当前控件相关的所有图片
             var allImages = ImageStateManager.Instance.GetImagesByCell(this);
             var imageIds = allImages.Select(img => img.ImageId).ToList();
             ImageStateManager.Instance.RemoveProcessedImages(imageIds);
-            
+
             // 确保显示当前图片
             ShowCurrentImage();
             // 更新导航和信息面板
@@ -3351,10 +3351,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             foreach (var imageInfo in imageInfos)
             {
                 if (imageInfo != null)
-                    {
-                        imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
-                        _updateManager.ResetImageUpdateStatus(imageInfo);
-                    }
+                {
+                    imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                    _updateManager.ResetImageUpdateStatus(imageInfo);
+                }
             }
             // 清空删除列表：因为所有已删除的图片都已经成功从服务器删除
             _deletedImages.Clear();

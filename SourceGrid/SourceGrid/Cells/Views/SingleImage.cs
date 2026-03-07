@@ -3,207 +3,171 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using DevAge.Drawing;
-using System.IO;
 using DevAge.Drawing.VisualElements;
-using System.Drawing.Imaging;
-using SourceGrid.Cells.Editors;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using RUINORERP.Common.BusinessImage;
 
 namespace SourceGrid.Cells.Views
 {
     /// <summary>
-    ///  
+    /// 单图片单元格视图
+    /// 用于显示单张本地图片
     /// </summary>
     [Serializable]
-    public class SingleImage : Cell
+    public class SingleImageView : ImageCellBase, IImageCellView
     {
-
         #region Constructors
 
         /// <summary>
-        /// Use default setting
+        /// 默认构造函数
         /// </summary>
-        public SingleImage()
+        public SingleImageView() : base()
         {
-            ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
-            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
-            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
-            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
-            Border = cellBorder;
         }
-
-        private System.Drawing.Image _GridImage;
-        public SingleImage(System.Drawing.Image image)
-        {
-            _GridImage = image;
-            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
-            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
-            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
-            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
-            Border = cellBorder;
-        }
-        private DevAge.Drawing.VisualElements.IVisualElement mFirstBackground;
-        public DevAge.Drawing.VisualElements.IVisualElement FirstBackground
-        {
-            get { return mFirstBackground; }
-            set { mFirstBackground = value; }
-        }
-
-        private DevAge.Drawing.VisualElements.IVisualElement mSecondBackground;
-        public DevAge.Drawing.VisualElements.IVisualElement SecondBackground
-        {
-            get { return mSecondBackground; }
-            set { mSecondBackground = value; }
-        }
-
-        private string ShowImageHash = string.Empty;
-
-        protected override void PrepareView(CellContext context)
-        {
-            base.PrepareView(context);
-            //start by watson 2024-1-11
-            if (context.Value == null)
-            {
-                return;
-            }
-            //��ʾͼƬ  Ҫ��ͼƬ�вŴ���
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[])
-            {
-                //end by watson 2024-08-28 TODO:
-                //PrepareVisualElementImage(context);
-
-                //Read the image
-                if (context.Value is byte[])
-                {
-                    //��ͼ����뵽�ֽ�����
-                    byte[] buffByte = context.Value as byte[];
-                    System.Drawing.Image img = null;
-                    // ʹ�� MemoryStream ���ֽ����鴴����
-                    using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
-                    {
-                        // �����д��� Image ����
-                        img = System.Drawing.Image.FromStream(stream);
-                        if (img != null)
-                        {
-                            GridImage = img;
-                            // context.Cell = new SourceGrid.Cells.ImageCell(img);
-                            //context.Cell.View = new SourceGrid.Cells.Views.SingleImage(img);
-                        }
-                    }
-
-                }
-
-                if (context.Value is Bitmap || context.Value is System.Drawing.Image)
-                {
-                    // ʹ�� MemoryStream ���ֽ����鴴����
-                    GridImage = context.Value as System.Drawing.Image;
-                }
-
-            }
-            //else if (context.Value is string && GridImage == null)
-            //{
-            //    if (context.Cell.Editor != null)
-            //    {
-            //        if (context.Cell.Editor is ImageWebPicker webPicker)
-            //        {
-            //            if (System.IO.File.Exists(webPicker.AbsolutelocPath) && !string.IsNullOrEmpty(webPicker.Imagehash))
-            //            {
-            //                if (string.IsNullOrEmpty(ShowImageHash) || GridImage == null)
-            //                {
-            //                    GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
-            //                }
-            //                else if (!ShowImageHash.Equals(webPicker.Imagehash, StringComparison.OrdinalIgnoreCase))//��������
-            //                {
-            //                    GridImage = System.Drawing.Image.FromFile(webPicker.AbsolutelocPath);
-            //                }
-            //                if (GridImage != null)
-            //                {
-            //                    ShowImageHash = ImagePickerHelper.GenerateHash(GridImage);
-            //                }
-            //            }
-            //        }
-            //        else
-            //        {
-            //            //��web����ͼƬ
-            //        }
-            //    }
-            //}
-
-        }
-
-
-        protected override void OnDraw(GraphicsCache graphics, RectangleF area)
-        {
-            base.OnDraw(graphics, area);
-        }
-
-        protected override void OnDrawContent(GraphicsCache graphics, RectangleF area)
-        {
-            base.OnDrawContent(graphics, area);
-            using (MeasureHelper measure = new MeasureHelper(graphics))
-            {
-                if (GridImage != null)
-                {
-                    graphics.Graphics.DrawImage(GridImage, Rectangle.Round(area)); //Note: ����Ҳ������Ρ���ʱ��ͼ�������ֵ����췽ʽ���ƣ���������������������������ʹ�ø������ص�ͼ�δ����е�ĳЩ���������
-                }
-            }
-        }
-        protected override void OnDrawBackground(GraphicsCache graphics, RectangleF area)
-        {
-            base.OnDrawBackground(graphics, area);
-        }
-
 
         /// <summary>
-        /// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
+        /// 使用图片对象构造
         /// </summary>
-        /// <param name="other"></param>
-        public SingleImage(SingleImage other)
-            : base(other)
+        /// <param name="image">图片对象</param>
+        public SingleImageView(Image image) : base(image)
         {
-            mImage = (DevAge.Drawing.VisualElements.IVisualElement)other.OneImage.Clone();
         }
+
         #endregion
 
-        private DevAge.Drawing.VisualElements.IVisualElement mImage = new DevAge.Drawing.VisualElements.VisualImage();
+        #region IImageCellView Implementation
+
         /// <summary>
-        /// Images of the cells
+        /// 加载图片
         /// </summary>
-        public DevAge.Drawing.VisualElements.IVisualElement OneImage
+        /// <param name="fileId">文件ID</param>
+        public void LoadImage(long fileId)
         {
-            get { return mImage; }
+            _currentFileId = fileId;
+            _pendingFileId = fileId;
+            CurrentFileId = fileId;
         }
 
-        public System.Drawing.Image GridImage { get => _GridImage; set => _GridImage = value; }
-
-        protected override IEnumerable<DevAge.Drawing.VisualElements.IVisualElement> GetElements()
+        /// <summary>
+        /// 异步加载图片
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>加载任务</returns>
+        public Task LoadImageAsync(long fileId)
         {
-            foreach (DevAge.Drawing.VisualElements.IVisualElement v in GetBaseElements())
-                yield return v;
-            if (OneImage != null)
-            {
-                yield return OneImage;
-            }
-
+            _currentFileId = fileId;
+            CurrentFileId = fileId;
+            return Task.CompletedTask;
         }
 
-
-
-        private IEnumerable<DevAge.Drawing.VisualElements.IVisualElement> GetBaseElements()
+        /// <summary>
+        /// 清空图片
+        /// </summary>
+        public void ClearImage()
         {
-            return base.GetElements();
+            GridImage = null;
+            _currentImageHash = string.Empty;
         }
+
+        /// <summary>
+        /// 获取图片ID
+        /// </summary>
+        /// <returns>图片ID</returns>
+        public long GetImageId()
+        {
+            return CurrentFileId;
+        }
+
+        /// <summary>
+        /// 获取图片信息
+        /// </summary>
+        /// <returns>图片信息</returns>
+        public ImageInfo GetImageInfo()
+        {
+            return ImageStateManager.Instance.GetImageInfo(CurrentFileId);
+        }
+
+        #endregion
+
+        #region 刷新
+
+        /// <summary>
+        /// 刷新视图
+        /// </summary>
+        /// <param name="context">单元格上下文</param>
+        public override void Refresh(CellContext context)
+        {
+            // 刷新逻辑
+        }
+
+        #endregion
 
         #region Clone
+
         /// <summary>
-        /// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
+        /// 克隆当前对象
         /// </summary>
-        /// <returns></returns>
+        /// <returns>克隆的对象</returns>
+        public override object Clone()
+        {
+            return new SingleImageView();
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// SingleImage的兼容性类
+    /// 保留旧类名以保持向后兼容
+    /// </summary>
+    [Serializable]
+    [Obsolete("请使用SingleImageView替代SingleImage")]
+    public class SingleImage : SingleImageView
+    {
+        #region Constructors
+
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public SingleImage() : base()
+        {
+        }
+
+        /// <summary>
+        /// 使用图片对象构造
+        /// </summary>
+        /// <param name="image">图片对象</param>
+        public SingleImage(Image image) : base(image)
+        {
+        }
+
+        /// <summary>
+        /// 复制构造函数
+        /// </summary>
+        /// <param name="other">源对象</param>
+        public SingleImage(SingleImage other) : base()
+        {
+            // 复制属性
+            if (other != null)
+            {
+                CurrentFileId = other.CurrentFileId;
+                // 其他属性复制
+            }
+        }
+
+        #endregion
+
+        #region Clone
+
+        /// <summary>
+        /// 克隆当前对象
+        /// </summary>
+        /// <returns>克隆的对象</returns>
         public override object Clone()
         {
             return new SingleImage(this);
         }
+
         #endregion
     }
 }

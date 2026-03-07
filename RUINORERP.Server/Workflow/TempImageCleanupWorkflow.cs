@@ -412,7 +412,9 @@ namespace RUINORERP.Server.Workflow
                     }
                     catch (Exception ex)
                     {
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"临时图片清理工作流执行错误: {ex.Message}");
+                        #endif
                     }
 
                     // 重新计算下次执行时间
@@ -425,7 +427,9 @@ namespace RUINORERP.Server.Workflow
             }
             catch (Exception ex)
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"临时图片清理工作流注册错误: {ex.Message}");
+                #endif
                 return false;
             }
         }

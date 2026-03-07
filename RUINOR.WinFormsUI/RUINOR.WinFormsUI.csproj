@@ -102,6 +102,7 @@
     <Compile Include="CustomPictureBox\ImageCroppingBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CustomPictureBox\Implementations\ImageProcessingConstants.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageProcessor.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageUpdateManager.cs" />
     <Compile Include="CustomPictureBox\Implementations\ImageUtils.cs" />
@@ -561,7 +562,7 @@
       <Name>RUINOR.Runtime.InteropServices.APIs</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
-      <Project>{921663BD-B801-4680-BACB-58D490046B6A}</Project>
+      <Project>{de296df4-037a-3870-fd4b-eba6110b8572}</Project>
       <Name>RUINORERP.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj">

@@ -185,7 +185,9 @@ namespace RUINORERP.Server.Services
             // 假设用户输入的注册码
             string userProvidedCode = regInfo.RegistrationCode;
             bool isValid = HLH.Lib.Security.SecurityService.ValidateRegistrationCode(userProvidedCode, key, machineCode);
+            #if DEBUG
             System.Diagnostics.Debug.WriteLine($"提供的注册码是否有效? {isValid}");
+            #endif
             return isValid;
         }
 

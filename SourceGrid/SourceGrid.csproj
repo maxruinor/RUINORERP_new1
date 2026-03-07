@@ -393,6 +393,7 @@
     <Compile Include="SourceGrid\Cells\Models\Real\RichTextBox.cs" />
     <Compile Include="SourceGrid\Cells\RichTextBox.cs" />
     <Compile Include="SourceGrid\Cells\RowHeader.cs" />
+    <Compile Include="SourceGrid\Cells\Utilities\ImageDataValidator.cs" />
     <Compile Include="SourceGrid\Cells\Views\Button.cs" />
     <Compile Include="SourceGrid\Cells\Views\Cell.cs" />
     <Compile Include="SourceGrid\Cells\Views\CheckBox.cs" />
@@ -400,6 +401,8 @@
     <Compile Include="SourceGrid\Cells\Views\ComboBox.cs" />
     <Compile Include="SourceGrid\Cells\Views\GridImageService.cs" />
     <Compile Include="SourceGrid\Cells\Views\Header.cs" />
+    <Compile Include="SourceGrid\Cells\Views\IImageCellView.cs" />
+    <Compile Include="SourceGrid\Cells\Views\ImageCellBase.cs" />
     <Compile Include="SourceGrid\Cells\Views\IView.cs" />
     <Compile Include="SourceGrid\Cells\Views\Link.cs" />
     <Compile Include="SourceGrid\Cells\Views\RemoteImageView.cs" />
@@ -570,7 +573,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
-      <Project>{921663bd-b801-4680-bacb-58d490046b6a}</Project>
+      <Project>{de296df4-037a-3870-fd4b-eba6110b8572}</Project>
       <Name>RUINORERP.Common</Name>
     </ProjectReference>
   </ItemGroup>

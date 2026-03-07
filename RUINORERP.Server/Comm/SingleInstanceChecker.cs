@@ -9,7 +9,9 @@ namespace RUINORERP.Server.Comm
     public static class SingleInstanceChecker
     {
         private static Mutex _mutex;
-        private const string GlobalMutexName = @"Global\RUINORERP.Server-YourAppUniqueId-1234-5678-1"; // 替换为唯一标识
+
+        //互斥体名称是硬编码的,修改一下就可以多个执行
+        private const string GlobalMutexName = @"Global\RUINORERP.Server-YourAppUniqueId-1234-5678-2"; // 替换为唯一标识
 
         /// <summary>
         /// 检测是否已有实例在运行，返回 true 表示已有实例

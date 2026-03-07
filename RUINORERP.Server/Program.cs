@@ -155,22 +155,22 @@ namespace RUINORERP.Server
             // 注册程序集解析事件,避免重复加载导致的调试器问题
             AppDomain.CurrentDomain.AssemblyResolve += OnAssemblyResolve;
 
-//#if DEBUG
-//            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
-//            bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");
-//            if (!allowMultipleInstances && SingleInstanceChecker.IsAlreadyRunning())
-//#else
-//            if (SingleInstanceChecker.IsAlreadyRunning())
-//#endif
-//            {
-//                // 已有实例运行则退出
-//                Process instance = RunningInstance();
-//                if (instance != null)
-//                {
-//                    HandleRunningInstance(instance);
-//                }
-//                return;
-//            }
+#if DEBUG
+            // 在DEBUG模式下，检查是否有特殊命令行参数来允许多实例运行
+            bool allowMultipleInstances = Environment.GetCommandLineArgs().Contains("--allow-multiple-instances");
+            if (!allowMultipleInstances && SingleInstanceChecker.IsAlreadyRunning())
+#else
+            if (SingleInstanceChecker.IsAlreadyRunning())
+#endif
+            {
+                // 已有实例运行则退出
+                Process instance = RunningInstance();
+                if (instance != null)
+                {
+                    HandleRunningInstance(instance);
+                }
+                return;
+            }
 
             try
             {
@@ -181,12 +181,14 @@ namespace RUINORERP.Server
             {
                 // 记录异常信息
                 Console.Error.WriteLine($"启动服务时发生未处理异常: {ex}");
-                System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}");
+                #if DEBUG
+                        System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}");
+                #endif
                 // 可以添加日志记录
             }
             finally
             {
-                SingleInstanceChecker.Release();
+               SingleInstanceChecker.Release();
             }
         }
 
@@ -242,18 +244,24 @@ namespace RUINORERP.Server
                         var tableSchemaManager = Startup.AutofacContainerScope.Resolve<ITableSchemaManager>();
                         var cacheInitService = Startup.AutofacContainerScope.Resolve<EntityCacheInitializationService>();
                         
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"使用Autofac容器获取服务");
                         System.Diagnostics.Debug.WriteLine($"TableSchemaManager实例ID: {tableSchemaManager.GetHashCode()}");
+                        #endif
                         
                         // 验证EntityCacheInitializationService使用的是同一个TableSchemaManager实例
                         var cacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"cacheInitService中的TableSchemaManager实例ID: {cacheInitServiceTableSchemaManager?.GetHashCode()}");
                         System.Diagnostics.Debug.WriteLine($"两个实例是否相同: {ReferenceEquals(tableSchemaManager, cacheInitServiceTableSchemaManager)}");
+                        #endif
                         
                         // 如果不是同一个实例，说明EntityCacheInitializationService使用的是不同的实例
                         if (!ReferenceEquals(tableSchemaManager, cacheInitServiceTableSchemaManager))
                         {
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine("警告：EntityCacheInitializationService使用了不同的TableSchemaManager实例");
+                            #endif
                             // 创建一个新的EntityCacheInitializationService实例，使用正确的TableSchemaManager
                             var unitOfWorkManage = Startup.AutofacContainerScope.Resolve<IUnitOfWorkManage>();
                             var cacheManager = Startup.AutofacContainerScope.Resolve<IEntityCacheManager>();
@@ -271,44 +279,60 @@ namespace RUINORERP.Server
                                 
                             // 验证新实例使用的是正确的TableSchemaManager
                             var newCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine($"新EntityCacheInitializationService中的TableSchemaManager实例ID: {newCacheInitServiceTableSchemaManager?.GetHashCode()}");
                             System.Diagnostics.Debug.WriteLine($"新实例与原始TableSchemaManager是否相同: {ReferenceEquals(tableSchemaManager, newCacheInitServiceTableSchemaManager)}");
+                            #endif
                         }
                         
                         // 打印初始化前的状态
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"初始化前 TableCount: {tableSchemaManager.GetAllTableNames().Count}");
                         System.Diagnostics.Debug.WriteLine($"初始化前 IsInitialized: {tableSchemaManager.IsInitialized}");
+                        #endif
                         
                         // 再次验证cacheInitService使用的TableSchemaManager实例
                         var beforeInitCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"初始化前cacheInitService中的TableSchemaManager实例ID: {beforeInitCacheInitServiceTableSchemaManager?.GetHashCode()}");
                         System.Diagnostics.Debug.WriteLine($"初始化前两个实例是否相同: {ReferenceEquals(tableSchemaManager, beforeInitCacheInitServiceTableSchemaManager)}");
+                        #endif
                                                         
                         // 同步初始化表结构，确保在后续代码执行前完成
                         cacheInitService.InitializeAllTableSchemas();
                         
                         // 再次验证cacheInitService使用的TableSchemaManager实例
                         var afterInitCacheInitServiceTableSchemaManager = GetPrivateField<EntityCacheInitializationService, ITableSchemaManager>(cacheInitService, "_tableSchemaManager");
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"初始化后cacheInitService中的TableSchemaManager实例ID: {afterInitCacheInitServiceTableSchemaManager?.GetHashCode()}");
                         System.Diagnostics.Debug.WriteLine($"初始化后两个实例是否相同: {ReferenceEquals(tableSchemaManager, afterInitCacheInitServiceTableSchemaManager)}");
+                        #endif
                                                         
                         // 打印初始化后的状态
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"初始化后 TableCount: {tableSchemaManager.GetAllTableNames().Count}");
                         System.Diagnostics.Debug.WriteLine($"初始化后 IsInitialized: {tableSchemaManager.IsInitialized}");
+                        #endif
                             
                         if (!tableSchemaManager.IsInitialized)
                         {
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine("警告：表结构初始化可能未完成，当前表数量为0");
+                            #endif
                         }
                         else
                         {
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine($"表结构初始化成功，共注册了 {tableSchemaManager.GetAllTableNames().Count} 个表");
+                            #endif
                         }
                     }
                     catch (Exception ex)
                     {
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"初始化表结构时发生错误: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"异常详情: {ex}");
+                        #endif
                         throw; // 重新抛出异常，以便在调试时能看到完整的堆栈跟踪
                     }
 
@@ -385,7 +409,9 @@ namespace RUINORERP.Server
                     MessageBox.Show(s);
                     MessageBox.Show(ex.StackTrace);
                     Console.Write(ex.StackTrace);
-                    System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}\r\n{ex.InnerException}");
+                    #if DEBUG
+                System.Diagnostics.Debug.WriteLine($"启动服务时发生未处理异常: {ex}\r\n{ex.InnerException}");
+                #endif
                 }
 
                 // IHostBuilder ihostbuilder= starter.CslaDIPort();
@@ -575,7 +601,9 @@ namespace RUINORERP.Server
             catch (Exception logEx)
             {
                 // 如果日志记录也失败，确保有基本的错误输出
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine("记录线程异常日志失败: " + logEx.Message);
+                #endif
             }
         }
 
@@ -605,7 +633,9 @@ namespace RUINORERP.Server
             catch (Exception logEx)
             {
                 // 如果日志记录也失败，确保有基本的错误输出
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine("记录应用程序域异常日志失败: " + logEx.Message);
+                #endif
             }
         }
 

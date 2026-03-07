@@ -238,10 +238,6 @@
       <Project>{df7d3616-94e5-43df-813a-d656c32ebd48}</Project>
       <Name>RUINOR.WinFormsUI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
-      <Project>{921663bd-b801-4680-bacb-58d490046b6a}</Project>
-      <Name>RUINORERP.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj">
       <Project>{bb1d0eac-2f97-404a-bdf3-08101553b1f2}</Project>
       <Name>RUINORERP.Extensions</Name>

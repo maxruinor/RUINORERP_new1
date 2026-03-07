@@ -1056,7 +1056,9 @@ namespace RUINORERP.Server
             // 验证日志级别有效性
             if (!Enum.IsDefined(typeof(LogLevel), logLevel))
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"警告: 尝试设置非法日志级别: {logLevel}");
+                #endif
                 return;
             }
 
@@ -1089,7 +1091,9 @@ namespace RUINORERP.Server
             }
             else
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"全局日志级别已从 {oldLevel} 变更为 {logLevel}");
+                #endif
             }
 
             // 更新菜单项选中状态
@@ -1108,7 +1112,9 @@ namespace RUINORERP.Server
                 var loggerRepository = log4net.LogManager.GetRepository(Log4NetConfiguration.SHARED_REPOSITORY_NAME);
                 if (loggerRepository == null)
                 {
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"警告: 无法获取日志仓库 {Log4NetConfiguration.SHARED_REPOSITORY_NAME}");
+                    #endif
                     return;
                 }
 
@@ -1123,7 +1129,9 @@ namespace RUINORERP.Server
                     {
                         root.Level = log4Level;
                         hierarchy.Configured = true;
+                        #if DEBUG
                         System.Diagnostics.Debug.WriteLine($"Log4Net 根日志级别已更新为: {log4Level}");
+                        #endif
                     }
 
                     // 更新所有 appenders 的阈值
@@ -1133,14 +1141,18 @@ namespace RUINORERP.Server
                         if (appender is log4net.Appender.AppenderSkeleton skeletonAppender)
                         {
                             skeletonAppender.Threshold = log4Level;
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine($"Appender '{appender.Name}' 的阈值已更新为: {log4Level}");
+                            #endif
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"更新 Log4Net 日志级别时发生错误: {ex.Message}");
+                #endif
             }
         }
 
@@ -1811,7 +1823,9 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 PrintInfoLog($"工作流调度失败: {ex.Message}");
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"工作流调度错误: {ex.Message}");
+                #endif
             }
         }
 
@@ -2555,7 +2569,9 @@ namespace RUINORERP.Server
         /// </summary>
         private void HandleCtrlPShortcut()
         {
+            #if DEBUG
             System.Diagnostics.Debug.WriteLine("Ctrl + P 被按下");
+            #endif
 
             using (var frmPassword = new frmInput())
             {
@@ -3414,14 +3430,18 @@ namespace RUINORERP.Server
                             adoNetAppender.BufferSize = bufferSize;
                             // 激活选项以应用更改
                             adoNetAppender.ActivateOptions();
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine($"Log4Net BufferSize已更新为{bufferSize}。");
+                            #endif
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"更新Log4Net BufferSize时发生错误: {ex.Message}");
+                #endif
             }
         }
     }

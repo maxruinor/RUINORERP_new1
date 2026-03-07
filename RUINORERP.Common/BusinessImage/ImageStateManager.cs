@@ -1,328 +1,500 @@
+using RUINORERP.Common.BusinessImage;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
+using System.Diagnostics;
 
 namespace RUINORERP.Common.BusinessImage
 {
     /// <summary>
     /// 图片状态管理器
-    /// 统一管理图片的状态和上传队列
+    /// 负责管理图片的上传队列和删除队列，确保图片操作的原子性和唯一性
     /// </summary>
     public class ImageStateManager
     {
-        #region 单例模式
-
-        private static ImageStateManager _instance;
-        private static readonly object _lockObject = new object();
+        private static readonly ImageStateManager _instance = new ImageStateManager();
+        private readonly Dictionary<long, ImageInfo> _images = new Dictionary<long, ImageInfo>();
+        private readonly object _lock = new object();
+        
+        /// <summary>
+        /// 是否启用详细日志
+        /// </summary>
+        public static bool EnableVerboseLogging { get; set; } = true;
 
         /// <summary>
-        /// 获取图片状态管理器实例
+        /// 单例实例
         /// </summary>
-        public static ImageStateManager Instance
+        public static ImageStateManager Instance => _instance;
+        
+        /// <summary>
+        /// 获取当前队列中的图片总数
+        /// </summary>
+        public int TotalImageCount
         {
             get
             {
-                if (_instance == null)
+                lock (_lock)
                 {
-                    lock (_lockObject)
+                    return _images.Count;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 获取待上传图片数量
+        /// </summary>
+        public int PendingUploadCount
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _images.Values.Count(img => img.Status == ImageStatus.PendingUpload);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 获取待删除图片数量
+        /// </summary>
+        public int PendingDeleteCount
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _images.Values.Count(img => img.Status == ImageStatus.PendingDelete);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 获取处理中图片数量
+        /// </summary>
+        public int ProcessingCount
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    return _images.Values.Count(img => img.Status == ImageStatus.Processing);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <param name="message">日志消息</param>
+        /// <param name="level">日志级别</param>
+        private static void Log(string message, string level = "INFO")
+        {
+            if (EnableVerboseLogging)
+            {
+                Debug.WriteLine($"[ImageStateManager][{level}][{DateTime.Now:HH:mm:ss.fff}] {message}");
+            }
+        }
+
+        /// <summary>
+        /// 添加图片
+        /// </summary>
+        /// <param name="imageInfo">图片信息</param>
+        public void AddImage(ImageInfo imageInfo)
+        {
+            lock (_lock)
+            {
+                if (imageInfo != null)
+                {
+                    // 如果FileId为0，使用ImageId作为键
+                    long key = imageInfo.FileId > 0 ? imageInfo.FileId : imageInfo.ImageId;
+                    if (key > 0)
                     {
-                        if (_instance == null)
-                            _instance = new ImageStateManager();
-                    }
-                }
-                return _instance;
-            }
-        }
-
-        private ImageStateManager()
-        {
-            _imageInfoDict = new ConcurrentDictionary<long, ImageInfo>();
-            _cellToImageDict = new ConcurrentDictionary<object, List<long>>();
-        }
-
-        #endregion
-
-        #region 私有字段
-
-        private readonly ConcurrentDictionary<long, ImageInfo> _imageInfoDict;
-        private readonly ConcurrentDictionary<object, List<long>> _cellToImageDict;
-
-        #endregion
-
-        #region 公共方法
-
-        /// <summary>
-        /// 添加图片信息
-        /// </summary>
-        /// <param name="cell">单元格</param>
-        /// <param name="imageId">图片ID</param>
-        /// <param name="fileName">文件名</param>
-        /// <param name="imageData">图片数据</param>
-        /// <param name="status">图片状态</param>
-        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status = ImageStatus.Normal, long businessId = 0, string storagePath = null)
-        {
-            lock (_lockObject)
-            {
-                // 创建图片信息
-                var imageInfo = new ImageInfo
-                {
-                    ImageId = imageId,
-                    BusinessId = businessId,
-                    FileName = fileName,
-                    OriginalFileName = fileName,
-                    ImageData = imageData,
-                    Status = status,
-                    StoragePath = storagePath,
-                    Cell = cell,
-                    CreateTime = DateTime.Now
-                };
-
-                // 添加到图片字典
-                _imageInfoDict.AddOrUpdate(imageId, imageInfo, (key, existing) => imageInfo);
-
-                // 建立单元格到图片的映射
-                if (cell != null && !_cellToImageDict.ContainsKey(cell))
-                {
-                    _cellToImageDict[cell] = new List<long>();
-                }
-
-                if (cell != null && !_cellToImageDict[cell].Contains(imageId))
-                {
-                    _cellToImageDict[cell].Add(imageId);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 获取图片信息
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>图片信息</returns>
-        public ImageInfo GetImageInfo(long imageId)
-        {
-            _imageInfoDict.TryGetValue(imageId, out var imageInfo);
-            return imageInfo;
-        }
-
-        /// <summary>
-        /// 获取单元格关联的所有图片
-        /// </summary>
-        /// <param name="cell">单元格</param>
-        /// <returns>图片列表</returns>
-        public List<ImageInfo> GetImagesByCell(object cell)
-        {
-            var result = new List<ImageInfo>();
-
-            if (cell != null && _cellToImageDict.TryGetValue(cell, out var imageIds))
-            {
-                foreach (var imageId in imageIds)
-                {
-                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo))
-                    {
-                        result.Add(imageInfo);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 更新图片状态
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <param name="newStatus">新状态</param>
-        public void UpdateImageStatus(long imageId, ImageStatus newStatus)
-        {
-            lock (_lockObject)
-            {
-                if (_imageInfoDict.TryGetValue(imageId, out var imageInfo))
-                {
-                    imageInfo.Status = newStatus;
-                }
-            }
-        }
-
-        /// <summary>
-        /// 删除图片信息
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        public void RemoveImage(long imageId)
-        {
-            lock (_lockObject)
-            {
-                if (_imageInfoDict.TryRemove(imageId, out var imageInfo))
-                {
-                    // 从单元格映射中移除
-                    if (imageInfo.Cell != null && _cellToImageDict.TryGetValue(imageInfo.Cell, out var imageIds))
-                    {
-                        imageIds.Remove(imageId);
-                        if (imageIds.Count == 0)
+                        bool isUpdate = _images.ContainsKey(key);
+                        // 直接赋值，会覆盖已存在的记录，避免重复添加
+                        _images[key] = imageInfo;
+                        
+                        if (isUpdate)
                         {
-                            _cellToImageDict.TryRemove(imageInfo.Cell, out _);
+                            Log($"更新图片: ID={key}, 状态={imageInfo.Status}, 文件名={imageInfo.FileName ?? imageInfo.OriginalFileName}");
+                        }
+                        else
+                        {
+                            Log($"添加图片: ID={key}, 状态={imageInfo.Status}, 文件名={imageInfo.FileName ?? imageInfo.OriginalFileName}");
                         }
                     }
-
-                    // 释放图片资源
-                    if (imageInfo.PreviewImage != null)
+                    else
                     {
-                        imageInfo.PreviewImage.Dispose();
+                        Log($"添加图片失败: 无效的图片ID (FileId={imageInfo.FileId}, ImageId={imageInfo.ImageId})", "WARN");
                     }
                 }
             }
         }
-
+        
         /// <summary>
-        /// 获取所有待上传的图片
+        /// 移除图片
+        /// </summary>
+        /// <param name="fileId">图片ID</param>
+        public void RemoveImage(long fileId)
+        {
+            lock (_lock)
+            {
+                if (fileId > 0 && _images.ContainsKey(fileId))
+                {
+                    var imageInfo = _images[fileId];
+                    _images.Remove(fileId);
+                    Log($"移除图片: ID={fileId}, 文件名={imageInfo?.FileName ?? imageInfo?.OriginalFileName}");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 获取待上传图片
         /// </summary>
         /// <returns>待上传图片列表</returns>
         public List<ImageInfo> GetPendingUploadImages()
         {
-            return _imageInfoDict.Values
-                .Where(x => x.Status == ImageStatus.PendingUpload)
-                .OrderBy(x => x.CreateTime)
-                .ToList();
+            lock (_lock)
+            {
+                var result = _images.Values.Where(img => img.Status == ImageStatus.PendingUpload).ToList();
+                Log($"获取待上传图片: {result.Count} 张");
+                return result;
+            }
         }
-
+        
         /// <summary>
-        /// 获取所有待删除的图片
+        /// 获取待删除图片
         /// </summary>
         /// <returns>待删除图片列表</returns>
         public List<ImageInfo> GetPendingDeleteImages()
         {
-            return _imageInfoDict.Values
-                .Where(x => x.Status == ImageStatus.PendingDelete)
-                .OrderBy(x => x.CreateTime)
-                .ToList();
-        }
-
-        /// <summary>
-        /// 获取指定单元格的待删除图片ID列表
-        /// </summary>
-        /// <param name="cell">单元格</param>
-        /// <returns>待删除图片ID列表</returns>
-        public List<long> GetPendingDeleteImagesByCell(object cell)
-        {
-            var result = new List<long>();
-
-            if (cell != null && _cellToImageDict.TryGetValue(cell, out var imageIds))
+            lock (_lock)
             {
-                foreach (var imageId in imageIds)
-                {
-                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) &&
-                        imageInfo.Status == ImageStatus.PendingDelete)
-                    {
-                        result.Add(imageId);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 获取指定单元格的待上传图片
-        /// </summary>
-        /// <param name="cell">单元格</param>
-        /// <returns>待上传图片信息列表</returns>
-        public List<ImageInfo> GetPendingUploadImagesByCell(object cell)
-        {
-            var result = new List<ImageInfo>();
-
-            if (cell != null && _cellToImageDict.TryGetValue(cell, out var imageIds))
-            {
-                foreach (var imageId in imageIds)
-                {
-                    if (_imageInfoDict.TryGetValue(imageId, out var imageInfo) &&
-                        imageInfo.Status == ImageStatus.PendingUpload)
-                    {
-                        result.Add(imageInfo);
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 获取所有待处理图片的统计信息
-        /// </summary>
-        /// <returns>统计信息（待删除数量、待上传数量等）</returns>
-        public Dictionary<string, int> GetPendingImageStats()
-        {
-            var stats = new Dictionary<string, int>
-            {
-                { "PendingDelete", _imageInfoDict.Count(kv => kv.Value.Status == ImageStatus.PendingDelete) },
-                { "PendingUpload", _imageInfoDict.Count(kv => kv.Value.Status == ImageStatus.PendingUpload) },
-                { "Normal", _imageInfoDict.Count(kv => kv.Value.Status == ImageStatus.Normal) },
-                { "Total", _imageInfoDict.Count }
-            };
-            return stats;
-        }
-
-        /// <summary>
-        /// 清理资源
-        /// </summary>
-        public void Dispose()
-        {
-            lock (_lockObject)
-            {
-                // 释放预览图片资源
-                foreach (var imageInfo in _imageInfoDict.Values)
-                {
-                    if (imageInfo.PreviewImage != null)
-                    {
-                        imageInfo.PreviewImage.Dispose();
-                        imageInfo.PreviewImage = null;
-                    }
-                }
-
-                _imageInfoDict.Clear();
-                _cellToImageDict.Clear();
+                var result = _images.Values.Where(img => img.Status == ImageStatus.PendingDelete).ToList();
+                Log($"获取待删除图片: {result.Count} 张");
+                return result;
             }
         }
-
+        
+        /// <summary>
+        /// 获取图片状态
+        /// </summary>
+        /// <param name="fileId">图片ID</param>
+        /// <returns>图片状态</returns>
+        public ImageStatus GetImageStatus(long fileId)
+        {
+            lock (_lock)
+            {
+                if (fileId > 0 && _images.ContainsKey(fileId))
+                {
+                    return _images[fileId].Status;
+                }
+                return ImageStatus.Deleted;
+            }
+        }
+        
+        /// <summary>
+        /// 获取图片信息
+        /// </summary>
+        /// <param name="fileId">图片ID</param>
+        /// <returns>图片信息</returns>
+        public ImageInfo GetImageInfo(long fileId)
+        {
+            lock (_lock)
+            {
+                if (fileId > 0 && _images.ContainsKey(fileId))
+                {
+                    return _images[fileId];
+                }
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// 更新图片状态
+        /// </summary>
+        /// <param name="fileId">图片ID</param>
+        /// <param name="status">新状态</param>
+        public void UpdateImageStatus(long fileId, ImageStatus status)
+        {
+            lock (_lock)
+            {
+                if (fileId > 0 && _images.ContainsKey(fileId))
+                {
+                    var oldStatus = _images[fileId].Status;
+                    _images[fileId].Status = status;
+                    Log($"更新图片状态: ID={fileId}, {oldStatus} -> {status}");
+                }
+                else
+                {
+                    Log($"更新图片状态失败: 图片不存在 ID={fileId}", "WARN");
+                }
+            }
+        }
+        
         /// <summary>
         /// 清空所有图片状态
         /// </summary>
-        public void ClearAll()
+        public void Clear()
         {
-            lock (_lockObject)
+            lock (_lock)
             {
-                // 释放预览图片资源
-                foreach (var imageInfo in _imageInfoDict.Values)
+                int count = _images.Count;
+                _images.Clear();
+                Log($"清空所有图片状态: 移除 {count} 张图片");
+            }
+        }
+        
+        /// <summary>
+        /// 添加图片（7参数重载）
+        /// </summary>
+        /// <param name="cell">单元格对象</param>
+        /// <param name="imageId">图片ID</param>
+        /// <param name="fileName">文件名</param>
+        /// <param name="imageData">图片数据</param>
+        /// <param name="status">图片状态</param>
+        /// <param name="businessId">业务ID</param>
+        /// <param name="storagePath">存储路径</param>
+        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status, long businessId, string storagePath)
+        {
+            var imageInfo = new ImageInfo
+            {
+                FileId = imageId,
+                ImageId = imageId,
+                OriginalFileName = fileName,
+                FileName = fileName,
+                ImageData = imageData,
+                Status = status,
+                BusinessId = businessId,
+                StoragePath = storagePath,
+                Cell = cell,
+                CreateTime = System.DateTime.Now,
+                ModifiedAt = System.DateTime.Now
+            };
+            AddImage(imageInfo);
+        }
+        
+        /// <summary>
+        /// 添加图片（5参数重载）
+        /// </summary>
+        /// <param name="cell">单元格对象</param>
+        /// <param name="imageId">图片ID</param>
+        /// <param name="fileName">文件名</param>
+        /// <param name="imageData">图片数据</param>
+        /// <param name="status">图片状态</param>
+        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status)
+        {
+            AddImage(cell, imageId, fileName, imageData, status, 0, string.Empty);
+        }
+        
+        /// <summary>
+        /// 移除已处理的图片
+        /// </summary>
+        public void RemoveProcessedImages()
+        {
+            lock (_lock)
+            {
+                var processedImages = _images.Where(kv => kv.Value.Status == ImageStatus.Uploaded || kv.Value.Status == ImageStatus.Deleted).ToList();
+                foreach (var kv in processedImages)
                 {
-                    if (imageInfo.PreviewImage != null)
+                    _images.Remove(kv.Key);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 移除已处理的图片（重载 - 按单元格）
+        /// </summary>
+        /// <param name="cell">单元格对象</param>
+        public void RemoveProcessedImages(object cell)
+        {
+            lock (_lock)
+            {
+                var processedImages = _images.Where(kv => 
+                    (kv.Value.Status == ImageStatus.Uploaded || kv.Value.Status == ImageStatus.Deleted) && 
+                    kv.Value.Cell == cell).ToList();
+                foreach (var kv in processedImages)
+                {
+                    _images.Remove(kv.Key);
+                }
+                if (processedImages.Count > 0)
+                {
+                    Log($"移除已处理图片(按单元格): {processedImages.Count} 张");
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 移除已处理的图片（重载 - 按图片ID列表）
+        /// </summary>
+        /// <param name="imageIds">图片ID列表</param>
+        public void RemoveProcessedImages(List<long> imageIds)
+        {
+            if (imageIds == null || imageIds.Count == 0)
+                return;
+                
+            lock (_lock)
+            {
+                int removedCount = 0;
+                foreach (var imageId in imageIds)
+                {
+                    if (imageId > 0 && _images.ContainsKey(imageId))
                     {
-                        imageInfo.PreviewImage.Dispose();
+                        _images.Remove(imageId);
+                        removedCount++;
                     }
                 }
-
-                _imageInfoDict.Clear();
-                _cellToImageDict.Clear();
+                Log($"移除已处理图片(按ID列表): 请求 {imageIds.Count} 张, 实际移除 {removedCount} 张");
             }
         }
-
+        
         /// <summary>
-        /// 批量删除已处理的图片
+        /// 标记图片为处理中状态（防止重复处理）
         /// </summary>
-        /// <param name="processedImageIds">已处理的图片ID列表</param>
-        public void RemoveProcessedImages(List<long> processedImageIds)
+        /// <param name="imageIds">图片ID列表</param>
+        /// <returns>成功标记的数量</returns>
+        public int MarkImagesAsProcessing(List<long> imageIds)
         {
-            if (processedImageIds == null || processedImageIds.Count == 0)
-                return;
-
-            lock (_lockObject)
+            if (imageIds == null || imageIds.Count == 0)
+                return 0;
+                
+            int markedCount = 0;
+            lock (_lock)
             {
-                foreach (var imageId in processedImageIds)
+                foreach (var imageId in imageIds)
                 {
-                    RemoveImage(imageId);
+                    if (imageId > 0 && _images.ContainsKey(imageId))
+                    {
+                        var imageInfo = _images[imageId];
+                        if (imageInfo.Status == ImageStatus.PendingUpload || imageInfo.Status == ImageStatus.PendingDelete)
+                        {
+                            imageInfo.Status = ImageStatus.Processing;
+                            markedCount++;
+                        }
+                    }
+                }
+            }
+            Log($"标记图片为处理中: 请求 {imageIds.Count} 张, 成功标记 {markedCount} 张");
+            return markedCount;
+        }
+        
+        /// <summary>
+        /// 获取待上传图片（原子操作：获取并标记为处理中）
+        /// </summary>
+        /// <returns>待上传图片列表</returns>
+        public List<ImageInfo> GetAndLockPendingUploadImages()
+        {
+            lock (_lock)
+            {
+                var pendingImages = _images.Values.Where(img => img.Status == ImageStatus.PendingUpload).ToList();
+                foreach (var image in pendingImages)
+                {
+                    image.Status = ImageStatus.Processing;
+                }
+                Log($"原子获取待上传图片: {pendingImages.Count} 张, 已标记为处理中");
+                return pendingImages;
+            }
+        }
+        
+        /// <summary>
+        /// 获取待删除图片（原子操作：获取并标记为处理中）
+        /// </summary>
+        /// <returns>待删除图片列表</returns>
+        public List<ImageInfo> GetAndLockPendingDeleteImages()
+        {
+            lock (_lock)
+            {
+                var pendingImages = _images.Values.Where(img => img.Status == ImageStatus.PendingDelete).ToList();
+                foreach (var image in pendingImages)
+                {
+                    image.Status = ImageStatus.Processing;
+                }
+                Log($"原子获取待删除图片: {pendingImages.Count} 张, 已标记为处理中");
+                return pendingImages;
+            }
+        }
+        
+        /// <summary>
+        /// 根据单元格获取图片
+        /// </summary>
+        /// <param name="cell">单元格对象</param>
+        /// <returns>图片信息列表</returns>
+        public System.Collections.Generic.List<ImageInfo> GetImagesByCell(object cell)
+        {
+            lock (_lock)
+            {
+                return _images.Values.Where(img => img.Cell == cell).ToList();
+            }
+        }
+        
+        /// <summary>
+        /// 获取所有图片
+        /// </summary>
+        /// <returns>所有图片信息列表</returns>
+        public List<ImageInfo> GetAllImages()
+        {
+            lock (_lock)
+            {
+                return _images.Values.ToList();
+            }
+        }
+        
+        /// <summary>
+        /// 批量移除图片
+        /// </summary>
+        /// <param name="fileIds">图片ID列表</param>
+        public void RemoveImages(List<long> fileIds)
+        {
+            lock (_lock)
+            {
+                if (fileIds != null)
+                {
+                    foreach (var fileId in fileIds)
+                    {
+                        if (fileId > 0 && _images.ContainsKey(fileId))
+                        {
+                            _images.Remove(fileId);
+                        }
+                    }
                 }
             }
         }
-
-        #endregion
+        
+        /// <summary>
+        /// 获取指定状态的图片数量
+        /// </summary>
+        /// <param name="status">图片状态</param>
+        /// <returns>图片数量</returns>
+        public int GetImageCountByStatus(ImageStatus status)
+        {
+            lock (_lock)
+            {
+                return _images.Values.Count(img => img.Status == status);
+            }
+        }
+        
+        /// <summary>
+        /// 清理过期的图片信息
+        /// </summary>
+        /// <param name="expireMinutes">过期分钟数</param>
+        public void CleanupExpiredImages(int expireMinutes = 30)
+        {
+            lock (_lock)
+            {
+                var expireTime = DateTime.Now.AddMinutes(-expireMinutes);
+                var expiredImages = _images.Where(kv => 
+                    kv.Value.ModifiedAt < expireTime && 
+                    (kv.Value.Status == ImageStatus.PendingUpload || kv.Value.Status == ImageStatus.PendingDelete))
+                    .ToList();
+                
+                foreach (var kv in expiredImages)
+                {
+                    _images.Remove(kv.Key);
+                }
+            }
+        }
     }
 }
+
+
+// 移除所有过度设计的复杂类，回归简单清晰的设计
+// 核心功能只需要 ImageStatus 和基本的 ImageInfo 管理即可

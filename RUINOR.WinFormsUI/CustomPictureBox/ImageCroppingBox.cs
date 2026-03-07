@@ -30,6 +30,28 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             this.Size = new Size(200, 150);
         }
 
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // 释放托管资源
+                if (_Image != null)
+                {
+                    _Image.Dispose();
+                    _Image = null;
+                }
+                if (originalImage != null)
+                {
+                    originalImage.Dispose();
+                    originalImage = null;
+                }
+            }
+            base.Dispose(disposing);
+        }
+
 
         /// <summary>
         /// 当前处理图片的原始文件路径（包括名称）
@@ -53,6 +75,18 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 if (value == this._Image) return;
 
+                // 释放旧的图片资源
+                if (_Image != null)
+                {
+                    _Image.Dispose();
+                    _Image = null;
+                }
+                if (originalImage != null)
+                {
+                    originalImage.Dispose();
+                    originalImage = null;
+                }
+
                 _Image = value;
                 originalImage = _Image;
                 if (_Image != null)
@@ -60,7 +94,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     Bitmap NewPic = new Bitmap(this._Image, GetNewSize(this.ClientRectangle.Width, this.ClientRectangle.Height, _Image.Width, _Image.Height));
                     this._Image = NewPic;
                 }
-              
+
 
                 this.Clear();
             }
@@ -493,13 +527,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         /// <summary>
         /// 获取当前选择区域的图像
+        /// 注意：返回的Bitmap对象需要由调用方负责释放
         /// </summary>
         /// <returns>当前选择区域图像</returns>
-        public virtual Image GetSelectedImage()
+        public virtual Bitmap GetSelectedImage()
         {
             if (this._Image == null) return null;
             if (this._SelectedRectangle.Size == Size.Empty) return null;
-            Image img = new Bitmap(this._SelectedRectangle.Width, this._SelectedRectangle.Height);
+            Bitmap img = new Bitmap(this._SelectedRectangle.Width, this._SelectedRectangle.Height);
             using (Graphics g = Graphics.FromImage(img))
             {
                 g.DrawImage(this._Image,
@@ -513,9 +548,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         /// <summary>
         /// 获取当前选择区域的图像，注意如果图片按比例缩放过，需要从原始图片中按比例提取
+        /// 注意：返回的Bitmap对象需要由调用方负责释放
         /// </summary>
         /// <returns>当前选择区域图像</returns>
-        public virtual Image GetSelectedImageNoZoom()
+        public virtual Bitmap GetSelectedImageNoZoom()
         {
             if (this._Image == null) return null;
             if (this._SelectedRectangle.Size == Size.Empty) return null;
@@ -524,7 +560,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             double dh = Convert.ToDouble(this._SelectedRectangle.Height) * ScalingRatio;
             int newWidth = Convert.ToInt32(dw);
             int newHeight = Convert.ToInt32(dh);
-            Image img = new Bitmap(newWidth, newHeight);
+            Bitmap img = new Bitmap(newWidth, newHeight);
             Point newPoint = new Point();
             double xx = Convert.ToDouble(this._SelectedRectangle.Location.X) * ScalingRatio;
             double yy = Convert.ToDouble(this._SelectedRectangle.Location.Y) * ScalingRatio;

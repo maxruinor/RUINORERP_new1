@@ -224,6 +224,13 @@ namespace RUINORERP.Business
             return await querySqlQueryable.ToListAsync();
         }
         
+
+        /// <summary>
+        /// 11
+        /// </summary>
+        /// <typeparam name="C"></typeparam>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;

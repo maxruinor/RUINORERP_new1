@@ -282,7 +282,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                         // 根据分类和当前时间确定存储路径（按YYMM分目录）
                         var fileCreateTime = DateTime.Now;
-                        var categoryPath = GetCategoryPath(FileStorageInfo.OwnerTableName.ToString(), fileCreateTime);
+                        var ownerTableName = FileStorageInfo.OwnerTableName ?? "Default";
+                        var categoryPath = GetCategoryPath(ownerTableName, fileCreateTime);
                         if (!Directory.Exists(categoryPath))
                         {
                             Directory.CreateDirectory(categoryPath);
@@ -375,11 +376,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         _logger?.Debug("文件信息保存到数据库成功，FileId: {FileId}", fileStorageInfo.FileId);
 
                         // 在服务器端创建业务关联
-                        if (uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
+                        // 修复：OwnerTableName 可能为 null，需要提供默认值
+                        var ownerTable = uploadRequest.OwnerTableName ?? "Unknown";
+                        if (ownerTable.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
                         {
                             var businessRelation = new tb_FS_BusinessRelation
                             {
-                                OwnerTableName = uploadRequest.OwnerTableName,
+                                OwnerTableName = ownerTable,
                                 BusinessNo = uploadRequest.BusinessNo ?? string.Empty, // 使用空字符串作为默认值
                                 BusinessId = uploadRequest.BusinessId.Value, // 新增:业务主键ID
                                 FileId = fileStorageInfo.FileId,

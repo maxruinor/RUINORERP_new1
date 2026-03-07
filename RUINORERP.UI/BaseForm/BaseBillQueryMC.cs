@@ -526,7 +526,7 @@ namespace RUINORERP.UI.BaseForm
                             btnSubmit.Enabled = true;
                         }
                     }
-                     
+
                     break;
                 case MenuItemEnums.属性:
                     Property();
@@ -885,7 +885,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
-                if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
+                if (fileDeleteResponse != null && fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
                 {
                     return true;
                 }

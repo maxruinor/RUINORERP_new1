@@ -1,4 +1,4 @@
-﻿using DevAge.Drawing;
+using DevAge.Drawing;
 using FastReport.DevComponents.Editors;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -598,6 +598,11 @@ namespace RUINORERP.UI.UCSourceGrid
         /// 控制的主要的业务表名
         /// </summary>
         public string MainBizDependencyTypeName { get; set; }
+
+        /// <summary>
+        /// 图片编辑器的业务ID提供者委托
+        /// </summary>
+        public Func<SourceGrid.CellContext, long> ImageEditorBusinessIdProvider { get; set; }
 
 
         private List<object> sourceList = new List<object>();

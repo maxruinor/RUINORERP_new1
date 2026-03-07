@@ -83,7 +83,6 @@
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
     <ProjectReference Include="..\RUINORERP.Services\RUINORERP.Services.csproj" />

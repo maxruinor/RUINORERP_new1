@@ -160,15 +160,19 @@ namespace RUINORERP.Server
 
             // 首先初始化 log4net 配置，确保日志仓库在所有服务使用前已经创建
             try
-            {
-                RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");
-                System.Diagnostics.Debug.WriteLine("Log4Net 配置初始化成功");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Log4Net 配置初始化失败: {ex.Message}");
-                throw;
-            }
+                {
+                    RUINORERP.Common.Log4Net.Log4NetConfiguration.Initialize("Log4net.config");
+                    #if DEBUG
+                    System.Diagnostics.Debug.WriteLine("Log4Net 配置初始化成功");
+                    #endif
+                }
+                catch (Exception ex)
+                {
+                    #if DEBUG
+                    System.Diagnostics.Debug.WriteLine($"Log4Net 配置初始化失败: {ex.Message}");
+                    #endif
+                    throw;
+                }
 
             // 配置日志服务
             services.AddLogging(logBuilder =>
@@ -178,7 +182,9 @@ namespace RUINORERP.Server
                 // 添加日志过滤规则
                 logBuilder.AddFilter((provider, category, logLevel) =>
                 {
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"日志过滤器检查: category={category}, level={logLevel}");
+                    #endif
                     // 临时禁用所有过滤，让所有日志通过
                     return true;
                 });
@@ -233,12 +239,16 @@ namespace RUINORERP.Server
 
             // 初始化表结构（如果不存在）
             // sequenceService.InitializeTable();
+            #if DEBUG
             System.Diagnostics.Debug.WriteLine("序号表初始化完成");
+            #endif
 
             // 测试序号表功能
             //var testResult = sequenceService.TestSequenceTable();
+            //  #if DEBUG
             //  System.Diagnostics.Debug.WriteLine("数据库序列表测试结果:");
             //  System.Diagnostics.Debug.WriteLine(testResult);
+            //  #endif
 
 
             // 注册业务编码生成相关服务
@@ -700,20 +710,21 @@ namespace RUINORERP.Server
 
             Type[] tempTypes = dalAssemble_Business.GetTypes();
 
-            List<KeyValuePair<string, Type>> ProcessorList = new List<KeyValuePair<string, Type>>();
-            List<KeyValuePair<string, Type>> BaseControllerlist = new List<KeyValuePair<string, Type>>();
-            List<KeyValuePair<string, Type>> BaseControllerGenericlist = new List<KeyValuePair<string, Type>>();
+            // 使用HashSet来避免重复添加
+            var ProcessorList = new HashSet<KeyValuePair<string, Type>>();
+            var BaseControllerlist = new HashSet<KeyValuePair<string, Type>>();
+            var BaseControllerGenericlist = new HashSet<KeyValuePair<string, Type>>();
             //2023-12-22用名称注册验证器
-            List<KeyValuePair<string, Type>> ValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+            var ValidatorGenericlist = new HashSet<KeyValuePair<string, Type>>();
 
             //2024-9-04用名称注册验证器  新加了一个基类
-            List<KeyValuePair<string, Type>> NewBaseValidatorGenericlist = new List<KeyValuePair<string, Type>>();
+            var NewBaseValidatorGenericlist = new HashSet<KeyValuePair<string, Type>>();
 
 
-            List<Type> IOCTypes = new List<Type>();
+            var IOCTypes = new HashSet<Type>();
 
 
-            List<Type> IOCCslaTypes = new List<Type>();
+            var IOCCslaTypes = new HashSet<Type>();
 
             var NoWantIOCAttr = typeof(NoWantIOCAttribute);
             for (int i = 0; i < tempTypes.Length; i++)
@@ -985,7 +996,9 @@ namespace RUINORERP.Server
                 catch (Exception ex)
                 {
                     // 记录无法加载的程序集
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"无法加载程序集 {file}: {ex.Message}");
+                    #endif
                     // 可以选择继续或抛出异常
                 }
             }
@@ -1003,12 +1016,14 @@ namespace RUINORERP.Server
                 catch (ReflectionTypeLoadException ex)
                 {
                     // 记录加载类型时的错误
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"无法从程序集 {assembly.FullName} 加载所有类型:");
                     foreach (var loaderException in ex.LoaderExceptions)
                     {
                         if (loaderException != null)
                             System.Diagnostics.Debug.WriteLine($"  - {loaderException.Message}");
                     }
+                    #endif
 
                     // 添加成功加载的类型
                     var loadedTypes = ex.Types.Where(t => t != null).ToList();
@@ -1019,7 +1034,9 @@ namespace RUINORERP.Server
                 }
                 catch (Exception ex)
                 {
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"处理程序集 {assembly.FullName} 时发生错误: {ex.Message}");
+                    #endif
                 }
             }
 
@@ -1066,7 +1083,9 @@ namespace RUINORERP.Server
                 if (AutofacContainerScope == null)
                 {
                     // 记录警告日志
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"警告: 尝试解析服务 {typeof(T).Name} 时，Autofac容器尚未初始化");
+                    #endif
 
                     // 尝试使用ServiceProvider作为备选方案
                     if (ServiceProvider != null)
@@ -1077,7 +1096,9 @@ namespace RUINORERP.Server
                         }
                         catch (Exception ex)
                         {
+                            #if DEBUG
                             System.Diagnostics.Debug.WriteLine($"尝试从ServiceProvider解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                            #endif
                         }
                     }
                     return default;
@@ -1089,7 +1110,9 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 // 记录解析异常
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"从Autofac容器解析服务 {typeof(T).Name} 失败: {ex.Message}");
+                #endif
 
                 // 尝试使用ServiceProvider作为备选方案
                 if (ServiceProvider != null)

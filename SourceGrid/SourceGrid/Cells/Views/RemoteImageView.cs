@@ -6,11 +6,7 @@ using SourceGrid.Cells.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Remoting.Contexts;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,381 +14,205 @@ using System.Windows.Forms;
 namespace SourceGrid.Cells.Views
 {
     /// <summary>
-    /// 单独的一个图片格子。区别于他原来提供的。这种方式，公用设置属性会将值全设置为一个样。得每次给值 都重新设置 所以用new每个cell
-    /// 重新写一个适用于WEB远程的显示图片的用法
-    /// 增强版：优化渲染效率、内存管理和异步加载
+    /// 远程图片单元格视图
+    /// 支持从服务器下载并显示图片
     /// </summary>
     [Serializable]
-    public class RemoteImageView : Cell, IDisposable
+    public class RemoteImageView : ImageCellBase, IImageCellView
     {
-        #region Constructors
-
-
+        #region 构造函数
 
         /// <summary>
-        /// Use default setting
+        /// 使用默认设置
         /// </summary>
-        public RemoteImageView()
+        public RemoteImageView() : base()
         {
-            ElementsDrawMode = DevAge.Drawing.ElementsDrawMode.Covering;
-            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
-            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
-            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
-            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
-            Border = cellBorder;
-        }
-
-        private System.Drawing.Image _GridImage;
-        private bool _disposed = false;
-        private long _pendingFileId;
-        private Task<System.Drawing.Image> _imageLoadTask;
-        private CancellationTokenSource _cancellationTokenSource;
-        private bool _enableAsyncLoading = true;
-        private bool _enableMemoryOptimization = true;
-        private string _currentImageHash = string.Empty;
-        private RUINORERP.Common.BusinessImage.ImageStatus _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
-        // 任务字典，用于管理并发任务
-        private static readonly Dictionary<long, Task<System.Drawing.Image>> _taskDictionary = new Dictionary<long, Task<System.Drawing.Image>>();
-        // 并发锁，用于线程安全地访问任务字典
-        private static readonly object _taskDictionaryLock = new object();
-
-
-
-        /// <summary>
-        /// 是否启用异步加载
-        /// </summary>
-        public bool EnableAsyncLoading
-        {
-            get => _enableAsyncLoading;
-            set => _enableAsyncLoading = value;
         }
 
         /// <summary>
-        /// 是否启用内存优化
+        /// 构造函数
         /// </summary>
-        public bool EnableMemoryOptimization
+        /// <param name="cache">图片缓存</param>
+        public RemoteImageView(ImageCache cache)
+            : base(cache)
         {
-            get => _enableMemoryOptimization;
-            set => _enableMemoryOptimization = value;
         }
 
         /// <summary>
-        /// 当前文件ID
+        /// 使用图片对象构造
         /// </summary>
-        public long CurrentFileId { get; private set; }
-
-        /// <summary>
-        /// 图片加载完成事件
-        /// </summary>
-        public event EventHandler<ImageLoadEventArgs> ImageLoaded;
-
-        /// <summary>
-        /// 图片加载失败事件
-        /// </summary>
-        public event EventHandler<ImageLoadErrorEventArgs> ImageLoadError;
-
-        public RemoteImageView(System.Drawing.Image image)
+        /// <param name="image">图片对象</param>
+        public RemoteImageView(Image image) : base(image)
         {
-            _GridImage = image;
-            FirstBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.White);
-            SecondBackground = new DevAge.Drawing.VisualElements.BackgroundSolid(Color.LightCyan);
-            DevAge.Drawing.BorderLine border = new DevAge.Drawing.BorderLine(Color.DarkKhaki, 1);
-            DevAge.Drawing.RectangleBorder cellBorder = new DevAge.Drawing.RectangleBorder(border, border);
-            Border = cellBorder;
         }
 
-        public delegate void LoadImageDelegate(System.Drawing.Image image, byte[] buffByte);
+        #endregion
 
-        private DevAge.Drawing.VisualElements.IVisualElement mFirstBackground;
-        public DevAge.Drawing.VisualElements.IVisualElement FirstBackground
-        {
-            get { return mFirstBackground; }
-            set { mFirstBackground = value; }
-        }
-
-        private DevAge.Drawing.VisualElements.IVisualElement mSecondBackground;
-        public DevAge.Drawing.VisualElements.IVisualElement SecondBackground
-        {
-            get { return mSecondBackground; }
-            set { mSecondBackground = value; }
-        }
-
+        #region 视觉元素
 
         /// <summary>
-        /// 验证数据
+        /// 视觉元素
         /// </summary>
-        public event LoadImageDelegate OnLoadImage;
+        private readonly IVisualElement _visualElement = new VisualImage();
 
-        //不显示图片的原因是第一次加载时先执行了 PrepareView，再draw内容。但是目前是值的变化事件中用了刷新
-        //是否能实现不重复预览。如果数据相同
+        /// <summary>
+        /// 视觉元素
+        /// </summary>
+        public IVisualElement VisualElement
+        {
+            get { return _visualElement; }
+        }
 
+        /// <summary>
+        /// 获取元素列表
+        /// </summary>
+        protected override IEnumerable<IVisualElement> GetElements()
+        {
+            foreach (var element in base.GetElements())
+            {
+                yield return element;
+            }
+
+            if (_visualElement != null)
+            {
+                yield return _visualElement;
+            }
+        }
+
+        #endregion
+
+        #region IImageCellView 实现
+
+        /// <summary>
+        /// 加载图片
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        public void LoadImage(long fileId)
+        {
+            _currentFileId = fileId;
+            _pendingFileId = fileId;
+            CurrentFileId = fileId;
+        }
+
+        /// <summary>
+        /// 异步加载图片
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>加载任务</returns>
+        public async Task LoadImageAsync(long fileId)
+        {
+            _currentFileId = fileId;
+            _pendingFileId = fileId;
+            CurrentFileId = fileId;
+
+            // 尝试从缓存或服务加载图片
+            await LoadImageFromServiceAsync(fileId);
+        }
+
+        /// <summary>
+        /// 清空图片
+        /// </summary>
+        public void ClearImage()
+        {
+            GridImage = null;
+            _currentImageHash = string.Empty;
+        }
+
+        /// <summary>
+        /// 获取图片ID
+        /// </summary>
+        /// <returns>图片ID</returns>
+        public long GetImageId()
+        {
+            return CurrentFileId;
+        }
+
+        /// <summary>
+        /// 获取图片信息
+        /// </summary>
+        /// <returns>图片信息</returns>
+        public ImageInfo GetImageInfo()
+        {
+            return ImageStateManager.Instance.GetImageInfo(CurrentFileId);
+        }
+
+        #endregion
+
+        #region PrepareView
+
+        /// <summary>
+        /// 准备视图
+        /// </summary>
         protected override void PrepareView(CellContext context)
         {
             base.PrepareView(context);
-            if (Math.IEEERemainder(context.Position.Row, 2) == 0)
-                Background = FirstBackground;
-            else
-                Background = SecondBackground;
 
-            // 关键修复：确保正确获取和显示图片数据
-            var valueModel = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-            if (valueModel is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-            {
-                // 优先使用字节数据
-                if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                {
-                    // 计算哈希值，避免重复生成预览
-                    string newHash = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
-                    if (newHash != _currentImageHash)
-                    {
-                        DisplayImageFromBytes(context, valueImageWeb.CellImageBytes);
-                        _currentImageHash = newHash;
-                    }
-                }
-                // 其次使用路径数据
-                else if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
-                {
-                    // 使用哈希名称作为标识，避免重复加载
-                    if (valueImageWeb.CellImageHashName != _currentImageHash)
-                    {
-                        LoadAndDisplayImageFromPath(context, valueImageWeb.CellImageHashName);
-                        _currentImageHash = valueImageWeb.CellImageHashName;
-                    }
-                }
-                else
-                {
-                    // 没有图片数据，清空预览
-                    if (!string.IsNullOrEmpty(_currentImageHash))
-                    {
-                        GridImage = null;
-                        _currentImageHash = string.Empty;
-                        context.Grid?.InvalidateCell(context.Position);
-                    }
-                }
-                // 缓存图片状态
-                CacheImageStatus();
-                return; // 处理完ValueImageWeb后直接返回
-            }
-
-            // 兼容原有的处理逻辑
             if (context.Value == null)
             {
-                if (!string.IsNullOrEmpty(_currentImageHash))
-                {
-                    GridImage = null;
-                    _currentImageHash = string.Empty;
-                    context.Grid?.InvalidateCell(context.Position);
-                }
-                // 缓存图片状态
-                CacheImageStatus();
                 return;
             }
-            
-            // 显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ValueImageWeb)
+
+            // 处理ValueImageWeb对象
+            if (context.Value is ValueImageWeb valueImageWeb)
             {
-                // Read the image
-                if (context.Value is ValueImageWeb icv)
-                {
-                    if (icv.ImageData != null)
-                    {
-                        // 计算哈希值，避免重复生成预览
-                        string newHash = ImageHashHelper.GenerateHash(icv.ImageData);
-                        if (newHash != _currentImageHash)
-                        {
-                            byte[] buffByte = icv.ImageData;
-                            System.Drawing.Image img = null;
-                            using (MemoryStream stream = new MemoryStream(buffByte))
-                            {
-                                try
-                                {
-                                    System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                                    if (tempImg != null)
-                                    {
-                                        img = new Bitmap(tempImg);
-                                        tempImg.Dispose();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
-                                }
-                            }
-
-                            if (GridImage != null)
-                            {
-                                GridImage.Dispose();
-                                GridImage = null;
-                            }
-                            GridImage = img;
-                            _currentImageHash = newHash;
-                        }
-                    }
-                    else if (!string.IsNullOrEmpty(icv.StoragePath))
-                    {
-                        // 使用FileId作为标识，避免重复加载
-                        string newHash = icv.FileId.ToString();
-                        if (newHash != _currentImageHash)
-                        {
-                            _pendingFileId = icv.FileId;
-                            CurrentFileId = _pendingFileId;
-                            if (_enableAsyncLoading)
-                            {
-                                LoadImageAsync(_pendingFileId, context);
-                            }
-                            else
-                            {
-                                LoadImageSync(_pendingFileId, context);
-                            }
-                            _currentImageHash = newHash;
-                        }
-                    }
-                }
-                else if (context.Value is byte[])
-                {
-                    // 计算哈希值，避免重复生成预览
-                    string newHash = ImageHashHelper.GenerateHash(context.Value as byte[]);
-                    if (newHash != _currentImageHash)
-                    {
-                        // 将图像读入到字节数组
-                        byte[] buffByte = context.Value as byte[];
-                        System.Drawing.Image img = null;
-                        // 使用 MemoryStream 从字节数组创建流
-                        // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
-                        // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
-                        using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
-                        {
-                            try
-                            {
-                                System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                                if (tempImg != null)
-                                {
-                                    img = new Bitmap(tempImg);
-                                    tempImg.Dispose();
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
-                            }
-                        }
-
-                        if (GridImage != null)
-                        {
-                            GridImage.Dispose();
-                            GridImage = null;
-                        }
-                        GridImage = img;
-                        _currentImageHash = newHash;
-                    }
-                }
-
-                if (context.Value is Bitmap || context.Value is System.Drawing.Image)
-                {
-                    // 使用对象引用作为标识，避免重复赋值
-                    if (GridImage != (System.Drawing.Image)context.Value)
-                    {
-                        if (GridImage != null)
-                        {
-                            GridImage.Dispose();
-                        }
-                        GridImage = context.Value as System.Drawing.Image;
-                        _currentImageHash = context.Value.GetHashCode().ToString();
-                    }
-                }
-
+                ProcessValueImageWeb(context, valueImageWeb);
             }
-            else if (context.Value is long && GridImage == null)
+            // 处理字节数组
+            else if (context.Value is byte[] imageData)
             {
-                // 使用long值作为标识，避免重复加载
-                string newHash = context.Value.ToString();
+                string newHash = ImageHashHelper.GenerateHash(imageData);
                 if (newHash != _currentImageHash)
                 {
-                    _pendingFileId = long.Parse(context.Value.ToString());
-                    CurrentFileId = _pendingFileId;
-
-                    if (_enableAsyncLoading)
-                    {
-                        // 异步加载图片
-                        LoadImageAsync(_pendingFileId, context);
-                    }
-                    else
-                    {
-                        // 同步加载图片
-                        LoadImageSync(_pendingFileId, context);
-                    }
+                    DisplayImageFromBytes(context, imageData);
                     _currentImageHash = newHash;
                 }
             }
-            
-            // 缓存图片状态
-            CacheImageStatus();
-        }
-
-        /// <summary>
-        /// 缓存图片状态
-        /// 在数据准备阶段缓存，避免在绘制时同步访问ImageStateManager
-        /// </summary>
-        private void CacheImageStatus()
-        {
-            try
+            // 处理Image对象
+            else if (context.Value is Image image)
             {
-                // 直接调用 ImageStateManager 获取图片信息
-                var imageInfo = ImageStateManager.Instance.GetImageInfo(CurrentFileId);
-                if (imageInfo != null)
-                {
-                    _cachedImageStatus = imageInfo.Status;
-                }
-                else
-                {
-                    _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("缓存图片状态失败: " + ex.Message);
-                _cachedImageStatus = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                GridImage = image;
             }
         }
 
+        #endregion
+
+        #region 远程图片处理
+
         /// <summary>
-        /// 从字节数据显示图片
+        /// 处理ValueImageWeb对象
         /// </summary>
         /// <param name="context">单元格上下文</param>
-        /// <param name="imageData">图片字节数据</param>
-        private void DisplayImageFromBytes(CellContext context, byte[] imageData)
+        /// <param name="valueImageWeb">ValueImageWeb对象</param>
+        protected override void ProcessValueImageWeb(CellContext context, ValueImageWeb valueImageWeb)
         {
-            try
+            // 优先使用字节数据
+            if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
             {
-                using (var ms = new System.IO.MemoryStream(imageData))
+                string newHash = ImageHashHelper.GenerateHash(valueImageWeb.CellImageBytes);
+                if (newHash != _currentImageHash)
                 {
-                    var image = System.Drawing.Image.FromStream(ms);
-                    
-                    // 直接更新当前视图的属性，而不是创建新实例
-                    // 这样可以保持_currentImageHash的值
-                    GridImage = new Bitmap(image);
-                    
-                    // 更新哈希值
-                    _currentImageHash = ImageHashHelper.GenerateHash(imageData);
-                    
-                    // 强制刷新显示
-                    context.Grid?.InvalidateCell(context.Position);
+                    DisplayImageFromBytes(context, valueImageWeb.CellImageBytes);
+                    _currentImageHash = newHash;
                 }
             }
-            catch (Exception ex)
+            // 其次使用路径数据
+            else if (!string.IsNullOrEmpty(valueImageWeb.CellImageHashName))
             {
-                System.Diagnostics.Debug.WriteLine($"显示图片失败: {ex.Message}");
-                // 清空图片和哈希值
-                GridImage = null;
-                _currentImageHash = string.Empty;
-                
-                // 强制刷新显示
-                context.Grid?.InvalidateCell(context.Position);
+                if (valueImageWeb.CellImageHashName != _currentImageHash)
+                {
+                    LoadAndDisplayImageFromPath(context, valueImageWeb.CellImageHashName);
+                    _currentImageHash = valueImageWeb.CellImageHashName;
+                }
+            }
+            // 最后使用FileId
+            else if (valueImageWeb.FileId > 0)
+            {
+                base.ProcessValueImageWeb(context, valueImageWeb);
             }
         }
 
         /// <summary>
-        /// 异步加载并显示图片路径
+        /// 从路径加载并显示图片
         /// </summary>
         /// <param name="context">单元格上下文</param>
         /// <param name="imagePath">图片路径</param>
@@ -401,16 +221,13 @@ namespace SourceGrid.Cells.Views
             try
             {
                 var imageService = GridImageServiceManager.CurrentService;
-                if (imageService != null && long.TryParse(System.IO.Path.GetFileNameWithoutExtension(imagePath), out long imageId))
+                if (imageService != null && long.TryParse(Path.GetFileNameWithoutExtension(imagePath), out long imageId))
                 {
                     var imageData = await imageService.DownloadImageAsync(imageId);
                     if (imageData != null && imageData.Length > 0)
                     {
-                        // 计算哈希值，避免重复生成预览
                         string newHash = ImageHashHelper.GenerateHash(imageData);
                         if (newHash != _currentImageHash)
-                        {
-                            // 确保在UI线程中更新
                             if (context.Grid.InvokeRequired)
                             {
                                 context.Grid.Invoke(new Action(() => DisplayImageFromBytes(context, imageData)));
@@ -419,901 +236,139 @@ namespace SourceGrid.Cells.Views
                             {
                                 DisplayImageFromBytes(context, imageData);
                             }
-                        }
                     }
                 }
             }
+
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"加载远程图片失败: {ex.Message}");
             }
         }
 
+        #endregion
+
+        #region 克隆
+
         /// <summary>
-        /// 强制显示图片
+        /// 克隆当前对象
+        /// </summary>
+        public override object Clone()
+        {
+            var clone = new RemoteImageView();
+            clone._currentFileId = _currentFileId;
+            clone._pendingFileId = _pendingFileId;
+            clone._currentImageHash = _currentImageHash;
+            clone._cachedImageStatus = _cachedImageStatus;
+            return clone;
+        }
+
+        #endregion
+
+        #region 刷新
+
+        /// <summary>
+        /// 刷新视图
         /// </summary>
         public override void Refresh(CellContext context)
         {
-            if (context.Value == null)
-            {
-                if (!string.IsNullOrEmpty(_currentImageHash))
-                {
-                    GridImage = null;
-                    _currentImageHash = string.Empty;
-                    context.Grid?.InvalidateCell(context.Position);
-                }
-                return;
-            }
-            //显示图片  要是图片列才处理
-            if (context.Cell is SourceGrid.Cells.ImageCell || context.Value is Bitmap || context.Value is Image || context.Value is byte[] || context.Value is ValueImageWeb)
-            {
-                //Read the image
-                if (context.Value is ValueImageWeb icv)
-                {
-                    if (icv.ImageData != null)
-                    {
-                        // 计算哈希值，避免重复生成预览
-                        string newHash = ImageHashHelper.GenerateHash(icv.ImageData);
-                        if (newHash != _currentImageHash)
-                        {
-                            byte[] buffByte = icv.ImageData;
-                            System.Drawing.Image img = null;
-                            using (MemoryStream stream = new MemoryStream(buffByte))
-                            {
-                                try
-                                {
-                                    System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                                    if (tempImg != null)
-                                    {
-                                        img = new Bitmap(tempImg);
-                                        tempImg.Dispose();
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    System.Diagnostics.Debug.WriteLine("从ImageCellValue创建图片失败: " + ex.Message);
-                                }
-                            }
-
-                            if (GridImage != null)
-                            {
-                                GridImage.Dispose();
-                                GridImage = null;
-                            }
-                            GridImage = img;
-                            _currentImageHash = newHash;
-                        }
-                    }
-                    else if (icv.FileId>0)
-                    {
-                        // 使用FileId作为标识，避免重复加载
-                        string newHash = icv.FileId.ToString();
-                        if (newHash != _currentImageHash)
-                        {
-                            _pendingFileId = icv.FileId;
-                            CurrentFileId = _pendingFileId;
-                            if (_enableAsyncLoading)
-                            {
-                                LoadImageAsync(_pendingFileId, context);
-                            }
-                            else
-                            {
-                                LoadImageSync(_pendingFileId, context);
-                            }
-                            _currentImageHash = newHash;
-                        }
-                    }
-                }
-                else if (context.Value is byte[])
-                {
-                    // 计算哈希值，避免重复生成预览
-                    string newHash = ImageHashHelper.GenerateHash(context.Value as byte[]);
-                    if (newHash != _currentImageHash)
-                    {
-                        //将图像读入到字节数组
-                        byte[] buffByte = context.Value as byte[];
-                        System.Drawing.Image img = null;
-                        // 使用 MemoryStream 从字节数组创建流
-                        // 注意：Image.FromStream创建的Image对象会保持对这个流的引用
-                        // 为了避免内存泄漏，使用 Clone 创建新的 Image 副本，不再依赖流
-                        using (MemoryStream stream = new MemoryStream(context.Value as byte[]))
-                        {
-                            try
-                            {
-                                System.Drawing.Image tempImg = System.Drawing.Image.FromStream(stream);
-                                if (tempImg != null)
-                                {
-                                    img = new Bitmap(tempImg);
-                                    tempImg.Dispose();
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                System.Diagnostics.Debug.WriteLine("从字节数组创建图片失败: " + ex.Message);
-                            }
-                        }
-
-                        if (GridImage != null)
-                        {
-                            GridImage.Dispose();
-                            GridImage = null;
-                        }
-                        GridImage = img;
-                        _currentImageHash = newHash;
-                    }
-                }
-
-                if (context.Value is Bitmap || context.Value is System.Drawing.Image)
-                {
-                    // 使用对象引用作为标识，避免重复赋值
-                    if (GridImage != (System.Drawing.Image)context.Value)
-                    {
-                        if (GridImage != null)
-                        {
-                            GridImage.Dispose();
-                        }
-                        GridImage = context.Value as System.Drawing.Image;
-                        _currentImageHash = context.Value.GetHashCode().ToString();
-                    }
-                }
-
-            }
-            else if (context.Value is long && GridImage == null)
-            {
-                // 使用long值作为标识，避免重复加载
-                string newHash = context.Value.ToString();
-                if (newHash != _currentImageHash)
-                {
-                    _pendingFileId = long.Parse(context.Value.ToString());
-                    CurrentFileId = _pendingFileId;
-
-                    if (_enableAsyncLoading)
-                    {
-                        // 异步加载图片
-                        LoadImageAsync(_pendingFileId, context);
-                    }
-                    else
-                    {
-                        // 同步加载图片
-                        LoadImageSync(_pendingFileId, context);
-                    }
-                    _currentImageHash = newHash;
-                }
-            }
+            PrepareView(context);
         }
 
-        protected override void OnDraw(GraphicsCache graphics, RectangleF area)
+        /// <summary>
+        /// 从服务异步加载图片
+        /// </summary>
+        /// <param name="fileId">文件ID</param>
+        /// <returns>加载任务</returns>
+        private async Task LoadImageFromServiceAsync(long fileId)
         {
-            base.OnDraw(graphics, area);
-        }
-
-        protected override void OnDrawContent(GraphicsCache graphics, RectangleF area)
-        {
-            base.OnDrawContent(graphics, area);
-            using (MeasureHelper measure = new MeasureHelper(graphics))
+            try
             {
-                // 使用局部变量避免多线程问题
-                var currentImage = GridImage;
-
-                // 检查GridImage是否有效
-                if (currentImage != null)
+                var imageService = GridImageServiceManager.CurrentService;
+                if (imageService != null)
                 {
-                    try
+                    var imageData = await imageService.DownloadImageAsync(fileId);
+                    if (imageData != null && imageData.Length > 0)
                     {
-                        // 先检查图片是否有效，避免 ArgumentException
-                        if (IsImageValid(currentImage))
+                        // 在UI线程中更新图片
+                        if (Application.OpenForms.Count > 0)
                         {
-                            graphics.Graphics.DrawImage(currentImage, Rectangle.Round(area)); //1Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
+                            Application.OpenForms[0].Invoke(new Action(() =>
+                            {
+                                using (var ms = new MemoryStream(imageData))
+                                {
+                                    GridImage = Image.FromStream(ms);
+                                }
+                            }));
                         }
                         else
                         {
-                            // 图片无效，释放并设置为null
-                            GridImage = null;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // 绘制失败，将GridImage设置为null
-                        GridImage = null;
-                        System.Diagnostics.Debug.WriteLine("绘制图片失败: " + ex.Message);
-                    }
-                }
-                else
-                {
-                    if (OnLoadImage != null)
-                    {
-                        OnLoadImage(currentImage, null);
-                        // 重新获取GridImage
-                        currentImage = GridImage;
-                        // 确保GridImage不为null后再绘制
-                        if (currentImage != null)
-                        {
-                            try
+                            using (var ms = new MemoryStream(imageData))
                             {
-                                if (IsImageValid(currentImage))
-                                {
-                                    graphics.Graphics.DrawImage(currentImage, Rectangle.Round(area)); //Note: 如果我不做矩形。有时，图像会以奇怪的拉伸方式绘制（不清晰）。这个问题可能是由于使用浮点重载的图形代码中的某些舍入引起的
-                                }
-                                else
-                                {
-                                    GridImage = null;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                // 绘制失败，将GridImage设置为null
-                                GridImage = null;
-                                System.Diagnostics.Debug.WriteLine("绘制图片失败: " + ex.Message);
+                                GridImage = Image.FromStream(ms);
                             }
                         }
-                    }
-                }
-
-                // 绘制图片状态标记
-                DrawImageStatus(graphics, area);
-            }
-        }
-
-        /// <summary>
-        /// 绘制图片状态标记
-        /// </summary>
-        /// <param name="graphics">图形对象</param>
-        /// <param name="area">绘制区域</param>
-        private void DrawImageStatus(GraphicsCache graphics, RectangleF area)
-        {
-            try
-            {
-                // 使用缓存的图片状态，避免在绘制时访问 ImageStateManager
-                var status = _cachedImageStatus;
-
-                // 根据状态绘制不同的标记
-                switch (status)
-                {
-                    case  ImageStatus.PendingDelete:
-                        // 绘制待删除标记
-                        DrawPendingDeleteMark(graphics, area);
-                        break;
-                    case ImageStatus.PendingUpload:
-                        // 绘制待上传标记
-                        DrawPendingUploadMark(graphics, area);
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("绘制图片状态标记失败: " + ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// 绘制待删除标记
-        /// </summary>
-        /// <param name="graphics">图形对象</param>
-        /// <param name="area">绘制区域</param>
-        private void DrawPendingDeleteMark(GraphicsCache graphics, RectangleF area)
-        {
-            // 绘制红色边框
-            using (var pen = new Pen(Color.Red, 2))
-            {
-                graphics.Graphics.DrawRectangle(pen, Rectangle.Round(area));
-            }
-
-            // 绘制红色对角线
-            using (var pen = new Pen(Color.Red, 2))
-            {
-                var rect = Rectangle.Round(area);
-                var topLeft = new System.Drawing.Point(rect.X, rect.Y);
-                var bottomRight = new System.Drawing.Point(rect.X + rect.Width, rect.Y + rect.Height);
-                var topRight = new System.Drawing.Point(rect.X + rect.Width, rect.Y);
-                var bottomLeft = new System.Drawing.Point(rect.X, rect.Y + rect.Height);
-                graphics.Graphics.DrawLine(pen, topLeft, bottomRight);
-                graphics.Graphics.DrawLine(pen, topRight, bottomLeft);
-            }
-
-            // 绘制"待删除"文字
-            using (var font = new Font("Arial", 10, FontStyle.Bold))
-            using (var brush = new SolidBrush(Color.Red))
-            {
-                var text = "待删除";
-                var textSize = graphics.Graphics.MeasureString(text, font);
-                var textX = area.X + (area.Width - textSize.Width) / 2;
-                var textY = area.Y + (area.Height - textSize.Height) / 2;
-                graphics.Graphics.DrawString(text, font, brush, textX, textY);
-            }
-        }
-
-        /// <summary>
-        /// 绘制待上传标记
-        /// </summary>
-        /// <param name="graphics">图形对象</param>
-        /// <param name="area">绘制区域</param>
-        private void DrawPendingUploadMark(GraphicsCache graphics, RectangleF area)
-        {
-            // 绘制蓝色边框
-            using (var pen = new Pen(Color.Blue, 2))
-            {
-                graphics.Graphics.DrawRectangle(pen, Rectangle.Round(area));
-            }
-
-            // 绘制蓝色点状边框
-            using (var pen = new Pen(Color.Blue, 1))
-            {
-                pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
-                var rect = Rectangle.Round(area);
-                rect.Inflate(-2, -2);
-                graphics.Graphics.DrawRectangle(pen, rect);
-            }
-
-            // 绘制"待上传"文字
-            using (var font = new Font("Arial", 10, FontStyle.Bold))
-            using (var brush = new SolidBrush(Color.Blue))
-            {
-                var text = "待上传";
-                var textSize = graphics.Graphics.MeasureString(text, font);
-                var textX = area.X + (area.Width - textSize.Width) / 2;
-                var textY = area.Y + (area.Height - textSize.Height) / 2;
-                graphics.Graphics.DrawString(text, font, brush, textX, textY);
-            }
-        }
-
-
-
-        /// <summary>
-        /// 检查图片是否有效
-        /// </summary>
-        private bool IsImageValid(System.Drawing.Image image)
-        {
-            if (image == null)
-                return false;
-
-            try
-            {
-                // 尝试访问图片属性，如果无效会抛出异常
-                var size = image.Size;
-                var format = image.RawFormat;
-                return size.Width > 0 && size.Height > 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        protected override void OnDrawBackground(GraphicsCache graphics, RectangleF area)
-        {
-            base.OnDrawBackground(graphics, area);
-        }
-
-
-        /// <summary>
-        /// Copy constructor.  This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
-        /// </summary>
-        /// <param name="other"></param>
-        public RemoteImageView(RemoteImageView other)
-            : base(other)
-        {
-            mImage = (DevAge.Drawing.VisualElements.IVisualElement)other.OneImage.Clone();
-        }
-        #endregion
-
-        private DevAge.Drawing.VisualElements.IVisualElement mImage = new DevAge.Drawing.VisualElements.VisualImage();
-        /// <summary>
-        /// Images of the cells
-        /// </summary>
-        public DevAge.Drawing.VisualElements.IVisualElement OneImage
-        {
-            get { return mImage; }
-        }
-
-        /// <summary>
-        /// 图片对象（优化内存管理）
-        /// </summary>
-        public System.Drawing.Image GridImage
-        {
-            get => _GridImage;
-            set
-            {
-                // 释放旧图片
-                if (_enableMemoryOptimization && _GridImage != null && _GridImage != value)
-                {
-                    _GridImage.Dispose();
-                }
-                _GridImage = value;
-            }
-        }
-
-        protected override IEnumerable<DevAge.Drawing.VisualElements.IVisualElement> GetElements()
-        {
-            foreach (DevAge.Drawing.VisualElements.IVisualElement v in GetBaseElements())
-                yield return v;
-            if (OneImage != null)
-            {
-                yield return OneImage;
-            }
-
-        }
-
-
-
-        private IEnumerable<DevAge.Drawing.VisualElements.IVisualElement> GetBaseElements()
-        {
-            return base.GetElements();
-        }
-
-        #region Clone
-        /// <summary>
-        /// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
-        /// </summary>
-        /// <returns></returns>
-        public override object Clone()
-        {
-            return new RemoteImageView(this);
-        }
-        #endregion
-
-        #region 异步加载方法
-
-        /// <summary>
-        /// 异步加载图片
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="context">单元格上下文</param>
-        private async void LoadImageAsync(long fileId, CellContext context)
-        {
-            if (fileId == 0)
-                return;
-
-            // 取消之前的加载任务
-            if (_cancellationTokenSource != null)
-            {
-                try
-                {
-                    _cancellationTokenSource.Cancel();
-                    _cancellationTokenSource.Dispose();
-                }
-                catch { }
-            }
-
-            // 创建新的取消令牌源
-            _cancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = _cancellationTokenSource.Token;
-
-            // 检查任务字典中是否已有该文件的加载任务
-            Task<System.Drawing.Image> existingTask = null;
-            lock (_taskDictionaryLock)
-            {
-                if (_taskDictionary.TryGetValue(fileId, out existingTask) && !existingTask.IsCompleted)
-                {
-                    // 使用现有任务
-                    _imageLoadTask = existingTask;
-                }
-                else
-                {
-                    // 创建新任务并添加到字典
-                    _imageLoadTask = System.Threading.Tasks.Task.Run(async () =>
-                    {
-                        try
-                        {
-                            // 检查取消令牌
-                            cancellationToken.ThrowIfCancellationRequested();
-                            
-                            // 使用缓存管理器异步加载图片
-                            return await ImageCacheManager.Instance.GetImageAsync(
-                                fileId,
-                                async (id) =>
-                                {
-                                    // 检查取消令牌
-                                    cancellationToken.ThrowIfCancellationRequested();
-                                    return await LoadImageDataAsync(fileId, context);
-                                }
-                            );
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            // 任务被取消，正常退出
-                            return null;
-                        }
-                        catch (Exception ex)
-                        {
-                            // 触发错误事件
-                            ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
-                            return null;
-                        }
-                        finally
-                        {
-                            // 任务完成后从字典中移除
-                            lock (_taskDictionaryLock)
-                            {
-                                _taskDictionary.Remove(fileId);
-                            }
-                        }
-                    }, cancellationToken);
-
-                    // 将新任务添加到字典
-                    _taskDictionary[fileId] = _imageLoadTask;
-                }
-            }
-
-            try
-            {
-                var image = await _imageLoadTask;
-                if (image != null && !_disposed && !cancellationToken.IsCancellationRequested)
-                {
-                    // 在UI线程中更新
-                    if (context.Grid.InvokeRequired)
-                    {
-                        context.Grid.Invoke((Action)(() =>
-                        {
-                            if (!_disposed && !cancellationToken.IsCancellationRequested)
-                            {
-                                GridImage = image;
-                                ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
-                                // 触发重绘
-                                context.Grid.InvalidateCell(context.Position);
-                            }
-                        }));
                     }
                     else
                     {
-                        if (!_disposed && !cancellationToken.IsCancellationRequested)
-                        {
-                            GridImage = image;
-                            ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
-                            // 触发重绘
-                            context.Grid.InvalidateCell(context.Position);
-                        }
+                        // 显示占位符图片
+                        DisplayPlaceholderImage();
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-                // 任务被取消，正常退出
-            }
             catch (Exception ex)
             {
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
+                System.Diagnostics.Debug.WriteLine($"从服务加载图片失败: {ex.Message}");
+                DisplayPlaceholderImage();
             }
         }
 
         /// <summary>
-        /// 同步加载图片
+        /// 显示占位符图片
         /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="context">单元格上下文</param>
-        private void LoadImageSync(long fileId, CellContext context)
+        private void DisplayPlaceholderImage()
         {
             try
             {
-                if (context.Cell.Editor is ImageWebPickEditor webPicker)
+                // 创建简单的占位符图片
+                var placeholder = new Bitmap(50, 50);
+                using (var g = Graphics.FromImage(placeholder))
                 {
-                    var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                    {
-                        if (valueImageWeb.CellImageBytes != null && valueImageWeb.CellImageBytes.Length > 0)
-                        {
-                            GridImage = ImageProcessor.ByteArrayToImage(valueImageWeb.CellImageBytes);
-                        }
-                        else
-                        {
-                            // 尝试从缓存加载
-                            GridImage = ImageCacheManager.Instance.GetImage(
-                                fileId,
-                                (id) =>
-                                {
-                                    // 尝试将string转换为long
-                                     
-                                        return LoadImageDataSync(id, context);
-                                   
-                                }
-                            );
-                        }
-                    }
+                    g.Clear(Color.LightGray);
+                    g.DrawString("图片", new Font("Arial", 8), Brushes.DarkGray, 5, 20);
                 }
+                GridImage = placeholder;
             }
             catch (Exception ex)
             {
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
+                System.Diagnostics.Debug.WriteLine($"显示占位符图片失败: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 异步加载图片数据
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="context">单元格上下文</param>
-        /// <returns>图片字节数据</returns>
-        private async Task<byte[]> LoadImageDataAsync(long fileId, CellContext context)
-        {
-            return await Task.Run(() => LoadImageDataSync(fileId, context));
-        }
-
-        /// <summary>
-        /// 同步加载图片数据
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="context">单元格上下文</param>
-        /// <returns>图片字节数据</returns>
-        private byte[] LoadImageDataSync(long fileId, CellContext context)
-        {
-            try
-            {
-                // 从ValueImageWeb获取图片数据
-                if (context.Cell.Editor is ImageWebPickEditor webPicker)
-                {
-                    var model = context.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
-                    {
-                        // 检查FileId是否匹配，确保获取正确的图片数据
-                        if (valueImageWeb.FileId == fileId || valueImageWeb.FileId == 0) // 0表示未设置
-                        {
-                            return valueImageWeb.CellImageBytes;
-                        }
-                    }
-                }
-
-                // 尝试从本地文件加载
-                string filePath = fileId.ToString();
-                if (File.Exists(filePath))
-                {
-                    return File.ReadAllBytes(filePath);
-                }
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"加载图片数据失败: {ex.Message}");
-                return null;
-            }
-        }
-
-        #endregion
-
-        #region 内存优化
-
-        /// <summary>
-        /// 释放内存资源
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 释放资源的具体实现
-        /// </summary>
-        /// <param name="disposing">是否正在释放托管资源</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed && disposing)
-            {
-                // 取消加载任务
-                if (_cancellationTokenSource != null)
-                {
-                    try
-                    {
-                        _cancellationTokenSource.Cancel();
-                        _cancellationTokenSource.Dispose();
-                    }
-                    catch { }
-                }
-
-                if (_imageLoadTask != null)
-                {
-                    try
-                    {
-                        _imageLoadTask.Dispose();
-                    }
-                    catch { }
-                }
-
-                // 释放图片资源
-                if (_GridImage != null)
-                {
-                    _GridImage.Dispose();
-                    _GridImage = null;
-                }
-
-                // 清除事件
-                ImageLoaded = null;
-                ImageLoadError = null;
-                ImageUploaded = null;
-                ImageDeleted = null;
-
-                // 清空哈希值
-                _currentImageHash = string.Empty;
-
-                _disposed = true;
-            }
-        }
-
-        #endregion
-
-        #region 图片管理功能
-
-        /// <summary>
-        /// 图片上传完成事件
-        /// </summary>
-        public event EventHandler<ImageUploadEventArgs> ImageUploaded;
-
-        /// <summary>
-        /// 图片删除完成事件
-        /// </summary>
-        public event EventHandler<ImageDeleteEventArgs> ImageDeleted;
-
-        /// <summary>
-        /// 上传图片
-        /// </summary>
-        /// <param name="imageBytes">图片字节数据</param>
-        /// <param name="fileName">文件名</param>
-        /// <param name="businessType">业务类型</param>
-        /// <returns>上传结果</returns>
-        public async Task<string> UploadImageAsync(byte[] imageBytes, string fileName, int businessType = 0)
-        {
-            try
-            {
-                // 使用GridImageService上传图片
-                string imageId = await GridImageServiceManager.CurrentService.UploadImageAsync(imageBytes, fileName, businessType);
-
-                // 触发上传完成事件
-                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, true));
-                return imageId;
-            }
-            catch (Exception ex)
-            {
-                // 触发上传失败事件
-                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, false, ex));
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 删除图片
+        /// 验证图片缓存有效性
         /// </summary>
         /// <param name="imageId">图片ID</param>
-        /// <returns>删除结果</returns>
-        public async Task<bool> DeleteImageAsync(long imageId)
+        /// <returns>是否有效</returns>
+        private bool IsCacheValid(long imageId)
         {
             try
             {
-                // 使用GridImageService删除图片
-                bool result = await GridImageServiceManager.CurrentService.DeleteImageAsync(imageId);
-
-                // 触发删除完成事件
-                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, result));
-                return result;
+                var cache = ImageCache.Instance;
+                if (cache != null)
+                {
+                    var cachedImage = cache.GetImage(imageId);
+                    return cachedImage != null;
+                }
+                return false;
             }
             catch (Exception ex)
             {
-                // 触发删除失败事件
-                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, false, ex));
+                System.Diagnostics.Debug.WriteLine($"验证缓存有效性失败: {ex.Message}");
                 return false;
             }
         }
 
-        /// <summary>
-        /// 下载图片
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>图片字节数据</returns>
-        public async Task<byte[]> DownloadImageAsync(long imageId)
-        {
-            try
-            {
-                // 使用GridImageService下载图片
-                return await GridImageServiceManager.CurrentService.DownloadImageAsync(imageId);
-            }
-            catch (Exception ex)
-            {
-                // 触发下载失败事件
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 获取图片信息
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>图片信息</returns>
-        public async Task<GridImageInfo> GetImageInfoAsync(long imageId)
-        {
-            try
-            {
-                // 使用GridImageService获取图片信息
-                return await GridImageServiceManager.CurrentService.GetImageInfoAsync(imageId);
-            }
-            catch (Exception ex)
-            {
-                // 触发获取信息失败事件
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 检查图片是否需要更新
-        /// </summary>
-        /// <returns>是否需要更新</returns>
-        public bool IsImageNeedingUpdate()
-        {
-            // 这里可以实现图片更新检测逻辑
-            // 例如比较图片哈希值等
-            return false;
-        }
-
-        /// <summary>
-        /// 重置图片状态
-        /// </summary>
-        public void ResetImageStatus()
-        {
-            // 这里可以实现重置图片状态的逻辑
-        }
-
         #endregion
-    }
-
-    /// <summary>
-    /// 图片加载事件参数
-    /// </summary>
-    public class ImageLoadEventArgs : EventArgs
-    {
-        public long FileId { get; }
-        public System.Drawing.Image Image { get; }
-
-        public ImageLoadEventArgs(long fileId, System.Drawing.Image image)
-        {
-            FileId = fileId;
-            Image = image;
-        }
-    }
-
-    /// <summary>
-    /// 图片加载错误事件参数
-    /// </summary>
-    public class ImageLoadErrorEventArgs : EventArgs
-    {
-        public long FileId { get; }
-        public Exception Error { get; }
-
-        public ImageLoadErrorEventArgs(long fileId, Exception error)
-        {
-            FileId = fileId;
-            Error = error;
-        }
-    }
-
-    /// <summary>
-    /// 图片上传事件参数
-    /// </summary>
-    public class ImageUploadEventArgs : EventArgs
-    {
-        public string FileName { get; }
-        public bool Success { get; }
-        public Exception Error { get; }
-
-        public ImageUploadEventArgs(string fileName, bool success, Exception error = null)
-        {
-            FileName = fileName;
-            Success = success;
-            Error = error;
-        }
-    }
-
-    /// <summary>
-    /// 图片删除事件参数
-    /// </summary>
-    public class ImageDeleteEventArgs : EventArgs
-    {
-        public long ImageId { get; }
-        public bool Success { get; }
-        public Exception Error { get; }
-
-        public ImageDeleteEventArgs(long imageId, bool success, Exception error = null)
-        {
-            ImageId = imageId;
-            Success = success;
-            Error = error;
-        }
     }
 }

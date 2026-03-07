@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Business;
 using RUINORERP.Model;
@@ -149,7 +149,9 @@ namespace RUINORERP.Server.Workflow
             }
             catch (Exception ex)
             {
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"工作流注册错误: {ex.Message}");
+                #endif
                 return false;
             }
         }
@@ -184,7 +186,9 @@ namespace RUINORERP.Server.Workflow
                 catch (Exception ex)
                 {
                     SafeLogInfo($"库存快照工作流执行错误: {ex.Message}");
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"工作流执行错误: {ex.Message}");
+                    #endif
                 }
 
                 // 改为每天执行一次
@@ -213,7 +217,9 @@ namespace RUINORERP.Server.Workflow
                 catch (Exception ex)
                 {
                     SafeLogInfo($"[调试模式] 库存快照工作流执行错误: {ex.Message}");
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"[调试模式] 工作流执行错误: {ex.Message}");
+                    #endif
                 }
             };
             timer.Start();
@@ -256,14 +262,18 @@ namespace RUINORERP.Server.Workflow
                 else
                 {
                     // 主窗体未初始化时，使用控制台输出
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine($"[工作流日志] {message}");
+                    #endif
                     Console.WriteLine($"[工作流日志] {message}");
                 }
             }
             catch (Exception ex)
             {
                 // 如果日志输出失败，使用最基础的方式输出
+                #if DEBUG
                 System.Diagnostics.Debug.WriteLine($"[工作流日志错误] {message} - 错误: {ex.Message}");
+                #endif
                 Console.WriteLine($"[工作流日志错误] {message} - 错误: {ex.Message}");
             }
         }

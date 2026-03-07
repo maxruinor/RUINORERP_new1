@@ -195,7 +195,7 @@ namespace RUINORERP.UI.Network.Services
 
 
         /// <summary>
-        /// 文件上传
+        /// 文件上传1
         /// </summary>
         /// <param name="request">文件上传请求</param>
         /// <param name="ct">取消令牌</param>

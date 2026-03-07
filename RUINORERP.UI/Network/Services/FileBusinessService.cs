@@ -37,6 +37,7 @@ namespace RUINORERP.UI.Network.Services
         private readonly ILogger<FileBusinessService> _logger;
         public readonly ApplicationContext _appContext;
         private readonly IEntityMappingService _mapper;
+        private readonly IImageService _imageService;
 
         /// <summary>
         /// 构造函数
@@ -45,16 +46,19 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="unitOfWorkManage">工作单元管理</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="appContext">应用上下文</param>
+        /// <param name="imageService">图片服务</param>
         public FileBusinessService(
             IEntityMappingService mapper,
             IUnitOfWorkManage unitOfWorkManage,
             ILogger<FileBusinessService> logger,
-            ApplicationContext appContext = null)
+            ApplicationContext appContext = null,
+            IImageService imageService = null)
         {
             _mapper = mapper;
             _unitOfWorkManage = unitOfWorkManage;
             _logger = logger;
             _appContext = appContext;
+            _imageService = imageService;
         }
 
 
@@ -83,65 +87,101 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                // 获取文件管理服务
-                var fileService = _appContext.GetRequiredService<FileManagementService>();
-
-
-                tb_FS_FileStorageInfo storageInfo = new tb_FS_FileStorageInfo();
-                storageInfo.OriginalFileName = OriginalFileName;
-                storageInfo.FileData = fileData;
-                storageInfo.OwnerTableName = entity.GetType().Name;
-
-                // 如果提供了文件ID(更新场景)
-                if (fileId.HasValue)
+                // 使用IImageService上传图片
+                if (_imageService != null)
                 {
-                    storageInfo.FileId = fileId.Value;
-                }
-
-                // 准备上传请求
-                var uploadRequest = new FileUploadRequest();
-                uploadRequest.FileStorageInfos.Add(storageInfo);
-                uploadRequest.OwnerTableName = entity.GetType().Name;
-                uploadRequest.BusinessId = entity.PrimaryKeyID;
-                uploadRequest.RelatedField = relatedField;
-                // 确保BusinessNo有值，避免关联表创建失败
-                uploadRequest.BusinessNo = uploadRequest.BusinessNo ?? string.Empty;
-                // 执行上传
-                var response = await fileService.UploadFileAsync(uploadRequest);
-
-                // 检查响应是否为空
-                if (response == null)
-                {
-                    _logger?.LogError("上传图片失败：服务器返回了空的响应数据");
-                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据，请联系系统管理员");
-                }
-
-                // 检查响应是否成功
-                if (!response.IsSuccess)
-                {
-                    _logger?.LogError($"上传图片失败: {response.ErrorMessage}");
-                    return response;
-                }
-
-                // 检查 FileStorageInfos 是否为空
-                if (response.FileStorageInfos == null)
-                {
-                    _logger?.LogError("上传图片失败：服务器返回的响应中 FileStorageInfos 为空");
-                    return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回的响应数据不完整，请联系系统管理员");
-                }
-
-                // 如果上传成功，创建业务关联
-                if (response.FileStorageInfos.Count > 0)
-                {
-                    // 获取业务关联服务
-                    var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
-                    foreach (var fileStorageInfo in response.FileStorageInfos)
+                    var imageInfo = new ImageInfo
                     {
-                        //服务器创建了，更合理，因为每经过一个环节 出错几率更高
+                        OriginalFileName = OriginalFileName,
+                        ImageData = fileData,
+                        FileExtension = Path.GetExtension(OriginalFileName),
+                        FileSize = fileData.Length,
+                        BusinessId = entity.PrimaryKeyID,
+                        OwnerTableName = entity.GetType().Name,
+                        RelatedField = relatedField,
+                        Status = ImageStatus.PendingUpload
+                    };
+
+                    var result = await _imageService.UploadImageAsync(imageInfo);
+                    if (result != null && result.FileId > 0)
+                    {
+                        var response = new FileUploadResponse
+                        {
+                            IsSuccess = true,
+                            FileStorageInfos = new List<tb_FS_FileStorageInfo>
+                            {
+                                ConvertToFileStorageInfo(result)
+                            }
+                        };
+                        return response;
+                    }
+                    else
+                    {
+                        return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("图片上传失败");
                     }
                 }
+                else
+                {
+                    // 回退到原有方式
+                    // 获取文件管理服务
+                    var fileService = _appContext.GetRequiredService<FileManagementService>();
 
-                return response;
+                    tb_FS_FileStorageInfo storageInfo = new tb_FS_FileStorageInfo();
+                    storageInfo.OriginalFileName = OriginalFileName;
+                    storageInfo.FileData = fileData;
+                    storageInfo.OwnerTableName = entity.GetType().Name;
+
+                    // 如果提供了文件ID(更新场景)
+                    if (fileId.HasValue)
+                    {
+                        storageInfo.FileId = fileId.Value;
+                    }
+
+                    // 准备上传请求
+                    var uploadRequest = new FileUploadRequest();
+                    uploadRequest.FileStorageInfos.Add(storageInfo);
+                    uploadRequest.OwnerTableName = entity.GetType().Name;
+                    uploadRequest.BusinessId = entity.PrimaryKeyID;
+                    uploadRequest.RelatedField = relatedField;
+                    // 确保BusinessNo有值，避免关联表创建失败
+                    uploadRequest.BusinessNo = uploadRequest.BusinessNo ?? string.Empty;
+                    // 执行上传
+                    var response = await fileService.UploadFileAsync(uploadRequest);
+
+                    // 检查响应是否为空
+                    if (response == null)
+                    {
+                        _logger?.LogError("上传图片失败：服务器返回了空的响应数据");
+                        return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回了空的响应数据，请联系系统管理员");
+                    }
+
+                    // 检查响应是否成功
+                    if (!response.IsSuccess)
+                    {
+                        _logger?.LogError($"上传图片失败: {response.ErrorMessage}");
+                        return response;
+                    }
+
+                    // 检查 FileStorageInfos 是否为空
+                    if (response.FileStorageInfos == null)
+                    {
+                        _logger?.LogError("上传图片失败：服务器返回的响应中 FileStorageInfos 为空");
+                        return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回的响应数据不完整，请联系系统管理员");
+                    }
+
+                    // 如果上传成功，创建业务关联
+                    if (response.FileStorageInfos.Count > 0)
+                    {
+                        // 获取业务关联服务
+                        var businessRelationService = _appContext.GetRequiredService<tb_FS_BusinessRelationController<tb_FS_BusinessRelation>>();
+                        foreach (var fileStorageInfo in response.FileStorageInfos)
+                        {
+                            //服务器创建了，更合理，因为每经过一个环节 出错几率更高
+                        }
+                    }
+
+                    return response;
+                }
             }
             catch (Exception ex)
             {
@@ -175,7 +215,7 @@ namespace RUINORERP.UI.Network.Services
                         if (fieldValue != null)
                         {
                             long fileId;
-                            
+
                             // 优化后的类型判断和转换
                             if (fieldValue is long longValue && longValue > 0)
                             {
@@ -263,7 +303,7 @@ namespace RUINORERP.UI.Network.Services
                 FileType = fileStorageInfo.FileType,
                 FileExtension = fileStorageInfo.FileExtension,
                 HashValue = fileStorageInfo.HashValue,
-                ModifiedAt = fileStorageInfo.Modified_at,
+                ModifiedAt = fileStorageInfo.Modified_at ?? DateTime.Now,
 
                 // 设置创建时间，如果没有则使用当前时间
                 CreateTime = fileStorageInfo.Created_at ?? DateTime.Now,
@@ -504,7 +544,7 @@ namespace RUINORERP.UI.Network.Services
                 deleteRequest.BusinessId = businessId;
 
                 deleteRequest.PhysicalDelete = physicalDelete;
-                
+
                 // 处理实体中已有的图片信息
                 if (entity.FileStorageInfoList != null && entity.FileStorageInfoList.Count > 0)
                 {
@@ -527,9 +567,9 @@ namespace RUINORERP.UI.Network.Services
                         }
                     }
                 }
-                
+
                 // 处理实体中的图片路径字段（如EvidenceImagePath）
-                ProcessImagePathFields(entity, ownerTableName, deleteRequest);
+                // 调用的具体业务中来处理
 
                 // 检查是否有图片需要删除
                 if (deleteRequest.FileStorageInfos.Count == 0)
@@ -550,73 +590,6 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
-        /// <summary>
-        /// 处理实体中的图片路径字段，解析图片ID并添加到删除请求中
-        /// </summary>
-        /// <param name="entity">业务实体</param>
-        /// <param name="ownerTableName">表名</param>
-        /// <param name="deleteRequest">删除请求</param>
-        private void ProcessImagePathFields(BaseEntity entity, string ownerTableName, FileDeleteRequest deleteRequest)
-        {
-            // 常见的图片路径字段名
-            string[] imagePathFields = { "EvidenceImagePath", "CloseCaseImagePath", "ImagePath", "ImageId", "PicturePath" };
-            
-            foreach (var fieldName in imagePathFields)
-            {
-                try
-                {
-                    // 反射获取字段值
-                    var propertyInfo = entity.GetType().GetProperty(fieldName);
-                    if (propertyInfo != null)
-                    {
-                        var fieldValue = propertyInfo.GetValue(entity);
-                        if (fieldValue != null)
-                        {
-                            // 解析图片ID
-                            long fileId;
-                            if (fieldValue is long longValue && longValue > 0)
-                            {
-                                fileId = longValue;
-                            }
-                            else if (fieldValue is int intValue && intValue > 0)
-                            {
-                                fileId = intValue;
-                            }
-                            else if (long.TryParse(fieldValue.ToString(), out fileId) && fileId > 0)
-                            {
-                                // 字符串转换
-                            }
-                            else
-                            {
-                                // 不是有效的图片ID，跳过
-                                continue;
-                            }
-                            
-                            // 创建文件存储信息并添加到删除请求
-                            tb_FS_FileStorageInfo fileStorageInfo = new tb_FS_FileStorageInfo
-                            {
-                                FileId = fileId,
-                                OwnerTableName = ownerTableName,
-                                StorageProvider = "Local",
-                                StoragePath = string.Empty,
-                                StorageFileName = $"{fileId}_{DateTime.Now:yyyyMMddHHmmssfff}",
-                                FileStatus = (int)FileStatus.Active,
-                                CurrentVersion = 1,
-                                ExpireTime = DateTime.MaxValue,
-                                Description = string.Empty,
-                                Metadata = string.Empty
-                            };
-                            
-                            deleteRequest.AddDeleteFileStorageInfo(fileStorageInfo);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, $"处理图片路径字段 {fieldName} 失败");
-                }
-            }
-        }
 
         /// <summary>
         /// 根据路径获取文件信息

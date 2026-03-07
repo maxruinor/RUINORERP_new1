@@ -222,6 +222,46 @@ namespace RUINORERP.Server.Services.BizCode
         }
 
         /// <summary>
+        /// 清理过期的生成记录
+        /// 防止_generatingSkus字典无限增长
+        /// </summary>
+        private static void CleanupExpiredGeneratingSkus(object state)
+        {
+            try
+            {
+                var expiredSkus = new List<string>();
+                var now = DateTime.Now;
+                var expirationThreshold = TimeSpan.FromMinutes(30);
+
+                // 查找过期的生成记录
+                foreach (var kvp in _generatingSkus)
+                {
+                    if (now - kvp.Value.Item2 > expirationThreshold)
+                    {
+                        expiredSkus.Add(kvp.Key);
+                    }
+                }
+
+                // 移除过期的记录
+                foreach (var sku in expiredSkus)
+                {
+                    _generatingSkus.TryRemove(sku, out _);
+                }
+
+                if (expiredSkus.Count > 0)
+                {
+                    // 使用静态日志记录，因为这是静态方法
+                    Console.WriteLine($"清理了 {expiredSkus.Count} 个过期的生成记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                // 使用静态日志记录，因为这是静态方法
+                Console.WriteLine($"清理过期生成记录时发生异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 初始化或刷新SKU缓存
         /// 在批量生成SKU前调用，可显著提高性能
         /// 同时会清理上一批次的生成记录
@@ -901,7 +941,12 @@ namespace RUINORERP.Server.Services.BizCode
         /// <summary>
         /// 当前批次正在生成的SKU集合，用于防止同一批次生成重复SKU
         /// </summary>
-        private static readonly ConcurrentDictionary<string, bool> _generatingSkus = new ConcurrentDictionary<string, bool>();
+        private static readonly ConcurrentDictionary<string, (bool, DateTime)> _generatingSkus = new ConcurrentDictionary<string, (bool, DateTime)>();
+
+        /// <summary>
+        /// 清理定时器，用于定期清理过期的生成记录
+        /// </summary>
+        private static readonly Timer _cleanupTimer = new Timer(CleanupExpiredGeneratingSkus, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
         /// <summary>
         /// 确保SKU编码唯一性
@@ -916,7 +961,7 @@ namespace RUINORERP.Server.Services.BizCode
             {
                 // 第1步：检查是否正在生成中（同一批次）
                 // 使用 TryAdd 原子操作，如果添加成功说明是第一个，否则说明重复
-                if (!_generatingSkus.TryAdd(baseSkuCode, true))
+                if (!_generatingSkus.TryAdd(baseSkuCode, (true, DateTime.Now)))
                 {
                     // 同一批次中已经有这个SKU在生成，需要添加序号
                     _logger.LogWarning("检测到同一批次生成重复SKU: {BaseSkuCode}，将添加序号", baseSkuCode);
@@ -977,7 +1022,7 @@ namespace RUINORERP.Server.Services.BizCode
             } while (_generatingSkus.ContainsKey(uniqueSkuCode) || _skuCache.ContainsKey(uniqueSkuCode));
 
             // 添加到正在生成集合
-            _generatingSkus.TryAdd(uniqueSkuCode, true);
+            _generatingSkus.TryAdd(uniqueSkuCode, (true, DateTime.Now));
             _skuCache.TryAdd(uniqueSkuCode, true);
 
             _logger.LogInformation(
@@ -1042,7 +1087,7 @@ namespace RUINORERP.Server.Services.BizCode
 
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
-            _generatingSkus.TryAdd(uniqueSkuCode, true);
+            _generatingSkus.TryAdd(uniqueSkuCode, (true, DateTime.Now));
 
             _logger.LogInformation(
                 "生成SKU唯一变体: {BaseSkuCode} -> {UniqueSkuCode} (序号: {Sequence})",
@@ -1107,7 +1152,7 @@ namespace RUINORERP.Server.Services.BizCode
 
             // 将新SKU添加到缓存
             _skuCache.TryAdd(uniqueSkuCode, true);
-            _generatingSkus.TryAdd(uniqueSkuCode, true);
+            _generatingSkus.TryAdd(uniqueSkuCode, (true, DateTime.Now));
 
             return uniqueSkuCode;
         }

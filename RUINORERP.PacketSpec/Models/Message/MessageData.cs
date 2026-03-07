@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using RUINORERP.Common.SnowflakeIdHelper;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
 using RUINORERP.Model.Base.StatusManager;
@@ -238,7 +239,7 @@ namespace RUINORERP.PacketSpec.Models.Message
 
             return new MessageData
             {
-                MessageId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId(),
+                MessageId = IdHelper.GetLongId(),
                 MessageType = MessageType.Business,
                 Title = title,
                 Content = content,

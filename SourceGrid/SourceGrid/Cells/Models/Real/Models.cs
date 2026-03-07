@@ -1,5 +1,6 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
+using System.Reflection.Emit;
 using SourceGrid.Cells.Editors;
 
 namespace SourceGrid.Cells.Models
@@ -406,6 +407,12 @@ namespace SourceGrid.Cells.Models
         /// </summary>
         public long BusinessId { get; set; }
 
+        public string OwnerTableName { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// 关联字段名，用于标识图片属于哪个业务字段
+        /// </summary>
+        public string RelatedField { get; set; } = string.Empty;
 
         #region 兼容性属性（为向后兼容保留）
 

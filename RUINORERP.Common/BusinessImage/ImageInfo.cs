@@ -1,50 +1,32 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace RUINORERP.Common.BusinessImage
 {
     /// <summary>
-    /// 图片信息类，包含基本信息和状态管理功能
+    /// 图片信息类
     /// </summary>
     public class ImageInfo
     {
         /// <summary>
         /// 图片ID
         /// </summary>
+        public long FileId { get; set; }
+        
+        /// <summary>
+        /// 图片ID（兼容属性）
+        /// </summary>
         public long ImageId { get; set; }
         
         /// <summary>
-        /// 业务ID，用于关联业务实体
-        /// </summary>
-        public long BusinessId { get; set; }
-        
-        /// <summary>
-        /// 存储图片的原始文件名
-        /// 如果是上传的图片，则为上传时的文件名；
-        /// 如果是粘贴或无法获取原始名称的图片，则为自动生成的默认名称
+        /// 原始文件名
         /// </summary>
         public string OriginalFileName { get; set; }
         
         /// <summary>
-        /// 图片文件名（用于存储）
+        /// 图片字节数据
         /// </summary>
-        public string FileName { get; set; }
-        
-        /// <summary>
-        /// 存储的相对路径（不带文件名），用于服务器搜索
-        /// </summary>
-        public string StoragePath { get; set; }
-        
-        /// <summary>
-        /// 文件大小
-        /// </summary>
-        public long FileSize { get; set; }
-        
-        /// <summary>
-        /// 创建时间
-        /// </summary>
-        public DateTime CreateTime { get; set; }
+        public byte[] ImageData { get; set; }
         
         /// <summary>
         /// 文件类型
@@ -57,53 +39,116 @@ namespace RUINORERP.Common.BusinessImage
         public string FileExtension { get; set; }
         
         /// <summary>
-        /// 文件哈希值
+        /// 文件大小
         /// </summary>
-        public string HashValue { get; set; }
+        public long FileSize { get; set; }
         
         /// <summary>
-        /// 元数据
+        /// 存储路径
         /// </summary>
-        public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+        public string StoragePath { get; set; }
         
         /// <summary>
-        /// 修改时间
+        /// 存储文件名
         /// </summary>
-        public DateTime? ModifiedAt { get; set; }
+        public string StorageFileName { get; set; }
         
         /// <summary>
-        /// 文件ID，用于版本控制
+        /// 业务ID
         /// </summary>
-        public long FileId { get; set; } = 0;
+        public long BusinessId { get; set; }
         
         /// <summary>
-        /// 图片字节数据
+        /// 业务表名
         /// </summary>
-        public byte[] ImageData { get; set; }
+        public string OwnerTableName { get; set; }
         
         /// <summary>
         /// 图片状态
         /// </summary>
-        public ImageStatus Status { get; set; } = ImageStatus.Normal;
+        public ImageStatus Status { get; set; }
         
         /// <summary>
-        /// 图片预览1
+        /// 关联字段
         /// </summary>
-        public Image PreviewImage { get; set; }
+        public string RelatedField { get; set; }
         
         /// <summary>
-        /// 单元格引用
+        /// 修改时间
         /// </summary>
-        public object Cell { get; set; }
+        public DateTime ModifiedAt { get; set; }
+        
+        /// <summary>
+        /// 元数据
+        /// </summary>
+        public Dictionary<string, string> Metadata { get; set; }
+        
+        /// <summary>
+        /// 哈希值
+        /// </summary>
+        public string HashValue { get; set; }
+        
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        public DateTime CreateTime { get; set; }
         
         /// <summary>
         /// 图片宽度
         /// </summary>
-        public int Width { get; set; } = 0;
+        public int Width { get; set; }
         
         /// <summary>
         /// 图片高度
         /// </summary>
-        public int Height { get; set; } = 0;
+        public int Height { get; set; }
+        
+        /// <summary>
+        /// 单元格对象
+        /// </summary>
+        public object Cell { get; set; }
+        
+        /// <summary>
+        /// 文件名
+        /// </summary>
+        public string FileName { get; set; }
     }
+
+    /// <summary>
+    /// 图片状态枚举
+    /// </summary>
+    public enum ImageStatus
+    {
+        /// <summary>
+        /// 正常状态
+        /// </summary>
+        Normal,
+        
+        /// <summary>
+        /// 待上传
+        /// </summary>
+        PendingUpload,
+        
+        /// <summary>
+        /// 处理中（防止重复处理）
+        /// </summary>
+        Processing,
+        
+        /// <summary>
+        /// 已上传
+        /// </summary>
+        Uploaded,
+        
+        /// <summary>
+        /// 待删除
+        /// </summary>
+        PendingDelete,
+        
+        /// <summary>
+        /// 已删除
+        /// </summary>
+        Deleted
+    }
+
+
 }

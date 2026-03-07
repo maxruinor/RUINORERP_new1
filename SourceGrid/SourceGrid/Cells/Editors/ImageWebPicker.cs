@@ -1,4 +1,4 @@
-﻿﻿using System;
+using System;
 using System.Windows.Forms;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -75,6 +75,87 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         public long CurrentFileIdLong { get; private set; }
 
+        /// <summary>
+        /// 获取当前编辑单元格对应的业务ID
+        /// </summary>
+        /// <returns>业务ID</returns>
+        private long GetCurrentBusinessId()
+        {
+            try
+            {
+                // 首先尝试从ValueImageWeb模型中获取业务ID
+                if (this.EditCellContext != null)
+                {
+                    var model = this.EditCellContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb && valueImageWeb.BusinessId > 0)
+                    {
+                        return valueImageWeb.BusinessId;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取业务ID失败: {ex.Message}");
+            }
+            
+            // 如果无法获取业务ID，返回0
+            return 0;
+        }
+        
+        /// <summary>
+        /// 获取当前编辑单元格对应的业务表名
+        /// </summary>
+        /// <returns>业务表名</returns>
+        private string GetCurrentOwnerTableName()
+        {
+            try
+            {
+                // 首先尝试从ValueImageWeb模型中获取业务表名
+                if (this.EditCellContext != null)
+                {
+                    var model = this.EditCellContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb && !string.IsNullOrEmpty(valueImageWeb.OwnerTableName))
+                    {
+                        return valueImageWeb.OwnerTableName;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取业务表名失败: {ex.Message}");
+            }
+            
+            // 如果无法获取业务表名，返回空字符串
+            return string.Empty;
+        }
+        
+        /// <summary>
+        /// 获取当前编辑单元格对应的关联字段名
+        /// </summary>
+        /// <returns>关联字段名</returns>
+        private string GetCurrentRelatedField()
+        {
+            try
+            {
+                // 首先尝试从ValueImageWeb模型中获取关联字段名
+                if (this.EditCellContext != null)
+                {
+                    var model = this.EditCellContext.Cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
+                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb && !string.IsNullOrEmpty(valueImageWeb.RelatedField))
+                    {
+                        return valueImageWeb.RelatedField;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"获取关联字段名失败: {ex.Message}");
+            }
+            
+            // 如果无法获取关联字段名，返回空字符串
+            return string.Empty;
+        }
+
 
 
         #endregion
@@ -137,12 +218,28 @@ namespace SourceGrid.Cells.Editors
 
         #region Constructor
 
+        private readonly ImageStateManager _stateManager;
+        private readonly ImageCache _cache;
+
         ///web下载图片 只是显示图片名称
         public ImageWebPickEditor(Type p_Type) : base(p_Type)
         {
-
+            // 使用单例实例初始化依赖项
+            _stateManager = ImageStateManager.Instance;
+            _cache = ImageCache.Instance;
         }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="p_Type">值类型</param>
+        /// <param name="stateManager">图片状态管理器</param>
+        /// <param name="cache">图片缓存</param>
+        public ImageWebPickEditor(Type p_Type, ImageStateManager stateManager, ImageCache cache) : base(p_Type)
+        {
+            _stateManager = stateManager;
+            _cache = cache;
+        }
 
         #endregion
 
@@ -373,7 +470,7 @@ namespace SourceGrid.Cells.Editors
                         // 生成带扩展名的文件名
                         fileName = $"Clipboard_{DateTime.Now:yyyyMMddHHmmss}.jpg";
 
-                        bool success = await SetImageToPathAsync(image);
+                        bool success = SetImageToPath(image);
                         if (success)
                         {
                             ValueType = typeof(string);
@@ -408,7 +505,7 @@ namespace SourceGrid.Cells.Editors
         /// </summary>
         /// <param name="image">原始图片对象</param>
         /// <returns>处理是否成功</returns>
-        private async Task<bool> SetImageToPathAsync(System.Drawing.Image image)
+        private bool SetImageToPath(System.Drawing.Image image)
         {
             if (image == null)
             {
@@ -428,7 +525,7 @@ namespace SourceGrid.Cells.Editors
                 SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
                 // 1. 图片预处理（调整尺寸、压缩、增强等）
-                System.Drawing.Image processedImage = await PreprocessImageAsync(image);
+                System.Drawing.Image processedImage = PreprocessImage(image);
                 if (processedImage == null)
                 {
                     return false;
@@ -437,11 +534,11 @@ namespace SourceGrid.Cells.Editors
                 // 2. 智能图片增强（可选）
                 if (EnableImageEnhancement)
                 {
-                    processedImage = await EnhanceImageAsync(processedImage);
+                    processedImage = EnhanceImage(processedImage);
                 }
 
                 // 3. 转换为字节数组并压缩
-                byte[] compressedBytes = await CompressImageAsync(processedImage);
+                byte[] compressedBytes = CompressImage(image);
                 if (compressedBytes == null || compressedBytes.Length == 0)
                 {
                     MessageBox.Show("图片压缩失败", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -455,45 +552,58 @@ namespace SourceGrid.Cells.Editors
                     return false;
                 }
 
-                // 5. 生成文件ID（使用新策略）
-                string newHash = ImageHashHelper.GenerateHash(compressedBytes);
-                long fileIdLong;
+                // 5. 创建ImageInfo对象，包含完整的业务信息
+                var imageInfo = new ImageInfo
+                {
+                    OriginalFileName = fileName,
+                    ImageData = compressedBytes,
+                    FileExtension = Path.GetExtension(fileName),
+                    FileSize = compressedBytes.Length,
+                    Status = ImageStatus.PendingUpload,
+                    BusinessId = GetCurrentBusinessId(),
+                    OwnerTableName = GetCurrentOwnerTableName(),
+                    RelatedField = GetCurrentRelatedField(),
+                    Cell = this.EditCell
+                };
 
                 // 生成唯一的long型ID
-                fileIdLong = GenerateUniqueLongId();
+                long fileIdLong = GenerateUniqueLongId();
+                imageInfo.FileId = fileIdLong;
 
-                // 6. 检查是否需要更新
-                if (!AreHashesEqual(valueImageWeb.GetImageNewHash(), newHash))
+                // 保存处理后的图片数据
+                valueImageWeb.CellImageBytes = compressedBytes;
+                valueImageWeb.FileId = fileIdLong; // 设置FileId属性
+                Control.Tag = imageInfo; // 存储完整的ImageInfo对象
+
+                // 更新显示图片
+                using (MemoryStream ms = new MemoryStream(compressedBytes))
                 {
-                    // 7. 保存处理后的图片数据
-                    valueImageWeb.SetImageNewHash(newHash);
-                    valueImageWeb.CellImageBytes = compressedBytes;
-                    valueImageWeb.FileId = fileIdLong; // 设置FileId属性
-                    Control.Tag = compressedBytes;
-
-                    // 8. 更新显示图片
-                    using (MemoryStream ms = new MemoryStream(compressedBytes))
-                    {
-                        PickerImage = System.Drawing.Image.FromStream(ms, true);
-                    }
-
-                    // 9. 清理临时图片对象
-                    if (processedImage != image)
-                    {
-                        processedImage.Dispose();
-                    }
-
-                    // 10. 添加到缓存
-                    await AddToCacheAsync(fileIdLong, compressedBytes);
-
+                    PickerImage = System.Drawing.Image.FromStream(ms, true);
                 }
 
-                // 11. 与图片状态管理系统集成
-                RegisterImageWithStateManager(fileIdLong, compressedBytes, fileName);
+                // 清理临时图片对象
+                if (processedImage != image)
+                {
+                    processedImage.Dispose();
+                }
 
-                // 12. 更新控件值
+                // 添加到缓存
+                var cache = _cache ?? ImageCache.Instance;
+                if (cache != null)
+                {
+                    cache.AddImage(fileIdLong, PickerImage);
+                }
+
+                // 与图片状态管理系统集成
+                var stateManager = _stateManager ?? ImageStateManager.Instance;
+                if (stateManager != null)
+                {
+                    stateManager.AddImage(imageInfo);
+                }
+
+                // 更新控件值
                 Control.Value = fileIdLong;
-                ValueType = typeof(string);
+                ValueType = typeof(long);
 
                 // 更新CurrentFileIdLong属性
                 CurrentFileIdLong = fileIdLong;
@@ -517,28 +627,33 @@ namespace SourceGrid.Cells.Editors
         {
             return await Task.Run(() =>
             {
-                try
-                {
-                    // 检查是否需要调整尺寸
-                    if (AutoResizeLargeImages && (originalImage.Width > MaxImageDimension || originalImage.Height > MaxImageDimension))
-                    {
-                        return ResizeImage(originalImage, MaxImageDimension, MaxImageDimension);
-                    }
-
-                    // 检查图片格式，如果不是标准格式，转换为标准格式
-                    if (!(originalImage is Bitmap))
-                    {
-                        return new Bitmap(originalImage);
-                    }
-
-                    return originalImage;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"图片预处理失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return null;
-                }
+                return PreprocessImage(originalImage);
             });
+        }
+
+        private System.Drawing.Image PreprocessImage(System.Drawing.Image originalImage)
+        {
+            try
+            {
+                // 检查是否需要调整尺寸
+                if (AutoResizeLargeImages && (originalImage.Width > MaxImageDimension || originalImage.Height > MaxImageDimension))
+                {
+                    return ResizeImage(originalImage, MaxImageDimension, MaxImageDimension);
+                }
+
+                // 检查图片格式，如果不是标准格式，转换为标准格式
+                if (!(originalImage is Bitmap))
+                {
+                    return new Bitmap(originalImage);
+                }
+
+                return originalImage;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"图片预处理失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
         }
 
         /// <summary>
@@ -660,7 +775,7 @@ namespace SourceGrid.Cells.Editors
                             // 保留完整的文件名（包含扩展名）
                             fileName = Path.GetFileName(filePath);
 
-                            bool success = await SetImageToPathAsync(img);
+                            bool success = SetImageToPath(img);
                             if (success)
                             {
                                 ValueType = typeof(string);
@@ -732,104 +847,327 @@ namespace SourceGrid.Cells.Editors
             var model = this.EditCell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
             SourceGrid.Cells.Models.ValueImageWeb valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
 
-            // 记录编辑前的状态
-            string originalHash = valueImageWeb.GetImageNewHash();
+            // 记录编辑前的状态，用于原子性替换
+            long oldFileId = valueImageWeb.FileId;
             byte[] originalImageData = valueImageWeb.ImageData;
+            string originalFileName = valueImageWeb.OriginalFileName;
             
             string selectedFilePath = string.Empty;
             
-            // 处理文件选择器选择的图片
-            if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
+            try
             {
-                if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
+                // 处理文件选择器选择的图片
+                if (Control is DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage)
                 {
-                    selectedFilePath = txtWebImage.SelectedFilePath;
-                    byte[] newImageBytes = ImageProcessor.CompressImage(txtWebImage.SelectedFilePath);
-                    string newHash = ImageHashHelper.GenerateHash(newImageBytes);
-
-                    // 只有当图片真正发生变化时才更新
-                    if (!AreHashesEqual(originalHash, newHash))
+                    if (!string.IsNullOrEmpty(txtWebImage.SelectedFilePath))
                     {
-                        // 更新图片数据
-                        valueImageWeb.ImageData = newImageBytes;
-                        valueImageWeb.OriginalFileName = Path.GetFileName(selectedFilePath);
-                        Control.Tag = newImageBytes;
+                        selectedFilePath = txtWebImage.SelectedFilePath;
+                        fileName = Path.GetFileName(selectedFilePath);
+
+                        // 原子性处理图片替换
+                        if (!AtomicImageReplace(txtWebImage, valueImageWeb, oldFileId))
+                        {
+                            // 替换失败，恢复原状态
+                            RestoreOriginalState(valueImageWeb, oldFileId, originalImageData, originalFileName);
+                            return oldFileId > 0 ? (object)oldFileId : null;
+                        }
+                        
+                        txtWebImage.SelectedFilePath = string.Empty; // 用完了清空
                     }
-                    txtWebImage.SelectedFilePath = string.Empty; // 用完了清空
+                }
+                
+                // 处理控件中的数据
+                object val = Control.Tag;
+                if (val == null)
+                {
+                    // 如果没有新数据且原有数据存在，保持原有数据
+                    if (originalImageData != null && originalImageData.Length > 0)
+                    {
+                        return valueImageWeb.FileId > 0 ? (object)valueImageWeb.FileId : valueImageWeb.OriginalFileName;
+                    }
+                    return null;
+                }
+                
+                if (val is System.Drawing.Image img)
+                {
+                    // 原子性处理图片对象替换
+                    if (!AtomicImageReplace(img, valueImageWeb, oldFileId))
+                    {
+                        // 替换失败，恢复原状态
+                        RestoreOriginalState(valueImageWeb, oldFileId, originalImageData, originalFileName);
+                        return oldFileId > 0 ? (object)oldFileId : null;
+                    }
+                    Control.Tag = null; // 清空，让第二个单元格可以选择新的图片
+                }
+                else if (val is byte[] buffByte)
+                {
+                    // 原子性处理字节数组替换
+                    if (!AtomicImageReplace(buffByte, selectedFilePath, valueImageWeb, oldFileId))
+                    {
+                        // 替换失败，恢复原状态
+                        RestoreOriginalState(valueImageWeb, oldFileId, originalImageData, originalFileName);
+                        return oldFileId > 0 ? (object)oldFileId : null;
+                    }
+                }
+                else if (val is ImageInfo imageInfo)
+                {
+                    // 确保将ImageInfo添加到状态管理器
+                    var stateManager = _stateManager ?? ImageStateManager.Instance;
+                    if (stateManager != null)
+                    {
+                        stateManager.AddImage(imageInfo);
+                    }
+                    // 直接返回ImageInfo的FileId
+                    return imageInfo.FileId;
+                }
+                else if (val is string)
+                {
+                    return val;
+                }
+                
+                return Control.Value;
+            }
+            catch (Exception ex)
+            {
+                // 发生异常时恢复原状态
+                RestoreOriginalState(valueImageWeb, oldFileId, originalImageData, originalFileName);
+                
+                System.Diagnostics.Debug.WriteLine($"图片替换过程中发生异常: {ex.Message}");
+                return oldFileId > 0 ? (object)oldFileId : null;
+            }
+        }
+
+        /// <summary>
+        /// 原子性替换图片（从文件选择器）
+        /// </summary>
+        /// <param name="txtWebImage">文件选择器控件</param>
+        /// <param name="valueImageWeb">图片数据模型</param>
+        /// <param name="oldFileId">旧图片ID</param>
+        /// <returns>是否替换成功</returns>
+        private bool AtomicImageReplace(DevAge.Windows.Forms.TextBoxUITypeEditorWebImage txtWebImage, 
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb, long oldFileId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(txtWebImage.SelectedFilePath)) return false;
+
+                using (var selectedImg = System.Drawing.Image.FromFile(txtWebImage.SelectedFilePath))
+                {
+                    return AtomicImageReplace(selectedImg, valueImageWeb, oldFileId);
                 }
             }
-            
-            // 处理控件中的数据
-            object val = Control.Tag;
-            if (val == null)
+            catch (Exception ex)
             {
-                // 如果没有新数据且原有数据存在，保持原有数据
+                System.Diagnostics.Debug.WriteLine($"原子性图片替换失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 原子性替换图片（从Image对象）
+        /// </summary>
+        /// <param name="newImage">新图片对象</param>
+        /// <param name="valueImageWeb">图片数据模型</param>
+        /// <param name="oldFileId">旧图片ID</param>
+        /// <returns>是否替换成功</returns>
+        private bool AtomicImageReplace(System.Drawing.Image newImage, 
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb, long oldFileId)
+        {
+            try
+            {
+                var stateManager = _stateManager ?? ImageStateManager.Instance;
+                
+                // 第一步：标记旧图片为待删除（如果存在）
+                if (oldFileId > 0 && stateManager != null)
+                {
+                    var oldImageInfo = stateManager.GetImageInfo(oldFileId);
+                    if (oldImageInfo != null)
+                    {
+                        // 标记为待删除，但不立即删除
+                        stateManager.UpdateImageStatus(oldFileId, ImageStatus.PendingDelete);
+                    }
+                }
+
+                // 第二步：处理新图片
+                if (!SetImageToPath(newImage))
+                {
+                    // 新图片处理失败，恢复旧图片状态
+                    if (oldFileId > 0 && stateManager != null)
+                    {
+                        stateManager.UpdateImageStatus(oldFileId, ImageStatus.Normal);
+                    }
+                    return false;
+                }
+
+                // 第三步：新图片处理成功，此时旧图片已标记为待删除，新图片为待上传
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"原子性图片替换失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 原子性替换图片（从字节数组）
+        /// </summary>
+        /// <param name="buffByte">新图片字节数组</param>
+        /// <param name="selectedFilePath">选择的文件路径</param>
+        /// <param name="valueImageWeb">图片数据模型</param>
+        /// <param name="oldFileId">旧图片ID</param>
+        /// <returns>是否替换成功</returns>
+        private bool AtomicImageReplace(byte[] buffByte, string selectedFilePath,
+            SourceGrid.Cells.Models.ValueImageWeb valueImageWeb, long oldFileId)
+        {
+            try
+            {
+                var stateManager = _stateManager ?? ImageStateManager.Instance;
+                
+                // 第一步：标记旧图片为待删除（如果存在）
+                if (oldFileId > 0 && stateManager != null)
+                {
+                    var oldImageInfo = stateManager.GetImageInfo(oldFileId);
+                    if (oldImageInfo != null)
+                    {
+                        // 标记为待删除，但不立即删除
+                        stateManager.UpdateImageStatus(oldFileId, ImageStatus.PendingDelete);
+                    }
+                }
+
+                // 第二步：处理新图片数据
+                string imageFileName = fileName;
+                if (!string.IsNullOrEmpty(selectedFilePath))
+                {
+                    imageFileName = Path.GetFileName(selectedFilePath);
+                }
+                else if (string.IsNullOrEmpty(imageFileName))
+                {
+                    imageFileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}.jpg";
+                }
+                else if (string.IsNullOrEmpty(Path.GetExtension(imageFileName)))
+                {
+                    imageFileName += ".jpg";
+                }
+                
+                // 创建ImageInfo对象，包含完整的业务信息
+                var imageInfo = new ImageInfo
+                {
+                    OriginalFileName = imageFileName,
+                    ImageData = buffByte,
+                    FileExtension = Path.GetExtension(imageFileName),
+                    FileSize = buffByte.Length,
+                    Status = ImageStatus.PendingUpload,
+                    BusinessId = GetCurrentBusinessId(),
+                    OwnerTableName = GetCurrentOwnerTableName(),
+                    RelatedField = GetCurrentRelatedField(),
+                    Cell = this.EditCell
+                };
+                
+                // 生成唯一的long型ID
+                long newFileId = GenerateUniqueLongId();
+                imageInfo.FileId = newFileId;
+                
+                valueImageWeb.ImageData = buffByte;
+                valueImageWeb.OriginalFileName = imageFileName;
+                valueImageWeb.FileId = newFileId;
+                CurrentFileIdLong = newFileId;
+                Control.Tag = imageInfo;
+                
+                // 更新显示
+                using (MemoryStream ms = new MemoryStream(buffByte))
+                {
+                    PickerImage = System.Drawing.Image.FromStream(ms, true);
+                }
+
+                // 添加到缓存
+                var cache = _cache ?? ImageCache.Instance;
+                if (cache != null)
+                {
+                    cache.AddImage(newFileId, PickerImage);
+                }
+
+                // 与图片状态管理系统集成（使用前面已声明的stateManager）
+                if (stateManager != null)
+                {
+                    stateManager.AddImage(imageInfo);
+                }
+
+                // 第三步：新图片处理成功，此时旧图片已标记为待删除，新图片为待上传
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"原子性图片替换失败: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 恢复原始状态（用于替换失败时的回滚）
+        /// </summary>
+        /// <param name="valueImageWeb">图片数据模型</param>
+        /// <param name="oldFileId">旧图片ID</param>
+        /// <param name="originalImageData">原始图片数据</param>
+        /// <param name="originalFileName">原始文件名</param>
+        private void RestoreOriginalState(SourceGrid.Cells.Models.ValueImageWeb valueImageWeb, 
+            long oldFileId, byte[] originalImageData, string originalFileName)
+        {
+            try
+            {
+                // 恢复FileId
+                valueImageWeb.FileId = oldFileId;
+                
+                // 恢复图片数据
                 if (originalImageData != null && originalImageData.Length > 0)
                 {
-                    Control.Tag = originalImageData;
-                    return valueImageWeb.FileId > 0 ? (object)valueImageWeb.FileId : valueImageWeb.OriginalFileName;
-                }
-                return null;
-            }
-            
-            if (val is System.Drawing.Image img)
-            {
-                // 处理图片对象
-                SetImageToPathAsync(img);
-                Control.Tag = null; // 清空，让第二个单元格可以选择新的图片
-            }
-            else if (val is byte[] buffByte)
-            {
-                string newHash = ImageHashHelper.GenerateHash(buffByte);
-                
-                // 只有当图片真正发生变化时才更新
-                if (!AreHashesEqual(originalHash, newHash))
-                {
-                    // 更新图片数据
-                    valueImageWeb.ImageData = buffByte;
+                    valueImageWeb.ImageData = originalImageData;
+                    valueImageWeb.CellImageBytes = originalImageData;
                     
-                    // 设置文件名
-                    if (!string.IsNullOrEmpty(selectedFilePath))
-                    {
-                        fileName = Path.GetFileName(selectedFilePath);
-                    }
-                    else if (string.IsNullOrEmpty(fileName))
-                    {
-                        fileName = $"Image_{DateTime.Now:yyyyMMddHHmmss}.jpg";
-                    }
-                    else if (string.IsNullOrEmpty(Path.GetExtension(fileName)))
-                    {
-                        fileName += ".jpg";
-                    }
-                    
-                    valueImageWeb.OriginalFileName = fileName;
-                    
-                    // 生成新的文件ID
-                    long newFileId = GenerateUniqueLongId();
-                    valueImageWeb.FileId = newFileId;
-                    CurrentFileIdLong = newFileId;
-                    
-                    // 注册到状态管理器
-                    if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
-                    {
-                        ImageStateManager.Instance.AddImage(cell, newFileId, fileName, buffByte, ImageStatus.PendingUpload);
-                    }
-                    
-                    // 更新显示
-                    using (MemoryStream ms = new MemoryStream(buffByte))
+                    // 恢复显示图片
+                    using (MemoryStream ms = new MemoryStream(originalImageData))
                     {
                         PickerImage = System.Drawing.Image.FromStream(ms, true);
                     }
-                    
-                    Control.Value = valueImageWeb.OriginalFileName;
                 }
+                else
+                {
+                    // 如果原始数据为空，清空显示
+                    valueImageWeb.ImageData = null;
+                    valueImageWeb.CellImageBytes = null;
+                    PickerImage = null;
+                }
+                
+                // 恢复文件名
+                if (!string.IsNullOrEmpty(originalFileName))
+                {
+                    valueImageWeb.OriginalFileName = originalFileName;
+                }
+                
+                // 恢复控件值
+                Control.Value = oldFileId > 0 ? oldFileId : (object)null;
+                CurrentFileIdLong = oldFileId;
+                
+                // 恢复旧图片的状态（如果之前被标记为待删除）
+                if (oldFileId > 0)
+                {
+                    var stateManager = _stateManager ?? ImageStateManager.Instance;
+                    if (stateManager != null)
+                    {
+                        var oldImageInfo = stateManager.GetImageInfo(oldFileId);
+                        if (oldImageInfo != null && oldImageInfo.Status == ImageStatus.PendingDelete)
+                        {
+                            stateManager.UpdateImageStatus(oldFileId, ImageStatus.Normal);
+                        }
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine("已恢复图片原始状态");
             }
-            else if (val is string)
+            catch (Exception ex)
             {
-                return val;
+                System.Diagnostics.Debug.WriteLine($"恢复图片原始状态失败: {ex.Message}");
             }
-            
-            return Control.Value;
         }
 
 
@@ -844,22 +1182,44 @@ namespace SourceGrid.Cells.Editors
         {
             return await Task.Run(() =>
             {
+                return EnhanceImage(image);
+            });
+        }
+
+        private System.Drawing.Image EnhanceImage(System.Drawing.Image image)
+        {
+            try
+            {
+                // 验证图片是否有效
+                if (image == null)
+                    return image;
+
+                // 检查图片是否有效
                 try
                 {
-                    if (!EnableSmartProcessing)
-                        return image;
-
-                    var bitmap = new Bitmap(image);
-
-                    // 简单的亮度调整
-                    return AdjustBrightness(bitmap, 1.1f);
+                    // 尝试访问图片属性，验证图片是否有效
+                    var width = image.Width;
+                    var height = image.Height;
                 }
-                catch (Exception ex)
+                catch
                 {
-                    System.Diagnostics.Debug.WriteLine($"图片增强失败：{ex.Message}");
+                    // 图片无效，直接返回
                     return image;
                 }
-            });
+
+                if (!EnableSmartProcessing)
+                    return image;
+
+                var bitmap = new Bitmap(image);
+
+                // 简单的亮度调整
+                return AdjustBrightness(bitmap, 1.1f);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"图片增强失败：{ex.Message}");
+                return image;
+            }
         }
 
         /// <summary>
@@ -871,8 +1231,13 @@ namespace SourceGrid.Cells.Editors
         {
             return await Task.Run(() =>
             {
-                return ImageProcessor.CompressImage(image);
+                return CompressImage(image);
             });
+        }
+
+        private byte[] CompressImage(System.Drawing.Image image)
+        {
+            return ImageProcessor.CompressImage(image);
         }
 
         /// <summary>
@@ -1012,10 +1377,8 @@ namespace SourceGrid.Cells.Editors
         /// 与图片状态管理系统集成
         /// 将图片注册到状态管理器，统一管理上传队列
         /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="imageData">图片数据</param>
-        /// <param name="fileName">文件名</param>
-        private void RegisterImageWithStateManager(long fileId, byte[] imageData, string fileName)
+        /// <param name="imageInfo">图片信息</param>
+        private void RegisterImageWithStateManager(ImageInfo imageInfo)
         {
             try
             {
@@ -1023,7 +1386,11 @@ namespace SourceGrid.Cells.Editors
                 if (this.EditCell != null && this.EditCell is SourceGrid.Cells.Cell cell)
                 {
                     // 直接调用ImageStateManager注册图片，确保与删除时使用相同的方式
-                    ImageStateManager.Instance.AddImage(cell, fileId, fileName, imageData, ImageStatus.PendingUpload);
+                    var stateManager = _stateManager ?? ImageStateManager.Instance;
+                    if (stateManager != null)
+                    {
+                        stateManager.AddImage(imageInfo);
+                    }
 
                     // 获取单元格位置信息（通过EditCellContext）
                     if (this.EditCellContext != null && !this.EditCellContext.IsEmpty())
@@ -1032,11 +1399,11 @@ namespace SourceGrid.Cells.Editors
                         var position = this.EditCellContext.Position;
                         if (grid != null && !position.IsEmpty())
                         {
-                            System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 单元格位置: Row={position.Row}, Column={position.Column}, ImageId={fileId}");
+                            System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 单元格位置: Row={position.Row}, Column={position.Column}, ImageId={imageInfo.FileId}");
                         }
                     }
 
-                    System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 图片已注册为待上传状态: {fileId}");
+                    System.Diagnostics.Debug.WriteLine($"[ImageStateManager] 图片已注册为待上传状态: {imageInfo.FileId}");
                 }
                 else
                 {

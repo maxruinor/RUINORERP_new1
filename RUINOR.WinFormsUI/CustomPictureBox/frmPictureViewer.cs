@@ -338,8 +338,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     g.TranslateTransform(-bmp.Width / 2, -bmp.Height / 2);
                     g.DrawImage(PictureBoxViewer.Image, new Point(0, 0));
                 }
-                
+
+                // 释放旧图片
+                var oldImage = PictureBoxViewer.Image;
                 PictureBoxViewer.Image = bmp;
+                oldImage?.Dispose();
                 UpdateStatusBar();
             }
         }
@@ -407,9 +410,11 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         new Rectangle(originalCropX, originalCropY, originalCropWidth, originalCropHeight),
                         GraphicsUnit.Pixel);
                 }
-                
-                // 替换图片
+
+                // 替换图片并释放旧图片
+                var oldImage = PictureBoxViewer.Image;
                 PictureBoxViewer.Image = croppedImage;
+                oldImage?.Dispose();
                 
                 // 退出裁剪模式
                 StopCrop();

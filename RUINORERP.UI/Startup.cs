@@ -513,6 +513,13 @@ namespace RUINORERP.UI
             
             // 注册防重复操作服务
             services.AddSingleton<RepeatOperationGuardService>();
+
+            // 注册图片相关服务
+            services.AddSingleton<RUINORERP.Common.BusinessImage.ImageStateManager>();
+            services.AddSingleton<RUINORERP.Common.BusinessImage.ImageCache>();
+            services.AddTransient<RUINORERP.Common.BusinessImage.IImageService, RUINORERP.UI.Network.Services.ImageService>();
+            services.AddTransient<RUINORERP.UI.Network.Services.FileManagementService>();
+            services.AddTransient<RUINORERP.UI.Network.Services.FileBusinessService>();
         }
 
 

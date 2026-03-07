@@ -119,7 +119,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj" />
-    <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj" />
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj" />
     <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
     <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />

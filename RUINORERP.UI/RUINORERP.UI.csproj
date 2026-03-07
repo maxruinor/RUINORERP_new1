@@ -2354,6 +2354,7 @@
     <Compile Include="Network\Services\FileBusinessService.cs" />
     <Compile Include="Network\Services\FileManagementService.cs" />
     <Compile Include="Network\Services\ImageCacheService.cs" />
+    <Compile Include="Network\Services\ImageService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\ClientLockManagementService.cs" />
     <Compile Include="Network\Services\LockRecoveryManager.cs" />
@@ -5112,7 +5113,7 @@
       <Name>RUINORERP.Business</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
-      <Project>{921663bd-b801-4680-bacb-58d490046b6a}</Project>
+      <Project>{de296df4-037a-3870-fd4b-eba6110b8572}</Project>
       <Name>RUINORERP.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj">

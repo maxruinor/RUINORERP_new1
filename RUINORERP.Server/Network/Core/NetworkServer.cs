@@ -166,7 +166,9 @@ namespace RUINORERP.Server.Network.Core
 
                     // 同时在控制台显示彩色错误信息
                     Console.ForegroundColor = ConsoleColor.Red;
+                    #if DEBUG
                     System.Diagnostics.Debug.WriteLine(errorMessage);
+                    #endif
                     Console.ResetColor();
 
                     throw new InvalidOperationException(errorMessage);
@@ -942,18 +944,22 @@ namespace RUINORERP.Server.Network.Core
         
             // 同时在控制台显示彩色错误信息
             Console.ForegroundColor = ConsoleColor.Red;
+            #if DEBUG
             System.Diagnostics.Debug.WriteLine(errorMessage);
+            #endif
             Console.ResetColor();
         }
 
         private void LogError(string message, Exception ex = null)
         {
             _logger?.LogError(ex, $"[NetworkServer] {message}");
+            #if DEBUG
             System.Diagnostics.Debug.WriteLine($"[NetworkServer] ERROR: {message}");
             if (ex != null)
             {
                 System.Diagnostics.Debug.WriteLine($"[NetworkServer] Exception: {ex}");
             }
+            #endif
         }
 
         /// <summary>

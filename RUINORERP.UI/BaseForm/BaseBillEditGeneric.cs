@@ -3324,29 +3324,41 @@ namespace RUINORERP.UI.BaseForm
                         await SyncTodoStatusAsync(updateData, "结案");
                     }
 
+                    // 结案凭证图片也使用队列模式，与保存/审核类似
                     if (frm.CloseCaseImage != null && ReflectionHelper.ExistPropertyName<T>("CloseCaseImagePath"))
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                         byte[] bytes = ImageHelper.ImageToByteArray(frm.CloseCaseImage);
-                        // 使用新的图片处理方式
-                        var ctrpay = Startup.GetFromFac<FileBusinessService>();
-                        try
+                        
+                        // 获取主键ID作为BusinessId
+                        long businessId = EditEntity?.GetType().GetProperty("Id")?.GetValue(EditEntity) as long? ?? 0;
+                        
+                        // 添加到图片状态管理器队列（与保存/审核相同的模式）
+                        var imageInfo = new RUINORERP.Common.BusinessImage.ImageInfo
                         {
-                            // 上传结案凭证图片
-                            var response = await ctrpay.UploadImageAsync(EditEntity as BaseEntity, "CloseCaseImage.jpg", bytes, "CloseCaseImagePath", null);
-                            if (response != null && response.IsSuccess)
-                            {
-                                EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
-                                //这里更新数据库
-                                await ctr.BaseSaveOrUpdate(EditEntity);
-                            }
-                        }
-                        catch (Exception ex)
+                            OriginalFileName = "CloseCaseImage.jpg",
+                            ImageData = bytes,
+                            FileExtension = ".jpg",
+                            FileSize = bytes.Length,
+                            BusinessId = businessId,
+                            OwnerTableName = typeof(T).Name,
+                            RelatedField = "CloseCaseImagePath",
+                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload
+                        };
+                        
+                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
+                        
+                        // 先保存单据基本信息
+                        EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
+                        await ctr.BaseSaveOrUpdate(EditEntity);
+                        
+                        // 然后同步图片（与保存时相同逻辑）
+                        var imageService = Startup.GetFromFac<RUINORERP.Common.BusinessImage.IImageService>();
+                        if (imageService != null)
                         {
-                            logger.LogError("上传结案凭证图片出错: {Message}", ex.Message);
-                            MainForm.Instance.uclog.AddLog($"上传结案凭证图片出错: {ex.Message}", UILogType.错误);
+                            var syncResults = await imageService.SyncImagesAsync();
+                            MainForm.Instance.PrintInfoLog($"结案凭证图片同步完成，共 {syncResults.Count} 个操作");
                         }
-
                     }
 
 
@@ -4215,6 +4227,7 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 保存图片到服务器。智能识别待上传图片，跳过未变更图片，提升性能
+        /// 使用原子操作防止重复处理
         /// </summary>
         /// <param name="sgd">网格定义</param>
         /// <param name="Details">明细数据列表</param>
@@ -4224,8 +4237,8 @@ namespace RUINORERP.UI.BaseForm
             bool result = true;
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
 
-            // 获取所有待上传图片
-            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
+            // 使用原子操作获取待上传图片并标记为处理中状态
+            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetAndLockPendingUploadImages();
 
             // 如果没有待上传图片，直接返回成功
             if (pendingUploadImages == null || pendingUploadImages.Count == 0)
@@ -4233,6 +4246,8 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.PrintInfoLog("没有需要上传的图片，跳过图片上传处理");
                 return true;
             }
+
+            MainForm.Instance.PrintInfoLog($"开始处理 {pendingUploadImages.Count} 张待上传图片...");
 
             // 识别包含图片的列
             foreach (C detail in Details)
@@ -4259,6 +4274,12 @@ namespace RUINORERP.UI.BaseForm
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog(ex.Message, Global.UILogType.错误);
+                // 上传失败时，恢复图片状态为待上传
+                var failedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
+                foreach (var imageId in failedImageIds)
+                {
+                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                }
             }
             return result;
         }
@@ -4266,11 +4287,14 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 优化的图片上传方法 - 只处理待上传图片，跳过未变更图片
         /// 上传图片。要返回图片ID的主键
+        /// 注意：传入的图片已标记为Processing状态，上传成功后需标记为Uploaded
         /// </summary>
         private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<RUINORERP.Common.BusinessImage.ImageInfo> pendingUploadImages)
         {
             bool rs = true;
             int processedCount = 0;
+            var successImageIds = new List<long>();
+            var failedImageIds = new List<long>();
 
             try
             {
@@ -4360,37 +4384,58 @@ namespace RUINORERP.UI.BaseForm
                                 string fileIdStr = cellFileInfo != null ? cellFileInfo.FileId.ToString() : null;
                                 UpdateCellImageDisplay(cell, imageInfo.ImageData, fileIdStr);
 
+                                // 标记为已上传状态
+                                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.Uploaded);
+                                successImageIds.Add(imageInfo.ImageId);
                                 processedCount++;
                                 MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
                             }
                             else
                             {
+                                // 上传失败，恢复为待上传状态
+                                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                                failedImageIds.Add(imageInfo.ImageId);
                                 MainForm.Instance.PrintInfoLog($"图片上传失败: {imageInfo.FileName}", Color.Red);
                                 rs = false;
                             }
                         }
                         else
                         {
+                            // 找不到对应单元格，恢复为待上传状态
+                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                            failedImageIds.Add(imageInfo.ImageId);
                             MainForm.Instance.PrintInfoLog($"找不到图片对应的单元格或明细数据: {imageInfo.ImageId}", Color.Orange);
                         }
                     }
                     catch (Exception ex)
                     {
+                        // 处理异常，恢复为待上传状态
+                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                        failedImageIds.Add(imageInfo.ImageId);
                         MainForm.Instance.logger.LogError(ex, $"处理图片 {imageInfo.ImageId} 上传失败");
                         rs = false;
                     }
                 }
 
-                // 清理已处理的待上传状态
-                if (processedCount > 0)
+                // 清理已成功处理的图片（只清理已上传状态的）
+                if (successImageIds.Count > 0)
                 {
-                    var processedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
-                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(processedImageIds);
-                    MainForm.Instance.PrintInfoLog($"成功上传 {processedCount} 张图片");
+                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(successImageIds);
+                    MainForm.Instance.PrintInfoLog($"成功上传 {successImageIds.Count} 张图片");
+                }
+                
+                if (failedImageIds.Count > 0)
+                {
+                    MainForm.Instance.PrintInfoLog($"{failedImageIds.Count} 张图片上传失败，已恢复为待上传状态", Color.Orange);
                 }
             }
             catch (Exception ex)
             {
+                // 批量处理异常，恢复所有图片为待上传状态
+                foreach (var imageInfo in pendingUploadImages)
+                {
+                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                }
                 MainForm.Instance.logger.LogError(ex, "批量上传图片异常");
                 rs = false;
             }
@@ -4401,14 +4446,23 @@ namespace RUINORERP.UI.BaseForm
         /// <summary>
         /// 删除待删除图片
         /// 要提供明细表的主键作为业务ID
+        /// 使用原子操作防止重复处理
         /// </summary>
         /// <param name="imageIdToBusinessIdMap">图片ID到业务主键ID的映射</param>
         /// <param name="ownerTableName">拥有者表名</param>
         /// <returns>删除是否成功</returns>
         protected async Task<bool> DeletePendingImagesAsync(List<RUINORERP.Common.BusinessImage.ImageInfo> extendedImageInfoList, string ownerTableName)
         {
+            if (extendedImageInfoList == null || extendedImageInfoList.Count == 0)
+            {
+                return true;
+            }
+
             try
             {
+                // 先标记为处理中状态，防止重复处理
+                var imageIds = extendedImageInfoList.Select(img => img.ImageId).ToList();
+                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.MarkImagesAsProcessing(imageIds);
 
                 // 获取文件管理服务
                 var fileService = Startup.GetFromFac<FileManagementService>();
@@ -4433,12 +4487,21 @@ namespace RUINORERP.UI.BaseForm
 
                         if (deleteResult != null && deleteResult.IsSuccess)
                         {
+                            // 标记为已删除
+                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.Deleted);
                             successCount++;
+                        }
+                        else
+                        {
+                            // 删除失败，恢复为待删除状态
+                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete);
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.logger.LogError(ex, $"删除图片 {kvp.FileName} 失败");
+                        // 删除失败，恢复为待删除状态
+                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(kvp.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete);
                     }
                 }
 
@@ -4658,7 +4721,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 修复性保存数据 支持主表的修改，子表的修改和增减
+        /// 修复性保存数据 支持主表的修改，子表的修改和增减11
         /// </summary>
         /// <summary>
         /// 特殊数据修正功能（仅管理员可用）
@@ -6309,7 +6372,7 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 var fileDeleteResponse = await ctrpay.DeleteImagesAsync(EditEntity as BaseEntity, true);
-                if (fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
+                if (fileDeleteResponse != null && fileDeleteResponse.IsSuccess && fileDeleteResponse.DeletedFileIds != null && fileDeleteResponse.DeletedFileIds.Count > 0)
                 {
                     return true;
                 }

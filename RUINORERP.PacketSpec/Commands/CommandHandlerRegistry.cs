@@ -271,8 +271,6 @@ namespace RUINORERP.PacketSpec.Commands
                 // 注册处理器
                 if (_handlersById.TryAdd(handler.HandlerId, handler))
                 {
-                    _logger?.Debug("成功注册命令处理器: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
-
                     // 建立命令ID到处理器的映射
                     UpdateCommandHandlerMap(handler, add: true);
                 }
@@ -485,8 +483,6 @@ namespace RUINORERP.PacketSpec.Commands
                 {
                     // 更新命令处理器映射
                     UpdateCommandHandlerMap(handler, add: true);
-
-                    _logger?.Debug("手动注册命令处理器成功: {HandlerName}({HandlerId})", handler.Name, handler.HandlerId);
                     return true;
                 }
 
@@ -527,7 +523,6 @@ namespace RUINORERP.PacketSpec.Commands
 
                
                 IsInitialized = false;
-                _logger?.Debug("命令处理器注册表已清理");
             }
             finally
             {
@@ -589,7 +584,6 @@ namespace RUINORERP.PacketSpec.Commands
                     // 释放处理器资源
                     handler.Dispose();
 
-                    _logger?.Debug("命令处理器已移除: {HandlerId}", handlerId);
                     return true;
                 }
 

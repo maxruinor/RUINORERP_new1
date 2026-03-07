@@ -120,9 +120,10 @@ namespace RUINORERP.Business
 
                             string msg = $"归还单:{entity.tb_prodborrowing.BorrowNo}的【{prodName}】的归还数量不能大于借出中对应行的数量，\r\n\" " +
                                 $"或存在当前借出单重复录入了归还单。";
-                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _unitOfWorkManage.RollbackTran();
+                            MessageBox.Show(msg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             _logger.Debug(msg);
+                            rs.ErrorMsg=msg;
                             return rs;
                         }
                         else

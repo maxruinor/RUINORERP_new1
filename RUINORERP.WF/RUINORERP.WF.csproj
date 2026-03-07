@@ -293,7 +293,7 @@
       <Name>RUINORERP.Business</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Common\RUINORERP.Common.csproj">
-      <Project>{ee910588-f33c-4f65-9c50-72bf3fe8d063}</Project>
+      <Project>{de296df4-037a-3870-fd4b-eba6110b8572}</Project>
       <Name>RUINORERP.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj">

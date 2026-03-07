@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Reflection;
+using System.Text;
 
 namespace RUINORERP.UI.Common
 {
@@ -94,6 +96,93 @@ namespace RUINORERP.UI.Common
             {
                 Debug.WriteLine($"  堆栈: {ex.StackTrace.Split('\n')[0]}");
             }
+        }
+
+        /// <summary>
+        /// 使用动态类型解析来查看对象属性
+        /// </summary>
+        /// <param name="obj">要查看的对象</param>
+        /// <returns>对象属性的字符串表示</returns>
+        public static string GetDynamicObjectValue(object obj)
+        {
+            if (obj == null) return "null";
+            Type type = obj.GetType();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"类型：{type.FullName}");
+            
+            // 获取所有属性（包括动态生成的）
+            foreach (PropertyInfo prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                try
+                {
+                    object value = prop.GetValue(obj);
+                    sb.AppendLine($"{prop.Name}: {value ?? "null"}");
+                }
+                catch (Exception ex)
+                {
+                    sb.AppendLine($"{prop.Name}: 无法读取 - {ex.Message}");
+                }
+            }
+            
+            // 获取所有字段（包括动态生成的）
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                try
+                {
+                    object value = field.GetValue(obj);
+                    sb.AppendLine($"{field.Name}: {value ?? "null"}");
+                }
+                catch (Exception ex)
+                {
+                    sb.AppendLine($"{field.Name}: 无法读取 - {ex.Message}");
+                }
+            }
+            
+            return sb.ToString();
+        }
+        
+        /// <summary>
+        /// 调试输出对象的所有属性和字段
+        /// </summary>
+        /// <param name="obj">要调试的对象</param>
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void DebugObject(object obj)
+        {
+            string value = GetDynamicObjectValue(obj);
+            Debug.WriteLine(value);
+            Console.WriteLine(value);
+        }
+        
+        /// <summary>
+        /// 使用动态类型访问对象属性
+        /// </summary>
+        /// <typeparam name="T">属性类型</typeparam>
+        /// <param name="obj">要访问的对象</param>
+        /// <param name="propertyName">属性名</param>
+        /// <returns>属性值</returns>
+        public static T GetPropertyValue<T>(object obj, string propertyName)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (string.IsNullOrEmpty(propertyName)) throw new ArgumentNullException(nameof(propertyName));
+            
+            Type type = obj.GetType();
+            PropertyInfo property = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
+            
+            if (property == null)
+            {
+                // 尝试查找字段
+                FieldInfo field = type.GetField(propertyName, BindingFlags.Public | BindingFlags.Instance);
+                if (field == null)
+                {
+                    throw new ArgumentException($"对象中不存在名为 {propertyName} 的属性或字段");
+                }
+                
+                object value = field.GetValue(obj);
+                return (T)Convert.ChangeType(value, typeof(T));
+            }
+            
+            object propertyValue = property.GetValue(obj);
+            return (T)Convert.ChangeType(propertyValue, typeof(T));
         }
 
         ///// <summary>

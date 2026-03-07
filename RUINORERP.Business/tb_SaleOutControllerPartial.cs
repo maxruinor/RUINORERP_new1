@@ -706,6 +706,7 @@ namespace RUINORERP.Business
                                     {
                                         _unitOfWorkManage.RollbackTran();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！";
+                                        rrs.ErrorMsg=msg;
                                         return rrs;
 
                                     }
@@ -748,6 +749,7 @@ namespace RUINORERP.Business
                                     {
                                         _unitOfWorkManage.RollbackTran();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！";
+                                        rrs.ErrorMsg=msg;
                                         return rrs;
 
                                     }
@@ -760,6 +762,7 @@ namespace RUINORERP.Business
                         {
                             _unitOfWorkManage.RollbackTran();
                             string msg = $"销售订单：{entity.tb_saleorder.SOrderNo}中，出库总交付数量不能大于订单数量！";
+                            rrs.ErrorMsg = msg;
                             return rrs;
                         }
 

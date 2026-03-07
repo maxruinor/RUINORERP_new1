@@ -29,11 +29,27 @@ namespace RUINORERP.Common.BusinessImage
         /// <summary>
         /// 同步的图片ID集合
         /// </summary>
-        public List<long> ImageIds { get; set; }
+        public List<long> ImageIds { get; set; } = new List<long>();
         /// <summary>
         /// 同步类型
         /// </summary>
         public ImageSyncType SyncType { get; set; }
+        /// <summary>
+        /// 是否成功
+        /// </summary>
+        public bool IsSuccess { get; set; } = true;
+        /// <summary>
+        /// 错误信息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 默认构造函数
+        /// </summary>
+        public ImageSyncResult()
+        {
+            ImageIds = new List<long>();
+        }
 
         /// <summary>
         /// 构造函数
@@ -44,7 +60,7 @@ namespace RUINORERP.Common.BusinessImage
         public ImageSyncResult(long businessId, List<long> imageIds, ImageSyncType syncType)
         {
             BusinessId = businessId;
-            ImageIds = imageIds;
+            ImageIds = imageIds ?? new List<long>();
             SyncType = syncType;
         }
     }

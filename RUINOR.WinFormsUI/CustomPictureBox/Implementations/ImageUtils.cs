@@ -16,23 +16,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// </summary>
         /// <param name="imageFormat">图片格式</param>
         /// <returns>扩展名（包含点号）</returns>
+        /// <exception cref="ArgumentNullException">当imageFormat为null时抛出</exception>
         public static string GetFormatExtension(ImageFormat imageFormat)
         {
-            if (imageFormat == null)
-                return ".jpg";
-
-            if (imageFormat.Equals(ImageFormat.Jpeg))
-                return ".jpg";
-            else if (imageFormat.Equals(ImageFormat.Png))
-                return ".png";
-            else if (imageFormat.Equals(ImageFormat.Gif))
-                return ".gif";
-            else if (imageFormat.Equals(ImageFormat.Bmp))
-                return ".bmp";
-            else if (imageFormat.Equals(ImageFormat.Tiff))
-                return ".tiff";
-            else
-                return ".jpg"; // 默认返回JPG格式
+            return ImageProcessingConstants.GetFormatExtension(imageFormat);
         }
 
         /// <summary>
@@ -60,29 +47,29 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             double scaleRatio = Math.Min(widthRatio, heightRatio);
 
             return new Size(
-                Math.Max(1, (int)(originalSize.Width * scaleRatio)),
-                Math.Max(1, (int)(originalSize.Height * scaleRatio)));
+                Math.Max(ImageProcessingConstants.MinimumImageSize, (int)(originalSize.Width * scaleRatio)),
+                Math.Max(ImageProcessingConstants.MinimumImageSize, (int)(originalSize.Height * scaleRatio)));
         }
 
         /// <summary>
         /// 安全地释放图片资源
         /// </summary>
-        /// <param name="image">要释放的图片</param>
+        /// <param name="image">要释放的图片（引用参数）</param>
+        /// <exception cref="System.NullReferenceException">释放时可能抛出</exception>
         public static void SafeDispose(ref Image image)
         {
             if (image != null)
             {
+                Image imageToDispose = image;
+                image = null;
+
                 try
                 {
-                    image.Dispose();
+                    imageToDispose.Dispose();
                 }
                 catch (Exception)
                 {
                     // 忽略释放过程中的异常
-                }
-                finally
-                {
-                    image = null;
                 }
             }
         }
@@ -116,9 +103,14 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// </summary>
         /// <param name="filePath">文件路径</param>
         /// <returns>图片格式</returns>
+        /// <exception cref="ArgumentNullException">当filePath为null或空时抛出</exception>
+        /// <exception cref="FileNotFoundException">当文件不存在时抛出</exception>
         public static ImageFormat GetImageFormat(string filePath)
         {
-            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            if (string.IsNullOrEmpty(filePath))
+                return ImageFormat.Jpeg;
+
+            if (!File.Exists(filePath))
                 return ImageFormat.Jpeg;
 
             try

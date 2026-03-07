@@ -17,9 +17,10 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// 构造函数
         /// </summary>
         /// <param name="imageProcessor">图片处理器实例</param>
+        /// <exception cref="ArgumentNullException">当imageProcessor为null时抛出</exception>
         public SHA256HashCalculator(ImageProcessor imageProcessor)
         {
-            _imageProcessor = imageProcessor;
+            _imageProcessor = imageProcessor ?? throw new ArgumentNullException(nameof(imageProcessor));
         }
 
         /// <summary>
@@ -27,6 +28,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// </summary>
         /// <param name="imageBytes">图片字节数据</param>
         /// <returns>计算得到的SHA256哈希值字符串</returns>
+        /// <exception cref="ArgumentNullException">当imageBytes为null或空时抛出</exception>
         public string CalculateHash(byte[] imageBytes)
         {
             if (imageBytes == null || imageBytes.Length == 0)
@@ -34,7 +36,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
                 throw new ArgumentNullException(nameof(imageBytes), "图片字节数据不能为空");
             }
 
-            using (var sha256 = SHA256.Create())
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(imageBytes);
                 return Convert.ToBase64String(hashBytes);
@@ -46,6 +48,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
         /// </summary>
         /// <param name="image">Image对象</param>
         /// <returns>计算得到的SHA256哈希值字符串</returns>
+        /// <exception cref="ArgumentNullException">当image为null时抛出</exception>
         public string CalculateHash(Image image)
         {
             if (image == null)

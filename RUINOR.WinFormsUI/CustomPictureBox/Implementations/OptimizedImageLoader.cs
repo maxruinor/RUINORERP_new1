@@ -9,18 +9,29 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
     /// 优化的图片加载器
     /// 提供高性能的图片加载功能，支持缓存和异步加载
     /// </summary>
-    public class OptimizedImageLoader
+    public class OptimizedImageLoader : IDisposable
     {
-        // 图片缓存
+        /// <summary>
+        /// 图片缓存
+        /// </summary>
         private readonly LRUImageCache _cache;
-        // 图片处理器
+
+        /// <summary>
+        /// 图片处理器
+        /// </summary>
         private readonly ImageProcessor _imageProcessor;
+
+        /// <summary>
+        /// 是否已释放
+        /// </summary>
+        private bool _disposed = false;
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="cache">图片缓存</param>
         /// <param name="imageProcessor">图片处理器</param>
+        /// <exception cref="ArgumentNullException">当参数为null时抛出</exception>
         public OptimizedImageLoader(LRUImageCache cache, ImageProcessor imageProcessor)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -57,7 +68,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception($"加载图片失败: {filePath}", ex);
+                throw new IOException($"加载图片失败: {filePath}", ex);
             }
         }
 
@@ -94,7 +105,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception($"异步加载图片失败: {filePath}", ex);
+                throw new IOException($"异步加载图片失败: {filePath}", ex);
             }
         }
 
@@ -128,7 +139,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception("从字节数组加载图片失败", ex);
+                throw new IOException("从字节数组加载图片失败", ex);
             }
         }
 
@@ -170,7 +181,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             }
             catch (Exception ex)
             {
-                throw new Exception($"加载并调整图片大小失败: {filePath}", ex);
+                throw new IOException($"加载并调整图片大小失败: {filePath}", ex);
             }
         }
 
@@ -220,8 +231,43 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             double scaleRatio = Math.Min(widthRatio, heightRatio);
 
             return new Size(
-                (int)(originalSize.Width * scaleRatio),
-                (int)(originalSize.Height * scaleRatio));
+                Math.Max(ImageProcessingConstants.MinimumImageSize, (int)(originalSize.Width * scaleRatio)),
+                Math.Max(ImageProcessingConstants.MinimumImageSize, (int)(originalSize.Height * scaleRatio)));
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// 释放资源
+        /// </summary>
+        /// <param name="disposing">是否正在释放托管资源</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 释放托管资源
+                    _cache?.Dispose();
+                    _imageProcessor?.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+
+        /// <summary>
+        /// 析构函数
+        /// </summary>
+        ~OptimizedImageLoader()
+        {
+            Dispose(false);
         }
     }
 }

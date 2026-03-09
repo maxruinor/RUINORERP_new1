@@ -185,10 +185,6 @@ namespace RUINORERP.Business.Document
         /// </summary>
         public virtual DocumentConversionType ConversionType => DocumentConversionType.DocumentGeneration;
         
-        /// <summary>
-        /// 获取菜单项显示文本（用于联动菜单显示）
-        /// 默认返回DisplayName，子类可以重写以提供更友好的显示文本
-        /// </summary>
-        public virtual string MenuItemText => DisplayName;
+
     }
 }

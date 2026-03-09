@@ -5065,10 +5065,8 @@ namespace RUINORERP.UI.BaseForm
                     {
                         continue;
                     }
-                    // 优先使用MenuItemText，如果没有则使用DisplayName
-                    string menuItemText = !string.IsNullOrEmpty(actionOption.MenuItemText)
-                        ? actionOption.MenuItemText
-                        : actionOption.DisplayName;
+                    // 使用DisplayName作为菜单项文本
+                    string menuItemText = actionOption.DisplayName;
 
                     var menuItem = new ToolStripMenuItem(menuItemText);
                     menuItem.Enabled = actionOption.IsEnabled;
@@ -5099,7 +5097,7 @@ namespace RUINORERP.UI.BaseForm
                                            i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
                         ?.GetGenericArguments()[1];
                     var convType = actionOption.ConversionType; // 保存转换类型
-                    var menuTxt = actionOption.MenuItemText; // 保存菜单项文本
+                    var menuTxt = actionOption.DisplayName; // 保存菜单项文本
                     var converterType = actionOption.ConverterType; // 保存转换器类型
                     menuItem.Click += async (sender, e) =>
                     {

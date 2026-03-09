@@ -19,7 +19,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 转换结果：更新应收应付款单的核销状态，更新预收付款单的余额
     /// 这是一个动作操作型转换，不需要生成新单据，而是执行业务操作
     /// </summary>
-    [System.ComponentModel.Description("预收付款单抵扣应收款")]
+    [System.ComponentModel.Description("从预收（付）款单联动去抵扣应收（付）款单")]
     public class PreReceivedPaymentToReceivablePayableOffsetConverter : DocumentConverterBase<tb_FM_PreReceivedPayment, tb_FM_ReceivablePayable>
     {
         private readonly ILogger<PreReceivedPaymentToReceivablePayableOffsetConverter> _logger;
@@ -54,10 +54,7 @@ namespace RUINORERP.Business.Document.Converters
         /// </summary>
         public override DocumentConversionType ConversionType => DocumentConversionType.ActionOperation;
 
-        /// <summary>
-        /// 菜单项显示文本（重写基类，用于联动菜单显示）
-        /// </summary>
-        public override string MenuItemText => "抵扣应收款";
+
 
         /// <summary>
         /// 执行单据转换 - 调用业务层核心抵扣逻辑

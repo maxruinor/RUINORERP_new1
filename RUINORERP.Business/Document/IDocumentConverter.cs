@@ -69,12 +69,6 @@ namespace RUINORERP.Business.Document
         /// 获取转换操作类型（单据生成型或动作操作型）
         /// </summary>
         DocumentConversionType ConversionType { get; }
-        
-        /// <summary>
-        /// 获取菜单项显示文本（用于联动菜单显示）
-        /// 如果重写此属性，优先使用此值而不是DisplayName
-        /// </summary>
-        string MenuItemText { get; }
     }
 
     /// <summary>

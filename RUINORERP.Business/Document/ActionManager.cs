@@ -176,7 +176,6 @@ namespace RUINORERP.Business.Document
             var result = conversions.ConvertAll(c => new ActionOption
             {
                 DisplayName = c.DisplayName,
-                MenuItemText = c.MenuItemText, // 添加菜单项显示文本
                 ActionType = "Convert",
                 TargetType = c.TargetDocumentType,
                 SourceType = c.SourceDocumentType,
@@ -333,11 +332,7 @@ namespace RUINORERP.Business.Document
         /// </summary>
         public string DisplayName { get; set; }
 
-        /// <summary>
-        /// 菜单项显示文本（用于联动菜单显示）
-        /// 优先使用此值而不是DisplayName
-        /// </summary>
-        public string MenuItemText { get; set; }
+
 
         /// <summary>
         /// 操作类型

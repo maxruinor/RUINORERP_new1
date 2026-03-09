@@ -295,13 +295,11 @@ namespace RUINORERP.Business.Document
                             var sourceDisplayName = GetEntityDisplayName(sourceType);
                             var targetDisplayName = GetEntityDisplayName(targetType);
 
-                            // 尝试通过元信息获取 ConversionType 和 MenuItemText
+                            // 尝试通过元信息获取 ConversionType
                             var conversionType = DocumentConversionType.DocumentGeneration;
-                            var menuItemText = $"转换为{targetDisplayName}";
                             if (meta != null)
                             {
                                 conversionType = meta.ConversionType;
-                                menuItemText = meta.MenuItemText;
                             }
                             else
                             {
@@ -315,17 +313,6 @@ namespace RUINORERP.Business.Document
                                         if (conversionTypeValue != null)
                                         {
                                             conversionType = (DocumentConversionType)conversionTypeValue;
-                                        }
-                                    }
-
-                                    // 使用反射获取MenuItemText属性
-                                    var menuItemTextProperty = converterType.GetProperty("MenuItemText");
-                                    if (menuItemTextProperty != null)
-                                    {
-                                        var menuItemTextValue = menuItemTextProperty.GetValue(converter);
-                                        if (menuItemTextValue != null)
-                                        {
-                                            menuItemText = menuItemTextValue.ToString();
                                         }
                                     }
                                 }
@@ -343,8 +330,7 @@ namespace RUINORERP.Business.Document
                                 TargetDocumentDisplayName = targetDisplayName,
                                 ConverterType = converterType,
                                 DisplayName = $"转换为{targetDisplayName}",
-                                ConversionType = conversionType,
-                                MenuItemText = menuItemText
+                                ConversionType = conversionType
                             });
                         }
                     }
@@ -384,13 +370,11 @@ namespace RUINORERP.Business.Document
                         var sourceDisplayName = GetEntityDisplayName(sourceType, source);
                         var targetDisplayName = GetEntityDisplayName(targetType, source);
 
-                        // 通过元信息获取 ConversionType 和 MenuItemText
+                        // 通过元信息获取 ConversionType
                         var conversionType = DocumentConversionType.DocumentGeneration;
-                        var menuItemText = $"转换为{targetDisplayName}";
                         if (meta != null)
                         {
                             conversionType = meta.ConversionType;
-                            menuItemText = meta.MenuItemText;
                         }
                         else
                         {
@@ -404,17 +388,6 @@ namespace RUINORERP.Business.Document
                                     if (conversionTypeValue != null)
                                     {
                                         conversionType = (DocumentConversionType)conversionTypeValue;
-                                    }
-                                }
-
-                                // 使用反射获取MenuItemText属性
-                                var menuItemTextProperty = converterType.GetProperty("MenuItemText");
-                                if (menuItemTextProperty != null)
-                                {
-                                    var menuItemTextValue = menuItemTextProperty.GetValue(converter);
-                                    if (menuItemTextValue != null)
-                                    {
-                                        menuItemText = menuItemTextValue.ToString();
                                     }
                                 }
                             }
@@ -432,8 +405,7 @@ namespace RUINORERP.Business.Document
                             TargetDocumentDisplayName = targetDisplayName,
                             ConverterType = converterType,
                             DisplayName = $"转换为{targetDisplayName}",
-                            ConversionType = conversionType,
-                            MenuItemText = menuItemText
+                            ConversionType = conversionType
                         });
                     }
                 }
@@ -610,10 +582,7 @@ namespace RUINORERP.Business.Document
         /// </summary>
         public DocumentConversionType ConversionType { get; set; } = DocumentConversionType.DocumentGeneration;
 
-        /// <summary>
-        /// 菜单项显示文本（用于联动菜单显示）
-        /// </summary>
-        public string MenuItemText { get; set; }
+
     }
 
 }

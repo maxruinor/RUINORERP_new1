@@ -2253,6 +2253,24 @@ namespace RUINORERP.Business
             return keyValuePairs;
         }
 
+        /// <summary>
+        /// 查找可抵扣的应收应付款单
+        /// 用于预收付款单抵扣应收应付款单的场景
+        /// </summary>
+        /// <param name="prePayment">预收付款单</param>
+        /// <returns>可抵扣的应收应付款单列表</returns>
+        public async Task<List<tb_FM_ReceivablePayable>> FindAvailableReceivablesForOffset(tb_FM_PreReceivedPayment prePayment)
+        {
+            var receivables = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_ReceivablePayable>()
+                         .Where(c => c.CustomerVendor_ID == prePayment.CustomerVendor_ID)
+                         .Where(c => c.ARAPStatus == (int)ARAPStatus.待支付 || c.ARAPStatus == (int)ARAPStatus.部分支付)
+                         .Where(c => c.Currency_ID == prePayment.Currency_ID)
+                         .Where(c => c.ReceivePaymentType == prePayment.ReceivePaymentType)
+                         .Where(p => p.LocalBalanceAmount != 0)
+                         .OrderBy(c => c.BusinessDate)
+                         .ToListAsync();
+            return receivables;
+        }
 
 
         /// <summary>

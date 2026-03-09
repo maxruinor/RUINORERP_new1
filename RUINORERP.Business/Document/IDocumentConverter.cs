@@ -64,6 +64,17 @@ namespace RUINORERP.Business.Document
         /// 获取转换操作的显示名称
         /// </summary>
         string DisplayName { get; }
+        
+        /// <summary>
+        /// 获取转换操作类型（单据生成型或动作操作型）
+        /// </summary>
+        DocumentConversionType ConversionType { get; }
+        
+        /// <summary>
+        /// 获取菜单项显示文本（用于联动菜单显示）
+        /// 如果重写此属性，优先使用此值而不是DisplayName
+        /// </summary>
+        string MenuItemText { get; }
     }
 
     /// <summary>
@@ -176,5 +187,23 @@ namespace RUINORERP.Business.Document
         /// 是否有提示信息
         /// </summary>
         public bool HasMessages => WarningMessages.Count > 0 || InfoMessages.Count > 0;
+    }
+    
+    /// <summary>
+    /// 单据转换操作类型1
+    /// </summary>
+    public enum DocumentConversionType
+    {
+        /// <summary>
+        /// 单据生成型：生成新的目标单据，需要打开编辑窗体
+        /// 例如：预收付款单 → 收付款单，销售订单 → 销售出库单
+        /// </summary>
+        DocumentGeneration = 0,
+        
+        /// <summary>
+        /// 动作操作型：执行特定业务操作，不需要打开新窗体
+        /// 例如：预收付款单 → 抵扣应收款，应收应付单 → 使用预收付款抵扣
+        /// </summary>
+        ActionOperation = 1
     }
 }

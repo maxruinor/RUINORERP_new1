@@ -16,8 +16,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Web.UI;
-using System.Windows.Forms;
+// Removed UI framework dependencies to keep the library server-friendly
 
 namespace RUINORERP.Business.Document
 {
@@ -152,6 +151,20 @@ namespace RUINORERP.Business.Document
         }
 
         /// <summary>
+        /// 验证动作操作转换条件
+        /// </summary>
+        /// <typeparam name="TSource">源单据类型</typeparam>
+        /// <typeparam name="TTarget">目标单据类型</typeparam>
+        /// <param name="source">源单据实例</param>
+        /// <returns>验证结果</returns>
+        public async Task<ValidationResult> ValidateConversionAsync<TSource, TTarget>(TSource source)
+            where TSource : BaseEntity
+            where TTarget : BaseEntity, new()
+        {
+            return await _converterFactory.ValidateConversionAsync<TSource, TTarget>(source);
+        }
+
+        /// <summary>
         /// 获取可用的联动操作列表
         /// </summary>
         /// <typeparam name="TSource">源单据类型</typeparam>
@@ -163,12 +176,14 @@ namespace RUINORERP.Business.Document
             var result = conversions.ConvertAll(c => new ActionOption
             {
                 DisplayName = c.DisplayName,
+                MenuItemText = c.MenuItemText, // 添加菜单项显示文本
                 ActionType = "Convert",
                 TargetType = c.TargetDocumentType,
                 SourceType = c.SourceDocumentType,
                 SourceDocumentDisplayName = c.SourceDocumentDisplayName,
                 TargetDocumentDisplayName = c.TargetDocumentDisplayName,
                 ConverterType = c.ConverterType,
+                ConversionType = c.ConversionType, // 添加转换操作类型
                 IsVisible = true, // 默认可见，可根据权限设置
                 IsEnabled = true  // 默认可用，可根据权限设置
             });
@@ -319,6 +334,12 @@ namespace RUINORERP.Business.Document
         public string DisplayName { get; set; }
 
         /// <summary>
+        /// 菜单项显示文本（用于联动菜单显示）
+        /// 优先使用此值而不是DisplayName
+        /// </summary>
+        public string MenuItemText { get; set; }
+
+        /// <summary>
         /// 操作类型
         /// </summary>
         public string ActionType { get; set; }
@@ -347,6 +368,11 @@ namespace RUINORERP.Business.Document
         /// 转换器类型
         /// </summary>
         public Type ConverterType { get; set; }
+
+        /// <summary>
+        /// 转换操作类型（单据生成型或动作操作型）
+        /// </summary>
+        public DocumentConversionType ConversionType { get; set; } = DocumentConversionType.DocumentGeneration;
 
         /// <summary>
         /// 操作可见性，用于权限控制

@@ -15,7 +15,7 @@ namespace RUINORERP.Business.Document
     /// </summary>
     /// <typeparam name="TSource">源单据类型</typeparam>
     /// <typeparam name="TTarget">目标单据类型</typeparam>
-    public abstract class DocumentConverterBase<TSource, TTarget> : IDocumentConverter<TSource, TTarget>
+    public abstract class DocumentConverterBase<TSource, TTarget> : IDocumentConverter<TSource, TTarget>, IConverterMeta
         where TSource : BaseEntity
         where TTarget : BaseEntity, new()
     {
@@ -178,5 +178,17 @@ namespace RUINORERP.Business.Document
                 }
             }
         }
+        
+        /// <summary>
+        /// 获取转换操作类型（单据生成型或动作操作型）
+        /// 默认为单据生成型
+        /// </summary>
+        public virtual DocumentConversionType ConversionType => DocumentConversionType.DocumentGeneration;
+        
+        /// <summary>
+        /// 获取菜单项显示文本（用于联动菜单显示）
+        /// 默认返回DisplayName，子类可以重写以提供更友好的显示文本
+        /// </summary>
+        public virtual string MenuItemText => DisplayName;
     }
 }

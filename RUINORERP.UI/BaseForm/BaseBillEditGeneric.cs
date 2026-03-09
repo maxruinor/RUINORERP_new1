@@ -106,6 +106,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
 using RUINORERP.UI.BaseForm.Helpers;
 using RUINORERP.Common.BusinessImage;
+using RUINORERP.Business.Document;
 
 namespace RUINORERP.UI.BaseForm
 {
@@ -158,8 +159,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
-
-
+ 
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
             List<UControls.ContextMenuController> list = new List<UControls.ContextMenuController>();
@@ -5065,29 +5065,48 @@ namespace RUINORERP.UI.BaseForm
                     {
                         continue;
                     }
-                    // 使用ActionOption中的DisplayName，它已经包含了从Description特性获取的显示名称
-                    string displayName = actionOption.DisplayName;
+                    // 优先使用MenuItemText，如果没有则使用DisplayName
+                    string menuItemText = !string.IsNullOrEmpty(actionOption.MenuItemText)
+                        ? actionOption.MenuItemText
+                        : actionOption.DisplayName;
 
-                    var menuItem = new ToolStripMenuItem(displayName);
+                    var menuItem = new ToolStripMenuItem(menuItemText);
                     menuItem.Enabled = actionOption.IsEnabled;
+
+                    // 根据转换操作类型设置不同的图标或样式
+                    if (actionOption.ConversionType == DocumentConversionType.ActionOperation)
+                    {
+                        // 动作操作型转换使用不同的图标标识
+                        menuItem.Font = new System.Drawing.Font(menuItem.Font, System.Drawing.FontStyle.Bold);
+                    }
 
                     // 根据目标单据类型设置图标
                     //menuItem.Image = GetDocumentTypeIcon(actionOption.TargetType);
 
-                    // 添加工具提示，使用实体元数据服务获取的显示名称
-                    menuItem.ToolTipText = $"★ 将当前【{actionOption.SourceDocumentDisplayName}】转换为【{actionOption.TargetDocumentDisplayName}】";
+                    // 添加工具提示，根据转换类型显示不同的提示
+                    if (actionOption.ConversionType == DocumentConversionType.DocumentGeneration)
+                    {
+                        menuItem.ToolTipText = $"★ 将当前【{actionOption.SourceDocumentDisplayName}】转换为【{actionOption.TargetDocumentDisplayName}】";
+                    }
+                    else
+                    {
+                        menuItem.ToolTipText = $"★ 执行【{menuItemText}】操作（动作操作型）";
+                    }
 
                     // 保存转换选项的引用，避免闭包问题
                     var targetType = actionOption.ConverterType.GetInterfaces()
                         .FirstOrDefault(i => i.IsGenericType &&
                                            i.GetGenericTypeDefinition() == typeof(RUINORERP.Business.Document.IDocumentConverter<,>))
                         ?.GetGenericArguments()[1];
+                    var convType = actionOption.ConversionType; // 保存转换类型
+                    var menuTxt = actionOption.MenuItemText; // 保存菜单项文本
+                    var converterType = actionOption.ConverterType; // 保存转换器类型
                     menuItem.Click += async (sender, e) =>
                     {
                         try
                         {
                             // 在后台线程执行转换，避免UI卡顿
-                            await PerformDocumentConversionAsync(targetType);
+                            await PerformDocumentConversionAsync(targetType, convType, menuTxt, converterType);
                         }
                         catch (Exception ex)
                         {
@@ -5098,7 +5117,7 @@ namespace RUINORERP.UI.BaseForm
                     menuItems.Add(menuItem);
 
                     // 记录转换选项加载日志
-                    MainForm.Instance.uclog.AddLog($"已加载转换选项: {displayName}", Global.UILogType.普通消息);
+                    MainForm.Instance.uclog.AddLog($"已加载转换选项: {menuItemText}", Global.UILogType.普通消息);
                 }
             }
             catch (Exception ex)
@@ -5164,7 +5183,10 @@ namespace RUINORERP.UI.BaseForm
         /// 执行单据转换操作
         /// </summary>
         /// <param name="targetType">目标单据类型</param>
-        private async Task PerformDocumentConversionAsync(Type targetType)
+        /// <param name="conversionType">转换操作类型（单据生成型或动作操作型）</param>
+        /// <param name="menuItemText">菜单项显示文本</param>
+        /// <param name="converterType">转换器类型</param>
+        private async Task PerformDocumentConversionAsync(Type targetType, DocumentConversionType conversionType = DocumentConversionType.DocumentGeneration, string menuItemText = null, Type converterType = null)
         {
             if (EditEntity == null)
             {
@@ -5194,7 +5216,14 @@ namespace RUINORERP.UI.BaseForm
                     throw new InvalidOperationException("无法获取ActionManager服务实例");
                 }
 
-                // 准备转换选项
+                // 动作操作型转换：直接执行业务操作，不需要打开新窗体
+                if (conversionType == DocumentConversionType.ActionOperation)
+                {
+                    await PerformActionOperationAsync(actionManager, menuItemText, sourceDisplayName, targetDisplayName, converterType);
+                    return;
+                }
+
+                // 单据生成型转换：生成新的目标单据，需要打开编辑窗体
                 var options = new RUINORERP.Business.Document.ActionOptions
                 {
                     UseTransaction = true,
@@ -5331,6 +5360,91 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
+        /// <summary>
+        /// 执行动作操作型转换
+        /// 不需要打开新窗体，直接执行业务操作
+        /// </summary>
+        /// <param name="actionManager">ActionManager实例</param>
+        /// <param name="menuItemText">菜单项显示文本</param>
+        /// <param name="sourceDisplayName">源单据显示名称</param>
+        /// <param name="targetDisplayName">目标单据显示名称</param>
+        /// <param name="converterType">转换器类型</param>
+        private async Task PerformActionOperationAsync(RUINORERP.Business.Document.ActionManager actionManager, string menuItemText, string sourceDisplayName, string targetDisplayName, Type converterType)
+        {
+            try
+            {
+                if (converterType == null)
+                {
+                    throw new InvalidOperationException("转换器类型不能为空");
+                }
+
+                // 获取转换器实例
+                var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
+                var converter = converterFactory.GetConverter(typeof(T), converterType);
+                if (converter == null)
+                {
+                    throw new InvalidOperationException($"无法获取转换器实例：{converterType.Name}");
+                }
+
+                // 验证转换条件（使用反射调用）
+                var validateMethod = converter.GetType().GetMethod("ValidateConversionAsync");
+                if (validateMethod == null)
+                {
+                    throw new InvalidOperationException($"转换器 {converterType.Name} 没有找到 ValidateConversionAsync 方法");
+                }
+                var validationTask = (Task<RUINORERP.Business.Document.ValidationResult>)validateMethod.Invoke(converter, new object[] { EditEntity });
+                var validationResult = await validationTask;
+                if (!validationResult.CanConvert)
+                {
+                    // 在UI线程显示错误消息
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        string errorMsg = validationResult.ErrorMessage ?? "操作失败";
+                        if (validationResult.HasMessages)
+                        {
+                            errorMsg += Environment.NewLine + validationResult.GetFormattedMessages();
+                        }
+                        MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    });
+                    return;
+                }
+
+                // 显示确认对话框和操作信息
+                bool userConfirmed = false;
+                this.Invoke((MethodInvoker)delegate
+                {
+                    string confirmMessage = $"确定要执行【{menuItemText}】操作吗？";
+                    if (validationResult.HasMessages)
+                    {
+                        confirmMessage += Environment.NewLine + Environment.NewLine + validationResult.GetFormattedMessages();
+                    }
+
+                    var result = MessageBox.Show(confirmMessage, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    userConfirmed = (result == DialogResult.Yes);
+                });
+
+                if (!userConfirmed)
+                {
+                    return;
+                }
+
+                
+                    // 其他类型的动作操作
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        MessageBox.Show($"该操作类型【{converterType.Name}】尚未实现，请联系系统管理员。", "功能开发中", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    });
+                
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"执行动作操作失败：{menuItemText}，错误：{ex.Message}", Global.UILogType.错误);
+                this.Invoke((MethodInvoker)delegate
+                {
+                    MessageBox.Show($"执行操作失败：{ex.Message}", "操作错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                });
+            }
+        }
 
 
         /// <summary>

@@ -335,12 +335,13 @@ namespace RUINORERP.Business
                 {
                     #region 生成预付款单
 
-                    // 获取付款方式信息
-                    if (_appContext.PaymentMethodOfPeriod == null)
+                    // 付款状态验证
+                    var validationError = ValidateOrderPaymentStatus((object)entity.Paytype_ID, (object)entity.PayStatus);
+                    if (validationError != null)
                     {
-                        _unitOfWorkManage.RollbackTran();
                         rmrs.Succeeded = false;
-                        rmrs.ErrorMsg = $"请先配置付款方式信息！";
+                        _unitOfWorkManage.RollbackTran();
+                        rmrs.ErrorMsg = validationError;
                         if (_appContext.SysConfig.ShowDebugInfo)
                         {
                             _logger.Debug(rmrs.ErrorMsg);
@@ -348,38 +349,6 @@ namespace RUINORERP.Business
                         return rmrs;
                     }
 
-
-                    //如果是账期必须是未付款
-                    if (entity.Paytype_ID == _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        if (entity.PayStatus != (int)PayStatus.未付款)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"付款方式为账期的订单必须是未付款。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.Debug(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
-
-                    if (entity.PayStatus == (int)PayStatus.未付款)
-                    {
-
-                        if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                        {
-                            rmrs.Succeeded = false;
-                            _unitOfWorkManage.RollbackTran();
-                            rmrs.ErrorMsg = $"未付款订单的付款方式必须是账期。";
-                            if (_appContext.SysConfig.ShowDebugInfo)
-                            {
-                                _logger.Debug(rmrs.ErrorMsg);
-                            }
-                            return rmrs;
-                        }
-                    }
                     // 外币相关处理 正确是 外币时一定要有汇率
                     decimal exchangeRate = 1; // 获取销售订单的汇率
                     if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)

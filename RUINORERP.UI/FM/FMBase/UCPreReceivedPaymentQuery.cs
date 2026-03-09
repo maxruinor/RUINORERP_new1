@@ -93,6 +93,12 @@ namespace RUINORERP.UI.FM
             base.LimitQueryConditions = lambda;
         }
 
+
+
+        /// <summary>
+        /// 1
+        /// </summary>
+        /// <returns></returns>
         public override List<ContextMenuController> AddContextMenu()
         {
 

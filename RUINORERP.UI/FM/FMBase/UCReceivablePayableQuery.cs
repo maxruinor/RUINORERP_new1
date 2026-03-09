@@ -112,7 +112,7 @@ namespace RUINORERP.UI.FM
 
 
 
-        #region 转为收付款单
+        #region 转为收付款单1
         public override List<ContextMenuController> AddContextMenu()
         {
             //List<EventHandler> ContextClickList = new List<EventHandler>();
@@ -614,7 +614,7 @@ namespace RUINORERP.UI.FM
 
 
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
-        //
+        //11
         private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
         {
             //1,查找能抵扣的待核销或部分核销的预收付款单数据集合

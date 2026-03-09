@@ -2154,7 +2154,7 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 查找可抵扣的预收付款单
+        /// 查找可抵扣的预收付款单11
         /// </summary>
         /// <param name="receivablePayable"></param>
         /// <returns></returns>

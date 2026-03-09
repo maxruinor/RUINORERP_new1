@@ -277,6 +277,65 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 验证订单的付款状态和付款方式是否匹配
+        /// </summary>
+        /// <param name="paytypeId">付款方式ID（支持long?和int?类型）</param>
+        /// <param name="payStatus">付款状态（支持int?和int类型）</param>
+        /// <returns>验证结果，成功返回null，失败返回错误信息</returns>
+        protected string ValidateOrderPaymentStatus(object paytypeId, object payStatus)
+        {
+            // 检查账期配置
+            if (_appContext.PaymentMethodOfPeriod == null)
+            {
+                return "请先配置付款方式信息！";
+            }
+
+            // 将paytypeId转换为long类型进行比较
+            long? paytypeIdValue = null;
+            if (paytypeId != null)
+            {
+                if (paytypeId.GetType() == typeof(long?) || paytypeId.GetType() == typeof(long))
+                {
+                    paytypeIdValue = Convert.ToInt64(paytypeId);
+                }
+                else if (paytypeId.GetType() == typeof(int?) || paytypeId.GetType() == typeof(int))
+                {
+                    paytypeIdValue = Convert.ToInt64(paytypeId);
+                }
+            }
+
+            // 将payStatus转换为int类型进行比较
+            int payStatusValue = 0;
+            if (payStatus != null)
+            {
+                if (payStatus.GetType() == typeof(int?) || payStatus.GetType() == typeof(int))
+                {
+                    payStatusValue = Convert.ToInt32(payStatus);
+                }
+            }
+
+            // 账期订单必须是未付款
+            if (paytypeIdValue == _appContext.PaymentMethodOfPeriod.Paytype_ID)
+            {
+                if (payStatusValue != (int)PayStatus.未付款)
+                {
+                    return "付款方式为账期的订单必须是未付款。";
+                }
+            }
+
+            // 未付款订单的付款方式必须是账期
+            if (payStatusValue == (int)PayStatus.未付款)
+            {
+                if (paytypeIdValue != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    return "未付款订单的付款方式必须是账期。";
+                }
+            }
+
+            return null; // 验证通过
+        }
+
 
 
 

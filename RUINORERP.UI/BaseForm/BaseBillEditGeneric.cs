@@ -3347,18 +3347,13 @@ namespace RUINORERP.UI.BaseForm
                         };
                         
                         RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
-                        
+
                         // 先保存单据基本信息
                         EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
                         await ctr.BaseSaveOrUpdate(EditEntity);
-                        
-                        // 然后同步图片（与保存时相同逻辑）
-                        var imageService = Startup.GetFromFac<RUINORERP.Common.BusinessImage.IImageService>();
-                        if (imageService != null)
-                        {
-                            var syncResults = await imageService.SyncImagesAsync();
-                            MainForm.Instance.PrintInfoLog($"结案凭证图片同步完成，共 {syncResults.Count} 个操作");
-                        }
+
+                        // 重构后：移除ImageService的同步逻辑
+                        // 图片同步已整合到FileBusinessService中
                     }
 
 

@@ -449,7 +449,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 通过销售订单生成预收款单
+        /// 通过销售订单生成预收款单1
         /// </summary>
         /// <param name="entity"></param>
         ///<param name="PrepaidAmount">手动再次预付款时的金额，</param>

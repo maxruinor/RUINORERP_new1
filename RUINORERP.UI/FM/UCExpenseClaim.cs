@@ -59,12 +59,9 @@ namespace RUINORERP.UI.FM
     [MenuAttrAssemblyInfo("费用报销单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.费用报销, BizType.费用报销单)]
     public partial class UCExpenseClaim : BaseBillEditGeneric<tb_FM_ExpenseClaim, tb_FM_ExpenseClaimDetail>, IToolStripMenuInfoAuth
     {
-        private readonly IImageService _imageService;
-
         public UCExpenseClaim()
         {
             InitializeComponent();
-            _imageService = Startup.GetFromFac<IImageService>();
         }
 
         /// <summary>
@@ -514,7 +511,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-       
+
         /// <summary>
         /// 获取报销凭证图片列的索引
         /// </summary>
@@ -650,7 +647,7 @@ namespace RUINORERP.UI.FM
                 // 关键：设置业务ID，即使没有图片也要设置
                 valueImageWeb.BusinessId = businessId;
                 valueImageWeb.OwnerTableName = OwnerTableName;
-                
+
                 // 如果提供了 RelatedField，也需要设置
                 if (!string.IsNullOrEmpty(relatedField))
                 {
@@ -888,142 +885,164 @@ namespace RUINORERP.UI.FM
 
         List<tb_FM_ExpenseClaimDetail> details = new List<tb_FM_ExpenseClaimDetail>();
 
-        //
         /// <summary>
-        /// 同步图片（如果需要）1
-        /// 重写基类方法，实现费用报销单的图片同步逻辑
+        /// 同步图片（如果需要）
+        /// 功能：处理ImageStateManager中的上传队列和删除队列
+        /// 1. 遍历待上传图片列表，调用FileBusinessService上传
+        /// 2. 遍历待删除图片列表，调用FileBusinessService删除
         /// </summary>
-        /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
+        /// <returns>同步结果列表</returns>
         protected override async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
-            if (EditEntity == null)
+            var results = new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+            var fileBusinessService = Startup.GetFromFac<FileBusinessService>();
+
+            try
             {
-                return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
-            }
-
-            // 使用IImageService同步图片
-            if (_imageService != null)
-            {
-                var syncResults = await _imageService.SyncImagesAsync();
-                MainForm.Instance.PrintInfoLog($"成功同步 {syncResults.Count} 个图片操作。");
-
-                // 简化的同步后处理：直接根据状态管理器更新业务表
-                var allImages = ImageStateManager.Instance.GetAllImages();
-                foreach (var imageInfo in allImages)
-                {
-                    // 找到对应业务ID的明细记录
-                    var detail = EditEntity.tb_FM_ExpenseClaimDetails.FirstOrDefault(d => d.ClaimSubID == imageInfo.BusinessId);
-                    if (detail != null)
-                    {
-                        if (imageInfo.Status == ImageStatus.Uploaded)
-                        {
-                            // 已上传图片，更新图片ID到业务表
-                            detail.EvidenceImagePath = imageInfo.FileId.ToString();
-                            detail.SetPropertyValue("EvidenceImagePath", detail.EvidenceImagePath);
-                        }
-                        else if (imageInfo.Status == ImageStatus.Deleted)
-                        {
-                            // 已删除图片，清空对应业务表的图片字段
-                            detail.EvidenceImagePath = null;
-                            detail.SetPropertyValue("EvidenceImagePath", null);
-                        }
-                    }
-                }
-
-                // 如果有图片同步结果，重新保存明细数据以更新图片字段
-                if (syncResults.Any())
-                {
-                    var saveDetailResult = await base.Save(EditEntity);
-                    if (saveDetailResult.Succeeded)
-                    {
-                        MainForm.Instance.PrintInfoLog("明细图片字段更新成功。");
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("更新明细图片字段失败。");
-                    }
-                }
-
-                return syncResults;
-            }
-            else
-            {
-                // 回退到原有方式
-                // 使用原子操作获取待删除和待上传图片，防止重复处理
-                var pendingDeleteImages = ImageStateManager.Instance.GetAndLockPendingDeleteImages();
-                var pendingUploadImages = ImageStateManager.Instance.GetAndLockPendingUploadImages();
-
-                // 处理待删除的图片
+                // 1. 处理待删除图片队列（优先处理删除）
+                var pendingDeleteImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetAndLockPendingDeleteImages();
                 if (pendingDeleteImages.Count > 0)
                 {
-                    // 调用基类的删除方法
-                    bool deleteSuccess = await base.DeletePendingImagesAsync(pendingDeleteImages, typeof(tb_FM_ExpenseClaim).Name);
-                    if (deleteSuccess)
+                    // 按业务ID分组
+                    var groupedDeletes = pendingDeleteImages.GroupBy(img => img.BusinessId);
+                    foreach (var group in groupedDeletes)
                     {
-                        MainForm.Instance.PrintInfoLog($"成功删除 {pendingDeleteImages.Count} 张待删除图片。");
-                        // 清理已删除的图片状态
-                        var deletedImageIds = pendingDeleteImages.Select(img => img.ImageId).ToList();
-                        ImageStateManager.Instance.RemoveProcessedImages(deletedImageIds);
-                    }
-                    else
-                    {
-                        MainForm.Instance.uclog.AddLog("删除待删除图片失败。");
-                        // 删除失败，恢复状态
-                        foreach (var img in pendingDeleteImages)
-                        {
-                            ImageStateManager.Instance.UpdateImageStatus(img.ImageId, ImageStatus.PendingDelete);
-                        }
-                    }
-                }
+                        long businessId = group.Key;
+                        var ownerTableName = group.First()?.OwnerTableName ?? typeof(tb_FM_ExpenseClaim).Name;
+                        var fileIds = group.Select(img => img.FileId).Where(id => id > 0).ToList();
 
-                // 处理明细凭证图片上传（使用文件服务器方式）
-                bindingSourceSub.EndEdit();
-                List<tb_FM_ExpenseClaimDetail> detailentity = bindingSourceSub.DataSource as List<tb_FM_ExpenseClaimDetail>;
-                if (detailentity != null)
-                {
-                    var details = detailentity.Where(t => t.SingleAmount != 0).ToList();
-                    if (details.Count > 0)
-                    {
-                        bool uploadImg = await base.SaveFileToServer(sgd, details);
-                        if (uploadImg)
+                        if (fileIds.Count > 0 && businessId > 0)
                         {
-                            // 保存到数据库。因为明细中的图片路径对应的字段数据更新为id了
-                            // 重新保存明细数据，确保图片ID已更新
-                            var saveDetailResult = await base.Save(EditEntity);
-                            if (saveDetailResult.Succeeded)
+                            try
                             {
-                                MainForm.Instance.PrintInfoLog($"明细凭证图片保存成功。");
-                                // 清理已上传的图片状态
-                                var uploadedImageIds = pendingUploadImages.Select(img => img.ImageId).ToList();
-                                ImageStateManager.Instance.RemoveProcessedImages(uploadedImageIds);
-                            }
-                            else
-                            {
-                                MainForm.Instance.uclog.AddLog("更新明细图片ID失败。");
-                                // 上传失败，恢复状态
-                                foreach (var imageId in pendingUploadImages.Select(img => img.ImageId))
+                                var deleteResponse = await fileBusinessService.DeleteImagesByIdsAsync(
+                                    businessId,
+                                    ownerTableName,
+                                    fileIds,
+                                    physicalDelete: false);
+
+                                var syncResult = new RUINORERP.Common.BusinessImage.ImageSyncResult
                                 {
-                                    ImageStateManager.Instance.UpdateImageStatus(imageId, ImageStatus.PendingUpload);
+                                    BusinessId = businessId,
+                                    ImageIds = fileIds,
+                                    SyncType = RUINORERP.Common.BusinessImage.ImageSyncType.Delete,
+                                    IsSuccess = deleteResponse.IsSuccess,
+                                    ErrorMessage = deleteResponse.IsSuccess ? null : deleteResponse.ErrorMessage
+                                };
+                                results.Add(syncResult);
+
+                                // 删除成功后，从管理器中移除
+                                if (deleteResponse.IsSuccess)
+                                {
+                                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveImages(fileIds);
+                                    MainForm.Instance.PrintInfoLog($"成功删除 {fileIds.Count} 张图片");
                                 }
                             }
-                        }
-                        else
-                        {
-                            MainForm.Instance.uclog.AddLog("明细凭证图片上传出错。");
-                            // 上传失败，恢复状态
-                            foreach (var imageId in pendingUploadImages.Select(img => img.ImageId))
+                            catch (Exception ex)
                             {
-                                ImageStateManager.Instance.UpdateImageStatus(imageId, ImageStatus.PendingUpload);
+                                logger.LogError(ex, $"删除图片失败: BusinessId={businessId}");
+                                results.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult
+                                {
+                                    BusinessId = businessId,
+                                    ImageIds = fileIds,
+                                    SyncType = RUINORERP.Common.BusinessImage.ImageSyncType.Delete,
+                                    IsSuccess = false,
+                                    ErrorMessage = ex.Message
+                                });
                             }
                         }
                     }
                 }
+
+                // 2. 处理待上传图片队列
+                var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetAndLockPendingUploadImages();
+                if (pendingUploadImages.Count > 0)
+                {
+                    foreach (var imageInfo in pendingUploadImages)
+                    {
+                        if (imageInfo.ImageData == null || imageInfo.ImageData.Length == 0)
+                        {
+                            logger.LogWarning("跳过无数据的图片: FileId={FileId}", imageInfo.FileId);
+                            continue;
+                        }
+
+                        try
+                        {
+                            // 确定业务实体和关联字段
+                            BaseEntity businessEntity = null;
+                            string relatedField = string.Empty;
+
+                            // 根据OwnerTableName确定实体
+                            if (imageInfo.OwnerTableName == typeof(tb_FM_ExpenseClaim).Name)
+                            {
+                                businessEntity = EditEntity;
+                                relatedField = "CloseCaseImagePath";
+                            }
+                            else if (imageInfo.OwnerTableName == typeof(tb_FM_ExpenseClaimDetail).Name && imageInfo.BusinessId > 0)
+                            {
+                                // 查找对应的明细
+                                var detail = EditEntity.tb_FM_ExpenseClaimDetails?.FirstOrDefault(d => d.ClaimSubID == imageInfo.BusinessId);
+                                if (detail != null)
+                                {
+                                    businessEntity = detail;
+                                    relatedField = "EvidenceImagePath";
+                                }
+                            }
+
+                            if (businessEntity == null)
+                            {
+                                logger.LogWarning("无法找到业务实体: BusinessId={BusinessId}, OwnerTableName={OwnerTableName}",
+                                    imageInfo.BusinessId, imageInfo.OwnerTableName);
+                                continue;
+                            }
+
+                            // 调用FileBusinessService上传
+                            var uploadResponse = await fileBusinessService.UploadImageAsync(
+                                businessEntity,
+                                imageInfo.FileName ?? imageInfo.OriginalFileName ?? "image.jpg",
+                                imageInfo.ImageData,
+                                relatedField,
+                                null);
+
+                            var syncResult = new RUINORERP.Common.BusinessImage.ImageSyncResult
+                            {
+                                BusinessId = imageInfo.BusinessId > 0 ? imageInfo.BusinessId : businessEntity.PrimaryKeyID,
+                                ImageIds = new List<long> { uploadResponse?.FileStorageInfos?.FirstOrDefault()?.FileId ?? 0 },
+                                SyncType = RUINORERP.Common.BusinessImage.ImageSyncType.Add,
+                                IsSuccess = uploadResponse?.IsSuccess ?? false,
+                                ErrorMessage = uploadResponse?.IsSuccess == true ? null : uploadResponse?.ErrorMessage
+                            };
+                            results.Add(syncResult);
+
+                            // 上传成功后，更新状态并移除
+                            if (uploadResponse?.IsSuccess == true)
+                            {
+                                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
+                                MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "上传图片失败: FileName={FileName}", imageInfo.FileName ?? imageInfo.OriginalFileName);
+                            results.Add(new RUINORERP.Common.BusinessImage.ImageSyncResult
+                            {
+                                BusinessId = imageInfo.BusinessId > 0 ? imageInfo.BusinessId : EditEntity.PrimaryKeyID,
+                                ImageIds = new List<long> { imageInfo.FileId },
+                                SyncType = RUINORERP.Common.BusinessImage.ImageSyncType.Add,
+                                IsSuccess = false,
+                                ErrorMessage = ex.Message
+                            });
+                        }
+                    }
+                }
+
+                return results;
             }
-
-            // 刷新网格显示
-            grid1.Refresh();
-
-            return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "同步图片失败");
+                return results;
+            }
         }
 
 

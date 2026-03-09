@@ -267,7 +267,7 @@ namespace RUINORERP.Business
 
                                         try
                                         {
-                                            //按配置自动审核收款单
+                                            //按配置自动审核收款单1
                                             if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                             {
                                                 if (entity.IsFromPlatform)
@@ -294,17 +294,8 @@ namespace RUINORERP.Business
                                                         }
                                                         else
                                                         {
-                                                            //更新预收款单状态
-                                                            preReceivedPayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
-                                                            var rrss = await ctrPreReceivedPayment.BaseSaveOrUpdateWithChild<tb_FM_PreReceivedPayment>(preReceivedPayment);
-                                                            if (rrss.Succeeded)
-                                                            {
-                                                                fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("预收款单自动审核成功后，已收款。状态为待核销", rr.ReturnObject as tb_FM_PaymentRecord);
-                                                            }
-                                                           
-                                                            fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("收款单自动审核成功", rr.ReturnObject as tb_FM_PaymentRecord);
-
-
+                                                            // 注意：ApprovalAsync内部已经更新了预收款单状态和余额，无需重复操作
+                                                            fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("平台订单预收款单自动审核成功，系统自动收款，预收款状态更新为待核销", rr.ReturnObject as tb_FM_PaymentRecord);
                                                         }
                                                     }
                                                 }

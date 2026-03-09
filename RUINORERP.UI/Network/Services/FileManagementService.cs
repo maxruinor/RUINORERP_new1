@@ -22,7 +22,7 @@ namespace RUINORERP.UI.Network.Services
 {
     /// <summary>
     /// 文件管理服务类
-    /// 提供文件上传、下载、删除、查询、更新等核心功能
+    /// 提供文件上传、下载、删除、查询、更新等核心功能1
     /// 参考UserLoginService的设计模式实现
     /// </summary>
     public sealed class FileManagementService : IDisposable
@@ -151,13 +151,15 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 删除图片文件（重载方法，直接使用文件存储信息对象）1
+        /// 删除图片文件（重载方法，直接使用文件存储信息对象）
+        /// 注意：此方法已废弃，建议使用 FileBusinessService.DeleteImagesAsync
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息对象</param>
         /// <param name="BusinessId">业务ID</param>
         /// <param name="OwnerTableName">业务表名</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>文件删除响应</returns>
+        [Obsolete("建议使用 FileBusinessService.DeleteImagesAsync 方法")]
         public async Task<FileDeleteResponse> DeleteImageAsync(tb_FS_FileStorageInfo fileStorageInfo, long BusinessId, string OwnerTableName, CancellationToken ct = default)
         {
             // 参数验证
@@ -191,6 +193,8 @@ namespace RUINORERP.UI.Network.Services
             // 调用通用删除方法
             return await DeleteFileAsync(deleteRequest, ct);
         }
+
+
 
 
 

@@ -4614,7 +4614,7 @@ namespace RUINORERP.UI.BaseForm
                 valueImageWeb.CellImageBytes = imageData;
                 valueImageWeb.CellImageHashName = imageHash;
 
-                // 设置视图
+                // 设置视图2
                 if (!(cell.View is SourceGrid.Cells.Views.RemoteImageView))
                 {
                     cell.View = new SourceGrid.Cells.Views.RemoteImageView();

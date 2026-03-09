@@ -807,7 +807,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     //如果是图片列。但不是总计行。则清空为平常的样式
                     if ((dc.CustomFormat == CustomFormatType.Image) && pt.Row != grid1.Rows.Count - 1)
                     {
-                        // currContext.Cell.View = sgdefine.ViewNormal;
+                        // currContext.Cell.View = sgdefine.ViewNormal;2
                     }
                     if ((dc.CustomFormat == CustomFormatType.WebPathImage) && pt.Row != grid1.Rows.Count - 1)
                     {

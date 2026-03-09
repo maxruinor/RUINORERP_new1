@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Common.BusinessImage
 {
     /// <summary>
-    /// 图片信息类
+    /// 图片信息类2
     /// </summary>
     public class ImageInfo
     {
@@ -115,7 +115,7 @@ namespace RUINORERP.Common.BusinessImage
     }
 
     /// <summary>
-    /// 图片状态枚举
+    /// 图片状态枚举1
     /// </summary>
     public enum ImageStatus
     {

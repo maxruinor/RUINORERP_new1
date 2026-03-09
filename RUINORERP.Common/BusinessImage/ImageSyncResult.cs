@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Common.BusinessImage
 {
     /// <summary>
-    /// 图片同步类型
+    /// 图片同步类型2
     /// </summary>
     public enum ImageSyncType
     {
@@ -18,7 +18,7 @@ namespace RUINORERP.Common.BusinessImage
     }
 
     /// <summary>
-    /// 图片同步结果
+    /// 图片同步结果1
     /// </summary>
     public class ImageSyncResult
     {

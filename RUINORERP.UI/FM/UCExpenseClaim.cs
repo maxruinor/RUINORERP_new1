@@ -890,7 +890,7 @@ namespace RUINORERP.UI.FM
 
         //
         /// <summary>
-        /// 同步图片（如果需要）
+        /// 同步图片（如果需要）1
         /// 重写基类方法，实现费用报销单的图片同步逻辑
         /// </summary>
         /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
@@ -1028,7 +1028,7 @@ namespace RUINORERP.UI.FM
 
 
         /// <summary>
-        /// 
+        /// 先保存数据，再同步性保存图片
         /// </summary>
         /// <param name="NeedValidated"></param>
         /// <returns></returns>

@@ -151,7 +151,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 删除图片文件（重载方法，直接使用文件存储信息对象）
+        /// 删除图片文件（重载方法，直接使用文件存储信息对象）1
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息对象</param>
         /// <param name="BusinessId">业务ID</param>

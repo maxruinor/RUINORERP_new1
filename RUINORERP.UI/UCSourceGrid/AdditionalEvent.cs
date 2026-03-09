@@ -24,7 +24,7 @@ namespace RUINORERP.UI.UCSourceGrid
                 return;
             }
 
-            // 检查单元格的View是否为RemoteImageView
+            // 检查单元格的View是否为RemoteImageView2
             if (sender.Cell.View is SourceGrid.Cells.Views.RemoteImageView)
             {
                 // RemoteImageView类型的单元格，由 PopupMenuForRemoteImageView 处理

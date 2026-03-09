@@ -7,7 +7,7 @@ using SourceGrid.Cells.Views;
 namespace SourceGrid.Cells
 {
     /// <summary>
-    /// 远程图片单元格
+    /// 远程图片单元格1
     /// 增强版：支持完整的图片处理流程
     /// 与现有的非远程图片单元格完全兼容
     /// </summary>
@@ -50,7 +50,7 @@ namespace SourceGrid.Cells
                 };
             }
 
-            // 设置远程图片视图以支持异步加载和显示
+            // 设置远程图片视图以支持异步加载和显示1
             if (View == null)
             {
                 View = new RemoteImageView();

@@ -360,6 +360,105 @@ namespace RUINORERP.UI.FM
         }
         #endregion
 
+        #region 辅助方法
+
+        /// <summary>
+        /// 验证应收应付单是否可以进行抵扣操作
+        /// </summary>
+        /// <param name="receivablePayable">应收应付单实体</param>
+        /// <param name="message">错误信息</param>
+        /// <returns>是否可以抵扣</returns>
+        private bool ValidateReceivableForOffset(tb_FM_ReceivablePayable receivablePayable, ref string message)
+        {
+            if (receivablePayable == null)
+            {
+                message = "应收应付单信息无效。";
+                return false;
+            }
+
+            if (receivablePayable.CustomerVendor_ID <= 0)
+            {
+                message = "应收应付单的往来单位信息不完整，无法进行抵扣操作。";
+                return false;
+            }
+
+            if (receivablePayable.Currency_ID <= 0)
+            {
+                message = "应收应付单的币种信息不完整，无法进行抵扣操作。";
+                return false;
+            }
+
+            if (receivablePayable.LocalBalanceAmount <= 0)
+            {
+                message = $"应收应付单【{receivablePayable.ARAPNo}】的余额为零，无需进行抵扣操作。";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 验证选中的应收应付单列表
+        /// </summary>
+        /// <param name="selectedList">选中的应收应付单列表</param>
+        /// <param name="validList">有效的应收应付单列表</param>
+        /// <param name="message">错误信息</param>
+        /// <returns>是否有有效的应收应付单</returns>
+        private bool ValidateSelectedReceivables(List<tb_FM_ReceivablePayable> selectedList, out List<tb_FM_ReceivablePayable> validList, out string message)
+        {
+            validList = new List<tb_FM_ReceivablePayable>();
+            message = string.Empty;
+            StringBuilder msg = new StringBuilder();
+            int counter = 1;
+
+            foreach (var item in selectedList)
+            {
+                bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 &&
+                                   item.ApprovalStatus == (int)ApprovalStatus.审核通过 &&
+                                   item.ApprovalResults.HasValue &&
+                                   item.ApprovalResults.Value;
+
+                if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
+                {
+                    validList.Add(item);
+                }
+                else
+                {
+                    msg.Append(counter.ToString() + ") ");
+                    msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法进行抵扣。").Append("\r\n");
+                    counter++;
+                }
+            }
+
+            message = msg.ToString();
+            return validList.Count > 0;
+        }
+
+        /// <summary>
+        /// 显示批量操作结果
+        /// </summary>
+        /// <param name="successCount">成功数量</param>
+        /// <param name="successAmount">成功金额</param>
+        /// <param name="failedList">失败列表</param>
+        /// <param name="operationName">操作名称</param>
+        private void ShowBatchOperationResult(int successCount, decimal successAmount, List<string> failedList, string operationName)
+        {
+            StringBuilder resultMsg = new StringBuilder();
+            resultMsg.AppendLine($"{operationName}完成！");
+            resultMsg.AppendLine($"成功处理【{successCount}】张单据，金额【{successAmount.ToString("###.00")}】元");
+
+            if (failedList.Any())
+            {
+                resultMsg.AppendLine();
+                resultMsg.AppendLine($"失败【{failedList.Count}】张单据：");
+                resultMsg.AppendLine(string.Join("\r\n", failedList));
+            }
+
+            MessageBox.Show(resultMsg.ToString(), $"{operationName}结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        #endregion
+
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
         private async void NewSumDataGridView_撤销预收预付抵扣(object sender, EventArgs e)
         {
@@ -508,12 +607,14 @@ namespace RUINORERP.UI.FM
             }
             catch (Exception ex)
             {
-
+                MainForm.Instance.logger.Error(ex);
+                MessageBox.Show($"预收预付抵扣操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
 
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
+        //
         private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
         {
             //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
@@ -563,16 +664,41 @@ namespace RUINORERP.UI.FM
                     MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
                 var receivable = RealList[0];
+
+                // 数据校验：检查应收应付单的数据完整性
+                string validationMessage = string.Empty;
+                if (!ValidateReceivableForOffset(receivable, ref validationMessage))
+                {
+                    MessageBox.Show(validationMessage, "数据校验失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
                 // 2. 查找可抵扣的预收付款单
                 var availableAdvances = await receivablePayableController.FindAvailableAdvances(receivable);
                 if (!availableAdvances.Any())
                 {
-                    MessageBox.Show("没有找到可抵扣的预收付款单！");
+                    MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
+                }
+
+                // 检查预收付款单的可用余额是否足够
+                decimal totalAvailableAmount = availableAdvances.Sum(x => x.LocalBalanceAmount);
+                if (totalAvailableAmount < receivable.LocalBalanceAmount)
+                {
+                    var confirmResult = MessageBox.Show(
+                        $"可抵扣的预收付款单总余额【{totalAvailableAmount.ToString("###.00")}】元小于应收应付单余额【{receivable.LocalBalanceAmount.ToString("###.00")}】元。\r\n" +
+                        $"是否继续进行部分抵扣？",
+                        "余额不足确认",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question);
+                    if (confirmResult == DialogResult.No)
+                    {
+                        return;
+                    }
                 }
 
                 // 创建列映射
@@ -667,13 +793,15 @@ namespace RUINORERP.UI.FM
             }
             catch (Exception ex)
             {
-
+                MainForm.Instance.logger.Error(ex);
+                MessageBox.Show($"撤销预收预付抵扣操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
 
 
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
+        //批量智能预收预付抵扣：支持多个应收应付单批量抵扣，每个应收应付单可使用多个预收付款单进行抵扣
         private async void NewSumDataGridView_批量智能预收预付抵扣(object sender, EventArgs e)
         {
             //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
@@ -684,72 +812,57 @@ namespace RUINORERP.UI.FM
             {
                 List<tb_FM_ReceivablePayable> selectlist = GetSelectResult();
                 List<tb_FM_ReceivablePayable> RealList = new List<tb_FM_ReceivablePayable>();
-                StringBuilder msg = new StringBuilder();
-                int counter = 1;
-                foreach (var item in selectlist)
+                string message;
+
+                if (!ValidateSelectedReceivables(selectlist, out RealList, out message))
                 {
-                    //只有审核状态才可以转换为收款单
-                    bool canConvert = item.ARAPStatus == (int)ARAPStatus.待支付 && item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                    if (canConvert || item.ARAPStatus == (int)ARAPStatus.部分支付)
-                    {
-                        RealList.Add(item);
-                    }
-                    else
-                    {
-                        msg.Append(counter.ToString() + ") ");
-                        msg.Append($"当前应{PaymentType.ToString()}单 {item.ARAPNo}状态为【 {((ARAPStatus)item.ARAPStatus.Value).ToString()}】 无法进行抵扣。").Append("\r\n");
-                        counter++;
-                    }
-                }
-                if (msg.ToString().Length > 0)
-                {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    if (RealList.Count == 0)
-                    {
-                        return;
-                    }
+                    MessageBox.Show(message, "数据校验", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
                 }
 
                 if (RealList.Count == 0)
                 {
-                    msg.Append("请至少选择一行数据进行抵扣");
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show("请至少选择一行数据进行抵扣", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+
                 var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                // 2. 查找可抵扣的预收付款单1
-                var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList);
-                if (availableAdvances.Any())
-                {
+                // 2. 为每个应收应付单查找可抵扣的预收付款单
+                Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>> receivableToAdvancesMap = new Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>>();
+                StringBuilder sbOffset = new StringBuilder();
+                List<tb_FM_ReceivablePayable> invalidReceivables = new List<tb_FM_ReceivablePayable>();
 
-                    StringBuilder sbOffset = new StringBuilder();
-                    foreach (var item in availableAdvances)
+                foreach (var receivable in RealList)
+                {
+                    // 数据校验：检查应收应付单的数据完整性
+                    string validationMessage = string.Empty;
+                    if (!ValidateReceivableForOffset(receivable, ref validationMessage))
                     {
-                        sbOffset.Append($"应{PaymentType.ToString()}单{item.Key.ARAPNo}:金额{item.Key.LocalBalanceAmount.ToString("###.00")}=>预{PaymentType.ToString()}单{item.Value.PreRPNO}:金额：{item.Value.LocalBalanceAmount.ToString("###.00")}").Append("\r\n");
+                        invalidReceivables.Add(receivable);
+                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:{validationMessage}\r\n");
+                        continue;
                     }
 
-                    if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                    // 查找可抵扣的预收付款单（使用单个抵扣的逻辑）
+                    var availableAdvances = await receivablePayableController.FindAvailableAdvances(receivable);
+                    if (availableAdvances.Any())
                     {
+                        receivableToAdvancesMap.Add(receivable, availableAdvances);
 
-                        int OffsetCounter = availableAdvances.Count;
-                        decimal OffsetAmount = availableAdvances.Sum(c => c.Key.LocalBalanceAmount);
-                        for (int i = 0; i < availableAdvances.Count; i++)
-                        {
-                            var kv = availableAdvances.ElementAt(i);
-                            if (kv.Key.LocalBalanceAmount != kv.Value.LocalBalanceAmount)
-                            {
-                                OffsetCounter--;
-                                OffsetAmount = OffsetAmount - kv.Key.LocalBalanceAmount;
-                                MainForm.Instance.PrintInfoLog($"预收付款单抵扣金额不一致，跳过。{kv.Key.ARAPNo}:金额{kv.Key.LocalBalanceAmount.ToString("###.00")}===》{kv.Value.PreRPNO}:金额：{kv.Value.LocalBalanceAmount.ToString("###.00")}");
-                                continue;
-                            }
-                            await receivablePayableController.ApplyManualPaymentAllocation(kv.Key, new List<tb_FM_PreReceivedPayment> { kv.Value });
-                        }
-                        MessageBox.Show($"批量智能预收预付抵扣，成功匹配【{OffsetCounter}】组！，金额{OffsetAmount}");
+                        // 构建抵扣信息
+                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
+                        sbOffset.Append(string.Join("、", availableAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                        sbOffset.Append("\r\n");
+                    }
+                    else
+                    {
+                        invalidReceivables.Add(receivable);
+                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:没有找到可抵扣的预{PaymentType.ToString()}单\r\n");
                     }
                 }
-                else
+
+                if (!receivableToAdvancesMap.Any())
                 {
                     string msgTips = string.Empty;
                     if (!_UCBillMasterQuery.newSumDataGridViewMaster.UseSelectedColumn)
@@ -761,10 +874,72 @@ namespace RUINORERP.UI.FM
                     return;
                 }
 
+                if (invalidReceivables.Any())
+                {
+                    StringBuilder skipMsg = new StringBuilder();
+                    foreach (var item in invalidReceivables)
+                    {
+                        skipMsg.Append($"应{PaymentType.ToString()}单 {item.ARAPNo} 没有找到可抵扣的预{PaymentType.ToString()}单，将跳过。\r\n");
+                    }
+                    if (MessageBox.Show($"{skipMsg.ToString()}其他单据可以进行抵扣，是否继续？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                }
+
+                if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                {
+                    int successCount = 0;
+                    decimal successAmount = 0;
+                    List<string> failedList = new List<string>();
+
+                    foreach (var kvp in receivableToAdvancesMap)
+                    {
+                        var receivable = kvp.Key;
+                        var advances = kvp.Value;
+
+                        try
+                        {
+                            // 执行抵扣操作（与单个抵扣相同的逻辑）
+                            bool result = await receivablePayableController.ApplyManualPaymentAllocation(receivable, advances);
+                            if (result)
+                            {
+                                successCount++;
+                                successAmount += receivable.LocalBalanceAmount;
+                                MainForm.Instance.PrintInfoLog($"成功抵扣应{PaymentType.ToString()}单：{receivable.ARAPNo}");
+                            }
+                            else
+                            {
+                                failedList.Add($"应{PaymentType.ToString()}单{receivable.ARAPNo}");
+                                MainForm.Instance.PrintInfoLog($"抵扣失败应{PaymentType.ToString()}单：{receivable.ARAPNo}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            failedList.Add($"应{PaymentType.ToString()}单{receivable.ARAPNo}：{ex.Message}");
+                            MainForm.Instance.logger.Error(ex, $"批量抵扣异常应{PaymentType.ToString()}单：{receivable.ARAPNo}");
+                        }
+                    }
+
+                    // 显示批量操作结果
+                    ShowBatchOperationResult(successCount, successAmount, failedList, "批量智能预收预付抵扣");
+
+                    // 刷新数据
+                    if (successCount > 0)
+                    {
+                        // 刷新查询数据
+                        if (_UCBillMasterQuery != null)
+                        {
+                            base.Query(QueryDtoProxy);
+                        }
+                    }
+                }
+
             }
             catch (Exception ex)
             {
                 MainForm.Instance.logger.Error(ex);
+                MessageBox.Show($"批量抵扣操作失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

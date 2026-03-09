@@ -195,7 +195,7 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 删除图片
+        /// 删除图片1
         /// </summary>
         /// <param name="fileId">图片ID</param>
         /// <param name="businessId">业务ID</param>

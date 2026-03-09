@@ -192,7 +192,7 @@ namespace RUINORERP.UI.Network.Services
 
         /// <summary>
         /// 下载图片
-        /// 通过反射获取实体关联字段的图片ID，然后下载图片
+        /// 通过反射获取实体关联字段的图片ID，然后下载图片1
         /// </summary>
         /// <param name="entity">业务实体</param>
         /// <param name="relatedField">关联字段名</param>

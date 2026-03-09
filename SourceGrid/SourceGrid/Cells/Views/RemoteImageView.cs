@@ -251,7 +251,7 @@ namespace SourceGrid.Cells.Views
         #region 克隆
 
         /// <summary>
-        /// 克隆当前对象
+        /// 克隆当前对象2
         /// </summary>
         public override object Clone()
         {

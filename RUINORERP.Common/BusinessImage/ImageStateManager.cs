@@ -9,12 +9,15 @@ namespace RUINORERP.Common.BusinessImage
     /// <summary>
     /// 图片状态管理器
     /// 负责管理图片的上传队列和删除队列，确保图片操作的原子性和唯一性
+    /// 增强功能：操作历史记录、状态验证、批量操作等
     /// </summary>
     public class ImageStateManager
     {
         private static readonly ImageStateManager _instance = new ImageStateManager();
         private readonly Dictionary<long, ImageInfo> _images = new Dictionary<long, ImageInfo>();
         private readonly object _lock = new object();
+        private readonly List<ImageOperationRecord> _operationHistory = new List<ImageOperationRecord>();
+        private const int MaxHistoryRecords = 100;
         
         /// <summary>
         /// 是否启用详细日志
@@ -96,6 +99,22 @@ namespace RUINORERP.Common.BusinessImage
         }
 
         /// <summary>
+        /// 记录操作历史
+        /// </summary>
+        /// <param name="operation">操作记录</param>
+        private void RecordOperation(ImageOperationRecord operation)
+        {
+            lock (_lock)
+            {
+                _operationHistory.Add(operation);
+                if (_operationHistory.Count > MaxHistoryRecords)
+                {
+                    _operationHistory.RemoveAt(0);
+                }
+            }
+        }
+
+        /// <summary>
         /// 添加图片
         /// </summary>
         /// <param name="imageInfo">图片信息</param>
@@ -112,7 +131,16 @@ namespace RUINORERP.Common.BusinessImage
                         bool isUpdate = _images.ContainsKey(key);
                         // 直接赋值，会覆盖已存在的记录，避免重复添加
                         _images[key] = imageInfo;
-                        
+
+                        RecordOperation(new ImageOperationRecord
+                        {
+                            OperationType = isUpdate ? "Update" : "Add",
+                            ImageId = key,
+                            FileName = imageInfo.FileName ?? imageInfo.OriginalFileName,
+                            Status = imageInfo.Status,
+                            Timestamp = DateTime.Now
+                        });
+
                         if (isUpdate)
                         {
                             Log($"更新图片: ID={key}, 状态={imageInfo.Status}, 文件名={imageInfo.FileName ?? imageInfo.OriginalFileName}");
@@ -142,6 +170,16 @@ namespace RUINORERP.Common.BusinessImage
                 {
                     var imageInfo = _images[fileId];
                     _images.Remove(fileId);
+
+                    RecordOperation(new ImageOperationRecord
+                    {
+                        OperationType = "Remove",
+                        ImageId = fileId,
+                        FileName = imageInfo?.FileName ?? imageInfo?.OriginalFileName,
+                        Status = imageInfo?.Status ?? ImageStatus.Deleted,
+                        Timestamp = DateTime.Now
+                    });
+
                     Log($"移除图片: ID={fileId}, 文件名={imageInfo?.FileName ?? imageInfo?.OriginalFileName}");
                 }
             }
@@ -492,9 +530,271 @@ namespace RUINORERP.Common.BusinessImage
                 }
             }
         }
+
+        /// <summary>
+        /// 获取图片操作历史记录
+        /// </summary>
+        /// <returns>操作历史记录</returns>
+        public List<ImageOperationRecord> GetOperationHistory()
+        {
+            lock (_lock)
+            {
+                return new List<ImageOperationRecord>(_operationHistory);
+            }
+        }
+
+        /// <summary>
+        /// 验证图片状态一致性
+        /// </summary>
+        /// <returns>验证结果</returns>
+        public ImageStateValidationResult ValidateStateConsistency()
+        {
+            lock (_lock)
+            {
+                var result = new ImageStateValidationResult();
+
+                foreach (var kvp in _images)
+                {
+                    var imageInfo = kvp.Value;
+
+                    // 检查1: FileId为0但状态不是PendingUpload
+                    if (imageInfo.FileId == 0 && imageInfo.Status != ImageStatus.PendingUpload)
+                    {
+                        result.InconsistentImages.Add(new ImageStateIssue
+                        {
+                            ImageId = kvp.Key,
+                            Issue = "FileId为0但状态不是PendingUpload",
+                            CurrentStatus = imageInfo.Status,
+                            ExpectedStatus = ImageStatus.PendingUpload
+                        });
+                    }
+
+                    // 检查2: FileId大于0但状态是PendingUpload
+                    if (imageInfo.FileId > 0 && imageInfo.Status == ImageStatus.PendingUpload)
+                    {
+                        result.InconsistentImages.Add(new ImageStateIssue
+                        {
+                            ImageId = kvp.Key,
+                            Issue = "FileId大于0但状态是PendingUpload",
+                            CurrentStatus = imageInfo.Status,
+                            ExpectedStatus = ImageStatus.Uploaded
+                        });
+                    }
+
+                    // 检查3: 没有哈希值
+                    if (string.IsNullOrEmpty(imageInfo.HashValue) && imageInfo.Status != ImageStatus.PendingUpload)
+                    {
+                        result.InconsistentImages.Add(new ImageStateIssue
+                        {
+                            ImageId = kvp.Key,
+                            Issue = "没有哈希值但状态不是PendingUpload",
+                            CurrentStatus = imageInfo.Status
+                        });
+                    }
+                }
+
+                result.IsValid = result.InconsistentImages.Count == 0;
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 批量更新图片状态
+        /// </summary>
+        /// <param name="imageIds">图片ID列表</param>
+        /// <param name="newStatus">新状态</param>
+        /// <returns>成功更新的数量</returns>
+        public int BatchUpdateImageStatus(List<long> imageIds, ImageStatus newStatus)
+        {
+            if (imageIds == null || imageIds.Count == 0)
+                return 0;
+
+            int updatedCount = 0;
+            lock (_lock)
+            {
+                foreach (var imageId in imageIds)
+                {
+                    if (imageId > 0 && _images.ContainsKey(imageId))
+                    {
+                        var oldStatus = _images[imageId].Status;
+                        _images[imageId].Status = newStatus;
+                        _images[imageId].ModifiedAt = DateTime.Now;
+                        updatedCount++;
+                        Log($"批量更新图片状态: ID={imageId}, {oldStatus} -> {newStatus}");
+                    }
+                }
+            }
+            return updatedCount;
+        }
+
+        /// <summary>
+        /// 获取指定业务ID的所有图片
+        /// </summary>
+        /// <param name="businessId">业务ID</param>
+        /// <returns>图片信息列表</returns>
+        public List<ImageInfo> GetImagesByBusinessId(long businessId)
+        {
+            lock (_lock)
+            {
+                return _images.Values.Where(img => img.BusinessId == businessId).ToList();
+            }
+        }
+
+        /// <summary>
+        /// 重置指定业务ID的所有图片状态
+        /// </summary>
+        /// <param name="businessId">业务ID</param>
+        /// <returns>重置的图片数量</returns>
+        public int ResetImagesByBusinessId(long businessId)
+        {
+            lock (_lock)
+            {
+                var images = _images.Values.Where(img => img.BusinessId == businessId).ToList();
+                foreach (var image in images)
+                {
+                    if (image.Status == ImageStatus.PendingUpload || image.Status == ImageStatus.PendingDelete)
+                    {
+                        image.Status = ImageStatus.Normal;
+                        image.Metadata.Clear();
+                    }
+                }
+                return images.Count;
+            }
+        }
+
+        /// <summary>
+        /// 获取统计信息
+        /// </summary>
+        /// <returns>统计信息</returns>
+        public ImageManagerStatistics GetStatistics()
+        {
+            lock (_lock)
+            {
+                return new ImageManagerStatistics
+                {
+                    TotalImages = _images.Count,
+                    PendingUpload = PendingUploadCount,
+                    PendingDelete = PendingDeleteCount,
+                    Processing = ProcessingCount,
+                    Uploaded = GetImageCountByStatus(ImageStatus.Uploaded),
+                    Deleted = GetImageCountByStatus(ImageStatus.Deleted),
+                    Normal = GetImageCountByStatus(ImageStatus.Normal)
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// 图片操作记录
+    /// </summary>
+    public class ImageOperationRecord
+    {
+        /// <summary>
+        /// 操作类型
+        /// </summary>
+        public string OperationType { get; set; }
+
+        /// <summary>
+        /// 图片ID
+        /// </summary>
+        public long ImageId { get; set; }
+
+        /// <summary>
+        /// 文件名
+        /// </summary>
+        public string FileName { get; set; }
+
+        /// <summary>
+        /// 状态
+        /// </summary>
+        public ImageStatus Status { get; set; }
+
+        /// <summary>
+        /// 时间戳
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+    }
+
+    /// <summary>
+    /// 图片状态验证结果
+    /// </summary>
+    public class ImageStateValidationResult
+    {
+        /// <summary>
+        /// 是否有效
+        /// </summary>
+        public bool IsValid { get; set; }
+
+        /// <summary>
+        /// 不一致的图片列表
+        /// </summary>
+        public List<ImageStateIssue> InconsistentImages { get; set; } = new List<ImageStateIssue>();
+    }
+
+    /// <summary>
+    /// 图片状态问题
+    /// </summary>
+    public class ImageStateIssue
+    {
+        /// <summary>
+        /// 图片ID
+        /// </summary>
+        public long ImageId { get; set; }
+
+        /// <summary>
+        /// 问题描述
+        /// </summary>
+        public string Issue { get; set; }
+
+        /// <summary>
+        /// 当前状态
+        /// </summary>
+        public ImageStatus CurrentStatus { get; set; }
+
+        /// <summary>
+        /// 期望状态
+        /// </summary>
+        public ImageStatus ExpectedStatus { get; set; }
+    }
+
+    /// <summary>
+    /// 图片管理器统计信息
+    /// </summary>
+    public class ImageManagerStatistics
+    {
+        /// <summary>
+        /// 总图片数
+        /// </summary>
+        public int TotalImages { get; set; }
+
+        /// <summary>
+        /// 待上传数
+        /// </summary>
+        public int PendingUpload { get; set; }
+
+        /// <summary>
+        /// 待删除数
+        /// </summary>
+        public int PendingDelete { get; set; }
+
+        /// <summary>
+        /// 处理中数
+        /// </summary>
+        public int Processing { get; set; }
+
+        /// <summary>
+        /// 已上传数
+        /// </summary>
+        public int Uploaded { get; set; }
+
+        /// <summary>
+        /// 已删除数
+        /// </summary>
+        public int Deleted { get; set; }
+
+        /// <summary>
+        /// 正常数
+        /// </summary>
+        public int Normal { get; set; }
     }
 }
-
-
-// 移除所有过度设计的复杂类，回归简单清晰的设计
-// 核心功能只需要 ImageStatus 和基本的 ImageInfo 管理即可

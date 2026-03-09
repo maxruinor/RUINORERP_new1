@@ -16,7 +16,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 {
     /// <summary>
     /// 自定义PictureBox控件1
-    /// 支持多张图片显示，路径用;隔开
+    /// 支持多张图片显示，路径用;隔开2
     /// </summary>
     public class MagicPictureBox : PictureBox
     {
@@ -412,7 +412,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
 
         public MagicPictureBox() : base()
         {
-            // 初始化图片处理相关组件
+            // 初始化图片处理相关组件1
             _imageProcessor = new ImageProcessor();
             _hashCalculator = new SHA256HashCalculator(_imageProcessor);
             _imageCache = new LRUImageCache(100); // 默认缓存大小100

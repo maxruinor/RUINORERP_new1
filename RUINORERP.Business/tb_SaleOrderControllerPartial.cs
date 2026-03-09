@@ -265,48 +265,75 @@ namespace RUINORERP.Business
                                         fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
                                         #region 如果是配置了平台订单，订单审核时自动审核预收款及收款单
 
-                                        try
+                                        //按配置自动审核收款单1
+
+                                        if (entity.IsFromPlatform)
                                         {
-                                            //按配置自动审核收款单1
                                             if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                                             {
-                                                if (entity.IsFromPlatform)
+                                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
+                                                //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
+                                                tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
+                                                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                                if (rrs.Succeeded)
                                                 {
-                                                    var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                    tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-                                                    //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
-                                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
-                                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                                                    if (rrs.Succeeded)
+                                                    //自动审核收款单
+                                                    paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
+                                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                                                    paymentRecord.ApprovalResults = true;
+                                                    var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                    ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
+                                                    if (!rr.Succeeded)
                                                     {
-                                                        //自动审核收款单
-                                                        paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
-                                                        paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                                                        paymentRecord.ApprovalResults = true;
-                                                        var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                        ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
-                                                        if (!rr.Succeeded)
-                                                        {
-                                                            rmrs.ErrorMsg = $"预收款单{preReceivedPayment.PreRPNO}审核成功，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
-                                                            rmrs.Succeeded = false;
-                                                            rmrs.ReturnObject = entity as T;
-                                                            return rmrs;
-                                                        }
-                                                        else
-                                                        {
-                                                            // 注意：ApprovalAsync内部已经更新了预收款单状态和余额，无需重复操作
-                                                            fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("平台订单预收款单自动审核成功，系统自动收款，预收款状态更新为待核销", rr.ReturnObject as tb_FM_PaymentRecord);
-                                                        }
+                                                        rmrs.ErrorMsg = $"预收款单{preReceivedPayment.PreRPNO}审核成功，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
+                                                        rmrs.Succeeded = false;
+                                                        rmrs.ReturnObject = entity as T;
+                                                        return rmrs;
+                                                    }
+                                                    else
+                                                    {
+                                                        // 注意：ApprovalAsync内部已经更新了预收款单状态和余额，无需重复操作
+                                                        fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("平台订单预收款单自动审核成功，系统自动收款，预收款状态更新为待核销", rr.ReturnObject as tb_FM_PaymentRecord);
                                                     }
                                                 }
                                             }
                                         }
-                                        catch (Exception ex)
+                                        else
                                         {
+                                            //非平台订单。如果预收款单配置中是自动审核成功了，则自动生成则自动生成收款单，但不自动审核收款单。
+                                            try
+                                            {
+                                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
+                                                
+                                                if (preReceivedPayment != null)
+                                                {
+                                                    //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
+                                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
+                                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+                                                    paymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+                                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                                    if (rrs.Succeeded)
+                                                    {
+                                                        fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("非平台订单,预收款单自动审核成功，系统自动生成收款单(待审核)，由财务完成人工审核", rrs.ReturnObject as tb_FM_PaymentRecord);
+                                                    }
+                                                    else
+                                                    {
+                                                        _logger.LogWarning($"非平台订单预收款单自动审核成功，但生成收款单失败: {rrs.ErrorMsg}");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    _logger.LogWarning("非平台订单预收款单自动审核成功，但返回对象为空，无法生成收款单");
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                _logger.LogError(ex, "非平台订单生成收款单失败");
+                                                // 不抛出异常，避免影响销售订单审核流程
+                                            }
 
-                                            _unitOfWorkManage.RollbackTran();
-                                            _logger.LogError(ex, "自动审核收款单失败");
-                                            throw new Exception("自动审核收款单失败！");
                                         }
                                         #endregion
 

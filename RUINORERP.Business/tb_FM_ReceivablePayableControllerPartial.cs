@@ -329,8 +329,6 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
 
-                entity.AllowAddToStatement = true;
-
                 BusinessHelper.Instance.ApproverEntity(entity);
 
                 _unitOfWorkManage.BeginTran();
@@ -1195,6 +1193,13 @@ namespace RUINORERP.Business
                                 //).ToListAsync();
                                 if (prePayment != null)
                                 {
+                                    // 记录余额变动前的状态
+                                    decimal oldLocalBalance = prePayment.LocalBalanceAmount;
+                                    decimal oldForeignBalance = prePayment.ForeignBalanceAmount;
+                                    decimal oldLocalPaid = prePayment.LocalPaidAmount;
+                                    decimal oldForeignPaid = prePayment.ForeignPaidAmount;
+                                    int oldStatus = prePayment.PrePaymentStatus;
+                                    
                                     prePayment.ForeignBalanceAmount += Settlement.SettledForeignAmount;
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
@@ -1212,6 +1217,11 @@ namespace RUINORERP.Business
                                     payable.ForeignPaidAmount -= Settlement.SettledForeignAmount;
                                     payable.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePaymentsUpdateList.Add(prePayment);
+
+                                    // 记录财务审计日志
+                                    var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    string auditMessage = $"预收款单反核销：本币余额从 {oldLocalBalance} 增加到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 增加到 {prePayment.ForeignBalanceAmount}，本币已付金额从 {oldLocalPaid} 减少到 {prePayment.LocalPaidAmount}，外币已付金额从 {oldForeignPaid} 减少到 {prePayment.ForeignPaidAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。反核销金额：本币 {Settlement.SettledLocalAmount}，外币 {Settlement.SettledForeignAmount}。关联应收应付单：{payable.ARAPNo}";
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(auditMessage, prePayment);
 
                                     //Settlement 逻辑删除
                                     Settlement.isdeleted = true;
@@ -1489,6 +1499,13 @@ namespace RUINORERP.Business
                                 var Settlement = item.Value as tb_FM_PaymentSettlement;
                                 if (prePayment != null)
                                 {
+                                    // 记录余额变动前的状态
+                                    decimal oldLocalBalance = prePayment.LocalBalanceAmount;
+                                    decimal oldForeignBalance = prePayment.ForeignBalanceAmount;
+                                    decimal oldLocalPaid = prePayment.LocalPaidAmount;
+                                    decimal oldForeignPaid = prePayment.ForeignPaidAmount;
+                                    int oldStatus = prePayment.PrePaymentStatus;
+                                    
                                     prePayment.ForeignBalanceAmount += Settlement.SettledForeignAmount;
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
@@ -1506,6 +1523,11 @@ namespace RUINORERP.Business
                                     payable.ForeignPaidAmount -= Settlement.SettledForeignAmount;
                                     payable.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePaymentsUpdateList.Add(prePayment);
+
+                                    // 记录财务审计日志
+                                    var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    string auditMessage = $"预收款单撤销抵扣：本币余额从 {oldLocalBalance} 增加到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 增加到 {prePayment.ForeignBalanceAmount}，本币已付金额从 {oldLocalPaid} 减少到 {prePayment.LocalPaidAmount}，外币已付金额从 {oldForeignPaid} 减少到 {prePayment.ForeignPaidAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。撤销抵扣金额：本币 {Settlement.SettledLocalAmount}，外币 {Settlement.SettledForeignAmount}。关联应收应付单：{payable.ARAPNo}";
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(auditMessage, prePayment);
 
                                     //Settlement 逻辑删除
                                     Settlement.isdeleted = true;
@@ -1566,6 +1588,13 @@ namespace RUINORERP.Business
                                 var Settlement = item.Value as tb_FM_PaymentSettlement;
                                 if (prePayment != null)
                                 {
+                                    // 记录余额变动前的状态
+                                    decimal oldLocalBalance = prePayment.LocalBalanceAmount;
+                                    decimal oldForeignBalance = prePayment.ForeignBalanceAmount;
+                                    decimal oldLocalPaid = prePayment.LocalPaidAmount;
+                                    decimal oldForeignPaid = prePayment.ForeignPaidAmount;
+                                    int oldStatus = prePayment.PrePaymentStatus;
+                                    
                                     prePayment.ForeignBalanceAmount += Settlement.SettledForeignAmount;
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
@@ -1583,6 +1612,11 @@ namespace RUINORERP.Business
                                     payable.ForeignPaidAmount -= Settlement.SettledForeignAmount;
                                     payable.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePaymentsUpdateList.Add(prePayment);
+
+                                    // 记录财务审计日志
+                                    var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                                    string auditMessage = $"预付款单撤销抵扣：本币余额从 {oldLocalBalance} 增加到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 增加到 {prePayment.ForeignBalanceAmount}，本币已付金额从 {oldLocalPaid} 减少到 {prePayment.LocalPaidAmount}，外币已付金额从 {oldForeignPaid} 减少到 {prePayment.ForeignPaidAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。撤销抵扣金额：本币 {Settlement.SettledLocalAmount}，外币 {Settlement.SettledForeignAmount}。关联应收应付单：{payable.ARAPNo}";
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(auditMessage, prePayment);
 
                                     //Settlement 逻辑删除
                                     Settlement.isdeleted = true;
@@ -1810,6 +1844,7 @@ namespace RUINORERP.Business
                     _unitOfWorkManage.BeginTran();
                 }
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
+                var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
                 foreach (var prePayment in prePayments)
                 {
                     // 应收款已全部抵扣，退出循环
@@ -1822,6 +1857,12 @@ namespace RUINORERP.Business
 
                     if (localDeduct > 0 || foreignDeduct > 0)
                     {
+                        // 记录余额变动前的状态
+                        decimal oldLocalBalance = prePayment.LocalBalanceAmount;
+                        decimal oldForeignBalance = prePayment.ForeignBalanceAmount;
+                        decimal oldLocalPaid = prePayment.LocalPaidAmount;
+                        decimal oldForeignPaid = prePayment.ForeignPaidAmount;
+                        
                         // 预收款余额减少
                         // 已抵扣金额增加
                         // 更新预收款单余额
@@ -1858,6 +1899,7 @@ namespace RUINORERP.Business
                         await settlementController.GenerateSettlement(prePayment, entity, localDeduct, foreignDeduct);
 
                         // 更新预收款状态
+                        int oldStatus = prePayment.PrePaymentStatus;
                         if (prePayment.LocalBalanceAmount == 0)
                         {
                             prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额核销;
@@ -1866,6 +1908,10 @@ namespace RUINORERP.Business
                         {
                             prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
                         }
+                        
+                        // 记录财务审计日志
+                        string auditMessage = $"预收款单核销：本币余额从 {oldLocalBalance} 减少到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 减少到 {prePayment.ForeignBalanceAmount}，本币已付金额从 {oldLocalPaid} 增加到 {prePayment.LocalPaidAmount}，外币已付金额从 {oldForeignPaid} 增加到 {prePayment.ForeignPaidAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。核销金额：本币 {localDeduct}，外币 {foreignDeduct}。关联应收应付单：{entity.ARAPNo}";
+                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(auditMessage, prePayment);
                     }
                 }
 

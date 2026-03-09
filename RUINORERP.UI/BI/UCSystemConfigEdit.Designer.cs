@@ -51,8 +51,6 @@ namespace RUINORERP.UI.BI
             this.cmbFreightAllocationRules = new Krypton.Toolkit.KryptonComboBox();
             this.kryptonLabel10 = new Krypton.Toolkit.KryptonLabel();
             this.kryptonLabel9 = new Krypton.Toolkit.KryptonLabel();
-            this.txtAmountCalculationTolerance = new Krypton.Toolkit.KryptonTextBox();
-            this.lblAmountCalculationTolerance = new Krypton.Toolkit.KryptonLabel();
             this.chkOwnershipControl = new Krypton.Toolkit.KryptonCheckBox();
             this.kryptonLabel8 = new Krypton.Toolkit.KryptonLabel();
             this.chkIsDebug = new Krypton.Toolkit.KryptonCheckBox();
@@ -79,6 +77,8 @@ namespace RUINORERP.UI.BI
             this.txtTaxRateDataPrecision = new Krypton.Toolkit.KryptonTextBox();
             this.lblMoneyDataPrecision = new Krypton.Toolkit.KryptonLabel();
             this.txtMoneyDataPrecision = new Krypton.Toolkit.KryptonTextBox();
+            this.lblAmountCalculationTolerance = new Krypton.Toolkit.KryptonLabel();
+            this.txtAmountCalculationTolerance = new Krypton.Toolkit.KryptonTextBox();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.lblCheckNegativeInventory = new Krypton.Toolkit.KryptonLabel();
@@ -171,7 +171,7 @@ namespace RUINORERP.UI.BI
             // 
             // kryptonGroupBox1
             // 
-            this.kryptonGroupBox1.Location = new System.Drawing.Point(640, 24);
+            this.kryptonGroupBox1.Location = new System.Drawing.Point(527, 17);
             this.kryptonGroupBox1.Name = "kryptonGroupBox1";
             // 
             // kryptonGroupBox1.Panel
@@ -193,7 +193,7 @@ namespace RUINORERP.UI.BI
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableVoucherModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableInvoiceModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableContractModule);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(485, 493);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(565, 496);
             this.kryptonGroupBox1.TabIndex = 201;
             this.kryptonGroupBox1.Values.Heading = "财务模块配置";
             // 
@@ -231,7 +231,7 @@ namespace RUINORERP.UI.BI
             this.chkAutoAuditPrePayment.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkAutoAuditPrePayment.Location = new System.Drawing.Point(262, 122);
             this.chkAutoAuditPrePayment.Name = "chkAutoAuditPrePayment";
-            this.chkAutoAuditPrePayment.Size = new System.Drawing.Size(127, 20);
+            this.chkAutoAuditPrePayment.Size = new System.Drawing.Size(231, 20);
             this.chkAutoAuditPrePayment.TabIndex = 206;
             this.chkAutoAuditPrePayment.Values.Text = "采购订单审核时，自动审核预付款单";
             // 
@@ -285,7 +285,7 @@ namespace RUINORERP.UI.BI
             this.chkAutoAuditPreReceive.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chkAutoAuditPreReceive.Location = new System.Drawing.Point(262, 147);
             this.chkAutoAuditPreReceive.Name = "chkAutoAuditPreReceive";
-            this.chkAutoAuditPreReceive.Size = new System.Drawing.Size(127, 20);
+            this.chkAutoAuditPreReceive.Size = new System.Drawing.Size(231, 20);
             this.chkAutoAuditPreReceive.TabIndex = 200;
             this.chkAutoAuditPreReceive.Values.Text = "销售订单审核时，自动审核预收款单";
             // 
@@ -580,20 +580,20 @@ namespace RUINORERP.UI.BI
             this.txtMoneyDataPrecision.Size = new System.Drawing.Size(100, 23);
             this.txtMoneyDataPrecision.TabIndex = 27;
             // 
-            // txtAmountCalculationTolerance
-            // 
-            this.txtAmountCalculationTolerance.Location = new System.Drawing.Point(184, 510);
-            this.txtAmountCalculationTolerance.Name = "txtAmountCalculationTolerance";
-            this.txtAmountCalculationTolerance.Size = new System.Drawing.Size(181, 21);
-            this.txtAmountCalculationTolerance.TabIndex = 211;
-            // 
             // lblAmountCalculationTolerance
             // 
             this.lblAmountCalculationTolerance.Location = new System.Drawing.Point(44, 512);
             this.lblAmountCalculationTolerance.Name = "lblAmountCalculationTolerance";
-            this.lblAmountCalculationTolerance.Size = new System.Drawing.Size(140, 20);
+            this.lblAmountCalculationTolerance.Size = new System.Drawing.Size(114, 20);
             this.lblAmountCalculationTolerance.TabIndex = 210;
             this.lblAmountCalculationTolerance.Values.Text = "金额计算容差阈值";
+            // 
+            // txtAmountCalculationTolerance
+            // 
+            this.txtAmountCalculationTolerance.Location = new System.Drawing.Point(184, 510);
+            this.txtAmountCalculationTolerance.Name = "txtAmountCalculationTolerance";
+            this.txtAmountCalculationTolerance.Size = new System.Drawing.Size(181, 23);
+            this.txtAmountCalculationTolerance.TabIndex = 211;
             // 
             // btnCancel
             // 

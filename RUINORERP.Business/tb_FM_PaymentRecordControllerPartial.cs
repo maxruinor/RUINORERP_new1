@@ -244,7 +244,7 @@ namespace RUINORERP.Business
         }
 
         /// <summary>
-        /// 收付款单审核方法12
+        /// 收付款单审核方法
         /// 功能说明：
         /// 1. 验证收付款单基本信息
         /// 2. 根据来源业务类型分组处理不同业务场景的核销逻辑
@@ -1004,21 +1004,40 @@ namespace RUINORERP.Business
                         List<tb_FM_PreReceivedPayment> PreReceivablePayableList = await _appContext.Db.Queryable<tb_FM_PreReceivedPayment>()
                            .Where(c => sourcebillids.Contains(c.PreRPID))
                            .ToListAsync();
+                        var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
                         foreach (var prePayment in PreReceivablePayableList)
                         {
                             //在收款单明细中，不可以存在：一种应付下有两同的两个应收单。 否则这里会出错。
                             tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == prePayment.PreRPID);
                             if (prePayment != null)
                             {
+                                // 记录余额变动前的状态
+                                decimal oldLocalBalance = prePayment.LocalBalanceAmount;
+                                decimal oldForeignBalance = prePayment.ForeignBalanceAmount;
+                                decimal oldLocalRefund = prePayment.LocalRefundAmount;
+                                decimal oldForeignRefund = prePayment.ForeignRefundAmount;
+                                int oldStatus = prePayment.PrePaymentStatus;
+                                
                                 //正数是地，是收预付款的款，所以是等待核销
                                 prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                 prePayment.PrePayDate = DateTime.Now;
                                 prePayment.ForeignBalanceAmount += RecordDetail.ForeignAmount;
                                 prePayment.LocalBalanceAmount += RecordDetail.LocalAmount;
 
+                                // 记录财务审计日志
+                                string auditMessage = $"预收款单收款：本币余额从 {oldLocalBalance} 增加到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 增加到 {prePayment.ForeignBalanceAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。收款金额：本币 {RecordDetail.LocalAmount}，外币 {RecordDetail.ForeignAmount}。关联收款单：{entity.PaymentNo}";
+                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(auditMessage, prePayment);
+
                                 //预收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                                 if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
                                 {
+                                    // 记录退款前的状态
+                                    decimal refundOldLocalBalance = prePayment.LocalBalanceAmount;
+                                    decimal refundOldForeignBalance = prePayment.ForeignBalanceAmount;
+                                    decimal refundOldLocalRefund = prePayment.LocalRefundAmount;
+                                    decimal refundOldForeignRefund = prePayment.ForeignRefundAmount;
+                                    int refundOldStatus = prePayment.PrePaymentStatus;
+                                    
                                     prePayment.LocalRefundAmount += Math.Abs(RecordDetail.LocalAmount);
                                     prePayment.ForeignRefundAmount += Math.Abs(RecordDetail.ForeignAmount);
                                     prePayment.Remark += $"{System.DateTime.Now.ToString()}退款{Math.Abs(RecordDetail.LocalAmount)}";
@@ -1046,6 +1065,10 @@ namespace RUINORERP.Business
                                     }
 
                                     #endregion
+
+                                    // 记录退款财务审计日志
+                                    string refundAuditMessage = $"预收款单退款：本币余额从 {refundOldLocalBalance} 变更为 {prePayment.LocalBalanceAmount}，外币余额从 {refundOldForeignBalance} 变更为 {prePayment.ForeignBalanceAmount}，本币退款金额从 {refundOldLocalRefund} 增加到 {prePayment.LocalRefundAmount}，外币退款金额从 {refundOldForeignRefund} 增加到 {prePayment.ForeignRefundAmount}，状态从 {refundOldStatus} 变更为 {prePayment.PrePaymentStatus}。退款金额：本币 {Math.Abs(RecordDetail.LocalAmount)}，外币 {Math.Abs(RecordDetail.ForeignAmount)}。关联收款单：{entity.PaymentNo}";
+                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(refundAuditMessage, prePayment);
 
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
@@ -3676,6 +3699,9 @@ namespace RUINORERP.Business
         {
             try
             {
+                // 获取审计日志服务
+                var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                
                 // 查询应收应付单及其明细，按到期日升序排序（最早优先）
                 List<tb_FM_ReceivablePayable> receivablePayableList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                      .Includes(c => c.tb_FM_ReceivablePayableDetails)
@@ -3688,6 +3714,13 @@ namespace RUINORERP.Business
                     // 在收款单明细中，不可以存在：一种应付下有两同的两个应收单。否则这里会出错。
                     // 应收应付明细中可以相同的。负数对冲。最终收款时只会合并。
                     tb_FM_PaymentRecordDetail RecordDetail = entity.tb_FM_PaymentRecordDetails.FirstOrDefault(c => c.SourceBilllId == receivablePayable.ARAPId);
+
+                    // 记录余额变动前的状态
+                    decimal oldLocalBalance = receivablePayable.LocalBalanceAmount;
+                    decimal oldForeignBalance = receivablePayable.ForeignBalanceAmount;
+                    decimal oldLocalPaid = receivablePayable.LocalPaidAmount;
+                    decimal oldForeignPaid = receivablePayable.ForeignPaidAmount;
+                    int oldStatus = receivablePayable.ARAPStatus ?? 0;
 
                     // 更新应收应付单的已付金额和余额
                     receivablePayable.ForeignPaidAmount += RecordDetail.ForeignAmount;
@@ -3734,6 +3767,11 @@ namespace RUINORERP.Business
                         receivablePayable.ARAPStatus = (int)ARAPStatus.部分支付;
                         receivablePayable.AllowAddToStatement = true;
                     }
+
+                    // 记录财务审计日志
+                    string billType = receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款 ? "应收款单" : "应付款单";
+                    string auditMessage = billType + "付款：本币余额从 " + oldLocalBalance + " 减少到 " + receivablePayable.LocalBalanceAmount + "，本币已付金额从 " + oldLocalPaid + " 增加到 " + receivablePayable.LocalPaidAmount + "，状态从 " + oldStatus + " 变更为 " + (receivablePayable.ARAPStatus ?? 0) + "。付款金额：本币 " + RecordDetail.LocalAmount + "。关联收款单：" + entity.PaymentNo;
+                    fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>(auditMessage, receivablePayable);
 
                     // 更新源单据状态（写回业务原始单据的完结状态，如销售出库、销售订单等）
                     await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,

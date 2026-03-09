@@ -5426,12 +5426,21 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                
-                    // 其他类型的动作操作
-                    this.Invoke((MethodInvoker)delegate
+                // 对于抵扣操作，需要用户选择目标单据
+                // 提示用户使用编辑窗体的专用抵扣功能
+                this.Invoke((MethodInvoker)delegate
+                {
+                    string message = $"【{menuItemText}】操作需要选择目标单据进行抵扣。\n\n" +
+                                   $"请使用编辑窗体中的专用抵扣功能来完成此操作。\n\n" +
+                                   $"提示：在验证结果中可以看到可用的目标单据列表。";
+                    
+                    if (validationResult.HasMessages)
                     {
-                        MessageBox.Show($"该操作类型【{converterType.Name}】尚未实现，请联系系统管理员。", "功能开发中", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    });
+                        message += "\n\n" + validationResult.GetFormattedMessages();
+                    }
+                    
+                    MessageBox.Show(message, "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                });
                 
             }
             catch (Exception ex)

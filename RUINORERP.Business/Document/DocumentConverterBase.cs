@@ -184,7 +184,19 @@ namespace RUINORERP.Business.Document
         /// 默认为单据生成型
         /// </summary>
         public virtual DocumentConversionType ConversionType => DocumentConversionType.DocumentGeneration;
-        
+
+        /// <summary>
+        /// 执行动作操作
+        /// 对于动作操作型转换，执行具体的业务操作
+        /// 默认实现抛出 NotImplementedException，子类需要重写
+        /// </summary>
+        /// <param name="source">源单据</param>
+        /// <param name="target">目标单据（可选，某些操作需要）</param>
+        /// <returns>操作结果</returns>
+        public virtual Task<ActionResult> ExecuteActionOperationAsync(TSource source, TTarget target = null)
+        {
+            throw new NotImplementedException($"转换器 {GetType().Name} 未实现 ExecuteActionOperationAsync 方法");
+        }
 
     }
 }

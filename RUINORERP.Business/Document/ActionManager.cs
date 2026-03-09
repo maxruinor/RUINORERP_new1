@@ -381,6 +381,105 @@ namespace RUINORERP.Business.Document
     }
 
     /// <summary>
+    /// 操作结果类（非泛型版本）
+    /// </summary>
+    public class ActionResult
+    {
+        /// <summary>
+        /// 是否成功
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// 错误信息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 警告信息列表
+        /// </summary>
+        public List<string> WarningMessages { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 信息提示列表
+        /// </summary>
+        public List<string> InfoMessages { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 创建成功结果
+        /// </summary>
+        public static ActionResult SuccessResult() => new ActionResult
+        {
+            Success = true
+        };
+
+        /// <summary>
+        /// 创建失败结果
+        /// </summary>
+        /// <param name="errorMessage">错误信息</param>
+        public static ActionResult Fail(string errorMessage) => new ActionResult
+        {
+            Success = false,
+            ErrorMessage = errorMessage
+        };
+
+        /// <summary>
+        /// 从验证结果创建ActionResult
+        /// </summary>
+        /// <param name="validationResult">验证结果</param>
+        /// <returns>ActionResult实例</returns>
+        public static ActionResult FromValidationResult(ValidationResult validationResult)
+        {
+            return new ActionResult
+            {
+                Success = validationResult.CanConvert,
+                ErrorMessage = validationResult.ErrorMessage,
+                WarningMessages = validationResult.WarningMessages?.ToList() ?? new List<string>(),
+                InfoMessages = validationResult.InfoMessages?.ToList() ?? new List<string>()
+            };
+        }
+
+        /// <summary>
+        /// 获取所有消息
+        /// </summary>
+        /// <returns>所有消息列表</returns>
+        public List<string> GetAllMessages()
+        {
+            var allMessages = new List<string>();
+
+            if (!string.IsNullOrEmpty(ErrorMessage))
+                allMessages.Add(ErrorMessage);
+
+            if (WarningMessages != null && WarningMessages.Any())
+                allMessages.AddRange(WarningMessages);
+
+            if (InfoMessages != null && InfoMessages.Any())
+                allMessages.AddRange(InfoMessages);
+
+            return allMessages;
+        }
+
+        /// <summary>
+        /// 获取格式化的消息字符串
+        /// </summary>
+        /// <returns>格式化的消息字符串</returns>
+        public string GetFormattedMessages()
+        {
+            var allMessages = GetAllMessages();
+            if (!allMessages.Any()) return string.Empty;
+
+            return string.Join(Environment.NewLine, allMessages);
+        }
+
+        /// <summary>
+        /// 是否有任何消息
+        /// </summary>
+        public bool HasMessages => !string.IsNullOrEmpty(ErrorMessage) ||
+                                 (WarningMessages != null && WarningMessages.Any()) ||
+                                 (InfoMessages != null && InfoMessages.Any());
+    }
+
+    /// <summary>
     /// 操作结果类
     /// </summary>
     /// <typeparam name="T">结果数据类型</typeparam>

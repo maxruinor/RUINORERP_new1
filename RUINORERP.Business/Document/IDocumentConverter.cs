@@ -69,6 +69,15 @@ namespace RUINORERP.Business.Document
         /// 获取转换操作类型（单据生成型或动作操作型）
         /// </summary>
         DocumentConversionType ConversionType { get; }
+
+        /// <summary>
+        /// 执行动作操作
+        /// 对于动作操作型转换，执行具体的业务操作
+        /// </summary>
+        /// <param name="source">源单据</param>
+        /// <param name="target">目标单据（可选，某些操作需要）</param>
+        /// <returns>操作结果</returns>
+        Task<ActionResult> ExecuteActionOperationAsync(TSource source, TTarget target = null);
     }
 
     /// <summary>

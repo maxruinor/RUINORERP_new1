@@ -13,10 +13,10 @@ namespace RUINORERP.Business.Document.Converters
 {
     /// <summary>
     /// 应收应付款单到预收付款单抵扣转换器
-    /// 负责使用预收付款单抵扣应收应付款单
+    /// 从应收/应付款单菜单执行抵扣，选择预收/预付款单进行抵扣
     /// 转换结果：更新应收应付款单的核销状态，更新预收付款单的余额
     /// </summary>
-    [System.ComponentModel.Description("从应收（付）款单联动去抵扣预收（付）款单")]
+    [System.ComponentModel.Description("使用预收付款抵扣")]
     public class ReceivablePayableToPreReceivedPaymentOffsetConverter : DocumentConverterBase<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>
     {
         private readonly ILogger<ReceivablePayableToPreReceivedPaymentOffsetConverter> _logger;
@@ -42,7 +42,58 @@ namespace RUINORERP.Business.Document.Converters
         /// </summary>
         public override string DisplayName => base.DisplayName;
 
+        /// <summary>
+        /// 转换操作类型：动作操作型
+        /// </summary>
+        public override DocumentConversionType ConversionType => DocumentConversionType.ActionOperation;
 
+        /// <summary>
+        /// 执行动作操作 - 抵扣应付款
+        /// </summary>
+        /// <param name="source">源单据：应收应付款单</param>
+        /// <param name="target">目标单据：预收付款单（必须提供）</param>
+        /// <returns>操作结果</returns>
+        public override async Task<ActionResult> ExecuteActionOperationAsync(tb_FM_ReceivablePayable source, tb_FM_PreReceivedPayment target = null)
+        {
+            if (source == null)
+            {
+                return ActionResult.Fail("应收应付款单不能为空");
+            }
+
+            if (target == null)
+            {
+                return ActionResult.Fail("请选择要使用的预收付款单");
+            }
+
+            try
+            {
+                // 调用业务层的核心抵扣逻辑
+                bool success = await _receivablePayableController.ApplyManualPaymentAllocation(
+                    source,
+                    new List<tb_FM_PreReceivedPayment> { target });
+
+                if (!success)
+                {
+                    return ActionResult.Fail("抵扣操作失败，请检查数据状态");
+                }
+
+                _logger.LogInformation(
+                    "应收应付款单 {ARAPNo} 成功使用预收付款单 {PreRPNO} 抵扣",
+                    source.ARAPNo,
+                    target.PreRPNO);
+
+                var result = ActionResult.SuccessResult();
+                result.InfoMessages.Add($"应收应付款单 {source.ARAPNo} 成功使用预收付款单 {target.PreRPNO} 抵扣");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "应收应付款单 {ARAPNo} 使用预收付款单 {PreRPNO} 抵扣时发生错误",
+                    source?.ARAPNo,
+                    target?.PreRPNO);
+                return ActionResult.Fail($"抵扣操作失败：{ex.Message}");
+            }
+        }
 
         /// <summary>
         /// 执行单据转换 - 调用业务层核心抵扣逻辑

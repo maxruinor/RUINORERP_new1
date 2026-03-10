@@ -329,7 +329,7 @@ namespace RUINORERP.Business.Document
                                 SourceDocumentDisplayName = sourceDisplayName,
                                 TargetDocumentDisplayName = targetDisplayName,
                                 ConverterType = converterType,
-                                DisplayName = $"转换为{targetDisplayName}",
+                                DisplayName = GetConverterDisplayName(converter, sourceDisplayName, targetDisplayName, conversionType),
                                 ConversionType = conversionType
                             });
                         }
@@ -352,6 +352,7 @@ namespace RUINORERP.Business.Document
             var sourceType = typeof(TSource);
 
             // 查找所有以该类型为源类型的转换器
+            // 转换类型和执行类型 要分开处理？
             foreach (var kvp in _convertersCache)
             {
                 // 解析键值
@@ -404,7 +405,7 @@ namespace RUINORERP.Business.Document
                             SourceDocumentDisplayName = sourceDisplayName,
                             TargetDocumentDisplayName = targetDisplayName,
                             ConverterType = converterType,
-                            DisplayName = $"转换为{targetDisplayName}",
+                            DisplayName = GetConverterDisplayName(converter, sourceDisplayName, targetDisplayName, conversionType),
                             ConversionType = conversionType
                         });
                     }
@@ -412,6 +413,39 @@ namespace RUINORERP.Business.Document
             }
 
             return options;
+        }
+
+        /// <summary>
+        /// 获取转换器的显示名称
+        /// 首先尝试获取转换器自身的 DisplayName 属性
+        /// 如果没有则使用默认格式
+        /// </summary>
+        /// <param name="converter">转换器实例</param>
+        /// <param name="sourceDisplayName">源单据显示名称</param>
+        /// <param name="targetDisplayName">目标单据显示名称</param>
+        /// <returns>显示名称</returns>
+        private string GetConverterDisplayName(object converter, string sourceDisplayName, string targetDisplayName, DocumentConversionType conversionType)
+        {
+            try
+            {
+                // 尝试获取转换器的 DisplayName 属性
+                var displayNameProperty = converter.GetType().GetProperty("DisplayName");
+                if (displayNameProperty != null)
+                {
+                    if (conversionType == DocumentConversionType.ActionOperation)
+                    {
+                        var displayName = displayNameProperty.GetValue(converter) as string;
+                        return displayName;
+                    }
+                }
+                // 默认格式
+                return $"转换为{targetDisplayName}";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, $"获取转换器 {converter.GetType().Name} 的显示名称失败");
+                return $"转换为{targetDisplayName}";
+            }
         }
 
         /// <summary>

@@ -45,9 +45,9 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 转换器显示名称
-        /// 使用基类实现，从Description特性获取
+        /// 直接返回菜单文本，不需要基类的格式
         /// </summary>
-        public override string DisplayName => base.DisplayName;
+        public override string DisplayName => "抵扣应收款";
 
         /// <summary>
         /// 转换操作类型：动作操作型

@@ -143,7 +143,11 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_FM_PaymentRecordDetail, tb_FM_PaymentSettlement>();
 
             //生成应收及明细
-            CreateMap<tb_SaleOut, tb_FM_ReceivablePayable>();
+            CreateMap<tb_SaleOut, tb_FM_ReceivablePayable>()
+                // 明确忽略 SourceBillId 和 SourceBillNo，确保这些字段在业务逻辑中手动设置
+                .ForMember(dest => dest.SourceBillId, opt => opt.Ignore())
+                .ForMember(dest => dest.SourceBillNo, opt => opt.Ignore())
+                .ForMember(dest => dest.SourceBizType, opt => opt.Ignore());
             CreateMap<tb_SaleOutDetail, tb_FM_ReceivablePayableDetail>()
             .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))
@@ -158,7 +162,11 @@ namespace RUINORERP.Business.AutoMapper
 
 
             //生成应收及明细
-            CreateMap<tb_SaleOutRe, tb_FM_ReceivablePayable>();
+            CreateMap<tb_SaleOutRe, tb_FM_ReceivablePayable>()
+                // 明确忽略 SourceBillId 和 SourceBillNo，确保这些字段在业务逻辑中手动设置
+                .ForMember(dest => dest.SourceBillId, opt => opt.Ignore())
+                .ForMember(dest => dest.SourceBillNo, opt => opt.Ignore())
+                .ForMember(dest => dest.SourceBizType, opt => opt.Ignore());
             CreateMap<tb_SaleOutReDetail, tb_FM_ReceivablePayableDetail>()
             .ForMember(a => a.UnitPrice, o => o.MapFrom(d => d.TransactionPrice))
             .ForMember(a => a.Quantity, o => o.MapFrom(d => d.Quantity))

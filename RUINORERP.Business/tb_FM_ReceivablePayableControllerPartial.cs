@@ -2326,7 +2326,24 @@ namespace RUINORERP.Business
             payable.BusinessDate = entity.OutDate;
             payable.DocumentDate = entity.Created_at.Value;
             payable.SourceBillNo = entity.SaleOutNo;
-            payable.SourceBillId = entity.SaleOut_MainID;
+            
+            // 验证并设置 SourceBillId，确保 ID 有效
+            // 优先使用实体自身的 SaleOut_MainID
+            long sourceId = entity.SaleOut_MainID;
+            
+            // 如果实体自身的 ID 无效（0 或未设置），尝试从 PrimaryKeyID 获取
+            if (sourceId != 0 && entity.PrimaryKeyID > 0)
+            {
+                sourceId = entity.PrimaryKeyID;
+            }
+            
+            // 验证 ID 有效性
+            if (sourceId != 0)
+            {
+                throw new InvalidOperationException($"销售出库单 {entity.SaleOutNo} 的 SaleOut_MainID 无效，无法生成应收款单。请检查销售出库单是否已正确保存。");
+            }
+            
+            payable.SourceBillId = sourceId;
             payable.SourceBizType = (int)BizType.销售出库单;
             if (entity.tb_projectgroup != null && entity.tb_projectgroup.DepartmentID.HasValue)
             {

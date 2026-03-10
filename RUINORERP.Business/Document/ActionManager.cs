@@ -192,7 +192,7 @@ namespace RUINORERP.Business.Document
             {
                 // 这里可以添加基于单据状态的过滤逻辑
                 // 例如：已审核的单据不能再次转换等
-              //  _logger.LogDebug($"根据单据状态过滤可用操作，源单据类型: {typeof(TSource).Name}, ID: {source.PrimaryKeyID}");
+                //  _logger.LogDebug($"根据单据状态过滤可用操作，源单据类型: {typeof(TSource).Name}, ID: {source.PrimaryKeyID}");
 
                 // 添加基于状态的过滤逻辑
                 // 只有已审核的单据才能进行转换操作
@@ -211,37 +211,47 @@ namespace RUINORERP.Business.Document
                     // 根据权限设置操作的可见性和可用性
                     foreach (var action in result)
                     {
-                        var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
-                            .WhereIF(!string.IsNullOrEmpty(Flag), c => c.tb_menuinfo.UIPropertyIdentifier == Flag)
-                            .FirstOrDefault();
-
-                        //对账单这种，就是有收付类型。但只有一种情况
-                        if (MenuInfo == null && !string.IsNullOrEmpty(Flag))
+                        if (action.ConversionType == DocumentConversionType.DocumentGeneration)
                         {
-                            MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
-                            .FirstOrDefault();
-                        }
 
-                        if (MenuInfo != null)
-                        {
-                            var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.联动.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
-                            if (btnInfo != null)
+
+
+                            var MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
+                                .WhereIF(!string.IsNullOrEmpty(Flag), c => c.tb_menuinfo.UIPropertyIdentifier == Flag)
+                                .FirstOrDefault();
+
+                            //对账单这种，就是有收付类型。但只有一种情况
+                            if (MenuInfo == null && !string.IsNullOrEmpty(Flag))
                             {
-                                action.IsVisible = btnInfo.IsVisble;
+                                MenuInfo = _applicationContext.CurrentRole.tb_P4Menus.Where(c => c.tb_menuinfo.EntityName == action.SourceType && c.tb_menuinfo.BIBaseForm.Contains("BaseBillEditGeneric"))
+                                .FirstOrDefault();
+                            }
+
+                            if (MenuInfo != null)
+                            {
+                                var btnInfo = _applicationContext.CurrentRole.tb_P4Buttons.Where(c => c.tb_buttoninfo.BtnText == MenuItemEnums.联动.ToString() && c.tb_buttoninfo.MenuID == MenuInfo.MenuID).FirstOrDefault();
+                                if (btnInfo != null)
+                                {
+                                    action.IsVisible = btnInfo.IsVisble;
+                                }
+                                else
+                                {
+                                    action.IsVisible = false;
+                                }
                             }
                             else
                             {
                                 action.IsVisible = false;
                             }
+
+                            //控制是否可用,暂时默认可以用，是否能保存。看目标窗体中的权限控制
+                            action.IsEnabled = true;
                         }
                         else
                         {
-                            action.IsVisible = false;
+                            //执行动作时的可用情况
+                            //var canExecute = _stateManager.CanExecuteActionWithMessage(source, Global.MenuItemEnums.).CanExecute;
                         }
-
-                        //控制是否可用,暂时默认可以用，是否能保存。看目标窗体中的权限控制
-                        action.IsEnabled = true;
-
                     }
 
                     // 假设Status属性表示单据状态，1表示已审核
@@ -360,7 +370,7 @@ namespace RUINORERP.Business.Document
         public string TargetDocumentDisplayName { get; set; }
 
         /// <summary>
-        /// 转换器类型
+        /// 转换器定义的类型（类名）
         /// </summary>
         public Type ConverterType { get; set; }
 

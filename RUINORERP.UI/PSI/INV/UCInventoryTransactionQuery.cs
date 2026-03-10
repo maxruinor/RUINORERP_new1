@@ -115,7 +115,7 @@ namespace RUINORERP.UI.PSI.INV
         /// <param name="UseNavQuery">是否使用导航查询</param>
         public async override void QueryAsync(bool UseNavQuery = false)
         {
-            if (Edited)
+            if (HasUnsavedChanges)
             {
                 if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                 {

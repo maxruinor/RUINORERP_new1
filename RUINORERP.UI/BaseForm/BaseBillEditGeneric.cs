@@ -160,6 +160,23 @@ namespace RUINORERP.UI.BaseForm
 
         #endregion
 
+        /// <summary>
+        /// 是否有未保存的更改（统一使用实体HasChanged属性判断）
+        /// </summary>
+        protected override bool HasUnsavedChanges
+        {
+            get
+            {
+                if (EditEntity == null)
+                {
+                    return false;
+                }
+
+                // 使用实体的 HasChanged 属性判断
+                return EditEntity.HasChanged && EditEntity.GetEffectiveChanges().Count > 0;
+            }
+        }
+
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
             List<UControls.ContextMenuController> list = new List<UControls.ContextMenuController>();
@@ -4169,16 +4186,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         protected virtual void Cancel()
         {
-            // 检查是否有未保存的数据更改
-            bool hasUnsavedChanges = false;
-
-            // 检查主实体是否有更改
-            if (EditEntity != null)
-            {
-                long pkid = EditEntity.PrimaryKeyID;
-                // 如果不是新创建的实体（pkid > 0）或者处于编辑状态，则认为可能有更改
-                hasUnsavedChanges = pkid > 0 || Edited;
-            }
+            // 使用 HasUnsavedChanges 统一判断
+            bool hasUnsavedChanges = HasUnsavedChanges;
 
             // 检查子实体是否有更改
             if (bindingSourceSub != null && bindingSourceSub.DataSource != null)
@@ -4186,7 +4195,15 @@ namespace RUINORERP.UI.BaseForm
                 List<C> detailEntities = bindingSourceSub.DataSource as List<C>;
                 if (detailEntities != null && detailEntities.Count > 0)
                 {
-                    hasUnsavedChanges = true;
+                    // 检查子实体是否有变化
+                    foreach (var detail in detailEntities)
+                    {
+                        if (detail is BaseEntity detailEntity && detailEntity.HasChanged)
+                        {
+                            hasUnsavedChanges = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -7307,7 +7324,7 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Query()
         {
-            if (base.Edited)
+            if (HasUnsavedChanges)
             {
                 if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                 {
@@ -7392,7 +7409,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     //这里应该是重新加载单据内容 而不是查询
                     //但是，查询才是对的，因为数据会修改变化缓存。
-                    if (!Edited)
+                    if (!HasUnsavedChanges)
                     {
                         if (OnBindDataToUIEvent != null)
                         {
@@ -7435,9 +7452,6 @@ namespace RUINORERP.UI.BaseForm
                                     editEntity = Activator.CreateInstance<T>();
                                 }
                                 OnBindDataToUIEvent(EditEntity, ActionStatus.加载);
-
-                                //刷新了。不再提示编辑状态了
-                                Edited = false;
                             }
                         }
                     }
@@ -7447,11 +7461,19 @@ namespace RUINORERP.UI.BaseForm
 
         protected override void Exit(object thisform)
         {
-            if (EditEntity == null || !EditEntity.HasChanged)
+            // 使用 HasUnsavedChanges 统一判断
+            if (!HasUnsavedChanges)
             {
-                Edited = false;
+                base.Exit(this);
             }
-            base.Exit(this);
+            else
+            {
+                // 有未保存数据，提示用户
+                if (MessageBox.Show("有数据没有保存\r\n你确定要退出吗", "询问", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
+                {
+                    base.Exit(this);
+                }
+            }
         }
 
         /// <summary>

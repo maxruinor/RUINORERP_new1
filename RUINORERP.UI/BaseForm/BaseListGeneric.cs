@@ -88,6 +88,18 @@ namespace RUINORERP.UI.BaseForm
         public bool EnableSmartHelp { get; set; } = true;
 
         /// <summary>
+        /// 是否有未保存的更改
+        /// </summary>
+        protected override bool HasUnsavedChanges
+        {
+            get
+            {
+                // 对于列表窗体，检查是否有未保存的编辑
+                return Edited;
+            }
+        }
+
+        /// <summary>
         /// 窗体帮助键(可选,覆盖默认值)
         /// </summary>
         [Category("帮助系统")]
@@ -616,10 +628,6 @@ namespace RUINORERP.UI.BaseForm
                 default:
                     break;
             }
-
-
-
-            Edited = toolStripButtonSave.Enabled;
         }
 
 
@@ -1313,7 +1321,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 //将选中的值保存到这里，用在 复杂编辑UI时 编辑外键的其他资料
                 base.Tag = bindingSourceList.Current;
-                if (!Edited)
+                if (!HasUnsavedChanges)
                 {
                     //退出
                     Form frm = (this as Control).Parent.Parent as Form;
@@ -1807,7 +1815,7 @@ namespace RUINORERP.UI.BaseForm
         //[MustOverride]
         public async override void QueryAsync(bool UseAutoNavQuery = false)
         {
-            if (Edited)
+            if (HasUnsavedChanges)
             {
                 if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                 {
@@ -2033,7 +2041,7 @@ namespace RUINORERP.UI.BaseForm
         protected override async void Exit(object thisform)
         {
             await UIBizService.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
-            if (!Edited)
+            if (!HasUnsavedChanges)
             {
                 //退出
                 CloseTheForm(thisform);
@@ -2055,7 +2063,7 @@ namespace RUINORERP.UI.BaseForm
         protected override void Refreshs()
         {
             LimitQueryConditionsBuilder();
-            if (!Edited)
+            if (!HasUnsavedChanges)
             {
                 QueryAsync();
             }

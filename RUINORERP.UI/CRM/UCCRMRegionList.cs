@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -122,7 +122,7 @@ namespace RUINORERP.UI.CRM
 
         protected async override void Query()
         {
-            if (base.Edited)
+            if (HasUnsavedChanges)
             {
                 if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                 {

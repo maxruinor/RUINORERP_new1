@@ -113,7 +113,7 @@ namespace RUINORERP.Model
 
         private DateTime _FollowUpDate;
         /// <summary>
-        /// 跟进日期
+        /// 跟进日期1
         /// </summary>
         [AdvQueryAttribute(ColName = "FollowUpDate",ColDesc = "跟进日期")] 
         [SugarColumn(ColumnDataType = "datetime", SqlParameterDbType ="DateTime",  ColumnName = "FollowUpDate" ,IsNullable = false,ColumnDescription = "跟进日期" )]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -634,7 +634,7 @@ namespace RUINORERP.UI.BaseForm
         //[MustOverride]
         public  override void QueryAsync(bool UseAutoNavQuery = false)
         {
-            if (Edited)
+            if (HasUnsavedChanges)
             {
                 if (MessageBox.Show("你有数据没有保存，当前操作会丢失数据\r\n你确定不保存吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.No)
                 {
@@ -709,7 +709,7 @@ namespace RUINORERP.UI.BaseForm
         {
             //保存请求的配置？
             //UIBizSrvice.SaveGridSettingData(CurMenuInfo, dataGridView1, typeof(T));
-            if (!Edited)
+            if (!HasUnsavedChanges)
             {
                 //退出
                 CloseTheForm(thisform);

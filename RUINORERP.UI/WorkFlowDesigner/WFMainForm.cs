@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing.Printing;
 using System.Drawing;
 using System.Collections;
@@ -877,16 +877,29 @@ namespace RUINORERP.UI.WorkFlowDesigner
         private bool editflag;
         /// <summary>
         /// 是否为编辑 如果为是则true
+        /// [已废弃] 请使用 HasUnsavedChanges 代替
         /// </summary>
+        [Obsolete("请使用 HasUnsavedChanges 代替此属性", false)]
         public bool Edited
         {
             get { return editflag; }
             set { editflag = value; }
         }
 
+        /// <summary>
+        /// 是否有未保存的更改
+        /// </summary>
+        protected virtual bool HasUnsavedChanges
+        {
+            get
+            {
+                return Edited;
+            }
+        }
+
         protected virtual void Exit(object thisform)
         {
-            if (!Edited)
+            if (!HasUnsavedChanges)
             {
                 //退出
                 CloseTheForm(thisform);

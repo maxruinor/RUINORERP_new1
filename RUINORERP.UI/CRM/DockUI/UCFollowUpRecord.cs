@@ -30,6 +30,7 @@ namespace RUINORERP.UI.CRM.DockUI
             InitializeComponent();
         }
 
+        //
         tb_CRM_FollowUpRecords RecordEntity = null;
         public void BindData(tb_CRM_FollowUpRecords entity, ActionStatus actionStatus = ActionStatus.无操作)
         {

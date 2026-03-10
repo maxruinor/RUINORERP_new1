@@ -3624,6 +3624,10 @@ namespace RUINORERP.Business
                             it.PrePaymentStatus,
                             it.ForeignBalanceAmount,
                             it.LocalBalanceAmount,
+                            it.LocalRefundAmount,
+                            it.ForeignRefundAmount,
+                            it.Remark,
+                            it.IsAvailable,
                         }).ExecuteCommandAsync();
                 }
 

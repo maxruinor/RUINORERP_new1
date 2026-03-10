@@ -159,7 +159,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
- 
+
         public virtual List<UControls.ContextMenuController> AddContextMenu()
         {
             List<UControls.ContextMenuController> list = new List<UControls.ContextMenuController>();
@@ -1296,25 +1296,25 @@ namespace RUINORERP.UI.BaseForm
                 List<string> imageNames = new List<string>();
                 List<ImageInfo> imageInfos = new List<ImageInfo>();
 
-               
-                    if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+
+                if (downloadResponse.IsSuccess && downloadResponse.FileStorageInfos != null)
+                {
+                    foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
                     {
-                        foreach (var fileStorageInfo in downloadResponse.FileStorageInfos)
+                        if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
                         {
-                            if (fileStorageInfo.FileData != null && fileStorageInfo.FileData.Length > 0)
-                            {
-                                imageDataList.Add(fileStorageInfo.FileData);
-                                imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
-                                // fileStorageInfo.OwnerTableName= typeof(T).Name;
-                                AddFileStorageInfo(entity as BaseEntity, fileStorageInfo);
-                            }
+                            imageDataList.Add(fileStorageInfo.FileData);
+                            imageInfos.Add(ctrpay.ConvertToImageInfo(fileStorageInfo));
+                            // fileStorageInfo.OwnerTableName= typeof(T).Name;
+                            AddFileStorageInfo(entity as BaseEntity, fileStorageInfo);
                         }
                     }
-                    else
-                    {
-                        logger.LogWarning("图片下载失败: {ErrorMessage}", downloadResponse.ErrorMessage ?? "未知错误");
-                    }
-                
+                }
+                else
+                {
+                    logger.LogWarning("图片下载失败: {ErrorMessage}", downloadResponse.ErrorMessage ?? "未知错误");
+                }
+
 
                 if (imageDataList.Count > 0)
                 {
@@ -1612,12 +1612,13 @@ namespace RUINORERP.UI.BaseForm
         public async Task<bool> UploadUpdatedImagesAsync<Target>(Target entity, List<Tuple<byte[], ImageInfo>> updatedImages, Expression<Func<Target, object>> TargetField)
         {
             // 转换为新版本的参数格式
-            var imageInfos = updatedImages.Select(tuple => {
+            var imageInfos = updatedImages.Select(tuple =>
+            {
                 var imageInfo = tuple.Item2;
                 imageInfo.ImageData = tuple.Item1;
                 return imageInfo;
             }).ToList();
-            
+
             // 调用新版本方法，deletedImages参数传入null
             return await UploadUpdatedImagesAsync(entity, imageInfos, null, TargetField);
         }
@@ -2522,7 +2523,7 @@ namespace RUINORERP.UI.BaseForm
                         if (btnQuery != null)
                         {
                             btnQuery.Enabled = true;
-    
+
                         }
                     }
                     break;
@@ -2791,7 +2792,7 @@ namespace RUINORERP.UI.BaseForm
                         if (btnRefresh != null)
                         {
                             btnRefresh.Enabled = true;
-    
+
                         }
                     }
                     break;
@@ -3329,10 +3330,10 @@ namespace RUINORERP.UI.BaseForm
                     {
                         string strCloseCaseImagePath = System.DateTime.Now.ToString("yy") + "/" + System.DateTime.Now.ToString("MM") + "/" + Ulid.NewUlid().ToString();
                         byte[] bytes = ImageHelper.ImageToByteArray(frm.CloseCaseImage);
-                        
+
                         // 获取主键ID作为BusinessId
                         long businessId = EditEntity?.GetType().GetProperty("Id")?.GetValue(EditEntity) as long? ?? 0;
-                        
+
                         // 添加到图片状态管理器队列（与保存/审核相同的模式）
                         var imageInfo = new RUINORERP.Common.BusinessImage.ImageInfo
                         {
@@ -3345,7 +3346,7 @@ namespace RUINORERP.UI.BaseForm
                             RelatedField = "CloseCaseImagePath",
                             Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload
                         };
-                        
+
                         RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
 
                         // 先保存单据基本信息
@@ -4418,7 +4419,7 @@ namespace RUINORERP.UI.BaseForm
                     RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(successImageIds);
                     MainForm.Instance.PrintInfoLog($"成功上传 {successImageIds.Count} 张图片");
                 }
-                
+
                 if (failedImageIds.Count > 0)
                 {
                     MainForm.Instance.PrintInfoLog($"{failedImageIds.Count} 张图片上传失败，已恢复为待上传状态", Color.Orange);
@@ -5433,15 +5434,15 @@ namespace RUINORERP.UI.BaseForm
                     string message = $"【{menuItemText}】操作需要选择目标单据进行抵扣。\n\n" +
                                    $"请使用编辑窗体中的专用抵扣功能来完成此操作。\n\n" +
                                    $"提示：在验证结果中可以看到可用的目标单据列表。";
-                    
+
                     if (validationResult.HasMessages)
                     {
                         message += "\n\n" + validationResult.GetFormattedMessages();
                     }
-                    
+
                     MessageBox.Show(message, "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 });
-                
+
             }
             catch (Exception ex)
             {
@@ -6714,6 +6715,8 @@ namespace RUINORERP.UI.BaseForm
                                             {
                                                 toolStripbtnReview.Enabled = true;
                                             }
+                                            // 自动审核成功后，清除因审核操作产生的变化标志，避免误判为未保存数据
+                                            saleOrder.AcceptChanges();
                                         }
                                         else
                                         {
@@ -6762,6 +6765,9 @@ namespace RUINORERP.UI.BaseForm
                                             {
                                                 toolStripbtnReview.Enabled = true;
                                             }
+                                            // 自动审核成功后，清除因审核操作产生的变化标志，避免误判为未保存数据
+                                            EditEntity.AcceptChanges();
+
                                         }
                                         else
                                         {

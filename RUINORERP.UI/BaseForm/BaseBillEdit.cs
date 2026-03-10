@@ -954,7 +954,7 @@ namespace RUINORERP.UI.BaseForm
         private bool editflag;
 
         /// <summary>
-        /// 是否为编辑 如果为是则true
+        /// 是否为编辑 如果为是则true1
         /// </summary>
         public bool Edited
         {

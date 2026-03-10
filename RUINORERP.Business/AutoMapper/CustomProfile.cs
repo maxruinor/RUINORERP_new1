@@ -115,9 +115,13 @@ namespace RUINORERP.Business.AutoMapper
             CreateMap<tb_AS_AfterSaleApplyDetail, tb_AS_AfterSaleDeliveryDetail>();
 
             //生成预付单
-            CreateMap<tb_PurOrder, tb_FM_PreReceivedPayment>();
+            CreateMap<tb_PurOrder, tb_FM_PreReceivedPayment>()
+                .ForMember(dest => dest.LocalBalanceAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.ForeignBalanceAmount, opt => opt.Ignore());
             //生成预收单
-            CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>();
+            CreateMap<tb_SaleOrder, tb_FM_PreReceivedPayment>()
+                .ForMember(dest => dest.LocalBalanceAmount, opt => opt.Ignore())
+                .ForMember(dest => dest.ForeignBalanceAmount, opt => opt.Ignore());
 
             //对账单转收款单
             //多个对账单转收款单 合并生成一个 付款单

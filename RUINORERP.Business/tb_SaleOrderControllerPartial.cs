@@ -247,7 +247,7 @@ namespace RUINORERP.Business
                                                 var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
                                                 if (rrs.Succeeded)
                                                 {
-                                                    //自动审核收款单
+                                                    //自动审核收款单1
                                                     paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
                                                     paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
                                                     paymentRecord.ApprovalResults = true;

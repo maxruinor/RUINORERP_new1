@@ -543,6 +543,8 @@ namespace RUINORERP.Business
             }
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
+            payable.LocalBalanceAmount = 0;
+            payable.ForeignBalanceAmount = 0;
 
             #endregion
             return payable;
@@ -641,6 +643,8 @@ namespace RUINORERP.Business
             payable.PrePaymentReason = $"采购订单{entity.PurOrderNo}的预付款";
             Business.BusinessHelper.Instance.InitEntity(payable);
             payable.PrePaymentStatus = (int)PrePaymentStatus.待审核;
+            payable.LocalBalanceAmount = 0;
+            payable.ForeignBalanceAmount = 0;
 
             #endregion
             return payable;

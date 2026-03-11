@@ -174,7 +174,7 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 检查是否可以播放语音提醒
+        /// 检查是否可以播放语音提醒1
         /// </summary>
         public static bool CanPlayVoiceReminder(MessageReminderConfig config = null)
         {

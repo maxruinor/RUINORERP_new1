@@ -5,7 +5,7 @@ using System;
 namespace RUINORERP.UI.Common
 {
     /// <summary>
-    /// 语音提醒服务接口
+    /// 语音提醒服务接口1
     /// </summary>
     public interface IVoiceReminder : IDisposable
     {

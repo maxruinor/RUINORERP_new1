@@ -1,39 +1,23 @@
 namespace RUINORERP.Lib.BusinessImage
 {
     /// <summary>
-    /// 图片状态枚举12
-    /// 定义图片在不同业务场景下的状态
+    /// 图片同步状态枚举
     /// </summary>
     public enum ImageStatus
     {
         /// <summary>
-        /// 正常状态
+        /// 正常状态 - 已有图片，从服务器加载
         /// </summary>
         Normal,
         
         /// <summary>
-        /// 待上传
+        /// 待上传 - 新增或修改的图片需要上传到服务器
         /// </summary>
         PendingUpload,
         
         /// <summary>
-        /// 处理中（防止重复处理）
+        /// 待删除 - 需要从服务器删除的图片
         /// </summary>
-        Processing,
-        
-        /// <summary>
-        /// 已上传
-        /// </summary>
-        Uploaded,
-        
-        /// <summary>
-        /// 待删除
-        /// </summary>
-        PendingDelete,
-        
-        /// <summary>
-        /// 已删除
-        /// </summary>
-        Deleted
+        PendingDelete
     }
 }

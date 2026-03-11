@@ -1429,9 +1429,6 @@ namespace RUINORERP.UI.BaseForm
                     {
                         successCount++;
                         MainForm.Instance.uclog.AddLog($"图片上传成功：{imageInfo.OriginalFileName}");
-
-                        // 上传成功后，将图片标记为正常状态
-                        imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                     }
                     else
                     {
@@ -1589,8 +1586,6 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 successCount++;
                                 MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
-                                // 上传成功后，将图片标记为正常状态
-                                imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                             }
                             else
                             {
@@ -4397,8 +4392,8 @@ namespace RUINORERP.UI.BaseForm
                                 string fileIdStr = cellFileInfo != null ? cellFileInfo.FileId.ToString() : null;
                                 UpdateCellImageDisplay(cell, imageInfo.ImageData, fileIdStr);
 
-                                // 标记为已上传状态
-                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.Uploaded);
+                                // 上传成功后移除图片
+                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.ImageId);
                                 successImageIds.Add(imageInfo.ImageId);
                                 processedCount++;
                                 MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
@@ -4473,10 +4468,6 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 先标记为处理中状态，防止重复处理
-                var imageIds = extendedImageInfoList.Select(img => img.ImageId).ToList();
-                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.MarkImagesAsProcessing(imageIds);
-
                 // 获取文件管理服务
                 var fileService = Startup.GetFromFac<FileManagementService>();
                 int successCount = 0;
@@ -4500,8 +4491,8 @@ namespace RUINORERP.UI.BaseForm
 
                         if (deleteResult != null && deleteResult.IsSuccess)
                         {
-                            // 标记为已删除
-                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Lib.BusinessImage.ImageStatus.Deleted);
+                            // 删除成功后直接移除
+                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageId);
                             successCount++;
                         }
                         else

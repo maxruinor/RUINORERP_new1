@@ -429,7 +429,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private void InitializeContextMenu()
         {
-            // 添加语音提醒菜单项
+            // 添加语音提醒菜单项2
             _menuPlayVoiceReminder = new ToolStripMenuItem("播放语音提醒");
             _menuPlayVoiceReminder.Click += MenuPlayVoiceReminder_Click;
             contextMenuStripMessages.Items.Add(_menuPlayVoiceReminder);

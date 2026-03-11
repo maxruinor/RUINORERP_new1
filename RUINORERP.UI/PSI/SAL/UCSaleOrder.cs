@@ -1789,13 +1789,9 @@ namespace RUINORERP.UI.PSI.SAL
                             MainForm.Instance.uclog.AddLog("图片删除成功", Global.UILogType.成功提示消息);
                             // 删除成功后清空删除列表
                             magicPictureBox订金付款凭证.ClearDeletedImagesList();
-                            // 添加删除同步结果
+                            // 删除成功后直接从管理器中移除
                             var deletedImageIds = deletedImages.Select(img => img.FileId).ToList();
-                            // 简化：不再创建复杂的同步结果，直接更新状态
-                            foreach (var imageId in deletedImageIds)
-                            {
-                                ImageStateManager.Instance.UpdateImageStatus(imageId, ImageStatus.Deleted);
-                            }
+                            ImageStateManager.Instance.RemoveImages(deletedImageIds);
                         }
                     }
 
@@ -1819,13 +1815,9 @@ namespace RUINORERP.UI.PSI.SAL
                         else
                         {
                             MainForm.Instance.uclog.AddLog("图片上传成功", Global.UILogType.成功提示消息);
-                            // 添加上传同步结果
+                            // 上传成功后移除图片
                             var uploadedImageIds = updatedImages.Select(img => img.FileId).ToList();
-                            // 简化：不再创建复杂的同步结果，直接更新状态
-                            foreach (var imageId in uploadedImageIds)
-                            {
-                                ImageStateManager.Instance.UpdateImageStatus(imageId, ImageStatus.Uploaded);
-                            }
+                            ImageStateManager.Instance.RemoveImages(uploadedImageIds);
                         }
                     }
 

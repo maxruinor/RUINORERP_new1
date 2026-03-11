@@ -674,7 +674,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileExtension = imageInfosList[i].FileExtension,
                             HashValue = hashValue, // 更新哈希值
                             Metadata = imageInfosList[i].Metadata != null ? new Dictionary<string, string>(imageInfosList[i].Metadata) : new Dictionary<string, string>(),
-                            Status = isFromServer ? ImageStatus.Normal : ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
+                            Status = isFromServer ? ImageStatus.Normal : ImageStatus.PendingUpload // 从服务器加载为Normal，新增为PendingUpload
                         };
                     }
                     else
@@ -690,7 +690,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             Metadata = new Dictionary<string, string>(),
                             FileType = "",
                             ModifiedAt = DateTime.Now,
-                            Status = isFromServer ? ImageStatus.Normal : ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
+                            Status = ImageStatus.PendingUpload // 新创建的图片为待上传
                         };
                     }
 
@@ -2550,7 +2550,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             CreateTime = DateTime.Now,
                             Metadata = new Dictionary<string, string> { { "Error", "加载失败" } },
                             HashValue = "",
-                            Status= ImageStatus.Normal,
                             Width = 0,
                             Height = 0
                         });
@@ -3313,7 +3312,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 if (imageInfo != null)
                 {
-                    imageInfo.Status = ImageStatus.Normal;
+                    // 简化：上传成功的图片不再标记状态，而是直接移除
                 }
             }
 
@@ -3352,7 +3351,6 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 if (imageInfo != null)
                 {
-                    imageInfo.Status = ImageStatus.Normal;
                     _updateManager.ResetImageUpdateStatus(imageInfo);
                 }
             }

@@ -11,7 +11,7 @@ namespace RUINORERP.UI.Common
 {
 
     /// <summary>
-    /// 服务器消息语音提醒工具（基于System.Speech）
+    /// 服务器消息语音提醒工具（基于System.Speech）1
     /// </summary>
     public class SystemSpeechVoiceReminder : IVoiceReminder
     {

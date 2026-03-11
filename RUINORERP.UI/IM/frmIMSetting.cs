@@ -44,7 +44,7 @@ namespace RUINORERP.UI.IM
         /// </summary>
         private void BindConfigToUI()
         {
-            // 语音提醒开关
+            // 语音提醒开关2
             chkVoiceReminder.Checked = _currentConfig.VoiceReminderEnabled;
             
             // 音量调节滑块

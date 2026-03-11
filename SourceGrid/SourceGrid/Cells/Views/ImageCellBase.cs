@@ -75,7 +75,7 @@ namespace SourceGrid.Cells.Views
         protected string _currentImageHash = string.Empty;
 
         /// <summary>
-        /// 缓存的图片状态
+        /// 缓存的图片状态（默认正常）
         /// </summary>
         protected ImageStatus _cachedImageStatus = ImageStatus.Normal;
 

@@ -6,7 +6,7 @@ using System;
 namespace RUINORERP.UI.Common
 {
     /// <summary>
-    /// 空语音提醒实现 - 用于不支持System.Speech的系统
+    /// 空语音提醒实现 - 用于不支持System.Speech的系统1
     /// </summary>
     public class NullVoiceReminder : IVoiceReminder
     {

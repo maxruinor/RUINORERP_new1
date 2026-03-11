@@ -992,7 +992,7 @@ namespace SourceGrid.Cells.Editors
                 // 第二步：处理新图片
                 if (!SetImageToPath(newImage))
                 {
-                    // 新图片处理失败，恢复旧图片状态
+                    // 新图片处理失败，恢复旧图片状态为Normal
                     if (oldFileId > 0 && stateManager != null)
                     {
                         stateManager.UpdateImageStatus(oldFileId, ImageStatus.Normal);
@@ -1149,17 +1149,13 @@ namespace SourceGrid.Cells.Editors
                 Control.Value = oldFileId > 0 ? oldFileId : (object)null;
                 CurrentFileIdLong = oldFileId;
                 
-                // 恢复旧图片的状态（如果之前被标记为待删除）
+                // 恢复旧图片的状态为Normal（如果之前被标记为待删除）
                 if (oldFileId > 0)
                 {
                     var stateManager = _stateManager ?? ImageStateManager.Instance;
                     if (stateManager != null)
                     {
-                        var oldImageInfo = stateManager.GetImageInfo(oldFileId);
-                        if (oldImageInfo != null && oldImageInfo.Status == ImageStatus.PendingDelete)
-                        {
-                            stateManager.UpdateImageStatus(oldFileId, ImageStatus.Normal);
-                        }
+                        stateManager.UpdateImageStatus(oldFileId, ImageStatus.Normal);
                     }
                 }
                 

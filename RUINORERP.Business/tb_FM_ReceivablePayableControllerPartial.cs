@@ -2255,7 +2255,7 @@ namespace RUINORERP.Business
 
         /// <summary>
         /// 查找可抵扣的应收应付款单
-        /// 用于预收付款单抵扣应收应付款单的场景
+        /// 用于预收付款单抵扣应收应付款单的场景12
         /// </summary>
         /// <param name="prePayment">预收付款单</param>
         /// <returns>可抵扣的应收应付款单列表</returns>

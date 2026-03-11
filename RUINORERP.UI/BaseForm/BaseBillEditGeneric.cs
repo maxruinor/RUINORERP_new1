@@ -5429,6 +5429,12 @@ namespace RUINORERP.UI.BaseForm
                 var actionResultTask = (Task<RUINORERP.Business.Document.ActionResult>)executeMethod.Invoke(converter, new object[] { EditEntity, null });
                 var actionResult = await actionResultTask;
 
+                if (actionResult.Cancelled)
+                {
+                    // 用户取消操作，不显示任何消息
+                    return;
+                }
+
                 if (actionResult.Success)
                 {
                     // 操作成功，显示成功消息

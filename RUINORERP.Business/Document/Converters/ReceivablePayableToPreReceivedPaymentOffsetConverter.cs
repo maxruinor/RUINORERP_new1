@@ -102,7 +102,7 @@ namespace RUINORERP.Business.Document.Converters
 
                     if (confirmResult == System.Windows.Forms.DialogResult.No)
                     {
-                        return ActionResult.Fail("用户取消了操作");
+                        return ActionResult.CancelResult();
                     }
                 }
 
@@ -132,7 +132,7 @@ namespace RUINORERP.Business.Document.Converters
                     selectedAdvances = await ShowAdvanceSelectorAsync(source, availableAdvances);
                     if (selectedAdvances == null || selectedAdvances.Count == 0)
                     {
-                        return ActionResult.Fail("用户取消了操作");
+                        return ActionResult.CancelResult();
                     }
                 }
 
@@ -163,6 +163,53 @@ namespace RUINORERP.Business.Document.Converters
         }
 
         /// <summary>
+        /// 获取单据对应的订单ID
+        /// </summary>
+        /// <param name="sourceBizType">来源业务类型</param>
+        /// <param name="sourceBillId">来源单据ID</param>
+        /// <returns>订单ID，如果不是订单类型或无法获取则返回null</returns>
+        private async Task<long?> GetOrderIdAsync(int? sourceBizType, long? sourceBillId)
+        {
+            if (!sourceBizType.HasValue || !sourceBillId.HasValue)
+            {
+                return null;
+            }
+
+            try
+            {
+                switch ((BizType)sourceBizType.Value)
+                {
+                    case BizType.销售订单:
+                    case BizType.采购订单:
+                        return sourceBillId;
+
+                    case BizType.销售出库单:
+                        var saleOut = await _appContext.Db.Queryable<tb_SaleOut>()
+                            .Includes(c => c.tb_saleorder)
+                            .Where(c => c.SaleOut_MainID == sourceBillId.Value)
+                            .FirstAsync();
+                        return saleOut?.tb_saleorder?.SOrder_ID;
+
+                    case BizType.采购入库单:
+                        var purEntry = await _appContext.Db.Queryable<tb_PurEntry>()
+                            .Includes(c => c.tb_purorder)
+                            .Where(c => c.PurEntryID == sourceBillId.Value)
+                            .FirstAsync();
+                        return purEntry?.tb_purorder?.PurOrder_ID;
+
+                    default:
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取订单ID时发生错误，来源业务类型：{SourceBizType}，来源单据ID：{SourceBillId}", 
+                    sourceBizType, sourceBillId);
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 检查应收应付款单和预收付款单的订单号是否匹配
         /// </summary>
         /// <param name="receivable">应收应付款单</param>
@@ -172,55 +219,9 @@ namespace RUINORERP.Business.Document.Converters
         {
             try
             {
-                // 获取应收应付款单对应的订单号
-                long? receivableOrderId = null;
-                if (receivable.SourceBizType == (int)BizType.销售订单)
-                {
-                    receivableOrderId = receivable.SourceBillId;
-                }
-                else if (receivable.SourceBizType == (int)BizType.销售出库单)
-                {
-                    // 如果是销售出库，需要查找对应的销售订单
-                    var saleOut = await _appContext.Db.Queryable<tb_SaleOut>()
-                        .Includes(c => c.tb_saleorder)
-                        .Where(c => c.SaleOut_MainID == receivable.SourceBillId)
-                        .FirstAsync();
-                    
-                    if (saleOut?.tb_saleorder != null)
-                    {
-                        receivableOrderId = saleOut.tb_saleorder.SOrder_ID;
-                    }
-                }
-                else if (receivable.SourceBizType == (int)BizType.采购订单)
-                {
-                    receivableOrderId = receivable.SourceBillId;
-                }
-                else if (receivable.SourceBizType == (int)BizType.采购入库单)
-                {
-                    // 如果是采购入库，需要查找对应的采购订单
-                    var purEntry = await _appContext.Db.Queryable<tb_PurEntry>()
-                        .Includes(c => c.tb_purorder)
-                        .Where(c => c.PurEntryID == receivable.SourceBillId)
-                        .FirstAsync();
-                    
-                    if (purEntry?.tb_purorder != null)
-                    {
-                        receivableOrderId = purEntry.tb_purorder.PurOrder_ID;
-                    }
-                }
+                var receivableOrderId = await GetOrderIdAsync(receivable.SourceBizType, receivable.SourceBillId);
+                var prePaymentOrderId = await GetOrderIdAsync(prePayment.SourceBizType, prePayment.SourceBillId);
 
-                // 获取预收付款单对应的订单号
-                long? prePaymentOrderId = null;
-                if (prePayment.SourceBizType == (int)BizType.销售订单)
-                {
-                    prePaymentOrderId = prePayment.SourceBillId;
-                }
-                else if (prePayment.SourceBizType == (int)BizType.采购订单)
-                {
-                    prePaymentOrderId = prePayment.SourceBillId;
-                }
-
-                // 比较订单号
                 return prePaymentOrderId.HasValue && receivableOrderId.HasValue && 
                        prePaymentOrderId.Value == receivableOrderId.Value;
             }
@@ -359,7 +360,6 @@ namespace RUINORERP.Business.Document.Converters
 
             try
             {
-                // 检查源单据是否为空
                 if (source == null)
                 {
                     result.CanConvert = false;
@@ -367,8 +367,6 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查应收应付款单状态
-                // 只有待支付或部分支付状态的应收应付款单才能进行抵扣
                 if (source.ARAPStatus != (int)ARAPStatus.待支付 &&
                     source.ARAPStatus != (int)ARAPStatus.部分支付)
                 {
@@ -378,7 +376,6 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查是否已审核
                 if (source.ApprovalStatus != (int)ApprovalStatus.审核通过 ||
                     !source.ApprovalResults.HasValue ||
                     !source.ApprovalResults.Value)
@@ -388,7 +385,6 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 检查应收应付余额是否有效
                 if (source.LocalBalanceAmount <= 0)
                 {
                     result.CanConvert = false;
@@ -396,32 +392,11 @@ namespace RUINORERP.Business.Document.Converters
                     return result;
                 }
 
-                // 添加提示信息
                 var paymentTypeEnum = (ReceivePaymentType)source.ReceivePaymentType;
                 result.AddInfo($"应{paymentTypeEnum}单 {source.ARAPNo} 未核销余额为 {source.LocalBalanceAmount:F2} (本币)");
                 result.AddInfo($"抵扣将生成核销记录，并更新应收应付款单和预收付款单的状态");
 
-                // 查找可用的预收付款单，给出建议
-                var availableAdvances = await _receivablePayableController.FindAvailableAdvances(source);
-
-                if (availableAdvances.Any())
-                {
-                    var totalAvailableAmount = availableAdvances.Sum(x => x.LocalBalanceAmount);
-                    result.AddInfo($"找到 {availableAdvances.Count} 张可用的预{paymentTypeEnum}单，总可用金额为 {totalAvailableAmount:F2} (本币)");
-
-                    if (totalAvailableAmount < source.LocalBalanceAmount)
-                    {
-                        result.AddWarning($"可用预{paymentTypeEnum}单总金额 {totalAvailableAmount:F2} 小于应{paymentTypeEnum}单余额 {source.LocalBalanceAmount:F2}，只能部分抵扣");
-                    }
-                }
-                else
-                {
-                    result.AddWarning($"没有找到可用的预{paymentTypeEnum}单，无法进行抵扣操作");
-                    result.CanConvert = false;
-                    result.ErrorMessage = $"没有找到可用的预{paymentTypeEnum}单";
-                }
-
-                await Task.CompletedTask; // 满足异步方法签名要求
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

@@ -401,6 +401,11 @@ namespace RUINORERP.Business.Document
         public bool Success { get; set; }
 
         /// <summary>
+        /// 是否用户取消操作
+        /// </summary>
+        public bool Cancelled { get; set; }
+
+        /// <summary>
         /// 错误信息
         /// </summary>
         public string ErrorMessage { get; set; }
@@ -431,6 +436,15 @@ namespace RUINORERP.Business.Document
         {
             Success = false,
             ErrorMessage = errorMessage
+        };
+
+        /// <summary>
+        /// 创建用户取消操作结果
+        /// </summary>
+        public static ActionResult CancelResult() => new ActionResult
+        {
+            Success = false,
+            Cancelled = true
         };
 
         /// <summary>

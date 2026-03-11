@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
@@ -98,25 +98,36 @@ namespace RUINORERP.Business.Processor
         //合并的时候要注意把参数统一 ,这里还是没有统一到。暂时没有处理。可以使用
         public LambdaExpression GetFilterLimitExpression(Type type)
         {
-            LambdaExpression lambda1 = null;
-            if (FilterLimitExpressions.Count > 0)
+            if (FilterLimitExpressions == null || FilterLimitExpressions.Count == 0)
             {
-                lambda1 = FilterLimitExpressions[0];
+                return null;
             }
+
             var parameter = Expression.Parameter(type, "t");
-            if (FilterLimitExpressions.Count > 1)
+            Expression combinedBody = null;
+
+            for (int i = 0; i < FilterLimitExpressions.Count; i++)
             {
-                for (int i = 1; i < FilterLimitExpressions.Count; i++)
+                var currentExpression = FilterLimitExpressions[i];
+                var visitor = new ParameterReplacementVisitor(parameter);
+                var replacedBody = visitor.Visit(currentExpression.Body);
+
+                if (combinedBody == null)
                 {
-                    lambda1 = Expression.Lambda(Expression.AndAlso(lambda1.Body, FilterLimitExpressions[i].Body), Expression.Parameter(type, "t"));
+                    combinedBody = replacedBody;
+                }
+                else
+                {
+                    combinedBody = Expression.AndAlso(combinedBody, replacedBody);
                 }
             }
-            var visitor = new ParameterReplacementVisitor(parameter);
-            var parameterReplacedExp = (LambdaExpression)visitor.Visit(lambda1);
-            //转换为TODO
-            //var lambdaNew = (Func<T, bool>)lambda1.Compile();
-            return lambda1;
-            //return CombineLambdaList(FilterLimitExpressions);
+
+            if (combinedBody == null)
+            {
+                return null;
+            }
+
+            return Expression.Lambda(combinedBody, parameter);
         }
 
 

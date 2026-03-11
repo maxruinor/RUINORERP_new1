@@ -335,8 +335,6 @@ namespace RUINORERP.Business.Document
                         }
                     }
                 }
-
-                return options;
             }
             return options;
         }

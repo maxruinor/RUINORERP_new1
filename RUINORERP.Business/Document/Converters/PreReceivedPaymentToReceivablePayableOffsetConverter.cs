@@ -5,11 +5,14 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Document;
 using RUINORERP.Global;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Lib.UI;
 using RUINORERP.Model;
+using RUINORERP.Model.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using tb_SaleOut = RUINORERP.Model.tb_SaleOut;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -25,6 +28,8 @@ namespace RUINORERP.Business.Document.Converters
         private readonly ILogger<PreReceivedPaymentToReceivablePayableOffsetConverter> _logger;
         private readonly tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable> _receivablePayableController;
         private readonly IMapper _mapper;
+        private readonly IDocumentSelectorFactory _selectorFactory;
+        private readonly ApplicationContext _appContext;
 
         /// <summary>
         /// 构造函数 - 依赖注入
@@ -32,15 +37,21 @@ namespace RUINORERP.Business.Document.Converters
         /// <param name="logger">日志记录器</param>
         /// <param name="receivablePayableController">应收应付控制器（用于调用核心抵扣逻辑）</param>
         /// <param name="mapper">对象映射器</param>
+        /// <param name="selectorFactory">单据选择器工厂</param>
+        /// <param name="appContext">应用上下文</param>
         public PreReceivedPaymentToReceivablePayableOffsetConverter(
             ILogger<PreReceivedPaymentToReceivablePayableOffsetConverter> logger,
             tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable> receivablePayableController,
-            IMapper mapper)
+            IMapper mapper,
+            IDocumentSelectorFactory selectorFactory,
+            ApplicationContext appContext)
             : base(logger)
         {
             _receivablePayableController = receivablePayableController ?? throw new ArgumentNullException(nameof(receivablePayableController));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _selectorFactory = selectorFactory ?? throw new ArgumentNullException(nameof(selectorFactory));
+            _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
         }
 
         /// <summary>
@@ -67,16 +78,51 @@ namespace RUINORERP.Business.Document.Converters
                 return ActionResult.Fail("预收付款单不能为空");
             }
 
-            if (target == null)
-            {
-                return ActionResult.Fail("请选择要抵扣的应收应付款单");
-            }
-
             try
             {
-                // 调用业务层的核心抵扣逻辑
+                // 查找可抵扣的应收应付款单
+                var availableReceivables = await _receivablePayableController.FindAvailableReceivablesForOffset(source);
+                if (!availableReceivables.Any())
+                {
+                    return ActionResult.Fail($"没有找到可抵扣的应收应付款单");
+                }
+
+                // 判断是否需要弹出选择窗体
+                bool needShowSelector = true;
+                tb_FM_ReceivablePayable selectedReceivable = null;
+
+                // 如果只有一条符合条件且与当前订单关联，自动抵扣
+                if (availableReceivables.Count == 1)
+                {
+                    var singleReceivable = availableReceivables[0];
+                    
+                    // 检查订单号是否匹配
+                    bool isOrderMatched = await CheckOrderMatchedAsync(source, singleReceivable);
+                    
+                    // 检查预收付款单余额是否足够
+                    bool isBalanceSufficient = source.LocalBalanceAmount >= singleReceivable.LocalBalanceAmount;
+                    
+                    if (isOrderMatched && isBalanceSufficient)
+                    {
+                        // 自动抵扣，无需弹出选择窗体
+                        needShowSelector = false;
+                        selectedReceivable = singleReceivable;
+                    }
+                }
+
+                if (needShowSelector)
+                {
+                    // 弹出选择窗体让用户选择
+                    selectedReceivable = await ShowReceivableSelectorAsync(source, availableReceivables);
+                    if (selectedReceivable == null)
+                    {
+                        return ActionResult.Fail("用户取消了操作");
+                    }
+                }
+
+                // 执行抵扣操作
                 bool success = await _receivablePayableController.ApplyManualPaymentAllocation(
-                    target,
+                    selectedReceivable,
                     new List<tb_FM_PreReceivedPayment> { source });
 
                 if (!success)
@@ -87,18 +133,140 @@ namespace RUINORERP.Business.Document.Converters
                 _logger.LogInformation(
                     "预收付款单 {PreRPNO} 成功抵扣应收应付款单 {ARAPNo}",
                     source.PreRPNO,
-                    target.ARAPNo);
+                    selectedReceivable.ARAPNo);
 
                 var result = ActionResult.SuccessResult();
-                result.InfoMessages.Add($"预收付款单 {source.PreRPNO} 成功抵扣应收应付款单 {target.ARAPNo}");
+                result.InfoMessages.Add($"预收付款单 {source.PreRPNO} 成功抵扣应收应付款单 {selectedReceivable.ARAPNo}");
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "预收付款单 {PreRPNO} 抵扣应收应付款单 {ARAPNo} 时发生错误",
-                    source?.PreRPNO,
-                    target?.ARAPNo);
+                _logger.LogError(ex, "预收付款单 {PreRPNO} 抵扣应收应付款单时发生错误",
+                    source?.PreRPNO);
                 return ActionResult.Fail($"抵扣操作失败：{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 检查预收付款单和应收应付款单的订单号是否匹配
+        /// </summary>
+        /// <param name="prePayment">预收付款单</param>
+        /// <param name="receivable">应收应付款单</param>
+        /// <returns>是否匹配</returns>
+        private async Task<bool> CheckOrderMatchedAsync(tb_FM_PreReceivedPayment prePayment, tb_FM_ReceivablePayable receivable)
+        {
+            try
+            {
+
+                //预收付应收应付单的来源业务类型必须是销售订单或采购订单，对应的是销售出库和采购入库生成的应收应付款单位
+                long? prePaymentOrderId = null;
+                if (prePayment.SourceBizType == (int)BizType.销售订单)
+                {
+                    prePaymentOrderId = prePayment.SourceBillId;
+
+
+                }
+                else if (prePayment.SourceBizType == (int)BizType.采购订单)
+                {
+                    prePaymentOrderId = prePayment.SourceBillId;
+                }
+
+                // 获取应收应付款单对应的订单号
+                long? receivableOrderId = null;
+                if (receivable.SourceBizType == (int)BizType.销售订单)
+                {
+                    receivableOrderId = receivable.SourceBillId;
+                }
+                else if (receivable.SourceBizType == (int)BizType.销售出库单)
+                {
+                    // 如果是销售出库，需要查找对应的销售订单
+                    var saleOut = await _appContext.Db.Queryable<tb_SaleOut>()
+                        .Includes(c => c.tb_saleorder)
+                        .Where(c => c.SaleOut_MainID == receivable.SourceBillId)
+                        .FirstAsync();
+                    
+                    if (saleOut?.tb_saleorder != null)
+                    {
+                        receivableOrderId = saleOut.tb_saleorder.SOrder_ID;
+                    }
+                }
+                else if (receivable.SourceBizType == (int)BizType.采购订单)
+                {
+                    receivableOrderId = receivable.SourceBillId;
+                }
+                else if (receivable.SourceBizType == (int)BizType.采购入库单)
+                {
+                    // 如果是采购入库，需要查找对应的采购订单
+                    var purEntry = await _appContext.Db.Queryable<tb_PurEntry>()
+                        .Includes(c => c.tb_purorder)
+                        .Where(c => c.PurEntryID == receivable.SourceBillId)
+                        .FirstAsync();
+                    
+                    if (purEntry?.tb_purorder != null)
+                    {
+                        receivableOrderId = purEntry.tb_purorder.PurOrder_ID;
+                    }
+                }
+
+                // 比较订单号
+                return prePaymentOrderId.HasValue && receivableOrderId.HasValue && 
+                       prePaymentOrderId.Value == receivableOrderId.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查订单号匹配时发生错误");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 显示应收应付款单选择窗体
+        /// </summary>
+        /// <param name="source">预收付款单</param>
+        /// <param name="availableReceivables">可抵扣的应收应付款单列表</param>
+        /// <returns>用户选择的应收应付款单，如果取消则返回 null</returns>
+        private async Task<tb_FM_ReceivablePayable> ShowReceivableSelectorAsync(tb_FM_PreReceivedPayment source, List<tb_FM_ReceivablePayable> availableReceivables)
+        {
+            try
+            {
+                var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
+                
+                // 使用工厂创建选择器
+                var selector = _selectorFactory.CreateSelector<tb_FM_ReceivablePayable>();
+                selector.ConfirmButtonText = "抵扣";
+                selector.AllowMultiSelect = false;
+
+                // 使用表达式树配置列映射
+                selector.ConfigureColumn(x => x.ARAPNo, "单据编号");
+                selector.ConfigureColumn(x => x.LocalBalanceAmount, "金额");
+                selector.ConfigureColumn(x => x.LocalBalanceAmount, "可用金额");
+                selector.ConfigureColumn(x => x.CustomerVendor_ID, "客户");
+                selector.ConfigureColumn(x => x.BusinessDate, "单据日期");
+                selector.ConfigureColumn(x => x.SourceBizType, "来源业务");
+                selector.ConfigureColumn(x => x.SourceBillNo, "来源单号");
+                selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
+                selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
+                selector.InitializeSelector(availableReceivables, $"选择应{paymentType}单");
+
+                // 在UI线程上显示选择窗体
+                tb_FM_ReceivablePayable selectedReceivable = null;
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    System.Windows.Forms.Application.OpenForms[0].Invoke((System.Windows.Forms.MethodInvoker)delegate
+                    {
+                        if (selector.ShowDialog())
+                        {
+                            selectedReceivable = selector.SelectedItems?.FirstOrDefault();
+                        }
+                    });
+                });
+
+                return selectedReceivable;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "显示应收应付款单选择窗体时发生错误");
+                return null;
             }
         }
 

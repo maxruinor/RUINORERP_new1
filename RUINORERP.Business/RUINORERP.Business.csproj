@@ -122,6 +122,7 @@
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj" />
     <ProjectReference Include="..\RUINORERP.Global\RUINORERP.Global.csproj" />
     <ProjectReference Include="..\RUINORERP.IServices\RUINORERP.IServices.csproj" />
+    <ProjectReference Include="..\RUINORERP.Lib\RUINORERP.Lib.csproj" />
     <ProjectReference Include="..\RUINORERP.Model\RUINORERP.Model.csproj" />
     <ProjectReference Include="..\RUINORERP.PacketSpec\RUINORERP.PacketSpec.csproj" />
     <ProjectReference Include="..\RUINORERP.Repository\RUINORERP.Repository.csproj" />

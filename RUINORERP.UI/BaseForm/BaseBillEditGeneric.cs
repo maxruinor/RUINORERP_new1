@@ -5226,7 +5226,7 @@ namespace RUINORERP.UI.BaseForm
                 // 动作操作型转换：直接执行业务操作，不需要打开新窗体
                 if (conversionType == DocumentConversionType.ActionOperation)
                 {
-                    await PerformActionOperationAsync(actionManager, menuItemText, sourceDisplayName, targetDisplayName, converterType);
+                    await PerformActionOperationAsync(actionManager, menuItemText, sourceDisplayName, targetDisplayName, targetType, converterType);
                     return;
                 }
 
@@ -5375,8 +5375,9 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="menuItemText">菜单项显示文本</param>
         /// <param name="sourceDisplayName">源单据显示名称</param>
         /// <param name="targetDisplayName">目标单据显示名称</param>
+        /// <param name="targetType">目标单据类型</param>
         /// <param name="converterType">转换器类型</param>
-        private async Task PerformActionOperationAsync(RUINORERP.Business.Document.ActionManager actionManager, string menuItemText, string sourceDisplayName, string targetDisplayName, Type converterType)
+        private async Task PerformActionOperationAsync(RUINORERP.Business.Document.ActionManager actionManager, string menuItemText, string sourceDisplayName, string targetDisplayName, Type targetType, Type converterType)
         {
             try
             {
@@ -5387,7 +5388,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 获取转换器实例
                 var converterFactory = Startup.GetFromFac<RUINORERP.Business.Document.DocumentConverterFactory>();
-                var converter = converterFactory.GetConverter(typeof(T), converterType);
+                var converter = converterFactory.GetConverter(typeof(T), targetType);
                 if (converter == null)
                 {
                     throw new InvalidOperationException($"无法获取转换器实例：{converterType.Name}");
@@ -5416,41 +5417,50 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 显示确认对话框和操作信息
-                bool userConfirmed = false;
-                this.Invoke((MethodInvoker)delegate
+                // 对于抵扣操作，调用转换器的 ExecuteActionOperationAsync 方法
+                var executeMethod = converter.GetType().GetMethod("ExecuteActionOperationAsync");
+                if (executeMethod == null)
                 {
-                    string confirmMessage = $"确定要执行【{menuItemText}】操作吗？";
-                    if (validationResult.HasMessages)
-                    {
-                        confirmMessage += Environment.NewLine + Environment.NewLine + validationResult.GetFormattedMessages();
-                    }
-
-                    var result = MessageBox.Show(confirmMessage, "确认操作", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-                    userConfirmed = (result == DialogResult.Yes);
-                });
-
-                if (!userConfirmed)
-                {
-                    return;
+                    throw new InvalidOperationException($"转换器 {converterType.Name} 没有找到 ExecuteActionOperationAsync 方法");
                 }
 
-                // 对于抵扣操作，需要用户选择目标单据
-                // 提示用户使用编辑窗体的专用抵扣功能
-                this.Invoke((MethodInvoker)delegate
+                // 调用转换器的执行方法，传入源单据和 null 作为目标单据
+                // 转换器内部会处理是否需要弹出选择窗体
+                var actionResultTask = (Task<RUINORERP.Business.Document.ActionResult>)executeMethod.Invoke(converter, new object[] { EditEntity, null });
+                var actionResult = await actionResultTask;
+
+                if (actionResult.Success)
                 {
-                    string message = $"【{menuItemText}】操作需要选择目标单据进行抵扣。\n\n" +
-                                   $"请使用编辑窗体中的专用抵扣功能来完成此操作。\n\n" +
-                                   $"提示：在验证结果中可以看到可用的目标单据列表。";
-
-                    if (validationResult.HasMessages)
+                    // 操作成功，显示成功消息
+                    this.Invoke((MethodInvoker)delegate
                     {
-                        message += "\n\n" + validationResult.GetFormattedMessages();
-                    }
-
-                    MessageBox.Show(message, "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                });
-
+                        string successMsg = "操作成功！";
+                        if (actionResult.InfoMessages.Any())
+                        {
+                            successMsg += Environment.NewLine + string.Join(Environment.NewLine, actionResult.InfoMessages);
+                        }
+                        MessageBox.Show(successMsg, "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        
+                        // 刷新数据
+                        if (EditEntity != null)
+                        {
+                            Refreshs();
+                        }
+                    });
+                }
+                else
+                {
+                    // 操作失败，显示错误消息
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        string errorMsg = actionResult.ErrorMessage ?? "操作失败";
+                        if (actionResult.InfoMessages.Any())
+                        {
+                            errorMsg += Environment.NewLine + string.Join(Environment.NewLine, actionResult.InfoMessages);
+                        }
+                        MessageBox.Show(errorMsg, "操作失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    });
+                }
             }
             catch (Exception ex)
             {

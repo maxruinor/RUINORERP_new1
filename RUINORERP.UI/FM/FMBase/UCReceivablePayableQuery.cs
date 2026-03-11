@@ -1,46 +1,43 @@
+using AutoMapper;
+using AutoUpdateTools;
+using Krypton.Navigator;
+using LiveChartsCore.Geo;
+using Microsoft.Extensions.Logging;
+using Netron.GraphLib;
+using NPOI.SS.Formula.Functions;
+using RUINOR.Core;
+using RUINOR.WinFormsUI.CustomPictureBox;
+using RUINORERP.Business;
+using RUINORERP.Business.AutoMapper;
+using RUINORERP.Business.BizMapperService;
+using RUINORERP.Business.LogicaService;
+using RUINORERP.Business.Processor;
+using RUINORERP.Business.Security;
+using RUINORERP.Common;
+using RUINORERP.Common.CollectionExtension;
+using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Helper;
+using RUINORERP.Global;
+using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt.CRM;
+using RUINORERP.Global.Model;
+using RUINORERP.Model;
+using RUINORERP.Model.Base;
+using RUINORERP.UI.AdvancedUIModule;
+using RUINORERP.UI.BaseForm;
+using RUINORERP.UI.Common;
+using RUINORERP.UI.ToolForm;
+using RUINORERP.UI.UControls;
+using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINORERP.Business.LogicaService;
-using RUINORERP.Model;
-using RUINORERP.UI.Common;
-using RUINORERP.Common;
-using RUINORERP.Common.CollectionExtension;
-using RUINOR.Core;
-using RUINORERP.Common.Helper;
-using RUINORERP.Business;
-
-using RUINORERP.Business.AutoMapper;
-using AutoMapper;
-using RUINORERP.Model.Base;
-using SqlSugar;
-using Krypton.Navigator;
-using RUINORERP.Business.Security;
-using RUINORERP.Business.Processor;
-using RUINORERP.UI.AdvancedUIModule;
-using RUINORERP.Global.EnumExt.CRM;
-using RUINORERP.Global;
-
-
-
-using AutoUpdateTools;
-using RUINORERP.UI.BaseForm;
-using RUINORERP.Common.Extensions;
-using RUINORERP.Global.EnumExt;
-using RUINORERP.UI.UControls;
-using LiveChartsCore.Geo;
-using Netron.GraphLib;
-using RUINORERP.Business.BizMapperService;
-using RUINORERP.Global.Model;
-using RUINORERP.UI.ToolForm;
-using Microsoft.Extensions.Logging;
-using NPOI.SS.Formula.Functions;
 
 namespace RUINORERP.UI.FM
 {
@@ -614,7 +611,6 @@ namespace RUINORERP.UI.FM
 
 
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
-        //11222
         private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
         {
             //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
@@ -717,7 +713,7 @@ namespace RUINORERP.UI.FM
                 // 初始化选择器
                 using (var selector = new frmAdvanceSelector<tb_FM_PreReceivedPayment>())
                 {
-
+                    
                     selector.ConfirmButtonText = "抵扣";
                     selector.AllowMultiSelect = true;
 

@@ -2494,6 +2494,7 @@
     <Compile Include="SysConfig\UCClientLockManage.Designer.cs">
       <DependentUpon>UCClientLockManage.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolForm\DocumentSelectorAdapter.cs" />
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>

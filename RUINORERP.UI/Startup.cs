@@ -626,6 +626,11 @@ namespace RUINORERP.UI
             // 注册UCTodoList用户控件 - 由于没有MenuAttrAssemblyInfo特性，需要单独注册
             RegisterUCTodoList(builder);
 
+            // 注册单据选择器工厂
+            builder.RegisterType<RUINORERP.UI.ToolForm.DocumentSelectorFactory>()
+                .As<RUINORERP.Lib.UI.IDocumentSelectorFactory>()
+                .InstancePerDependency();
+
             // RegisterForm的调用已移至MainRegister统一处理，避免重复注册
         }
 

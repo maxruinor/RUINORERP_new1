@@ -8,7 +8,7 @@ using RUINORERP.Global;
 using RUINORERP.Model;
 using RUINORERP.UI.Network.Services;
 using Krypton.Toolkit;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 
 namespace RUINORERP.UI.ProductEAV
 {

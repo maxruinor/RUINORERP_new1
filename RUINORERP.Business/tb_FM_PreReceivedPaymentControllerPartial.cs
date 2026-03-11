@@ -434,16 +434,44 @@ namespace RUINORERP.Business
         }
 
 
+        /// <summary>
+        /// 预收款单逻辑删除
+        /// 删除前检测并级联处理关联的收款单
+        /// </summary>
+        /// <param name="ObjectEntity">预收款单实体</param>
+        /// <returns>删除是否成功</returns>
         public async Task<bool> BaseLogicDeleteAsync(tb_FM_PreReceivedPayment ObjectEntity)
         {
-            //  ReturnResults<tb_FM_PreReceivedPaymentController> rrs = new Business.ReturnResults<tb_FM_PreReceivedPaymentController>();
-            int count = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PreReceivedPayment>(ObjectEntity).IsLogic().ExecuteCommandAsync();
+            // 先检测并处理关联的收款单
+            var PaymentRecordlist = await _appContext.Db.Queryable<tb_FM_PaymentRecord>()
+                .Includes(a => a.tb_FM_PaymentRecordDetails)
+                .Where(c => c.tb_FM_PaymentRecordDetails.Any(d => d.SourceBilllId == ObjectEntity.PreRPID))
+                .ToListAsync();
+
+            if (PaymentRecordlist != null && PaymentRecordlist.Count > 0)
+            {
+                // 检查是否存在已审核的收款单，不能直接删除
+                if (PaymentRecordlist.Any(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过))
+                {
+                    var approvedRecord = PaymentRecordlist.FirstOrDefault(c => c.ApprovalStatus == (int)ApprovalStatus.审核通过);
+                    throw new Exception($"预收款单{ObjectEntity.PreRPNO}已关联已审核的收款单{approvedRecord?.PaymentNo}，请先处理收款单后再删除");
+                }
+
+                // 删除未审核的收款单（草稿或待审核状态）
+                foreach (var item in PaymentRecordlist)
+                {
+                    await _appContext.Db.DeleteNav<tb_FM_PaymentRecord>(item)
+                        .Include(c => c.tb_FM_PaymentRecordDetails)
+                        .ExecuteCommandAsync();
+                }
+            }
+
+            // 执行预收款单的逻辑删除
+            int count = await _unitOfWorkManage.GetDbClient()
+                .Deleteable<tb_FM_PreReceivedPayment>(ObjectEntity).IsLogic().ExecuteCommandAsync();
             if (count > 0)
             {
-                //rrs.Succeeded = true;
                 return true;
-                ////生成时暂时只考虑了一个主键的情况
-                // _cacheManager.DeleteEntityList<tb_FM_PreReceivedPaymentController>(entity);
             }
             return false;
         }

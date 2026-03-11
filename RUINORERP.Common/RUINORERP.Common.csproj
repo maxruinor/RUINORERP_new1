@@ -16,6 +16,7 @@
   <PlatformTarget>AnyCPU</PlatformTarget>
 </PropertyGroup>
 <ItemGroup>
+  <Compile Remove="BusinessImage\**" />
   <Compile Remove="Config\**" />
   <Compile Remove="EnumExt\**" />
   <Compile Remove="HttpContextUser\**" />
@@ -25,6 +26,7 @@
   <Compile Remove="LogHelper\Seri\**" />
   <Compile Remove="Model\**" />
   <Compile Remove="Seed\**" />
+  <EmbeddedResource Remove="BusinessImage\**" />
   <EmbeddedResource Remove="Config\**" />
   <EmbeddedResource Remove="EnumExt\**" />
   <EmbeddedResource Remove="HttpContextUser\**" />
@@ -34,6 +36,7 @@
   <EmbeddedResource Remove="LogHelper\Seri\**" />
   <EmbeddedResource Remove="Model\**" />
   <EmbeddedResource Remove="Seed\**" />
+  <None Remove="BusinessImage\**" />
   <None Remove="Config\**" />
   <None Remove="EnumExt\**" />
   <None Remove="HttpContextUser\**" />

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using RUINOR.WinFormsUI.CustomPictureBox;
-using RUINORERP.Common.BusinessImage; // 用于访问ImageInfo类
+using RUINORERP.Lib.BusinessImage; // 用于访问ImageInfo类
 
 namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
 {
@@ -59,7 +59,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
             {
                 // 无论是否有哈希值，都标记为需要更新
                 imageInfo.Metadata["UpdateMarker"] = ImageProcessingConstants.UpdateMarker;
-                imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+                imageInfo.Status = ImageStatus.PendingUpload;
                 imageInfo.ModifiedAt = DateTime.Now;
 
                 // 如果有哈希值，也添加到需要更新的集合中
@@ -100,7 +100,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox.Implementations
                 isNewImage = IsNewImage(imageInfo);
             }
 
-            isPendingUpload = imageInfo.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+            isPendingUpload = imageInfo.Status == ImageStatus.PendingUpload;
 
             return hasUpdateMarker || isInUpdateSet || isNewImage || isPendingUpload;
         }

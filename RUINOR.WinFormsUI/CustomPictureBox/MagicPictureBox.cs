@@ -10,7 +10,7 @@ using System.IO;
 using System.ComponentModel;
 using RUINOR.WinFormsUI.CustomPictureBox.Implementations;
 using RUINORERP.Common.Helper;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 
 namespace RUINOR.WinFormsUI.CustomPictureBox
 {
@@ -318,7 +318,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     FileExtension = formatExtension,
                                     FileType = formatExtension,
                                     HashValue = CalculateImageHash(imageBytes),
-                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                                    Status = ImageStatus.PendingUpload,
                                     Width = images[i]?.Width ?? 0,
                                     Height = images[i]?.Height ?? 0
                                 };
@@ -337,7 +337,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             }
             else if (this.Image != null && (imageInfos.Count == 0 ||
                                            (imageInfos.Count > 0 &&
-                                            (imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload ||
+                                            (imageInfos[0].Status ==ImageStatus.PendingUpload ||
                                              IsImageNeedingUpdate(0) ||
                                              imageInfos[0].FileId == 0 ||
                                              string.IsNullOrEmpty(imageInfos[0].HashValue)))))
@@ -381,7 +381,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileType = formatExtension,
                             FileExtension = formatExtension,
                             HashValue = CalculateImageHash(imageBytes),
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                            Status= ImageStatus.PendingUpload,
                             Width = this.Image?.Width ?? 0,
                             Height = this.Image?.Height ?? 0
                         };
@@ -674,7 +674,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileExtension = imageInfosList[i].FileExtension,
                             HashValue = hashValue, // 更新哈希值
                             Metadata = imageInfosList[i].Metadata != null ? new Dictionary<string, string>(imageInfosList[i].Metadata) : new Dictionary<string, string>(),
-                            Status = isFromServer ? RUINORERP.Common.BusinessImage.ImageStatus.Normal : RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
+                            Status = isFromServer ? ImageStatus.Normal : ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
                         };
                     }
                     else
@@ -690,7 +690,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             Metadata = new Dictionary<string, string>(),
                             FileType = "",
                             ModifiedAt = DateTime.Now,
-                            Status = isFromServer ? RUINORERP.Common.BusinessImage.ImageStatus.Normal : RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
+                            Status = isFromServer ? ImageStatus.Normal : ImageStatus.PendingUpload // 如果是从服务器加载，标记为正常状态
                         };
                     }
 
@@ -762,7 +762,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 // 确保ImageUpdateManager中的更新状态与imageInfos同步
                 foreach (var imageInfo in imageInfos)
                 {
-                    if (imageInfo.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload)
+                    if (imageInfo.Status ==ImageStatus.PendingUpload)
                     {
                         _updateManager.MarkImageAsUpdated(imageInfo);
                     }
@@ -905,7 +905,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 HashValue = hashValue,
                                 Metadata = new Dictionary<string, string>(),
                                 ModifiedAt = DateTime.Now,
-                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
+                                Status =ImageStatus.PendingUpload // 标记为待上传
                             });
                         }
                         else
@@ -920,7 +920,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 imageInfos[0].HashValue = hashValue;
                                 imageInfos[0].Metadata = new Dictionary<string, string>();
                                 imageInfos[0].ModifiedAt = DateTime.Now;
-                                imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+                                imageInfos[0].Status =ImageStatus.PendingUpload;
                                 // 添加Width和Height属性
                                 if (images.Count > 0)
                                 {
@@ -940,7 +940,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     HashValue = hashValue,
                                     Metadata = new Dictionary<string, string>(),
                                     ModifiedAt = System.DateTime.Now,
-                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
+                                    Status= ImageStatus.PendingUpload, // 标记为待上传
                                     Width = images[images.Count - 1]?.Width ?? 0,
                                     Height = images[images.Count - 1]?.Height ?? 0
                                 });
@@ -1536,7 +1536,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     {
                         if (imageInfo != null && imageInfo.FileId > 0)
                         {
-                            imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete;
+                            imageInfo.Status= ImageStatus.PendingDelete;
                             _deletedImages.Add(imageInfo);
                         }
                     }
@@ -1626,7 +1626,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     CreateTime = fileInfo.CreationTime,
                                     FileType = Path.GetExtension(fileName).TrimStart('.'),
                                     HashValue = hashValue,
-                                    Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
+                                    Status =ImageStatus.PendingUpload // 标记为待上传
                                 });
 
                                 // 如果是第一张图片，显示它
@@ -1651,7 +1651,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                     imageInfos[0].CreateTime = fileInfo.CreationTime;
                                     imageInfos[0].FileType = Path.GetExtension(fileName).TrimStart('.');
                                     imageInfos[0].HashValue = hashValue;
-                                    imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+                                    imageInfos[0].Status= ImageStatus.PendingUpload;
                                 }
                                 else
                                 {
@@ -1663,7 +1663,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                         CreateTime = fileInfo.CreationTime,
                                         FileType = Path.GetExtension(fileName).TrimStart('.'),
                                         HashValue = hashValue,
-                                        Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload
+                                        Status= ImageStatus.PendingUpload
                                     });
                                 }
                                 UpdateInfoPanel();
@@ -1760,7 +1760,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 CreateTime = fileInfo.CreationTime,
                                 FileType = Path.GetExtension(fileInfo.Name).TrimStart('.'),
                                 HashValue = hashValue,
-                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                                Status= ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             });
@@ -1810,7 +1810,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 Metadata = new Dictionary<string, string>(),
                                 FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
                                 HashValue = newhash,
-                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                                Status= ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             };
@@ -1827,7 +1827,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 Metadata = new Dictionary<string, string>(),
                                 FileExtension = Path.GetExtension(fileInfo.Name).TrimStart('.').ToLower(),
                                 HashValue = newhash,
-                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                                Status= ImageStatus.PendingUpload,
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0
                             });
@@ -1923,7 +1923,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             FileExtension = GetImageFormatExtension(image),
                             Width = image?.Width ?? 0,
                             Height = image?.Height ?? 0,
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload,
+                            Status= ImageStatus.PendingUpload,
                             HashValue = newhash
                         };
                         imageInfos.Add(newImageInfo);
@@ -1945,7 +1945,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             imageInfos[0].FileType = GetImageFormatExtension(image);
                             imageInfos[0].FileExtension = GetImageFormatExtension(image);
                             imageInfos[0].HashValue = newhash; // 设置哈希值
-                            imageInfos[0].Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload; // 标记为待上传
+                            imageInfos[0].Status =ImageStatus.PendingUpload; // 标记为待上传
                             _updateManager.MarkImageAsUpdated(imageInfos[0]); // 标记为需要更新
                         }
                         else
@@ -1960,7 +1960,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                                 FileType = GetImageFormatExtension(image),
                                 Width = image?.Width ?? 0,
                                 Height = image?.Height ?? 0,
-                                Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
+                                Status =ImageStatus.PendingUpload, // 标记为待上传
                                 HashValue = newhash // 设置哈希值
                             };
                             imageInfos.Add(newImageInfo);
@@ -2205,7 +2205,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             HashValue = CalculateImageHash(newImage),
                             Width = newImage?.Width ?? 0,
                             Height = newImage?.Height ?? 0,
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload // 标记为待上传
+                            Status = ImageStatus.PendingUpload // 标记为待上传
                         };
                         imageInfos.Add(newImageInfo);
                         // 标记图片需要更新
@@ -2227,7 +2227,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         {
                             OriginalFileName = fileInfo.Name,
                             FileSize = fileInfo.Length,
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
+                            Status = ImageStatus.PendingUpload, // 标记为待上传
                             CreateTime = fileInfo.CreationTime,
                             FileType = Path.GetExtension(openFileDialog.FileName).TrimStart('.'),
                             HashValue = CalculateImageHash(this.Image),
@@ -2531,7 +2531,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             CreateTime = DateTime.Now,
                             Metadata = new Dictionary<string, string>(),
                             HashValue = hashValue,
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload, // 标记为待上传
+                            Status = ImageStatus.PendingUpload, // 标记为待上传
                             Width = imageList[i]?.Width ?? 0,
                             Height = imageList[i]?.Height ?? 0
                         };
@@ -2550,7 +2550,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                             CreateTime = DateTime.Now,
                             Metadata = new Dictionary<string, string> { { "Error", "加载失败" } },
                             HashValue = "",
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal,
+                            Status= ImageStatus.Normal,
                             Width = 0,
                             Height = 0
                         });
@@ -3120,7 +3120,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 bool needsUpdate = IsImageNeedingUpdate(0) ||
                                     imageInfos[0].FileId == 0 ||
                                    string.IsNullOrEmpty(imageInfos[0].HashValue) ||
-                                   imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+                                   imageInfos[0].Status ==ImageStatus.PendingUpload;
 
                 if (needsUpdate)
                 {
@@ -3198,7 +3198,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 bool needsUpdate = IsImageNeedingUpdate(0) ||
                                     imageInfos[0].FileId == 0 ||
                                    string.IsNullOrEmpty(imageInfos[0].HashValue) ||
-                                   imageInfos[0].Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload;
+                                   imageInfos[0].Status == ImageStatus.PendingUpload;
 
                 if (needsUpdate)
                 {
@@ -3352,7 +3352,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
             {
                 if (imageInfo != null)
                 {
-                    imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                    imageInfo.Status = ImageStatus.Normal;
                     _updateManager.ResetImageUpdateStatus(imageInfo);
                 }
             }

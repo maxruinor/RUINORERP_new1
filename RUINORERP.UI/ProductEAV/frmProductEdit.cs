@@ -13,7 +13,7 @@ using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.Processor;
 using RUINORERP.Common;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -2899,7 +2899,7 @@ namespace RUINORERP.UI.ProductEAV
                             {
                                 successCount++;
                                 MainForm.Instance.uclog.AddLog($"产品图片上传成功：{imageInfo.OriginalFileName}");
-                                imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                                imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                             }
                             else
                             {
@@ -3348,7 +3348,7 @@ namespace RUINORERP.UI.ProductEAV
                                 MainForm.Instance.uclog.AddLog($"新图片上传成功：{imageInfo.OriginalFileName}");
                             }
                             // 上传成功后，将图片标记为未更新
-                            imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal; // 重置删除标记
+                            imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal; // 重置删除标记
                         }
                         else
                         {

@@ -19,7 +19,7 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
@@ -1751,7 +1751,7 @@ namespace RUINORERP.UI.PSI.SAL
         /// 重写基类方法，实现销售订单凭证图片的同步逻辑
         /// </summary>
         /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
-        protected override async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
+        protected override async Task<List<RUINORERP.Lib.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
             try
             {
@@ -1759,7 +1759,7 @@ namespace RUINORERP.UI.PSI.SAL
                 if (EditEntity == null || EditEntity.PrimaryKeyID <= 0)
                 {
                     MainForm.Instance.uclog.AddLog("单据尚未保存，无法操作图片");
-                    return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+                    return new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
                 }
 
                 if (magicPictureBox订金付款凭证 != null)
@@ -1782,7 +1782,7 @@ namespace RUINORERP.UI.PSI.SAL
                         if (!deleteSuccess)
                         {
                             MainForm.Instance.uclog.AddLog("图片删除失败", Global.UILogType.错误);
-                            return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+                            return new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
                         }
                         else
                         {
@@ -1814,7 +1814,7 @@ namespace RUINORERP.UI.PSI.SAL
                         if (!uploadSuccess)
                         {
                             MainForm.Instance.uclog.AddLog("图片上传失败", Global.UILogType.错误);
-                            return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+                            return new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
                         }
                         else
                         {
@@ -1832,13 +1832,13 @@ namespace RUINORERP.UI.PSI.SAL
                     // 如果有图片操作（上传或删除），都会在前面添加到syncResults中
                 }
 
-                return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+                return new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
             }
             catch (Exception ex)
             {
                 MainForm.Instance.uclog.AddLog($"上传图片时发生异常：{ex.Message}", Global.UILogType.错误);
                 logger.LogError(ex, "上传图片异常");
-                return new List<RUINORERP.Common.BusinessImage.ImageSyncResult>();
+                return new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
             }
         }
     }

@@ -105,7 +105,7 @@ using static RUINORERP.UI.Common.GUIUtils;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using static WorkflowCore.Models.ActivityResult;
 using RUINORERP.UI.BaseForm.Helpers;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Business.Document;
 
 namespace RUINORERP.UI.BaseForm
@@ -1226,7 +1226,7 @@ namespace RUINORERP.UI.BaseForm
                 }
 
                 // 过滤出待删除的图片
-                var imagesToDelete = imageInfos.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete).ToList();
+                var imagesToDelete = imageInfos.Where(img => img.Status == RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete).ToList();
                 if (imagesToDelete.Count == 0)
                 {
                     return true;
@@ -1380,7 +1380,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 过滤需要上传的图片
                 var imagesToUpload = onlyUpdated ?
-                    imageInfos.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload).ToList() :
+                    imageInfos.Where(img => img.Status == RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload).ToList() :
                     imageInfos;
 
                 if (imagesToUpload.Count == 0)
@@ -1431,7 +1431,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.uclog.AddLog($"图片上传成功：{imageInfo.OriginalFileName}");
 
                         // 上传成功后，将图片标记为正常状态
-                        imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                        imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                     }
                     else
                     {
@@ -1502,7 +1502,7 @@ namespace RUINORERP.UI.BaseForm
                 if (deletedImages != null && deletedImages.Count > 0)
                 {
                     // 过滤出待删除的图片
-                    var imagesToDelete = deletedImages.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete).ToList();
+                    var imagesToDelete = deletedImages.Where(img => img.Status == RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete).ToList();
                     if (imagesToDelete.Count > 0)
                     {
                         // 创建删除请求
@@ -1545,7 +1545,7 @@ namespace RUINORERP.UI.BaseForm
                 if (updatedImages != null && updatedImages.Count > 0)
                 {
                     // 过滤出待上传的图片
-                    var imagesToUpload = updatedImages.Where(img => img.Status == RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload).ToList();
+                    var imagesToUpload = updatedImages.Where(img => img.Status == RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload).ToList();
                     if (imagesToUpload.Count > 0)
                     {
 
@@ -1590,7 +1590,7 @@ namespace RUINORERP.UI.BaseForm
                                 successCount++;
                                 MainForm.Instance.uclog.AddLog($"凭证图片更新成功：{imageInfo.OriginalFileName}");
                                 // 上传成功后，将图片标记为正常状态
-                                imageInfo.Status = RUINORERP.Common.BusinessImage.ImageStatus.Normal;
+                                imageInfo.Status = RUINORERP.Lib.BusinessImage.ImageStatus.Normal;
                             }
                             else
                             {
@@ -1649,8 +1649,8 @@ namespace RUINORERP.UI.BaseForm
         {
             // 子类可以重写此方法，检查其MagicPictureBox控件
             // 默认返回false，子类可以根据需要实现
-            var pendingDeleteImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
-            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
+            var pendingDeleteImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages();
+            var pendingUploadImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages();
             if (pendingDeleteImages.Count > 0 || pendingUploadImages.Count > 0)
             {
                 return true;
@@ -1663,11 +1663,11 @@ namespace RUINORERP.UI.BaseForm
         /// 子类可以重写此方法以支持自定义的图片同步逻辑
         /// </summary>
         /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
-        protected virtual async Task<List<RUINORERP.Common.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
+        protected virtual async Task<List<RUINORERP.Lib.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
             // 子类可以重写此方法，实现具体的图片同步逻辑
             // 默认返回空列表，子类可以根据需要实现
-            return await Task.FromResult(new List<RUINORERP.Common.BusinessImage.ImageSyncResult>());
+            return await Task.FromResult(new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>());
         }
 
 
@@ -3352,7 +3352,7 @@ namespace RUINORERP.UI.BaseForm
                         long businessId = EditEntity?.GetType().GetProperty("Id")?.GetValue(EditEntity) as long? ?? 0;
 
                         // 添加到图片状态管理器队列（与保存/审核相同的模式）
-                        var imageInfo = new RUINORERP.Common.BusinessImage.ImageInfo
+                        var imageInfo = new RUINORERP.Lib.BusinessImage.ImageInfo
                         {
                             OriginalFileName = "CloseCaseImage.jpg",
                             ImageData = bytes,
@@ -3361,10 +3361,10 @@ namespace RUINORERP.UI.BaseForm
                             BusinessId = businessId,
                             OwnerTableName = typeof(T).Name,
                             RelatedField = "CloseCaseImagePath",
-                            Status = RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload
+                            Status = RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload
                         };
 
-                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
+                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(imageInfo);
 
                         // 先保存单据基本信息
                         EditEntity.SetPropertyValue("CloseCaseImagePath", strCloseCaseImagePath);
@@ -4251,7 +4251,7 @@ namespace RUINORERP.UI.BaseForm
             List<SGDefineColumnItem> ImgCols = new List<SGDefineColumnItem>();
 
             // 使用原子操作获取待上传图片并标记为处理中状态
-            var pendingUploadImages = RUINORERP.Common.BusinessImage.ImageStateManager.Instance.GetAndLockPendingUploadImages();
+            var pendingUploadImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetAndLockPendingUploadImages();
 
             // 如果没有待上传图片，直接返回成功
             if (pendingUploadImages == null || pendingUploadImages.Count == 0)
@@ -4291,7 +4291,7 @@ namespace RUINORERP.UI.BaseForm
                 var failedImageIds = pendingUploadImages.Select(p => p.ImageId).ToList();
                 foreach (var imageId in failedImageIds)
                 {
-                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
                 }
             }
             return result;
@@ -4302,7 +4302,7 @@ namespace RUINORERP.UI.BaseForm
         /// 上传图片。要返回图片ID的主键
         /// 注意：传入的图片已标记为Processing状态，上传成功后需标记为Uploaded
         /// </summary>
-        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<RUINORERP.Common.BusinessImage.ImageInfo> pendingUploadImages)
+        private async Task<bool> UploadImageAsyncOptimized(List<SGDefineColumnItem> ImgCols, Grid grid, List<C> Details, List<RUINORERP.Lib.BusinessImage.ImageInfo> pendingUploadImages)
         {
             bool rs = true;
             int processedCount = 0;
@@ -4398,7 +4398,7 @@ namespace RUINORERP.UI.BaseForm
                                 UpdateCellImageDisplay(cell, imageInfo.ImageData, fileIdStr);
 
                                 // 标记为已上传状态
-                                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.Uploaded);
+                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.Uploaded);
                                 successImageIds.Add(imageInfo.ImageId);
                                 processedCount++;
                                 MainForm.Instance.PrintInfoLog($"图片上传成功: {imageInfo.FileName}");
@@ -4406,7 +4406,7 @@ namespace RUINORERP.UI.BaseForm
                             else
                             {
                                 // 上传失败，恢复为待上传状态
-                                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
                                 failedImageIds.Add(imageInfo.ImageId);
                                 MainForm.Instance.PrintInfoLog($"图片上传失败: {imageInfo.FileName}", Color.Red);
                                 rs = false;
@@ -4415,7 +4415,7 @@ namespace RUINORERP.UI.BaseForm
                         else
                         {
                             // 找不到对应单元格，恢复为待上传状态
-                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
                             failedImageIds.Add(imageInfo.ImageId);
                             MainForm.Instance.PrintInfoLog($"找不到图片对应的单元格或明细数据: {imageInfo.ImageId}", Color.Orange);
                         }
@@ -4423,7 +4423,7 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         // 处理异常，恢复为待上传状态
-                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
                         failedImageIds.Add(imageInfo.ImageId);
                         MainForm.Instance.logger.LogError(ex, $"处理图片 {imageInfo.ImageId} 上传失败");
                         rs = false;
@@ -4433,7 +4433,7 @@ namespace RUINORERP.UI.BaseForm
                 // 清理已成功处理的图片（只清理已上传状态的）
                 if (successImageIds.Count > 0)
                 {
-                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(successImageIds);
+                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveProcessedImages(successImageIds);
                     MainForm.Instance.PrintInfoLog($"成功上传 {successImageIds.Count} 张图片");
                 }
 
@@ -4447,7 +4447,7 @@ namespace RUINORERP.UI.BaseForm
                 // 批量处理异常，恢复所有图片为待上传状态
                 foreach (var imageInfo in pendingUploadImages)
                 {
-                    RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingUpload);
+                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
                 }
                 MainForm.Instance.logger.LogError(ex, "批量上传图片异常");
                 rs = false;
@@ -4464,7 +4464,7 @@ namespace RUINORERP.UI.BaseForm
         /// <param name="imageIdToBusinessIdMap">图片ID到业务主键ID的映射</param>
         /// <param name="ownerTableName">拥有者表名</param>
         /// <returns>删除是否成功</returns>
-        protected async Task<bool> DeletePendingImagesAsync(List<RUINORERP.Common.BusinessImage.ImageInfo> extendedImageInfoList, string ownerTableName)
+        protected async Task<bool> DeletePendingImagesAsync(List<RUINORERP.Lib.BusinessImage.ImageInfo> extendedImageInfoList, string ownerTableName)
         {
             if (extendedImageInfoList == null || extendedImageInfoList.Count == 0)
             {
@@ -4475,7 +4475,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 先标记为处理中状态，防止重复处理
                 var imageIds = extendedImageInfoList.Select(img => img.ImageId).ToList();
-                RUINORERP.Common.BusinessImage.ImageStateManager.Instance.MarkImagesAsProcessing(imageIds);
+                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.MarkImagesAsProcessing(imageIds);
 
                 // 获取文件管理服务
                 var fileService = Startup.GetFromFac<FileManagementService>();
@@ -4501,20 +4501,20 @@ namespace RUINORERP.UI.BaseForm
                         if (deleteResult != null && deleteResult.IsSuccess)
                         {
                             // 标记为已删除
-                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.Deleted);
+                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Lib.BusinessImage.ImageStatus.Deleted);
                             successCount++;
                         }
                         else
                         {
                             // 删除失败，恢复为待删除状态
-                            RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete);
+                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete);
                         }
                     }
                     catch (Exception ex)
                     {
                         MainForm.Instance.logger.LogError(ex, $"删除图片 {kvp.FileName} 失败");
                         // 删除失败，恢复为待删除状态
-                        RUINORERP.Common.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(kvp.ImageId, RUINORERP.Common.BusinessImage.ImageStatus.PendingDelete);
+                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(kvp.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete);
                     }
                 }
 

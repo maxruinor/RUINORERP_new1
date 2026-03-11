@@ -1,7 +1,8 @@
 using System;
 using System.Drawing;
 using System.IO;
-using RUINORERP.Common.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
+using RUINORERP.Lib.BusinessImage;
 
 namespace SourceGrid.Cells.Utilities
 {

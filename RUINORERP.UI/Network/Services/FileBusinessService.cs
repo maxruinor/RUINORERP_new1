@@ -142,30 +142,24 @@ namespace RUINORERP.UI.Network.Services
             {
                 if (string.IsNullOrEmpty(relatedField) || entity == null)
                 {
-                    _logger?.LogWarning("未指定关联字段或实体，无法下载文件");
                     return FileDownloadResponse.CreateFailure("未指定关联字段或实体，无法下载文件");
                 }
 
                 var propertyInfo = entity.GetType().GetProperty(relatedField);
                 if (propertyInfo == null)
                 {
-                    _logger?.LogWarning("实体 {EntityType} 中不存在关联字段 {FieldName}",
-                        entity.GetType().Name, relatedField);
                     return FileDownloadResponse.CreateFailure($"实体中不存在关联字段 {relatedField}");
                 }
 
                 var fieldValue = propertyInfo.GetValue(entity);
                 if (fieldValue == null)
                 {
-                    _logger?.LogWarning("关联字段 {FieldName} 的值为 null", relatedField);
                     return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值为 null");
                 }
 
                 long fileId = GetFileIdFromValue(fieldValue);
                 if (fileId <= 0)
                 {
-                    _logger?.LogWarning("关联字段 {FieldName} 的值不是有效的文件ID: {Value}",
-                        relatedField, fieldValue);
                     return FileDownloadResponse.CreateFailure($"关联字段 {relatedField} 的值不是有效的文件ID");
                 }
 
@@ -224,12 +218,12 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="fileStorageInfo">文件存储信息实体</param>
         /// <returns>转换后的ImageInfo对象</returns>
-        public RUINORERP.Common.BusinessImage.ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo fileStorageInfo)
+        public RUINORERP.Lib.BusinessImage.ImageInfo ConvertToImageInfo(tb_FS_FileStorageInfo fileStorageInfo)
         {
             if (fileStorageInfo == null)
                 return null;
 
-            return new RUINORERP.Common.BusinessImage.ImageInfo
+            return new RUINORERP.Lib.BusinessImage.ImageInfo
             {
                 FileId = fileStorageInfo.FileId,
                 OriginalFileName = fileStorageInfo.OriginalFileName,
@@ -253,7 +247,7 @@ namespace RUINORERP.UI.Network.Services
         /// </summary>
         /// <param name="imageInfo">图片信息对象</param>
         /// <returns>转换后的tb_FS_FileStorageInfo实体</returns>
-        public tb_FS_FileStorageInfo ConvertToFileStorageInfo(RUINORERP.Common.BusinessImage.ImageInfo imageInfo)
+        public tb_FS_FileStorageInfo ConvertToFileStorageInfo(RUINORERP.Lib.BusinessImage.ImageInfo imageInfo)
         {
             if (imageInfo == null)
                 return null;

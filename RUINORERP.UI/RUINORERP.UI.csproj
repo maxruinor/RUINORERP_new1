@@ -5115,6 +5115,10 @@
       <Project>{de296df4-037a-3870-fd4b-eba6110b8572}</Project>
       <Name>RUINORERP.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\RUINORERP.Lib\RUINORERP.Lib.csproj">
+      <Project>{56227b2f-9ac5-4c25-9e5e-071d4faab483}</Project>
+      <Name>RUINORERP.Lib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RUINORERP.Extensions\RUINORERP.Extensions.csproj">
       <Project>{bb1d0eac-2f97-404a-bdf3-08101553b1f2}</Project>
       <Name>RUINORERP.Extensions</Name>

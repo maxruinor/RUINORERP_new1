@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using RUINORERP.Model;
 using System;
 using System.ComponentModel;
@@ -108,7 +108,7 @@ namespace RUINORERP.UI.IM
             try
             {
                 GetConfigFromUI();
-                
+
                 // 验证配置
                 var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
                 if (!ConfigurationService.ValidateConfig(_currentConfig, validationResults))
@@ -121,10 +121,13 @@ namespace RUINORERP.UI.IM
                     MessageBox.Show(errorMessage, "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                
+
                 // 使用配置服务保存配置
                 if (MessageReminderConfigService.SaveConfig(_currentConfig))
                 {
+                    // 触发配置变更事件，使语音提醒服务立即生效
+                    MessageReminderConfigService.RaiseConfigChanged(_currentConfig);
+
                     MessageBox.Show("配置保存成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     DialogResult = DialogResult.OK;
                     Close();
@@ -137,6 +140,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 MessageBox.Show($"保存配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"保存配置异常: {ex}");
             }
         }
 

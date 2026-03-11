@@ -1244,9 +1244,16 @@ namespace RUINORERP.UI.IM
                     var message = _messageManager.GetMessageById(messageId);
                     if (message != null)
                     {
-                        // 使用TaskVoiceReminder直接播放语音提醒
-                        var voiceReminder = new RUINORERP.UI.Common.SystemSpeechVoiceReminder();
+                        // 使用配置中的音量设置播放语音提醒
+                        var config = MessageReminderConfigService.GetConfig();
+                        var voiceReminder = new RUINORERP.UI.Common.SystemSpeechVoiceReminder
+                        {
+                            IsEnabled = true,
+                            Volume = config.Volume
+                        };
                         voiceReminder.AddRemindMessage(message);
+
+                        System.Diagnostics.Debug.WriteLine($"手动播放语音提醒 - 音量: {config.Volume}");
                     }
                 }
             }

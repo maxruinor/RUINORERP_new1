@@ -10,10 +10,38 @@ namespace RUINORERP.UI.IM
     // MessageReminderConfig 类已移至单独的 MessageReminderConfig.cs 文件中
 
     /// <summary>
+    /// 配置变更事件参数
+    /// </summary>
+    public class ConfigChangedEventArgs : EventArgs
+    {
+        public string ConfigType { get; set; }
+        public object NewConfig { get; set; }
+    }
+
+    /// <summary>
     /// 通用配置服务 - 提供统一的配置管理功能
     /// </summary>
     public static class ConfigurationService
     {
+        /// <summary>
+        /// 配置变更事件
+        /// </summary>
+        public static event EventHandler<ConfigChangedEventArgs> ConfigChanged;
+
+        /// <summary>
+        /// 触发配置变更事件
+        /// </summary>
+        /// <param name="configType">配置类型</param>
+        /// <param name="newConfig">新配置对象</param>
+        public static void RaiseConfigChanged(string configType, object newConfig)
+        {
+            ConfigChanged?.Invoke(null, new ConfigChangedEventArgs
+            {
+                ConfigType = configType,
+                NewConfig = newConfig
+            });
+        }
+
         /// <summary>
         /// 获取指定类型的配置
         /// </summary>
@@ -40,6 +68,7 @@ namespace RUINORERP.UI.IM
             catch (Exception ex)
             {
                 // 记录日志
+                System.Diagnostics.Debug.WriteLine($"获取配置失败: {ex.Message}");
                 return defaultValue ?? new T();
             }
         }
@@ -80,6 +109,7 @@ namespace RUINORERP.UI.IM
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"保存配置失败: {ex.Message}");
                 return false;
             }
         }
@@ -135,6 +165,20 @@ namespace RUINORERP.UI.IM
         private const string CONFIG_FIELD_NAME = "IMConfig";
 
         /// <summary>
+        /// 消息提醒配置变更事件
+        /// </summary>
+        public static event EventHandler<MessageReminderConfig> ConfigChanged;
+
+        /// <summary>
+        /// 触发配置变更事件
+        /// </summary>
+        /// <param name="config">新配置</param>
+        public static void RaiseConfigChanged(MessageReminderConfig config)
+        {
+            ConfigChanged?.Invoke(null, config);
+        }
+
+        /// <summary>
         /// 获取消息提醒配置
         /// </summary>
         public static MessageReminderConfig GetConfig()
@@ -174,7 +218,7 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 检查是否可以播放语音提醒1
+        /// 检查是否可以播放语音提醒
         /// </summary>
         public static bool CanPlayVoiceReminder(MessageReminderConfig config = null)
         {

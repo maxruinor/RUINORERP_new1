@@ -74,6 +74,12 @@ namespace RUINORERP.UI.IM
             _entityBizMappingService = entityBizMappingService;
             _voiceReminder = voiceReminder ?? throw new ArgumentNullException(nameof(voiceReminder));
 
+            // 订阅配置变更事件，使语音提醒设置立即生效
+            MessageReminderConfigService.ConfigChanged += OnMessageReminderConfigChanged;
+
+            // 初始化语音提醒配置
+            ApplyVoiceReminderConfig();
+
             // 初始化消息持久化管理器
             _persistenceManager = new MessagePersistenceManager();
 
@@ -87,6 +93,60 @@ namespace RUINORERP.UI.IM
             InitializeMessageService();
             InitializePersistence(); // 初始化持久化功能
             _messageCheckTimer.Start();
+        }
+
+        /// <summary>
+        /// 消息提醒配置变更事件处理
+        /// </summary>
+        private void OnMessageReminderConfigChanged(object sender, MessageReminderConfig config)
+        {
+            try
+            {
+                _logger?.LogInformation("收到消息提醒配置变更通知，正在应用新配置");
+                ApplyVoiceReminderConfig();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "应用消息提醒配置变更时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 应用语音提醒配置
+        /// </summary>
+        private void ApplyVoiceReminderConfig()
+        {
+            try
+            {
+                var config = MessageReminderConfigService.GetConfig();
+
+                // 更新语音提醒服务的配置
+                _voiceReminder.IsEnabled = config.VoiceReminderEnabled;
+                _voiceReminder.Volume = config.Volume;
+
+                _logger?.LogInformation("语音提醒配置已更新 - 启用状态: {Enabled}, 音量: {Volume}",
+                    config.VoiceReminderEnabled, config.Volume);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "应用语音提醒配置时发生错误");
+            }
+        }
+
+        /// <summary>
+        /// 检查是否可以播放语音提醒
+        /// </summary>
+        private bool CanPlayVoiceReminder()
+        {
+            try
+            {
+                return MessageReminderConfigService.CanPlayVoiceReminder();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "检查语音提醒播放条件时发生错误");
+                return false;
+            }
         }
 
         /// <summary>
@@ -326,8 +386,25 @@ namespace RUINORERP.UI.IM
                     // 同步到MessageService的内存存储
                     SaveMessageToMessageServiceOnly(messageData);
 
-                    // 触发语音提醒
-                    _voiceReminder.AddRemindMessage(messageData);
+                    // 触发语音提醒（先检查配置是否允许播放）
+                    if (CanPlayVoiceReminder())
+                    {
+                        _voiceReminder.AddRemindMessage(messageData);
+                        _logger?.LogDebug("语音提醒已播放 - 消息ID: {MessageId}", messageData.MessageId);
+                    }
+                    else
+                    {
+                        // 记录不播放语音提醒的原因
+                        var config = MessageReminderConfigService.GetConfig();
+                        if (!config.VoiceReminderEnabled)
+                        {
+                            _logger?.LogDebug("语音提醒未播放 - 功能已关闭");
+                        }
+                        else if (MessageReminderConfigService.IsInQuietTime(config))
+                        {
+                            _logger?.LogDebug("语音提醒未播放 - 当前处于免打扰时段");
+                        }
+                    }
 
                     // 根据消息类型执行特定处理
                     switch (messageType)
@@ -520,8 +597,11 @@ namespace RUINORERP.UI.IM
             // 保存到持久化存储
             _persistenceManager.AddMessage(message);
 
-            // 触发语音提醒
-            _voiceReminder.AddRemindMessage(message);
+            // 触发语音提醒（先检查配置是否允许播放）
+            if (CanPlayVoiceReminder())
+            {
+                _voiceReminder.AddRemindMessage(message);
+            }
 
             // 更新未读消息计数并触发事件
             UpdateUnreadMessageCount();
@@ -1197,6 +1277,9 @@ namespace RUINORERP.UI.IM
             {
                 if (disposing)
                 {
+                    // 取消订阅配置变更事件
+                    MessageReminderConfigService.ConfigChanged -= OnMessageReminderConfigChanged;
+
                     if (_messageCheckTimer != null)
                     {
                         _messageCheckTimer.Stop();

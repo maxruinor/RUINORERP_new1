@@ -53,7 +53,21 @@ namespace RUINORERP.UI.IM
         {
             try
             {
+                // 检查MainForm实例和用户个性化配置是否为空
+                if (MainForm.Instance == null || MainForm.Instance.AppContext == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("MainForm实例或AppContext为空，返回默认配置");
+                    return defaultValue ?? new T();
+                }
+
                 tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+
+                // 检查用户个性化配置是否为空
+                if (userPersonalized == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("用户个性化配置为空，返回默认配置");
+                    return defaultValue ?? new T();
+                }
 
                 // 通过反射获取配置字段的值
                 var configJson = GetConfigJsonFromUserPersonalized(userPersonalized, configFieldName);
@@ -87,7 +101,21 @@ namespace RUINORERP.UI.IM
                 if (config == null)
                     throw new ArgumentNullException(nameof(config));
 
+                // 检查MainForm实例和用户个性化配置是否为空
+                if (MainForm.Instance == null || MainForm.Instance.AppContext == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("MainForm实例或AppContext为空，无法保存配置");
+                    return false;
+                }
+
                 tb_UserPersonalized userPersonalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
+
+                // 检查用户个性化配置是否为空，如果为空则创建新实例
+                if (userPersonalized == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("用户个性化配置为空，创建新实例");
+                    userPersonalized = new tb_UserPersonalized();
+                }
 
                 // 序列化配置
                 string configJson = JsonConvert.SerializeObject(config, Formatting.Indented);

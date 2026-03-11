@@ -74,6 +74,7 @@ namespace RUINORERP.Business.Document.Converters
             try
             {
                 // 查找可用的预收付款单
+                //如果结果大于1，则默认启动多选模式，并且将来源单据对应的订单号相同的预收付款单排在前面，选中订单号相同的预收付款单
                 var availableAdvances = await _receivablePayableController.FindAvailableAdvances(source);
                 if (!availableAdvances.Any())
                 {

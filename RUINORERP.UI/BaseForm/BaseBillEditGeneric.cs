@@ -5262,6 +5262,31 @@ namespace RUINORERP.UI.BaseForm
                 var resultProperty = task.GetType().GetProperty("Result");
                 result = resultProperty?.GetValue(task);
 
+                // 检查是否需要用户确认
+                bool shouldContinue = true;
+                if (result != null && result.RequiresUserConfirmation)
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        var confirmResult = MessageBox.Show(
+                            result.ConfirmationMessage ?? "是否确认继续操作？",
+                            "操作确认",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+                        
+                        if (confirmResult != DialogResult.Yes)
+                        {
+                            MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
+                            shouldContinue = false;
+                        }
+                    });
+                }
+
+                if (!shouldContinue)
+                {
+                    return;
+                }
+
                 // 在UI线程处理结果
                 this.Invoke((MethodInvoker)async delegate
                 {

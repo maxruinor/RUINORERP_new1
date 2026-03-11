@@ -91,6 +91,16 @@ namespace RUINORERP.Business.Document
         public bool CanConvert { get; set; }
 
         /// <summary>
+        /// 是否需要用户确认
+        /// </summary>
+        public bool RequiresUserConfirmation { get; set; }
+
+        /// <summary>
+        /// 用户确认提示信息
+        /// </summary>
+        public string ConfirmationMessage { get; set; }
+
+        /// <summary>
         /// 验证错误信息
         /// </summary>
         public string ErrorMessage { get; set; }

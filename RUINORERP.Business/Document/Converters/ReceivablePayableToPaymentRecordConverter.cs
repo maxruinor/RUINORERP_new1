@@ -144,10 +144,17 @@ namespace RUINORERP.Business.Document.Converters
                 if (availableAdvances.Any())
                 {
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
-                    result.AddWarning($"有可抵扣的预{paymentType}单，请先进行抵扣操作！");
+                    var totalAvailableAmount = availableAdvances.Sum(x => x.LocalBalanceAmount);
+                    var advanceCount = availableAdvances.Count;
+                    
+                    // 设置需要用户确认
+                    result.RequiresUserConfirmation = true;
+                    result.ConfirmationMessage = $"检测到有 {advanceCount} 张可抵扣的预{paymentType}单，总可用金额为 {totalAvailableAmount:F2} 元。\r\n" +
+                        $"建议优先通过抵扣来核销。\r\n" +
+                        $"确认要生成收付款单，而不是先进行抵扣操作？";
                 }
 
-                await Task.CompletedTask; // 满足异步方法签名要求
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

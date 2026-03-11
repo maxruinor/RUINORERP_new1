@@ -515,6 +515,16 @@ namespace RUINORERP.Business.Document
         public bool Success { get; set; }
 
         /// <summary>
+        /// 是否需要用户确认
+        /// </summary>
+        public bool RequiresUserConfirmation { get; set; }
+
+        /// <summary>
+        /// 用户确认提示信息
+        /// </summary>
+        public string ConfirmationMessage { get; set; }
+
+        /// <summary>
         /// 错误信息
         /// </summary>
         public string ErrorMessage { get; set; }
@@ -567,7 +577,9 @@ namespace RUINORERP.Business.Document
                 ErrorMessage = validationResult.ErrorMessage,
                 Data = data,
                 WarningMessages = validationResult.WarningMessages?.ToList() ?? new List<string>(),
-                InfoMessages = validationResult.InfoMessages?.ToList() ?? new List<string>()
+                InfoMessages = validationResult.InfoMessages?.ToList() ?? new List<string>(),
+                RequiresUserConfirmation = validationResult.RequiresUserConfirmation,
+                ConfirmationMessage = validationResult.ConfirmationMessage
             };
         }
 

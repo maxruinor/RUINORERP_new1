@@ -426,7 +426,8 @@ namespace RUINORERP.UI.Common
 
             if (result.Key != null)
             {
-                targetTableKey = CurrentRowEntity.GetPropertyValue(result.Key).ToString();
+                var keyValue = CurrentRowEntity.GetPropertyValue(result.Key);
+                targetTableKey = keyValue?.ToString() ?? string.Empty;
                 System.Diagnostics.Debug.WriteLine($"找到的键值对: Key = {result.Key}, Value = {result.Value}");
 
                 var info = RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.TargetTableName.Key == targetTableKey);
@@ -434,7 +435,8 @@ namespace RUINORERP.UI.Common
             }
             else
             {
-                string billno = CurrentRowEntity.GetPropertyValue(GridViewColumnFieldName).ToString();
+                var billnoValue = CurrentRowEntity.GetPropertyValue(GridViewColumnFieldName);
+                string billno = billnoValue?.ToString() ?? string.Empty;
                 return RelatedInfoList.FirstOrDefault(c => c.SourceUniqueField == GridViewColumnFieldName && c.SourceTableName == CurrentRowEntity.GetType().Name);
             }
         }

@@ -384,10 +384,16 @@ namespace RUINORERP.UI.FM
                 message = "应收应付单的币种信息不完整，无法进行抵扣操作。";
                 return false;
             }
-
-            if (receivablePayable.LocalBalanceAmount <= 0)
+            //这里逻辑要修改，如果余额等于0才提示无需，
+            if (receivablePayable.LocalBalanceAmount == 0)
             {
                 message = $"应收应付单【{receivablePayable.ARAPNo}】的余额为零，无需进行抵扣操作。";
+                return false;
+            }
+            //这里逻辑要修改，如果余额等于0才提示无需，
+            if (receivablePayable.LocalBalanceAmount < 0)
+            {
+                message = $"应收应付单【{receivablePayable.ARAPNo}】的余额小于零，不能进行抵扣操作。";
                 return false;
             }
 
@@ -679,6 +685,12 @@ namespace RUINORERP.UI.FM
                 {
                     MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
+                }
+                else
+                {
+                    //预收的来源是 销售订单，预付的来源是采购订单，应收的来源是销售出库，应付是采购入库，
+                    //所以还要通过销售订单找到销售出库，采购订单找到采购入库，销售出库和采购入库找到应收应付
+                    availableAdvances = availableAdvances.OrderByDescending(c => c.SourceBillNo == receivable.SourceBillNo).ThenBy(c => c.PrePayDate).ToList();
                 }
 
                 // 检查预收付款单的可用余额是否足够

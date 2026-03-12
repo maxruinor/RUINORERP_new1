@@ -2983,7 +2983,22 @@ namespace RUINORERP.UI.BaseForm
                         {
                             return;
                         }
-                        await AntiCloseCaseAsync();
+                        var statusType = EditEntity.StateManager.GetStatusType(EditEntity);
+                        if (statusType == typeof(DataStatus))
+                        {
+                            var dataStatus = (DataStatus)EditEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt();
+                            if (dataStatus == DataStatus.草稿 || dataStatus == DataStatus.新建)
+                            {
+                                MessageBox.Show("只能对已【完结】的单据操作。\r\n请检查数据，刷新后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                return;
+                            }
+                        }
+
+                        bool rsAntiCloseCase = await AntiCloseCaseAsync();
+                        if (rsAntiCloseCase)
+                        {
+                            UpdateAllUIStates(EditEntity);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -4822,7 +4837,7 @@ namespace RUINORERP.UI.BaseForm
                 // 使用事务进行数据修正
                 var dbClient = Startup.GetFromFac<SqlSugar.ISqlSugarClient>();
                 bool transactionStarted = false;
-                
+
                 try
                 {
                     if (dbClient.Ado.Transaction == null)
@@ -4862,13 +4877,13 @@ namespace RUINORERP.UI.BaseForm
 
                         // 获取子表的主键属性名
                         string childPkName = GetChildPrimaryKeyName();
-                        
+
                         var existingDetailIds = existingDetails.Select(d => GetPrimaryKeyValue(d, childPkName)).ToHashSet();
 
                         foreach (var detail in details)
                         {
                             long detailPk = GetPrimaryKeyValue(detail, childPkName);
-                            
+
                             if (detailPk == 0)
                             {
                                 // 新增的明细
@@ -4967,10 +4982,10 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 获取主表类型名
                 string mainTypeName = typeof(T).Name;
-                
+
                 // 获取子表类型的所有属性
                 var childProperties = typeof(C).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                
+
                 // 查找带有FKRelationAttribute特性的属性
                 foreach (var prop in childProperties)
                 {
@@ -4985,7 +5000,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                     }
                 }
-                
+
                 // 如果没有找到匹配的FKRelationAttribute，尝试通过命名规则推断
                 return GetForeignKeyNameByNamingConvention(mainTypeName);
             }
@@ -5007,7 +5022,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 // 获取子表类型的所有属性
                 var childProperties = typeof(C).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                
+
                 // 查找带有IsPrimaryKey特性的属性
                 foreach (var prop in childProperties)
                 {
@@ -5017,7 +5032,7 @@ namespace RUINORERP.UI.BaseForm
                         return prop.Name;
                     }
                 }
-                
+
                 // 如果没有找到，尝试通过命名规则推断
                 return GetPrimaryKeyNameByNamingConvention(typeof(C).Name);
             }
@@ -5093,7 +5108,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return "PreReceivedPaymentDetail_ID";
             }
-            
+
             // 默认规则：类型名 + "_ID"
             return typeName + "_ID";
         }
@@ -5142,7 +5157,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 return "MainID";
             }
-            
+
             // 默认规则：主表类型名 + "ID"
             return mainTypeName.Replace("tb_FM_", "") + "ID";
         }
@@ -5546,7 +5561,7 @@ namespace RUINORERP.UI.BaseForm
                             "操作确认",
                             MessageBoxButtons.YesNo,
                             MessageBoxIcon.Question);
-                        
+
                         if (confirmResult != DialogResult.Yes)
                         {
                             MainForm.Instance.uclog.AddLog($"用户取消了单据转换：{sourceDisplayName} -> {targetDisplayName}", Global.UILogType.普通消息);
@@ -5744,7 +5759,7 @@ namespace RUINORERP.UI.BaseForm
                             successMsg += Environment.NewLine + string.Join(Environment.NewLine, actionResult.InfoMessages);
                         }
                         MessageBox.Show(successMsg, "操作成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        
+
                         // 刷新数据
                         if (EditEntity != null)
                         {

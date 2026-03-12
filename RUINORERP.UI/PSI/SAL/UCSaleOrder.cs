@@ -1554,7 +1554,6 @@ namespace RUINORERP.UI.PSI.SAL
             toolStripButton反结案.Visible = false;//默认隐藏
             UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton反结案);
             toolStripButton反结案.ToolTipText = "结案错误，要上级特殊处理时，使用本功能。";
-            toolStripButton反结案.Click += new System.EventHandler(this.toolStripButton反结案_Click);
 
             System.Windows.Forms.ToolStripItem[] extendButtons = new System.Windows.Forms.ToolStripItem[]
             {
@@ -1639,21 +1638,7 @@ namespace RUINORERP.UI.PSI.SAL
         ToolStripButton toolStripButton反结案 = new System.Windows.Forms.ToolStripButton();
 
 
-
-        private async void toolStripButton反结案_Click(object sender, EventArgs e)
-        {
-            if (EditEntity == null)
-            {
-                return;
-            }
-            if (EditEntity.DataStatus != (int)DataStatus.完结)
-            {
-                MessageBox.Show("只能对已【完结】的单据操作。\r\n请检查数据，刷新后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                return;
-            }
-            await AntiCloseCaseAsync();
-        }
-
+ 
 
 
 

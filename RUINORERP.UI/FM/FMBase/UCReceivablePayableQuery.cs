@@ -870,14 +870,11 @@ namespace RUINORERP.UI.FM
                     return;
                 }
 
+                //
                 if (invalidReceivables.Any())
                 {
-                    StringBuilder skipMsg = new StringBuilder();
-                    foreach (var item in invalidReceivables)
-                    {
-                        skipMsg.Append($"应{PaymentType.ToString()}单 {item.ARAPNo} 没有找到可抵扣的预{PaymentType.ToString()}单，将跳过。\r\n");
-                    }
-                    if (MessageBox.Show($"{skipMsg.ToString()}其他单据可以进行抵扣，是否继续？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
+                    int skipCount = invalidReceivables.Count();
+                    if (MessageBox.Show($"共有 {skipCount} 张应{PaymentType.ToString()}单没有找到可抵扣的预{PaymentType.ToString()}单，将跳过。其他单据可以进行抵扣，是否继续？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
                     {
                         return;
                     }

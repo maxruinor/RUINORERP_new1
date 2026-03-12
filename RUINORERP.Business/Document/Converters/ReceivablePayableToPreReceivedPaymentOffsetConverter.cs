@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using tb_SaleOut = RUINORERP.Model.tb_SaleOut;
+using tb_PurEntry = RUINORERP.Model.tb_PurEntry;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -60,6 +61,12 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 执行动作操作 - 抵扣应付款
+        /// 业务逻辑：
+        /// 1. 查找可用的预收付款单
+        /// 2. 检查预收付款单的可用余额是否足够
+        /// 3. 将与应收应付款单关联的订单号相同的预收付款单排在最前面
+        /// 4. 如果订单号不一致，提示用户确认
+        /// 5. 执行抵扣操作
         /// </summary>
         /// <param name="source">源单据：应收应付款单</param>
         /// <param name="target">目标单据：预收付款单（必须提供）</param>
@@ -74,7 +81,6 @@ namespace RUINORERP.Business.Document.Converters
             try
             {
                 // 查找可用的预收付款单
-                //如果结果大于1，则默认启动多选模式，并且将来源单据对应的订单号相同的预收付款单排在前面，选中订单号相同的预收付款单
                 var availableAdvances = await _receivablePayableController.FindAvailableAdvances(source);
                 if (!availableAdvances.Any())
                 {
@@ -135,6 +141,48 @@ namespace RUINORERP.Business.Document.Converters
                     {
                         return ActionResult.CancelResult();
                     }
+
+                    // 检查订单号是否一致
+                    var sourceOrderId = await GetOrderIdAsync(source.SourceBizType, source.SourceBillId);
+                    var preOrderIds = selectedAdvances.Where(c => c.SourceBizType == (int)BizType.销售订单 || c.SourceBizType == (int)BizType.采购订单)
+                        .Select(c => c.SourceBillId.Value)
+                        .ToList();
+                    
+                    if (sourceOrderId.HasValue && preOrderIds.Any())
+                    {
+                        var sourceOrderIdsList = new List<long> { sourceOrderId.Value };
+                        var sourceOrderSet = new HashSet<long>(sourceOrderIdsList);
+                        var preOrderSet = new HashSet<long>(preOrderIds);
+                        
+                        if (!sourceOrderSet.SetEquals(preOrderSet))
+                        {
+                            var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
+                            var preRPNOsPreview = string.Join(", ", selectedAdvances.Take(5).Select(item => item.PreRPNO));
+                            if (selectedAdvances.Count > 5)
+                            {
+                                preRPNOsPreview += $" 等 {selectedAdvances.Count} 张单据";
+                            }
+
+                            var confirmResult = await System.Threading.Tasks.Task.Run(() =>
+                            {
+                                System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.No;
+                                System.Windows.Forms.Application.OpenForms[0].Invoke((System.Windows.Forms.MethodInvoker)delegate
+                                {
+                                    result = System.Windows.Forms.MessageBox.Show(
+                                        $"当前【应{paymentType}单】：{source.ARAPNo}与【预{paymentType}单】：{preRPNOsPreview}的订单号不一致，你确实要抵扣吗？",
+                                        "提示",
+                                        System.Windows.Forms.MessageBoxButtons.OKCancel,
+                                        System.Windows.Forms.MessageBoxIcon.Information);
+                                });
+                                return result;
+                            });
+
+                            if (confirmResult != System.Windows.Forms.DialogResult.OK)
+                            {
+                                return ActionResult.CancelResult();
+                            }
+                        }
+                    }
                 }
 
                 // 执行抵扣操作
@@ -165,6 +213,10 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 获取单据对应的订单ID
+        /// 业务逻辑：
+        /// 1. 预收款的来源是销售订单，预付款的来源是采购订单
+        /// 2. 应收款的来源是销售出库，应付款是采购入库
+        /// 3. 需要通过销售出库找到销售订单，采购入库找到采购订单
         /// </summary>
         /// <param name="sourceBizType">来源业务类型</param>
         /// <param name="sourceBillId">来源单据ID</param>
@@ -235,6 +287,10 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 显示预收付款单选择窗体
+        /// 业务逻辑：
+        /// 1. 将与应收应付款单关联的订单号相同的预收付款单排在最前面
+        /// 2. 相同订单号的预收付款单按付款日期排序
+        /// 3. 默认选中与应收应付款单关联的订单号相同的预收付款单
         /// </summary>
         /// <param name="source">应收应付款单</param>
         /// <param name="availableAdvances">可用的预收付款单列表</param>
@@ -248,7 +304,7 @@ namespace RUINORERP.Business.Document.Converters
                 // 获取来源单据的订单ID
                 var sourceOrderId = await GetOrderIdAsync(source.SourceBizType, source.SourceBillId);
 
-                // 如果结果大于1，则默认启动多选模式，并且将来源单据对应的订单号相同的预收付款单排在前面，选中订单号相同的预收付款单
+                // 如果结果大于1，则默认启动多选模式，并且将来源单据对应的订单号相同的预收付款单排在前面
                 if (availableAdvances.Count > 1)
                 {
                     // 将订单号相同的预收付款单排在前面

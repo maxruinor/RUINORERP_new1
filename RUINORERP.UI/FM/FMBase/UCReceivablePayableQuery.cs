@@ -701,11 +701,11 @@ namespace RUINORERP.UI.FM
                     }
                     else if (receivable.SourceBizType == (int)BizType.采购入库单)
                     {
-                        var purInboundController = Startup.GetFromFac<tb_PurInboundController<tb_PurInbound>>();
+                        var purInboundController = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
                         var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
-                        if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrderNo))
+                        if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrder_NO))
                         {
-                            relatedOrderNos.Add(purInbound.PurOrderNo);
+                            relatedOrderNos.Add(purInbound.PurOrder_NO);
                         }
                     }
 

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using tb_SaleOut = RUINORERP.Model.tb_SaleOut;
+using tb_PurEntry = RUINORERP.Model.tb_PurEntry;
 
 namespace RUINORERP.Business.Document.Converters
 {
@@ -67,6 +68,12 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 执行动作操作 - 抵扣应收款
+        /// 业务逻辑：
+        /// 1. 查找可抵扣的应收应付款单
+        /// 2. 检查预收付款单余额是否足够
+        /// 3. 将与预收付款单关联的订单号相同的应收应付款单排在最前面
+        /// 4. 如果订单号不一致，提示用户确认
+        /// 5. 执行抵扣操作
         /// </summary>
         /// <param name="source">源单据：预收付款单</param>
         /// <param name="target">目标单据：应收应付款单（必须提供）</param>
@@ -118,6 +125,34 @@ namespace RUINORERP.Business.Document.Converters
                     {
                         return ActionResult.CancelResult();
                     }
+
+                    // 检查订单号是否一致
+                    var sourceOrderId = await GetOrderIdAsync(source.SourceBizType, source.SourceBillId);
+                    var receivableOrderId = await GetOrderIdAsync(selectedReceivable.SourceBizType, selectedReceivable.SourceBillId);
+                    
+                    if (sourceOrderId.HasValue && receivableOrderId.HasValue && 
+                        sourceOrderId.Value != receivableOrderId.Value)
+                    {
+                        var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
+                        var confirmResult = await System.Threading.Tasks.Task.Run(() =>
+                        {
+                            System.Windows.Forms.DialogResult result = System.Windows.Forms.DialogResult.No;
+                            System.Windows.Forms.Application.OpenForms[0].Invoke((System.Windows.Forms.MethodInvoker)delegate
+                            {
+                                result = System.Windows.Forms.MessageBox.Show(
+                                    $"当前【预{paymentType}单】：{source.PreRPNO}与【应{paymentType}单】：{selectedReceivable.ARAPNo}的订单号不一致，你确实要抵扣吗？",
+                                    "提示",
+                                    System.Windows.Forms.MessageBoxButtons.OKCancel,
+                                    System.Windows.Forms.MessageBoxIcon.Information);
+                            });
+                            return result;
+                        });
+
+                        if (confirmResult != System.Windows.Forms.DialogResult.OK)
+                        {
+                            return ActionResult.CancelResult();
+                        }
+                    }
                 }
 
                 // 执行抵扣操作
@@ -149,6 +184,10 @@ namespace RUINORERP.Business.Document.Converters
 
         /// <summary>
         /// 获取单据对应的订单ID
+        /// 业务逻辑：
+        /// 1. 预收款的来源是销售订单，预付款的来源是采购订单
+        /// 2. 应收款的来源是销售出库，应付款是采购入库
+        /// 3. 需要通过销售出库找到销售订单，采购入库找到采购订单
         /// </summary>
         /// <param name="sourceBizType">来源业务类型</param>
         /// <param name="sourceBillId">来源单据ID</param>

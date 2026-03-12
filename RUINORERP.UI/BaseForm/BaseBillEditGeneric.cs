@@ -4725,7 +4725,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 修复性保存数据 支持主表的修改，子表的修改和增减11
+        /// 修复性保存数据 支持主表的修改，子表的修改和增减
         /// </summary>
         /// <summary>
         /// 特殊数据修正功能（仅管理员可用）
@@ -4735,6 +4735,7 @@ namespace RUINORERP.UI.BaseForm
         /// 2. 支持新增和修改从表明细数据（包括新增、修改、删除明细行）
         /// 3. 跳过大部分业务规则检查
         /// 4. 保留审批状态和数据状态
+        /// 5. 使用普通更新方式而非导航式更新，避免外键约束冲突
         /// </summary>
         protected async override void SpecialDataFix()
         {
@@ -4757,10 +4758,9 @@ namespace RUINORERP.UI.BaseForm
                 // 结束编辑状态
                 bindingSourceSub.EndEdit();
 
-                // 获取明细数据并设置到EditEntity
+                // 获取明细数据
                 List<C> detailentity = bindingSourceSub.DataSource as List<C>;
                 List<C> details = new List<C>();
-                List<C> detailsToDelete = new List<C>(); // 需要删除的明细
 
                 if (typeof(C).Name.Contains("Detail") && detailentity != null)
                 {
@@ -4768,19 +4768,16 @@ namespace RUINORERP.UI.BaseForm
                     string prodDetailIDName = UIHelper.GetPrimaryKeyColName(typeof(tb_ProdDetail));
 
                     // 提取所有明细数据（包括新增、修改、删除）
-                    // BaseSaveOrUpdateWithChild 会根据主键ID自动判断是新增、修改还是删除
                     details = new List<C>(detailentity);
 
-                    //明细中有产品的才去判断需要产品ID大于0的记录
+                    // 明细中有产品的才去判断需要产品ID大于0的记录
                     bool ContainDetail = false;
                     if (typeof(C).ContainsProperty(prodDetailIDName))
                     {
                         ContainDetail = true;
                     }
-                    // int validDetailCount = details.Count(t => t.ContainsProperty(prodDetailIDName) && t.GetPropertyValue(prodDetailIDName).ToLong() > 0);
 
                     // 统计有效明细数量（ProdDetailID大于0）
-                    // 注意:需要使用属性检查而非字段检查,因为ProdDetailID是属性不是字段
                     int validDetailCount = details.Count(t =>
                     {
                         var prop = t.GetType().GetProperty(prodDetailIDName);
@@ -4822,41 +4819,126 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 将明细数据设置到EditEntity中
-                if (details.Count > 0)
+                // 使用事务进行数据修正
+                var dbClient = Startup.GetFromFac<SqlSugar.ISqlSugarClient>();
+                bool transactionStarted = false;
+                
+                try
                 {
-                    SetDetailsToEditEntity(details);
-                }
+                    if (dbClient.Ado.Transaction == null)
+                    {
+                        dbClient.Ado.BeginTran();
+                        transactionStarted = true;
+                    }
 
+                    // 1. 更新主表数据（使用普通Update，不使用导航式更新）
+                    var mainUpdateResult = await dbClient.Updateable(EditEntity)
+                        .ExecuteCommandAsync();
 
-                // 明确调用基类的Save(T entity)方法,绕过子类Save(bool)方法中的ActionStatus检查
-                // 使用(base as BaseBillEditGeneric<T, C>).Save(EditEntity)确保调用基类方法
-                var saveResult = await ((BaseBillEditGeneric<T, C>)this).Save(EditEntity);
+                    if (mainUpdateResult <= 0)
+                    {
+                        throw new Exception("主表数据更新失败");
+                    }
 
-                if (saveResult.Succeeded)
-                {
-                    // 获取单据号用于日志显示
+                    // 2. 处理子表数据
+                    if (details.Count > 0)
+                    {
+                        // 获取主表的主键值
+                        string mainPkName = BaseUIHelper.GetEntityPrimaryKey<T>();
+                        long mainPkValue = (long)ReflectionHelper.GetPropertyValue(EditEntity, mainPkName);
+
+                        // 获取子表关联主表的外键属性名
+                        string childFkName = GetChildForeignKeyName();
+
+                        // 区分新增、修改、删除的明细
+                        var detailsToAdd = new List<C>();
+                        var detailsToUpdate = new List<C>();
+                        var detailsToDelete = new List<C>();
+
+                        // 获取数据库中已有的明细数据
+                        var existingDetails = await dbClient.Queryable<C>()
+                            .Where($"{childFkName} = @mainPkValue", new { mainPkValue })
+                            .ToListAsync();
+
+                        // 获取子表的主键属性名
+                        string childPkName = GetChildPrimaryKeyName();
+                        
+                        var existingDetailIds = existingDetails.Select(d => GetPrimaryKeyValue(d, childPkName)).ToHashSet();
+
+                        foreach (var detail in details)
+                        {
+                            long detailPk = GetPrimaryKeyValue(detail, childPkName);
+                            
+                            if (detailPk == 0)
+                            {
+                                // 新增的明细
+                                detailsToAdd.Add(detail);
+                            }
+                            else if (existingDetailIds.Contains(detailPk))
+                            {
+                                // 修改的明细
+                                detailsToUpdate.Add(detail);
+                            }
+                            else
+                            {
+                                // 删除的明细（不在当前明细列表中，但在数据库中存在）
+                                // 这里不需要处理，因为用户已经在界面上删除了
+                            }
+                        }
+
+                        // 执行删除操作（删除数据库中存在但当前明细列表中不存在的记录）
+                        var detailsToRemove = existingDetails.Where(d => !details.Any(cd => GetPrimaryKeyValue(cd, childPkName) == GetPrimaryKeyValue(d, childPkName))).ToList();
+                        if (detailsToRemove.Count > 0)
+                        {
+                            await dbClient.Deleteable<C>()
+                                .In(detailsToRemove.Select(d => GetPrimaryKeyValue(d, childPkName)).ToArray())
+                                .ExecuteCommandAsync();
+                        }
+
+                        // 执行新增操作
+                        if (detailsToAdd.Count > 0)
+                        {
+                            // 设置外键值
+                            foreach (var detail in detailsToAdd)
+                            {
+                                ReflectionHelper.SetPropertyValue(detail, childFkName, mainPkValue);
+                            }
+                            await dbClient.Insertable(detailsToAdd).ExecuteCommandAsync();
+                        }
+
+                        // 执行修改操作
+                        if (detailsToUpdate.Count > 0)
+                        {
+                            await dbClient.Updateable(detailsToUpdate).ExecuteCommandAsync();
+                        }
+                    }
+
+                    // 提交事务
+                    if (transactionStarted)
+                    {
+                        dbClient.Ado.CommitTran();
+                    }
+
+                    // 修正成功
                     string billNo = GetBillNoForLog();
                     MainForm.Instance.PrintInfoLog($"数据修正成功。单据号：{billNo}");
 
                     // 记录审计日志
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", saveResult.ReturnObject,
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", EditEntity,
                         $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
                         $"结果：成功，" +
                         $"明细数量：{details.Count}，" +
-                        $"删除明细数：{detailsToDelete.Count}");
+                        $"新增明细数：{details.Count(d => GetPrimaryKeyValue(d, GetChildPrimaryKeyName()) == 0)}，" +
+                        $"修改明细数：{details.Count(d => GetPrimaryKeyValue(d, GetChildPrimaryKeyName()) > 0)}");
                 }
-                else
+                catch
                 {
-                    MainForm.Instance.PrintInfoLog($"数据修正失败。", Color.Red);
-                    MessageBox.Show($"数据修正失败！\n\n{saveResult.ErrorMsg}",
-                        "修正失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
-                    // 记录审计日志
-                    await MainForm.Instance.AuditLogHelper.CreateAuditLog("特殊数据修正", EditEntity,
-                        $"操作人：{MainForm.Instance.AppContext.CurUserInfo.UserInfo.UserName}，" +
-                        $"结果：失败，" +
-                        $"错误信息：{saveResult.ErrorMsg}");
+                    // 回滚事务
+                    if (transactionStarted && dbClient.Ado.Transaction != null)
+                    {
+                        dbClient.Ado.RollbackTran();
+                    }
+                    throw;
                 }
             }
             catch (Exception ex)
@@ -4872,6 +4954,197 @@ namespace RUINORERP.UI.BaseForm
                     $"结果：异常，" +
                     $"异常信息：{ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 获取子表关联主表的外键属性名
+        /// 通过反射查找子表中带有FKRelationAttribute特性的属性，该特性的第一个参数为主表名
+        /// </summary>
+        /// <returns>外键属性名</returns>
+        private string GetChildForeignKeyName()
+        {
+            try
+            {
+                // 获取主表类型名
+                string mainTypeName = typeof(T).Name;
+                
+                // 获取子表类型的所有属性
+                var childProperties = typeof(C).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                // 查找带有FKRelationAttribute特性的属性
+                foreach (var prop in childProperties)
+                {
+                    var fkAttribute = prop.GetCustomAttribute<FKRelationAttribute>();
+                    if (fkAttribute != null)
+                    {
+                        // 检查该特性的第一个参数（主表名）是否与主表类型名匹配
+                        if (fkAttribute.FKTableName == mainTypeName)
+                        {
+                            // 返回该属性的名称（外键属性名）
+                            return prop.Name;
+                        }
+                    }
+                }
+                
+                // 如果没有找到匹配的FKRelationAttribute，尝试通过命名规则推断
+                return GetForeignKeyNameByNamingConvention(mainTypeName);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"获取外键属性名失败，主表类型：{typeof(T).Name}，子表类型：{typeof(C).Name}");
+                // 如果反射失败，尝试通过命名规则推断
+                return GetForeignKeyNameByNamingConvention(typeof(T).Name);
+            }
+        }
+
+        /// <summary>
+        /// 获取子表的主键属性名
+        /// </summary>
+        /// <returns>主键属性名</returns>
+        private string GetChildPrimaryKeyName()
+        {
+            try
+            {
+                // 获取子表类型的所有属性
+                var childProperties = typeof(C).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                
+                // 查找带有IsPrimaryKey特性的属性
+                foreach (var prop in childProperties)
+                {
+                    var pkAttribute = prop.GetCustomAttribute<SugarColumn>();
+                    if (pkAttribute != null && pkAttribute.IsPrimaryKey)
+                    {
+                        return prop.Name;
+                    }
+                }
+                
+                // 如果没有找到，尝试通过命名规则推断
+                return GetPrimaryKeyNameByNamingConvention(typeof(C).Name);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"获取主键属性名失败，子表类型：{typeof(C).Name}");
+                // 如果反射失败，尝试通过命名规则推断
+                return GetPrimaryKeyNameByNamingConvention(typeof(C).Name);
+            }
+        }
+
+        /// <summary>
+        /// 获取实体的主键值
+        /// </summary>
+        /// <param name="entity">实体对象</param>
+        /// <param name="primaryKeyName">主键属性名</param>
+        /// <returns>主键值</returns>
+        private long GetPrimaryKeyValue(object entity, string primaryKeyName)
+        {
+            try
+            {
+                var pkValue = ReflectionHelper.GetPropertyValue(entity, primaryKeyName);
+                if (pkValue != null)
+                {
+                    return Convert.ToInt64(pkValue);
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogError(ex, $"获取主键值失败，实体类型：{entity.GetType().Name}，主键属性名：{primaryKeyName}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// 通过命名规则推断主键属性名（作为反射方式的备用方案）
+        /// </summary>
+        /// <param name="typeName">类型名</param>
+        /// <returns>主键属性名</returns>
+        private string GetPrimaryKeyNameByNamingConvention(string typeName)
+        {
+            // 根据类型名推断主键属性名
+            if (typeName.Contains("SaleOrderDetail"))
+            {
+                return "SaleOrderDetail_ID";
+            }
+            else if (typeName.Contains("SaleOutDetail"))
+            {
+                return "SaleOutDetail_ID";
+            }
+            else if (typeName.Contains("PurOrderDetail"))
+            {
+                return "PurOrder_ChildID";
+            }
+            else if (typeName.Contains("PurEntryDetail"))
+            {
+                return "PurEntryDetail_ID";
+            }
+            else if (typeName.Contains("StocktakeDetail"))
+            {
+                return "SubID";
+            }
+            else if (typeName.Contains("ReceivablePayableDetail"))
+            {
+                return "ReceivablePayableDetail_ID";
+            }
+            else if (typeName.Contains("PaymentRecordDetail"))
+            {
+                return "PaymentRecordDetail_ID";
+            }
+            else if (typeName.Contains("PreReceivedPaymentDetail"))
+            {
+                return "PreReceivedPaymentDetail_ID";
+            }
+            
+            // 默认规则：类型名 + "_ID"
+            return typeName + "_ID";
+        }
+
+        /// <summary>
+        /// 通过命名规则推断外键属性名（作为反射方式的备用方案）
+        /// </summary>
+        /// <param name="mainTypeName">主表类型名</param>
+        /// <returns>外键属性名</returns>
+        private string GetForeignKeyNameByNamingConvention(string mainTypeName)
+        {
+            // 根据主表类型推断外键属性名
+            if (mainTypeName.Contains("SaleOut"))
+            {
+                return "SaleOut_MainID";
+            }
+            else if (mainTypeName.Contains("PurEntryRe"))
+            {
+                return "PurEntryRe_CID";
+            }
+            else if (mainTypeName.Contains("ReceivablePayable"))
+            {
+                return "ARAPId";
+            }
+            else if (mainTypeName.Contains("PaymentRecord"))
+            {
+                return "PaymentRecordID";
+            }
+            else if (mainTypeName.Contains("PreReceivedPayment"))
+            {
+                return "PreRPID";
+            }
+            else if (mainTypeName.Contains("SaleOrder"))
+            {
+                return "SOrder_ID";
+            }
+            else if (mainTypeName.Contains("PurOrder"))
+            {
+                return "PurOrder_ID";
+            }
+            else if (mainTypeName.Contains("PurEntry"))
+            {
+                return "PurEntryID";
+            }
+            else if (mainTypeName.Contains("Stocktake"))
+            {
+                return "MainID";
+            }
+            
+            // 默认规则：主表类型名 + "ID"
+            return mainTypeName.Replace("tb_FM_", "") + "ID";
         }
 
         /// <summary>

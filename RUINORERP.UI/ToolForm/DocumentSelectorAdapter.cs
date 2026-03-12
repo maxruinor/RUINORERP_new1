@@ -80,6 +80,14 @@ namespace RUINORERP.UI.ToolForm
         }
 
         /// <summary>
+        /// 设置默认选中的项目
+        /// </summary>
+        public void SetDefaultSelectedItems(List<T> items)
+        {
+            _selector.SetDefaultSelectedItems(items);
+        }
+
+        /// <summary>
         /// 显示选择窗体
         /// </summary>
         public bool ShowDialog()

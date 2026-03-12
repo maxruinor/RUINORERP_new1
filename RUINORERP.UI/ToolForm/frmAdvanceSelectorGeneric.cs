@@ -1,4 +1,4 @@
-﻿using RUINORERP.Common.Extensions;
+using RUINORERP.Common.Extensions;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using System;
@@ -159,6 +159,36 @@ namespace RUINORERP.UI.ToolForm
             SelectorTitle = title;
             BindData();
             ConfigureDataGridView();
+        }
+
+        /// <summary>
+        /// 设置默认选中的项目
+        /// </summary>
+        /// <param name="items">要默认选中的项目列表</param>
+        public void SetDefaultSelectedItems(List<T> items)
+        {
+            if (items == null || !items.Any())
+            {
+                return;
+            }
+
+            // 等待数据绑定完成
+            Application.DoEvents();
+
+            foreach (DataGridViewRow row in dgvItems.Rows)
+            {
+                var dataItem = row.DataBoundItem;
+                if (dataItem != null && items.Any(item => object.Equals(item, dataItem)))
+                {
+                    DataGridViewCheckBoxCell checkBoxCell = row.Cells["Selected"] as DataGridViewCheckBoxCell;
+                    if (checkBoxCell != null)
+                    {
+                        checkBoxCell.Value = true;
+                    }
+                }
+            }
+
+            dgvItems.Refresh();
         }
 
         // 完善列头替换功能的方法

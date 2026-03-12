@@ -55,6 +55,12 @@ namespace RUINORERP.Lib.UI
         void InitializeSelector(List<T> dataSource, string title = "请选择");
 
         /// <summary>
+        /// 设置默认选中的项目
+        /// </summary>
+        /// <param name="items">要默认选中的项目列表</param>
+        void SetDefaultSelectedItems(List<T> items);
+
+        /// <summary>
         /// 显示选择窗体
         /// </summary>
         /// <returns>用户是否确认选择</returns>

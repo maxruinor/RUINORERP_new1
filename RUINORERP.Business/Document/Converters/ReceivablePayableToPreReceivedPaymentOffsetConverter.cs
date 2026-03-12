@@ -245,6 +245,21 @@ namespace RUINORERP.Business.Document.Converters
             {
                 var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                 
+                // 获取来源单据的订单ID
+                var sourceOrderId = await GetOrderIdAsync(source.SourceBizType, source.SourceBillId);
+
+                // 如果结果大于1，则默认启动多选模式，并且将来源单据对应的订单号相同的预收付款单排在前面，选中订单号相同的预收付款单
+                if (availableAdvances.Count > 1)
+                {
+                    // 将订单号相同的预收付款单排在前面
+                    var sortedAdvances = availableAdvances
+                        .OrderByDescending(a => IsSameOrder(a, sourceOrderId))
+                        .ThenBy(a => a.PrePayDate)
+                        .ToList();
+                    
+                    availableAdvances = sortedAdvances;
+                }
+
                 // 使用工厂创建选择器
                 var selector = _selectorFactory.CreateSelector<tb_FM_PreReceivedPayment>();
                 selector.ConfirmButtonText = "抵扣";
@@ -261,6 +276,19 @@ namespace RUINORERP.Business.Document.Converters
                 selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
                 selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
                 selector.InitializeSelector(availableAdvances, $"选择预{paymentType}单");
+
+                // 如果有订单号相同的预收付款单，默认选中
+                if (sourceOrderId.HasValue && availableAdvances.Count > 1)
+                {
+                    var matchedAdvances = availableAdvances
+                        .Where(a => IsSameOrder(a, sourceOrderId.Value))
+                        .ToList();
+                    
+                    if (matchedAdvances.Any())
+                    {
+                        selector.SetDefaultSelectedItems(matchedAdvances);
+                    }
+                }
 
                 // 在UI线程上显示选择窗体
                 List<tb_FM_PreReceivedPayment> selectedAdvances = null;
@@ -281,6 +309,37 @@ namespace RUINORERP.Business.Document.Converters
             {
                 _logger.LogError(ex, "显示预收付款单选择窗体时发生错误");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// 判断预收付款单是否与指定订单号匹配
+        /// </summary>
+        /// <param name="advance">预收付款单</param>
+        /// <param name="orderId">订单ID</param>
+        /// <returns>是否匹配</returns>
+        private bool IsSameOrder(tb_FM_PreReceivedPayment advance, long? orderId)
+        {
+            if (!orderId.HasValue)
+            {
+                return false;
+            }
+
+            try
+            {
+                switch ((BizType)advance.SourceBizType)
+                {
+                    case BizType.销售订单:
+                    case BizType.采购订单:
+                        return advance.SourceBillId == orderId;
+
+                    default:
+                        return false;
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 

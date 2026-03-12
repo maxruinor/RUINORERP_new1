@@ -229,6 +229,21 @@ namespace RUINORERP.Business.Document.Converters
             {
                 var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                 
+                // 获取来源单据的订单ID
+                var sourceOrderId = await GetOrderIdAsync(source.SourceBizType, source.SourceBillId);
+
+                // 如果结果大于1，则将来源单据对应的订单号相同的应收应付款单排在前面
+                if (availableReceivables.Count > 1)
+                {
+                    // 将订单号相同的应收应付款单排在前面
+                    var sortedReceivables = availableReceivables
+                        .OrderByDescending(r => IsSameOrder(r, sourceOrderId))
+                        .ThenBy(r => r.BusinessDate)
+                        .ToList();
+                    
+                    availableReceivables = sortedReceivables;
+                }
+
                 // 使用工厂创建选择器
                 var selector = _selectorFactory.CreateSelector<tb_FM_ReceivablePayable>();
                 selector.ConfirmButtonText = "抵扣";
@@ -265,6 +280,37 @@ namespace RUINORERP.Business.Document.Converters
             {
                 _logger.LogError(ex, "显示应收应付款单选择窗体时发生错误");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// 判断应收应付款单是否与指定订单号匹配
+        /// </summary>
+        /// <param name="receivable">应收应付款单</param>
+        /// <param name="orderId">订单ID</param>
+        /// <returns>是否匹配</returns>
+        private bool IsSameOrder(tb_FM_ReceivablePayable receivable, long? orderId)
+        {
+            if (!orderId.HasValue)
+            {
+                return false;
+            }
+
+            try
+            {
+                switch ((BizType)receivable.SourceBizType)
+                {
+                    case BizType.销售订单:
+                    case BizType.采购订单:
+                        return receivable.SourceBillId == orderId;
+
+                    default:
+                        return false;
+                }
+            }
+            catch
+            {
+                return false;
             }
         }
 

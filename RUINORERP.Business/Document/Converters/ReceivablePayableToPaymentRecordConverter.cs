@@ -139,10 +139,13 @@ namespace RUINORERP.Business.Document.Converters
             {
                 // 查找可抵扣的预收付款单
                 var sourceList = new List<tb_FM_ReceivablePayable> { source };
-                var availableAdvances = await _receivablePayableController.FindAvailableAdvances(sourceList);
+                var availableAdvancePairs = await _receivablePayableController.FindAvailableAdvances(sourceList);
 
-                if (availableAdvances.Any())
+                if (availableAdvancePairs.Any())
                 {
+                    // 从KeyValuePair中提取预收付款单列表
+                    var availableAdvances = availableAdvancePairs.Select(kvp => kvp.Value).ToList();
+
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                     var totalAvailableAmount = availableAdvances.Sum(x => x.LocalBalanceAmount);
                     var advanceCount = availableAdvances.Count;
@@ -150,8 +153,8 @@ namespace RUINORERP.Business.Document.Converters
                     // 设置需要用户确认
                     result.RequiresUserConfirmation = true;
                     result.ConfirmationMessage = $"检测到有 {advanceCount} 张可抵扣的预{paymentType}单，总可用金额为 {totalAvailableAmount:F2} 元。\r\n" +
-                        $"建议优先通过抵扣来核销。\r\n" +
-                        $"确认要生成收付款单，而不是先进行抵扣操作？";
+                        $"一般来说，优先通过抵扣来核销。特殊情况才会跳过预收付款，选择再次收付款。\r\n" +
+                        $"是否确认要直接生成收付款单，而不是先进行抵扣操作？";
                 }
 
                 await Task.CompletedTask;

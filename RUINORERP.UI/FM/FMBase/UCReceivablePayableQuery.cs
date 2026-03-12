@@ -688,9 +688,35 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    //预收的来源是 销售订单，预付的来源是采购订单，应收的来源是销售出库，应付是采购入库，
-                    //所以还要通过销售订单找到销售出库，采购订单找到采购入库，销售出库和采购入库找到应收应付
-                    availableAdvances = availableAdvances.OrderByDescending(c => c.SourceBillNo == receivable.SourceBillNo).ThenBy(c => c.PrePayDate).ToList();
+                    List<string> relatedOrderNos = new List<string>();
+
+                    if (receivable.SourceBizType == (int)BizType.销售出库单)
+                    {
+                        var saleOutController = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                        var saleOut = await saleOutController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                        if (saleOut != null && !string.IsNullOrEmpty(saleOut.SaleOrderNo))
+                        {
+                            relatedOrderNos.Add(saleOut.SaleOrderNo);
+                        }
+                    }
+                    else if (receivable.SourceBizType == (int)BizType.采购入库单)
+                    {
+                        var purInboundController = Startup.GetFromFac<tb_PurInboundController<tb_PurInbound>>();
+                        var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                        if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrderNo))
+                        {
+                            relatedOrderNos.Add(purInbound.PurOrderNo);
+                        }
+                    }
+
+                    if (relatedOrderNos.Any())
+                    {
+                        availableAdvances = availableAdvances.OrderByDescending(c => relatedOrderNos.Contains(c.SourceBillNo)).ThenBy(c => c.PrePayDate).ToList();
+                    }
+                    else
+                    {
+                        availableAdvances = availableAdvances.OrderByDescending(c => c.PrePayDate).ToList();
+                    }
                 }
 
                 // 检查预收付款单的可用余额是否足够

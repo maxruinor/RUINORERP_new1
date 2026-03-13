@@ -2154,10 +2154,10 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 查找可抵扣的预收付款单11AAA
+        /// 查找可抵扣的预收付款单
         /// </summary>
-        /// <param name="receivablePayable"></param>
-        /// <returns></returns>
+        /// <param name="receivablePayable">应收应付款单</param>
+        /// <returns>可抵扣的预收付款单列表</returns>
         public async Task<List<tb_FM_PreReceivedPayment>> FindAvailableAdvances(tb_FM_ReceivablePayable receivablePayable)
         {
             var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
@@ -2165,7 +2165,7 @@ namespace RUINORERP.Business
                          .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
                          .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
                          .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
-                         .Where(p => p.LocalBalanceAmount != 0)
+                         .Where(c => c.LocalBalanceAmount != 0)
                          .OrderBy(c => c.PrePayDate)
                          .ToListAsync();
             return prePayment;
@@ -2174,88 +2174,37 @@ namespace RUINORERP.Business
         /// <summary>
         /// 查找可抵扣的预收付款单
         /// 批量处理
+        /// 查询逻辑与单个方法保持一致，不限制订单号和金额匹配
         /// </summary>
-        /// <param name="receivablePayable"></param>
-        /// <returns></returns>
-        public async Task<List<KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>>> FindAvailableAdvances(List<tb_FM_ReceivablePayable> receivablePayables)
+        /// <param name="receivablePayables">应收应付款单列表</param>
+        /// <returns>应收应付款单与可抵扣预收付款单的映射</returns>
+        public async Task<Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>>> FindAvailableAdvances(List<tb_FM_ReceivablePayable> receivablePayables)
         {
-            List<KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>> keyValuePairs = new List<KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>>();
+            Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>> receivableToAdvancesMap = new Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>>();
 
             foreach (var receivablePayable in receivablePayables)
             {
-                if (receivablePayable.SourceBizType == (int)BizType.销售出库单)
+                var availableAdvances = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                         .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
+                         .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
+                         .Where(c => c.LocalBalanceAmount != 0)
+                         .OrderBy(c => c.PrePayDate)
+                         .ToListAsync();
+                
+                if (availableAdvances.Any())
                 {
-                    var SaleOut = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
-                    .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.SaleOut_MainID == receivablePayable.SourceBillId)
-                    .FirstAsync();//single的话 如果修改过客户。会查不到。所以用first。
-                    if (SaleOut == null)
-                    {
-                        throw new Exception($"销售出库单：{receivablePayable.SourceBillNo}的应收款单来源数据出错，请检查往来单位是否对应。");
-                    }
-                    if (SaleOut.SOrder_ID.HasValue)
-                    {
-                        var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                       .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                                       .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
-                                       .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
-                                       .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType
-                                       && c.ReceivePaymentType == receivablePayable.ReceivePaymentType
-                                       && c.SourceBillId == SaleOut.SOrder_ID
-                                       )
-                                       .ToListAsync();
-                        if (prePayment.Count > 0)
-                        {
-                            // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
-                            // 并且预付款单余额应该大于0，才能进行抵扣
-                            if (prePayment[0].LocalBalanceAmount > 0 &&
-                                receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
-                            {
-                                keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
-                            }
-                        }
-                    }
-                }
-
-                if (receivablePayable.SourceBizType == (int)BizType.采购入库单)
-                {
-                    var PurEntry = await _unitOfWorkManage.GetDbClient().Queryable<tb_PurEntry>()
-                    .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.PurEntryID == receivablePayable.SourceBillId)
-                   .FirstAsync();
-                    if (PurEntry == null)
-                    {
-                        throw new Exception($"采购入库单：{receivablePayable.SourceBillNo}的应付款单来源数据出错，请检查往来单位是否对应。");
-                    }
-                    if (PurEntry.PurOrder_ID.HasValue)
-                    {
-                        var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                                       .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                                       .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
-                                       .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
-                                       .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType
-                                       && c.ReceivePaymentType == receivablePayable.ReceivePaymentType
-                                       && c.SourceBillId == PurEntry.PurOrder_ID
-                                       )
-                                       .ToListAsync();
-                        if (prePayment.Count > 0)
-                        {
-                            // 修正金额匹配逻辑：应收应付单金额应该小于等于预付款单余额
-                            // 并且预付款单余额应该大于0，才能进行抵扣
-                            if (prePayment[0].LocalBalanceAmount > 0 &&
-                                receivablePayable.LocalBalanceAmount <= prePayment[0].LocalBalanceAmount)
-                            {
-                                keyValuePairs.Add(new KeyValuePair<tb_FM_ReceivablePayable, tb_FM_PreReceivedPayment>(receivablePayable, prePayment[0]));
-                            }
-                        }
-                    }
+                    receivableToAdvancesMap.Add(receivablePayable, availableAdvances);
                 }
             }
 
-            return keyValuePairs;
+            return receivableToAdvancesMap;
         }
 
         /// <summary>
         /// 查找可抵扣的应收应付款单
-        /// 用于预收付款单抵扣应收应付款单的场景12
+        /// 用于预收付款单抵扣应收应付款单的场景
         /// </summary>
         /// <param name="prePayment">预收付款单</param>
         /// <returns>可抵扣的应收应付款单列表</returns>
@@ -2266,7 +2215,7 @@ namespace RUINORERP.Business
                          .Where(c => c.ARAPStatus == (int)ARAPStatus.待支付 || c.ARAPStatus == (int)ARAPStatus.部分支付)
                          .Where(c => c.Currency_ID == prePayment.Currency_ID)
                          .Where(c => c.ReceivePaymentType == prePayment.ReceivePaymentType)
-                         .Where(p => p.LocalBalanceAmount != 0)
+                         .Where(c => c.LocalBalanceAmount != 0)
                          .OrderBy(c => c.BusinessDate)
                          .ToListAsync();
             return receivables;

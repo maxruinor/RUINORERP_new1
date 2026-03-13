@@ -686,37 +686,35 @@ namespace RUINORERP.UI.FM
                     MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
+
+                List<string> relatedOrderNos = new List<string>();
+
+                if (receivable.SourceBizType == (int)BizType.销售出库单)
+                {
+                    var saleOutController = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                    var saleOut = await saleOutController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                    if (saleOut != null && !string.IsNullOrEmpty(saleOut.SaleOrderNo))
+                    {
+                        relatedOrderNos.Add(saleOut.SaleOrderNo);
+                    }
+                }
+                else if (receivable.SourceBizType == (int)BizType.采购入库单)
+                {
+                    var purInboundController = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
+                    var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                    if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrder_NO))
+                    {
+                        relatedOrderNos.Add(purInbound.PurOrder_NO);
+                    }
+                }
+
+                if (relatedOrderNos.Any())
+                {
+                    availableAdvances = availableAdvances.OrderByDescending(c => relatedOrderNos.Contains(c.SourceBillNo)).ThenBy(c => c.PrePayDate).ToList();
+                }
                 else
                 {
-                    List<string> relatedOrderNos = new List<string>();
-
-                    if (receivable.SourceBizType == (int)BizType.销售出库单)
-                    {
-                        var saleOutController = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
-                        var saleOut = await saleOutController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
-                        if (saleOut != null && !string.IsNullOrEmpty(saleOut.SaleOrderNo))
-                        {
-                            relatedOrderNos.Add(saleOut.SaleOrderNo);
-                        }
-                    }
-                    else if (receivable.SourceBizType == (int)BizType.采购入库单)
-                    {
-                        var purInboundController = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
-                        var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
-                        if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrder_NO))
-                        {
-                            relatedOrderNos.Add(purInbound.PurOrder_NO);
-                        }
-                    }
-
-                    if (relatedOrderNos.Any())
-                    {
-                        availableAdvances = availableAdvances.OrderByDescending(c => relatedOrderNos.Contains(c.SourceBillNo)).ThenBy(c => c.PrePayDate).ToList();
-                    }
-                    else
-                    {
-                        availableAdvances = availableAdvances.OrderByDescending(c => c.PrePayDate).ToList();
-                    }
+                    availableAdvances = availableAdvances.OrderByDescending(c => c.PrePayDate).ToList();
                 }
 
                 // 检查预收付款单的可用余额是否足够
@@ -767,6 +765,19 @@ namespace RUINORERP.UI.FM
                     selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
                     selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
                     selector.InitializeSelector(availableAdvances, $"选择预{PaymentType}单");
+
+                    // 如果有订单号相同的预收付款单，默认选中
+                    if (relatedOrderNos.Any() && availableAdvances.Count > 1)
+                    {
+                        var matchedAdvances = availableAdvances
+                            .Where(a => relatedOrderNos.Contains(a.SourceBillNo))
+                            .ToList();
+                        
+                        if (matchedAdvances.Any())
+                        {
+                            selector.SetDefaultSelectedItems(matchedAdvances);
+                        }
+                    }
 
                     // 设置金额格式化
                     //selector.SetColumnFormatter("Amount", value => $"{value:N2}");
@@ -862,8 +873,9 @@ namespace RUINORERP.UI.FM
 
                 var receivablePayableController = MainForm.Instance.AppContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
 
-                // 2. 为每个应收应付单查找可抵扣的预收付款单
+                // 2. 为每个应收应付单查找可抵扣的预收付款单，实现自动匹配逻辑
                 Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>> receivableToAdvancesMap = new Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>>();
+                Dictionary<tb_FM_ReceivablePayable, bool> receivableAutoMatchMap = new Dictionary<tb_FM_ReceivablePayable, bool>();
                 StringBuilder sbOffset = new StringBuilder();
                 List<tb_FM_ReceivablePayable> invalidReceivables = new List<tb_FM_ReceivablePayable>();
 
@@ -878,16 +890,79 @@ namespace RUINORERP.UI.FM
                         continue;
                     }
 
-                    // 查找可抵扣的预收付款单（使用单个抵扣的逻辑）
+                    // 查找可抵扣的预收付款单
                     var availableAdvances = await receivablePayableController.FindAvailableAdvances(receivable);
                     if (availableAdvances.Any())
                     {
-                        receivableToAdvancesMap.Add(receivable, availableAdvances);
+                        // 获取来源单据的订单号
+                        List<string> relatedOrderNos = new List<string>();
+                        if (receivable.SourceBizType == (int)BizType.销售出库单)
+                        {
+                            var saleOutController = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                            var saleOut = await saleOutController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                            if (saleOut != null && !string.IsNullOrEmpty(saleOut.SaleOrderNo))
+                            {
+                                relatedOrderNos.Add(saleOut.SaleOrderNo);
+                            }
+                        }
+                        else if (receivable.SourceBizType == (int)BizType.采购入库单)
+                        {
+                            var purInboundController = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
+                            var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                            if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrder_NO))
+                            {
+                                relatedOrderNos.Add(purInbound.PurOrder_NO);
+                            }
+                        }
 
-                        // 构建抵扣信息
-                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
-                        sbOffset.Append(string.Join("、", availableAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
-                        sbOffset.Append("\r\n");
+                        // 查找订单号相同且金额匹配的预收付款单（实现自动匹配）
+                        List<tb_FM_PreReceivedPayment> matchedAdvances = new List<tb_FM_PreReceivedPayment>();
+                        if (relatedOrderNos.Any())
+                        {
+                            matchedAdvances = availableAdvances
+                                .Where(c => relatedOrderNos.Contains(c.SourceBillNo))
+                                .Where(c => c.LocalBalanceAmount >= receivable.LocalBalanceAmount)
+                                .OrderBy(c => c.PrePayDate)
+                                .ToList();
+                        }
+
+                        // 如果找到完全匹配的（订单号相同且金额足够），自动选择
+                        if (matchedAdvances.Any())
+                        {
+                            receivableToAdvancesMap.Add(receivable, matchedAdvances);
+                            receivableAutoMatchMap.Add(receivable, true);
+                            
+                            // 构建抵扣信息
+                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
+                            sbOffset.Append(string.Join("、", matchedAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                            sbOffset.Append("\r\n");
+                        }
+                        else
+                        {
+                            // 没有找到完全匹配的，将所有可用的预收付款单加入，让用户选择
+                            // 按订单号排序，订单号相同的排在前面
+                            if (relatedOrderNos.Any())
+                            {
+                                availableAdvances = availableAdvances
+                                    .OrderByDescending(c => relatedOrderNos.Contains(c.SourceBillNo))
+                                    .ThenBy(c => c.PrePayDate)
+                                    .ToList();
+                            }
+                            else
+                            {
+                                availableAdvances = availableAdvances
+                                    .OrderByDescending(c => c.PrePayDate)
+                                    .ToList();
+                            }
+
+                            receivableToAdvancesMap.Add(receivable, availableAdvances);
+                            receivableAutoMatchMap.Add(receivable, false);
+                            
+                            // 构建抵扣信息（标记为需要用户选择）
+                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
+                            sbOffset.Append(string.Join("、", availableAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                            sbOffset.Append("（需手动选择）\r\n");
+                        }
                     }
                     else
                     {
@@ -916,6 +991,112 @@ namespace RUINORERP.UI.FM
                     {
                         return;
                     }
+                }
+
+                // 统计自动匹配和手动选择的数量
+                int autoMatchCount = 0;
+                int manualSelectCount = 0;
+                foreach (var kvp in receivableToAdvancesMap)
+                {
+                    var advances = kvp.Value;
+                    // 检查是否只有一个预收付款单且订单号相同且金额匹配（自动匹配）
+                    if (advances.Count == 1 && !sbOffset.ToString().Contains("（需手动选择）"))
+                    {
+                        autoMatchCount++;
+                    }
+                    else
+                    {
+                        manualSelectCount++;
+                    }
+                }
+
+                // 如果有需要手动选择的，弹出选择器
+                 if (manualSelectCount > 0)
+                 {
+                     // 显示选择器让用户选择需要手动选择的预收付款单
+                     foreach (var kvp in receivableToAdvancesMap.ToList())
+                     {
+                         var receivable = kvp.Key;
+                         var advances = kvp.Value;
+                         
+                         // 检查是否需要手动选择
+                         if (receivableAutoMatchMap.ContainsKey(receivable) && !receivableAutoMatchMap[receivable])
+                         {
+                             // 弹出选择器
+                             using (var selector = new frmAdvanceSelector<tb_FM_PreReceivedPayment>())
+                             {
+                                 selector.ConfirmButtonText = "抵扣";
+                                 selector.AllowMultiSelect = true;
+                                 
+                                 // 使用表达式树配置列映射
+                                 selector.ConfigureColumn(x => x.PreRPNO, "单据编号");
+                                 selector.ConfigureColumn(x => x.LocalPrepaidAmount, "金额");
+                                 selector.ConfigureColumn(x => x.LocalBalanceAmount, "可用金额");
+                                 selector.ConfigureColumn(x => x.CustomerVendor_ID, "客户");
+                                 selector.ConfigureColumn(x => x.PrePayDate, "付款日期");
+                                 selector.ConfigureColumn(x => x.SourceBizType, "来源业务");
+                                 selector.ConfigureColumn(x => x.SourceBillNo, "来源单号");
+                                 selector.ConfigureSummaryColumn(x => x.LocalPrepaidAmount);
+                                 selector.ConfigureSummaryColumn(x => x.LocalBalanceAmount);
+                                 selector.InitializeSelector(advances, $"选择预{PaymentType}单");
+                                 
+                                 // 获取订单号
+                                 List<string> relatedOrderNos = new List<string>();
+                                 if (receivable.SourceBizType == (int)BizType.销售出库单)
+                                 {
+                                     var saleOutController = Startup.GetFromFac<tb_SaleOutController<tb_SaleOut>>();
+                                     var saleOut = await saleOutController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                                     if (saleOut != null && !string.IsNullOrEmpty(saleOut.SaleOrderNo))
+                                     {
+                                         relatedOrderNos.Add(saleOut.SaleOrderNo);
+                                     }
+                                 }
+                                 else if (receivable.SourceBizType == (int)BizType.采购入库单)
+                                 {
+                                     var purInboundController = Startup.GetFromFac<tb_PurEntryController<tb_PurEntry>>();
+                                     var purInbound = await purInboundController.BaseQueryByIdAsync(receivable.SourceBillId.Value);
+                                     if (purInbound != null && !string.IsNullOrEmpty(purInbound.PurOrder_NO))
+                                     {
+                                         relatedOrderNos.Add(purInbound.PurOrder_NO);
+                                     }
+                                 }
+                                 
+                                 // 如果有订单号相同的预收付款单，默认选中
+                                 if (relatedOrderNos.Any() && advances.Count > 1)
+                                 {
+                                     var matchedAdvances = advances
+                                         .Where(a => relatedOrderNos.Contains(a.SourceBillNo))
+                                         .ToList();
+                                     
+                                     if (matchedAdvances.Any())
+                                     {
+                                         selector.SetDefaultSelectedItems(matchedAdvances);
+                                     }
+                                 }
+                                 
+                                 if (selector.ShowDialog() == DialogResult.OK)
+                                 {
+                                     receivableToAdvancesMap[receivable] = selector.SelectedItems;
+                                 }
+                                 else
+                                 {
+                                     // 用户取消，从映射中移除
+                                     receivableToAdvancesMap.Remove(receivable);
+                                 }
+                             }
+                         }
+                     }
+                 }
+
+                // 重新构建抵扣信息（移除"需手动选择"标记）
+                sbOffset.Clear();
+                foreach (var kvp in receivableToAdvancesMap)
+                {
+                    var receivable = kvp.Key;
+                    var advances = kvp.Value;
+                    sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
+                    sbOffset.Append(string.Join("、", advances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                    sbOffset.Append("\r\n");
                 }
 
                 if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)

@@ -143,8 +143,8 @@ namespace RUINORERP.Business.Document.Converters
 
                 if (availableAdvancePairs.Any())
                 {
-                    // 从KeyValuePair中提取预收付款单列表
-                    var availableAdvances = availableAdvancePairs.Select(kvp => kvp.Value).ToList();
+                    // 从KeyValuePair中提取预收付款单列表并展平
+                    var availableAdvances = availableAdvancePairs.SelectMany(kvp => kvp.Value).ToList();
 
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                     var totalAvailableAmount = availableAdvances.Sum(x => x.LocalBalanceAmount);

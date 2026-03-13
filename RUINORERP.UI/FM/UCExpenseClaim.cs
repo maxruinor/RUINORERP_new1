@@ -1019,6 +1019,12 @@ namespace RUINORERP.UI.FM
                             {
                                 RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
                                 MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
+
+                                // 确保实体被标记为已修改，以便后续保存时能更新到数据库
+                                if (businessEntity.ActionStatus != ActionStatus.新增)
+                                {
+                                    businessEntity.ActionStatus = ActionStatus.修改;
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -1121,11 +1127,33 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-                // 使用事务处理保存操作
+                // 使用事务处理保存操作1
                 ReturnMainSubResults<tb_FM_ExpenseClaim> SaveResult = new ReturnMainSubResults<tb_FM_ExpenseClaim>();
 
                 if (NeedValidated)
                 {
+                    // 在保存单据前先同步图片，确保图片ID能保存到数据库
+                    bool hasImagesToSync = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages().Count > 0 ||
+                                           RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages().Count > 0;
+                    
+                    if (hasImagesToSync)
+                    {
+                        MainForm.Instance.PrintInfoLog("正在同步图片...");
+                        List<ImageSyncResult> syncResults = await SyncImagesIfNeeded();
+                        
+                        // 检查上传是否成功
+                        bool uploadSuccess = syncResults.All(r =&gt; r.IsSuccess);
+                        if (!uploadSuccess)
+                        {
+                            var failedResults = syncResults.Where(r =&gt; !r.IsSuccess).ToList();
+                            string errorMsg = string.Join("; ", failedResults.Select(r =&gt; r.ErrorMessage));
+                            MainForm.Instance.uclog.AddLog($"图片同步失败: {errorMsg}");
+                            return false;
+                        }
+                        
+                        MainForm.Instance.PrintInfoLog("图片同步完成");
+                    }
+
                     SaveResult = await base.Save(EditEntity);
                     if (SaveResult.Succeeded)
                     {
@@ -1133,15 +1161,6 @@ namespace RUINORERP.UI.FM
                         EditEntity.tb_FM_ExpenseClaimDetails.ForEach(c => c.AcceptChanges());
 
                         MainForm.Instance.PrintInfoLog($"费用报销单保存成功,{EditEntity.ClaimNo}。");
-
-                        // 调用图片同步方法
-                        var syncResults = await SyncImagesIfNeeded();
-                        if (!syncResults.Any() && RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages().Count > 0)
-                        {
-                            // 有图片需要同步但同步失败
-                            MainForm.Instance.uclog.AddLog("图片同步失败。");
-                            return false;
-                        }
                     }
                     else
                     {

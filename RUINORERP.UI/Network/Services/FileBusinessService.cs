@@ -115,8 +115,44 @@ namespace RUINORERP.UI.Network.Services
                     return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>("服务器返回的响应数据不完整");
                 }
 
-                _logger?.LogInformation("上传文件成功: FileId={FileId}, FileName={FileName}",
-                    response.FileStorageInfos[0].FileId, fileName);
+                // 上传成功后，将文件ID更新到业务实体的关联字段中
+                if (!string.IsNullOrEmpty(relatedField) && entity != null)
+                {
+                    try
+                    {
+                        var propertyInfo = entity.GetType().GetProperty(relatedField);
+                        if (propertyInfo != null)
+                        {
+                            // 获取所有上传成功的文件ID
+                            List<long> fileIds = response.FileStorageInfos
+                                .Where(f => f != null && f.FileId > 0)
+                                .Select(f => f.FileId)
+                                .ToList();
+
+                            if (fileIds.Count > 0)
+                            {
+                                // 根据字段类型设置值
+                                if (propertyInfo.PropertyType == typeof(string))
+                                {
+                                    // 字符串类型，多个文件ID用逗号分隔
+                                    string fileIdsStr = string.Join(",", fileIds);
+                                    propertyInfo.SetValue(entity, fileIdsStr);
+                                    _logger?.LogInformation("已将文件ID更新到实体字段: {FieldName}={FileIds}", relatedField, fileIdsStr);
+                                }
+                                else if (propertyInfo.PropertyType == typeof(long) || propertyInfo.PropertyType == typeof(long?))
+                                {
+                                    // long类型，只设置第一个文件ID
+                                    propertyInfo.SetValue(entity, fileIds[0]);
+                                    _logger?.LogInformation("已将文件ID更新到实体字段: {FieldName}={FileId}", relatedField, fileIds[0]);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "更新实体关联字段失败: FieldName={FieldName}", relatedField);
+                    }
+                }
 
                 return response;
             }

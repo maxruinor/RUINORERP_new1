@@ -150,7 +150,7 @@ namespace RUINORERP.Business
 
             if (SettlementRecord.SettledLocalAmount < 0 || SettlementRecord.SettledForeignAmount < 0)
             {
-                SettlementRecord.SettlementType = (int)SettlementType.红字核销;
+                SettlementRecord.SettlementType = (int)SettlementType.红蓝核销;
                 SettlementRecord.IsReversed = true;
                 if (ReversedPaymentSettlement != null)
                 {
@@ -225,7 +225,7 @@ namespace RUINORERP.Business
             SettlementRecord.Account_id = PaymentRecord.Account_id;
             if (amountToWriteOff < 0)
             {
-                SettlementRecord.SettlementType = (int)SettlementType.红字核销;
+                SettlementRecord.SettlementType = (int)SettlementType.红蓝核销;
             }
             //成熟系统的设计目标是保证财务数据的清晰性、一致性和可审计性。核销记录本身不应该使用负数来区分方向。
             SettlementRecord.SettledLocalAmount = Math.Abs(amountToWriteOff);  // 使用绝对值确保金额为正

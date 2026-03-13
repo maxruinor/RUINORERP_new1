@@ -2602,7 +2602,7 @@ namespace RUINORERP.UI.BaseForm
                             rsSave = await Save(true);
                             if (!rsSave)
                             {
-                                // 验证失败或保存失败，不锁定单据，保持保存按钮可用
+                                // 验证失败或保存失败，不锁定单据，保持保存按钮可用1
                                 // await LockBill();
                             }
                             else
@@ -2612,7 +2612,7 @@ namespace RUINORERP.UI.BaseForm
                         }
                         else if (hasImagesToUpload)
                         {
-                            // 实体没有变化但有图片需要同步，直接调用同步图片方法
+                            // 实体没有变化但有图片需要同步，直接调用同步图片方法1
                             MainForm.Instance.uclog.AddLog("单据数据未变更，但检测到有图片需要同步");
                             var syncResults = await SyncImagesIfNeeded();
 

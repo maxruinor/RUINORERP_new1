@@ -1,6 +1,6 @@
 /// <summary>
-/// PDF 标签批量复制工具
-/// 将PDF标签每张复制10份，保持原始尺寸不变
+/// PDF 标签批量生成工具
+/// 从PDF提取内容并生成900个标签，保持原始内容，只修改SN编号
 /// </summary>
 
 using PdfSharpCore.Pdf;
@@ -10,109 +10,165 @@ using System.IO;
 using PdfSharpCore.Pdf.IO;
 
 /// <summary>
-/// PDF 标签复制器
+/// PDF 标签生成器
 /// </summary>
-class PdfLabelResizer
+class PdfLabelGenerator
 {
-
     /// <summary>
-    /// 复制份数（每张标签复制10份）
+    /// 标签总数
     /// </summary>
-    private const int CopyCount = 10;
+    private const int TotalLabels = 900;
 
     /// <summary>
-    /// 处理单个 PDF 文件
+    /// 标签间距（毫米）
+    /// </summary>
+    private const double LabelSpacingMm = 2.0;
+
+    /// <summary>
+    /// 生成标签
     /// </summary>
     /// <param name="inputPath">输入文件路径</param>
     /// <param name="outputPath">输出文件路径</param>
     /// <returns>处理是否成功</returns>
-    public static bool ProcessPdfFile(string inputPath, string outputPath)
+    public static bool GenerateLabels(string inputPath, string outputPath)
     {
+        PdfDocument? inputDocument = null;
+        PdfDocument? outputDocument = null;
+
         try
         {
-            // 用Import模式打开文档，直接复制页面（不调整尺寸）
-            var importDocument = PdfReader.Open(inputPath, PdfDocumentOpenMode.Import);
+            inputDocument = PdfReader.Open(inputPath, PdfDocumentOpenMode.Import);
+            outputDocument = new PdfDocument();
 
-            int originalPageCount = importDocument.PageCount;
-
-            // 创建最终的输出文档
-            var outputDocument = new PdfDocument();
-
-            int totalPagesGenerated = 0;
-
-            // 将原始页面复制10份到输出文档
-            for (int i = 0; i < originalPageCount; i++)
+            if (inputDocument.PageCount == 0)
             {
-                PdfPage sourcePage = importDocument.Pages[i];
+                Console.WriteLine($"✗ 输入PDF文件为空");
+                return false;
+            }
 
-                for (int copyIndex = 0; copyIndex < CopyCount; copyIndex++)
+            PdfPage sourcePage = inputDocument.Pages[0];
+            double sourceWidth = sourcePage.Width.Point;
+            double sourceHeight = sourcePage.Height.Point;
+
+            PdfPage? currentPage = null;
+            int labelsOnCurrentPage = 0;
+            int currentX = 0;
+            int currentY = 0;
+            int pageWidth = 0;
+            int pageHeight = 0;
+            int labelWidth = 0;
+            int labelHeight = 0;
+            int labelsPerRow = 0;
+            int labelsPerColumn = 0;
+            int spacingPoints = (int)(LabelSpacingMm * 2.835);
+
+            for (int i = 1; i <= TotalLabels; i++)
+            {
+                if (currentPage == null || labelsOnCurrentPage == 0)
                 {
-                    // 使用AddPage添加页面到新文档
-                    PdfPage newPage = outputDocument.AddPage(sourcePage);
-                    totalPagesGenerated++;
+                    currentPage = outputDocument.AddPage();
+                    currentPage.Width = XUnit.FromMillimeter(210);
+                    currentPage.Height = XUnit.FromMillimeter(297);
+                    pageWidth = (int)currentPage.Width.Point;
+                    pageHeight = (int)currentPage.Height.Point;
+                    labelWidth = (int)(sourceWidth);
+                    labelHeight = (int)(sourceHeight);
+                    labelsPerRow = 2;
+                    labelsPerColumn = 6;
+                    labelsOnCurrentPage = 0;
+                    currentX = 0;
+                    currentY = 0;
+                }
+
+                int xPos = currentX * (labelWidth + spacingPoints) + (int)(pageWidth * 0.02);
+                int yPos = currentY * (labelHeight + spacingPoints) + (int)(pageHeight * 0.03);
+
+                DrawLabel(currentPage, sourcePage, xPos, yPos, labelWidth, labelHeight, i);
+
+                labelsOnCurrentPage++;
+                currentX++;
+
+                if (currentX >= labelsPerRow)
+                {
+                    currentX = 0;
+                    currentY++;
+                }
+
+                if (labelsOnCurrentPage >= labelsPerRow * labelsPerColumn)
+                {
+                    currentPage = null;
+                    labelsOnCurrentPage = 0;
                 }
             }
 
-            // 保存新的 PDF
             outputDocument.Save(outputPath);
-            outputDocument.Close();
-            importDocument.Close();
-
-            Console.WriteLine($"✓ 处理成功: {Path.GetFileName(inputPath)} (原{originalPageCount}页 → {totalPagesGenerated}页)");
+            Console.WriteLine($"✓ 标签生成成功: {Path.GetFileName(outputPath)} (共{TotalLabels}个标签)");
             return true;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ 处理失败: {Path.GetFileName(inputPath)} - {ex.Message}");
+            Console.WriteLine($"✗ 标签生成失败: {Path.GetFileName(inputPath)} - {ex.Message}");
             return false;
+        }
+        finally
+        {
+            outputDocument?.Close();
+            inputDocument?.Close();
         }
     }
 
     /// <summary>
-    /// 批量处理目录下的所有 PDF 文件
+    /// 绘制单个标签
     /// </summary>
-    /// <param name="rootDir">根目录</param>
-    /// <param name="suffix">输出文件后缀</param>
-    public static void BatchProcessPdfFiles(string rootDir, string suffix = "_10copies")
+    /// <param name="targetPage">目标页面</param>
+    /// <param name="sourcePage">源页面</param>
+    /// <param name="x">X坐标</param>
+    /// <param name="y">Y坐标</param>
+    /// <param name="width">宽度</param>
+    /// <param name="height">高度</param>
+    /// <param name="sequenceNumber">序列号</param>
+    private static void DrawLabel(PdfPage targetPage, PdfPage sourcePage, int x, int y, int width, int height, int sequenceNumber)
     {
-        int totalFiles = 0;
-        int successFiles = 0;
-        int failedFiles = 0;
-
-        Console.WriteLine($"开始处理目录: {rootDir}");
-        Console.WriteLine($"复制份数: 每张标签{CopyCount}份");
-        Console.WriteLine($"保持原始尺寸不变");
-        Console.WriteLine(new string('-', 60));
-
-        // 遍历所有子目录
-        foreach (string file in Directory.GetFiles(rootDir, "*.pdf", SearchOption.AllDirectories))
+        using (XGraphics graphics = XGraphics.FromPdfPage(targetPage))
         {
-            // 跳过已处理过的文件
-            if (file.Contains(suffix))
+            XRect labelRect = new XRect(x, y, width, height);
+
+            XGraphicsState state = graphics.Save();
+            try
             {
-                continue;
+                graphics.IntersectClip(labelRect);
+                
+                string tempFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".pdf");
+                PdfDocument tempDoc = new PdfDocument();
+                tempDoc.AddPage(sourcePage);
+                tempDoc.Save(tempFilePath);
+                tempDoc.Close();
+                
+                XImage sourceImage = XImage.FromFile(tempFilePath);
+                graphics.DrawImage(sourceImage, x, y, width, height);
+                
+                try
+                {
+                    if (File.Exists(tempFilePath))
+                    {
+                        File.Delete(tempFilePath);
+                    }
+                }
+                catch
+                {
+                }
+            }
+            finally
+            {
+                graphics.Restore(state);
             }
 
-            string directory = Path.GetDirectoryName(file)!;
-            string filename = Path.GetFileNameWithoutExtension(file);
-            string extension = Path.GetExtension(file);
-            string outputPath = Path.Combine(directory, $"{filename}{suffix}{extension}");
-
-            totalFiles++;
-            if (ProcessPdfFile(file, outputPath))
-            {
-                successFiles++;
-            }
-            else
-            {
-                failedFiles++;
-            }
+            string sequenceText = sequenceNumber.ToString("00000");
+            XFont sequenceFont = new XFont("Arial", 14, XFontStyle.Bold);
+            XSize sequenceSize = graphics.MeasureString(sequenceText, sequenceFont);
+            XPoint sequencePosition = new XPoint(x + width - sequenceSize.Width - 20, y + height - 30);
+            graphics.DrawString(sequenceText, sequenceFont, XBrushes.Black, sequencePosition);
         }
-
-        Console.WriteLine(new string('-', 60));
-        Console.WriteLine($"处理完成！总计: {totalFiles} 个文件");
-        Console.WriteLine($"成功: {successFiles} 个");
-        Console.WriteLine($"失败: {failedFiles} 个");
     }
 }
 
@@ -123,18 +179,40 @@ class Program
 {
     static void Main(string[] args)
     {
-        // 设置工作目录
         string scriptDir = AppDomain.CurrentDomain.BaseDirectory;
-        string pdfDir = Path.Combine(scriptDir, "外箱标签");
+        string projectDir = Path.GetFullPath(Path.Combine(scriptDir, "..", "..", ".."));
+        string pdfDir = projectDir;
 
-        // 如果找不到目录，使用脚本所在目录
-        if (!Directory.Exists(pdfDir))
+        string inputFile = Path.Combine(pdfDir, "7142.pdf");
+        string outputFile = Path.Combine(pdfDir, "7142_900labels.pdf");
+
+        if (!File.Exists(inputFile))
         {
-            pdfDir = Path.GetDirectoryName(scriptDir)!;
+            Console.WriteLine($"✗ 输入文件不存在: {inputFile}");
+            Console.WriteLine("\n按任意键退出...");
+            Console.ReadKey();
+            return;
         }
 
-        // 批量处理
-        PdfLabelResizer.BatchProcessPdfFiles(pdfDir, suffix: "_10copies");
+        Console.WriteLine("开始生成标签...");
+        Console.WriteLine($"输入文件: {inputFile}");
+        Console.WriteLine($"输出文件: {outputFile}");
+        Console.WriteLine($"标签总数: 900");
+        Console.WriteLine($"标签间距: 2mm");
+        Console.WriteLine($"保持原始内容，只修改SN编号");
+        Console.WriteLine(new string('-', 60));
+
+        bool success = PdfLabelGenerator.GenerateLabels(inputFile, outputFile);
+
+        Console.WriteLine(new string('-', 60));
+        if (success)
+        {
+            Console.WriteLine("标签生成完成！");
+        }
+        else
+        {
+            Console.WriteLine("标签生成失败！");
+        }
 
         Console.WriteLine("\n按任意键退出...");
         Console.ReadKey();

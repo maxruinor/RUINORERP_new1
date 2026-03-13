@@ -417,8 +417,8 @@ namespace RUINORERP.Global.EnumExt
         [Description("坏账核销")]
         坏账核销 = 5,
 
-        [Description("退款红字核销")]
-        红字核销 = 6,
+        [Description("退款红蓝核销")]
+        红蓝核销 = 6,
 
         /// <summary>
         /// 一个单位即收又付。双方需进行核销

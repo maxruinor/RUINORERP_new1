@@ -2495,6 +2495,12 @@
       <DependentUpon>UCClientLockManage.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolForm\DocumentSelectorAdapter.cs" />
+    <Compile Include="ToolForm\frmMessageViewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolForm\frmMessageViewer.Designer.cs">
+      <DependentUpon>frmMessageViewer.cs</DependentUpon>
+    </Compile>
     <Compile Include="UControls\JsonViewer.cs" />
     <Compile Include="UControls\JsonViewer.Designer.cs">
       <DependentUpon>JsonViewer.cs</DependentUpon>

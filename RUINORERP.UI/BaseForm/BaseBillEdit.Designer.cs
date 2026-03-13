@@ -65,7 +65,6 @@ namespace RUINORERP.UI.BaseForm
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripBtnCreatorInfo = new System.Windows.Forms.ToolStripDropDownButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -97,8 +96,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnConvertDocuments,
             this.toolStripbtnProperty,
             this.toolStripbtnClose,
-            this.tsBtnLocked,
-            this.toolStripBtnCreatorInfo});
+            this.tsBtnLocked});
             this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
             this.BaseToolStrip.Name = "BaseToolStrip";
             this.BaseToolStrip.Size = new System.Drawing.Size(1187, 25);
@@ -293,15 +291,6 @@ namespace RUINORERP.UI.BaseForm
             // 
             this.errorProviderForAllInput.ContainerControl = this;
             // 
-            // toolStripBtnCreatorInfo
-            // 
-            this.toolStripBtnCreatorInfo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripBtnCreatorInfo.Image = ((System.Drawing.Image)(resources.GetObject("toolStripBtnCreatorInfo.Image")));
-            this.toolStripBtnCreatorInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripBtnCreatorInfo.Name = "toolStripBtnCreatorInfo";
-            this.toolStripBtnCreatorInfo.Size = new System.Drawing.Size(72, 22);
-            this.toolStripBtnCreatorInfo.Text = "创建信息";
-            // 
             // BaseBillEdit
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -350,6 +339,5 @@ namespace RUINORERP.UI.BaseForm
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnConvertDocuments;
         public System.Windows.Forms.ToolStripButton toolStripBtnCancelSubmit;
-        private System.Windows.Forms.ToolStripDropDownButton toolStripBtnCreatorInfo;
     }
 }

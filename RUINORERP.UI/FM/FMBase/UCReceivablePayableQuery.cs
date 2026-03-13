@@ -195,12 +195,12 @@ namespace RUINORERP.UI.FM
             if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
             {
                 msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 return;
             }
             if (msg.ToString().Length > 0)
             {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 if (RealList.Count == 0)
                 {
                     return;
@@ -210,7 +210,7 @@ namespace RUINORERP.UI.FM
             if (RealList.Count == 0)
             {
                 msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 return;
             }
             else
@@ -223,7 +223,7 @@ namespace RUINORERP.UI.FM
                     var checkResult = await receivablePayableController.CheckUnconfirmedPrePaymentExists(item);
                     if (!checkResult.Succeeded)
                     {
-                        MessageBox.Show($"【{item.ARAPNo}】有未确认的预收付款单{string.Join(",", checkResult.DataList)}，请确认！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        frmMessageViewer.Show("提示", $"【{item.ARAPNo}】有未确认的预收付款单{string.Join(",", checkResult.DataList)}，请确认！", MessageContentType.Text, this);
                         return;
                     }
                 }
@@ -298,12 +298,12 @@ namespace RUINORERP.UI.FM
             if (RealList.GroupBy(g => g.CustomerVendor_ID).Select(g => g.Key).Count() > 1)
             {
                 msg.Append($"多选时，要相同客户才能合并到一个{PaymentType.ToString()}单");
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 return;
             }
             if (msg.ToString().Length > 0)
             {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 if (RealList.Count == 0)
                 {
                     return;
@@ -313,7 +313,7 @@ namespace RUINORERP.UI.FM
             if (RealList.Count == 0)
             {
                 msg.Append($"请至少选择一行数据转为收{PaymentType.ToString()}单");
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                 return;
             }
             else
@@ -323,7 +323,7 @@ namespace RUINORERP.UI.FM
                 var availableAdvances = await receivablePayableController.FindAvailableAdvances(RealList);
                 if (availableAdvances.Any())
                 {
-                    MessageBox.Show($"有可抵扣的预{PaymentType.ToString()}单！,请先进行抵扣操作！", "操作提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    frmMessageViewer.Show("操作提示", $"有可抵扣的预{PaymentType.ToString()}单！,请先进行抵扣操作！", MessageContentType.Text, this);
                     return;
                 }
 
@@ -648,12 +648,12 @@ namespace RUINORERP.UI.FM
                 if (RealList.Count() > 1)
                 {
                     msg.Append("一次只能选择一行数据进行抵扣");
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                     return;
                 }
                 if (msg.ToString().Length > 0)
                 {
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                     if (RealList.Count == 0)
                     {
                         return;
@@ -663,7 +663,7 @@ namespace RUINORERP.UI.FM
                 if (RealList.Count == 0)
                 {
                     msg.Append("请至少选择一行数据进行抵扣");
-                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("提示", msg.ToString(), MessageContentType.Text, this);
                     return;
                 }
 
@@ -673,7 +673,7 @@ namespace RUINORERP.UI.FM
                 string validationMessage = string.Empty;
                 if (!ValidateReceivableForOffset(receivable, ref validationMessage))
                 {
-                    MessageBox.Show(validationMessage, "数据校验失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    frmMessageViewer.Show("数据校验失败", validationMessage, MessageContentType.Text, this);
                     return;
                 }
 
@@ -683,7 +683,7 @@ namespace RUINORERP.UI.FM
                 var availableAdvances = await receivablePayableController.FindAvailableAdvances(receivable);
                 if (!availableAdvances.Any())
                 {
-                    MessageBox.Show("没有找到可抵扣的预收付款单！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("提示", "没有找到可抵扣的预收付款单！", MessageContentType.Text, this);
                     return;
                 }
 
@@ -861,13 +861,13 @@ namespace RUINORERP.UI.FM
 
                 if (!ValidateSelectedReceivables(selectlist, out RealList, out message))
                 {
-                    MessageBox.Show(message, "数据校验", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("数据校验", message, MessageContentType.Text, this);
                     return;
                 }
 
                 if (RealList.Count == 0)
                 {
-                    MessageBox.Show("请至少选择一行数据进行抵扣", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    frmMessageViewer.Show("提示", "请至少选择一行数据进行抵扣", MessageContentType.Text, this);
                     return;
                 }
 
@@ -1042,14 +1042,16 @@ namespace RUINORERP.UI.FM
                         msgTips = "请使用【多选模式】，选择要抵扣的单据。";
                     }
 
-                    MessageBox.Show($"没有找到可抵扣的预收付款单！{msgTips}\r\n\r\n{fullMessage.ToString()}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string fullMsg = $"没有找到可抵扣的预收付款单！{msgTips}\r\n\r\n{fullMessage.ToString()}";
+                    frmMessageViewer.Show("批量抵扣提示", fullMsg, MessageContentType.Text, this);
                     return;
                 }
 
                 // 如果有跳过的单据，显示提示
                 if (sbSkipped.Length > 0)
                 {
-                    if (MessageBox.Show($"{fullMessage.ToString()}\r\n是否继续进行抵扣操作？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
+                    string skipMsg = $"{fullMessage.ToString()}\r\n是否继续进行抵扣操作？";
+                    if (frmMessageViewer.Show("批量抵扣提示", skipMsg, MessageContentType.Text, "继续", "取消", true, this) == DialogResult.Cancel)
                     {
                         return;
                     }
@@ -1164,7 +1166,8 @@ namespace RUINORERP.UI.FM
                 finalConfirmMsg.Append("\r\n");
                 finalConfirmMsg.Append($"共 {receivableToAdvancesMap.Count} 张应{PaymentType.ToString()}单将进行抵扣操作");
 
-                if (MessageBox.Show($"{finalConfirmMsg.ToString()}\r\n\r\n你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                string confirmMsg = $"{finalConfirmMsg.ToString()}\r\n\r\n你确定进行对应抵扣吗？";
+                if (frmMessageViewer.Show("批量抵扣确认", confirmMsg, MessageContentType.Text, "确定", "取消", true, this) == DialogResult.OK)
                 {
                     int successCount = 0;
                     decimal successAmount = 0;

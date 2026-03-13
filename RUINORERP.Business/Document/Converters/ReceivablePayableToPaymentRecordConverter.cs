@@ -153,7 +153,7 @@ namespace RUINORERP.Business.Document.Converters
                     // 设置需要用户确认
                     result.RequiresUserConfirmation = true;
                     result.ConfirmationMessage = $"检测到有 {advanceCount} 张可抵扣的预{paymentType}单，总可用金额为 {totalAvailableAmount:F2} 元。\r\n" +
-                        $"一般来说，优先通过抵扣来核销。特殊情况才会跳过预收付款，选择再次收付款。\r\n" +
+                        $"优先通过抵扣核销。特殊情况才会跳过预收付款，选择再次收付款。\r\n" +
                         $"是否确认要直接生成收付款单，而不是先进行抵扣操作？";
                 }
 

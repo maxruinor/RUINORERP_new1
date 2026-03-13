@@ -877,16 +877,44 @@ namespace RUINORERP.UI.FM
                 Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>> receivableToAdvancesMap = new Dictionary<tb_FM_ReceivablePayable, List<tb_FM_PreReceivedPayment>>();
                 Dictionary<tb_FM_ReceivablePayable, bool> receivableAutoMatchMap = new Dictionary<tb_FM_ReceivablePayable, bool>();
                 StringBuilder sbOffset = new StringBuilder();
+                StringBuilder sbSkipped = new StringBuilder();
                 List<tb_FM_ReceivablePayable> invalidReceivables = new List<tb_FM_ReceivablePayable>();
+                int specialDocCount = 0;
+                int negativeAmountCount = 0;
+                int noMatchCount = 0;
 
                 foreach (var receivable in RealList)
                 {
+                    // 检查特殊单据类型：销售退回单、采购退货单
+                    bool isSpecialDoc = receivable.SourceBizType == (int)BizType.销售退回单 || 
+                                       receivable.SourceBizType == (int)BizType.采购退货单;
+                    
+                    // 检查红字单据（负数金额）
+                    bool isNegativeAmount = receivable.LocalBalanceAmount < 0;
+                    
+                    // 特殊单据或红字单据，自动跳过
+                    if (isSpecialDoc || isNegativeAmount)
+                    {
+                        if (isSpecialDoc)
+                        {
+                            specialDocCount++;
+                            sbSkipped.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:特殊单据类型【{((BizType)receivable.SourceBizType).ToString()}】，自动跳过\r\n");
+                        }
+                        else if (isNegativeAmount)
+                        {
+                            negativeAmountCount++;
+                            sbSkipped.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:红字单据（余额{receivable.LocalBalanceAmount}），自动跳过\r\n");
+                        }
+                        continue;
+                    }
+
                     // 数据校验：检查应收应付单的数据完整性
                     string validationMessage = string.Empty;
                     if (!ValidateReceivableForOffset(receivable, ref validationMessage))
                     {
                         invalidReceivables.Add(receivable);
-                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:{validationMessage}\r\n");
+                        sbSkipped.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:{validationMessage}\r\n");
+                        noMatchCount++;
                         continue;
                     }
 
@@ -932,9 +960,9 @@ namespace RUINORERP.UI.FM
                             receivableToAdvancesMap.Add(receivable, matchedAdvances);
                             receivableAutoMatchMap.Add(receivable, true);
                             
-                            // 构建抵扣信息
-                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
-                            sbOffset.Append(string.Join("、", matchedAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                            // 构建抵扣信息：按"原单号 [金额] → 目标单号 [金额]"格式显示
+                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo} [{receivable.LocalBalanceAmount.ToString("###.00")}] → ");
+                            sbOffset.Append(string.Join("、", matchedAdvances.Select(a => $"{a.PreRPNO} [{a.LocalBalanceAmount.ToString("###.00")}]")));
                             sbOffset.Append("\r\n");
                         }
                         else
@@ -959,16 +987,51 @@ namespace RUINORERP.UI.FM
                             receivableAutoMatchMap.Add(receivable, false);
                             
                             // 构建抵扣信息（标记为需要用户选择）
-                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
-                            sbOffset.Append(string.Join("、", availableAdvances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
+                            sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo} [{receivable.LocalBalanceAmount.ToString("###.00")}] → ");
+                            sbOffset.Append(string.Join("、", availableAdvances.Select(a => $"{a.PreRPNO} [{a.LocalBalanceAmount.ToString("###.00")}]")));
                             sbOffset.Append("（需手动选择）\r\n");
                         }
                     }
                     else
                     {
                         invalidReceivables.Add(receivable);
-                        sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:没有找到可抵扣的预{PaymentType.ToString()}单\r\n");
+                        sbSkipped.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:没有找到可抵扣的预{PaymentType.ToString()}单\r\n");
+                        noMatchCount++;
                     }
+                }
+
+                // 构建完整的提示信息
+                StringBuilder fullMessage = new StringBuilder();
+                if (sbOffset.Length > 0)
+                {
+                    fullMessage.Append("=== 可抵扣单据 ===\r\n");
+                    fullMessage.Append(sbOffset.ToString());
+                    fullMessage.Append("\r\n");
+                }
+                
+                if (sbSkipped.Length > 0)
+                {
+                    fullMessage.Append("=== 跳过单据 ===\r\n");
+                    fullMessage.Append(sbSkipped.ToString());
+                    fullMessage.Append("\r\n");
+                    
+                    // 统计跳过信息
+                    int totalSkipped = specialDocCount + negativeAmountCount + noMatchCount;
+                    fullMessage.Append($"=== 统计信息 ===\r\n");
+                    fullMessage.Append($"跳过 {totalSkipped} 行未匹配数据");
+                    if (specialDocCount > 0)
+                    {
+                        fullMessage.Append($"（特殊单据 {specialDocCount} 行）");
+                    }
+                    if (negativeAmountCount > 0)
+                    {
+                        fullMessage.Append($"（红字单据 {negativeAmountCount} 行）");
+                    }
+                    if (noMatchCount > 0)
+                    {
+                        fullMessage.Append($"（无匹配数据 {noMatchCount} 行）");
+                    }
+                    fullMessage.Append("\r\n");
                 }
 
                 if (!receivableToAdvancesMap.Any())
@@ -979,15 +1042,14 @@ namespace RUINORERP.UI.FM
                         msgTips = "请使用【多选模式】，选择要抵扣的单据。";
                     }
 
-                    MessageBox.Show($"没有找到可抵扣的预收付款单！{msgTips}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"没有找到可抵扣的预收付款单！{msgTips}\r\n\r\n{fullMessage.ToString()}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
 
-                //
-                if (invalidReceivables.Any())
+                // 如果有跳过的单据，显示提示
+                if (sbSkipped.Length > 0)
                 {
-                    int skipCount = invalidReceivables.Count();
-                    if (MessageBox.Show($"共有 {skipCount} 张应{PaymentType.ToString()}单没有找到可抵扣的预{PaymentType.ToString()}单，将跳过。其他单据可以进行抵扣，是否继续？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
+                    if (MessageBox.Show($"{fullMessage.ToString()}\r\n是否继续进行抵扣操作？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) == DialogResult.Cancel)
                     {
                         return;
                     }
@@ -1088,18 +1150,21 @@ namespace RUINORERP.UI.FM
                      }
                  }
 
-                // 重新构建抵扣信息（移除"需手动选择"标记）
-                sbOffset.Clear();
+                // 重新构建抵扣信息（使用新格式）
+                StringBuilder finalConfirmMsg = new StringBuilder();
+                finalConfirmMsg.Append("=== 最终抵扣单据 ===\r\n");
                 foreach (var kvp in receivableToAdvancesMap)
                 {
                     var receivable = kvp.Key;
                     var advances = kvp.Value;
-                    sbOffset.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo}:余额{receivable.LocalBalanceAmount.ToString("###.00")}元=>");
-                    sbOffset.Append(string.Join("、", advances.Select(a => $"{a.PreRPNO}:{a.LocalBalanceAmount.ToString("###.00")}")));
-                    sbOffset.Append("\r\n");
+                    finalConfirmMsg.Append($"应{PaymentType.ToString()}单{receivable.ARAPNo} [{receivable.LocalBalanceAmount.ToString("###.00")}] → ");
+                    finalConfirmMsg.Append(string.Join("、", advances.Select(a => $"{a.PreRPNO} [{a.LocalBalanceAmount.ToString("###.00")}]")));
+                    finalConfirmMsg.Append("\r\n");
                 }
+                finalConfirmMsg.Append("\r\n");
+                finalConfirmMsg.Append($"共 {receivableToAdvancesMap.Count} 张应{PaymentType.ToString()}单将进行抵扣操作");
 
-                if (MessageBox.Show($"{sbOffset.ToString()}你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
+                if (MessageBox.Show($"{finalConfirmMsg.ToString()}\r\n\r\n你确定进行对应抵扣吗？", "提示", MessageBoxButtons.OKCancel, MessageBoxIcon.Information) == DialogResult.OK)
                 {
                     int successCount = 0;
                     decimal successAmount = 0;

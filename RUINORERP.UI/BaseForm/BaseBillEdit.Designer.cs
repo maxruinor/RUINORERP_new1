@@ -62,6 +62,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnBillInfo = new System.Windows.Forms.ToolStripButton();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
@@ -95,6 +96,7 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnRelatedQuery,
             this.toolStripbtnConvertDocuments,
             this.toolStripbtnProperty,
+            this.toolStripbtnBillInfo,
             this.toolStripbtnClose,
             this.tsBtnLocked});
             this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
@@ -282,6 +284,14 @@ namespace RUINORERP.UI.BaseForm
             this.tsBtnLocked.Text = "已锁定";
             this.tsBtnLocked.Visible = false;
             // 
+            // toolStripbtnBillInfo
+            // 
+            this.toolStripbtnBillInfo.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
+            this.toolStripbtnBillInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnBillInfo.Name = "toolStripbtnBillInfo";
+            this.toolStripbtnBillInfo.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnBillInfo.Text = "操作记录";
+            // 
             // bwRemoting
             // 
             this.bwRemoting.WorkerReportsProgress = true;
@@ -339,5 +349,6 @@ namespace RUINORERP.UI.BaseForm
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem4;
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnConvertDocuments;
         public System.Windows.Forms.ToolStripButton toolStripBtnCancelSubmit;
+        public System.Windows.Forms.ToolStripButton toolStripbtnBillInfo;
     }
 }

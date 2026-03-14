@@ -931,6 +931,12 @@
     <Compile Include="Common\TaskPool.cs" />
     <Compile Include="Common\TaskVoiceReminder.cs" />
     <Compile Include="Common\UIBizService.cs" />
+    <Compile Include="FormProperty\frmBillInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormProperty\frmBillInfo.Designer.cs">
+      <DependentUpon>frmBillInfo.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LockInfoDetailForm.cs">
       <SubType>Form</SubType>
     </Compile>

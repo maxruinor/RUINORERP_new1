@@ -1135,22 +1135,22 @@ namespace RUINORERP.UI.FM
                     // 在保存单据前先同步图片，确保图片ID能保存到数据库
                     bool hasImagesToSync = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingUploadImages().Count > 0 ||
                                            RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetPendingDeleteImages().Count > 0;
-                    
+
                     if (hasImagesToSync)
                     {
                         MainForm.Instance.PrintInfoLog("正在同步图片...");
                         List<ImageSyncResult> syncResults = await SyncImagesIfNeeded();
-                        
+
                         // 检查上传是否成功
-                        bool uploadSuccess = syncResults.All(r =&gt; r.IsSuccess);
+                        bool uploadSuccess = syncResults.All(r => r.IsSuccess);
                         if (!uploadSuccess)
                         {
-                            var failedResults = syncResults.Where(r =&gt; !r.IsSuccess).ToList();
-                            string errorMsg = string.Join("; ", failedResults.Select(r =&gt; r.ErrorMessage));
+                            var failedResults = syncResults.Where(r => !r.IsSuccess).ToList();
+                            string errorMsg = string.Join("; ", failedResults.Select(r => r.ErrorMessage));
                             MainForm.Instance.uclog.AddLog($"图片同步失败: {errorMsg}");
                             return false;
                         }
-                        
+
                         MainForm.Instance.PrintInfoLog("图片同步完成");
                     }
 

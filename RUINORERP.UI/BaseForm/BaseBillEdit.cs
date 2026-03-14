@@ -62,6 +62,9 @@ namespace RUINORERP.UI.BaseForm
 
             // 初始化帮助系统
             InitializeHelpSystem();
+
+            // 注册单据信息按钮点击事件
+            toolStripbtnBillInfo.Click += ToolStripbtnBillInfo_Click;
         }
 
         #region 帮助系统集成
@@ -1397,6 +1400,47 @@ namespace RUINORERP.UI.BaseForm
                 button.Enabled = isEditable;
             }
         }
+
+     
+
+        #region 单据信息显示
+
+        /// <summary>
+        /// 单据信息按钮点击事件
+        /// </summary>
+        private void ToolStripbtnBillInfo_Click(object sender, EventArgs e)
+        {
+            ShowBillInfo();
+        }
+
+        /// <summary>
+        /// 显示单据信息对话框
+        /// </summary>
+        protected virtual void ShowBillInfo()
+        {
+            try
+            {
+                // 检查是否有绑定的实体
+                if (BoundEntity == null)
+                {
+                    MessageBox.Show("当前没有加载单据数据，请先加载单据后再查看信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 创建并显示单据信息对话框
+                using (var frm = new RUINORERP.UI.FormProperty.frmBillInfo(BoundEntity))
+                {
+                    frm.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "显示单据信息失败");
+                MessageBox.Show($"显示单据信息失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
 
     }
 }

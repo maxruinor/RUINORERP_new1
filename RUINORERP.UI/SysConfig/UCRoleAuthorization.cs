@@ -310,21 +310,21 @@ namespace RUINORERP.UI.SysConfig
                 return;
             // TODO: 实现导航器索引改变时的逻辑
             NewSumDataGridView dg = kryptonNavigator1.SelectedPage.Controls[0] as NewSumDataGridView;
-            if (dg == null && kryptonNavigator1.SelectedPage.Controls.Count > 0 && TreeView1.SelectedNode.Tag != null)
+            if (dg == null && kryptonNavigator1.SelectedPage.Controls.Count > 0)
             {
                 dg = newSumDataGridViewRowAuthPolicy;
-                //加载行级授权的配置
-                if ((TreeView1.SelectedNode.Tag is tb_MenuInfo menuInfo))
+                if (TreeView1.SelectedNode.Tag != null)
                 {
-                    MainForm.Instance.AppContext.Db.Queryable<tb_P4RowAuthPolicyByRole>()
-                        .Where(c => c.MenuID == menuInfo.MenuID)
-                        .Where(c => c.RoleID == CurrentRole.RoleID)
-                        .ToList();
-                    return;
+                    //加载行级授权的配置
+                    if ((TreeView1.SelectedNode.Tag is tb_MenuInfo menuInfo))
+                    {
+                        MainForm.Instance.AppContext.Db.Queryable<tb_P4RowAuthPolicyByRole>()
+                            .Where(c => c.MenuID == menuInfo.MenuID)
+                            .Where(c => c.RoleID == CurrentRole.RoleID)
+                            .ToList();
+                        return;
+                    }
                 }
-
-
-
             }
 
             #region 设置全选菜单
@@ -1681,7 +1681,7 @@ namespace RUINORERP.UI.SysConfig
                         var discoveredFields = SelectedMenuInfo.tb_FieldInfos
                             .Where(f => !existingFieldIds.Contains(f.FieldInfo_ID))
                             .ToList();
-                        
+
                         if (discoveredFields.Count > 0)
                         {
                             MainForm.Instance.logger.Info($"菜单 '{SelectedMenuInfo.CaptionCN}' 发现 {discoveredFields.Count} 个新字段，将进行增量添加");

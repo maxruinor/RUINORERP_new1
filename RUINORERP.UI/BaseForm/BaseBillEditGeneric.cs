@@ -8422,13 +8422,54 @@ namespace RUINORERP.UI.BaseForm
 
 
         #endregion
+
+        #region 单据信息显示重写
+
+        /// <summary>
+        /// 重写显示单据信息方法，优先使用 EditEntity
+        /// </summary>
+        protected override void ShowBillInfo()
+        {
+            try
+            {
+                // 优先使用 EditEntity
+                BaseEntity entityToShow = EditEntity as BaseEntity;
+
+                // 如果 EditEntity 为空，则使用基类的 BoundEntity
+                if (entityToShow == null)
+                {
+                    entityToShow = BoundEntity;
+                }
+
+                // 检查是否有绑定的实体
+                if (entityToShow == null)
+                {
+                    MessageBox.Show("当前没有加载单据数据，请先加载单据后再查看信息。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 创建并显示单据信息对话框
+                var frm = new RUINORERP.UI.FormProperty.frmBillInfo(entityToShow);
+                frm.ShowDialog(this);
+
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "显示单据信息失败");
+                MessageBox.Show($"显示单据信息失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        #endregion
+
     }
-
-
-
-
-
 }
+
+
+
+
+
+
 
 
 

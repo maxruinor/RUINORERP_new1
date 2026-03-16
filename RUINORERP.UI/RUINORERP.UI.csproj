@@ -3332,6 +3332,7 @@
     </Compile>
     <Compile Include="UCSourceGrid\BillOperateController.cs" />
     <Compile Include="UCSourceGrid\AdditionalEvent.cs" />
+    <Compile Include="UCSourceGrid\BusinessImageCellManager.cs" />
     <Compile Include="UCSourceGrid\CellClickEvent.cs" />
     <Compile Include="UCSourceGrid\CollectionExtensions.cs" />
     <Compile Include="UCSourceGrid\ExtendedQueryColumnMapping.cs" />

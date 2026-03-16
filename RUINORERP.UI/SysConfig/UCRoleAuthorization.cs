@@ -74,6 +74,12 @@ namespace RUINORERP.UI.SysConfig
         private bool _dataGridView1Configured = false;
         private bool _dataGridView2Configured = false;
 
+        // 菜单加载锁，防止并发加载导致的数据重复
+        private readonly object _menuLoadLock = new object();
+
+        // 当前正在加载的菜单ID，用于去重和状态管理
+        private long _currentLoadingMenuId = -1;
+
         /// <summary>
         /// 异步初始化任务的缓存，避免重复初始化同一菜单
         /// Key: MenuID, Value: 正在执行的Task
@@ -1797,12 +1803,6 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="e">TreeView事件参数</param>
         private async void TreeView1_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            // 防止重复选择
-            if (_isSelectingNode)
-            {
-                return;
-            }
-
             if (TreeView1.SelectedNode == null)
             {
                 return;
@@ -1823,18 +1823,40 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            _isSelectingNode = true;
+            // 取消之前的加载操作
+            _loadingCancellationTokenSource?.Cancel();
+            _loadingCancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = _loadingCancellationTokenSource.Token;
+
+            // 在锁内原子性地设置加载状态
+            long loadingMenuId;
+            lock (_menuLoadLock)
+            {
+                // 如果正在加载，先取消
+                if (_isSelectingNode)
+                {
+                    // 允许切换到新菜单，重置状态
+                }
+                _isSelectingNode = true;
+                _currentLoadingMenuId = selectMenu.MenuID;
+                loadingMenuId = selectMenu.MenuID;
+            }
+
             try
             {
+                // 显示加载状态
+                this.Cursor = Cursors.WaitCursor;
                 kryptonNavigator1.SelectedPage = kryptonPageBtn;
                 CurrentMenuInfo = selectMenu;
 
-                // 强制刷新按钮和字段权限数据（每次点击节点都重新加载）
-                // 修改参数为 true，确保数据源完全刷新
-                await Task.WhenAll(
-                    InitLoadP4Button(selectMenu, true),
-                    InitLoadP4Field(selectMenu, true)
-                );
+                // 串行执行按钮和字段权限加载，避免并发导致的数据重复问题
+                // 先加载按钮权限
+                await InitLoadP4Button(selectMenu, true, cancellationToken);
+                // 验证是否已被取消或切换了菜单
+                cancellationToken.ThrowIfCancellationRequested();
+                // 再加载字段权限
+                await InitLoadP4Field(selectMenu, true, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
 
                 //加载行级权限规则，优先默认的在前面
                 InitLoadRowLevelAuthPolicy(selectMenu);
@@ -1843,21 +1865,10 @@ namespace RUINORERP.UI.SysConfig
                 CurrentRole.tb_P4Buttons.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
                 CurrentRole.tb_P4Fields.Where(c => c.RoleID == CurrentRole.RoleID).ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
                 #endregion
-
-                #region 设置全选菜单
-                // 只在首次选择时设置右键菜单
-                if (!_dataGridView1Configured && dataGridViewButton.Columns.Count > 0)
-                {
-                    foreach (DataGridViewColumn dc in dataGridViewButton.Columns)
-                    {
-                        if (dc.GetType().Name == "DataGridViewCheckBoxColumn")
-                        {
-                            dc.HeaderCell.ContextMenuStrip = contextMenuStrip1;
-                        }
-                    }
-                    _dataGridView1Configured = true;
-                }
-                #endregion
+            }
+            catch (OperationCanceledException)
+            {
+                // 切换菜单时取消操作是正常的，不记录日志
             }
             catch (Exception ex)
             {
@@ -1865,7 +1876,16 @@ namespace RUINORERP.UI.SysConfig
             }
             finally
             {
-                _isSelectingNode = false;
+                // 只有当前加载的菜单ID匹配时才重置状态
+                lock (_menuLoadLock)
+                {
+                    if (_currentLoadingMenuId == loadingMenuId)
+                    {
+                        _isSelectingNode = false;
+                        _currentLoadingMenuId = -1;
+                    }
+                }
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -1874,7 +1894,8 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="selectMenu">选中菜单</param>
         /// <param name="InitLoadData">是否强制重新加载数据</param>
-        private async Task InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false)
+        /// <param name="cancellationToken">取消令牌</param>
+        private async Task InitLoadP4Button(tb_MenuInfo selectMenu, bool InitLoadData = false, CancellationToken cancellationToken = default)
         {
             if (CurrentRole == null)
             {
@@ -1887,20 +1908,11 @@ namespace RUINORERP.UI.SysConfig
                 .ToList() ?? new List<tb_P4Button>();
 
             // 只有在需要时才重新初始化数据
+            // InitBtnByRole 内部已有完整的去重逻辑，直接使用其返回值即可
             if (pblist.Count == 0 || InitLoadData)
             {
                 pblist = await InitBtnByRole(CurrentRole, selectMenu);
-
-                // 更新缓存
-                if (CurrentRole.tb_P4Buttons == null)
-                {
-                    CurrentRole.tb_P4Buttons = new List<tb_P4Button>();
-                }
-
-                // 移除旧数据并添加新数据（优化：避免多次遍历）
-                var existingButtons = CurrentRole.tb_P4Buttons.Where(c => c.MenuID == selectMenu.MenuID).ToList();
-                existingButtons.ForEach(b => CurrentRole.tb_P4Buttons.Remove(b));
-                CurrentRole.tb_P4Buttons.AddRange(pblist);
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             // 优化UI更新 - 只在必要时更新数据源
@@ -1915,19 +1927,8 @@ namespace RUINORERP.UI.SysConfig
                 bindingSource1.ResetBindings(false);
             }
 
-            // 优化列设置 - 只设置一次
-            if (!_dataGridView1Configured && dataGridViewButton.Columns.Count > 0)
-            {
-                foreach (DataGridViewColumn col in dataGridViewButton.Columns)
-                {
-                    if (col.ValueType?.Name == "Boolean")
-                    {
-                        col.ReadOnly = false;
-                    }
-                }
-                // 标记已配置
-                _dataGridView1Configured = true;
-            }
+            // 设置右键菜单和列属性（每次加载后都尝试设置，确保可用）
+            SetupDataGridViewContextMenu(dataGridViewButton, ref _dataGridView1Configured);
 
             // 批量更新保存状态
             pblist.ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
@@ -1939,7 +1940,8 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="selectMenu">选中菜单</param>
         /// <param name="InitLoadData">是否强制重新加载数据</param>
-        private async Task InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false)
+        /// <param name="cancellationToken">取消令牌</param>
+        private async Task InitLoadP4Field(tb_MenuInfo selectMenu, bool InitLoadData = false, CancellationToken cancellationToken = default)
         {
             if (CurrentRole == null)
             {
@@ -1953,20 +1955,11 @@ namespace RUINORERP.UI.SysConfig
 
             // 只有在需要时才重新初始化数据
             // InitLoadData=true 时表示用户主动触发初始化（如右键菜单），此时需要强制刷新字段信息以支持增量添加
+            // InitFiledByRole 内部已有完整的去重逻辑，直接使用其返回值即可
             if (pflist.Count == 0 || InitLoadData)
             {
                 pflist = await InitFiledByRole(CurrentRole, selectMenu, false, InitLoadData);
-
-                // 更新缓存
-                if (CurrentRole.tb_P4Fields == null)
-                {
-                    CurrentRole.tb_P4Fields = new List<tb_P4Field>();
-                }
-
-                // 移除旧数据并添加新数据（优化：避免多次遍历）
-                var existingFields = CurrentRole.tb_P4Fields.Where(c => c.MenuID == selectMenu.MenuID).ToList();
-                existingFields.ForEach(f => CurrentRole.tb_P4Fields.Remove(f));
-                CurrentRole.tb_P4Fields.AddRange(pflist);
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             // 优化UI更新 - 只在必要时更新数据源
@@ -1981,27 +1974,46 @@ namespace RUINORERP.UI.SysConfig
                 bindingSource2.ResetBindings(false);
             }
 
-            // 优化列设置 - 只设置一次
-            if (!_dataGridView2Configured && dataGridViewField.Columns.Count > 0)
-            {
-                foreach (DataGridViewColumn col in dataGridViewField.Columns)
-                {
-                    if (col.ValueType?.Name == "Boolean")
-                    {
-                        col.ReadOnly = false;
-                    }
-                    // ischild只是标记是否为子表，不可编辑
-                    if (col.DataPropertyName == "IsChild")
-                    {
-                        col.ReadOnly = true;
-                    }
-                }
-                // 标记已配置
-                _dataGridView2Configured = true;
-            }
+            // 设置右键菜单和列属性（每次加载后都尝试设置，确保可用）
+            SetupDataGridViewContextMenu(dataGridViewField, ref _dataGridView2Configured);
 
             // 批量更新保存状态
             pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
+        }
+
+        /// <summary>
+        /// 设置DataGridView右键菜单（确保每次加载后都能使用）
+        /// </summary>
+        private void SetupDataGridViewContextMenu(NewSumDataGridView dg, ref bool configuredFlag)
+        {
+            if (dg.Columns.Count == 0)
+            {
+                return;
+            }
+
+            // 设置右键菜单和列属性
+            foreach (DataGridViewColumn col in dg.Columns)
+            {
+                // 设置布尔列的可编辑性
+                if (col.ValueType?.Name == "Boolean")
+                {
+                    col.ReadOnly = false;
+                }
+                // ischild只是标记是否为子表，不可编辑
+                if (col.DataPropertyName == "IsChild")
+                {
+                    col.ReadOnly = true;
+                }
+
+                // 设置右键菜单（只有CheckBox列需要）
+                if (col.GetType().Name == "DataGridViewCheckBoxColumn")
+                {
+                    col.HeaderCell.ContextMenuStrip = contextMenuStrip1;
+                }
+            }
+
+            // 标记已配置
+            configuredFlag = true;
         }
 
         private void InitLoadRowLevelAuthPolicy(tb_MenuInfo selectMenu)

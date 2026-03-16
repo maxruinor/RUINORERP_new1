@@ -72,10 +72,10 @@ namespace RUINORERP.UI.FormProperty
 
                 txtCreated_at.Text = GetPropertyValue(entityType, "Created_at");
                 txtCreated_by.Text = GetEmployeeName(GetPropertyValue(entityType, "Created_by"));
-                txtUpdated_at.Text = GetPropertyValue(entityType, "Updated_at");
-                txtUpdated_by.Text = GetEmployeeName(GetPropertyValue(entityType, "Updated_by"));
-                txtApproved_at.Text = GetPropertyValue(entityType, "Approved_at");
-                txtApproved_by.Text = GetEmployeeName(GetPropertyValue(entityType, "Approved_by"));
+                txtUpdated_at.Text = GetPropertyValue(entityType, "Modified_at");
+                txtUpdated_by.Text = GetEmployeeName(GetPropertyValue(entityType, "Modified_by"));
+                txtApproved_at.Text = GetPropertyValue(entityType, "Approver_at");
+                txtApproved_by.Text = GetEmployeeName(GetPropertyValue(entityType, "Approver_by"));
             }
             catch (Exception ex)
             {

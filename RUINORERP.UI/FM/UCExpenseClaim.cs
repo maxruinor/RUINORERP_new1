@@ -1,9 +1,11 @@
 using AutoMapper;
 using DevAge.Windows.Forms;
+using Google.Protobuf.Collections;
 using Krypton.Toolkit;
 using Microsoft.Extensions.Logging;
 using Netron.GraphLib;
 using RUINOR.Core;
+using RUINOR.WinFormsUI.CustomPictureBox;
 using RUINORERP.Business;
 using RUINORERP.Business.AutoMapper;
 using RUINORERP.Business.CommService;
@@ -16,8 +18,10 @@ using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Model;
 using RUINORERP.Model.Dto;
+using RUINORERP.PacketSpec.Models.FileManagement;
 using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.BI;
@@ -26,6 +30,7 @@ using RUINORERP.UI.MRP.MP;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.SysConfig;
+using RUINORERP.UI.UCSourceGrid;
 // using RUINORERP.UI.UCSourceGrid; // 注释掉，避免与SourceGrid.ImageStateManager冲突
 using SourceGrid;
 using SourceGrid.Cells.Editors;
@@ -44,14 +49,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RUINOR.WinFormsUI.CustomPictureBox;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
-using RUINORERP.PacketSpec.Models.FileManagement;
-using RUINORERP.UI.UCSourceGrid;
-using RUINORERP.Lib.BusinessImage;
 
 namespace RUINORERP.UI.FM
 {
@@ -477,8 +478,7 @@ namespace RUINORERP.UI.FM
                     {
                         // 关键修复：为所有图片单元格设置业务ID，包括空单元格
                         // 这样用户后续添加新图片时才能获取到BusinessId
-                        SetCellBusinessId(cell, detail.ClaimSubID, typeof(tb_FM_ExpenseClaimDetail).Name);
-
+                        BusinessImageCellManager.SetCellBusinessId<tb_FM_ExpenseClaimDetail>(cell, detail.ClaimSubID, c => c.EvidenceImagePath);
                         // 如果有图片路径，则加载图片
                         if (!string.IsNullOrEmpty(detail.EvidenceImagePath))
                         {
@@ -617,64 +617,7 @@ namespace RUINORERP.UI.FM
             }
         }
 
-        /// <summary>
-        /// 为单元格设置业务ID（修复：加载数据时即使没有图片也要设置BusinessId）
-        /// 这样用户后续添加新图片时才能获取到BusinessId
-        /// </summary>
-        /// <param name="cell">单元格</param>
-        /// <param name="businessId">业务ID</param>
-        /// <param name="OwnerTableName">业务表名</param>
-        /// <param name="relatedField">关联字段名（可选）</param>
-        private void SetCellBusinessId(SourceGrid.Cells.Cell cell, long businessId, string OwnerTableName, string relatedField = null)
-        {
-            if (cell == null) return;
 
-            try
-            {
-                // 获取或创建 ValueImageWeb 模型
-                var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
-                SourceGrid.Cells.Models.ValueImageWeb valueImageWeb;
-                if (model == null)
-                {
-                    valueImageWeb = new SourceGrid.Cells.Models.ValueImageWeb();
-                    cell.Model.AddModel(valueImageWeb);
-                }
-                else
-                {
-                    valueImageWeb = (SourceGrid.Cells.Models.ValueImageWeb)model;
-                }
-
-                // 关键：设置业务ID，即使没有图片也要设置
-                valueImageWeb.BusinessId = businessId;
-                valueImageWeb.OwnerTableName = OwnerTableName;
-
-                // 如果提供了 RelatedField，也需要设置
-                if (!string.IsNullOrEmpty(relatedField))
-                {
-                    valueImageWeb.RelatedField = relatedField;
-                }
-
-                // 如果单元格Tag不是ImageInfo，也需要更新
-                if (cell.Tag is RUINORERP.Lib.BusinessImage.ImageInfo imageInfo)
-                {
-                    imageInfo.BusinessId = businessId;
-                    if (!string.IsNullOrEmpty(OwnerTableName))
-                    {
-                        imageInfo.OwnerTableName = OwnerTableName;
-                    }
-                    if (!string.IsNullOrEmpty(relatedField))
-                    {
-                        imageInfo.RelatedField = relatedField;
-                    }
-                }
-
-                MainForm.Instance.PrintInfoLog($"单元格业务ID已设置: BusinessId={businessId}, OwnerTableName={OwnerTableName}");
-            }
-            catch (Exception ex)
-            {
-                MainForm.Instance.logger.LogError(ex, "设置单元格业务ID失败");
-            }
-        }
 
 
         /// <summary>
@@ -970,29 +913,23 @@ namespace RUINORERP.UI.FM
                         {
                             // 确定业务实体和关联字段
                             BaseEntity businessEntity = null;
-                            string relatedField = string.Empty;
+
 
                             // 根据OwnerTableName确定实体
-                            if (imageInfo.OwnerTableName == typeof(tb_FM_ExpenseClaim).Name)
-                            {
-                                businessEntity = EditEntity;
-                                relatedField = "CloseCaseImagePath";
-                            }
-                            else if (imageInfo.OwnerTableName == typeof(tb_FM_ExpenseClaimDetail).Name && imageInfo.BusinessId > 0)
+
+                            if (string.IsNullOrEmpty(imageInfo.OwnerTableName) && imageInfo.BusinessId > 0)
                             {
                                 // 查找对应的明细
                                 var detail = EditEntity.tb_FM_ExpenseClaimDetails?.FirstOrDefault(d => d.ClaimSubID == imageInfo.BusinessId);
                                 if (detail != null)
                                 {
                                     businessEntity = detail;
-                                    relatedField = "EvidenceImagePath";
                                 }
                             }
 
                             if (businessEntity == null)
                             {
-                                logger.LogWarning("无法找到业务实体: BusinessId={BusinessId}, OwnerTableName={OwnerTableName}",
-                                    imageInfo.BusinessId, imageInfo.OwnerTableName);
+                                logger.LogWarning("无法找到业务实体: BusinessId={BusinessId}, OwnerTableName={OwnerTableName}", imageInfo.BusinessId, imageInfo.OwnerTableName);
                                 continue;
                             }
 
@@ -1001,7 +938,7 @@ namespace RUINORERP.UI.FM
                                 businessEntity,
                                 imageInfo.FileName ?? imageInfo.OriginalFileName ?? "image.jpg",
                                 imageInfo.ImageData,
-                                relatedField,
+                                imageInfo.RelatedField,
                                 null);
 
                             var syncResult = new RUINORERP.Lib.BusinessImage.ImageSyncResult

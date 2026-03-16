@@ -372,7 +372,7 @@ namespace RUINORERP.UI.BI
 
             // 隐藏不必要的列
             var columnsToHide = new[] { "NotifyChannels", "NotifyRecipients", "JsonConfig",
-                "EffectiveDate", "ExpireDate", "Created_at", "Created_by", "Updated_at", "Updated_by" };
+                "EffectiveDate", "ExpireDate", "Created_at", "Created_by", "Modified_at", "Modified_by" };
 
             foreach (var columnName in columnsToHide)
             {

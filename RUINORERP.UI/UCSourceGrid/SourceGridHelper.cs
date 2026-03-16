@@ -3510,7 +3510,7 @@ namespace RUINORERP.UI.UCSourceGrid
 
 
         /// <summary>
-        /// 设置从查询结果对象指向单据明细的列集合
+        /// 设置从查询结果对象指向单据明细的列集合1
         /// 即：从产品查询QueryFormGeneric查出来的结果。放到 指定明细中某个列中
         /// </summary>
         /// <typeparam name="ProdcutShare"></typeparam>

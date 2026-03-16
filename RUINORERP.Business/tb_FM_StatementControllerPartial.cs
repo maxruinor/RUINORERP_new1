@@ -390,6 +390,8 @@ namespace RUINORERP.Business
                     it.ApprovalStatus,
                     it.ApprovalResults,
                     it.ApprovalOpinions,
+                    it.Approver_at,
+                    it.Approver_by,
                     it.PayeeInfoID,
                 }).ExecuteCommandAsync();
 

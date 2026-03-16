@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using RUINORERP.Model;
@@ -59,6 +59,11 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         public List<tb_FS_FileStorageInfo> FileStorageInfos { get; set; } = new List<tb_FS_FileStorageInfo>();
 
         /// <summary>
+        /// 错误信息（单个错误消息，用于向后兼容）
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
         /// 默认构造函数
         /// </summary>
         public FileUploadResponse() : base() { }
@@ -72,6 +77,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
             this.Message = message;
             this.FileStorageInfos = fileStorageInfos ?? new List<tb_FS_FileStorageInfo>();
             this.Timestamp = DateTime.Now;
+            this.ErrorMessage = null;
         }
 
         /// <summary>
@@ -81,9 +87,6 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         {
             return new FileUploadResponse(true, message, new List<tb_FS_FileStorageInfo> { fileStorageInfo });
         }
-
-
-
     }
 
 

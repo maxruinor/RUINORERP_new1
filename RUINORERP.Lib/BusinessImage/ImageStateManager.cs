@@ -226,7 +226,7 @@ namespace RUINORERP.Lib.BusinessImage
                 ImageId = imageId,
                 OriginalFileName = fileName,
                 FileName = fileName,
-                OwnerTableName = "",
+                OwnerTableName = OwnerTableName,
                 ImageData = imageData,
                 Status = status,
                 BusinessId = businessId,

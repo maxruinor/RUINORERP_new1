@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.Model;
@@ -82,6 +82,12 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         /// 下载令牌
         /// </summary>
         public string DownloadToken { get; set; }
+
+        /// <summary>
+        /// 错误信息列表
+        /// </summary>
+        public List<string> ErrorMessages { get; set; } = new List<string>();
+
         /// <summary>
         /// 默认构造函数
         /// </summary>
@@ -96,6 +102,7 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
             this.Message = message;
             this.FileStorageInfos = fileStorageInfos;
             this.Timestamp = DateTime.Now;
+            this.ErrorMessages = new List<string>();
         }
 
         /// <summary>
@@ -112,6 +119,20 @@ namespace RUINORERP.PacketSpec.Models.FileManagement
         public static FileDownloadResponse CreateFailure(string message, int code = 500)
         {
             return new FileDownloadResponse(false, message, null, code);
+        }
+
+        /// <summary>
+        /// 创建带错误信息的失败结果
+        /// </summary>
+        /// <param name="message">失败消息</param>
+        /// <param name="errorMessages">错误信息列表</param>
+        /// <param name="code">状态码</param>
+        /// <returns>下载响应</returns>
+        public static FileDownloadResponse CreateFailure(string message, List<string> errorMessages, int code = 500)
+        {
+            var response = new FileDownloadResponse(false, message, null, code);
+            response.ErrorMessages = errorMessages ?? new List<string>();
+            return response;
         }
     }
 

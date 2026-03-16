@@ -232,6 +232,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
             _logger?.Debug("开始处理文件上传请求，文件数量: {FileCount}", uploadRequest.FileStorageInfos?.Count ?? 0);
 
             var responseData = new FileUploadResponse();
+            var errorMessages = new List<string>();
+            bool hasError = false;
+
             try
             {
                 if (uploadRequest.FileStorageInfos == null || uploadRequest.FileStorageInfos.Count == 0)
@@ -256,15 +259,19 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         // 检查文件数据是否为空
                         if (FileStorageInfo.FileData == null || FileStorageInfo.FileData.Length == 0)
                         {
-                            _logger?.LogWarning("文件数据为空: {FileName}", FileStorageInfo.OriginalFileName);
+                            string errorMsg = $"文件数据为空: {FileStorageInfo.OriginalFileName}";
+                            _logger?.LogWarning(errorMsg);
+                            hasError = true;
+                            errorMessages.Add(errorMsg);
                             continue;
                         }
 
                         // 检查文件大小
                         if (FileStorageInfo.FileData.Length > MAX_FILE_SIZE)
                         {
-                            _logger?.LogWarning("文件大小超过限制: {FileName}, 大小: {FileSize} bytes", FileStorageInfo.OriginalFileName, FileStorageInfo.FileData.Length);
-                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件 {FileStorageInfo.OriginalFileName} 大小超过限制，最大允许 {MAX_FILE_SIZE / (1024 * 1024)}MB");
+                            string errorMsg = $"文件大小超过限制: {FileStorageInfo.OriginalFileName}, 大小: {FileStorageInfo.FileData.Length} bytes，最大允许 {MAX_FILE_SIZE / (1024 * 1024)}MB";
+                            _logger?.LogWarning(errorMsg);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(errorMsg);
                         }
 
                         // 验证文件格式（仅允许图片文件）1
@@ -272,8 +279,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         var fileExtension = Path.GetExtension(FileStorageInfo.OriginalFileName)?.ToLower();
                         if (string.IsNullOrEmpty(fileExtension) || !allowedExtensions.Contains(fileExtension))
                         {
-                            _logger?.LogWarning("文件格式不支持: {FileName}", FileStorageInfo.OriginalFileName);
-                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件 {FileStorageInfo.OriginalFileName} 格式不支持，仅允许图片文件");
+                            string errorMsg = $"文件格式不支持: {FileStorageInfo.OriginalFileName}，仅允许图片文件";
+                            _logger?.LogWarning(errorMsg);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(errorMsg);
                         }
 
                         // 生成唯一文件名
@@ -300,8 +308,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             }
                             catch (Exception ex)
                             {
-                                _logger?.LogWarning(ex, "设置目录权限失败: {CategoryPath}", categoryPath);
-                                // 权限设置失败不影响文件上传，仅记录警告
+                                string errorMsg = $"设置目录权限失败: {categoryPath}，错误: {ex.Message}";
+                                _logger?.LogWarning(ex, errorMsg);
+                                hasError = true;
+                                errorMessages.Add(errorMsg);
                             }
                         }
 
@@ -323,13 +333,15 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         }
                         catch (IOException ioEx)
                         {
-                            _logger?.LogError(ioEx, "文件写入失败: {FilePath}", filePath);
-                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件写入失败: {ioEx.Message}");
+                            string errorMsg = $"文件写入失败: {filePath}，错误: {ioEx.Message}";
+                            _logger?.LogError(ioEx, errorMsg);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(errorMsg);
                         }
                         catch (UnauthorizedAccessException authEx)
                         {
-                            _logger?.LogError(authEx, "文件访问权限不足: {FilePath}", filePath);
-                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>($"文件访问权限不足: {authEx.Message}");
+                            string errorMsg = $"文件访问权限不足: {filePath}，错误: {authEx.Message}";
+                            _logger?.LogError(authEx, errorMsg);
+                            return ResponseFactory.CreateSpecificErrorResponse<FileUploadResponse>(errorMsg);
                         }
 
                         // 将绝对路径转换为相对路径保存到数据库
@@ -367,8 +379,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                         var saveResult = await _fileStorageInfoController.SaveOrUpdate(fileStorageInfo);
                         if (!saveResult.Succeeded)
                         {
-                            _logger?.LogWarning("文件信息保存到数据库失败: {FileName}, 错误: {Error}",
-                                FileStorageInfo.OriginalFileName, saveResult.ErrorMsg);
+                            string errorMsg = $"文件信息保存到数据库失败: {FileStorageInfo.OriginalFileName}，错误: {saveResult.ErrorMsg}";
+                            _logger?.LogWarning(errorMsg);
+                            hasError = true;
+                            errorMessages.Add(errorMsg);
                             continue;
                         }
 
@@ -397,8 +411,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             var relationResult = await _businessRelationController.SaveOrUpdate(businessRelation);
                             if (!relationResult.Succeeded)
                             {
-                                _logger?.LogWarning("业务关联保存失败: {FileName}, 错误: {Error}",
-                                    FileStorageInfo.OriginalFileName, relationResult.ErrorMsg);
+                                string errorMsg = $"业务关联保存失败: {FileStorageInfo.OriginalFileName}，错误: {relationResult.ErrorMsg}";
+                                _logger?.LogWarning(errorMsg);
+                                hasError = true;
+                                errorMessages.Add(errorMsg);
                             }
                             else
                             {
@@ -408,12 +424,22 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 同步HasAttachment标志（在事务内执行）
                                 if (_hasAttachmentSyncService != null && uploadRequest.OwnerTableName.Trim().Length > 0 && uploadRequest.BusinessId.HasValue && uploadRequest.BusinessId.Value > 0)
                                 {
-                                    await _hasAttachmentSyncService.SyncOnFileUploadAsync(
-                                        uploadRequest.OwnerTableName,
-                                        uploadRequest.BusinessId.Value,
-                                        uploadRequest.BusinessNo,
-                                        cancellationToken,
-                                        useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                                    try
+                                    {
+                                        await _hasAttachmentSyncService.SyncOnFileUploadAsync(
+                                            uploadRequest.OwnerTableName,
+                                            uploadRequest.BusinessId.Value,
+                                            uploadRequest.BusinessNo,
+                                            cancellationToken,
+                                            useTransaction: false); // 已经在外部事务中，不需要开启新事务
+                                    }
+                                    catch (Exception syncEx)
+                                    {
+                                        string errorMsg = $"同步HasAttachment标志失败: {uploadRequest.OwnerTableName}，BusinessId={uploadRequest.BusinessId.Value}，错误: {syncEx.Message}";
+                                        _logger?.LogError(syncEx, errorMsg);
+                                        hasError = true;
+                                        errorMessages.Add(errorMsg);
+                                    }
                                 }
                             }
                         }
@@ -429,9 +455,21 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     // 提交事务
                     _unitOfWorkManage.CommitTran();
 
-                    responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
-                    _logger?.Debug("文件上传处理完成，成功上传 {SuccessCount} 个文件", responseData.FileStorageInfos.Count);
-                    responseData.IsSuccess = true;
+                    // 设置响应状态和消息
+                    if (hasError && errorMessages.Count > 0)
+                    {
+                        responseData.IsSuccess = false;
+                        responseData.Message = "文件上传过程中出现错误";
+                        //错误信息列表转为字符串
+                        responseData.ErrorMessage = string.Join("; ", errorMessages);
+                    }
+                    else
+                    {
+                        responseData.IsSuccess = true;
+                        responseData.Message = $"文件上传成功，共成功上传 {responseData.FileStorageInfos.Count} 个文件";
+                    }
+
+                    _logger?.Debug("文件上传处理完成，成功上传 {SuccessCount} 个文件，是否有错误: {HasError}", responseData.FileStorageInfos.Count, hasError);
                     return responseData;
                 }
                 catch (Exception ex)
@@ -508,29 +546,78 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
 
                 // 加载文件数据
+                var errorMessages = new List<string>();
+                bool hasError = false;
+                var successfulFiles = new List<tb_FS_FileStorageInfo>();
+
                 foreach (var fileInfo in fileList)
                 {
-                    // 组合StoragePath和StorageFileName得到完整的相对路径
-                    string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
-                    string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
-                    if (!File.Exists(filePath))
+                    try
                     {
-                        _logger?.LogWarning("文件不存在: {FilePath}", filePath);
-                        return FileDownloadResponse.CreateFailure($"文件 {fileInfo.OriginalFileName} 不存在或无法访问");
-                    }
+                        // 组合StoragePath和StorageFileName得到完整的相对路径
+                        string fullRelativePath = Path.Combine(fileInfo.StoragePath, fileInfo.StorageFileName);
+                        string filePath = FileStorageHelper.ResolveToAbsolutePath(fullRelativePath);
+                        if (!File.Exists(filePath))
+                        {
+                            string errorMsg = $"文件不存在: {filePath}";
+                            _logger?.LogWarning(errorMsg);
+                            hasError = true;
+                            errorMessages.Add(errorMsg);
+                            continue;
+                        }
 
-                    fileInfo.FileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                        fileInfo.FileData = await File.ReadAllBytesAsync(filePath, cancellationToken);
+                        successfulFiles.Add(fileInfo);
+                    }
+                    catch (IOException ioEx)
+                    {
+                        string errorMsg = $"文件读取失败: {fileInfo.OriginalFileName}，错误: {ioEx.Message}";
+                        _logger?.LogError(ioEx, errorMsg);
+                        hasError = true;
+                        errorMessages.Add(errorMsg);
+                    }
+                    catch (UnauthorizedAccessException authEx)
+                    {
+                        string errorMsg = $"文件访问权限不足: {fileInfo.OriginalFileName}，错误: {authEx.Message}";
+                        _logger?.LogError(authEx, errorMsg);
+                        hasError = true;
+                        errorMessages.Add(errorMsg);
+                    }
+                    catch (Exception ex)
+                    {
+                        string errorMsg = $"文件加载失败: {fileInfo.OriginalFileName}，错误: {ex.Message}";
+                        _logger?.LogError(ex, errorMsg);
+                        hasError = true;
+                        errorMessages.Add(errorMsg);
+                    }
+                }
+
+                // 检查是否有成功加载的文件
+                if (successfulFiles.Count == 0)
+                {
+                    string errorMsg = hasError ? "所有文件加载失败" : "未找到符合条件的文件";
+                    _logger?.LogWarning(errorMsg);
+                    return FileDownloadResponse.CreateFailure(errorMsg, errorMessages);
                 }
 
                 // 创建响应数据
                 var response = new FileDownloadResponse
                 {
-                    FileStorageInfos = fileList,
-                    Message = fileList.Count == 1 ? "文件下载成功" : $"成功下载 {fileList.Count} 个文件",
-                    IsSuccess = true
+                    FileStorageInfos = successfulFiles,
+                    IsSuccess = !hasError,
+                    ErrorMessages = hasError ? errorMessages : null
                 };
 
-                _logger?.Debug("文件下载成功,共 {Count} 个文件", fileList.Count);
+                if (hasError)
+                {
+                    response.Message = $"部分文件下载成功，成功 {successfulFiles.Count}/{fileList.Count} 个文件";
+                }
+                else
+                {
+                    response.Message = successfulFiles.Count == 1 ? "文件下载成功" : $"成功下载 {successfulFiles.Count} 个文件";
+                }
+
+                _logger?.Debug("文件下载完成，成功 {SuccessCount}/{TotalCount} 个文件，是否有错误: {HasError}", successfulFiles.Count, fileList.Count, hasError);
                 return response;
             }
             catch (IOException ioEx)
@@ -835,6 +922,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// 集成事务处理，确保删除操作的原子性
         /// 如果没有其它业务引用则删除文件本身和tb_FS_FileStorageInfo的文件存储信息的数据行
         /// 要先删除业务性的再删除文件信息。因为数据库有引用外键约束，如果先删除文件信息，业务性的关联记录会因为找不到文件信息而无法删除，导致数据不一致。
+        /// 需要完善返回错误的实际情况
         /// </summary>
         private async Task<ResponseBase> HandleFileDeleteAsync(FileDeleteRequest deleteRequest, CommandContext executionContext, CancellationToken cancellationToken)
         {
@@ -1155,9 +1243,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     {
                         // 创建一个副本，避免在循环过程中修改集合
                         var relationsToDeleteCopy = relationsToDelete.ToList();
-                        
+
                         _logger?.LogDebug("开始处理业务关联记录，数量: {Count}", relationsToDeleteCopy.Count);
-                        
+
                         foreach (var relation in relationsToDeleteCopy)
                         {
                             if (relation == null)
@@ -1201,8 +1289,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 记录错误但继续处理其他关联记录
                             }
                         }
-                        
-                        
+
+
                     }
                     catch (Exception ex)
                     {
@@ -1252,7 +1340,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
                                 // 记录错误但继续删除其他文件存储信息
                             }
                         }
-                
+
                     }
 
                     // 同步HasAttachment标志（在删除关联后，事务内执行）
@@ -1280,9 +1368,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                             }
                             catch (Exception ex)
                             {
-                                _logger?.LogError(ex, "同步HasAttachment标志失败: BusinessType={BusinessType}, BusinessId={BusinessId}",
-                                    entity.OwnerTableName, entity.BusinessId);
-                                // 记录错误但继续同步其他实体
+                                string errorMsg = $"同步HasAttachment标志失败: BusinessType={entity.OwnerTableName}, BusinessId={entity.BusinessId}，错误: {ex.Message}";
+                                _logger?.LogError(ex, errorMsg);
+                                hasError = true;
+                                errorMessages.Add(errorMsg);
                             }
                         }
                     }
@@ -1312,7 +1401,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
 
                     // 设置响应状态
                     response.IsSuccess = !hasError && (deletedCount > 0 || relationDeletedCount > 0);
-                    
+
                     // 如果有错误，设置错误消息
                     if (hasError && errorMessages.Count > 0)
                     {
@@ -1606,7 +1695,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "从数据库统计文件使用信息失败");
+                    string errorMsg = $"从数据库统计文件使用信息失败，错误: {ex.Message}";
+                    _logger?.LogError(ex, errorMsg);
+                    return StorageUsageInfo.CreateFailure(errorMsg);
                 }
 
                 var response = StorageUsageInfo.CreateSuccess(

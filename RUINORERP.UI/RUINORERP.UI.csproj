@@ -2179,9 +2179,6 @@
     <Compile Include="Common\EmitHelper.cs" />
     <Compile Include="Common\EnumBindingHelper.cs" />
     <Compile Include="Common\GlobalDataDictionary.cs" />
-    <Compile Include="Common\GridDefine.cs" />
-    <Compile Include="Common\GridDefineColumnItem.cs" />
-    <Compile Include="Common\GridHelper.cs" />
     <Compile Include="Common\GUIUtils.cs" />
     <Compile Include="Common\HttpWebService.cs" />
     <Compile Include="Common\InitModuleMenu.cs" />
@@ -3344,7 +3341,6 @@
     <Compile Include="UCSourceGrid\EditorQuery.cs" />
     <Compile Include="UCSourceGrid\EditorQueryGeneric.cs" />
     <Compile Include="UCSourceGrid\EditorRichTextInput.cs" />
-    <Compile Include="UCSourceGrid\EditorTextBoxButtonQuery.cs" />
     <Compile Include="UCSourceGrid\GridController.cs" />
     <Compile Include="UCSourceGrid\MyToolTipModel.cs" />
     <Compile Include="UCSourceGrid\PopupMenu.cs" />

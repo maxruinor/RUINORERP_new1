@@ -916,7 +916,7 @@ namespace SourceGrid.Cells.Editors
                     var stateManager = _stateManager ?? ImageStateManager.Instance;
                     if (stateManager != null)
                     {
-                        stateManager.AddImage(imageInfo);
+                        stateManager.AddImage(imageInfo);//这里执行了一次
                     }
                     // 直接返回ImageInfo的FileId
                     return imageInfo.FileId;

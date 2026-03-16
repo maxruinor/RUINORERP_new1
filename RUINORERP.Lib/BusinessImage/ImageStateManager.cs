@@ -302,7 +302,7 @@ namespace RUINORERP.Lib.BusinessImage
         {
             lock (_lock)
             {
-                var pendingImages = _images.Values.Where(img => img.Status == ImageStatus.PendingUpload).ToList();
+                var pendingImages = _images.Values.Where(img => img.Status == ImageStatus.PendingUpload && img.BusinessId > 0).ToList();
                 Log($"获取待上传图片: {pendingImages.Count} 张");
                 return pendingImages;
             }

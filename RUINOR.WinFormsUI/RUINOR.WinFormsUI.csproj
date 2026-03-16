@@ -190,114 +190,6 @@
     <Compile Include="RegTextBox\RegTextInterface.cs" />
     <Compile Include="RegTextBox\RegularAuthenticationSettings.cs" />
     <Compile Include="RegTextBox\TzhtecButton.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\BehaviorModelCollection.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\BehaviorModelGroup.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\BindProperty.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Button.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\CheckBox.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\ColumnHeader.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Common.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\ContextMenu.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Cursor.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\CustomEvents.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Header.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\IBehaviorModel.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Resize.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\RowHeader.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\ToolTipText.cs" />
-    <Compile Include="SourceGrid2\BehaviorModels\Unselectable.cs" />
-    <Compile Include="SourceGrid2\Cells\Button.cs" />
-    <Compile Include="SourceGrid2\Cells\Cell.cs" />
-    <Compile Include="SourceGrid2\Cells\CellControl.cs" />
-    <Compile Include="SourceGrid2\Cells\CellVirtual.cs" />
-    <Compile Include="SourceGrid2\Cells\CheckBox.cs" />
-    <Compile Include="SourceGrid2\Cells\ColumnHeader.cs" />
-    <Compile Include="SourceGrid2\Cells\ComboBox.cs" />
-    <Compile Include="SourceGrid2\Cells\Header.cs" />
-    <Compile Include="SourceGrid2\Cells\ICell.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellCheckBox.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellContextMenu.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellCursor.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellSortableHeader.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellToolTipText.cs" />
-    <Compile Include="SourceGrid2\Cells\ICellVirtual.cs" />
-    <Compile Include="SourceGrid2\Cells\Link.cs" />
-    <Compile Include="SourceGrid2\Cells\RowHeader.cs" />
-    <Compile Include="SourceGrid2\Common\Border.cs" />
-    <Compile Include="SourceGrid2\Common\CellVirtualCollection.cs" />
-    <Compile Include="SourceGrid2\Common\ColumnInfo.cs" />
-    <Compile Include="SourceGrid2\Common\CustomScrollControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Common\Enums.cs" />
-    <Compile Include="SourceGrid2\Common\Events.cs" />
-    <Compile Include="SourceGrid2\Common\frmCellSize.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Common\GridContextMenu.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Common\GridSubPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Common\Position.cs" />
-    <Compile Include="SourceGrid2\Common\Range.cs" />
-    <Compile Include="SourceGrid2\Common\RowInfo.cs" />
-    <Compile Include="SourceGrid2\Common\Selection.cs" />
-    <Compile Include="SourceGrid2\Common\Utility.cs" />
-    <Compile Include="SourceGrid2\CurTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\DataModels\ControlsRepository.cs" />
-    <Compile Include="SourceGrid2\DataModels\DataModelBase.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorComboBox.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorControlBase.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorDateTime.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorNumericUpDown.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorTextBox.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorTextBoxButton.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorTextBoxNumeric.cs" />
-    <Compile Include="SourceGrid2\DataModels\EditorUITypeEditor.cs" />
-    <Compile Include="SourceGrid2\DataModels\IDataModel.cs" />
-    <Compile Include="SourceGrid2\General\ArrayUtils.cs" />
-    <Compile Include="SourceGrid2\General\BooleanFlagsMap.cs" />
-    <Compile Include="SourceGrid2\General\ColorUtil.cs" />
-    <Compile Include="SourceGrid2\General\CommonDragging.cs" />
-    <Compile Include="SourceGrid2\General\DoubleBuffer.cs" />
-    <Compile Include="SourceGrid2\General\Enumerations.cs" />
-    <Compile Include="SourceGrid2\General\GDIUtil.cs" />
-    <Compile Include="SourceGrid2\General\GDIUtilities.cs" />
-    <Compile Include="SourceGrid2\General\MathUtils.cs" />
-    <Compile Include="SourceGrid2\General\ResourceUtil.cs" />
-    <Compile Include="SourceGrid2\General\TextUtil.cs" />
-    <Compile Include="SourceGrid2\Grids\Grid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Grids\GridVirtual.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\HScrollBarEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\ScrollBarEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\TextBoxButton.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\VisualModels\CheckBox.cs" />
-    <Compile Include="SourceGrid2\VisualModels\Common.cs" />
-    <Compile Include="SourceGrid2\VisualModels\Header.cs" />
-    <Compile Include="SourceGrid2\VisualModels\IVisualModel.cs" />
-    <Compile Include="SourceGrid2\VisualModels\MultiImages.cs" />
-    <Compile Include="SourceGrid2\VisualModels\VisualModelBase.cs" />
-    <Compile Include="SourceGrid2\VScrollBarEx.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SourceGrid2\Win32\Enums.cs" />
-    <Compile Include="SourceGrid2\Win32\Functions.cs" />
-    <Compile Include="SourceGrid2\Win32\RegistryUtil.cs" />
-    <Compile Include="SourceGrid2\Win32\Structs.cs" />
     <Compile Include="SourceLibrary\ComponentModel\Converter\CurrencyTypeConverter.cs" />
     <Compile Include="SourceLibrary\ComponentModel\Converter\DateTimeTypeConverter.cs" />
     <Compile Include="SourceLibrary\ComponentModel\Converter\NumberTypeConverter.cs" />
@@ -403,8 +295,6 @@
     <Content Include="GlacialList\GlacialListXDoc.xml" />
     <Content Include="GlacialList\unchecked.bmp" />
     <Content Include="OutlookGrid\outlookgird说明.txt" />
-    <Content Include="SourceGrid2\Grid.bmp" />
-    <Content Include="SourceGrid2\GridVirtual.bmp" />
     <Content Include="TreeViewThreeState\TreeViewThreeStateTest.png" />
     <EmbeddedResource Include="CustomPictureBox\frmPictureViewer.resx">
       <DependentUpon>frmPictureViewer.cs</DependentUpon>
@@ -461,38 +351,6 @@
     <EmbeddedResource Include="GlacialList\ManagedVScrollBar.resx">
       <DependentUpon>ManagedVScrollBar.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SourceGrid2\Common\frmCellSize.resx">
-      <DependentUpon>frmCellSize.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxChecked.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxCheckedDisable.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxCheckedSel.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnChecked.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnCheckedDisable.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\CheckBoxUnCheckedSel.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\clear.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\copy.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\cut.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\DeleteCol.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\DeleteRow.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\InsertCol.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\InsertRow.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\paste.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\properties.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\SortDown.ico" />
-    <EmbeddedResource Include="SourceGrid2\Common\Icons\SortUp.ico" />
-    <EmbeddedResource Include="SourceGrid2\HScrollBarEx.resx">
-      <DependentUpon>HScrollBarEx.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SourceGrid2\ScrollBarEx.resx">
-      <DependentUpon>ScrollBarEx.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SourceGrid2\TextBoxButton.resx">
-      <DependentUpon>TextBoxButton.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SourceGrid2\VScrollBarEx.resx">
-      <DependentUpon>VScrollBarEx.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SourceLibrary\Windows\Forms\ButtonMultiSelection.resx">
       <DependentUpon>ButtonMultiSelection.cs</DependentUpon>
     </EmbeddedResource>
@@ -546,7 +404,6 @@
     <None Include="app.config" />
     <None Include="GlacialList\GlacialList.csproj" />
     <None Include="packages.config" />
-    <None Include="SourceGrid2\General\vssver.scc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HLH.Lib\HLH.Lib.csproj">

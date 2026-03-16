@@ -917,7 +917,7 @@ namespace RUINORERP.UI.FM
 
                             // 根据OwnerTableName确定实体
 
-                            if (string.IsNullOrEmpty(imageInfo.OwnerTableName) && imageInfo.BusinessId > 0)
+                            if (!string.IsNullOrEmpty(imageInfo.OwnerTableName) && imageInfo.BusinessId > 0)
                             {
                                 // 查找对应的明细
                                 var detail = EditEntity.tb_FM_ExpenseClaimDetails?.FirstOrDefault(d => d.ClaimSubID == imageInfo.BusinessId);

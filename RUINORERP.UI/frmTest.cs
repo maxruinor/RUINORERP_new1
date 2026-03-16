@@ -13,7 +13,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RUINORERP.IServices;
-using SourceGrid2;
 using System.Collections.Concurrent;
 using RUINORERP.UI.Common;
 using System.Reflection;
@@ -182,32 +181,7 @@ namespace RUINORERP.UI
             //创建实例化
             //object o = ReturnSumInst.InvokeMember("ReturnSum", BindingFlags.InvokeMethod, null, ReturnSumInst, null);//调用方法
             //System.Diagnostics.Debug.WriteLine("Sum:{0}", o.ToString());//显示结果
-
-            ///显示列表对应的中文
-            System.Collections.Concurrent.ConcurrentQueue<KeyValuePair<string, PropertyInfo>> Ddc = EmitHelper.GetfieldNameList(combinedType);
-            List<GridDefineColumnItem> listCols = new List<GridDefineColumnItem>();
-
-
-            foreach (var item in Ddc)
-            {
-                GridDefineColumnItem gdc = new GridDefineColumnItem();
-                gdc.name = item.Key;
-                gdc.ColPropertyInfo = item.Value as PropertyInfo;
-                listCols.Add(gdc);
-            }
-
-            // gridvisual gv = (gridvisual)cenetcom.util.refutil.tools.getattoftype(type, typeof(gridvisual));
-
-            int[] sizes = new int[Ddc.Count];
-            for (int ii = 0; ii < Ddc.Count; ii++)
-            {
-                sizes[ii] = 90;
-            }
-            GridDefine define = new GridDefine(listCols.ToArray());
-
-            //define.DisableEdit();
-
-            Common.GridHelper.InitGridForEdit(this.grid1, define, true);
+          
             return;
             /*
             grid1.BorderStyle = BorderStyle.FixedSingle;
@@ -232,7 +206,7 @@ namespace RUINORERP.UI
 
             // Common.GridHelper.fillgrid<tb_Unit>(this.grid1, list, Common.UIHelper.GetFieldNameList<tb_Unit>());
             return;
-            grid1.Header3D = true;
+            //grid1.Header3D = true;
 
 
             // grid1.Rows.Insert(r);
@@ -244,7 +218,7 @@ namespace RUINORERP.UI
             //grid1[r, 2] = new SourceGrid2.Cells.Real.Cell("  ", typeof(string));
 
 
-            grid1.AutoSizeAll();
+            //grid1.AutoSizeAll();
 
             return;
 

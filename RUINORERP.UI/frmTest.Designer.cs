@@ -35,7 +35,6 @@
             this.kryptonButton2 = new Krypton.Toolkit.KryptonButton();
             this.btnUseSqlsugar = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.grid1 = new SourceGrid2.Grid();
             this.btnGridTest = new System.Windows.Forms.Button();
             this.grid2 = new SourceGrid.Grid();
             this.btnCslaQuery = new System.Windows.Forms.Button();
@@ -113,145 +112,6 @@
             this.button1.Text = "button1";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
-            // grid1
-            // 
-            this.grid1.AutoSizeMinHeight = 10;
-            this.grid1.AutoSizeMinWidth = 10;
-            this.grid1.AutoStretchColumnsToFitWidth = false;
-            this.grid1.AutoStretchRowsToFitHeight = false;
-            this.grid1.BorderWidth = 0;
-            this.grid1.ColumnNames = null;
-            this.grid1.ContextMenuStyle = SourceGrid2.ContextMenuStyle.None;
-            this.grid1.CustomSort = false;
-            this.grid1.DefaultHeight = 18;
-            this.grid1.DefaultWidth = 50;
-            this.grid1.DrawGrid = true;
-            this.grid1.FocusCellEdit = false;
-            this.grid1.FocusStyle = SourceGrid2.FocusStyle.None;
-            this.grid1.GridToolTipActive = true;
-            this.grid1.Header3D = true;
-            this.grid1.InEdit = true;
-            this.grid1.KeepFocus = true;
-            this.grid1.Location = new System.Drawing.Point(69, 175);
-            this.grid1.Name = "grid1";
-            this.grid1.NoHScroll = false;
-            this.grid1.NoVScroll = false;
-            this.grid1.ShowFocus = true;
-            this.grid1.Size = new System.Drawing.Size(351, 278);
-            this.grid1.SpecialKeys = ((SourceGrid2.GridSpecialKeys)(((((((((SourceGrid2.GridSpecialKeys.Ctrl_C | SourceGrid2.GridSpecialKeys.Ctrl_V) 
-            | SourceGrid2.GridSpecialKeys.Ctrl_X) 
-            | SourceGrid2.GridSpecialKeys.Delete) 
-            | SourceGrid2.GridSpecialKeys.Arrows) 
-            | SourceGrid2.GridSpecialKeys.Tab) 
-            | SourceGrid2.GridSpecialKeys.PageDownUp) 
-            | SourceGrid2.GridSpecialKeys.Enter) 
-            | SourceGrid2.GridSpecialKeys.Escape)));
-            this.grid1.Summary = false;
-            this.grid1.SummaryCells = new SourceGrid2.Cells.ICell[] {
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null};
-            this.grid1.SummaryColor = System.Drawing.Color.LightBlue;
-            this.grid1.SummaryHeight = 30;
-            this.grid1.TabIndex = 7;
             // 
             // btnGridTest
             // 
@@ -343,7 +203,6 @@
             this.Controls.Add(this.btnCslaQuery);
             this.Controls.Add(this.grid2);
             this.Controls.Add(this.btnGridTest);
-            this.Controls.Add(this.grid1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.btnUseSqlsugar);
             this.Controls.Add(this.kryptonButton2);
@@ -367,7 +226,6 @@
         private Krypton.Toolkit.KryptonButton kryptonButton2;
         private System.Windows.Forms.Button btnUseSqlsugar;
         private System.Windows.Forms.Button button1;
-        private SourceGrid2.Grid grid1;
         private System.Windows.Forms.Button btnGridTest;
         private SourceGrid.Grid grid2;
         private System.Windows.Forms.Button btnCslaQuery;

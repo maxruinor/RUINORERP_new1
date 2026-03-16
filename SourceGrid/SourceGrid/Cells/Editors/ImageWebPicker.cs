@@ -599,7 +599,7 @@ namespace SourceGrid.Cells.Editors
                 var stateManager = _stateManager ?? ImageStateManager.Instance;
                 if (stateManager != null)
                 {
-                    stateManager.AddImage(imageInfo);
+                    stateManager.AddImage(imageInfo);//这里执行了一次
                 }
 
                 // 更新控件值
@@ -912,13 +912,7 @@ namespace SourceGrid.Cells.Editors
                 }
                 else if (val is ImageInfo imageInfo)
                 {
-                    // 确保将ImageInfo添加到状态管理器
-                    var stateManager = _stateManager ?? ImageStateManager.Instance;
-                    if (stateManager != null)
-                    {
-                        stateManager.AddImage(imageInfo);//这里执行了一次
-                    }
-                    // 直接返回ImageInfo的FileId
+                    // 直接返回ImageInfo的FileId，图片已在SetImageToPath()中添加到状态管理器
                     return imageInfo.FileId;
                 }
                 else if (val is string)

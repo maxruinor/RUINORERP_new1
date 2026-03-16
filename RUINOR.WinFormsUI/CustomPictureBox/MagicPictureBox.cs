@@ -1382,7 +1382,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         }
 
                         // 将图片添加到ImageStateManager
-                        ImageStateManager.Instance.AddImage(this, deletedImageInfo.ImageId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId, deletedImageInfo.StoragePath);
+                        ImageStateManager.Instance.AddImage(this, deletedImageInfo.ImageId, deletedImageInfo.OriginalFileName, null, deletedImageInfo.Status, deletedImageInfo.BusinessId,deletedImageInfo.OwnerTableName, deletedImageInfo.StoragePath);
 
                         System.Diagnostics.Debug.WriteLine($"单图模式:标记图片为已删除: {deletedImageInfo.OriginalFileName}, FileId: {deletedImageInfo.FileId}");
                     }
@@ -1435,7 +1435,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                     }
 
                     // 将图片添加到ImageStateManager
-                    ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.ImageId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.StoragePath);
+                    ImageStateManager.Instance.AddImage(this, multiDeletedImageInfo.ImageId, multiDeletedImageInfo.OriginalFileName, null, multiDeletedImageInfo.Status, multiDeletedImageInfo.BusinessId, multiDeletedImageInfo.OwnerTableName, multiDeletedImageInfo.StoragePath);
 
                     System.Diagnostics.Debug.WriteLine($"多图模式:标记图片为已删除: {multiDeletedImageInfo.OriginalFileName}, FileId: {multiDeletedImageInfo.FileId}");
                 }
@@ -1508,7 +1508,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                         }
 
                         // 将图片添加到ImageStateManager
-                        ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
+                        ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.OwnerTableName, imageInfo.StoragePath);
 
                         System.Diagnostics.Debug.WriteLine($"ClearImage: 标记图片为已删除: {imageInfo.OriginalFileName}, FileId: {imageInfo.FileId}");
                     }
@@ -3048,7 +3048,7 @@ namespace RUINOR.WinFormsUI.CustomPictureBox
                 }
 
                 // 将图片添加到ImageStateManager
-                ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId, imageInfo.StoragePath);
+                ImageStateManager.Instance.AddImage(this, imageInfo.ImageId, imageInfo.OriginalFileName, null, imageInfo.Status, imageInfo.BusinessId,imageInfo.OwnerTableName, imageInfo.StoragePath);
             }
         }
 

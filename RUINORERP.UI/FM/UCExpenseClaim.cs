@@ -33,6 +33,7 @@ using RUINORERP.UI.SysConfig;
 using RUINORERP.UI.UCSourceGrid;
 // using RUINORERP.UI.UCSourceGrid; // 注释掉，避免与SourceGrid.ImageStateManager冲突
 using SourceGrid;
+using SourceGrid.Cells;
 using SourceGrid.Cells.Editors;
 using SourceGrid.Cells.Models;
 using SqlSugar;
@@ -51,6 +52,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static RUINORERP.UI.Common.DataBindingHelper;
 using static RUINORERP.UI.Common.GUIUtils;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 using ApplicationContext = RUINORERP.Model.Context.ApplicationContext;
 using Image = System.Drawing.Image;
 
@@ -851,8 +853,14 @@ namespace RUINORERP.UI.FM
                     foreach (var group in groupedDeletes)
                     {
                         long businessId = group.Key;
-                        var ownerTableName = group.First()?.OwnerTableName ?? typeof(tb_FM_ExpenseClaim).Name;
+                        var ownerTableName = group.First()?.OwnerTableName;
                         var fileIds = group.Select(img => img.FileId).Where(id => id > 0).ToList();
+
+                        // 如果OwnerTableName为空，通过反射推断
+                        if (string.IsNullOrEmpty(ownerTableName))
+                        {
+                            ownerTableName = pendingDeleteImages.Where(c => c.BusinessId == businessId).First().OwnerTableName;
+                        }
 
                         if (fileIds.Count > 0 && businessId > 0)
                         {
@@ -941,8 +949,10 @@ namespace RUINORERP.UI.FM
                                 imageInfo.RelatedField,
                                 null);
 
+
                             var syncResult = new RUINORERP.Lib.BusinessImage.ImageSyncResult
                             {
+
                                 BusinessId = imageInfo.BusinessId > 0 ? imageInfo.BusinessId : businessEntity.PrimaryKeyID,
                                 ImageIds = new List<long> { uploadResponse?.FileStorageInfos?.FirstOrDefault()?.FileId ?? 0 },
                                 SyncType = RUINORERP.Lib.BusinessImage.ImageSyncType.Add,
@@ -956,6 +966,19 @@ namespace RUINORERP.UI.FM
                             {
                                 RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
                                 MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
+                                if (imageInfo.Cell is ImageWebCell webCell)
+                                {
+                                    var model = webCell.ImageWebModel;
+                                    if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
+                                    {
+                                        //对应的单元格的数据也要更新
+                                        model.FileId = uploadResponse.FileStorageInfos.FirstOrDefault()?.FileId ?? 0;
+                                        model.StoragePath = uploadResponse.FileStorageInfos.FirstOrDefault()?.StoragePath ?? "";
+                                        model.StorageFileName = uploadResponse.FileStorageInfos.FirstOrDefault()?.StorageFileName ?? "";
+                                        model.OriginalFileName = uploadResponse.FileStorageInfos.FirstOrDefault()?.OriginalFileName ?? "";
+                                    }
+
+                                }
 
                                 // 确保实体被标记为已修改，以便后续保存时能更新到数据库
                                 if (businessEntity.ActionStatus != ActionStatus.新增)
@@ -1087,6 +1110,7 @@ namespace RUINORERP.UI.FM
                             MainForm.Instance.uclog.AddLog($"图片同步失败: {errorMsg}");
                             return false;
                         }
+
 
                         MainForm.Instance.PrintInfoLog("图片同步完成");
                     }

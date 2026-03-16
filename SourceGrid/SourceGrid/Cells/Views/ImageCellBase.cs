@@ -149,29 +149,6 @@ namespace SourceGrid.Cells.Views
 
         #endregion
 
-        #region 事件
-
-        /// <summary>
-        /// 图片加载完成事件
-        /// </summary>
-        public event EventHandler<ImageLoadEventArgs> ImageLoaded;
-
-        /// <summary>
-        /// 图片加载失败事件
-        /// </summary>
-        public event EventHandler<ImageLoadErrorEventArgs> ImageLoadError;
-
-        /// <summary>
-        /// 图片上传完成事件
-        /// </summary>
-        public event EventHandler<ImageUploadEventArgs> ImageUploaded;
-
-        /// <summary>
-        /// 图片删除完成事件
-        /// </summary>
-        public event EventHandler<ImageDeleteEventArgs> ImageDeleted;
-
-        #endregion
 
         #region 构造函数
 
@@ -426,7 +403,6 @@ namespace SourceGrid.Cells.Views
                         catch (Exception ex)
                         {
                             // 触发错误事件
-                            ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
                             return null;
                         }
                         finally
@@ -457,7 +433,6 @@ namespace SourceGrid.Cells.Views
                             if (!_disposed && !cancellationToken.IsCancellationRequested)
                             {
                                 GridImage = image;
-                                ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
                                 // 触发重绘
                                 context.Grid.InvalidateCell(context.Position);
                             }
@@ -468,7 +443,6 @@ namespace SourceGrid.Cells.Views
                         if (!_disposed && !cancellationToken.IsCancellationRequested)
                         {
                             GridImage = image;
-                            ImageLoaded?.Invoke(this, new ImageLoadEventArgs(fileId, image));
                             // 触发重绘
                             context.Grid.InvalidateCell(context.Position);
                         }
@@ -481,7 +455,6 @@ namespace SourceGrid.Cells.Views
             }
             catch (Exception ex)
             {
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
             }
         }
 
@@ -516,7 +489,6 @@ namespace SourceGrid.Cells.Views
             }
             catch (Exception ex)
             {
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(fileId, ex));
             }
         }
 
@@ -818,130 +790,7 @@ namespace SourceGrid.Cells.Views
 
         #endregion
 
-        #region 图片管理功能
-
-        /// <summary>
-        /// 上传图片
-        /// </summary>
-        /// <param name="imageBytes">图片字节数据</param>
-        /// <param name="fileName">文件名</param>
-        /// <param name="businessType">业务类型</param>
-        /// <returns>上传结果</returns>
-        public virtual Task<string> UploadImageAsync(byte[] imageBytes, string fileName, int businessType = 0)
-        {
-            try
-            {
-                // 生成唯一的long型ID
-                long fileId = ImageWebPickEditor.GenerateUniqueLongId();
-                
-                // 创建ImageInfo对象
-                var imageInfo = new ImageInfo
-                {
-                    FileId = fileId,
-                    OriginalFileName = fileName,
-                    ImageData = imageBytes,
-                    FileExtension = Path.GetExtension(fileName),
-                    FileSize = imageBytes.Length,
-                    Status = ImageStatus.PendingUpload
-                };
-
-                // 添加到图片状态管理器
-                ImageStateManager.Instance.AddImage(imageInfo);
-                
-                // 触发上传完成事件
-                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, true));
-                return Task.FromResult(fileId.ToString());
-            }
-            catch (Exception ex)
-            {
-                // 触发上传失败事件
-                ImageUploaded?.Invoke(this, new ImageUploadEventArgs(fileName, false, ex));
-                return Task.FromResult<string>(null);
-            }
-        }
-
-        /// <summary>
-        /// 删除图片
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>删除结果</returns>
-        public virtual Task<bool> DeleteImageAsync(long imageId)
-        {
-            try
-            {
-                // 从图片状态管理器获取图片信息
-                var imageInfo = ImageStateManager.Instance.GetImageInfo(imageId);
-                if (imageInfo != null)
-                {
-                    // 更新图片状态为待删除
-                    imageInfo.Status = ImageStatus.PendingDelete;
-                    ImageStateManager.Instance.AddImage(imageInfo);
-                }
-                else
-                {
-                    // 如果图片信息不存在，创建一个新的待删除状态的图片信息
-                    var newImageInfo = new ImageInfo
-                    {
-                        FileId = imageId,
-                        Status = ImageStatus.PendingDelete
-                    };
-                    ImageStateManager.Instance.AddImage(newImageInfo);
-                }
-
-                // 触发删除完成事件
-                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, true));
-                return Task.FromResult(true);
-            }
-            catch (Exception ex)
-            {
-                // 触发删除失败事件
-                ImageDeleted?.Invoke(this, new ImageDeleteEventArgs(imageId, false, ex));
-                return Task.FromResult(false);
-            }
-        }
-
-        /// <summary>
-        /// 下载图片
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>图片字节数据</returns>
-        public virtual async Task<byte[]> DownloadImageAsync(long imageId)
-        {
-            try
-            {
-                // 使用GridImageService下载图片
-                return await GridImageServiceManager.CurrentService.DownloadImageAsync(imageId);
-            }
-            catch (Exception ex)
-            {
-                // 触发下载失败事件
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 获取图片信息
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <returns>图片信息</returns>
-        public virtual async Task<GridImageInfo> GetImageInfoAsync(long imageId)
-        {
-            try
-            {
-                // 使用GridImageService获取图片信息
-                return await GridImageServiceManager.CurrentService.GetImageInfoAsync(imageId);
-            }
-            catch (Exception ex)
-            {
-                // 触发获取信息失败事件
-                ImageLoadError?.Invoke(this, new ImageLoadErrorEventArgs(imageId, ex));
-                return null;
-            }
-        }
-
-        #endregion
-
+     
         #region 状态管理
 
         /// <summary>
@@ -1020,11 +869,7 @@ namespace SourceGrid.Cells.Views
                     _gridImage = null;
                 }
 
-                // 清除事件
-                ImageLoaded = null;
-                ImageLoadError = null;
-                ImageUploaded = null;
-                ImageDeleted = null;
+                 
 
                 // 清空哈希值
                 _currentImageHash = string.Empty;
@@ -1046,125 +891,5 @@ namespace SourceGrid.Cells.Views
         #endregion
     }
 
-    /// <summary>
-    /// 图片加载事件参数
-    /// </summary>
-    public class ImageLoadEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 文件ID
-        /// </summary>
-        public long FileId { get; }
 
-        /// <summary>
-        /// 图片对象
-        /// </summary>
-        public System.Drawing.Image Image { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="image">图片对象</param>
-        public ImageLoadEventArgs(long fileId, System.Drawing.Image image)
-        {
-            FileId = fileId;
-            Image = image;
-        }
-    }
-
-    /// <summary>
-    /// 图片加载错误事件参数
-    /// </summary>
-    public class ImageLoadErrorEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 文件ID
-        /// </summary>
-        public long FileId { get; }
-
-        /// <summary>
-        /// 错误信息
-        /// </summary>
-        public Exception Error { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="fileId">文件ID</param>
-        /// <param name="error">错误信息</param>
-        public ImageLoadErrorEventArgs(long fileId, Exception error)
-        {
-            FileId = fileId;
-            Error = error;
-        }
-    }
-
-    /// <summary>
-    /// 图片上传事件参数
-    /// </summary>
-    public class ImageUploadEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 文件名
-        /// </summary>
-        public string FileName { get; }
-
-        /// <summary>
-        /// 是否成功
-        /// </summary>
-        public bool Success { get; }
-
-        /// <summary>
-        /// 错误信息
-        /// </summary>
-        public Exception Error { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="fileName">文件名</param>
-        /// <param name="success">是否成功</param>
-        /// <param name="error">错误信息</param>
-        public ImageUploadEventArgs(string fileName, bool success, Exception error = null)
-        {
-            FileName = fileName;
-            Success = success;
-            Error = error;
-        }
-    }
-
-    /// <summary>
-    /// 图片删除事件参数
-    /// </summary>
-    public class ImageDeleteEventArgs : EventArgs
-    {
-        /// <summary>
-        /// 图片ID
-        /// </summary>
-        public long ImageId { get; }
-
-        /// <summary>
-        /// 是否成功
-        /// </summary>
-        public bool Success { get; }
-
-        /// <summary>
-        /// 错误信息
-        /// </summary>
-        public Exception Error { get; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="imageId">图片ID</param>
-        /// <param name="success">是否成功</param>
-        /// <param name="error">错误信息</param>
-        public ImageDeleteEventArgs(long imageId, bool success, Exception error = null)
-        {
-            ImageId = imageId;
-            Success = success;
-            Error = error;
-        }
-    }
 }

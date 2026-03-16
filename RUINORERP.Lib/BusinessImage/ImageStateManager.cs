@@ -14,7 +14,7 @@ namespace RUINORERP.Lib.BusinessImage
         private static readonly ImageStateManager _instance = new ImageStateManager();
         private readonly Dictionary<long, ImageInfo> _images = new Dictionary<long, ImageInfo>();
         private readonly object _lock = new object();
-        
+
         /// <summary>
         /// 是否启用详细日志
         /// </summary>
@@ -24,7 +24,7 @@ namespace RUINORERP.Lib.BusinessImage
         /// 单例实例
         /// </summary>
         public static ImageStateManager Instance => _instance;
-        
+
         /// <summary>
         /// 获取当前队列中的图片总数
         /// </summary>
@@ -38,7 +38,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 获取待上传图片数量
         /// </summary>
@@ -52,7 +52,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 获取待删除图片数量
         /// </summary>
@@ -79,7 +79,7 @@ namespace RUINORERP.Lib.BusinessImage
         }
 
         /// <summary>
-        /// 添加图片
+        /// 添加图片1
         /// </summary>
         /// <param name="imageInfo">图片信息</param>
         public void AddImage(ImageInfo imageInfo)
@@ -98,7 +98,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 移除图片
         /// </summary>
@@ -114,7 +114,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 获取待上传图片
         /// </summary>
@@ -128,7 +128,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return result;
             }
         }
-        
+
         /// <summary>
         /// 获取待删除图片
         /// </summary>
@@ -142,7 +142,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return result;
             }
         }
-        
+
         /// <summary>
         /// 获取图片状态
         /// </summary>
@@ -159,7 +159,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return ImageStatus.Normal;
             }
         }
-        
+
         /// <summary>
         /// 获取图片信息
         /// </summary>
@@ -176,7 +176,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return null;
             }
         }
-        
+
         /// <summary>
         /// 更新图片状态
         /// </summary>
@@ -193,7 +193,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 清空所有图片状态
         /// </summary>
@@ -206,7 +206,7 @@ namespace RUINORERP.Lib.BusinessImage
                 Log($"清空所有图片状态: 移除 {count} 张图片");
             }
         }
-        
+
         /// <summary>
         /// 重置状态
         /// </summary>
@@ -218,7 +218,7 @@ namespace RUINORERP.Lib.BusinessImage
         /// <summary>
         /// 添加图片（7参数重载）
         /// </summary>
-        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status, long businessId, string storagePath)
+        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status, long businessId, string OwnerTableName, string storagePath = "")
         {
             var imageInfo = new ImageInfo
             {
@@ -226,6 +226,7 @@ namespace RUINORERP.Lib.BusinessImage
                 ImageId = imageId,
                 OriginalFileName = fileName,
                 FileName = fileName,
+                OwnerTableName = "",
                 ImageData = imageData,
                 Status = status,
                 BusinessId = businessId,
@@ -236,15 +237,9 @@ namespace RUINORERP.Lib.BusinessImage
             };
             AddImage(imageInfo);
         }
-        
-        /// <summary>
-        /// 添加图片（5参数重载）
-        /// </summary>
-        public void AddImage(object cell, long imageId, string fileName, byte[] imageData, ImageStatus status)
-        {
-            AddImage(cell, imageId, fileName, imageData, status, 0, string.Empty);
-        }
-        
+
+
+
         /// <summary>
         /// 移除已处理的图片（操作完成后调用）
         /// </summary>
@@ -257,7 +252,7 @@ namespace RUINORERP.Lib.BusinessImage
                 Log($"移除已处理图片: {count} 张");
             }
         }
-        
+
         /// <summary>
         /// 移除已处理的图片（按单元格）
         /// </summary>
@@ -276,7 +271,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 移除已处理的图片（按图片ID列表）
         /// </summary>
@@ -284,7 +279,7 @@ namespace RUINORERP.Lib.BusinessImage
         {
             if (imageIds == null || imageIds.Count == 0)
                 return;
-                
+
             lock (_lock)
             {
                 foreach (var imageId in imageIds)
@@ -294,7 +289,7 @@ namespace RUINORERP.Lib.BusinessImage
                 Log($"移除已处理图片(按ID列表): {imageIds.Count} 张");
             }
         }
-        
+
         /// <summary>
         /// 获取待上传图片（获取后直接移除，由调用方保证操作成功）
         /// </summary>
@@ -307,7 +302,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return pendingImages;
             }
         }
-        
+
         /// <summary>
         /// 获取待删除图片（获取后直接移除，由调用方保证操作成功）
         /// </summary>
@@ -320,7 +315,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return pendingImages;
             }
         }
-        
+
         /// <summary>
         /// 根据单元格获取图片
         /// </summary>
@@ -331,7 +326,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return _images.Values.Where(img => img.Cell == cell).ToList();
             }
         }
-        
+
         /// <summary>
         /// 获取所有图片
         /// </summary>
@@ -342,7 +337,7 @@ namespace RUINORERP.Lib.BusinessImage
                 return _images.Values.ToList();
             }
         }
-        
+
         /// <summary>
         /// 批量移除图片
         /// </summary>
@@ -359,7 +354,7 @@ namespace RUINORERP.Lib.BusinessImage
                 }
             }
         }
-        
+
         /// <summary>
         /// 清理过期的图片信息（超过指定分钟数且仍为待处理状态的图片）
         /// </summary>
@@ -368,11 +363,11 @@ namespace RUINORERP.Lib.BusinessImage
             lock (_lock)
             {
                 var expireTime = DateTime.Now.AddMinutes(-expireMinutes);
-                var expiredImages = _images.Where(kv => 
-                    kv.Value.ModifiedAt < expireTime && 
+                var expiredImages = _images.Where(kv =>
+                    kv.Value.ModifiedAt < expireTime &&
                     (kv.Value.Status == ImageStatus.PendingUpload || kv.Value.Status == ImageStatus.PendingDelete))
                     .ToList();
-                
+
                 foreach (var kv in expiredImages)
                 {
                     _images.Remove(kv.Key);

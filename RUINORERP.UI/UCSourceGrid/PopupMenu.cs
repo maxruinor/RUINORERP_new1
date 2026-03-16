@@ -944,14 +944,14 @@ namespace RUINORERP.UI.UCSourceGrid
 
                             // 正确流程：只预览图片，添加到状态管理器等待队列
                             // 实际的上传操作在单据保存时才执行
-                            
+
                             // 生成临时的唯一ID用于标识这张图片
                             long tempImageId = ImageWebPickEditor.GenerateUniqueLongId();
-                            
+
                             // 设置ImageInfo状态为待上传
                             imageInfo.FileId = tempImageId;
                             imageInfo.ImageId = tempImageId;
-                            
+
                             // 获取业务ID、业务表名和关联字段
                             var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                             if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
@@ -960,7 +960,7 @@ namespace RUINORERP.UI.UCSourceGrid
                                 imageInfo.OwnerTableName = valueImageWeb.OwnerTableName;
                                 imageInfo.RelatedField = valueImageWeb.RelatedField;
                             }
-                            
+
                             // 如果没有获取到，使用默认值
                             if (string.IsNullOrEmpty(imageInfo.OwnerTableName))
                             {
@@ -970,10 +970,10 @@ namespace RUINORERP.UI.UCSourceGrid
                             {
                                 imageInfo.RelatedField = "EvidenceImagePath";
                             }
-                            
+
                             // 添加到ImageStateManager等待队列（不立即上传）
                             _stateManager.AddImage(imageInfo);
-                            
+
                             // 更新ValueImageWeb模型，用于预览
                             if (model is SourceGrid.Cells.Models.ValueImageWeb imageWebModel)
                             {
@@ -982,17 +982,17 @@ namespace RUINORERP.UI.UCSourceGrid
                                 imageWebModel.OriginalFileName = fileName;
                                 imageWebModel.ImageData = imageBytes;
                             }
-                            
+
                             // 更新单元格值
                             cell.Value = tempImageId;
                             cell.Tag = imageInfo;
-                            
+
                             // 强制重绘
                             grid.Refresh();
-                            
+
                             // 更新编辑状态
                             UpdateCellEditState();
-                            
+
                             MainForm.Instance.PrintInfoLog("图片已添加到上传队列，将在保存单据时上传: " + fileName);
                         }
                         catch (Exception ex)
@@ -1036,8 +1036,8 @@ namespace RUINORERP.UI.UCSourceGrid
                                     // 正确流程：将图片标记为待删除状态，而不是立即删除
                                     // 实际删除操作在单据保存时才执行
                                     // 图片ID是全局唯一的，直接使用即可
-                                    
-                                    _stateManager.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete);
+
+                                    _stateManager.AddImage(cell, imageId, fileName, imageData, ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.OwnerTableName);
                                     MainForm.Instance.PrintInfoLog("图片已标记为待删除状态，将在保存时处理");
                                 }
 
@@ -1084,7 +1084,8 @@ namespace RUINORERP.UI.UCSourceGrid
             // 替换图片：将旧图片标记为待删除，将新图片标记为待上传
             System.Windows.Forms.ToolStripMenuItem item = (System.Windows.Forms.ToolStripMenuItem)sender;
             SourceGrid.Cells.Cell cell = (SourceGrid.Cells.Cell)item.Tag;
-
+            long BusinessId = 0;
+            string OwnerTableName = string.Empty;
             ValueImageWeb imageWeb = new ValueImageWeb();
             // 先处理旧图片
             if (cell.Value is ValueImageWeb valueImage)
@@ -1109,8 +1110,10 @@ namespace RUINORERP.UI.UCSourceGrid
                     var model = cell.Model.FindModel(typeof(SourceGrid.Cells.Models.ValueImageWeb));
                     if (model is SourceGrid.Cells.Models.ValueImageWeb valueImageWeb)
                     {
+                        BusinessId = valueImageWeb.BusinessId;
+                        OwnerTableName = valueImageWeb.OwnerTableName;
                         // 将旧图片标记为待删除状态
-                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, imageWeb.FileId, imageWeb.StorageFileName, imageWeb.ImageData, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.StoragePath);
+                        RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, imageWeb.FileId, imageWeb.StorageFileName, imageWeb.ImageData, RUINORERP.Lib.BusinessImage.ImageStatus.PendingDelete, valueImageWeb.BusinessId, valueImageWeb.OwnerTableName, valueImageWeb.StoragePath);
                     }
                 }
                 catch (Exception ex)
@@ -1121,9 +1124,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
 
             #endregion
-
-
-
 
 
             // 再选择新图片
@@ -1145,7 +1145,7 @@ namespace RUINORERP.UI.UCSourceGrid
                     long tempImageId = GenerateUniqueLongId();
 
                     // 将新图片标记为待上传状态
-                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
+                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.AddImage(cell, tempImageId, fileName, imageBytes, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload, BusinessId, OwnerTableName);
 
                     // 更新单元格值为临时ID，确保只存储图片ID
                     cell.Value = tempImageId;
@@ -1208,7 +1208,7 @@ namespace RUINORERP.UI.UCSourceGrid
             {
                 //如果用户不替换了，则清除上面添加到删除集合中的文件 
                 RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageWeb.FileId);
-                
+
             }
         }
 

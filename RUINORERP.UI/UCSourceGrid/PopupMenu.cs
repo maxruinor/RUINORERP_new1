@@ -1079,12 +1079,6 @@ namespace RUINORERP.UI.UCSourceGrid
             }
         }
 
-
-        /// <summary>
-        /// 实际处理逻辑是先删除，后上传
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void SiReplace_Click(object sender, EventArgs e)
         {
             // 替换图片：将旧图片标记为待删除，将新图片标记为待上传

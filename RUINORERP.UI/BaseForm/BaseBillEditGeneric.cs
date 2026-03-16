@@ -1653,18 +1653,222 @@ namespace RUINORERP.UI.BaseForm
             return false;
         }
 
+        ///// <summary>
+        ///// 同步图片（如果需要）
+        ///// 子类可以重写此方法以支持自定义的图片同步逻辑
+        ///// </summary>
+        ///// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
+        //protected virtual async Task<List<RUINORERP.Lib.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
+        //{
+        //    // 子类可以重写此方法，实现具体的图片同步逻辑
+        //    // 默认返回空列表，子类可以根据需要实现
+        //    return await Task.FromResult(new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>());
+        //}
         /// <summary>
         /// 同步图片（如果需要）
-        /// 子类可以重写此方法以支持自定义的图片同步逻辑
+        /// 通用实现：支持主表和子表图片的上传和删除
+        /// 使用泛型类型T（主表）和C（子表），通过反射查找对应的实体
         /// </summary>
         /// <returns>图片同步结果列表，空列表表示无图片需要同步或同步失败</returns>
         protected virtual async Task<List<RUINORERP.Lib.BusinessImage.ImageSyncResult>> SyncImagesIfNeeded()
         {
-            // 子类可以重写此方法，实现具体的图片同步逻辑
-            // 默认返回空列表，子类可以根据需要实现
-            return await Task.FromResult(new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>());
-        }
+            var results = new List<RUINORERP.Lib.BusinessImage.ImageSyncResult>();
+            var fileBusinessService = Startup.GetFromFac<FileBusinessService>();
 
+            try
+            {
+                // 1. 处理待删除图片队列（优先处理删除）
+                var pendingDeleteImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetAndLockPendingDeleteImages();
+                if (pendingDeleteImages.Count > 0)
+                {
+                    // 按业务ID分组
+                    var groupedDeletes = pendingDeleteImages.GroupBy(img => img.BusinessId);
+                    foreach (var group in groupedDeletes)
+                    {
+                        long businessId = group.Key;
+                        var ownerTableName = group.First()?.OwnerTableName ?? typeof(T).Name;
+                        var fileIds = group.Select(img => img.FileId).Where(id => id > 0).ToList();
+
+                        if (fileIds.Count > 0 && businessId > 0)
+                        {
+                            try
+                            {
+                                var deleteResponse = await fileBusinessService.DeleteImagesByIdsAsync(
+                                    businessId,
+                                    ownerTableName,
+                                    fileIds,
+                                    physicalDelete: false);
+
+                                var syncResult = new RUINORERP.Lib.BusinessImage.ImageSyncResult
+                                {
+                                    BusinessId = businessId,
+                                    ImageIds = fileIds,
+                                    SyncType = RUINORERP.Lib.BusinessImage.ImageSyncType.Delete,
+                                    IsSuccess = deleteResponse.IsSuccess,
+                                    ErrorMessage = deleteResponse.IsSuccess ? null : deleteResponse.ErrorMessage
+                                };
+                                results.Add(syncResult);
+
+                                // 删除成功后，从管理器中移除
+                                if (deleteResponse.IsSuccess)
+                                {
+                                    RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImages(fileIds);
+                                    MainForm.Instance.PrintInfoLog($"成功删除 {fileIds.Count} 张图片");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                logger?.LogError(ex, $"删除图片失败: BusinessId={businessId}");
+                                results.Add(new RUINORERP.Lib.BusinessImage.ImageSyncResult
+                                {
+                                    BusinessId = businessId,
+                                    ImageIds = fileIds,
+                                    SyncType = RUINORERP.Lib.BusinessImage.ImageSyncType.Delete,
+                                    IsSuccess = false,
+                                    ErrorMessage = ex.Message
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // 2. 处理待上传图片队列
+                var pendingUploadImages = RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.GetAndLockPendingUploadImages();
+                if (pendingUploadImages.Count > 0)
+                {
+                    foreach (var imageInfo in pendingUploadImages)
+                    {
+                        if (imageInfo.ImageData == null || imageInfo.ImageData.Length == 0)
+                        {
+                            logger?.LogWarning("跳过无数据的图片: FileId={FileId}", imageInfo.FileId);
+                            continue;
+                        }
+
+                        try
+                        {
+                            // 确定业务实体和关联字段
+                            BaseEntity businessEntity = null;
+
+                            // 根据OwnerTableName确定实体
+                            if (string.IsNullOrEmpty(imageInfo.OwnerTableName) && imageInfo.BusinessId > 0)
+                            {
+                                // 通过反射查找子表集合属性（子表类型名 + "s"）
+                                string detailCollectionPropertyName = typeof(C).Name + "s";
+                                var detailCollectionProperty = typeof(T).GetProperty(detailCollectionPropertyName);
+
+                                if (detailCollectionProperty != null && EditEntity != null)
+                                {
+                                    var detailList = detailCollectionProperty.GetValue(EditEntity) as IEnumerable<C>;
+                                    if (detailList != null)
+                                    {
+                                        foreach (var detail in detailList)
+                                        {
+                                            if (detail is BaseEntity baseDetail && baseDetail.PrimaryKeyID == imageInfo.BusinessId)
+                                            {
+                                                businessEntity = baseDetail;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 如果没有找到子表实体，检查是否是主表
+                                if (businessEntity == null && EditEntity != null && EditEntity.PrimaryKeyID == imageInfo.BusinessId)
+                                {
+                                    businessEntity = EditEntity as BaseEntity;
+                                }
+                            }
+                            else if (!string.IsNullOrEmpty(imageInfo.OwnerTableName))
+                            {
+                                // 如果有OwnerTableName，根据类型判断
+                                if (imageInfo.OwnerTableName == typeof(T).Name && EditEntity != null)
+                                {
+                                    businessEntity = EditEntity as BaseEntity;
+                                }
+                                else if (imageInfo.OwnerTableName == typeof(C).Name && EditEntity != null)
+                                {
+                                    // 通过反射查找子表集合属性
+                                    string detailCollectionPropertyName = typeof(C).Name + "s";
+                                    var detailCollectionProperty = typeof(T).GetProperty(detailCollectionPropertyName);
+
+                                    if (detailCollectionProperty != null)
+                                    {
+                                        var detailList = detailCollectionProperty.GetValue(EditEntity) as IEnumerable<C>;
+                                        if (detailList != null)
+                                        {
+                                            foreach (var detail in detailList)
+                                            {
+                                                if (detail is BaseEntity baseDetail && baseDetail.PrimaryKeyID == imageInfo.BusinessId)
+                                                {
+                                                    businessEntity = baseDetail;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (businessEntity == null)
+                            {
+                                logger?.LogWarning("无法找到业务实体: BusinessId={BusinessId}, OwnerTableName={OwnerTableName}", imageInfo.BusinessId, imageInfo.OwnerTableName);
+                                continue;
+                            }
+
+                            // 调用FileBusinessService上传
+                            var uploadResponse = await fileBusinessService.UploadImageAsync(
+                                businessEntity,
+                                imageInfo.FileName ?? imageInfo.OriginalFileName ?? "image.jpg",
+                                imageInfo.ImageData,
+                                imageInfo.RelatedField,
+                                null);
+
+                            var syncResult = new RUINORERP.Lib.BusinessImage.ImageSyncResult
+                            {
+                                BusinessId = imageInfo.BusinessId > 0 ? imageInfo.BusinessId : businessEntity.PrimaryKeyID,
+                                ImageIds = new List<long> { uploadResponse?.FileStorageInfos?.FirstOrDefault()?.FileId ?? 0 },
+                                SyncType = RUINORERP.Lib.BusinessImage.ImageSyncType.Add,
+                                IsSuccess = uploadResponse?.IsSuccess ?? false,
+                                ErrorMessage = uploadResponse?.IsSuccess == true ? null : uploadResponse?.ErrorMessage
+                            };
+                            results.Add(syncResult);
+
+                            // 上传成功后，更新状态并移除
+                            if (uploadResponse?.IsSuccess == true)
+                            {
+                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.RemoveImage(imageInfo.FileId);
+                                MainForm.Instance.PrintInfoLog($"成功上传图片: {imageInfo.FileName ?? imageInfo.OriginalFileName}");
+
+                                // 确保实体被标记为已修改，以便后续保存时能更新到数据库
+                                if (businessEntity.ActionStatus != ActionStatus.新增)
+                                {
+                                    businessEntity.ActionStatus = ActionStatus.修改;
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            logger?.LogError(ex, "上传图片失败: FileName={FileName}", imageInfo.FileName ?? imageInfo.OriginalFileName);
+                            results.Add(new RUINORERP.Lib.BusinessImage.ImageSyncResult
+                            {
+                                BusinessId = imageInfo.BusinessId > 0 ? imageInfo.BusinessId : (EditEntity as BaseEntity)?.PrimaryKeyID ?? 0,
+                                ImageIds = new List<long> { imageInfo.FileId },
+                                SyncType = RUINORERP.Lib.BusinessImage.ImageSyncType.Add,
+                                IsSuccess = false,
+                                ErrorMessage = ex.Message
+                            });
+                        }
+                    }
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "同步图片失败");
+                return results;
+            }
+        }
 
 
 

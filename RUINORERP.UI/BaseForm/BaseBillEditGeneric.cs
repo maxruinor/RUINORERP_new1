@@ -3012,8 +3012,10 @@ namespace RUINORERP.UI.BaseForm
                         {
                             // 调用提交成功后的处理逻辑（虚方法，子类可重写）
                             await AfterSubmitAsync();
-                            //提交后别人可以审核
-                            UNLock();
+                            //提交后别人可以审核 - 优化锁定处理
+                            UNLock(true); // 传递NeedUpdateUI=true参数，确保UI立即更新
+                            // 提交成功后强制刷新锁定状态显示
+                            await RefreshLockStatusAfterSubmit();
                             // 提交成功后更新所有UI状态，让按钮根据新状态重新评估
                             UpdateAllUIStates(EditEntity);
                         }
@@ -8499,6 +8501,36 @@ namespace RUINORERP.UI.BaseForm
                 MainForm.Instance.uclog.AddLog($"【{cbd.BizName}】批量解锁失败：{errorMsg}", UILogType.错误);
             }
             return true;
+        }
+
+
+
+        /// <summary>
+        /// 提交后刷新锁定状态（极简版）
+        /// 确保提交成功后锁定状态正确显示
+        /// </summary>
+        private async Task RefreshLockStatusAfterSubmit()
+        {
+            try
+            {
+                if (EditEntity?.PrimaryKeyID > 0)
+                {
+                    // 直接检查当前锁定状态并更新UI
+                    var lockInfo = await BillLockHelper.CheckBillLockStatusAsync(
+                        EditEntity.PrimaryKeyID, CurMenuInfo.MenuID, logger);
+                    
+                    // 立即更新UI锁定状态
+                    UpdateLockUI(lockInfo);
+                    
+                    // 记录状态更新日志
+                    logger?.LogDebug("提交后锁定状态刷新: 单据ID={BillId}, 锁定状态={IsLocked}", 
+                        EditEntity.PrimaryKeyID, lockInfo?.IsLocked ?? false);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "提交后刷新锁定状态失败");
+            }
         }
 
 

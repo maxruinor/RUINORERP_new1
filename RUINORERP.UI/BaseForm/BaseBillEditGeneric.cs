@@ -6743,14 +6743,39 @@ namespace RUINORERP.UI.BaseForm
 
             try
             {
-                // 核心步骤1: 使用BillLockHelper查询锁定状态
-                var lockInfo = await BillLockHelper.CheckBillLockStatusAsync(billId, CurMenuInfo.MenuID, logger);
+                // 优化：应用智能频率控制，避免频繁检测
+                if (!_frequencyController.ShouldDetectStatus(billId))
+                {
+                    // 使用缓存数据，避免频繁查询
+                    var cachedInfo = await GetCachedLockInfoAsync(billId);
+                    if (cachedInfo != null && !cachedInfo.IsExpired)
+                    {
+                        return (cachedInfo.IsLocked, !cachedInfo.IsLocked || cachedInfo.LockedUserId == MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID, cachedInfo);
+                    }
+                }
+
+                // 记录检测时间
+                _frequencyController.RecordDetection(billId);
+
+                // 优化：添加本地缓存检查，避免不必要的网络请求
+                var lockInfo = await GetCachedLockInfoAsync(billId);
+                
+                if (lockInfo == null || lockInfo.IsExpired)
+                {
+                    // 缓存过期或不存在，查询服务器
+                    lockInfo = await BillLockHelper.CheckBillLockStatusAsync(billId, CurMenuInfo.MenuID, logger);
+                    
+                    // 更新缓存
+                    if (lockInfo != null)
+                    {
+                        await UpdateLockCacheAsync(billId, lockInfo);
+                    }
+                }
 
                 // 判断锁定状态
                 bool isLocked = lockInfo != null && lockInfo.IsLocked;
                 string BillNo = lockInfo?.BillNo;
                 string lockStatusMsg = isLocked ? "已锁定" : "未锁定";
-
 
                 // 核心步骤2: 判断操作权限
                 long currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
@@ -6796,6 +6821,160 @@ namespace RUINORERP.UI.BaseForm
                 return (false, true, null);
             }
         }
+
+        #region 缓存优化方法
+
+        /// <summary>
+        /// 智能状态检测频率控制
+        /// 避免频繁的状态检测请求，提高性能
+        /// </summary>
+        private class StatusDetectionFrequencyController
+        {
+            private readonly Dictionary<long, DateTime> _lastDetectionTimes = new Dictionary<long, DateTime>();
+            private readonly TimeSpan _minDetectionInterval = TimeSpan.FromSeconds(3); // 最小检测间隔3秒
+            
+            /// <summary>
+            /// 检查是否需要执行状态检测
+            /// </summary>
+            /// <param name="billId">单据ID</param>
+            /// <returns>是否需要检测</returns>
+            public bool ShouldDetectStatus(long billId)
+            {
+                if (!_lastDetectionTimes.ContainsKey(billId))
+                {
+                    return true;
+                }
+                
+                var lastTime = _lastDetectionTimes[billId];
+                return DateTime.Now - lastTime > _minDetectionInterval;
+            }
+            
+            /// <summary>
+            /// 记录检测时间
+            /// </summary>
+            /// <param name="billId">单据ID</param>
+            public void RecordDetection(long billId)
+            {
+                _lastDetectionTimes[billId] = DateTime.Now;
+            }
+            
+            /// <summary>
+            /// 清理过期的检测记录
+            /// </summary>
+            public void CleanupExpiredRecords()
+            {
+                var expiredTime = DateTime.Now - TimeSpan.FromMinutes(10);
+                var expiredKeys = _lastDetectionTimes
+                    .Where(kvp => kvp.Value < expiredTime)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+                    
+                foreach (var key in expiredKeys)
+                {
+                    _lastDetectionTimes.Remove(key);
+                }
+            }
+        }
+
+        private readonly StatusDetectionFrequencyController _frequencyController = new StatusDetectionFrequencyController();
+
+        #region 简单事件驱动架构
+
+        /// <summary>
+        /// 状态变更事件参数
+        /// </summary>
+        public class StatusChangedEventArgs : EventArgs
+        {
+            public long BillId { get; set; }
+            public string OldStatus { get; set; }
+            public string NewStatus { get; set; }
+            public DateTime ChangeTime { get; set; }
+        }
+
+        /// <summary>
+        /// 状态变更事件
+        /// </summary>
+        public event EventHandler<StatusChangedEventArgs> StatusChanged;
+
+        /// <summary>
+        /// 触发状态变更事件
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="oldStatus">旧状态</param>
+        /// <param name="newStatus">新状态</param>
+        protected virtual void OnStatusChanged(long billId, string oldStatus, string newStatus)
+        {
+            try
+            {
+                StatusChanged?.Invoke(this, new StatusChangedEventArgs
+                {
+                    BillId = billId,
+                    OldStatus = oldStatus,
+                    NewStatus = newStatus,
+                    ChangeTime = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "触发状态变更事件失败: BillID={BillId}", billId);
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 获取缓存的锁信息
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁信息</returns>
+        private async Task<LockInfo> GetCachedLockInfoAsync(long billId)
+        {
+            try
+            {
+                // 使用ClientLockManagementService的缓存
+                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                if (lockService != null)
+                {
+                    var response = await lockService.CheckLockStatusAsync(billId);
+                    if (response.IsSuccess && response.LockInfo != null && !response.LockInfo.IsExpired)
+                    {
+                        return response.LockInfo;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogDebug(ex, "获取缓存锁信息失败: BillID={BillId}", billId);
+            }
+            
+            return null;
+        }
+
+        /// <summary>
+        /// 更新锁缓存
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="lockInfo">锁信息</param>
+        private async Task UpdateLockCacheAsync(long billId, LockInfo lockInfo)
+        {
+            try
+            {
+                // 使用ClientLockManagementService更新缓存
+                var lockService = Startup.GetFromFac<Network.Services.ClientLockManagementService>();
+                if (lockService != null && lockInfo != null)
+                {
+                    // 更新缓存，设置合理的过期时间
+                    lockInfo.LastUpdateTime = DateTime.Now;
+                    lockInfo.ExpireTime = DateTime.Now.AddMinutes(10); // 10分钟缓存
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogDebug(ex, "更新锁缓存失败: BillID={BillId}", billId);
+            }
+        }
+
+        #endregion
 
         /// <summary>
         /// 更新锁定UI显示（优化版）

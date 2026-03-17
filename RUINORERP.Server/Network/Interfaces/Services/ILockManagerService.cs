@@ -185,5 +185,12 @@ namespace RUINORERP.Server.Network.Interfaces.Services
         /// </summary>
         /// <returns>孤儿锁数量</returns>
         int GetOrphanedLockCount();
+        
+        /// <summary>
+        /// 批量检查锁状态（性能优化）
+        /// </summary>
+        /// <param name="billIds">单据ID数组</param>
+        /// <returns>锁状态字典，key为单据ID，value为锁信息</returns>
+        Task<Dictionary<long, LockInfo>> CheckLockStatusBatchAsync(long[] billIds);
     }
 }

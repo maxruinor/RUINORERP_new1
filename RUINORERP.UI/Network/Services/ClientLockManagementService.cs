@@ -1037,10 +1037,10 @@ namespace RUINORERP.UI.Network.Services
             }
         }
 
+     
         /// <summary>
-        /// 批量检查锁状态 v2.1.0优化
-        /// 支持同时检查多个单据的锁定状态，提高批量操作效率
-        /// 优化：移除全局锁，使用并行处理提高效率
+        /// 批量检查锁状态（性能优化版）
+        /// 使用并行处理减少网络请求延迟，提高批量操作效率
         /// </summary>
         /// <param name="billIds">要检查的单据ID列表</param>
         /// <param name="ct">取消令牌，用于取消异步操作</param>
@@ -1053,85 +1053,64 @@ namespace RUINORERP.UI.Network.Services
             if (billIds == null || !billIds.Any())
                 return new Dictionary<long, LockResponse>();
 
+            var stopwatch = Stopwatch.StartNew();
+            
             try
             {
-                _logger?.LogDebug("开始批量检查锁状态 - 单据数量: {Count}", billIds.Count);
-
-                var results = new ConcurrentDictionary<long, LockResponse>();
-                var currentUserId = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
-
-                // 分批处理，避免一次性发送过多请求
-                const int batchSize = 20; // 增加批量大小，提高处理效率
-                for (int i = 0; i < billIds.Count; i += batchSize)
+                // 限制批量查询大小，避免内存溢出
+                var limitedIds = billIds.Take(100).ToList();
+                
+                // 使用并行处理进行批量查询
+                var tasks = limitedIds.Select(async billId =>
                 {
-                    var batch = billIds.Skip(i).Take(batchSize).ToList();
-                    // 使用并行处理，每个单据独立处理，避免全局阻塞
-                    var batchTasks = batch.Select(async billId =>
+                    try
                     {
-                        try
-                        {
-                            // 获取当前单据的锁
-                            var billLock = _billLocks.GetOrAdd(billId, _ => new SemaphoreSlim(1, 1));
+                        var response = await CheckLockStatusAsync(billId, 0, ct);
+                        return (billId, response);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "批量检查单个单据失败: BillID={BillId}", billId);
+                        return (billId, LockResponseFactory.CreateFailedResponse($"检查失败: {ex.Message}"));
+                    }
+                });
+                
+                var results = await Task.WhenAll(tasks);
+                
+                var successResults = results
+                    .Where(r => r.Item2 != null)
+                    .ToDictionary(r => r.Item1, r => r.Item2);
 
-                            if (await billLock.WaitAsync(_operationTimeout, ct != default ? ct : _cancellationTokenSource.Token))
-                            {
-                                try
-                                {
-                                    // 首先检查本地缓存
-                                    var cachedStatus = await _clientCache.GetLockInfoAsync(billId);
-                                    if (cachedStatus != null && cachedStatus.IsLocked && !cachedStatus.IsExpired)
-                                    {
-                                        results[billId] = new LockResponse
-                                        {
-                                            IsSuccess = true,
-                                            LockInfo = cachedStatus,
-                                            Message = "从缓存获取"
-                                        };
-                                    }
-                                    else
-                                    {
-                                        // 缓存未命中，查询服务器
-                                        var response = await CheckLockStatusAsync(billId, 0, ct);
-                                        results[billId] = response;
-                                    }
-                                }
-                                finally
-                                {
-                                    billLock.Release();
-                                }
-                            }
-                            else
-                            {
-                                results[billId] = new LockResponse
-                                {
-                                    IsSuccess = false,
-                                    Message = "操作超时"
-                                };
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "检查单据 {BillId} 锁状态时发生异常", billId);
-                            results[billId] = new LockResponse
-                            {
-                                IsSuccess = false,
-                                Message = ex.Message
-                            };
-                        }
-                    });
+                _logger.LogDebug("批量检查锁状态完成: 查询数量={QueryCount}, 结果数量={ResultCount}, 耗时={ElapsedMs}ms",
+                    limitedIds.Count, successResults.Count, stopwatch.ElapsedMilliseconds);
 
-                    await Task.WhenAll(batchTasks);
-                }
-
-                _logger?.LogDebug("批量检查锁状态完成 - 成功: {Success}/{Total}",
-                    results.Values.Count(r => r.IsSuccess), billIds.Count);
-
-                return results.ToDictionary();
+                return successResults;
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "批量检查锁状态时发生异常");
-                throw;
+                _logger.LogError(ex, "批量检查锁状态时发生异常: BillIDs={BillIds}", string.Join(",", billIds));
+                
+                // 降级到单次查询
+                var fallbackResults = new Dictionary<long, LockResponse>();
+                foreach (var billId in billIds.Take(20))
+                {
+                    try
+                    {
+                        var response = await CheckLockStatusAsync(billId, 0, ct);
+                        fallbackResults[billId] = response;
+                    }
+                    catch (Exception innerEx)
+                    {
+                        _logger.LogWarning(innerEx, "批量检查降级查询失败: BillID={BillId}", billId);
+                        fallbackResults[billId] = LockResponseFactory.CreateFailedResponse($"降级查询失败: {innerEx.Message}");
+                    }
+                }
+                
+                return fallbackResults;
+            }
+            finally
+            {
+                stopwatch.Stop();
             }
         }
 

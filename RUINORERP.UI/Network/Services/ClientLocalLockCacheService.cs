@@ -25,14 +25,21 @@ namespace RUINORERP.UI.Network.Services
         private readonly object _syncLock = new object();
 
         /// <summary>
-        /// 缓存过期时间（分钟）
+        /// 缓存过期时间（分钟）- 优化为更合理的值
         /// </summary>
-        private const int CACHE_EXPIRY_MINUTES = 15;
+        private const int CACHE_EXPIRY_MINUTES = 30;
 
         /// <summary>
-        /// 同步间隔（分钟）
+        /// 同步间隔（分钟）- 减少同步频率
         /// </summary>
-        private const int SYNC_INTERVAL_MINUTES = 2;
+        private const int SYNC_INTERVAL_MINUTES = 5;
+
+        /// <summary>
+        /// 智能缓存过期策略 - 根据访问频率动态调整过期时间
+        /// </summary>
+        private readonly Dictionary<long, (LockInfo Info, int AccessCount)> _smartCache = new Dictionary<long, (LockInfo, int)>();
+        private readonly TimeSpan _highFrequencyThreshold = TimeSpan.FromMinutes(5);
+        private const int _highAccessThreshold = 3;
 
 
         private long currentUserId = 0;
@@ -67,6 +74,54 @@ namespace RUINORERP.UI.Network.Services
         }
 
 
+
+        /// <summary>
+        /// 智能缓存获取方法 - 根据访问频率动态调整缓存策略
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <returns>锁信息</returns>
+        private LockInfo GetFromSmartCache(long billId)
+        {
+            if (_smartCache.TryGetValue(billId, out var cacheEntry))
+            {
+                // 检查是否过期
+                if (cacheEntry.Info.IsExpired)
+                {
+                    _smartCache.Remove(billId);
+                    return null;
+                }
+                
+                // 更新访问计数
+                _smartCache[billId] = (cacheEntry.Info, cacheEntry.AccessCount + 1);
+                
+                return cacheEntry.Info;
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// 更新智能缓存
+        /// </summary>
+        /// <param name="billId">单据ID</param>
+        /// <param name="lockInfo">锁信息</param>
+        private void UpdateSmartCache(long billId, LockInfo lockInfo)
+        {
+            if (lockInfo == null) return;
+            
+            // 根据访问频率设置不同的过期时间
+            var accessCount = 0;
+            if (_smartCache.TryGetValue(billId, out var existingEntry))
+            {
+                accessCount = existingEntry.AccessCount;
+            }
+            
+            // 高频访问的单据设置更短的过期时间，确保数据新鲜度
+            var expireMinutes = accessCount >= _highAccessThreshold ? 5 : CACHE_EXPIRY_MINUTES;
+            lockInfo.ExpireTime = DateTime.Now.AddMinutes(expireMinutes);
+            
+            _smartCache[billId] = (lockInfo, accessCount + 1);
+        }
 
         /// <summary>
         /// 统一的缓存获取方法 - 只从本地缓存获取

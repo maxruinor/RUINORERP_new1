@@ -3,6 +3,8 @@ using RUINORERP.Global;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Responses;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.BaseForm
@@ -228,6 +230,81 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogError(ex, "刷新单据锁状态时发生异常: BillID={BillId}", billId);
                 return LockResponseFactory.CreateFailedResponse($"刷新异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 批量检查锁状态（性能优化）
+        /// 减少网络请求次数，提高批量操作效率
+        /// </summary>
+        /// <param name="billIds">单据ID数组</param>
+        /// <param name="logger">日志记录器(可选)</param>
+        /// <returns>锁状态字典，key为单据ID，value为锁信息</returns>
+        public static async Task<Dictionary<long, LockInfo>> CheckBillLockStatusBatchAsync(
+            long[] billIds,
+            ILogger logger = null)
+        {
+            try
+            {
+                if (billIds == null || billIds.Length == 0)
+                {
+                    return new Dictionary<long, LockInfo>();
+                }
+
+                // 限制批量查询大小，避免内存溢出
+                var limitedIds = billIds.Take(100).ToArray();
+                
+                logger?.LogDebug("批量检查锁状态: 单据数量={Count}", limitedIds.Length);
+                
+                // 使用并行处理进行批量查询
+                var tasks = limitedIds.Select(async billId =>
+                {
+                    try
+                    {
+                        var lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
+                        return (billId, lockInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogWarning(ex, "批量检查单个单据失败: BillID={BillId}", billId);
+                        return (billId, (LockInfo)null);
+                    }
+                });
+                
+                var results = await Task.WhenAll(tasks);
+                
+                var successResults = results
+                    .Where(r => r.Item2 != null)
+                    .ToDictionary(r => r.Item1, r => r.Item2);
+
+                logger?.LogDebug("批量检查锁状态完成: 成功数量={SuccessCount}, 总数={TotalCount}", 
+                    successResults.Count, limitedIds.Length);
+
+                return successResults;
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "批量检查锁状态时发生异常: BillIDs={BillIds}", string.Join(",", billIds ?? Array.Empty<long>()));
+                
+                // 降级到单次查询
+                var fallbackResults = new Dictionary<long, LockInfo>();
+                foreach (var billId in billIds.Take(20))
+                {
+                    try
+                    {
+                        var lockInfo = await CheckBillLockStatusAsync(billId, 0, logger);
+                        if (lockInfo != null)
+                        {
+                            fallbackResults[billId] = lockInfo;
+                        }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        logger?.LogWarning(innerEx, "批量检查降级查询失败: BillID={BillId}", billId);
+                    }
+                }
+                
+                return fallbackResults;
             }
         }
 

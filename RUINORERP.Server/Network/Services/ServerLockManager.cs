@@ -67,6 +67,62 @@ namespace RUINORERP.Server.Network.Services
         #region 构造函数和初始化
 
         /// <summary>
+        /// 批量检查锁状态（性能优化）
+        /// </summary>
+        /// <param name="billIds">单据ID数组</param>
+        /// <returns>锁状态字典，key为单据ID，value为锁信息</returns>
+        public async Task<Dictionary<long, LockInfo>> CheckLockStatusBatchAsync(long[] billIds)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            
+            if (billIds == null || billIds.Length == 0)
+            {
+                return new Dictionary<long, LockInfo>();
+            }
+
+            try
+            {
+                // 限制批量查询大小，避免内存溢出
+                var limitedIds = billIds.Take(1000).ToArray();
+                var results = new Dictionary<long, LockInfo>();
+
+                // 批量查询锁状态
+                foreach (var billId in limitedIds)
+                {
+                    if (_documentLocks.TryGetValue(billId, out var lockInfo))
+                    {
+                        // 检查锁是否已过期
+                        if (lockInfo.IsExpired)
+                        {
+                            // 清理过期锁
+                            _documentLocks.TryRemove(billId, out _);
+                            _logger.LogDebug("批量检查中清理过期锁: BillID={BillId}", billId);
+                            continue;
+                        }
+
+                        // 创建锁信息副本，避免直接引用
+                        var infoCopy = CreateLockInfoCopy(lockInfo);
+                        results[billId] = infoCopy;
+                    }
+                }
+
+                _logger.LogDebug("批量检查锁状态完成: 查询数量={QueryCount}, 结果数量={ResultCount}, 耗时={ElapsedMs}ms",
+                    limitedIds.Length, results.Count, stopwatch.ElapsedMilliseconds);
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "批量检查锁状态时发生异常: BillIDs={BillIds}", string.Join(",", billIds));
+                return new Dictionary<long, LockInfo>();
+            }
+            finally
+            {
+                stopwatch.Stop();
+            }
+        }
+
+        /// <summary>
         /// 广播锁定状态变化给所有客户端
         /// </summary>
         /// <param name="lockedDocument">锁定文档信息</param>

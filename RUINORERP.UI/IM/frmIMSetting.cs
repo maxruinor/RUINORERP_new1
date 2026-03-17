@@ -101,7 +101,7 @@ namespace RUINORERP.UI.IM
         }
 
         /// <summary>
-        /// 保存配置
+        /// 保存配置1
         /// </summary>
         private void SaveConfig()
         {

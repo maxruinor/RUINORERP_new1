@@ -105,5 +105,19 @@ namespace RUINORERP.Model.ConfigModel
         /// </summary>
         public decimal AmountCalculationTolerance { get; set; } = 0.0001m;
 
+        /// <summary>
+        /// 【死锁优化】销售出库审核时财务独立事务（默认启用）
+        /// 适用条件：仅在启用财务模块时生效
+        /// 核心特性：
+        /// 1. 主事务只处理库存、订单等核心业务（缩短事务时间，降低死锁风险）
+        /// 2. 财务单据在主事务提交后独立生成
+        /// 3. 财务单据生成失败不影响出库审核成功（保证物流优先）
+        /// 4. 失败的财务单据需要人工手动补单或系统定时任务重试
+        /// 注意事项：
+        /// - 启用后，财务部门可能需要手动补录未自动生成的应收/应付单据
+        /// - 建议配套开发财务单据生成监控和定时重试机制
+        /// </summary>
+        public bool EnableIndependentFinanceTransactionInSaleOut { get; set; } = true;
+
     }
 }

@@ -762,7 +762,6 @@ namespace RUINORERP.Model
         public virtual tb_ProjectGroup tb_projectgroup { get; set; }
 
 
-
         [SugarColumn(IsIgnore = true)]
         [Navigate(NavigateType.OneToMany, nameof(tb_SaleOutDetail.SaleOut_MainID))]
         public virtual List<tb_SaleOutDetail> tb_SaleOutDetails { get; set; }

@@ -188,6 +188,7 @@ namespace RUINORERP.UI.BI
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkAutoAuditPreReceive);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableARAutoOffsetPreReceive);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders);
+            this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableIndependentFinanceTransactionInSaleOut);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableFinancialModule);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableMultiCurrency);
             this.kryptonGroupBox1.Panel.Controls.Add(this.chkEnableVoucherModule);
@@ -304,6 +305,16 @@ namespace RUINORERP.UI.BI
             this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Size = new System.Drawing.Size(218, 20);
             this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.TabIndex = 210;
             this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders.Values.Text = "全额预收款订单销售出库自动审核";
+            // 
+            // chkEnableIndependentFinanceTransactionInSaleOut
+            // 
+            this.chkEnableIndependentFinanceTransactionInSaleOut.Checked = true;
+            this.chkEnableIndependentFinanceTransactionInSaleOut.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkEnableIndependentFinanceTransactionInSaleOut.Location = new System.Drawing.Point(16, 343);
+            this.chkEnableIndependentFinanceTransactionInSaleOut.Name = "chkEnableIndependentFinanceTransactionInSaleOut";
+            this.chkEnableIndependentFinanceTransactionInSaleOut.Size = new System.Drawing.Size(380, 20);
+            this.chkEnableIndependentFinanceTransactionInSaleOut.TabIndex = 211;
+            this.chkEnableIndependentFinanceTransactionInSaleOut.Values.Text = "销售出库审核时财务独立事务（默认启用·死锁优化·失败需手动补单）";
             // 
             // chkEnableFinancialModule
             // 
@@ -828,6 +839,7 @@ namespace RUINORERP.UI.BI
         private Krypton.Toolkit.KryptonCheckBox chkEnableAutoRefundOnOrderCancel;
         private Krypton.Toolkit.KryptonCheckBox chkAutoAuditExpensePaymentRecord;
         private Krypton.Toolkit.KryptonCheckBox chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders;
+        private Krypton.Toolkit.KryptonCheckBox chkEnableIndependentFinanceTransactionInSaleOut;
         private Krypton.Toolkit.KryptonCheckBox chkEnableRowLevelAuth;
     }
 }

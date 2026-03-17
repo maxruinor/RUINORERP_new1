@@ -84,7 +84,7 @@ namespace RUINORERP.Extensions
                     },
                     MoreSettings = new ConnMoreSettings
                     {
-                        IsWithNoLockQuery = true,
+                        IsWithNoLockQuery = true, // 查询时使用 WITH(NOLOCK)
                         DisableNvarchar = true,
                         IsAutoRemoveDataCache = true,
                     }

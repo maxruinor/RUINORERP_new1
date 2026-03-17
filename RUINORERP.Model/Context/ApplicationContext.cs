@@ -297,6 +297,7 @@ namespace RUINORERP.Model.Context
         #endregion
 
 
+
         /// <summary>
         /// 角色级的属性配置，作用于第一个角色组,即当前角色
         /// </summary>

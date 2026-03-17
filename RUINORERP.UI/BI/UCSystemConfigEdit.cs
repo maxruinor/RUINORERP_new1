@@ -119,6 +119,9 @@ namespace RUINORERP.UI.BI
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.AutoAuditExpensePaymentRecord, chkAutoAuditExpensePaymentRecord, false);
             DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableAutoAuditSalesOutboundForFullPrepaymentOrders, chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders, false);
 
+            // 【死锁优化】财务独立事务开关
+            DataBindingHelper.BindData4CheckBox<FMConfiguration>(fMConfiguration, t => t.EnableIndependentFinanceTransactionInSaleOut, chkEnableIndependentFinanceTransactionInSaleOut, false);
+
             // 金额计算容差阈值数据绑定
             DataBindingHelper.BindData4TextBox<FMConfiguration>(fMConfiguration, t => t.AmountCalculationTolerance, txtAmountCalculationTolerance, BindDataType4TextBox.Money, false);
             #endregion

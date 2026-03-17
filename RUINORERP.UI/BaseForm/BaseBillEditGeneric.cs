@@ -3012,10 +3012,6 @@ namespace RUINORERP.UI.BaseForm
                         {
                             // 调用提交成功后的处理逻辑（虚方法，子类可重写）
                             await AfterSubmitAsync();
-                            //提交后别人可以审核 - 优化锁定处理
-                            UNLock(true); // 传递NeedUpdateUI=true参数，确保UI立即更新
-                            // 提交成功后强制刷新锁定状态显示
-                            await RefreshLockStatusAfterSubmit();
                             // 提交成功后更新所有UI状态，让按钮根据新状态重新评估
                             UpdateAllUIStates(EditEntity);
                         }
@@ -3152,7 +3148,6 @@ namespace RUINORERP.UI.BaseForm
                         ReviewResult reviewResult = await Review();
                         if (!reviewResult.Succeeded)
                         {
-                            UNLock();
                             // 审核失败时恢复审核按钮状态
                             if (btnReview != null && EditEntity != null)
                             {
@@ -3169,7 +3164,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"审核单据失败：{ex.Message}");
-                        UNLock();
                         // 审核异常时恢复审核按钮状态
                         if (btnReview != null && EditEntity != null)
                         {

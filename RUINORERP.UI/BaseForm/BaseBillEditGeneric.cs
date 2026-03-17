@@ -3205,7 +3205,6 @@ namespace RUINORERP.UI.BaseForm
                         bool rsReReview = await ReReview();
                         if (!rsReReview)
                         {
-                            UNLock();
                             // 反审失败时恢复反审按钮状态
                             if (btnReverseReview != null && EditEntity != null)
                             {
@@ -3222,7 +3221,6 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"反审单据失败：{ex.Message}");
-                        UNLock();
                         // 反审异常时恢复反审按钮状态
                         if (btnReverseReview != null && EditEntity != null)
                         {
@@ -8499,33 +8497,6 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        /// <summary>
-        /// 提交后刷新锁定状态（极简版）
-        /// 确保提交成功后锁定状态正确显示
-        /// </summary>
-        private async Task RefreshLockStatusAfterSubmit()
-        {
-            try
-            {
-                if (EditEntity?.PrimaryKeyID > 0)
-                {
-                    // 直接检查当前锁定状态并更新UI
-                    var lockInfo = await BillLockHelper.CheckBillLockStatusAsync(
-                        EditEntity.PrimaryKeyID, CurMenuInfo.MenuID, logger);
-                    
-                    // 立即更新UI锁定状态
-                    UpdateLockUI(lockInfo);
-                    
-                    // 记录状态更新日志
-                    logger?.LogDebug("提交后锁定状态刷新: 单据ID={BillId}, 锁定状态={IsLocked}", 
-                        EditEntity.PrimaryKeyID, lockInfo?.IsLocked ?? false);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "提交后刷新锁定状态失败");
-            }
-        }
 
 
 

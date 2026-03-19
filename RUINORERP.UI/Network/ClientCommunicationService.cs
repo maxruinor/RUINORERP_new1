@@ -1835,14 +1835,21 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                             {
                                 try
                                 {
-                                    // 使用Invoke确保在UI线程执行
+                                    // 使用BeginInvoke替代Invoke，避免死锁风险
+                                    // 如果在UI线程上，直接调用；否则通过BeginInvoke异步执行
                                     if (MainForm.Instance.InvokeRequired)
                                     {
-                                        MainForm.Instance.Invoke(async () =>
+                                        MainForm.Instance.BeginInvoke(new Action(async () =>
                                         {
-                                            // 调用UpdateSys方法，显示消息框并强制更新
-                                            await MainForm.Instance.UpdateSys(true, true);
-                                        });
+                                            try
+                                            {
+                                                await MainForm.Instance.UpdateSys(true, true);
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                System.Diagnostics.Debug.WriteLine($"UpdateSys错误: {ex.Message}");
+                                            }
+                                        }));
                                     }
                                     else
                                     {

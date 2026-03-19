@@ -81,7 +81,12 @@ namespace RUINORERP.UI
 
                     if (count > 0)
                     {
-                        _mainForm.Invoke(new Action(() => ProcessLogsInUiThread(logsToProcess, count)));
+                        // 使用BeginInvoke替代Invoke，避免阻塞日志处理线程
+                        // 如果UI线程繁忙，日志会异步延迟处理，不会导致死锁
+                        if (_mainForm.IsHandleCreated)
+                        {
+                            _mainForm.BeginInvoke(new Action(() => ProcessLogsInUiThread(logsToProcess, count)));
+                        }
                     }
                 }
                 catch (Exception ex)

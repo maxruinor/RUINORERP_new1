@@ -948,7 +948,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
-                var inventoryGroups = new Dictionary&lt;(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)&gt;();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)>();
 
 
                 foreach (var child in entity.tb_SaleOrderDetails)

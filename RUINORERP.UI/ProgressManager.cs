@@ -189,11 +189,12 @@ namespace RUINORERP.UI
         {
             try
             {
-                var workAction = (Func<BackgroundWorker, Task>)e.Argument; // 修改为 Func<Task>
-                SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+                var workAction = (Func<BackgroundWorker, Task>)e.Argument;
 
-                // 同步执行异步操作，使用ConfigureAwait(false)避免上下文捕获
-                workAction(_worker).ConfigureAwait(false).GetAwaiter().GetResult();
+                // 使用Task.Run在后台线程执行，避免阻塞和死锁风险
+                // 不再设置新的SynchronizationContext，保持原有上下文隔离
+                var task = Task.Run(() => workAction(_worker));
+                task.Wait(); // BackgroundWorker的DoWork事件本身就在后台线程执行，这里Wait是安全的
 
                 e.Result = null;
             }

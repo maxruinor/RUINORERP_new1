@@ -798,8 +798,27 @@ namespace RUINORERP.UI.Network.Services
 
             try
             {
-                // 停止服务，使用ConfigureAwait(false)避免上下文捕获导致的死锁
-                StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                // 停止服务 - 使用Task.Run在后台线程执行，避免阻塞
+                // 添加超时机制，防止无限等待
+                try
+                {
+                    using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
+                    {
+                        var stopTask = Task.Run(async () => await StopAsync().ConfigureAwait(false), timeoutCts.Token);
+                        stopTask.Wait(timeoutCts.Token);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    System.Diagnostics.Debug.WriteLine("LockManagementService停止操作超时");
+                }
+                catch (AggregateException ae)
+                {
+                    foreach (var e in ae.InnerExceptions)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"LockManagementService停止异常: {e.Message}");
+                    }
+                }
 
                 // 释放定时器
                 _lockRefreshTimer?.Dispose();

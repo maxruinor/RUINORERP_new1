@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using RUINORERP.Model;
 using RUINORERP.UI.Common;
 using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace RUINORERP.UI.WorkFlowDesigner
 {
@@ -52,8 +53,20 @@ namespace RUINORERP.UI.WorkFlowDesigner
         {
             try
             {
-                // 异步转同步，使用ConfigureAwait(false)避免上下文捕获导致的死锁
-                OpenMenuAsync(menuId, logger).ConfigureAwait(false).GetAwaiter().GetResult();
+                // 使用Task.Run在后台线程执行，避免阻塞调用线程
+                // 添加超时机制，防止无限等待
+                using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                {
+                    var task = Task.Run(() => OpenMenuAsync(menuId, logger), timeoutCts.Token);
+                    try
+                    {
+                        task.Wait(timeoutCts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        logger?.LogWarning("打开菜单操作超时");
+                    }
+                }
             }
             catch (Exception ex)
             {

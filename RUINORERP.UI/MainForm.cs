@@ -490,8 +490,8 @@ namespace RUINORERP.UI
             #endregion
 
 
-            // 移除禁用跨线程检查的代码，这是不安全的做法
-            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+            // 注意：不再禁用跨线程检查，确保所有UI操作都在UI线程执行
+            // 如需从后台线程更新UI，请使用 BeginInvoke 方法
 
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;
@@ -510,16 +510,52 @@ namespace RUINORERP.UI
 
             _menuTracker = Startup.GetFromFac<MenuTracker>();
 
-            // 设置5分钟自动保存定时器
+            // 设置5分钟自动保存定时器（回调在ThreadPool线程执行，需要线程安全访问UI）
             _autoSaveTimer = new System.Threading.Timer(_ =>
             {
-                _menuTracker.AutoSave();
+                try
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            try { _menuTracker.AutoSave(); }
+                            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"AutoSave错误: {ex.Message}"); }
+                        }));
+                    }
+                    else
+                    {
+                        _menuTracker.AutoSave();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"定时器回调错误: {ex.Message}");
+                }
             }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
-            // 设置1分钟客户端版本信息更新定时器
+            // 设置1分钟客户端版本信息更新定时器（回调在ThreadPool线程执行，需要线程安全访问UI）
             _clientVersionUpdateTimer = new System.Threading.Timer(_ =>
             {
-                UpdateCurrentUserModuleAndForm();
+                try
+                {
+                    if (this.InvokeRequired)
+                    {
+                        this.BeginInvoke(new Action(() =>
+                        {
+                            try { UpdateCurrentUserModuleAndForm(); }
+                            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"UpdateCurrentUserModuleAndForm错误: {ex.Message}"); }
+                        }));
+                    }
+                    else
+                    {
+                        UpdateCurrentUserModuleAndForm();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"定时器回调错误: {ex.Message}");
+                }
             }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
 

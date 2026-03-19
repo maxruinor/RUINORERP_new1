@@ -13,7 +13,7 @@ namespace RUINORERP.Repository.UnitOfWorks
 
 
     /// <summary>
-    /// 事务管理类
+    /// 事务管理类，确认后的优化版本
     /// </summary>
     public class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository
     {

@@ -127,7 +127,7 @@ namespace RUINORERP.UI.BaseForm
     // - 移除了多余的状态缓存和重复检查逻辑
     // - 保留了必要的重复调用防护机制
     // - 简化了事件订阅和处理流程
-    //添加取消提交的方法
+    //添加取消提交的方法1
     // ==============================================================================
     public partial class BaseBillEditGeneric<T, C> : BaseBillEdit, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : BaseEntity, new() where C : class, new()
     {
@@ -459,12 +459,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 5. 字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
-
-                // 6. 关键修复：验证UI状态与数据库状态一致性
-                if (entity.PrimaryKeyID > 0) // 仅对已保存的实体进行一致性验证
-                {
-                    _ = Task.Run(async () => await VerifyUIStateConsistencyAsync(entity));
-                }
+        
             }
             catch (Exception ex)
             {
@@ -507,108 +502,7 @@ namespace RUINORERP.UI.BaseForm
             }
         }
 
-        /// <summary>
-        /// 验证UI状态与数据库状态一致性
-        /// </summary>
-        /// <param name="entity">要验证的实体</param>
-        /// <returns>一致性验证结果</returns>
-        protected async virtual Task<bool> VerifyUIStateConsistencyAsync(BaseEntity entity)
-        {
-            if (entity == null || entity.PrimaryKeyID <= 0 || StateManager == null)
-                return true; // 未保存的实体不需要验证
 
-            try
-            {
-                // 获取UI中显示的状态
-                var uiStatus = StateManager.GetBusinessStatus(entity);
-                
-                // 从数据库重新加载实体，获取实际状态
-                var reloadedEntity = await ReloadEntityFromDatabaseAsync(entity);
-                if (reloadedEntity == null)
-                {
-                    logger?.LogWarning("无法从数据库重新加载实体，跳过一致性验证");
-                    return true;
-                }
-                
-                var dbStatus = StateManager.GetBusinessStatus(reloadedEntity);
-                
-                // 比较状态是否一致
-                if (!Equals(uiStatus, dbStatus))
-                {
-                    logger?.LogWarning($"UI状态与数据库状态不一致: UI={uiStatus}, DB={dbStatus}");
-                    
-                    // 在UI线程中显示警告
-                    if (this.InvokeRequired)
-                    {
-                        this.Invoke(new Action(() => 
-                        {
-                            MainForm.Instance?.uclog.AddLog($"单据状态不一致，请刷新确认", UILogType.警告);
-                        }));
-                    }
-                    else
-                    {
-                        MainForm.Instance?.uclog.AddLog($"单据状态不一致，请刷新确认", UILogType.警告);
-                    }
-                    
-                    return false;
-                }
-                
-                return true;
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "UI状态一致性验证失败");
-                return false; // 验证失败时返回false
-            }
-        }
-
-        /// <summary>
-        /// 从数据库重新加载实体
-        /// </summary>
-        /// <param name="entity">要重新加载的实体</param>
-        /// <returns>重新加载的实体</returns>
-        protected async virtual Task<T> ReloadEntityFromDatabaseAsync(BaseEntity entity)
-        {
-            try
-            {
-                if (entity == null || entity.PrimaryKeyID <= 0)
-                    return null;
-
-                // 获取对应的Controller
-                var controllerType = Type.GetType($"RUINORERP.Business.{typeof(T).Name}Controller`1");
-                if (controllerType == null)
-                {
-                    logger?.LogWarning($"无法找到{typeof(T).Name}对应的Controller");
-                    return null;
-                }
-
-                var controller = Startup.GetFromFacByName<object>(typeof(T).Name + "Controller");
-                if (controller == null)
-                {
-                    logger?.LogWarning($"无法从DI容器获取{typeof(T).Name}Controller");
-                    return null;
-                }
-
-                // 使用反射调用GetByIdAsync方法
-                var getByIdMethod = controller.GetType().GetMethod("GetByIdAsync", new[] { typeof(long) });
-                if (getByIdMethod == null)
-                {
-                    logger?.LogWarning($"{typeof(T).Name}Controller没有GetByIdAsync方法");
-                    return null;
-                }
-
-                var task = (Task)getByIdMethod.Invoke(controller, new object[] { entity.PrimaryKeyID });
-                await task.ConfigureAwait(false);
-                
-                var resultProperty = task.GetType().GetProperty("Result");
-                return (T)resultProperty?.GetValue(task);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "重新加载实体失败");
-                return null;
-            }
-        }
 
         /// <summary>
         /// 统一更新打印状态显示
@@ -2157,8 +2051,11 @@ namespace RUINORERP.UI.BaseForm
 
             #region 联查
 
+            // 修复：移除Task.Run，确保LoadRelatedDataToDropDownItemsAsync在UI线程执行
+            // 因为这个方法会直接操作UI控件（toolStripbtnRelatedQuery.DropDownItems.Add）
+            // 后台线程不能直接操作UI控件，会导致菜单项无法显示
             toolStripbtnRelatedQuery.DropDownItems.Clear();
-            _ = Task.Run(async () => await LoadRelatedDataToDropDownItemsAsync());
+            _ = LoadRelatedDataToDropDownItemsAsync();
             #endregion
 
             #region 单据联动

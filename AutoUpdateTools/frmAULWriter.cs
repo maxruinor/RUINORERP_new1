@@ -51,6 +51,16 @@ namespace AULWriter
         private readonly string configFilePath = Path.Combine(
             Application.StartupPath, "config", "config.xml");
 
+        // 排除规则缓存（性能优化）
+        private string[] _cachedExcludeFiles;
+        private string[] _cachedExcludeExtensions;
+        private string[] _cachedExcludeDirectories;
+        private DateTime _excludeCacheTime;
+        private readonly TimeSpan ExcludeCacheDuration = TimeSpan.FromSeconds(2);
+        private string _lastExcludeFilesText;
+        private string _lastExcludeExtensionsText;
+        private string _lastExcludeDirectoriesText;
+
 
         #region [基本入口构造函数]
 
@@ -414,18 +424,26 @@ namespace AULWriter
                     txtAutoUpdateXmlSavePath.Text = dataConfig.SavePath;
                     txtMainExePath.Text = dataConfig.EntryPoint;
                     StringBuilder sbexfiles = new StringBuilder();
-                    string[] exfiles = dataConfig.ExcludeFiles.Split(new string[] { "\n" }, StringSplitOptions.None);
+                    string[] exfiles = dataConfig.ExcludeFiles.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var item in exfiles)
                     {
-                        sbexfiles.Append(item).Append("\r\n");
+                        string trimmedItem = item.Trim();
+                        if (!string.IsNullOrEmpty(trimmedItem))
+                        {
+                            sbexfiles.Append(trimmedItem).Append("\r\n");
+                        }
                     }
                     txtExpt.Text = sbexfiles.ToString();
 
                     StringBuilder sbupfiles = new StringBuilder();
-                    string[] upfiles = dataConfig.UpdatedFiles.Split(new string[] { "\n" }, StringSplitOptions.None);
+                    string[] upfiles = dataConfig.UpdatedFiles.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
                     foreach (var item in upfiles)
                     {
-                        sbupfiles.Append(item).Append("\r\n");
+                        string trimmedItem = item.Trim();
+                        if (!string.IsNullOrEmpty(trimmedItem))
+                        {
+                            sbupfiles.Append(trimmedItem).Append("\r\n");
+                        }
                     }
                     txtPreVerUpdatedFiles.Text = sbupfiles.ToString();
                     
@@ -433,10 +451,14 @@ namespace AULWriter
                     StringBuilder sbExcludeExt = new StringBuilder();
                     if (!string.IsNullOrEmpty(dataConfig.ExcludeExtensions))
                     {
-                        string[] extFiles = dataConfig.ExcludeExtensions.Split(new string[] { "\n" }, StringSplitOptions.None);
+                        string[] extFiles = dataConfig.ExcludeExtensions.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (var item in extFiles)
                         {
-                            sbExcludeExt.Append(item).Append("\r\n");
+                            string trimmedItem = item.Trim();
+                            if (!string.IsNullOrEmpty(trimmedItem))
+                            {
+                                sbExcludeExt.Append(trimmedItem).Append("\r\n");
+                            }
                         }
                     }
                     txtExcludeExtensions.Text = sbExcludeExt.ToString();
@@ -445,10 +467,14 @@ namespace AULWriter
                     StringBuilder sbExcludeDir = new StringBuilder();
                     if (!string.IsNullOrEmpty(dataConfig.ExcludeDirectories))
                     {
-                        string[] dirFiles = dataConfig.ExcludeDirectories.Split(new string[] { "\n" }, StringSplitOptions.None);
+                        string[] dirFiles = dataConfig.ExcludeDirectories.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries);
                         foreach (var item in dirFiles)
                         {
-                            sbExcludeDir.Append(item).Append("\r\n");
+                            string trimmedItem = item.Trim();
+                            if (!string.IsNullOrEmpty(trimmedItem))
+                            {
+                                sbExcludeDir.Append(trimmedItem).Append("\r\n");
+                            }
                         }
                     }
                     txtExcludeDirectories.Text = sbExcludeDir.ToString();
@@ -1871,6 +1897,61 @@ namespace AULWriter
         #region [排除不需要的文件]
 
         /// <summary>
+        /// 刷新排除规则缓存（如果配置已更改或缓存已过期）
+        /// </summary>
+        private void RefreshExcludeCacheIfNeeded()
+        {
+            string currentExcludeFilesText = txtExpt.Text;
+            string currentExcludeExtensionsText = txtExcludeExtensions.Text;
+            string currentExcludeDirectoriesText = txtExcludeDirectories.Text;
+            
+            // 检查是否需要刷新缓存
+            bool needsRefresh = _cachedExcludeFiles == null ||
+                _lastExcludeFilesText != currentExcludeFilesText ||
+                _lastExcludeExtensionsText != currentExcludeExtensionsText ||
+                _lastExcludeDirectoriesText != currentExcludeDirectoriesText ||
+                (DateTime.Now - _excludeCacheTime) > ExcludeCacheDuration;
+            
+            if (!needsRefresh)
+                return;
+            
+            // 刷新缓存
+            _lastExcludeFilesText = currentExcludeFilesText;
+            _lastExcludeExtensionsText = currentExcludeExtensionsText;
+            _lastExcludeDirectoriesText = currentExcludeDirectoriesText;
+            
+            _cachedExcludeFiles = currentExcludeFilesText.Split(
+                new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).ToArray();
+            
+            _cachedExcludeExtensions = currentExcludeExtensionsText
+                .Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim().ToLower())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .ToArray();
+            
+            _cachedExcludeDirectories = currentExcludeDirectoriesText.Split(
+                new[] { "\r\n", "\n", "\r" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).ToArray();
+            
+            _excludeCacheTime = DateTime.Now;
+        }
+
+        /// <summary>
+        /// 强制刷新排除规则缓存
+        /// </summary>
+        private void ForceRefreshExcludeCache()
+        {
+            _cachedExcludeFiles = null;
+            _cachedExcludeExtensions = null;
+            _cachedExcludeDirectories = null;
+            _lastExcludeFilesText = null;
+            _lastExcludeExtensionsText = null;
+            _lastExcludeDirectoriesText = null;
+            RefreshExcludeCacheIfNeeded();
+        }
+
+        /// <summary>
         /// 检查文件是否应该被排除
         /// </summary>
         /// <param name="filePath">文件路径</param>
@@ -1885,11 +1966,19 @@ namespace AULWriter
             
             try
             {
-                AppendLog($"检查文件是否排除：{filePath}");
+                // 标准化路径分隔符：将所有路径统一为Windows格式
+                string normalizedFilePath = filePath.Replace('/', Path.DirectorySeparatorChar)
+                                                   .Replace('\\', Path.DirectorySeparatorChar);
                 
-                // 获取排除文件列表
-                string[] excludeFiles = txtExpt.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                AppendLog($"排除文件列表大小：{excludeFiles.Length}");
+                AppendLog($"检查文件是否排除：{normalizedFilePath}");
+                
+                // 获取排除文件列表（使用缓存优化性能）
+                RefreshExcludeCacheIfNeeded();
+                string[] excludeFiles = _cachedExcludeFiles;
+                AppendLog($"排除文件列表大小：{excludeFiles?.Length ?? 0}");
+                
+                // 获取文件名
+                string fileName = Path.GetFileName(normalizedFilePath);
                 
                 // 检查文件是否在排除列表中
                 foreach (string excludeRule in excludeFiles)
@@ -1901,26 +1990,35 @@ namespace AULWriter
                     
                     AppendLog($"检查排除规则：{trimmedRule}");
                     
-                    // 支持四种匹配方式：
-                    // 1. 完全匹配
-                    if (filePath.Trim().Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
+                    // 1. 完全匹配（路径）
+                    if (normalizedFilePath.Trim().Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
-                        AppendLog($"文件 {filePath} 被排除：完全匹配排除规则 {trimmedRule}");
+                        AppendLog($"文件 {normalizedFilePath} 被排除：完全匹配排除规则 {trimmedRule}");
                         return true;
                     }
                     
                     // 2. 文件名匹配（不考虑路径）
-                    string fileName = Path.GetFileName(filePath);
                     if (fileName.Equals(trimmedRule, StringComparison.OrdinalIgnoreCase))
                     {
-                        AppendLog($"文件 {filePath} 被排除：文件名匹配排除规则 {trimmedRule}");
+                        AppendLog($"文件 {normalizedFilePath} 被排除：文件名匹配排除规则 {trimmedRule}");
                         return true;
+                    }
+                    
+                    // 3. 通配符匹配（支持 * 和 ?）
+                    if (trimmedRule.Contains('*') || trimmedRule.Contains('?'))
+                    {
+                        if (MatchesWildcard(normalizedFilePath, trimmedRule) || 
+                            MatchesWildcard(fileName, trimmedRule))
+                        {
+                            AppendLog($"文件 {normalizedFilePath} 被排除：通配符匹配排除规则 {trimmedRule}");
+                            return true;
+                        }
                     }
                 }
                 
                 // 检查排除目录设置
-                string[] excludeDirectories = txtExcludeDirectories.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                AppendLog($"排除目录列表大小：{excludeDirectories.Length}");
+                string[] excludeDirectories = _cachedExcludeDirectories;
+                AppendLog($"排除目录列表大小：{excludeDirectories?.Length ?? 0}");
                 
                 foreach (string excludeDirRule in excludeDirectories)
                 {
@@ -1930,24 +2028,20 @@ namespace AULWriter
                     
                     AppendLog($"检查排除目录规则：{trimmedRule}");
                     
-                    // 3. 目录匹配（新增功能）
-                    if (IsDirectoryExcluded(filePath, trimmedRule))
+                    // 4. 目录匹配
+                    if (IsDirectoryExcluded(normalizedFilePath, trimmedRule))
                     {
-                        AppendLog($"文件 {filePath} 被排除：所在目录匹配排除规则 {trimmedRule}");
+                        AppendLog($"文件 {normalizedFilePath} 被排除：所在目录匹配排除规则 {trimmedRule}");
                         return true;
                     }
                 }
                 
                 // 检查文件扩展名是否在排除列表中
-                var fileExtension = Path.GetExtension(filePath).ToLower();
+                var fileExtension = Path.GetExtension(normalizedFilePath).ToLower();
                 if (!string.IsNullOrEmpty(fileExtension))
                 {
-                    // 从配置中读取排除后缀名
-                    var excludeExtensions = txtExcludeExtensions.Text
-                        .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(ext => ext.Trim().ToLower())
-                        .Where(ext => !string.IsNullOrEmpty(ext))
-                        .ToArray();
+                    // 从缓存中读取排除后缀名
+                    var excludeExtensions = _cachedExcludeExtensions;
                     
                     AppendLog($"排除后缀名列表：{string.Join(", ", excludeExtensions)}");
                     AppendLog($"文件扩展名：{fileExtension}");
@@ -1955,17 +2049,17 @@ namespace AULWriter
                     // 检查文件扩展名是否在排除列表中
                     if (excludeExtensions.Contains(fileExtension))
                     {
-                        AppendLog($"文件 {filePath} 被排除：扩展名 {fileExtension} 在排除列表中");
+                        AppendLog($"文件 {normalizedFilePath} 被排除：扩展名 {fileExtension} 在排除列表中");
                         return true;
                     }
                     else
                     {
-                        AppendLog($"文件 {filePath} 未被排除：扩展名 {fileExtension} 不在排除列表中");
+                        AppendLog($"文件 {normalizedFilePath} 未被排除：扩展名 {fileExtension} 不在排除列表中");
                     }
                 }
                 else
                 {
-                    AppendLog($"文件 {filePath} 未被排除：没有扩展名");
+                    AppendLog($"文件 {normalizedFilePath} 未被排除：没有扩展名");
                 }
             }
             catch (Exception ex)
@@ -1980,6 +2074,33 @@ namespace AULWriter
         }
 
         /// <summary>
+        /// 使用通配符匹配字符串
+        /// </summary>
+        /// <param name="input">输入字符串</param>
+        /// <param name="pattern">通配符模式（支持 * 和 ?）</param>
+        /// <returns>如果匹配返回true</returns>
+        private bool MatchesWildcard(string input, string pattern)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(pattern))
+                    return false;
+                
+                // 将通配符转换为正则表达式
+                string regexPattern = "^" + System.Text.RegularExpressions.Regex.Escape(pattern)
+                    .Replace("\\*", ".*")
+                    .Replace("\\?", ".") + "$";
+                
+                return System.Text.RegularExpressions.Regex.IsMatch(
+                    input, regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// 检查文件所在目录是否被排除
         /// </summary>
         /// <param name="filePath">文件路径</param>
@@ -1989,14 +2110,21 @@ namespace AULWriter
         {
             try
             {
+                // 标准化排除规则
+                string normalizedRule = excludeRule.TrimEnd('\\', '/')
+                                                   .Replace('/', Path.DirectorySeparatorChar)
+                                                   .Replace('\\', Path.DirectorySeparatorChar);
+                
+                // 获取文件所在目录
+                string directoryPath = Path.GetDirectoryName(filePath) ?? string.Empty;
+                directoryPath = directoryPath.Replace('/', Path.DirectorySeparatorChar)
+                                            .Replace('\\', Path.DirectorySeparatorChar);
+                
                 // 检查排除规则是否为目录模式（以斜杠或反斜杠结尾）
                 if (excludeRule.EndsWith("\\") || excludeRule.EndsWith("/"))
                 {
-                    string directoryPath = Path.GetDirectoryName(filePath) ?? string.Empty;
-                    string normalizedRule = excludeRule.TrimEnd('\\', '/');
-                    
-                    // 检查文件是否在排除目录中
-                    if (directoryPath.StartsWith(normalizedRule, StringComparison.OrdinalIgnoreCase))
+                    // 使用路径段匹配而非简单的StartsWith
+                    if (IsPathStartsWithSegment(directoryPath, normalizedRule))
                     {
                         return true;
                     }
@@ -2010,11 +2138,16 @@ namespace AULWriter
                 }
                 else
                 {
-                    // 检查文件路径是否包含排除目录（通配符模式）
-                    if (filePath.Contains("\\" + excludeRule + "\\") ||
-                        filePath.Contains("/" + excludeRule + "/") ||
-                        filePath.StartsWith(excludeRule + "\\") ||
-                        filePath.StartsWith(excludeRule + "/"))
+                    // 使用路径段匹配
+                    if (IsPathStartsWithSegment(directoryPath, normalizedRule))
+                    {
+                        return true;
+                    }
+                    
+                    // 兼容旧逻辑：检查文件路径是否包含排除目录
+                    string sep = Path.DirectorySeparatorChar.ToString();
+                    if (filePath.Contains(sep + normalizedRule + sep) ||
+                        filePath.StartsWith(normalizedRule + sep, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;
                     }
@@ -2026,6 +2159,39 @@ namespace AULWriter
             }
             
             return false;
+        }
+
+        /// <summary>
+        /// 检查路径是否以指定目录段开头（更精确的路径匹配）
+        /// </summary>
+        /// <param name="path">完整路径</param>
+        /// <param name="startDirectory">起始目录名</param>
+        /// <returns>如果路径以该目录段开头返回true</returns>
+        private bool IsPathStartsWithSegment(string path, string startDirectory)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(startDirectory))
+                return false;
+            
+            // 标准化路径
+            path = path.Replace('/', Path.DirectorySeparatorChar)
+                      .Replace('\\', Path.DirectorySeparatorChar);
+            
+            // 分割路径段
+            string[] pathParts = path.Split(Path.DirectorySeparatorChar);
+            string[] startParts = startDirectory.Split(Path.DirectorySeparatorChar);
+            
+            // 如果路径段数少于起始目录段数，不可能匹配
+            if (pathParts.Length < startParts.Length)
+                return false;
+            
+            // 逐段比较
+            for (int i = 0; i < startParts.Length; i++)
+            {
+                if (!pathParts[i].Equals(startParts[i], StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+            
+            return true;
         }
 
 
@@ -2107,6 +2273,8 @@ namespace AULWriter
                         dataConfig.BaseDir = txtTargetDirectory.Text;
                         dataConfig.BaseExeVersion = txtBaseExeVersion.Text;
                         dataConfig.UseBaseExeVersion = chkUseBaseVersion.Checked;
+                        dataConfig.ExcludeExtensions = txtExcludeExtensions.Text;
+                        dataConfig.ExcludeDirectories = txtExcludeDirectories.Text;
 
                         // 序列化并保存
                         SerializeXmlHelper.SerializeXml(dataConfig, saveFileDialog.FileName);

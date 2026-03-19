@@ -521,27 +521,8 @@ namespace RUINORERP.UI.BaseForm
                     // 删除操作需要特殊处理
                     break;
                 case MenuItemEnums.保存:
-                    // 防止重复点击：立即禁用保存按钮
-                    var saveButton = toolStripButtonSave;
-                    bool wasEnabled = saveButton?.Enabled ?? true;
-                    if (saveButton != null)
-                    {
-                        saveButton.Enabled = false;
-                    }
-                    
-                    try
-                    {
-                        // 保存操作是异步的
-                        _ = Save(true);
-                    }
-                    finally
-                    {
-                        // 确保按钮恢复可用状态
-                        if (saveButton != null)
-                        {
-                            saveButton.Enabled = wasEnabled;
-                        }
-                    }
+                    // 保存操作是异步的，需要等待完成后再更新UI状态
+                    _ = HandleSaveAsync();
                     break;
                 case MenuItemEnums.提交:
                     // 提交操作是异步的
@@ -598,6 +579,46 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+
+        /// <summary>
+        /// 异步处理保存操作
+        /// 正确等待保存完成后再更新UI状态，避免按钮状态错误恢复
+        /// </summary>
+        private async Task HandleSaveAsync()
+        {
+            // 防止重复点击：立即禁用保存按钮
+            var saveButton = toolStripButtonSave;
+            if (saveButton != null)
+            {
+                saveButton.Enabled = false;
+            }
+
+            try
+            {
+                // 等待保存操作完成
+                await Save(true);
+
+                // 保存成功后，UI状态由Save方法内部的UpdateAllUIStates调用负责更新
+                // 不需要在这里手动恢复按钮状态
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "保存操作失败");
+                MainForm.Instance.uclog?.AddLog($"保存失败：{ex.Message}", UILogType.错误);
+
+                // 保存失败时，根据当前实体状态恢复按钮状态
+                if (saveButton != null && BoundEntity != null)
+                {
+                    // 如果实体有未保存的更改，保持按钮启用
+                    saveButton.Enabled = BoundEntity.HasChanged;
+                }
+                else if (saveButton != null)
+                {
+                    // 其他情况，禁用按钮
+                    saveButton.Enabled = false;
+                }
+            }
+        }
 
         #region 定义所有工具栏的方法 参数在这一级能确认的。可以定义 在这，在下一级的。就不在这定义
 

@@ -2458,7 +2458,7 @@ SendCommandWithResponseAsync 恢复执行并返回响应
                 catch (Exception ex)
                 {
                     _clientEventManager.OnErrorOccurred(new Exception($"带响应命令发送失败: {ex.Message}", ex));
-                    // 如果是操作取消异常，重新抛出
+                    // 如果是操作取消异常，重新抛出1
                     if (ex is OperationCanceledException)
                     {
                         throw;

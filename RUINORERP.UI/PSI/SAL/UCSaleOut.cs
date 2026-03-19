@@ -192,87 +192,152 @@ namespace RUINORERP.UI.PSI.SAL
 
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {
-            //加载关联的单据
-            if (base.EditEntity is tb_SaleOut saleOut)
-            {
-                if (saleOut.SOrder_ID.HasValue)
-                {
-                    var rqp = new Model.CommonModel.RelatedQueryParameter();
-                    rqp.bizType = BizType.销售订单;
-                    rqp.billId = saleOut.SOrder_ID.Value;
-                    ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
-                    RelatedMenuItem.Name = $"{rqp.billId}";
-                    RelatedMenuItem.Tag = rqp;
-                    RelatedMenuItem.Text = $"{rqp.bizType}:{saleOut.SaleOrderNo}";
-                    RelatedMenuItem.Click += base.MenuItem_Click;
-                    if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(saleOut.SOrder_ID.Value.ToString()))
-                    {
-                        toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
-                    }
+            // 加载关联的单据（在后台线程执行，避免UI卡顿）
+            List<ToolStripMenuItem> menuItems = new List<ToolStripMenuItem>();
+            string errorMessage = null;
 
-                    if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
+            try
+            {
+                // 在后台线程执行数据查询和菜单项创建
+                await Task.Run(() =>
+                {
+                    if (base.EditEntity is tb_SaleOut saleOut)
                     {
-                        foreach (var item in saleOut.tb_SaleOutRes)
+                        // 添加销售订单
+                        if (saleOut.SOrder_ID.HasValue)
                         {
-                            var rqpSub = new Model.CommonModel.RelatedQueryParameter();
-                            rqpSub.bizType = BizType.销售退回单;
-                            rqpSub.billId = item.SaleOutRe_ID;
-                            ToolStripMenuItem RelatedMenuItemSub = new ToolStripMenuItem();
-                            RelatedMenuItemSub.Name = $"{rqpSub.billId}";
-                            RelatedMenuItemSub.Tag = rqpSub;
-                            RelatedMenuItemSub.Text = $"{rqpSub.bizType}:{item.ReturnNo}";
-                            RelatedMenuItemSub.Click += base.MenuItem_Click;
-                            if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(rqpSub.billId.ToString()))
+                            var rqp = new Model.CommonModel.RelatedQueryParameter();
+                            rqp.bizType = BizType.销售订单;
+                            rqp.billId = saleOut.SOrder_ID.Value;
+                            ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                            RelatedMenuItem.Name = $"{rqp.billId}";
+                            RelatedMenuItem.Tag = rqp;
+                            RelatedMenuItem.Text = $"{rqp.bizType}:{saleOut.SaleOrderNo}";
+                            RelatedMenuItem.Click += base.MenuItem_Click;
+                            menuItems.Add(RelatedMenuItem);
+
+                            // 添加销售退回单
+                            if (saleOut.tb_SaleOutRes != null && saleOut.tb_SaleOutRes.Count > 0)
                             {
-                                toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItemSub);
+                                foreach (var item in saleOut.tb_SaleOutRes)
+                                {
+                                    var rqpSub = new Model.CommonModel.RelatedQueryParameter();
+                                    rqpSub.bizType = BizType.销售退回单;
+                                    rqpSub.billId = item.SaleOutRe_ID;
+                                    ToolStripMenuItem RelatedMenuItemSub = new ToolStripMenuItem();
+                                    RelatedMenuItemSub.Name = $"{rqpSub.billId}";
+                                    RelatedMenuItemSub.Tag = rqpSub;
+                                    RelatedMenuItemSub.Text = $"{rqpSub.bizType}:{item.ReturnNo}";
+                                    RelatedMenuItemSub.Click += base.MenuItem_Click;
+                                    menuItems.Add(RelatedMenuItemSub);
+                                }
                             }
                         }
 
+                        // 添加应收应付
+                        if (saleOut.DataStatus >= (int)DataStatus.确认)
+                        {
+                            // 查询应收应付数据（在后台线程执行）
+                            var receivablePayables = MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
+                                                                .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
+                                                                && c.CustomerVendor_ID == saleOut.CustomerVendor_ID
+                                                                    && c.SourceBizType == (int)BizType.销售出库单
+                                                                && c.SourceBillId == saleOut.SaleOut_MainID)
+                                                                .ToList();
+
+                            foreach (var item in receivablePayables)
+                            {
+                                var rqp = new Model.CommonModel.RelatedQueryParameter();
+                                if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
+                                {
+                                    rqp.bizType = BizType.应付款单;
+                                }
+                                else
+                                {
+                                    rqp.bizType = BizType.应收款单;
+                                }
+                                rqp.billId = item.ARAPId;
+                                ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
+                                RelatedMenuItem.Name = $"{rqp.billId}";
+                                RelatedMenuItem.Tag = rqp;
+                                if (item.IsForCommission)
+                                {
+                                    RelatedMenuItem.Text = $"{rqp.bizType}[佣金]:{item.ARAPNo}";
+                                }
+                                else
+                                {
+                                    RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
+                                }
+
+                                RelatedMenuItem.Click += base.MenuItem_Click;
+                                menuItems.Add(RelatedMenuItem);
+                            }
+                        }
                     }
+                });
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+                MainForm.Instance.uclog?.AddLog($"加载关联数据失败: {ex.Message}", Global.UILogType.错误);
+            }
+
+            // 在UI线程更新菜单（确保UI操作在UI线程执行）
+            if (this.InvokeRequired)
+            {
+                this.Invoke((MethodInvoker)delegate
+                {
+                    UpdateRelatedQueryMenu(menuItems, errorMessage);
+                });
+            }
+            else
+            {
+                UpdateRelatedQueryMenu(menuItems, errorMessage);
+            }
+
+            // 调用基类方法
+            await base.LoadRelatedDataToDropDownItemsAsync();
+        }
+
+        /// <summary>
+        /// 更新联查菜单
+        /// </summary>
+        /// <param name="menuItems">菜单项列表</param>
+        /// <param name="errorMessage">错误信息</param>
+        private void UpdateRelatedQueryMenu(List<ToolStripMenuItem> menuItems, string errorMessage)
+        {
+            try
+            {
+                if (errorMessage != null)
+                {
+                    toolStripbtnRelatedQuery.Visible = false;
+                    return;
                 }
 
-                //如果有出库，则查应收
-                if (saleOut.DataStatus >= (int)DataStatus.确认)
-                {
-                    var receivablePayables = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_ReceivablePayable>()
-                                                                    .Where(c => c.ARAPStatus >= (int)ARAPStatus.待审核
-                                                                    && c.CustomerVendor_ID == saleOut.CustomerVendor_ID
-                                                                        && c.SourceBizType == (int)BizType.销售出库单
-                                                                    && c.SourceBillId == saleOut.SaleOut_MainID)
-                                                                    .ToListAsync();
-                    foreach (var item in receivablePayables)
-                    {
-                        var rqp = new Model.CommonModel.RelatedQueryParameter();
-                        if (item.ReceivePaymentType == (int)ReceivePaymentType.付款)
-                        {
-                            rqp.bizType = BizType.应付款单;
-                        }
-                        else
-                        {
-                            rqp.bizType = BizType.应收款单;
-                        }
-                        rqp.billId = item.ARAPId;
-                        ToolStripMenuItem RelatedMenuItem = new ToolStripMenuItem();
-                        RelatedMenuItem.Name = $"{rqp.billId}";
-                        RelatedMenuItem.Tag = rqp;
-                        if (item.IsForCommission)
-                        {
-                            RelatedMenuItem.Text = $"{rqp.bizType}[佣金]:{item.ARAPNo}";
-                        }
-                        else
-                        {
-                            RelatedMenuItem.Text = $"{rqp.bizType}:{item.ARAPNo}";
-                        }
+                // 清空现有菜单项
+                toolStripbtnRelatedQuery.DropDownItems.Clear();
 
-                        RelatedMenuItem.Click += base.MenuItem_Click;
-                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(item.ARAPId.ToString()))
+                // 添加新菜单项（去重）
+                if (menuItems != null && menuItems.Count > 0)
+                {
+                    foreach (var menuItem in menuItems)
+                    {
+                        if (!toolStripbtnRelatedQuery.DropDownItems.ContainsKey(menuItem.Name))
                         {
-                            toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
+                            toolStripbtnRelatedQuery.DropDownItems.Add(menuItem);
                         }
                     }
+                    toolStripbtnRelatedQuery.Visible = true;
+                }
+                else
+                {
+                    toolStripbtnRelatedQuery.Visible = false;
                 }
             }
-            base.LoadRelatedDataToDropDownItemsAsync();
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog?.AddLog($"更新联查菜单失败: {ex.Message}", Global.UILogType.错误);
+            }
         }
         public override void BindData(tb_SaleOut entity, ActionStatus actionStatus)
         {

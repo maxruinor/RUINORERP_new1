@@ -28,7 +28,7 @@ using SqlSugar;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 库存流水表
+    /// 库存流水表1
     /// </summary>
     public partial class tb_InventoryTransactionController<T> : BaseController<T> where T : class
     {

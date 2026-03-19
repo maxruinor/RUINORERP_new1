@@ -892,9 +892,11 @@
     <Compile Include="BI\UCUserPersonalizedEdit.designer.cs">
       <DependentUpon>UCUserPersonalizedEdit.cs</DependentUpon>
     </Compile>
+    <Compile Include="BusinessService\BillOperationService.cs" />
     <Compile Include="BusinessService\CalculationService\PurEntryCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SaleOutCoordinator.cs" />
     <Compile Include="BusinessService\CalculationService\SourceGridCoordinator.cs" />
+    <Compile Include="BusinessService\IBillOperationService.cs" />
     <Compile Include="BusinessService\RepeatOperationGuardService.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuTracker.cs" />
     <Compile Include="BusinessService\SmartMenuService\MenuUseInfo.cs" />

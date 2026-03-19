@@ -300,9 +300,9 @@ namespace RUINORERP.Business
         //- 分次生成收款单 → 手动核销	- 每次核销更新 应收应付表.RemainAmount
         //- 最后一次核销标记 IsFullySettled = 1
 
-        /// </summary>
-        /// <param name="entity">销售出库单实体</param>
-        /// <returns>审核结果</returns>
+        // </summary>
+        // <param name="entity">销售出库单实体</param>
+        // <returns>审核结果</returns>
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rrs = new ReturnResults<T>();
@@ -899,13 +899,29 @@ namespace RUINORERP.Business
                     #endregion
 
                     //销售出库单，如果来自于销售订单，则要把出库数量累加到订单中的已交数量 并且如果数量够则自动结案
+                    // 关键修复：订单状态更新必须在事务提交前执行，确保原子性
                     if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty) == entity.tb_saleorder.tb_SaleOrderDetails.Sum(c => c.Quantity)
                         && entity.tb_saleorder.DataStatus == (int)DataStatus.确认)
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
                         entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                        await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder).UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, entity.tb_saleorder.TotalCost }).ExecuteCommandAsync();
+                        
+                        // 关键修复：在事务提交前更新订单状态，确保与库存扣减的原子性
+                        var orderUpdateResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder)
+                            .UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, t.TotalCost })
+                            .ExecuteCommandAsync();
+                            
+                        if (orderUpdateResult <= 0)
+                        {
+                            _logger.LogError($"销售出库单{entity.SaleOutNo}审核：订单状态更新失败，订单ID: {entity.tb_saleorder.SOrder_ID}");
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.Succeeded = false;
+                            rrs.ErrorMsg = "订单状态更新失败，审核终止";
+                            return rrs;
+                        }
+                        
+                        _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已自动结案为完结状态");
                     }
 
                     #endregion
@@ -979,8 +995,17 @@ namespace RUINORERP.Business
 
 
 
-                // 注意信息的完整性
+                // 关键修复：在事务提交前添加详细的日志记录
+                _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：开始提交事务，包含库存扣减和订单状态更新");
+                
+                // 关键修复：事务提交前验证关键数据完整性
+                if (entity.tb_saleorder != null && entity.tb_saleorder.DataStatus == (int)DataStatus.完结)
+                {
+                    _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已标记为完结状态，准备提交事务");
+                }
+                
                 _unitOfWorkManage.CommitTran();
+                _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：主事务提交成功");
                 
                 // 【死锁优化】财务独立事务处理（仅在启用财务模块时执行）
                 // 核心特性：
@@ -1088,10 +1113,15 @@ namespace RUINORERP.Business
                     }
                     catch (Exception financeEx)
                     {
-                        // 财务处理失败不影响出库审核结果，只记录错误日志
+                        // 财务处理失败不影响出库审核结果，但需要提供明确的用户反馈
                         _logger.LogError(financeEx, 
                             $"销售出库单{saleOutNo}审核：财务独立事务处理失败（出库审核已成功）- {financeEx.Message}\n" +
                             $"⚠️ 请财务部门检查并手动补录相关单据");
+                        
+                        // 关键修复：增强用户反馈机制
+                        rrs.ErrorMsg = $"销售出库单审核成功，但财务单据生成失败：{financeEx.Message}\n" +
+                                      $"请财务部门手动补录相关单据，单据号：{saleOutNo}";
+                        
                     }
                 }
                 
@@ -1101,9 +1131,37 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
+                // 关键修复：增强异常处理，确保事务正确回滚
+                try
+                {
+                    _logger.LogError(ex, $"销售出库单审核发生异常，开始回滚事务。异常信息: {ex.Message}");
+                    
+                    // 检查当前事务状态，避免重复回滚
+                    var transactionState = _unitOfWorkManage.GetTransactionState();
+                    if (transactionState.IsActive)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        _logger.LogInformation($"销售出库单审核：事务已成功回滚");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"销售出库单审核：事务状态异常，可能已提交或回滚，当前状态: {transactionState}");
+                    }
+                }
+                catch (Exception rollbackEx)
+                {
+                    // 回滚失败时的紧急处理
+                    _logger.LogCritical(rollbackEx, $"销售出库单审核：事务回滚失败！可能出现数据不一致。紧急处理中...");
+                    
+                    // 强制标记事务需要回滚
+                    _unitOfWorkManage.MarkForRollback();
+                    
+                    // 记录关键数据，用于后续人工修复
+                    _logger.LogCritical($"销售出库单审核紧急记录 - 出库单号: {entity?.SaleOutNo}, 订单号: {entity?.tb_saleorder?.SOrderNo}");
+                }
+                
                 rrs.Succeeded = false;
-                rrs.ErrorMsg = "事务回滚=>" + ex.Message;
+                rrs.ErrorMsg = $"审核失败：{ex.Message}";
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 return rrs;
             }

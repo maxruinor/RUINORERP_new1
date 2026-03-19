@@ -1342,8 +1342,11 @@ namespace RUINORERP.UI
 
             // 注册审计日志服务
             services.AddSingleton<IAuditLogService, AuditLogService>();
-            // 注册审计日志服务
+            // 添加审计日志服务
             services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
+
+            // 注册单据业务操作服务
+            services.AddScoped<IBillOperationService, BillOperationService>();
 
             services.AddSingleton(typeof(MenuTracker)); // 菜单跟踪
 

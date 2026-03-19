@@ -17,7 +17,7 @@ namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 统一状态管理器接口
-    /// 基于V4版本架构优化，简化日志记录，提升性能
+    /// 基于V4版本架构优化，简化日志记录，提升性能1
     /// 支持MenuItemEnums，实现操作权限检查和UI控件影响
     /// </summary>
     public interface IUnifiedStateManager : IDisposable

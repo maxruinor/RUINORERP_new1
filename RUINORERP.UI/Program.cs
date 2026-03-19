@@ -648,7 +648,7 @@ namespace RUINORERP.UI
                         }
                     });
 
-                    Application.Run(form1);
+                    Application.Run(form1);//
 
                 }
                 catch (Exception ex)

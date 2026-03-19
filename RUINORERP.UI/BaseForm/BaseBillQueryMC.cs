@@ -65,7 +65,7 @@ namespace RUINORERP.UI.BaseForm
     /// </summary>
     /// <typeparam name="M"></typeparam>
     /// <typeparam name="C"></typeparam>
-    public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth, IToolStripMenuInfoAuth where M : class, new() where C : class, new()
+    public partial class BaseBillQueryMC<M, C> : BaseQuery, IContextMenuInfoAuth, IToolStripMenuInfoAuth where M : BaseEntity, new() where C : class, new()
     {
 
 
@@ -84,6 +84,11 @@ namespace RUINORERP.UI.BaseForm
         /// 防重复操作服务实例
         /// </summary>
         private RepeatOperationGuardService _guardService;
+
+        /// <summary>
+        /// 单据业务操作服务
+        /// </summary>
+        protected readonly IBillOperationService BillOperationService;
 
         #region 防抖机制相关字段
         // 已迁移到 RepeatOperationGuardService
@@ -179,6 +184,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 this.StateManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IUnifiedStateManager>();
                 this.TodoListManager = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<TodoListManager>();
+                this.BillOperationService = RUINORERP.Model.Context.ApplicationContext.Current.GetRequiredService<IBillOperationService>();
             }
 
             if (System.ComponentModel.LicenseManager.UsageMode != System.ComponentModel.LicenseUsageMode.Designtime)
@@ -187,6 +193,9 @@ namespace RUINORERP.UI.BaseForm
 
                 if (!this.DesignMode)
                 {
+                    // 订阅单据状态变更事件
+                    SubscribeToStatusChangeEvents();
+
                     if (frm == null)
                     {
                         frm = new frmFormProperty();
@@ -561,8 +570,45 @@ namespace RUINORERP.UI.BaseForm
                         try
                         {
                             ApprovalEntity ae = await Review(selectlist);
-                            // 添加同步代码
-                            await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
+
+                            // 验证审核结果：只有当审核成功时才同步任务状态
+                            if (ae != null && selectlist != null && selectlist.Count > 0)
+                            {
+                                // 检查审核是否成功（通过或驳回都算成功操作）
+                                bool isReviewSuccess = true;
+
+                                // 验证审核结果：审核通过或审核驳回都算成功操作
+                                if (ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+                                {
+                                    var entity = selectlist[0];
+                                    var approvalResult = entity.GetPropertyValue("ApprovalResults");
+
+                                    // 审核通过：ApprovalResults = true
+                                    // 审核驳回：ApprovalResults = false，但操作本身成功
+                                    // 审核失败：ae为null或操作异常
+                                    if (approvalResult != null)
+                                    {
+                                        // 审核操作成功完成
+                                        await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
+                                    }
+                                    else
+                                    {
+                                        // 审核操作失败
+                                        isReviewSuccess = false;
+                                        MainForm.Instance.uclog.AddLog($"审核操作失败，单据状态未变更", UILogType.警告);
+                                    }
+                                }
+                                else
+                                {
+                                    // 实体没有审核结果字段，默认认为操作成功
+                                    await SyncTodoUpdatesToServer(selectlist, TodoUpdateType.StatusChanged, "单据已审核");
+                                }
+                            }
+                            else
+                            {
+                                // 审核操作失败或用户取消
+                                MainForm.Instance.uclog.AddLog($"审核操作未完成或用户取消", UILogType.警告);
+                            }
                         }
                         finally
                         {
@@ -1116,25 +1162,230 @@ namespace RUINORERP.UI.BaseForm
 
         }
 
+        ///// <summary>
+        ///// 单据提交
+        ///// </summary>
+        ///// <returns>提交结果，成功失败</returns>
+        //public virtual Task<bool> Submit()
+        //{
+        //    return Task.FromResult(false);
+        //}
+
+        #region 状态同步事件订阅
+
         /// <summary>
-        /// 单据提交
+        /// 订阅单据状态变更事件
         /// </summary>
-        /// <returns>提交结果，成功失败</returns>
-        public virtual Task<bool> Submit()
+        private void SubscribeToStatusChangeEvents()
         {
-            return Task.FromResult(false);
+            try
+            {
+                // 订阅单据状态变更事件
+                BillOperationService.BillStatusChanged += OnBillStatusChanged;
+
+                // 订阅单据操作完成事件
+                BillOperationService.BillOperationCompleted += OnBillOperationCompleted;
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不影响主流程
+                System.Diagnostics.Debug.WriteLine($"订阅状态变更事件失败: {ex.Message}");
+            }
         }
 
+        /// <summary>
+        /// 取消订阅状态变更事件
+        /// </summary>
+        private void UnsubscribeFromStatusChangeEvents()
+        {
+            try
+            {
+                BillOperationService.BillStatusChanged -= OnBillStatusChanged;
+                BillOperationService.BillOperationCompleted -= OnBillOperationCompleted;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"取消订阅状态变更事件失败: {ex.Message}");
+            }
+        }
 
         /// <summary>
-        /// 审核 注意后面还需要加很多业务逻辑。
-        /// 比方出库单，审核就会减少库存修改成本
-        /// （如果有月结动作，则在月结时统计修改成本，更科学，因为如果退单等会影响成本）
+        /// 单据状态变更事件处理
         /// </summary>
-        protected async virtual Task<ApprovalEntity> Review(M EditEntity)
+        private void OnBillStatusChanged(object sender, RUINORERP.UI.BusinessService.BillStatusChangedEventArgs e)
         {
-            return await Review(new List<M> { EditEntity });
+            try
+            {
+                // 检查是否是当前查询列表相关的实体类型
+                if (e.Entity.GetType() == typeof(M))
+                {
+                    // 异步刷新查询列表
+                    Task.Run(() =>
+                    {
+                        if (this.IsHandleCreated && !this.IsDisposed)
+                        {
+                            this.Invoke(new Action(() =>
+                            {
+                                // 延迟刷新，避免频繁刷新
+                                Task.Delay(100).ContinueWith(_ =>
+                                {
+                                    if (this.IsHandleCreated && !this.IsDisposed)
+                                    {
+                                        this.Invoke(new Action(() =>
+                                        {
+                                            Query(QueryDtoProxy);
+                                        }));
+                                    }
+                                });
+                            }));
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"处理单据状态变更事件失败: {ex.Message}");
+            }
         }
+
+        /// <summary>
+        /// 单据操作完成事件处理
+        /// </summary>
+        private void OnBillOperationCompleted(object sender, RUINORERP.UI.BusinessService.BillOperationCompletedEventArgs e)
+        {
+            try
+            {
+                // 记录操作完成日志
+                if (e.Result.Success)
+                {
+                    System.Diagnostics.Debug.WriteLine($"单据操作完成: {e.OperationType} - {e.Result.Message}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"单据操作失败: {e.OperationType} - {e.Result.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"处理单据操作完成事件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 窗体关闭时取消订阅事件
+        /// </summary>
+        protected void OnFormClosed(FormClosedEventArgs e)
+        {
+            try
+            {
+                UnsubscribeFromStatusChangeEvents();
+            }
+            catch (Exception ex)
+            {
+                // 记录错误但不影响窗体关闭
+                System.Diagnostics.Debug.WriteLine($"取消订阅事件失败: {ex.Message}");
+            }
+
+            // 调用基类的OnFormClosed方法（如果存在）
+            if (e != null)
+            {
+                // 使用反射调用基类的OnFormClosed方法
+                var baseMethod = typeof(Form).GetMethod("OnFormClosed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                baseMethod?.Invoke(this, new object[] { e });
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 提交选中的单据（使用 BillOperationService）
+        /// </summary>
+        public async virtual Task<bool> Submit()
+        {
+            var selectlist = GetSelectResult();
+            if (selectlist == null || selectlist.Count == 0)
+            {
+                MessageBox.Show("请选择要提交的单据");
+                return false;
+            }
+
+            // 根据选中数量决定调用单个还是批量
+            BillOperationResult result;
+            if (selectlist.Count == 1)
+            {
+                result = await BillOperationService.SubmitAsync(selectlist[0]);
+            }
+            else
+            {
+                result = await BillOperationService.SubmitBatchAsync(selectlist);
+            }
+
+            if (result.Success)
+            {
+                // 关键修复：验证提交后状态是否真正更新
+                bool stateUpdated = await VerifyOperationStateUpdate(selectlist, MenuItemEnums.提交);
+                if (!stateUpdated)
+                {
+                    MainForm.Instance.uclog.AddLog("提交操作成功，但状态更新验证失败，请手动刷新确认", UILogType.警告);
+                }
+
+                Query(QueryDtoProxy); // 刷新列表
+                return true;
+            }
+            else
+            {
+                MessageBox.Show(result.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 验证操作后状态是否真正更新
+        /// </summary>
+        /// <param name="entities">操作的单据列表</param>
+        /// <param name="operationType">操作类型</param>
+        /// <returns>状态更新是否成功</returns>
+        protected async virtual Task<bool> VerifyOperationStateUpdate(List<M> entities, MenuItemEnums operationType)
+        {
+            if (entities == null || entities.Count == 0 || StateManager == null)
+                return false;
+
+            try
+            {
+                bool allStatesUpdated = true;
+
+                foreach (var entity in entities)
+                {
+                    if (entity is BaseEntity baseEntity)
+                    {
+                        // 使用实际存在的方法验证操作状态转换
+                        var validationResult = await StateManager.ValidateActionTransitionAsync(baseEntity, operationType);
+                        if (validationResult != null && !validationResult.IsSuccess)
+                        {
+                            allStatesUpdated = false;
+                            MainForm.Instance.logger?.LogWarning($"单据状态转换验证失败: {validationResult.ErrorMessage}");
+                        }
+
+                        // 验证操作是否可执行
+                        var canExecuteResult = StateManager.CanExecuteActionWithMessage(baseEntity, operationType);
+                        if (!canExecuteResult.CanExecute)
+                        {
+                            allStatesUpdated = false;
+                            MainForm.Instance.logger?.LogWarning($"操作不可执行: {canExecuteResult.Message}");
+                        }
+                    }
+                }
+
+                return allStatesUpdated;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger?.LogError(ex, "状态更新验证失败");
+                return false;
+            }
+        }
+
+ 
 
         /// <summary>
         /// 批量审核多个实体单据
@@ -1143,8 +1394,10 @@ namespace RUINORERP.UI.BaseForm
         /// <returns>审核结果</returns>
         protected async virtual Task<ApprovalEntity> Review(List<M> EditEntities)
         {
-            return await Review(EditEntities, 10); // 默认延时10ms
+            return await Review(EditEntities, EditEntities.Count * 3000); // 默认延时3秒（3000ms）
         }
+
+
 
         /// <summary>
         /// 批量审核多个实体单据（带处理延迟）
@@ -1399,32 +1652,80 @@ namespace RUINORERP.UI.BaseForm
             else
             {
                 // 审核驳回: 使用StateManager统一处理状态转换
+                bool rejectOperationSuccess = true;
+                string rejectErrorMessage = string.Empty;
+
                 if (StateManager != null && EditEntity is BaseEntity)
                 {
                     var rejectResult = await StateManager.HandleApprovalRejectAsync(EditEntity as BaseEntity, ae.ApprovalOpinions);
                     if (!rejectResult.IsSuccess)
                     {
-                        MainForm.Instance.logger.LogError($"审核驳回状态转换失败: {rejectResult.ErrorMessage}");
+                        rejectOperationSuccess = false;
+                        rejectErrorMessage = $"审核驳回状态转换失败: {rejectResult.ErrorMessage}";
+                        MainForm.Instance.logger.LogError(rejectErrorMessage);
                         MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核驳回状态转换失败", Color.Red);
                     }
                 }
 
-                if (ReflectionHelper.ExistPropertyName<M>("ApprovalOpinions"))
+                // 只有状态转换成功才继续执行后续操作
+                if (rejectOperationSuccess)
                 {
-                    EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                    try
+                    {
+                        // 设置审核相关属性
+                        if (ReflectionHelper.ExistPropertyName<M>("ApprovalOpinions"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalOpinions", ae.ApprovalOpinions);
+                        }
+                        if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.审核驳回);
+                        }
+                        if (ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
+                        {
+                            EditEntity.SetPropertyValue("ApprovalResults", false);
+                        }
+
+                        BusinessHelper.Instance.ApproverEntity(EditEntity);
+                        BaseController<M> ctrBase = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
+
+                        // 保存驳回操作结果
+                        var saveResult = await ctrBase.BaseSaveOrUpdate(EditEntity as M);
+
+                        if (!saveResult.Succeeded)
+                        {
+                            rejectOperationSuccess = false;
+                            rejectErrorMessage = $"审核驳回数据保存失败: {saveResult.ErrorMsg}";
+                            MainForm.Instance.logger.LogError(rejectErrorMessage);
+                            MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核驳回数据保存失败", Color.Red);
+
+                            // 保存失败时恢复状态
+                            command.Undo();
+                            MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核驳回失败。\r\n {saveResult.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return null; // 返回null表示操作失败
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        rejectOperationSuccess = false;
+                        rejectErrorMessage = $"审核驳回操作异常: {ex.Message}";
+                        MainForm.Instance.logger.LogError(ex, rejectErrorMessage);
+
+                        // 异常时恢复状态
+                        command.Undo();
+                        MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核驳回操作异常。\r\n {ex.Message}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return null; // 返回null表示操作失败
+                    }
                 }
-                if (ReflectionHelper.ExistPropertyName<M>("ApprovalStatus"))
+                else
                 {
-                    EditEntity.SetPropertyValue("ApprovalStatus", (int)ApprovalStatus.审核驳回);
+                    // 状态转换失败，恢复原始状态
+                    command.Undo();
+                    MessageBox.Show($"{ae.bizName}:{ae.BillNo}审核驳回失败。\r\n {rejectErrorMessage}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null; // 返回null表示操作失败
                 }
-                if (ReflectionHelper.ExistPropertyName<M>("ApprovalResults"))
-                {
-                    EditEntity.SetPropertyValue("ApprovalResults", false);
-                }
-                BusinessHelper.Instance.ApproverEntity(EditEntity);
-                BaseController<M> ctrBase = Startup.GetFromFacByName<BaseController<M>>(typeof(M).Name + "Controller");
-                //因为只需要更新主表
-                await ctrBase.BaseSaveOrUpdate(EditEntity as M);
+
+                // 只有所有操作都成功才返回ae
                 return ae;
             }
 
@@ -1432,7 +1733,6 @@ namespace RUINORERP.UI.BaseForm
 
             return ae;
         }
-
 
 
         /// <summary>

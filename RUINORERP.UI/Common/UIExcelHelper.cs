@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 using RUINORERP.Model;
 using RUINORERP.UI.CommonUI;
@@ -204,7 +204,6 @@ namespace RUINORERP.UI.Common
                     using (var package = new ExcelPackage())
                     {
                         progressForm.Show();
-                        Application.DoEvents();
 
                         ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Sheet1");
                         int exportedRows = 0;
@@ -272,7 +271,6 @@ namespace RUINORERP.UI.Common
                                 if (rowIndex % 100 == 0)
                                 {
                                     progressForm.SetProgress((int)((rowIndex + 1) * 100f / newSumDataGridViewMaster.RowCount));
-                                    Application.DoEvents();
                                 }
                             }
 

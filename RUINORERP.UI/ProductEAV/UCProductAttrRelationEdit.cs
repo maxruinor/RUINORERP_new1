@@ -160,8 +160,9 @@ namespace RUINORERP.UI.ProductEAV
 
                 await Task.WhenAll(productsTask, propertiesTask);
 
-                var products = productsTask.Result;
-                var properties = propertiesTask.Result;
+                // 移除.Result，使用await后的变量
+                var products = await productsTask;
+                var properties = await propertiesTask;
 
                 // 绑定产品数据
                 DataBindingHelper.BindData4Cmb<tb_Prod>(products, k => k.ProdBaseID, v => v.ProductNo + " - " + v.CNName, cmbProduct);

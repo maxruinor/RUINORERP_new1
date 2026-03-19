@@ -2157,7 +2157,6 @@ namespace RUINORERP.UI
                 _menuTracker.SaveToDb();
                 ClearUI();
                 ClearData();
-                Application.DoEvents();
 
                 // 登出完成，断开与服务器的连接
                 if (communicationService != null && communicationService.ConnectionManager.IsConnected)
@@ -2679,7 +2678,7 @@ namespace RUINORERP.UI
         {
             using (StatusBusy busy = new StatusBusy("系统正在初始化 请稍候"))
             {
-                Thread.Sleep(100);
+                // 移除不必要的Thread.Sleep(100)
                 //System.Timers.Timer AutoTaskTimer = new System.Timers.Timer(3600000);//每隔一个小时执行一次，没用winfrom自带的
                 //System.Timers.Timer AutoTaskTimer = new System.Timers.Timer(1800000);//每隔半个小时执行一次，没用winfrom自带的
                 //AutoTaskTimer.Elapsed += AutoTaskTimer_Elapsed;//委托，要执行的方法
@@ -2744,8 +2743,7 @@ namespace RUINORERP.UI
 
                 voidHandler handler = new voidHandler(LoadEvent);
                 IAsyncResult result = handler.BeginInvoke(new AsyncCallback(callback), "AsycState:OK");
-                Thread.Sleep(100);
-
+                // 移除不必要的Thread.Sleep(100)
 
 
 
@@ -3306,19 +3304,7 @@ namespace RUINORERP.UI
             }
             else
             {
-                try
-                {
-                    Application.DoEvents();
-                    Application.Exit();
-                }
-                catch (Exception)
-                {
-
-                }
-                finally
-                {
-                    Application.Exit();
-                }
+                Application.Exit();
             }
         }
 

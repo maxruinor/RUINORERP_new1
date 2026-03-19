@@ -223,7 +223,8 @@ namespace RUINORERP.UI.ProductEAV
             {
                 btnCalculate.Enabled = false;
                 btnCalculate.Text = "计算中...";
-                Application.DoEvents();
+                // 移除Application.DoEvents()，按钮状态更改会立即生效
+                // 如果计算耗时较长，应使用async/await模式
 
                 if (rdoQuantityToBox.Checked)
                 {

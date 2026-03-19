@@ -1208,7 +1208,7 @@ namespace RUINORERP.UI.SysConfig.BasicDataImport
                 kbtnDynamicParse.Enabled = false;
                 kbtnDynamicMap.Enabled = false;
 
-                Application.DoEvents();
+                // 移除不必要的Application.DoEvents()，后续的await会让UI线程有机会处理消息
 
                 // 初始化导入器，传入共享的ForeignKeyService实例
                 _dynamicImporter = new DynamicImporter(_db, _entityInfoService, _foreignKeyService);

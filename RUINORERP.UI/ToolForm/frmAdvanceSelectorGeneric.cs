@@ -172,8 +172,8 @@ namespace RUINORERP.UI.ToolForm
                 return;
             }
 
-            // 等待数据绑定完成
-            Application.DoEvents();
+            // 数据绑定已完成，无需Application.DoEvents()
+            // 直接遍历行进行选中处理
 
             foreach (DataGridViewRow row in dgvItems.Rows)
             {

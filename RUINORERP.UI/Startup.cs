@@ -491,17 +491,18 @@ namespace RUINORERP.UI
                 });
             });
  
-            // 注册审计日志
+            // 注册审计日志 - 优化配置
             services.Configure<AuditLogOptions>(options =>
             {
-                options.BatchSize = 5;
-                options.FlushInterval = 5000;
-                options.EnableAudit = true;
+                // 使用优化后的配置参数
+                options.BatchSize = 50;           // 批量写入大小（提高至50）
+                options.FlushInterval = 1000;       // 刷新间隔1秒（降低至1000ms）
+                options.EnableAudit = true;         // 启用审计
+                options.MaxQueueSize = 10000;       // 队列最大容量（新增）
+                options.FlushTimeout = 30000;       // 刷新超时30秒（新增）
+                options.MaxRetryCount = 3;          // 最大重试次数（新增）
+                options.EnableMetrics = true;        // 启用性能监控（新增）
             });
-
-            // 注册审计日志服务
-            services.AddSingleton<IAuditLogService, AuditLogService>();
-            services.AddSingleton<IFMAuditLogService, FMAuditLogService>();
 
             services.AddSingleton(typeof(MenuTracker));
 
@@ -1331,12 +1332,16 @@ namespace RUINORERP.UI
             // 添加审计日志配置 （如果存在）
             services.Configure<AuditLogOptions>(configuration.GetSection("AuditLog"));
 
-            // 使用 ConfigureOptions 手动覆盖特定值
+            // 使用 ConfigureOptions 手动覆盖特定值 - 优化配置
             services.Configure<AuditLogOptions>(options =>
             {
-                options.BatchSize = 5;
-                options.FlushInterval = 5000;
+                options.BatchSize = 50;           // 批量写入大小
+                options.FlushInterval = 1000;       // 刷新间隔1秒
                 options.EnableAudit = true;
+                options.MaxQueueSize = 10000;       // 队列最大容量
+                options.FlushTimeout = 30000;       // 刷新超时30秒
+                options.MaxRetryCount = 3;          // 最大重试次数
+                options.EnableMetrics = true;        // 启用性能监控
             });
 
 

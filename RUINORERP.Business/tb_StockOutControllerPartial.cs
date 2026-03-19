@@ -123,7 +123,7 @@ namespace RUINORERP.Business
                 }
 
                 DbHelper<tb_Inventory> InvdbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                var Counter = await InvdbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);//1
                 if (Counter == 0)
                 {
                     _logger.Debug($"{entity.BillNo}审核时，更新库存结果为0行，请检查数据！");

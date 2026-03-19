@@ -1181,7 +1181,7 @@ namespace RUINORERP.UI.PSI.PUR
 
                     //审核成功
                     toolStripbtnReview.Enabled = true;
-
+                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_PurOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                 }
                 else
                 {

@@ -51,7 +51,7 @@ namespace RUINORERP.Business
         /// 
         /// 销售订金（预收）	- 预收定金生成预收单--》预收审核时 生成收款单 收款单审核代表完成支付。
         //- 后续订单核销预收 → 自动冲抵应收	- 预收付表：减少 RemainAmount
-        //- 应收应付表：减少 TotalAmount
+        //- 应收应付表：减少 TotalAmount1
 
         /// </summary>
         /// <param name="entity"></param>
@@ -62,6 +62,8 @@ namespace RUINORERP.Business
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
             try
             {
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
                 // 开启事务，保证数据一致性
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -69,7 +71,7 @@ namespace RUINORERP.Business
 
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                 //var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum, decimal QtySum)>();
-                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)>();
 
 
 
@@ -86,14 +88,14 @@ namespace RUINORERP.Business
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
-                    decimal currentSaleQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                    int currentSaleQty = child.Quantity;
                     //decimal currentQty = child.Quantity; // 假设 Qty 与 Sale_Qty 相同，可根据实际业务调整
                     DateTime currentOutboundTime = DateTime.Now; // 每次出库更新时间
                                                                  // 若字典中不存在该产品，初始化记录
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = invExistEntityList.Find(i => i.Location_ID == child.Location_ID);
+                        tb_Inventory inv = invExistEntityList.Find(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv == null)
                         {
                             //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
@@ -136,11 +138,11 @@ namespace RUINORERP.Business
                 {
                     var inv = group.Value.Inventory;
                     // 累加数值字段
-                    inv.Sale_Qty += group.Value.SaleQtySum.ToInt();
+                    inv.Sale_Qty += group.Value.SaleQtySum;
                     invList.Add(inv);
                 }
 
-                _unitOfWorkManage.BeginTran();
+
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
@@ -275,7 +277,7 @@ namespace RUINORERP.Business
                                             {
                                                 var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                                                 tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-                                                
+
                                                 if (preReceivedPayment != null)
                                                 {
                                                     //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
@@ -946,13 +948,13 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
-                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum)>();
+                var inventoryGroups = new Dictionary&lt;(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)&gt;();
 
 
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
-                    decimal currentSaleQty = child.Quantity; // 假设 Sale_Qty 对应明细中的 Quantity
+                    int currentSaleQty = child.Quantity;
                                                              // 若字典中不存在该产品，初始化记录
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
@@ -988,7 +990,7 @@ namespace RUINORERP.Business
                 {
                     var inv = group.Value.Inventory;
                     //反审 要用减
-                    inv.Sale_Qty -= group.Value.SaleQtySum.ToInt();
+                    inv.Sale_Qty -= group.Value.SaleQtySum;
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }

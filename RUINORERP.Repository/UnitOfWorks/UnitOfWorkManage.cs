@@ -56,6 +56,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     var newConfig = new ConnectionConfig
                     {
+                        
                         ConnectionString = originalConfig.ConnectionString,
                         DbType = originalConfig.DbType,
                         IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
@@ -99,10 +100,10 @@ namespace RUINORERP.Repository.UnitOfWorks
                 try
                 {
                     // 检查嵌套深度
-                    if (context.Depth >= 5) // 限制最大嵌套深度
+                    if (context.Depth >= 8) // 限制最大嵌套深度
                     {
                         throw new InvalidOperationException(
-                            $"事务嵌套深度超过最大限制(5)，请检查业务逻辑");
+                            $"事务嵌套深度超过最大限制(8)，请检查业务逻辑");
                     }
 
                     // 增加事务深度

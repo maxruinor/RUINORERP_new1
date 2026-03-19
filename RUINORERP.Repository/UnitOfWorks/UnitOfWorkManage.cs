@@ -10,6 +10,11 @@ using RUINORERP.Model.Context;
 
 namespace RUINORERP.Repository.UnitOfWorks
 {
+
+
+    /// <summary>
+    /// 事务管理类
+    /// </summary>
     public class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository
     {
         private readonly ILogger<UnitOfWorkManage> _logger;
@@ -20,9 +25,9 @@ namespace RUINORERP.Repository.UnitOfWorks
         private readonly AsyncLocal<TransactionContext> _currentTransactionContext =
             new AsyncLocal<TransactionContext>();
 
-        // 每个线程独立的连接实例（关键修复！）
-        private static readonly ThreadLocal<ISqlSugarClient> _threadLocalClient =
-            new ThreadLocal<ISqlSugarClient>();
+        // 每个异步上下文独立的连接实例（关键修复！替换ThreadLocal为AsyncLocal）
+        private readonly AsyncLocal<ISqlSugarClient> _asyncLocalClient =
+            new AsyncLocal<ISqlSugarClient>();
 
         // 简单的嵌套计数器（兼容旧代码）
         private readonly AsyncLocal<int> _tranDepth = new AsyncLocal<int>();
@@ -37,12 +42,12 @@ namespace RUINORERP.Repository.UnitOfWorks
         }
 
         /// <summary>
-        /// 获取线程独立的数据库客户端
+        /// 获取异步上下文独立的数据库客户端
         /// </summary>
         public SqlSugarScope GetDbClient()
         {
-            // 每个线程使用独立的连接实例
-            if (!_threadLocalClient.IsValueCreated)
+            // 每个异步上下文使用独立的连接实例
+            if (_asyncLocalClient.Value == null)
             {
                 // 复制原始连接配置，创建新的连接实例
                 var originalConfig = (_sqlSugarClient as SqlSugarScope)?.CurrentConnectionConfig;
@@ -53,31 +58,31 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         ConnectionString = originalConfig.ConnectionString,
                         DbType = originalConfig.DbType,
-                        IsAutoCloseConnection = true, // 重要：让每个线程自己管理连接
+                        IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
                         InitKeyType = originalConfig.InitKeyType,
                         MoreSettings = originalConfig.MoreSettings,
                         ConfigureExternalServices = originalConfig.ConfigureExternalServices,
                         AopEvents = originalConfig.AopEvents
                     };
 
-                    _threadLocalClient.Value = new SqlSugarScope(newConfig);
+                    _asyncLocalClient.Value = new SqlSugarScope(newConfig);
                 }
                 else
                 {
                     // 后备方案：创建新实例
-                    _threadLocalClient.Value = new SqlSugarScope(new ConnectionConfig
+                    _asyncLocalClient.Value = new SqlSugarScope(new ConnectionConfig
                     {
                         ConnectionString = _sqlSugarClient.Ado.Connection.ConnectionString,
                         DbType = DbType.SqlServer,
-                        IsAutoCloseConnection = true,
+                        IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
                         InitKeyType = InitKeyType.Attribute
                     });
                 }
 
-                _logger.LogDebug($"为线程 {Thread.CurrentThread.ManagedThreadId} 创建了新的数据库连接实例");
+                _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程ID: {Thread.CurrentThread.ManagedThreadId}");
             }
 
-            return _threadLocalClient.Value as SqlSugarScope;
+            return _asyncLocalClient.Value as SqlSugarScope;
         }
 
         /// <summary>
@@ -385,6 +390,28 @@ namespace RUINORERP.Repository.UnitOfWorks
                 // 清理上下文
                 _currentTransactionContext.Value = null;
                 _tranDepth.Value = 0;
+
+                // 关键修复：清理数据库连接实例，避免连接泄漏
+                if (_asyncLocalClient.Value != null)
+                {
+                    try
+                    {
+                        var dbClient = _asyncLocalClient.Value;
+                        if (dbClient.Ado.Connection != null && dbClient.Ado.Connection.State == System.Data.ConnectionState.Open)
+                        {
+                            dbClient.Ado.Connection.Close();
+                            _logger.LogDebug($"[Transaction-{transactionId}] 数据库连接已关闭");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, $"[Transaction-{transactionId}] 关闭数据库连接时发生异常");
+                    }
+                    finally
+                    {
+                        _asyncLocalClient.Value = null;
+                    }
+                }
 
                 _logger.LogDebug($"[Transaction-{transactionId}] 事务状态已重置");
             }

@@ -301,6 +301,8 @@ namespace RUINORERP.UI.BaseForm
         /// </summary>
         public GridViewDisplayTextResolverGeneric<T> DisplayTextResolver { get; set; }
 
+ 
+
         #region 分页功能相关属性和字段
 
         /// <summary>

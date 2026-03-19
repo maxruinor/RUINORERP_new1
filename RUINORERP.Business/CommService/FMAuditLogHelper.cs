@@ -377,6 +377,7 @@ namespace RUINORERP.Business.CommService
             }
         }
 
+        //1
         public void CreateAuditLog<T>(string action, T entity) where T : class
         {
             CreateAuditLog(action, entity, "");

@@ -439,7 +439,7 @@ namespace RUINORERP.Model
 
         private decimal _LocalBalanceAmount= ((0));
         /// <summary>
-        /// 余额本币1
+        /// 余额本币1211
         /// </summary>
         [AdvQueryAttribute(ColName = "LocalBalanceAmount",ColDesc = "余额本币")] 
         [SugarColumn(ColumnDataType = "money", SqlParameterDbType ="Decimal",  ColumnName = "LocalBalanceAmount" , DecimalDigits = 4,IsNullable = false,ColumnDescription = "余额本币" )]

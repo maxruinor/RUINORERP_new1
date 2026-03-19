@@ -58,6 +58,7 @@ namespace RUINORERP.UI.PSI.INV
             //表格显示时DataGridView1_CellFormatting 取外键类型
             ColDisplayTypes.Add(typeof(tb_Prod));
             ColDisplayTypes.Add(typeof(tb_ProdDetail));
+            
         }
 
         #region 添加成本确认

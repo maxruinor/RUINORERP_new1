@@ -68,23 +68,7 @@ namespace RUINORERP.Common.Log4Net
             return string.Empty;
         }
 
-        //private object LookupProperty(string property, LoggingEvent loggingEvent)
-        //{
-        //    // 尝试从 MDC 中获取值
-        //    object value = loggingEvent.Repository.GetContext().GetProperty(property);
 
-        //    // 如果 MDC 中没有找到，尝试从消息对象中获取
-        //    if (value == null && loggingEvent.MessageObject != null)
-        //    {
-        //        PropertyInfo propertyInfo = loggingEvent.MessageObject.GetType().GetProperty(property);
-        //        if (propertyInfo != null)
-        //        {
-        //            value = propertyInfo.GetValue(loggingEvent.MessageObject, null);
-        //        }
-        //    }
-
-        //    return value ?? string.Empty;
-        //}
 
     }
  

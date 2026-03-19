@@ -43,6 +43,7 @@ namespace RUINORERP.UI.BI
             this.chkAutoAuditPreReceive = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableARAutoOffsetPreReceive = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableAutoAuditSalesOutboundForFullPrepaymentOrders = new Krypton.Toolkit.KryptonCheckBox();
+            this.chkEnableIndependentFinanceTransactionInSaleOut = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableFinancialModule = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableMultiCurrency = new Krypton.Toolkit.KryptonCheckBox();
             this.chkEnableVoucherModule = new Krypton.Toolkit.KryptonCheckBox();

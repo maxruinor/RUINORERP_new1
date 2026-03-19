@@ -54,6 +54,7 @@ namespace RUINORERP.UI.PSI.INV
 
         private void UCInventoryTransactionQuery_Load(object sender, EventArgs e)
         {
+            GridRelated.SetComplexTargetField<tb_InventoryTransaction>(c => c.BizType, c => c.ReferenceNo);
         }
 
         #region 扩展功能按钮

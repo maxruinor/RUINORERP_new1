@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Model;
 using RUINORERP.Model.CommonModel;
@@ -17,7 +17,7 @@ using RUINORERP.Business.EntityLoadService;
 namespace RUINORERP.Business.CommService
 {
     /// <summary>
-    /// 审计日志服务接口
+    /// 审计日志服务接口1
     /// </summary>
     public interface IAuditLogService
     {
@@ -768,7 +768,7 @@ namespace RUINORERP.Business.CommService
 
         public void CreateAuditLog<T>(string action, T entity) where T : class
         {
-            CreateAuditLog(action, entity, "").Wait();
+            _ = Task.Run(() => CreateAuditLog(action, entity, ""));
         }
 
         public async Task CreateAuditLog(string action, string description)

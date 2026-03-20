@@ -8,7 +8,7 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 namespace RUINORERP.Common.Log4Net
 {
     /// <summary>
-    /// 简化版日志记录器 - 优化版
+    /// 简化版日志记录器 - 优化版1
     /// 实现 Microsoft.Extensions.Logging.ILogger 接口
     /// 添加日志缓冲机制，避免频繁调用log4net
     /// </summary>

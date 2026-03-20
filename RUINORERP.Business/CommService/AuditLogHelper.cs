@@ -8,7 +8,7 @@ using RUINORERP.Global;
 
 namespace RUINORERP.Business.CommService
 {
-    // 审计日志帮助类（适配原有接口，逐步迁移到服务）
+    // 审计日志帮助类（适配原有接口，逐步迁移到服务）1
     public class AuditLogHelper : IExcludeFromRegistration
     {
         private readonly IAuditLogService _auditLogService;
@@ -36,7 +36,7 @@ namespace RUINORERP.Business.CommService
 
         public void CreateAuditLog<T>(string action, T entity) where T : class
         {
-            CreateAuditLog(action, entity, "");
+            CreateAuditLog(action, entity, "").Wait();
         }
 
         public async Task CreateAuditLog(string action, string description)

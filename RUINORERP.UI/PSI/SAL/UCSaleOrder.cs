@@ -89,10 +89,10 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
         }
- 
+
         IEntityCacheManager cacheManager = Startup.GetFromFac<IEntityCacheManager>();
 
- 
+
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法
         /// </summary>
@@ -619,8 +619,8 @@ namespace RUINORERP.UI.PSI.SAL
             base.BindData(entity);
 
             // 调用基类方法下载图片，指定关联字段
-           // 注意:LoadImages内部已自动完成初始化和状态重置,无需额外调用InitializeImageControl
-           await DownloadImageAsync(entity, magicPictureBox订金付款凭证, c=> c.VoucherImage);
+            // 注意:LoadImages内部已自动完成初始化和状态重置,无需额外调用InitializeImageControl
+            await DownloadImageAsync(entity, magicPictureBox订金付款凭证, c => c.VoucherImage);
         }
 
         /// <summary>
@@ -771,7 +771,7 @@ namespace RUINORERP.UI.PSI.SAL
             listCols.SetCol_FormulaReverse<tb_SaleOrderDetail>(d => d.Quantity != 0, (a, b) => a.CommissionAmount / b.Quantity, c => c.UnitCommissionAmount);
 
 
- 
+
 
             //设置总计列
             BaseProcessor baseProcessor = BusinessHelper._appContext.GetRequiredServiceByName<BaseProcessor>(typeof(tb_SaleOrderDetail).Name + "Processor");
@@ -1336,20 +1336,20 @@ namespace RUINORERP.UI.PSI.SAL
                         {
                             // 获取需要更新的图片（新上传或修改的图片）
                             var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
-                            
+
                             // 获取已删除的图片（需要从服务器删除的图片）
                             var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
-                            
+
                             // 如果有图片需要处理（更新或删除）
                             if (updatedImages.Count > 0 || deletedImages.Count > 0)
                             {
                                 // 调用增强版的上传方法，同时处理新增/更新和删除的图片
                                 await UploadUpdatedImagesAsync<tb_SaleOrder>(
-                                    EditEntity, 
-                                    updatedImages, 
-                                    deletedImages, 
+                                    EditEntity,
+                                    updatedImages,
+                                    deletedImages,
                                     c => c.VoucherImage);
-                                
+
                                 // 处理完成后，清空删除列表并重置状态
                                 magicPictureBox订金付款凭证.ClearDeletedImagesList();
                                 magicPictureBox订金付款凭证.ResetImageChangeStatus();
@@ -1497,7 +1497,8 @@ namespace RUINORERP.UI.PSI.SAL
                     //这里推送到审核，启动工作流  队列应该有一个策略 比方优先级，桌面不动1 3 5分钟 
                     //OriginalData od = ActionForClient.工作流审批(pkid, (int)BizType.盘点单, ae.ApprovalResults, ae.ApprovalComments);
                     //MainForm.Instance.ecs.AddSendData(od);
-                    MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    EditEntity.AcceptChanges();
+                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_SaleOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
                     Refreshs();
                 }
                 else
@@ -1638,7 +1639,7 @@ namespace RUINORERP.UI.PSI.SAL
         ToolStripButton toolStripButton反结案 = new System.Windows.Forms.ToolStripButton();
 
 
- 
+
 
 
 
@@ -1723,7 +1724,7 @@ namespace RUINORERP.UI.PSI.SAL
             {
                 var updatedImages = magicPictureBox订金付款凭证.GetImageInfosNeedingUpdate();
                 var deletedImages = magicPictureBox订金付款凭证.GetDeletedImages();
-                
+
                 // 检查是否有需要上传的图片或需要删除的图片
                 return (updatedImages != null && updatedImages.Count > 0) ||
                        (deletedImages != null && deletedImages.Count > 0);

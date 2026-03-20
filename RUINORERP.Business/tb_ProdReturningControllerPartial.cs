@@ -241,7 +241,7 @@ namespace RUINORERP.Business
                 
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 // 使用LINQ查询
                 var CheckNewInvList = invUpdateList.Where(c => c.Inventory_ID == 0)
@@ -435,7 +435,7 @@ namespace RUINORERP.Business
                 
                 // 记录反向库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })

@@ -355,7 +355,7 @@ namespace RUINORERP.Business
 
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                    await tranController.BatchRecordTransactions(transactionList);
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                     if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
                     {
@@ -677,9 +677,9 @@ namespace RUINORERP.Business
                         }
                     }
 
-                    // 记录反向库存流水
+                    // 记录反向库存流水（带死锁重试机制）
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                    await tranController.BatchRecordTransactions(transactionList);
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
 
                     #region 回写销售订单  使用了销售出库的数据，要放在出库退回数量修改前面

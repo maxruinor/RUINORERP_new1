@@ -1,4 +1,4 @@
-﻿using FluentValidation.Results;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
 using RUINOR.Core;
 using RUINORERP.Business.CommService;
@@ -174,7 +174,7 @@ namespace RUINORERP.Business
                 
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (InvMainCounter.ToInt() == 0)
@@ -399,9 +399,9 @@ namespace RUINORERP.Business
                     transactionList.Add(transactionTo);
                 }
                 
-                // 记录反向库存流水
+                // 记录反向库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)

@@ -244,7 +244,7 @@ namespace RUINORERP.Business
 
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                    await tranController.BatchRecordTransactions(transactionList);
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 }
 
                 #endregion
@@ -414,9 +414,9 @@ namespace RUINORERP.Business
                     _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
-                // 记录反向库存流水
+                // 记录反向库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
 
 

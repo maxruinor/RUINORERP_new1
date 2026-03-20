@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -400,7 +400,7 @@ namespace RUINORERP.Business
 
                     // 记录库存流水
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                    await tranController.BatchRecordTransactions(transactionList);
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                     //TODO: 制令单  怎么样才能结案
                     //领料单，如果来自于制令单，则要把领料出库数量累加到制令单中的已交数量 并且如果数量够则自动结案
@@ -560,9 +560,9 @@ namespace RUINORERP.Business
                     _logger.Debug($"{entity.MaterialRequisitionNO}更新库存结果为0行，请检查数据！");
                 }
 
-                // 记录反向库存流水
+                // 记录反向库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
 
 

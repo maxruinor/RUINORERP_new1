@@ -460,7 +460,7 @@ namespace RUINORERP.Business
 
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 if (BOM_SDetails.Any())
                 {
@@ -757,9 +757,9 @@ namespace RUINORERP.Business
                         throw new Exception("入库时，库存更新数据为0，更新失败！");
                     }
 
-                    // 记录库存流水
+                    // 记录库存流水（带死锁重试机制）
                     tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                    await tranController.BatchRecordTransactions(transactionList);
+                    await tranController.BatchRecordTransactionsWithRetry(transactionList);
                 }
 
                 if (BOM_SDetails.Count > 0)

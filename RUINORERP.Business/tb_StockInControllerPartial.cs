@@ -160,7 +160,7 @@ namespace RUINORERP.Business
 
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.确认;
@@ -281,9 +281,9 @@ namespace RUINORERP.Business
                     _logger.Debug($"{entity.BillNo}反审核时，更新库存结果为0行，请检查数据！");
                 }
 
-                // 记录库存流水
+                // 记录库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 //这部分是否能提出到上一级公共部分？
                 entity.DataStatus = (int)DataStatus.新建;

@@ -60,20 +60,24 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rmrs = new ReturnResults<T>();
             tb_SaleOrder entity = ObjectEntity as tb_SaleOrder;
+            
+            // 【事务优化】保存关键数据到方法级变量，用于财务独立事务处理
+            bool needProcessFinance = false;
+            long? orderId = null;
+            string orderNo = "";
+            bool isFromPlatform = false;
+            long? paytypeId = null;
+            decimal totalAmount = 0;
+            
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-
-                // 开启事务，保证数据一致性
+                // 【事务优化】第一步：预处理阶段（无事务）- 验证和计算
+                #region 预处理阶段
+                
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
-                // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
-                //var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal SaleQtySum, decimal QtySum)>();
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)>();
-
-
 
                 long[] childProdDetailIds = entity.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().ToArray();
 
@@ -82,30 +86,25 @@ namespace RUINORERP.Business
                     .Where(c => childProdDetailIds.Contains(c.ProdDetailID))
                     .ToListAsync();
 
-
-
                 //更新拟销售量
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     var key = (child.ProdDetailID, child.Location_ID);
                     int currentSaleQty = child.Quantity;
-                    //decimal currentQty = child.Quantity; // 假设 Qty 与 Sale_Qty 相同，可根据实际业务调整
-                    DateTime currentOutboundTime = DateTime.Now; // 每次出库更新时间
-                                                                 // 若字典中不存在该产品，初始化记录
+                    DateTime currentOutboundTime = DateTime.Now;
+                    
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
-                        #region 库存表的更新 ，
                         tb_Inventory inv = invExistEntityList.Find(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
                         if (inv == null)
                         {
-                            //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
                             inv = new tb_Inventory
                             {
                                 ProdDetailID = key.ProdDetailID,
                                 Location_ID = key.Location_ID,
-                                Quantity = 0, // 初始数量
+                                Quantity = 0,
                                 InitInventory = 0,
-                                Inv_Cost = 0, // 假设成本价需从其他地方获取，需根据业务补充
+                                Inv_Cost = 0,
                                 Notes = "销售订单创建",
                                 Sale_Qty = 0,
                             };
@@ -115,34 +114,56 @@ namespace RUINORERP.Business
                         {
                             BusinessHelper.Instance.EditEntity(inv);
                         }
-                        // 初始化分组数据
-                        group = (
-                            Inventory: inv,
-                            SaleQtySum: currentSaleQty // 首次累加
-                                                       //QtySum: currentQty
-                        );
+                        group = (Inventory: inv, SaleQtySum: currentSaleQty);
                         inventoryGroups[key] = group;
-                        #endregion
                     }
                     else
                     {
-                        // 累加已有分组的数值字段
                         group.SaleQtySum += currentSaleQty;
-                        inventoryGroups[key] = group; // 更新分组数据
+                        inventoryGroups[key] = group;
                     }
                 }
 
-                // 处理分组数据，更新库存记录的各字段
-                //循环inventoryGroups
                 foreach (var group in inventoryGroups)
                 {
                     var inv = group.Value.Inventory;
-                    // 累加数值字段
                     inv.Sale_Qty += group.Value.SaleQtySum;
                     invList.Add(inv);
                 }
+                
+                #endregion
+                
+                // 付款状态验证（在事务外执行）
+                var validationError = ValidateOrderPaymentStatus((object)entity.Paytype_ID, (object)entity.PayStatus);
+                if (validationError != null)
+                {
+                    rmrs.Succeeded = false;
+                    rmrs.ErrorMsg = validationError;
+                    if (_appContext.SysConfig.ShowDebugInfo)
+                    {
+                        _logger.Debug(rmrs.ErrorMsg);
+                    }
+                    return rmrs;
+                }
+                
+                // 【事务优化】保存关键数据，用于后续财务独立处理
+                orderId = entity.SOrder_ID;
+                orderNo = entity.SOrderNo;
+                isFromPlatform = entity.IsFromPlatform;
+                paytypeId = entity.Paytype_ID;
+                totalAmount = entity.TotalAmount;
+                
+                // 【事务优化】检查是否需要财务独立处理
+                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
+                if (authorizeController.EnableFinancialModule() && entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
+                {
+                    needProcessFinance = true;
+                }
 
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
 
+                // 更新库存拟销售量
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invList);
                 if (Counter == 0)
@@ -151,178 +172,12 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新数据为0，更新失败！");
                 }
 
-
-                AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                if (authorizeController.EnableFinancialModule())
-                {
-                    #region 生成预收款单 
-
-                    #region 生成预收款单条件判断检测
-                    // 付款状态验证
-                    var validationError = ValidateOrderPaymentStatus((object)entity.Paytype_ID, (object)entity.PayStatus);
-                    if (validationError != null)
-                    {
-                        rmrs.Succeeded = false;
-                        _unitOfWorkManage.RollbackTran();
-                        rmrs.ErrorMsg = validationError;
-                        if (_appContext.SysConfig.ShowDebugInfo)
-                        {
-                            _logger.Debug(rmrs.ErrorMsg);
-                        }
-                        return rmrs;
-                    }
-
-                    #endregion
-
-
-                    // 外币相关处理 正确是 外币时一定要有汇率
-                    decimal exchangeRate = 1; // 获取销售订单的汇率
-                    if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
-                    {
-                        exchangeRate = entity.ExchangeRate; // 获取销售订单的汇率
-                                                            // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                            // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
-                    }
-
-                    //销售订单审核时，非账期，即时收款时
-                    //订金，部分收款和全部收款都要生成预收款。（因为财务必须有一个审核收款行为）
-                    //销售出库时，生成应收去核销预收。 如果客户超付，（预收，收款，实际已经支付。 出库时 只要生成应收，和核销记录，并且回写
-                    if (entity.Paytype_ID != _appContext.PaymentMethodOfPeriod.Paytype_ID)
-                    {
-                        //正常来说。不能重复生成。即使退款也只会有一个对应订单的预收款单。 一个预收款单可以对应正负两个收款单。
-                        // 生成预收款单前 检测
-                        var ctrPreReceivedPayment = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                        var PreReceivedPayment = await ctrPreReceivedPayment.BuildPreReceivedPaymentAsync(entity);
-                        if (PreReceivedPayment.LocalPrepaidAmount > 0)
-                        {
-                            ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrPreReceivedPayment.SaveOrUpdate(PreReceivedPayment);
-                            if (!rmpay.Succeeded)
-                            {
-                                // 处理预收款单生成失败的情况
-                                rmrs.Succeeded = false;
-                                _unitOfWorkManage.RollbackTran();
-                                rmrs.ErrorMsg = $"预收款单生成失败：{rmpay.ErrorMsg ?? "未知错误"}";
-                                if (_appContext.SysConfig.ShowDebugInfo)
-                                {
-                                    _logger.Debug(rmrs.ErrorMsg);
-                                }
-                            }
-                            else
-                            {
-                                if (_appContext.FMConfig.AutoAuditPreReceive)
-                                {
-                                    #region 自动审核预收款
-                                    //销售订单审核时自动将预付款单设为"已生效"状态
-                                    PreReceivedPayment.ApprovalOpinions = "系统自动审核";
-                                    PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                                    PreReceivedPayment.ApprovalResults = true;
-                                    ReturnResults<tb_FM_PreReceivedPayment> autoApproval = await ctrPreReceivedPayment.ApprovalAsync(PreReceivedPayment);
-                                    if (!autoApproval.Succeeded)
-                                    {
-
-                                        rmrs.Succeeded = false;
-                                        _unitOfWorkManage.RollbackTran();
-                                        rmrs.ErrorMsg = $"预收款单自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
-                                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                        await fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核失败", autoApproval.ReturnObject as tb_FM_PreReceivedPayment, rmrs.ErrorMsg);
-                                        if (_appContext.SysConfig.ShowDebugInfo)
-                                        {
-                                            _logger.Debug(rmrs.ErrorMsg);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
-                                        #region 如果是配置了平台订单，订单审核时自动审核预收款及收款单
-
-                                        //按配置自动审核收款单1
-
-                                        if (entity.IsFromPlatform)
-                                        {
-                                            if (_appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
-                                            {
-                                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-                                                //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
-                                                tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
-                                                var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                                                if (rrs.Succeeded)
-                                                {
-                                                    //自动审核收款单1
-                                                    paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
-                                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                                                    paymentRecord.ApprovalResults = true;
-                                                    var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                    ReturnResults<tb_FM_PaymentRecord> rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
-                                                    if (!rr.Succeeded)
-                                                    {
-                                                        rmrs.ErrorMsg = $"预收款单{preReceivedPayment.PreRPNO}审核成功，系统自动审核收款单{paymentRecord.PaymentNo}时失败!";
-                                                        rmrs.Succeeded = false;
-                                                        rmrs.ReturnObject = entity as T;
-                                                        return rmrs;
-                                                    }
-                                                    else
-                                                    {
-                                                        // 注意：ApprovalAsync内部已经更新了预收款单状态和余额，无需重复操作
-                                                        fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("平台订单预收款单自动审核成功，系统自动收款，预收款状态更新为待核销", rr.ReturnObject as tb_FM_PaymentRecord);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else
-                                        {
-                                            //非平台订单。如果预收款单配置中是自动审核成功了，则自动生成则自动生成收款单，但不自动审核收款单。
-                                            try
-                                            {
-                                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-
-                                                if (preReceivedPayment != null)
-                                                {
-                                                    //下面的自动审核会修改PrePaymentStatus状态。所以已经生效生赋值。后面 可能是审核后变为等待核销
-                                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
-                                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
-                                                    paymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
-                                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                                                    if (rrs.Succeeded)
-                                                    {
-                                                        fMAuditLog.CreateAuditLog<tb_FM_PaymentRecord>("非平台订单,预收款单自动审核成功，系统自动生成收款单(待审核)，由财务完成人工审核", rrs.ReturnObject as tb_FM_PaymentRecord);
-                                                    }
-                                                    else
-                                                    {
-                                                        _logger.LogWarning($"非平台订单预收款单自动审核成功，但生成收款单失败: {rrs.ErrorMsg}");
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    _logger.LogWarning("非平台订单预收款单自动审核成功，但返回对象为空，无法生成收款单");
-                                                }
-                                            }
-                                            catch (Exception ex)
-                                            {
-                                                _logger.LogError(ex, "非平台订单生成收款单失败");
-                                                // 不抛出异常，避免影响销售订单审核流程
-                                            }
-
-                                        }
-                                        #endregion
-
-                                    }
-                                    #endregion
-                                }
-                            }
-                        }
-                    }
-                    #endregion
-                }
-
-                //这部分是否能提出到上一级公共部分？
+                // 更新订单状态
                 entity.DataStatus = (int)DataStatus.确认;
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
                 BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
+                
                 var result = await _unitOfWorkManage.GetDbClient().Updateable(entity).UpdateColumns(it => new
                 {
                     it.DataStatus,
@@ -332,22 +187,157 @@ namespace RUINORERP.Business
                     it.Approver_by,
                     it.ApprovalOpinions
                 }).ExecuteCommandAsync();
-                // 注意信息的完整性
+                
                 _unitOfWorkManage.CommitTran();
+                _logger.LogInformation($"销售订单{entity.SOrderNo}审核：主事务提交成功");
+                
+                // 【事务优化】财务独立事务处理（主事务提交后执行）
+                if (needProcessFinance)
+                {
+                    await ProcessFinanceOrderApprovalAsync(orderId, orderNo, isFromPlatform, paytypeId, totalAmount);
+                }
+                
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
             }
             catch (Exception ex)
             {
-                _unitOfWorkManage.RollbackTran();
-                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-                rmrs.ErrorMsg = "事务回滚=>" + ex.Message;
+                // 检查事务状态并回滚
+                try
+                {
+                    var transactionState = _unitOfWorkManage.GetTransactionState();
+                    if (transactionState.IsActive)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        _logger.LogInformation($"销售订单审核：事务已回滚");
+                    }
+                }
+                catch (Exception rollbackEx)
+                {
+                    _logger.LogCritical(rollbackEx, $"销售订单审核：事务回滚失败");
+                }
+                
                 rmrs.Succeeded = false;
+                rmrs.ErrorMsg = $"审核失败：{ex.Message}";
+                _logger.Error(ex, "销售订单审核异常");
                 return rmrs;
             }
-
         }
+        
+        /// <summary>
+        /// 【事务优化】销售订单审核后的财务独立事务处理
+        /// 将预收款单生成、审核等操作从主事务中分离，减少主事务持有时间
+        /// </summary>
+        private async Task ProcessFinanceOrderApprovalAsync(long? orderId, string orderNo, bool isFromPlatform, long? paytypeId, decimal totalAmount)
+        {
+            try
+            {
+                _logger.LogInformation($"销售订单{orderNo}审核：开始处理财务独立事务...");
+                
+                var ctrPreReceivedPayment = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
+                
+                // 重新加载订单实体
+                var order = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
+                    .Where(c => c.SOrder_ID == orderId)
+                    .FirstAsync();
+                
+                if (order == null)
+                {
+                    _logger.LogError($"销售订单{orderNo}审核：无法重新加载订单实体");
+                    return;
+                }
+                
+                // 生成预收款单
+                var PreReceivedPayment = await ctrPreReceivedPayment.BuildPreReceivedPaymentAsync(order);
+                if (PreReceivedPayment.LocalPrepaidAmount > 0)
+                {
+                    ReturnResults<tb_FM_PreReceivedPayment> rmpay = await ctrPreReceivedPayment.SaveOrUpdate(PreReceivedPayment);
+                    if (!rmpay.Succeeded)
+                    {
+                        _logger.LogError($"销售订单{orderNo}审核：预收款单生成失败 - {rmpay.ErrorMsg}");
+                        return;
+                    }
+                    
+                    // 自动审核预收款
+                    if (_appContext.FMConfig.AutoAuditPreReceive)
+                    {
+                        PreReceivedPayment.ApprovalOpinions = "系统自动审核";
+                        PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                        PreReceivedPayment.ApprovalResults = true;
+                        
+                        var autoApproval = await ctrPreReceivedPayment.ApprovalAsync(PreReceivedPayment);
+                        if (!autoApproval.Succeeded)
+                        {
+                            _logger.LogError($"销售订单{orderNo}审核：预收款单自动审核失败 - {autoApproval.ErrorMsg}");
+                            return;
+                        }
+                        
+                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                        
+                        // 平台订单自动生成并审核收款单
+                        if (isFromPlatform && _appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
+                        {
+                            var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
+                            
+                            tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(
+                                new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
+                            
+                            var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                            if (rrs.Succeeded)
+                            {
+                                paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
+                                paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                                paymentRecord.ApprovalResults = true;
+                                
+                                var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                var rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
+                                if (!rr.Succeeded)
+                                {
+                                    _logger.LogError($"销售订单{orderNo}审核：收款单自动审核失败 - {rr.ErrorMsg}");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // 非平台订单，生成收款单但不自动审核
+                            try
+                            {
+                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
+                                
+                                if (preReceivedPayment != null)
+                                {
+                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(
+                                        new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
+                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
+                                    paymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
+                                    
+                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
+                                    if (rrs.Succeeded)
+                                    {
+                                        _logger.LogInformation($"销售订单{orderNo}审核：收款单生成成功(待审核)");
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "非平台订单生成收款单失败");
+                            }
+                        }
+                    }
+                }
+                
+                _logger.LogInformation($"销售订单{orderNo}审核：财务独立事务处理完成");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"销售订单{orderNo}审核：财务独立事务处理失败 - {ex.Message}");
+            }
+        }
+           
 
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿﻿// *************************************
+﻿// *************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -167,7 +167,7 @@ namespace RUINORERP.Business
                 
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                  
                 // 批量更新所有库存
@@ -348,9 +348,9 @@ namespace RUINORERP.Business
                     throw new Exception("库存更新失败！");
                 }
                 
-                // 记录反向库存流水
+                // 记录反向库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
-                await tranController.BatchRecordTransactions(transactionList);
+                await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
                 entity.DataStatus = (int)DataStatus.新建;
                 entity.ApprovalOpinions = "反审";

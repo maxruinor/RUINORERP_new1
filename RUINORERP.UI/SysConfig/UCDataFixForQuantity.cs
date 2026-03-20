@@ -155,28 +155,6 @@ namespace RUINORERP.UI.SysConfig
 
 
 
-
-        //写一个方法来实现两个价格的比较 前一个为原价，后一个为最新价格。求最新价格大于前的价格的百分比。价格是ecimal类型
-        private double ComparePrice(double oldPrice, double newPrice)
-        {
-            if (oldPrice < 0 || newPrice < 0)
-            {
-                //如果有负 直接要求更新
-                return 100;
-                //throw new ArgumentException("Prices cannot be negative.");
-            }
-
-            if (oldPrice == 0)
-            {
-                // 如果原价为 0，无法计算百分比增长
-                // 根据需求返回 -1 或 throw 异常
-                return -1; // 或者抛出定制异常
-            }
-            double diffpirce = Math.Abs(newPrice - oldPrice);
-            double percentage = (diffpirce / oldPrice * 100);
-            return Math.Round(percentage, 2); // 四舍五入到 2 位小数
-        }
-
         private void btnQuery_Click(object sender, EventArgs e)
         {
             QueryInv();
@@ -197,7 +175,7 @@ namespace RUINORERP.UI.SysConfig
             bindingSourceInv.DataSource = inventories.ToBindingSortCollection();
             dataGridViewInv.DataSource = bindingSourceInv;
             dataGridViewInv.EditMode = DataGridViewEditMode.EditOnEnter;
-            
+
             Dictionary<string, string> dic = new Dictionary<string, string>();
             //设置一个集合：列名和显示的名称添加的集合中
             dic = new Dictionary<string, string> {
@@ -237,28 +215,7 @@ namespace RUINORERP.UI.SysConfig
             }
         }
 
-        private async void 全部更新ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (dataGridViewInv.SelectedRows != null)
-            {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
 
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
-                {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
-                }
-               
-            }
-
-            //if (dataGridViewInv.CurrentRow != null
-            //    && dataGridViewInv.CurrentRow.DataBoundItem is View_Inventory inventory)
-            //{
-            //    await CostFix(true, string.Empty, inventory.ProdDetailID.Value);
-            //}
-        }
 
         private void txtSearchKey_TextChanged(object sender, EventArgs e)
         {
@@ -383,18 +340,18 @@ namespace RUINORERP.UI.SysConfig
 
                         case BizType.销售订单:
 
- 
+
 
 
                             break;
                         case BizType.销售出库单:
 
-                           
+
                             break;
                         case BizType.销售退回单:
                             break;
                         case BizType.采购订单:
-                           
+
 
                             break;
                         case BizType.采购入库单:
@@ -405,23 +362,23 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.其他出库单:
 
-                         
+
                             break;
                         case BizType.盘点单:
                             break;
                         case BizType.制令单:
-                          
+
 
                             break;
                         case BizType.BOM物料清单:
 
-                        
+
 
                             break;
                         case BizType.生产领料单:
 
 
-                           
+
                             break;
                         case BizType.生产退料单:
                             break;
@@ -433,19 +390,19 @@ namespace RUINORERP.UI.SysConfig
                             break;
                         case BizType.缴库单:
 
-                        
+
                             break;
                         case BizType.请购单:
                             break;
                         case BizType.产品分割单:
                             break;
                         case BizType.产品组合单:
-                            
+
 
                             break;
                         case BizType.借出单:
 
-                          
+
                             break;
                         case BizType.归还单:
                             break;
@@ -477,188 +434,136 @@ namespace RUINORERP.UI.SysConfig
 
         }
 
-        private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+  
+        private async void btnUpdateQuantity_Click(object sender, EventArgs e)
         {
-            if (tabControl.SelectedTab != null)
-            {
-                List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
-                DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
-                if (dgv != null)
-                {
-                    dgv.AllowUserToAddRows = false;
-                    if (tabControl.SelectedTab.Text.Contains("对应配方"))
-                    {
-                        //双击母件行能将子件所有库存数据带出来+并且将他
-
-                        //dgv.ContextMenuStrip = contextMenuStripCmd;
-                    }
-                    //dgv.ContextMenuStrip = contextMenuStripCmd;
-                    //dgv.Dock = DockStyle.Fill;
-                    // dgv.Refresh();
-                }
-
-            }
+            UpdateSelectedInventoryQuantity();
         }
 
-
-        
-        
-
-
-      
-
-        private async Task 更新为当前成本ToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void UpdateSelectedInventoryQuantity()
         {
-            if (sender is ToolStripMenuItem toolStripMenu)
+            if (dataGridViewInv.SelectedRows.Count == 0)
             {
-                if (tabControl.SelectedTab != null)
+                MessageBox.Show("请先选择要修改的库存记录。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (!int.TryParse(txtQuantity.Text.Trim(), out int newQuantity) || newQuantity < 0)
+            {
+                MessageBox.Show("请输入有效的库存数量（正整数）。", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var selectedRows = dataGridViewInv.SelectedRows.Cast<DataGridViewRow>().ToList();
+            int totalCount = selectedRows.Count;
+            StringBuilder previewMsg = new StringBuilder();
+            previewMsg.AppendLine($"即将修改 {totalCount} 条库存记录：");
+            previewMsg.AppendLine();
+
+            foreach (var row in selectedRows.Take(5))
+            {
+                if (row.DataBoundItem is View_Inventory inv)
                 {
-                    List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
-                    DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
-                    if (dgv != null)
-                    {
-                        dgv.ContextMenuStrip = null;
-                        // dgv.ContextMenuStrip = contextMenuStripCmd;
-                        dgv.Dock = DockStyle.Fill;
-                        if (!chkTestMode.Checked)
-                        {
-                            MainForm.Instance.AppContext.Db.Ado.BeginTran();
-                        }
-                        if (dgv.Tag is BizType bt)
-                        {
-                            switch (bt)
-                            {
-                                case BizType.销售出库单:
-                                    
-                                    break;
-                            }
-
-                        }
-
-                        if (!chkTestMode.Checked)
-                        {
-                            MainForm.Instance.AppContext.Db.Ado.CommitTran();
-                        }
-                    }
-
+                    previewMsg.AppendLine($"SKU: {inv.SKU}, 当前数量: {inv.Quantity}, 新数量: {newQuantity}");
                 }
             }
-        }
 
-        private async Task toolStripMenuItem修复小计总计_Click(object sender, EventArgs e)
-        {
-            if (sender is ToolStripMenuItem toolStripMenu)
+            if (totalCount > 5)
             {
-                if (tabControl.SelectedTab != null)
+                previewMsg.AppendLine($"... 还有 {totalCount - 5} 条记录");
+            }
+
+            previewMsg.AppendLine();
+            previewMsg.AppendLine("是否继续？");
+
+            if (chkTestMode.Checked)
+            {
+                previewMsg.Insert(0, "【测试模式】仅显示修改预览，不执行实际修改：\n\n");
+                MessageBox.Show(previewMsg.ToString(), "测试模式预览", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                richTextBoxLog.AppendText($"[测试模式] 预览修改 {totalCount} 条记录，数量将改为 {newQuantity}\n");
+                return;
+            }
+
+            DialogResult confirmResult = MessageBox.Show(previewMsg.ToString(), "确认修改", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirmResult != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                int successCount = 0;
+                int failCount = 0;
+                StringBuilder errorLog = new StringBuilder();
+
+                foreach (var row in selectedRows)
                 {
-                    List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
-                    DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
-                    if (dgv != null)
+                    if (row.DataBoundItem is View_Inventory inv)
                     {
-                        dgv.ContextMenuStrip = null;
-                        // dgv.ContextMenuStrip = contextMenuStripCmd;
-                        dgv.Dock = DockStyle.Fill;
-                        if (!chkTestMode.Checked)
+                        try
                         {
-                            MainForm.Instance.AppContext.Db.Ado.BeginTran();
-                        }
-                        if (dgv.Tag is BizType bt)
-                        {
-                            switch (bt)
+                            long inventoryId = inv.Inventory_ID;
+                            long prodDetailId = inv.ProdDetailID.Value;
+                            int oldQuantity = inv.Quantity.Value;
+
+                            var inventoryEntity = await MainForm.Instance.AppContext.Db.Queryable<tb_Inventory>()
+                                .Where(it => it.Inventory_ID == inventoryId)
+                                .FirstAsync();
+
+                            if (inventoryEntity != null)
                             {
-                                case BizType.销售出库单:
-                                  
-                                    break;
-                            }
+                                inventoryEntity.Quantity = newQuantity;
+                                inventoryEntity.Modified_at = DateTime.Now;
+                                inventoryEntity.Modified_by = MainForm.Instance.AppContext.CurUserInfo?.UserInfo?.User_ID;
 
-                        }
+                                int result = await MainForm.Instance.AppContext.Db.Updateable(inventoryEntity)
+                                    .Where(it => it.Inventory_ID == inventoryId)
+                                    .ExecuteCommandAsync();
 
-                        if (!chkTestMode.Checked)
-                        {
-                            MainForm.Instance.AppContext.Db.Ado.CommitTran();
-                        }
-                    }
-
-                }
-            }
-        }
-
-        private void 更新关联成本ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (dataGridViewInv.SelectedRows != null)
-            {
-                
-                
-            }
-        }
-
-        private async void 更新库存成本数据ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (dataGridViewInv.SelectedRows != null)
-            {
-                
-            }
-
-        }
-
-
-        private void kryptonLabel2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private async Task 将配方成本更新到库存ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (tabControl.SelectedTab != null)
-            {
-                List<Control> controls = tabControl.SelectedTab.Controls.CastToList<Control>();
-                DataGridView dgv = controls.FirstOrDefault(c => c.GetType().Name == "DataGridView") as DataGridView;
-                if (dgv != null)
-                {
-                    dgv.AllowUserToAddRows = false;
-                    if (tabControl.SelectedTab.Text.Contains("对应配方"))
-                    {
-                        foreach (DataGridViewRow item in dgv.SelectedRows)
-                        {
-                            if (true)
-                            {
-                                if (dataGridViewInv.SelectedRows != null)
+                                if (result > 0)
                                 {
-                                    
-                                    
-                                }
+                                    string auditDesc = $"库存手动修正：SKU[{inv.SKU}] 数量从 {oldQuantity} 变更为 {newQuantity}";
+                                    await MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_Inventory>("库存数量修正", inventoryEntity, auditDesc);
 
+                                    successCount++;
+                                    richTextBoxLog.AppendText($"[成功] SKU:{inv.SKU} 数量 {oldQuantity}->{newQuantity}\n");
+                                }
+                                else
+                                {
+                                    failCount++;
+                                    errorLog.AppendLine($"SKU:{inv.SKU} 更新失败");
+                                }
+                            }
+                            else
+                            {
+                                failCount++;
+                                errorLog.AppendLine($"SKU:{inv.SKU} 未找到库存记录");
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            failCount++;
+                            errorLog.AppendLine($"SKU:{inv.SKU} 异常:{ex.Message}");
+                            richTextBoxLog.AppendText($"[异常] SKU:{inv.SKU} {ex.Message}\n");
+                        }
                     }
-
                 }
 
+                string resultMsg = $"修改完成：成功 {successCount} 条，失败 {failCount} 条";
+                if (failCount > 0)
+                {
+                    resultMsg += $"\n错误信息：{errorLog.ToString()}";
+                }
+
+                MessageBox.Show(resultMsg, "操作完成", MessageBoxButtons.OK, failCount > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+                richTextBoxLog.AppendText($"[完成] {resultMsg}\n");
+
+                await QueryInv();
             }
-        }
-
-        private async void 库存成本更新为指定值ToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (dataGridViewInv.SelectedRows != null)
+            catch (Exception ex)
             {
-                List<tb_Inventory> inventories = new List<tb_Inventory>();
-                foreach (DataGridViewRow dr in dataGridViewInv.SelectedRows)
-                {
-                    if (dr.DataBoundItem is View_Inventory inventory)
-                    {
-                        inventories.Add(inventory.tb_inventory);
-                    }
-                }
-                if (inventories.Count == 1)
-                {
-                   
-                }
-                else
-                {
-                    //只能操作一行库存数据
-                    MessageBox.Show("一次只能操作一行库存数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
+                MessageBox.Show($"修改库存数量时发生错误：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                richTextBoxLog.AppendText($"[错误] {ex.Message}\n");
             }
         }
     }

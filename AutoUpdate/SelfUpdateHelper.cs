@@ -521,7 +521,7 @@ namespace AutoUpdate
                         WriteLog("AutoUpdateLog.txt", $"[ERP启动] 进程名称: {process.ProcessName}");
                         
                         // 等待进程启动完成
-                        Thread.Sleep(2000);
+                        Thread.Sleep(1500);
                         
                         // 检查进程是否仍在运行
                         if (!process.HasExited)

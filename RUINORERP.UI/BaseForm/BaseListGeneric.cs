@@ -1438,7 +1438,8 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-            dataGridView1.Refresh();
+            // 移除不必要的Refresh调用，BindingSource会自动通知更新
+            // dataGridView1.Refresh();
         }
 
         protected virtual void Modify(BaseEditGeneric<T> frmadd)
@@ -1542,7 +1543,8 @@ namespace RUINORERP.UI.BaseForm
                 }
 
             }
-            dataGridView1.Refresh();
+            // 移除不必要的Refresh调用，BindingSource会自动通知更新
+            // dataGridView1.Refresh();
         }
 
 

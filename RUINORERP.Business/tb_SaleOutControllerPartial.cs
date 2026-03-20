@@ -83,10 +83,18 @@ namespace RUINORERP.Business
                     List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                     List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
 
+                    // 优化：预先计算重复的ProdDetailID，避免在循环内重复查询
+                    var duplicateProdDetailIds = details
+                        .Select(c => c.ProdDetailID)
+                        .ToList()
+                        .GroupBy(x => x)
+                        .Where(x => x.Count() > 1)
+                        .Select(x => x.Key)
+                        .ToHashSet();
+
                     for (global::System.Int32 i = 0; i < details.Count; i++)
                     {
-                        var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                        if (aa.Count > 0 && details[i].SaleOutDetail_ID > 0)
+                        if (duplicateProdDetailIds.Contains(details[i].ProdDetailID) && details[i].SaleOutDetail_ID > 0)
                         {
                             #region 产品ID可能大于1行，共用料号情况
                             tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID
@@ -682,6 +690,15 @@ namespace RUINORERP.Business
                         }
 
                         //分两种情况处理。
+                        // 优化：预先计算重复的ProdDetailID，避免在循环内重复查询
+                        var duplicateOrderProdDetailIds = entity.tb_saleorder.tb_SaleOrderDetails
+                            .Select(c => c.ProdDetailID)
+                            .ToList()
+                            .GroupBy(x => x)
+                            .Where(x => x.Count() > 1)
+                            .Select(x => x.Key)
+                            .ToHashSet();
+
                         for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                         {
                             //如果当前订单明细行，不存在于出库明细行。直接跳过。这种就是多行多品被删除时。不需要比较
@@ -699,8 +716,7 @@ namespace RUINORERP.Business
                                       entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
                             //明细中有相同的产品或物品。
                             //2024-4-29 思路更新:如果订单中有相同的产品的多行情况。出库明细冗余了订单明细的行号ID，就容易分清具体行的数据
-                            var aa = entity.tb_saleorder.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                            if (aa.Count > 0 && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
+                            if (duplicateOrderProdDetailIds.Contains(entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID) && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
                             {
                                 #region 如果存在不是引用的明细,则不允许出库。这样不支持手动添加的情况。
                                 if (entity.tb_saleorder.tb_SaleOrderDetails.Any(c => c.SaleOrderDetail_ID == 0))
@@ -1480,6 +1496,15 @@ namespace RUINORERP.Business
                         detailList.AddRange(item.tb_SaleOutDetails);
                     }
 
+                    // 优化：预先计算重复的ProdDetailID，避免在循环内重复查询
+                    var duplicateOrderProdDetailIds2 = entity.tb_saleorder.tb_SaleOrderDetails
+                        .Select(c => c.ProdDetailID)
+                        .ToList()
+                        .GroupBy(x => x)
+                        .Where(x => x.Count() > 1)
+                        .Select(x => x.Key)
+                        .ToHashSet();
+
                     //分两种情况处理。
                     for (int i = 0; i < entity.tb_saleorder.tb_SaleOrderDetails.Count; i++)
                     {
@@ -1488,8 +1513,7 @@ namespace RUINORERP.Business
                         string prodName = entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.CNName +
                                   entity.tb_saleorder.tb_SaleOrderDetails[i].tb_proddetail.tb_prod.Specifications;
                         //明细中有相同的产品或物品。
-                        var aa = entity.tb_saleorder.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                        if (aa.Count > 0 && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
+                        if (duplicateOrderProdDetailIds2.Contains(entity.tb_saleorder.tb_SaleOrderDetails[i].ProdDetailID) && entity.tb_saleorder.tb_SaleOrderDetails[i].SaleOrderDetail_ID > 0)
                         {
                             #region 如果存在不是引用的明细,则不允许入库。这样不支持手动添加的情况。
                             if (entity.tb_SaleOutDetails.Any(c => c.SaleOrderDetail_ID == 0))
@@ -1757,10 +1781,18 @@ namespace RUINORERP.Business
                 List<tb_SaleOutReDetail> details = mapper.Map<List<tb_SaleOutReDetail>>(saleout.tb_SaleOutDetails);
                 List<tb_SaleOutReDetail> NewDetails = new List<tb_SaleOutReDetail>();
 
+                // 优化：预先计算重复的ProdDetailID，避免在循环内重复查询
+                var duplicateProdDetailIds3 = details
+                    .Select(c => c.ProdDetailID)
+                    .ToList()
+                    .GroupBy(x => x)
+                    .Where(x => x.Count() > 1)
+                    .Select(x => x.Key)
+                    .ToHashSet();
+
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
-                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                    if (aa.Count > 0 && details[i].SaleOutDetail_ID > 0)
+                    if (duplicateProdDetailIds3.Contains(details[i].ProdDetailID) && details[i].SaleOutDetail_ID > 0)
                     {
                         #region 产品ID可能大于1行，共用料号情况
                         tb_SaleOutDetail item = saleout.tb_SaleOutDetails.FirstOrDefault(c => c.ProdDetailID == details[i].ProdDetailID

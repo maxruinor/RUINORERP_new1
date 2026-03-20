@@ -976,7 +976,7 @@ namespace RUINORERP.UI
             watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName;
             // watcher.NotifyFilter = NotifyFilters.LastWrite;
 
-            watcher.Changed += (sender, e) =>
+            watcher.Changed += async (sender, e) =>
             {
                 if (e.Name == UpdatefilePath && e.ChangeType == WatcherChangeTypes.Changed)
                 {
@@ -998,9 +998,9 @@ namespace RUINORERP.UI
                         }
                         catch (IOException ioEx)
                         {
-                            // 文件被占用，等待2秒后重试
+                            // 文件被占用，异步等待后重试
                             System.Diagnostics.Debug.WriteLine($"文件被占用，正在重试... ({retryCount + 1}/5)");
-                            Thread.Sleep(2000);
+                            await Task.Delay(500); // 异步等待而非阻塞线程
                             retryCount++;
                         }
                         catch (Exception ex)

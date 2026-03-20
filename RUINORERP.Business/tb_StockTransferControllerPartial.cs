@@ -44,14 +44,34 @@ namespace RUINORERP.Business
             tb_StockTransfer entity = ObjectEntity as tb_StockTransfer;
             try
             {
-                // 开启事务，保证数据一致性
-                _unitOfWorkManage.BeginTran();
-
-              var   ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 if (entity == null)
                 {
                     return rmsr;
                 }
+
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                
+                foreach (var child in entity.tb_StockTransferDetails)
+                {
+                    allKeys.Add((child.ProdDetailID, entity.Location_ID_from));
+                    allKeys.Add((child.ProdDetailID, entity.Location_ID_to));
+                }
+
+                var distinctKeys = allKeys.Distinct().ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
+              var   ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 // 创建库存更新列表（合并调出和调入）
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建库存插入列表（仅用于新增库存）
@@ -66,32 +86,30 @@ namespace RUINORERP.Business
                     #region 库存表的更新 调出
                     //标记是否有期初
 
-                    tb_Inventory invFrom = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_from);
-                    if (invFrom != null)
-                    {
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (invFrom.Quantity - child.Qty) < 0)
-                        {
-                            rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
-                            rmsr.Succeeded = false;
-                            return rmsr;
-                        }
-
-                        //更新库存
-                        invFrom.Quantity = invFrom.Quantity - child.Qty;
-                        invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
-                        invFrom.LatestOutboundTime = System.DateTime.Now;
-                        BusinessHelper.Instance.EditEntity(invFrom);
-                        // 添加到批量更新列表
-                        invUpdateList.Add(invFrom);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_from), out var invFrom) || invFrom == null)
                     {
                         rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
                         _unitOfWorkManage.RollbackTran();
                         rmsr.Succeeded = false;
                         return rmsr;
                     }
+
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (invFrom.Quantity - child.Qty) < 0)
+                    {
+                        rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
+                        _unitOfWorkManage.RollbackTran();
+                        rmsr.Succeeded = false;
+                        return rmsr;
+                    }
+
+                    //更新库存
+                    invFrom.Quantity = invFrom.Quantity - child.Qty;
+                    invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
+                    invFrom.LatestOutboundTime = System.DateTime.Now;
+                    BusinessHelper.Instance.EditEntity(invFrom);
+                    // 添加到批量更新列表
+                    invUpdateList.Add(invFrom);
                     
                     // 实时获取调出仓库的当前库存成本
                     decimal realtimeCost = invFrom.Inv_Cost;
@@ -112,40 +130,43 @@ namespace RUINORERP.Business
                     transactionList.Add(transactionFrom);
 
                     #endregion
-#warning 将来要更新。增加单据调拨费用，如运费杂费 入仓费，调拨的额外成本，如运费、装卸费， 出仓不管成本。入库类似采购一样算成本
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初
 
-                    tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_to);
-                    if (invTo != null)
-                    {
-                        //更新库存
-                        invTo.Quantity = invTo.Quantity + child.Qty;
-                        invTo.LatestStorageTime = System.DateTime.Now;
-                        invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
-                        BusinessHelper.Instance.EditEntity(invTo);
-                        // 添加到批量更新列表
-                        invUpdateList.Add(invTo);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_to), out var invTo) || invTo == null)
                     {
                         invTo = new tb_Inventory();
                         invTo.Location_ID = entity.Location_ID_to;
                         invTo.ProdDetailID = child.ProdDetailID;
-                        invTo.Quantity = invTo.Quantity + child.Qty;
+                        invTo.Quantity = child.Qty;
                         invTo.InitInventory = (int)invTo.Quantity;
                         invTo.CostFIFO = invFrom.CostFIFO;
                         invTo.CostMonthlyWA = invFrom.CostMonthlyWA;
+                        invTo.Inv_Cost = invFrom.Inv_Cost;
+                        invTo.CostMovingWA = invFrom.CostMovingWA;
+                        invTo.Inv_AdvCost = invFrom.Inv_AdvCost;
+                        invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
+                        invTo.LatestStorageTime = System.DateTime.Now;
+                        invTo.Notes = "";
+                        BusinessHelper.Instance.InitEntity(invTo);
+                        invDict[(child.ProdDetailID, entity.Location_ID_to)] = invTo;
+                        // 添加到插入列表
+                        invInsertList.Add(invTo);
+                    }
+                    else
+                    {
+                        //更新库存
+                        invTo.Quantity = invTo.Quantity + child.Qty;
                         invTo.CostMovingWA = invFrom.CostMovingWA;
                         invTo.Inv_AdvCost = invFrom.Inv_AdvCost;
                         invTo.Inv_Cost = invFrom.Inv_Cost;
                         invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
                         invTo.LatestStorageTime = System.DateTime.Now;
-                        invTo.Notes = "";//后面修改数据库是不需要？
-                        BusinessHelper.Instance.InitEntity(invTo);
-                        // 添加到插入列表
-                        invInsertList.Add(invTo);
+                        BusinessHelper.Instance.EditEntity(invTo);
+                        // 添加到批量更新列表
+                        invUpdateList.Add(invTo);
                     }
                     
                     // 创建调入仓库的库存流水记录
@@ -233,9 +254,27 @@ namespace RUINORERP.Business
             ReturnResults<T> rmsr = new ReturnResults<T>();
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                
+                foreach (var child in entity.tb_StockTransferDetails)
+                {
+                    allKeys.Add((child.ProdDetailID, entity.Location_ID_from));
+                    allKeys.Add((child.ProdDetailID, entity.Location_ID_to));
+                }
+
+                var distinctKeys = allKeys.Distinct().ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 // 创建批量更新列表
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -250,36 +289,8 @@ namespace RUINORERP.Business
                     #region 库存表的更新 反审时，调出的要加回来。
                     //标记是否有期初
 
-                    tb_Inventory invFrom = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_from);
-                    if (invFrom != null)
-                    {
-                        //更新库存
-                        invFrom.Quantity = invFrom.Quantity + child.Qty;
-                        invFrom.LatestStorageTime = System.DateTime.Now;
-                        invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
-                        BusinessHelper.Instance.EditEntity(invFrom);
-                        // 添加到批量更新列表
-                        invUpdateList.Add(invFrom);
-                        
-                        // 实时获取当前库存成本
-                        decimal realtimeCost = invFrom.Inv_Cost;
-                        
-                        // 创建调出仓库的反向库存流水记录（反审核时调出仓库增加库存）
-                        tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
-                        transactionFrom.ProdDetailID = invFrom.ProdDetailID;
-                        transactionFrom.Location_ID = invFrom.Location_ID;
-                        transactionFrom.BizType = (int)BizType.调拨单;
-                        transactionFrom.ReferenceId = entity.StockTransferID;
-                        transactionFrom.ReferenceNo = entity.StockTransferNo;
-                        transactionFrom.QuantityChange = child.Qty; // 反审核时调出仓库增加库存
-                        transactionFrom.AfterQuantity = invFrom.Quantity;
-                        transactionFrom.UnitCost = realtimeCost; // 使用实时成本
-                        transactionFrom.TransactionTime = DateTime.Now;
-                        transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transactionFrom.Notes = $"调拨单反审核：{entity.StockTransferNo}，调出仓库反向调整：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
-                        transactionList.Add(transactionFrom);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_from), out var invFrom) || invFrom == null)
                     {
                         rmsr.ErrorMsg = "调出仓库中不存在这个产品的库存，出库产品必须存在于仓库中。";
                         _unitOfWorkManage.RollbackTran();
@@ -287,54 +298,78 @@ namespace RUINORERP.Business
                         return rmsr;
                     }
 
+                    //更新库存
+                    invFrom.Quantity = invFrom.Quantity + child.Qty;
+                    invFrom.LatestStorageTime = System.DateTime.Now;
+                    invFrom.Inv_SubtotalCostMoney = invFrom.Inv_Cost * invFrom.Quantity;
+                    BusinessHelper.Instance.EditEntity(invFrom);
+                    // 添加到批量更新列表
+                    invUpdateList.Add(invFrom);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCost = invFrom.Inv_Cost;
+                    
+                    // 创建调出仓库的反向库存流水记录（反审核时调出仓库增加库存）
+                    tb_InventoryTransaction transactionFrom = new tb_InventoryTransaction();
+                    transactionFrom.ProdDetailID = invFrom.ProdDetailID;
+                    transactionFrom.Location_ID = invFrom.Location_ID;
+                    transactionFrom.BizType = (int)BizType.调拨单;
+                    transactionFrom.ReferenceId = entity.StockTransferID;
+                    transactionFrom.ReferenceNo = entity.StockTransferNo;
+                    transactionFrom.QuantityChange = child.Qty; // 反审核时调出仓库增加库存
+                    transactionFrom.AfterQuantity = invFrom.Quantity;
+                    transactionFrom.UnitCost = realtimeCost; // 使用实时成本
+                    transactionFrom.TransactionTime = DateTime.Now;
+                    transactionFrom.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionFrom.Notes = $"调拨单反审核：{entity.StockTransferNo}，调出仓库反向调整：{entity.Location_ID_from}，产品：{invFrom.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionFrom);
+
                     #endregion
 
                     #region 库存表的更新  调入时不考虑成本价格,如果初次入库时则使用调出时的成本。
                     //标记是否有期初
 
-                    tb_Inventory invTo = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID_to);
-                    if (invTo != null)
-                    {
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - child.Qty) < 0)
-                        {
-                            rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
-                            rmsr.Succeeded = false;
-                            return rmsr;
-                        }
-
-                        //更新库存
-                        invTo.Quantity = invTo.Quantity - child.Qty;
-                        invTo.LatestOutboundTime = System.DateTime.Now;
-                        invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
-                        BusinessHelper.Instance.EditEntity(invTo);
-                        // 添加到批量更新列表
-                        invUpdateList.Add(invTo);
-                        
-                        // 实时获取当前库存成本
-                        decimal realtimeCost = invTo.Inv_Cost;
-                        
-                        // 创建调入仓库的反向库存流水记录（反审核时调入仓库减少库存）
-                        tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
-                        transactionTo.ProdDetailID = invTo.ProdDetailID;
-                        transactionTo.Location_ID = invTo.Location_ID;
-                        transactionTo.BizType = (int)BizType.调拨单;
-                        transactionTo.ReferenceId = entity.StockTransferID;
-                        transactionTo.ReferenceNo = entity.StockTransferNo;
-                        transactionTo.QuantityChange = -child.Qty; // 反审核时调入仓库减少库存
-                        transactionTo.AfterQuantity = invTo.Quantity;
-                        transactionTo.UnitCost = realtimeCost; // 使用实时成本
-                        transactionTo.TransactionTime = DateTime.Now;
-                        transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transactionTo.Notes = $"调拨单反审核：{entity.StockTransferNo}，调入仓库反向调整：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
-                        transactionList.Add(transactionTo);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, entity.Location_ID_to), out var invTo) || invTo == null)
                     {
                         //正常逻辑不会执行到这里
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception("调入仓库中不存在这个产品的库存，出库产品必须存在于仓库中。");
                     }
+
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (invTo.Quantity - child.Qty) < 0)
+                    {
+                        rmsr.ErrorMsg = "系统设置不允许负库存，请检查调出数量与库存相关数据";
+                        _unitOfWorkManage.RollbackTran();
+                        rmsr.Succeeded = false;
+                        return rmsr;
+                    }
+
+                    //更新库存
+                    invTo.Quantity = invTo.Quantity - child.Qty;
+                    invTo.LatestOutboundTime = System.DateTime.Now;
+                    invTo.Inv_SubtotalCostMoney = invTo.Inv_Cost * invTo.Quantity;
+                    BusinessHelper.Instance.EditEntity(invTo);
+                    // 添加到批量更新列表
+                    invUpdateList.Add(invTo);
+                    
+                    // 实时获取当前库存成本
+                    decimal realtimeCostTo = invTo.Inv_Cost;
+                    
+                    // 创建调入仓库的反向库存流水记录（反审核时调入仓库减少库存）
+                    tb_InventoryTransaction transactionTo = new tb_InventoryTransaction();
+                    transactionTo.ProdDetailID = invTo.ProdDetailID;
+                    transactionTo.Location_ID = invTo.Location_ID;
+                    transactionTo.BizType = (int)BizType.调拨单;
+                    transactionTo.ReferenceId = entity.StockTransferID;
+                    transactionTo.ReferenceNo = entity.StockTransferNo;
+                    transactionTo.QuantityChange = -child.Qty; // 反审核时调入仓库减少库存
+                    transactionTo.AfterQuantity = invTo.Quantity;
+                    transactionTo.UnitCost = realtimeCostTo; // 使用实时成本
+                    transactionTo.TransactionTime = DateTime.Now;
+                    transactionTo.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
+                    transactionTo.Notes = $"调拨单反审核：{entity.StockTransferNo}，调入仓库反向调整：{entity.Location_ID_to}，产品：{invTo.tb_proddetail?.tb_prod?.CNName}";
+                    transactionList.Add(transactionTo);
                     #endregion
                 }
                 

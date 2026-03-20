@@ -51,10 +51,24 @@ namespace RUINORERP.Business
 
             try
             {
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var requiredKeys = entity.tb_PurReturnEntryDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //BillConverterFactory bcf = _appContext.GetRequiredService<BillConverterFactory>();
 
 
@@ -100,8 +114,9 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
 
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    if (!invDict.TryGetValue(key, out var inv) || inv == null)
                     {
                         _unitOfWorkManage.RollbackTran();
                         rs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法进行采购退货入库。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
@@ -354,11 +369,25 @@ namespace RUINORERP.Business
             rs.Succeeded = false;
             try
             {
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var requiredKeys = entity.tb_PurReturnEntryDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建反向库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
@@ -367,14 +396,16 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 期初已经有数据了，则要
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    if (!invDict.TryGetValue(key, out var inv) || inv == null)
                     {
                         inv = new tb_Inventory();
                         inv.Quantity = inv.Quantity - child.Quantity;
                         inv.InitInventory =0;
                         inv.Notes = "";//后面修改数据库是不需要？
                         BusinessHelper.Instance.InitEntity(inv);
+                        invDict[key] = inv;
                     }
                     else
                     {

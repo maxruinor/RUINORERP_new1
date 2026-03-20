@@ -130,10 +130,42 @@ namespace RUINORERP.Business
                 {
                     tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
+                    #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                    var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                    if (entity.tb_FM_PriceAdjustmentDetails != null)
+                    {
+                        foreach (var detail in entity.tb_FM_PriceAdjustmentDetails)
+                        {
+                            if (detail.ProdDetailID.HasValue)
+                            {
+                                allKeys2.Add((detail.ProdDetailID.Value, detail.Location_ID));
+                            }
+                        }
+                    }
+
+                    var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                    if (allKeys2.Count > 0)
+                    {
+                        var distinctProdDetailIds = allKeys2.Select(k => k.ProdDetailID).Distinct().ToList();
+                        var requiredPairs = allKeys2.Distinct().ToHashSet();
+                        var inventoryList = await _unitOfWorkManage.GetDbClient()
+                            .Queryable<tb_Inventory>()
+                            .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                            .ToListAsync();
+                        inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                        invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    }
+                    #endregion
+
                     for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
                     {
                         var detail = entity.tb_FM_PriceAdjustmentDetails[i];
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == detail.ProdDetailID && i.Location_ID == detail.Location_ID);
+                        if (!detail.ProdDetailID.HasValue)
+                            continue;
+                        
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (detail.ProdDetailID.Value, detail.Location_ID);
+                        invDict2.TryGetValue(key, out var inv);
                         if (inv != null)
                         {
                             #region 恢复成本
@@ -221,10 +253,42 @@ namespace RUINORERP.Business
                 {
                     tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
+                    #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                    var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                    if (entity.tb_FM_PriceAdjustmentDetails != null)
+                    {
+                        foreach (var detail in entity.tb_FM_PriceAdjustmentDetails)
+                        {
+                            if (detail.ProdDetailID.HasValue)
+                            {
+                                allKeys.Add((detail.ProdDetailID.Value, detail.Location_ID));
+                            }
+                        }
+                    }
+
+                    var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                    if (allKeys.Count > 0)
+                    {
+                        var distinctProdDetailIds = allKeys.Select(k => k.ProdDetailID).Distinct().ToList();
+                        var requiredPairs = allKeys.Distinct().ToHashSet();
+                        var inventoryList = await _unitOfWorkManage.GetDbClient()
+                            .Queryable<tb_Inventory>()
+                            .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                            .ToListAsync();
+                        inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                        invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                    }
+                    #endregion
+
                     for (int i = 0; i < entity.tb_FM_PriceAdjustmentDetails.Count; i++)
                     {
                         var detail = entity.tb_FM_PriceAdjustmentDetails[i];
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == detail.ProdDetailID && i.Location_ID == detail.Location_ID);
+                        if (!detail.ProdDetailID.HasValue)
+                            continue;
+                        
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (detail.ProdDetailID.Value, detail.Location_ID);
+                        invDict.TryGetValue(key, out var inv);
                         if (inv != null)
                         {
                             #region 计算成本

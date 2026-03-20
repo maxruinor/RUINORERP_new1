@@ -454,190 +454,94 @@ namespace RUINORERP.UI.PSI.SAL
 
             entity.PropertyChanged += async (sender, s2) =>
             {
-                //如果是销售订单引入变化则加载明细及相关数据
-                if ((entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) && entity.SOrder_ID.HasValue && entity.SOrder_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.SOrder_ID))
+                bool isOrderChanged = (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改) 
+                    && entity.SOrder_ID.HasValue 
+                    && entity.SOrder_ID > 0 
+                    && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.SOrder_ID);
+
+                if (isOrderChanged)
                 {
-                    await OrderToOutBill(entity.SOrder_ID.Value);
+                    var orderId = entity.SOrder_ID.Value;
+                    _ = Task.Run(async () =>
+                    {
+                        await OrderToOutBill(orderId);
+                    });
                 }
 
-
-                //权限允许
-                if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                Action updateUI = () =>
                 {
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Currency_ID) && entity.Currency_ID > 0)
-                    {
+                    if (IsDisposed || Disposing) return;
 
-                        if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
+                    if ((true && entity.DataStatus == (int)DataStatus.草稿) || (true && entity.DataStatus == (int)DataStatus.新建))
+                    {
+                        if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Currency_ID) && entity.Currency_ID > 0)
                         {
-                            if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
+                            if (cmbCurrency_ID.SelectedItem is tb_Currency cv)
                             {
-                                //显示外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, true);
-                                entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
-                                if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
+                                if (cv.CurrencyCode.Trim() != DefaultCurrency.RMB.ToString())
                                 {
-                                    EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
-                                    //
-                                    EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision()); // 四舍五入到 2 位小数
-                                }
-                                lblExchangeRate.Visible = true;
-                                txtExchangeRate.Visible = true;
-                                lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
-                            }
-                            else
-                            {
-                                //隐藏外币相关
-                                UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, false);
-                                lblExchangeRate.Visible = false;
-                                txtExchangeRate.Visible = false;
-                                entity.ExchangeRate = 1;
-                                entity.ForeignTotalAmount = 0;
-                            }
-                        }
-
-                    }
-
-                    if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
-                    {
-                        if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
-                        {
-                            EditEntity.tb_paymentmethod = paymentMethod;
-                        }
-                    }
-                    /*
-
-                    #region 计算运费成本分摊
-                    if (entity.FreightCost >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightCost))
-                    {
-                        // 如果正在计算中，则跳过本次处理，避免循环
-                        if (_isCalculating) return;
-                        try
-                        {
-                            // 设置计算状态
-                            _isCalculating = true;
-                            Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightCost;
-                            string colName = colNameExp.GetMemberInfo().Name;
-                            var coltarget = sgh.SGDefine[colName];
-                            int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
-
-
-                            //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                            //根据系统设置中的分摊规则来分配运费收入到明细。
-                            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
-                            {
-                                // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                                foreach (var item in entity.tb_SaleOutDetails)
-                                {
-                                    item.AllocatedFreightCost = EditEntity.FreightCost * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
-                                    item.AllocatedFreightCost = item.AllocatedFreightCost.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                                    item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
-                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
+                                    UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, true);
+                                    entity.ExchangeRate = BizService.GetExchangeRateFromCache(cv.Currency_ID, AppContext.BaseCurrency.Currency_ID);
+                                    if (EditEntity.Currency_ID != AppContext.BaseCurrency.Currency_ID)
                                     {
-                                        if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
-                                        {
-                                            if (line.ProdDetailID == item.ProdDetailID)
-                                            {
-                                                Position position = new Position(i, colIndex);
-                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
-                                                continue;
-                                            }
-                                        }
+                                        EditEntity.ForeignTotalAmount = EditEntity.TotalAmount / EditEntity.ExchangeRate;
+                                        EditEntity.ForeignTotalAmount = Math.Round(EditEntity.ForeignTotalAmount, MainForm.Instance.authorizeController.GetMoneyDataPrecision());
                                     }
+                                    lblExchangeRate.Visible = true;
+                                    txtExchangeRate.Visible = true;
+                                    lblForeignTotalAmount.Text = $"金额({cv.CurrencyCode})";
                                 }
-                            }
-                        }
-                        finally
-                        {
-                            // 无论是否发生异常，都要重置计算状态
-                            _isCalculating = false;
-                        }
-                    }
-
-                    #endregion
-
-                    #region 计算运费收入分摊
-                    if (entity.FreightIncome >= 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.FreightIncome))
-                    {// 如果正在计算中，则跳过本次处理，避免循环
-                        if (_isCalculating) return;
-                        try
-                        {
-                            // 设置计算状态
-                            _isCalculating = true;
-                            Expression<Func<tb_SaleOutDetail, object>> colNameExp = c => c.AllocatedFreightIncome;
-                            string colName = colNameExp.GetMemberInfo().Name;
-                            var coltarget = sgh.SGDefine[colName];
-                            int colIndex = sgh.SGDefine.grid.Columns.GetColumnInfo(coltarget.UniqueId).Index;
-                            //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
-                            //根据系统设置中的分摊规则来分配运费收入到明细。
-                            if (MainForm.Instance.AppContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
-                            {
-                                // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                                foreach (var item in entity.tb_SaleOutDetails)
+                                else
                                 {
-                                    item.AllocatedFreightIncome = EditEntity.FreightIncome * (item.Quantity.ToDecimal() / EditEntity.TotalQty.ToDecimal());
-                                    item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                                    item.FreightAllocationRules = MainForm.Instance.AppContext.SysConfig.FreightAllocationRules;
-                                    for (int i = 0; i < sgh.SGDefine.grid.Rows.Count; i++)
-                                    {
-                                        if (sgh.SGDefine.grid.Rows[i].RowData != null && sgh.SGDefine.grid.Rows[i].RowData is tb_SaleOutDetail line)
-                                        {
-                                            if (line.ProdDetailID == item.ProdDetailID)
-                                            {
-                                                Position position = new Position(i, colIndex);
-                                                sgh.SetCellValueForCurrentUICell(coltarget, colName, position, item);
-                                                continue;
-                                            }
-                                        }
-                                    }
+                                    UIHelper.ControlForeignFieldInvisible<tb_SaleOut>(this, false);
+                                    lblExchangeRate.Visible = false;
+                                    txtExchangeRate.Visible = false;
+                                    entity.ExchangeRate = 1;
+                                    entity.ForeignTotalAmount = 0;
                                 }
                             }
                         }
-                        catch (Exception ex)
-                        {
 
-                        }
-                        finally
+                        if (s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.Paytype_ID) && entity.Paytype_ID > 0)
                         {
-                            // 无论是否发生异常，都要重置计算状态
-                            _isCalculating = false;
-                        }
-                    }
-
-                    #endregion
-                    */
-
-                    if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
-                    {
-                        var obj = _cacheManager.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
-                        if (obj != null && obj.ToString() != "System.Object")
-                        {
-                            if (obj is tb_CustomerVendor cv)
+                            if (cmbPaytype_ID.SelectedItem is tb_PaymentMethod paymentMethod)
                             {
-                                EditEntity.Employee_ID = cv.Employee_ID;
+                                EditEntity.tb_paymentmethod = paymentMethod;
+                            }
+                        }
+
+                        if (entity.CustomerVendor_ID > 0 && s2.PropertyName == entity.GetPropertyName<tb_SaleOut>(c => c.CustomerVendor_ID))
+                        {
+                            var obj = _cacheManager.GetEntity<tb_CustomerVendor>(entity.CustomerVendor_ID);
+                            if (obj != null && obj.ToString() != "System.Object")
+                            {
+                                if (obj is tb_CustomerVendor cv)
+                                {
+                                    EditEntity.Employee_ID = cv.Employee_ID;
+                                }
                             }
                         }
                     }
-                }
 
-                //显示 打印状态 如果是草稿状态 不显示打印
-                if ((DataStatus)entity.DataStatus != DataStatus.草稿)
-                {
-                    toolStripbtnPrint.Enabled = true;
-                    if (entity.PrintStatus == 0)
+                    if ((DataStatus)entity.DataStatus != DataStatus.草稿)
                     {
-                        lblPrintStatus.Text = "未打印";
+                        toolStripbtnPrint.Enabled = true;
+                        lblPrintStatus.Text = entity.PrintStatus == 0 ? "未打印" : $"打印{entity.PrintStatus}次";
                     }
                     else
                     {
-                        lblPrintStatus.Text = $"打印{entity.PrintStatus}次";
+                        toolStripbtnPrint.Enabled = false;
                     }
+                };
 
+                if (InvokeRequired)
+                {
+                    BeginInvoke(updateUI);
                 }
                 else
                 {
-                    toolStripbtnPrint.Enabled = false;
+                    updateUI();
                 }
-
             };
 
 
@@ -1186,15 +1090,32 @@ namespace RUINORERP.UI.PSI.SAL
                                 this.Invoke((MethodInvoker)delegate
                                 {
                                     MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】自动审核成功(全额预收款订单)");
+                                    // 自动审核成功后清除变化标志，避免误提示"有数据没有保存"
+                                    if (EditEntity is BaseEntity baseEntity)
+                                    {
+                                        baseEntity.AcceptChanges();
+                                    }
                                     // 刷新当前单据状态
                                     Refreshs();
                                 });
                             }
                             else if (!string.IsNullOrEmpty(autoAuditResult.ErrorMsg))
                             {
+                                // 在UI线程中显示错误信息弹窗
                                 this.Invoke((MethodInvoker)delegate
                                 {
-                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】{autoAuditResult.ErrorMsg}", Color.Red);
+                                    string errorTitle = "自动审核失败";
+                                    string errorContent = autoAuditResult.ErrorMsg;
+                                    
+                                    // 判断是否为库存不足相关错误
+                                    if (errorContent.Contains("库存") || errorContent.Contains("负库存") || errorContent.Contains("Quantity"))
+                                    {
+                                        errorTitle = "自动审核失败 - 库存不足";
+                                        errorContent = $"审核失败：{errorContent}\n\n请检查库存数量或联系管理员处理。";
+                                    }
+                                    
+                                    MessageBox.Show(errorContent, errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                    MainForm.Instance.PrintInfoLog($"销售出库单【{EditEntity.SaleOutNo}】{errorTitle}:{autoAuditResult.ErrorMsg}", Color.Red);
                                 });
                             }
                         }
@@ -1203,6 +1124,7 @@ namespace RUINORERP.UI.PSI.SAL
                             this.Invoke((MethodInvoker)delegate
                             {
                                 MainForm.Instance.uclog.AddLog($"销售出库单【{EditEntity?.SaleOutNo}】自动审核异常:{ex.Message}", UILogType.错误);
+                                MessageBox.Show($"自动审核异常：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             });
                         }
                     });

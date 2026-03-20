@@ -46,7 +46,7 @@ using Expression = System.Linq.Expressions.Expression;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 单表基础资料操作
+    /// 单表基础资料操作1
     /// </summary>
     public class BaseController<T> : BaseController where T : class
     {

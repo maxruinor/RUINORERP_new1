@@ -50,7 +50,19 @@ namespace RUINORERP.Business
             tb_StockIn entity = ObjectEntity as tb_StockIn;
             try
             {
+                #region 【死锁优化】第一步：预处理阶段（事务外批量预加载库存）
+                var requiredKeys = entity.tb_StockInDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
 
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
@@ -60,41 +72,26 @@ namespace RUINORERP.Business
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //标记是否有期初
 
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv != null)
-                    {
-                        //更新库存
-                        inv.Quantity = inv.Quantity + child.Qty;
-                        BusinessHelper.Instance.EditEntity(inv);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, child.Location_ID), out var inv) || inv == null)
                     {
                         inv = new tb_Inventory();
-                        inv.Quantity = inv.Quantity + child.Qty;
+                        inv.Quantity = child.Qty;
                         inv.InitInventory = 0;
                         inv.Location_ID = child.Location_ID;
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Notes = "其他入库初始化";
                         BusinessHelper.Instance.InitEntity(inv);
+                        invDict[(child.ProdDetailID, child.Location_ID)] = inv;
                     }
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    //其他入库不需要计算成本。只有采购入库和缴库单算。
-                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    //inv.CostFIFO = child.Cost;
-                    //inv.CostMonthlyWA = child.Cost;
-                    //inv.CostMovingWA = child.Cost;
-                    //inv.ProdDetailID = child.ProdDetailID;
+                    else
+                    {
+                        //更新库存
+                        inv.Quantity = inv.Quantity + child.Qty;
+                        BusinessHelper.Instance.EditEntity(inv);
+                    }
+                    
                     inv.Rack_ID = child.Rack_ID;
-                    //inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
 
                     #endregion
@@ -204,9 +201,22 @@ namespace RUINORERP.Business
             tb_StockIn entity = ObjectEntity as tb_StockIn;
             try
             {
+                #region 【死锁优化】第一步：预处理阶段（事务外批量预加载库存）
+                var requiredKeys = entity.tb_StockInDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 if (entity == null)
                 {
@@ -217,31 +227,25 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //标记是否有期初
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv != null)
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, child.Location_ID), out var inv) || inv == null)
+                    {
+                        inv = new tb_Inventory();
+                        inv.Quantity = 0;
+                        inv.ProdDetailID = child.ProdDetailID;
+                        inv.Location_ID = child.Location_ID;
+                        BusinessHelper.Instance.InitEntity(inv);
+                        invDict[(child.ProdDetailID, child.Location_ID)] = inv;
+                    }
+                    else
                     {
                         //更新库存
                         inv.Quantity = inv.Quantity - child.Qty;
                         BusinessHelper.Instance.EditEntity(inv);
                     }
-
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    //inv.Inv_Cost = child.Cost;//这里需要计算，根据系统设置中的算法计算。
-                    //inv.CostFIFO = child.Cost;
-                    //inv.CostMonthlyWA = child.Cost;
-                    //inv.CostMovingWA = child.Cost;
+                    
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Rack_ID = child.Rack_ID;
-                    //inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestStorageTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);

@@ -47,6 +47,23 @@ namespace RUINORERP.Business
 
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var requiredKeys1 = entity.tb_StocktakeDetails
+                    .Select(c => (c.ProdDetailID, entity.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (requiredKeys1.Count > 0)
+                {
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => requiredKeys1.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                        .ToListAsync();
+                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 提前开启事务，确保所有数据库操作都在事务内执行
                 _unitOfWorkManage.BeginTran();
 
@@ -69,8 +86,10 @@ namespace RUINORERP.Business
                     //先看库存表中是否存在记录。
                     #region 库存表的更新
                     //标记是否有期初
-
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, entity.Location_ID);
+                    tb_Inventory inv = null;
+                    invDict1.TryGetValue(key, out inv);
                     if (inv == null)
                     {
                         if (CheckMode.期初盘点 != cm)
@@ -251,6 +270,22 @@ namespace RUINORERP.Business
 
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var requiredKeys2 = entity.tb_StocktakeDetails
+                    .Select(c => (c.ProdDetailID, entity.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (requiredKeys2.Count > 0)
+                {
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => requiredKeys2.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                        .ToListAsync();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
 
 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -264,7 +299,10 @@ namespace RUINORERP.Business
                     #region 库存表的更新
                     //标记是否有期初
                     bool Opening;
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == entity.Location_ID);
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, entity.Location_ID);
+                    tb_Inventory inv = null;
+                    invDict2.TryGetValue(key, out inv);
                     if (inv != null)
                     {
                         Opening = false;

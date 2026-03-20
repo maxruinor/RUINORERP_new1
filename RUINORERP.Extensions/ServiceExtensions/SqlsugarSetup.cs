@@ -134,46 +134,50 @@ namespace RUINORERP.Extensions
         }
 
         /// <summary>
-        /// 配置数据库AOP事件
+        /// 配置数据库 AOP 事件
         /// </summary>
-        /// <param name="db">SqlSugar数据库对象</param>
+        /// <param name="db">SqlSugar 数据库对象</param>
         /// <param name="logger">日志记录器</param>
         /// <param name="appContextData">应用上下文数据</param>
         private static void ConfigureDbAop(SqlSugarClient db, ILogger logger, ApplicationContext appContextData, IConfiguration configuration = null)
         {
-            db.Ado.CommandTimeOut = 30; // 单位秒
-
-            // 配置SQL执行前事件1
+            ApplyAopConfiguration(db, logger, appContextData, configuration);
+        }
+                
+        /// <summary>
+        /// 为 SqlSugarClient 应用 AOP 配置（可重复调用）
+        /// </summary>
+        /// <param name="db">SqlSugar 客户端</param>
+        /// <param name="logger">日志记录器（可选）</param>
+        /// <param name="appContextData">应用上下文数据（可选）</param>
+        /// <param name="configuration">配置信息（可选）</param>
+        public static void ApplyAopConfiguration(SqlSugarClient db, ILogger logger = null, ApplicationContext appContextData = null, IConfiguration configuration = null)
+        {
             // 从配置读取是否启用调用方法名记录
             bool enableCallerMethod = configuration?.GetValue<bool>("SqlSugar:EnableCallerMethod", false) ?? false;
             
+            // 配置 SQL 执行前事件
             db.Aop.OnLogExecuting = (sql, pars) =>
             {
                 string callerMethod = string.Empty;
                 
-                // 只有在启用时才获取调用方法名
                 if (enableCallerMethod)
                 {
-                    // 获取调用堆栈以识别调用方法
                     callerMethod = GetCallerMethodName();
                 }
 
-                // 获取原生SQL并添加调用方法信息
                 string nativeSql = UtilMethods.GetNativeSql(sql, pars);
                 string sqlWithCaller = string.IsNullOrEmpty(callerMethod) ? nativeSql : $"{callerMethod}:{nativeSql}";
-                //System.Diagnostics.Debug.WriteLine(sqlWithCaller);
 
-                // 触发自定义检查事件
                 if (CheckEvent != null)
                 {
                     string formattedSql = Common.DB.SqlProfiler.FormatParam(sql, pars);
                     string formattedSqlWithCaller = string.IsNullOrEmpty(callerMethod) ? formattedSql : $"{callerMethod}:     {formattedSql}";
-                    //System.Diagnostics.Debug.WriteLine(formattedSqlWithCaller);
                     CheckEvent(formattedSqlWithCaller);
                 }
             };
 
-            // 配置SQL执行错误事件
+            // 配置 SQL 执行错误事件
             db.Aop.OnError = (e) =>
             {
                 try
@@ -181,68 +185,65 @@ namespace RUINORERP.Extensions
                     string errorsql = SqlProfiler.FormatParam(e.Sql, e.Parametres as SugarParameter[]);
                     Exception exception = e.GetBaseException();
                     
-                    // 记录错误日志
                     if (logger != null)
                     {
-                        logger.LogError("SQL执行错误: {ErrorMessage}, SQL: {Sql}", exception.Message, errorsql, e);
+                        logger.LogError("SQL 执行错误：{ErrorMessage}, SQL: {Sql}", exception.Message, errorsql, e);
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine($"SQL执行错误: {exception.Message}, SQL: {errorsql}");
+                        System.Diagnostics.Debug.WriteLine($"SQL 执行错误：{exception.Message}, SQL: {errorsql}");
                     }
                     
-                    // 检测死锁异常
                     if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                     {
                         var deadlockInfo = new
                         {
                             Time = DateTime.Now,
                             StackTrace = e.StackTrace,
-                            Sql = errorsql
+                            Sql = errorsql,
+                            Parameters = (e.Parametres as System.Collections.IEnumerable)?
+                                .Cast<SugarParameter>()?
+                                .Select(p => $"{p.ParameterName}={p.Value}")?.ToArray() ?? Array.Empty<string>()
                         };
-                        
+                                            
                         if (logger != null)
                         {
-                            logger.LogError("检测到数据库死锁: {DeadlockInfo}", JsonConvert.SerializeObject(deadlockInfo), e);
+                            logger.LogError("检测到数据库死锁：{DeadlockInfo}", JsonConvert.SerializeObject(deadlockInfo), e);
                         }
                         else
                         {
-                            System.Diagnostics.Debug.WriteLine($"检测到数据库死锁: {JsonConvert.SerializeObject(deadlockInfo)}");
+                            System.Diagnostics.Debug.WriteLine($"检测到数据库死锁：{JsonConvert.SerializeObject(deadlockInfo)}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"日志记录失败: {ex.Message}\n原始错误: {e.Message}");
+                    System.Diagnostics.Debug.WriteLine($"日志记录失败：{ex.Message}\n原始错误：{e.Message}");
                     if (logger != null)
                     {
-                        logger.LogError("记录SQL错误日志时出错", ex);
+                        logger.LogError("记录 SQL 错误日志时出错", ex);
                     }
                 }
                 
-                // 触发提醒事件
                 if (RemindEvent != null)
                 {
                     RemindEvent(e);
                 }
             };
 
-            // 配置SQL执行后事件
+            // 配置 SQL 执行后事件
             db.Aop.OnLogExecuted = (sql, pars) =>
             {
-                // 在调试模式下记录详细信息
                 if (appContextData != null && appContextData.IsDebug)
                 {
                     // 调试模式下可启用详细日志记录
                 }
             };
 
-            // 配置差异日志事件（当前为空实现）
+            // 配置差异日志事件
             db.Aop.OnDiffLogEvent = async u =>
             {
-                // 异步延迟以避免阻塞
                 await Task.Delay(0);
-                // 差异日志功能暂未实现，可以根据需要启用
             };
         }
 

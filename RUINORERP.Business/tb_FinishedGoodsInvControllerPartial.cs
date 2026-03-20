@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -53,6 +53,30 @@ namespace RUINORERP.Business
             ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_FinishedGoodsInvDetails != null)
+                {
+                    foreach (var detail in entity.tb_FinishedGoodsInvDetails)
+                    {
+                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeys.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeys.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -98,8 +122,9 @@ namespace RUINORERP.Business
                 {
 
                     #region 库存表的更新 这里应该是必需有库存的数据，
-
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    invDict1.TryGetValue(key, out var inv);
                     if (inv == null)
                     {
                         inv = new tb_Inventory();
@@ -527,6 +552,30 @@ namespace RUINORERP.Business
                     return rs;
                 }
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_FinishedGoodsInvDetails != null)
+                {
+                    foreach (var detail in entity.tb_FinishedGoodsInvDetails)
+                    {
+                        allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys2.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeys2.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeys2.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -536,7 +585,9 @@ namespace RUINORERP.Business
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
                     //实际 反审时 期初已经有数据
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                    // ✅ 从预加载字典获取（死锁优化）
+                    var key = (child.ProdDetailID, child.Location_ID);
+                    invDict2.TryGetValue(key, out var inv);
                     BusinessHelper.Instance.EditEntity(inv);
                     inv.ProdDetailID = child.ProdDetailID;
                     inv.Location_ID = child.Location_ID;

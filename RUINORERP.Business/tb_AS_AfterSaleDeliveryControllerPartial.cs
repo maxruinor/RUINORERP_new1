@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -66,6 +66,27 @@ namespace RUINORERP.Business
                         .Where(d => d.ASDeliveryID == entity.ASDeliveryID).FirstAsync();
                 }
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_AS_AfterSaleDeliveryDetails != null)
+                {
+                    foreach (var detail in entity.tb_AS_AfterSaleDeliveryDetails)
+                    {
+                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys.Count > 0)
+                {
+                    var distinctKeys = allKeys.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
 
                 // 开启事务，保证数据一致性
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -83,7 +104,8 @@ namespace RUINORERP.Business
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        invDict1.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
                             throw new Exception($"售后交付单反审核时，库存不存在，ProdDetailID：{child.ProdDetailID}，LocationID：{child.Location_ID}");
@@ -231,6 +253,28 @@ namespace RUINORERP.Business
                         .Where(d => d.ASDeliveryID == entity.ASDeliveryID).FirstAsync();
                 }
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_AS_AfterSaleDeliveryDetails != null)
+                {
+                    foreach (var detail in entity.tb_AS_AfterSaleDeliveryDetails)
+                    {
+                        allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys2.Count > 0)
+                {
+                    var distinctKeys = allKeys2.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
 
                 // 开启事务，保证数据一致性
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
@@ -248,7 +292,8 @@ namespace RUINORERP.Business
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        invDict2.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
                             throw new Exception($"售后交付单审核时，库存不存在，ProdDetailID：{child.ProdDetailID}，LocationID：{child.Location_ID}");

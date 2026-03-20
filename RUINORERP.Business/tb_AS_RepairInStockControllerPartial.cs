@@ -168,6 +168,28 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_AS_RepairInStockDetails != null)
+                {
+                    foreach (var detail in entity.tb_AS_RepairInStockDetails)
+                    {
+                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys.Count > 0)
+                {
+                    var distinctKeys = allKeys.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal RepairQty)>();
 
                 //更新  维修仓的数量增加
@@ -180,7 +202,8 @@ namespace RUINORERP.Business
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        invDict.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
                             //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0
@@ -372,6 +395,28 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_AS_RepairInStockDetails != null)
+                {
+                    foreach (var detail in entity.tb_AS_RepairInStockDetails)
+                    {
+                        allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys2.Count > 0)
+                {
+                    var distinctKeys = allKeys2.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal RepairQty)>();
 
                 //更新  维修仓的数量增加
@@ -384,7 +429,8 @@ namespace RUINORERP.Business
                     if (!inventoryGroups.TryGetValue(key, out var group))
                     {
                         #region 库存表的更新 ，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        invDict2.TryGetValue(key, out var inv);
                         if (inv == null)
                         {
                             //采购和销售都会提前处理。所以这里默认提供一行数据。成本和数量都可能为0

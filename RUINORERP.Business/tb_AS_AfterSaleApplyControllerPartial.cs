@@ -221,6 +221,28 @@ namespace RUINORERP.Business
                     return rmrs;
                 }
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_AS_AfterSaleApplyDetails != null)
+                {
+                    foreach (var detail in entity.tb_AS_AfterSaleApplyDetails)
+                    {
+                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys.Count > 0)
+                {
+                    var distinctKeys = allKeys.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();

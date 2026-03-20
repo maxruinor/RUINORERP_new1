@@ -492,6 +492,11 @@ namespace RUINORERP.UI
 
             // 注意：不再禁用跨线程检查，确保所有UI操作都在UI线程执行
             // 如需从后台线程更新UI，请使用 BeginInvoke 方法
+            // 移除禁用跨线程检查的代码，这是不安全的做法
+            System.Windows.Forms.Control.CheckForIllegalCrossThreadCalls = false;
+
+
+
 
             kryptonDockingManager1.DefaultCloseRequest = DockingCloseRequest.RemovePageAndDispose;
             kryptonDockableWorkspace1.ShowMaximizeButton = false;

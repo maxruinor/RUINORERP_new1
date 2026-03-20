@@ -290,7 +290,7 @@ namespace RUINORERP.Business
         /// <summary>
         /// 注意明细中  支持了 相同产品多行录入。所以要加总分组计算
         /// 审核其他出库单 注意逻辑是减少库存，并且更新单据本身状态
-        /// 如果非账期则同时生成收款单
+        /// 如果非账期则同时生成收款单.
         /// 
         /// 1. 现金销售（全额收款）	- 销售出库时生成应收单（即使现金）
         //- 生成收款单并审核 → 自动核销应收单	- 应收应付表：生成应收单（状态=已审核）
@@ -307,6 +307,7 @@ namespace RUINORERP.Business
         {
             ReturnResults<T> rrs = new ReturnResults<T>();
             tb_SaleOut entity = ObjectEntity as tb_SaleOut;
+            FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
             try
             {
                 // 【死锁优化】财务独立事务模式所需变量（在 try 块内定义，确保整个方法可见）
@@ -316,7 +317,7 @@ namespace RUINORERP.Business
                 decimal totalAmount = 0;
                 decimal foreignTotalAmount = 0;
                 decimal totalCommissionAmount = 0;
-                
+
                 // 首先检查单据是否已经被审核，防止重复审核
                 var existingEntity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOut>()
                     .Where(c => c.SaleOut_MainID == entity.SaleOut_MainID)
@@ -440,7 +441,7 @@ namespace RUINORERP.Business
                             }
                         }
                     }
-       
+
 
                     // 如果成本为零时则会实时检测库存成本，以库存成本为基准。这种情况解决未知成本，提前销售的情况。 相于于订单时成本不清楚写的0。销售出库时才有成本。
 
@@ -456,7 +457,7 @@ namespace RUINORERP.Business
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
                         .Includes(a => a.tb_proddetail)
-                        .Where(i => requiredInventoryKeys.Any(k => 
+                        .Where(i => requiredInventoryKeys.Any(k =>
                             k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
 
@@ -469,7 +470,7 @@ namespace RUINORERP.Business
                     var prodDetailIds = entity.tb_SaleOutDetails.Select(c => c.ProdDetailID).Distinct().ToList();
                     var priceRecordList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_PriceRecord>()
-                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID && 
+                        .Where(c => c.Employee_ID == entity.tb_saleorder.Employee_ID &&
                                     prodDetailIds.Contains(c.ProdDetailID))
                         .ToListAsync();
 
@@ -479,7 +480,7 @@ namespace RUINORERP.Business
                     // 使用字典按 (ProdDetailID, LocationID) 分组，存储库存记录及累计数据
                     var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, decimal OutQtySum, DateTime LatestOutboundTime)>();
 
-             // 开启事务，保证数据一致性
+                    // 开启事务，保证数据一致性
                     _unitOfWorkManage.BeginTran();
                     List<tb_PriceRecord> priceUpdateList = new List<tb_PriceRecord>();
 
@@ -748,7 +749,7 @@ namespace RUINORERP.Business
                                     {
                                         _unitOfWorkManage.RollbackTran();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，对应的订单：{entity.tb_saleorder.SOrderNo}，入库总数量不能大于订单数量！";
-                                        rrs.ErrorMsg=msg;
+                                        rrs.ErrorMsg = msg;
                                         return rrs;
 
                                     }
@@ -791,7 +792,7 @@ namespace RUINORERP.Business
                                     {
                                         _unitOfWorkManage.RollbackTran();
                                         string msg = $"销售出库单：{entity.SaleOutNo}审核时，【{prodName}】的出库总数量不能大于订单数量！";
-                                        rrs.ErrorMsg=msg;
+                                        rrs.ErrorMsg = msg;
                                         return rrs;
 
                                     }
@@ -906,12 +907,12 @@ namespace RUINORERP.Business
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
                         entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
                         entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
-                        
+
                         // 关键修复：在事务提交前更新订单状态，确保与库存扣减的原子性
                         var orderUpdateResult = await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_saleorder)
                             .UpdateColumns(t => new { t.DataStatus, t.CloseCaseOpinions, t.TotalCost })
                             .ExecuteCommandAsync();
-                            
+
                         if (orderUpdateResult <= 0)
                         {
                             _logger.LogError($"销售出库单{entity.SaleOutNo}审核：订单状态更新失败，订单ID: {entity.tb_saleorder.SOrder_ID}");
@@ -920,8 +921,6 @@ namespace RUINORERP.Business
                             rrs.ErrorMsg = "订单状态更新失败，审核终止";
                             return rrs;
                         }
-                        
-                        _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已自动结案为完结状态");
                     }
 
                     #endregion
@@ -938,7 +937,7 @@ namespace RUINORERP.Business
                     //！！！！！！！！！！！！！！！！！！！！！！！！！！！！注意要实现 参考收款单审核中 反冲时回写预收old的代码
                     //出库时，如果有预收款，如果收的金额 与 到账金额不一致时。是不是停止 出库？
                     //所有统一先应收再收款 by 2025-05-18 仅仅是订金时先处理了一些东西而已。
-                    
+
                     #region 【优化方案 2】固定表访问顺序（死锁优化）
                     // 全局表访问顺序规范（按锁定优先级排序，确保所有并发事务以相同顺序访问）：
                     // 1. tb_SaleOut (主单) → 2. tb_SaleOrder (订单) → 3. tb_Inventory (库存) ← 关键资源
@@ -946,9 +945,9 @@ namespace RUINORERP.Business
                     // 6. tb_PriceRecord (价格) → 7. tb_SaleOrderDetail (订单明细) → 8. tb_crm_customer (客户)
                     // 9. tb_FM_ReceivablePayable (应收应付) ← 放在最后，可考虑拆分独立事务
                     #endregion
-                    
+
                     AuthorizeController authorizeController = _appContext.GetRequiredService<AuthorizeController>();
-                    
+
                     // 【死锁优化】默认启用财务独立事务模式（仅在启用财务模块时）
                     // 1. 主事务只处理库存、订单等核心业务
                     // 2. 财务单据在主事务提交后独立生成
@@ -961,7 +960,7 @@ namespace RUINORERP.Business
                         totalAmount = entity.TotalAmount;
                         foreignTotalAmount = entity.ForeignTotalAmount;
                         totalCommissionAmount = entity.TotalCommissionAmount;
-                        
+
                         // 标记需要财务处理
                         needProcessFinance = true;
                     }
@@ -994,19 +993,14 @@ namespace RUINORERP.Business
                 }).ExecuteCommandAsync();
 
 
-
-                // 关键修复：在事务提交前添加详细的日志记录
-                _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：开始提交事务，包含库存扣减和订单状态更新");
-                
                 // 关键修复：事务提交前验证关键数据完整性
                 if (entity.tb_saleorder != null && entity.tb_saleorder.DataStatus == (int)DataStatus.完结)
                 {
                     _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：订单{entity.tb_saleorder.SOrderNo}已标记为完结状态，准备提交事务");
                 }
-                
+
                 _unitOfWorkManage.CommitTran();
-                _logger.LogInformation($"销售出库单{entity.SaleOutNo}审核：主事务提交成功");
-                
+
                 // 【死锁优化】财务独立事务处理（仅在启用财务模块时执行）
                 // 核心特性：
                 // 1. 主事务已提交（库存、订单等核心业务已完成）
@@ -1017,11 +1011,8 @@ namespace RUINORERP.Business
                 {
                     try
                     {
-                        _logger.LogInformation(
-                            $"销售出库单{saleOutNo}审核：主事务已提交，开始处理财务独立事务...");
-                        
                         var ctrpayable = _appContext.GetRequiredService<tb_FM_ReceivablePayableController<tb_FM_ReceivablePayable>>();
-                        
+
                         // 生成应收款单
                         if (totalAmount > 0 || foreignTotalAmount > 0)
                         {
@@ -1034,17 +1025,32 @@ namespace RUINORERP.Business
                                     .Includes(a => a.tb_saleorder, b => b.tb_paymentmethod)
                                     .Where(s => s.SaleOut_MainID == saleOutMainId)
                                     .FirstAsync();
-                                
+
                                 if (financeEntity != null)
                                 {
                                     tb_FM_ReceivablePayable payable = await ctrpayable.BuildReceivablePayable(financeEntity);
-                                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr = 
+                                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmr =
                                         await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payable, false);
-                                    
+
                                     if (rmr.Succeeded)
                                     {
-                                        _logger.LogInformation(
-                                            $"销售出库单{saleOutNo}审核：应收款单生成成功，单号：{rmr.ReturnObject?.ARAPNo}");
+                                        fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{saleOutNo}审核：应收款单生成成功，单号：{rmr.ReturnObject?.ARAPNo}", rmr.ReturnObject as tb_FM_ReceivablePayable);
+
+                                        //如果是平台单，则自动审核
+                                        if (payable.IsFromPlatform)
+                                        {
+                                            payable.ApprovalOpinions = "平台订单，自动审核";
+                                            ReturnResults<tb_FM_ReceivablePayable> autoApproval = await ctrpayable.ApprovalAsync(payable, true);
+                                            if (!autoApproval.Succeeded)
+                                            {
+                                                autoApproval.Succeeded = false;
+                                                autoApproval.ErrorMsg = $"自动审核失败：{autoApproval.ErrorMsg ?? "未知错误"}";
+                                            }
+                                            else
+                                            {
+                                                fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>("自动审核成功", autoApproval.ReturnObject as tb_FM_ReceivablePayable);
+                                            }
+                                        }
                                     }
                                     else
                                     {
@@ -1062,12 +1068,12 @@ namespace RUINORERP.Business
                             }
                             catch (Exception arEx)
                             {
-                                _logger.LogError(arEx, 
+                                _logger.LogError(arEx,
                                     $"销售出库单{saleOutNo}审核：生成应收款单时发生异常 - {arEx.Message}\n" +
                                     $"⚠️ 请财务部门手动补录应收单据");
                             }
                         }
-                        
+
                         // 生成佣金应付款单
                         if (totalCommissionAmount > 0)
                         {
@@ -1079,14 +1085,14 @@ namespace RUINORERP.Business
                                     .Includes(a => a.tb_saleorder, b => b.tb_paymentmethod)
                                     .Where(s => s.SaleOut_MainID == saleOutMainId)
                                     .FirstAsync();
-                                
+
                                 if (commissionEntity != null)
                                 {
-                                    tb_FM_ReceivablePayable payableCommission = 
+                                    tb_FM_ReceivablePayable payableCommission =
                                         await ctrpayable.BuildReceivablePayable(commissionEntity, true);
-                                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmrCommission = 
+                                    ReturnMainSubResults<tb_FM_ReceivablePayable> rmrCommission =
                                         await ctrpayable.BaseSaveOrUpdateWithChild<tb_FM_ReceivablePayable>(payableCommission, false);
-                                    
+
                                     if (rmrCommission.Succeeded)
                                     {
                                         _logger.LogInformation(
@@ -1102,29 +1108,29 @@ namespace RUINORERP.Business
                             }
                             catch (Exception commEx)
                             {
-                                _logger.LogError(commEx, 
+                                _logger.LogError(commEx,
                                     $"销售出库单{saleOutNo}审核：生成佣金应付款单时发生异常 - {commEx.Message}\n" +
                                     $"⚠️ 请财务部门手动补录应付单据");
                             }
                         }
-                        
+
                         _logger.LogInformation(
                             $"销售出库单{saleOutNo}审核：财务独立事务处理完成");
                     }
                     catch (Exception financeEx)
                     {
                         // 财务处理失败不影响出库审核结果，但需要提供明确的用户反馈
-                        _logger.LogError(financeEx, 
+                        _logger.LogError(financeEx,
                             $"销售出库单{saleOutNo}审核：财务独立事务处理失败（出库审核已成功）- {financeEx.Message}\n" +
                             $"⚠️ 请财务部门检查并手动补录相关单据");
-                        
+
                         // 关键修复：增强用户反馈机制
                         rrs.ErrorMsg = $"销售出库单审核成功，但财务单据生成失败：{financeEx.Message}\n" +
                                       $"请财务部门手动补录相关单据，单据号：{saleOutNo}";
-                        
+
                     }
                 }
-                
+
                 rrs.ReturnObject = entity as T;
                 rrs.Succeeded = true;
                 return rrs;
@@ -1135,7 +1141,7 @@ namespace RUINORERP.Business
                 try
                 {
                     _logger.LogError(ex, $"销售出库单审核发生异常，开始回滚事务。异常信息: {ex.Message}");
-                    
+
                     // 检查当前事务状态，避免重复回滚
                     var transactionState = _unitOfWorkManage.GetTransactionState();
                     if (transactionState.IsActive)
@@ -1152,14 +1158,14 @@ namespace RUINORERP.Business
                 {
                     // 回滚失败时的紧急处理
                     _logger.LogCritical(rollbackEx, $"销售出库单审核：事务回滚失败！可能出现数据不一致。紧急处理中...");
-                    
+
                     // 强制标记事务需要回滚
                     _unitOfWorkManage.MarkForRollback();
-                    
+
                     // 记录关键数据，用于后续人工修复
                     _logger.LogCritical($"销售出库单审核紧急记录 - 出库单号: {entity?.SaleOutNo}, 订单号: {entity?.tb_saleorder?.SOrderNo}");
                 }
-                
+
                 rrs.Succeeded = false;
                 rrs.ErrorMsg = $"审核失败：{ex.Message}";
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));

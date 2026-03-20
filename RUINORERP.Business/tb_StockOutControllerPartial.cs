@@ -47,43 +47,47 @@ namespace RUINORERP.Business
             tb_StockOut entity = ObjectEntity as tb_StockOut;
             try
             {
+                #region 【死锁优化】第一步：预处理阶段（事务外批量预加载库存）
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                
+                var requiredKeys = entity.tb_StockOutDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var inventoryDict = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryDict.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+                
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockOutDetails)
                 {
                     #region 库存表的更新 这里应该是必需有库存的数据，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv != null)
-                    {
-                        if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
-                        {
-                            rsms.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
-                            _unitOfWorkManage.RollbackTran();
-                            rsms.Succeeded = false;
-                            return rsms;
-                        }
-                        //更新库存
-                        inv.Quantity = inv.Quantity - child.Qty;
-                        BusinessHelper.Instance.EditEntity(inv);
-                    }
-                    else
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, child.Location_ID), out var inv) || inv == null)
                     {
                         _unitOfWorkManage.RollbackTran(); 
                         throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                     }
-                    /*
-                  直接输入成本：在录入库存记录时，直接输入该产品或物品的成本价格。这种方式适用于成本价格相对稳定或容易确定的情况。
-                 平均成本法：通过计算一段时间内该产品或物品的平均成本来确定成本价格。这种方法适用于成本价格随时间波动的情况，可以更准确地反映实际成本。
-                 先进先出法（FIFO）：按照先入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较快，成本价格相对稳定的情况。
-                 后进先出法（LIFO）：按照后入库的产品先出库的原则，计算库存成本。这种方法适用于库存流转速度较慢，成本价格波动较大的情况。
-                 数据来源可以是多种多样的，例如：
-                 采购价格：从供应商处购买产品或物品时的价格。
-                 生产成本：自行生产产品时的成本，包括原材料、人工和间接费用等。
-                 市场价格：参考市场上类似产品或物品的价格。
-                  */
-                    //inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
+                    
+                    if (!_appContext.SysConfig.CheckNegativeInventory && (inv.Quantity - child.Qty) < 0)
+                    {
+                        rsms.ErrorMsg = "系统设置不允许负库存，请检查物料出库数量与库存相关数据";
+                        _unitOfWorkManage.RollbackTran();
+                        rsms.Succeeded = false;
+                        return rsms;
+                    }
+                    //更新库存
+                    inv.Quantity = inv.Quantity - child.Qty;
+                    BusinessHelper.Instance.EditEntity(inv);
+                    
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion
                     invUpdateList.Add(inv);
@@ -176,33 +180,43 @@ namespace RUINORERP.Business
             tb_StockOut entity = ObjectEntity as tb_StockOut;
             try
             {  
+                #region 【死锁优化】第一步：预处理阶段（事务外批量预加载库存）
+                var requiredKeys = entity.tb_StockOutDetails
+                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Distinct()
+                    .ToList();
+
+                var inventoryList = await _unitOfWorkManage.GetDbClient()
+                    .Queryable<tb_Inventory>()
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
+                    .ToListAsync();
+
+                var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 //更新拟销售量减少
-
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 foreach (var child in entity.tb_StockOutDetails)
                 {
                     #region 库存表的更新 ，
-                    tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
-                    if (inv == null)
+                    // ✅ 从预加载字典获取（死锁优化）
+                    if (!invDict.TryGetValue((child.ProdDetailID, child.Location_ID), out var inv) || inv == null)
                     {
                         inv = new tb_Inventory();
                         inv.ProdDetailID = child.ProdDetailID;
                         inv.Location_ID = child.Location_ID;
                         inv.Quantity = 0;
                         inv.InitInventory =0;
-                        inv.Notes = "";//后面修改数据库是不需要？
-                                       //inv.LatestStorageTime = System.DateTime.Now;
+                        inv.Notes = "";
                         BusinessHelper.Instance.InitEntity(inv);
+                        invDict[(child.ProdDetailID, child.Location_ID)] = inv;
                     }
                     //更新在途库存
                     //反审，出库的要加回来，要卖的也要加回来
                     inv.Quantity = inv.Quantity + child.Qty;
-                    //最后出库时间要改回来，这里没有处理
-                    //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);

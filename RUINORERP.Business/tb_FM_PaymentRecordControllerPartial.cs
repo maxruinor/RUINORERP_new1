@@ -1128,11 +1128,35 @@ namespace RUINORERP.Business
                                                     saleOrderUpdateList.Add(saleOrder);
                                                     #region 更新库存的拟销量
 
+                                                    #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                                                    var saleOrderKeys = new List<(long ProdDetailID, long LocationID)>();
+                                                    if (saleOrder.tb_SaleOrderDetails != null)
+                                                    {
+                                                        foreach (var detail in saleOrder.tb_SaleOrderDetails)
+                                                        {
+                                                            saleOrderKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                                                        }
+                                                    }
+
+                                                    var saleOrderInvDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                                                    if (saleOrderKeys.Count > 0)
+                                                    {
+                                                        var distinctKeys = saleOrderKeys.Distinct().ToList();
+                                                        var inventoryList = await _unitOfWorkManage.GetDbClient()
+                                                            .Queryable<tb_Inventory>()
+                                                            .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                                                            .ToListAsync();
+                                                        saleOrderInvDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                                                    }
+                                                    #endregion
+
                                                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                                                     foreach (var child in saleOrder.tb_SaleOrderDetails)
                                                     {
                                                         #region 库存表的更新 ，
-                                                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                        // ✅ 从预加载字典获取（死锁优化）
+                                                        var key = (child.ProdDetailID, child.Location_ID);
+                                                        saleOrderInvDict.TryGetValue(key, out var inv);
                                                         int notoutqty = child.Quantity - child.TotalDeliveredQty;
                                                         if (notoutqty == 0)
                                                         {
@@ -1177,11 +1201,35 @@ namespace RUINORERP.Business
                                                     purOrderUpdateList.Add(purOrder);
                                                     #region 更新库存的拟销量
 
+                                                    #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                                                    var purOrderKeys = new List<(long ProdDetailID, long LocationID)>();
+                                                    if (purOrder.tb_PurOrderDetails != null)
+                                                    {
+                                                        foreach (var detail in purOrder.tb_PurOrderDetails)
+                                                        {
+                                                            purOrderKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                                                        }
+                                                    }
+
+                                                    var purOrderInvDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                                                    if (purOrderKeys.Count > 0)
+                                                    {
+                                                        var distinctKeys = purOrderKeys.Distinct().ToList();
+                                                        var inventoryList = await _unitOfWorkManage.GetDbClient()
+                                                            .Queryable<tb_Inventory>()
+                                                            .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                                                            .ToListAsync();
+                                                        purOrderInvDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                                                    }
+                                                    #endregion
+
                                                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                                                     foreach (var child in purOrder.tb_PurOrderDetails)
                                                     {
                                                         #region 库存表的更新 ，
-                                                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                                                        // ✅ 从预加载字典获取（死锁优化）
+                                                        var key = (child.ProdDetailID, child.Location_ID);
+                                                        purOrderInvDict.TryGetValue(key, out var inv);
                                                         int notEntryQty = child.Quantity - child.DeliveredQuantity;
                                                         if (notEntryQty == 0)
                                                         {

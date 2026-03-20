@@ -111,7 +111,71 @@ namespace RUINORERP.Business
                     entity.AcceptChanges();
                 }
 
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys1 = new List<(long ProdDetailID, long LocationID)>();
+                if (entity.tb_saleout != null && entity.tb_saleout.tb_SaleOutDetails != null)
+                {
+                    foreach (var detail in entity.tb_saleout.tb_SaleOutDetails)
+                    {
+                        allKeys1.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+                foreach (var child in entity.tb_SaleOutReDetails)
+                {
+                    allKeys1.Add((child.ProdDetailID, child.Location_ID));
+                }
+                if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
+                {
+                    foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
+                    {
+                        allKeys1.Add((child.ProdDetailID, child.Location_ID));
+                    }
+                }
+
+                var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys1.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeys1.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeys1.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
+
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                foreach (var child in entity.tb_SaleOutReDetails)
+                {
+                    allKeys2.Add((child.ProdDetailID, child.Location_ID));
+                }
+                if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
+                {
+                    foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
+                    {
+                        allKeys2.Add((child.ProdDetailID, child.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys2.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeys2.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeys2.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 _unitOfWorkManage.BeginTran();
 
                 if (entity.tb_saleout != null)
@@ -294,7 +358,10 @@ namespace RUINORERP.Business
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        tb_Inventory inv = null;
+                        invDict1.TryGetValue(key, out inv);
                         if (inv == null)
                         {
                             var outDetail = entity.tb_saleout.tb_SaleOutDetails.Where(c => c.SaleOutDetail_ID == child.SaleOutDetail_ID).FirstOrDefault();
@@ -302,10 +369,18 @@ namespace RUINORERP.Business
                             {
                                 // 必须要有库存初始数据
                                 //如果从主仓库出。退到维修仓库 可能就没有初始库数据，则将出库时的数据搬过来后更更新数量
-                                var oldinv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == outDetail.Location_ID);
-                                inv = new tb_Inventory();
-                                inv.Quantity = 0;
-                                inv.Inv_Cost = oldinv.Inv_Cost;
+                                var oldKey = (child.ProdDetailID, outDetail.Location_ID);
+                                invDict1.TryGetValue(oldKey, out var oldinv);
+                                if (oldinv != null)
+                                {
+                                    inv = new tb_Inventory();
+                                    inv.ProdDetailID = child.ProdDetailID;
+                                    inv.Location_ID = child.Location_ID;
+                                    inv.Quantity = 0;
+                                    inv.Inv_Cost = oldinv.Inv_Cost;
+                                    BusinessHelper.Instance.InitEntity(inv);
+                                    invDict1[key] = inv;
+                                }
                             }
                         }
                         if (inv == null)
@@ -364,7 +439,9 @@ namespace RUINORERP.Business
                         foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
                         {
                             #region 库存表的更新 这里应该是必需有库存的数据，
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                            // ✅ 从预加载字典获取（死锁优化）
+                            var key = (child.ProdDetailID, child.Location_ID);
+                            invDict1.TryGetValue(key, out var inv);
                             if (inv == null)
                             {
                                 _unitOfWorkManage.RollbackTran();
@@ -569,6 +646,34 @@ namespace RUINORERP.Business
                         return rrs;
                     }
                 }
+
+                // ✅ 死锁优化：事务外批量预加载库存
+                var allKeysAnti = new List<(long ProdDetailID, long LocationID)>();
+                foreach (var child in entity.tb_SaleOutReDetails)
+                {
+                    allKeysAnti.Add((child.ProdDetailID, child.Location_ID));
+                }
+                if (entity.tb_SaleOutReRefurbishedMaterialsDetails != null)
+                {
+                    foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
+                    {
+                        allKeysAnti.Add((child.ProdDetailID, child.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeysAnti.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeysAnti.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeysAnti.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 //处理业务数据
@@ -581,7 +686,16 @@ namespace RUINORERP.Business
                     foreach (var child in entity.tb_SaleOutReDetails)
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        invDict2.TryGetValue(key, out var inv);
+                        if (inv == null)
+                        {
+                            _unitOfWorkManage.RollbackTran();
+                            rrs.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法反审核。";
+                            rrs.Succeeded = false;
+                            return rrs;
+                        }
 
                         //更新库存
                         inv.Quantity = inv.Quantity - child.Quantity;
@@ -637,7 +751,9 @@ namespace RUINORERP.Business
                         foreach (var child in entity.tb_SaleOutReRefurbishedMaterialsDetails)
                         {
                             #region 库存表的更新 这里应该是必需有库存的数据，
-                            tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                            // ✅ 从预加载字典获取（死锁优化）
+                            var key = (child.ProdDetailID, child.Location_ID);
+                            invDict2.TryGetValue(key, out var inv);
                             if (inv != null)
                             {
                                 //更新库存

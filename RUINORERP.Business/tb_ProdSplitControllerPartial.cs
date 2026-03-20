@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
@@ -51,13 +51,40 @@ namespace RUINORERP.Business
             ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                allKeys.Add((entity.ProdDetailID, entity.Location_ID));
+                if (entity.tb_ProdSplitDetails != null)
+                {
+                    foreach (var detail in entity.tb_ProdSplitDetails)
+                    {
+                        allKeys.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict1 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys.Count > 0)
+                {
+                    var distinctProdDetailIds = allKeys.Select(k => k.ProdDetailID).Distinct().ToList();
+                    var requiredPairs = allKeys.Distinct().ToHashSet();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .ToListAsync();
+                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
+                    invDict1 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 //减少母件
-                tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                // ✅ 从预加载字典获取（死锁优化）
+                var keyMother = (entity.ProdDetailID, entity.Location_ID);
+                invDict1.TryGetValue(keyMother, out var invMother);
                 if (invMother != null)
                 {
                     if (!_appContext.SysConfig.CheckNegativeInventory && (invMother.Quantity - entity.SplitParentQty) < 0)
@@ -91,7 +118,9 @@ namespace RUINORERP.Business
                         #region 库存表的更新 这里应该是必需有库存的数据，
                       
                       
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        invDict1.TryGetValue(key, out var inv);
                         if (inv != null)
                         {
                             //更新库存
@@ -204,13 +233,38 @@ namespace RUINORERP.Business
             ReturnResults<T> rs = new ReturnResults<T>();
             try
             {
+                #region 【死锁优化】预处理阶段（事务外批量预加载库存）
+                var allKeys2 = new List<(long ProdDetailID, long LocationID)>();
+                allKeys2.Add((entity.ProdDetailID, entity.Location_ID));
+                if (entity.tb_ProdSplitDetails != null)
+                {
+                    foreach (var detail in entity.tb_ProdSplitDetails)
+                    {
+                        allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
+                    }
+                }
+
+                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                if (allKeys2.Count > 0)
+                {
+                    var distinctKeys = allKeys2.Distinct().ToList();
+                    var inventoryList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_Inventory>()
+                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .ToListAsync();
+                    invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
+                }
+                #endregion
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 
 
                 //增加母件
-                tb_Inventory invMother = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == entity.ProdDetailID && i.Location_ID == entity.Location_ID);
+                // ✅ 从预加载字典获取（死锁优化）
+                var keyMother = (entity.ProdDetailID, entity.Location_ID);
+                invDict2.TryGetValue(keyMother, out var invMother);
                 if (invMother != null)
                 {
                     //更新库存
@@ -231,7 +285,9 @@ namespace RUINORERP.Business
                     {
                         #region 库存表的更新 这里应该是必需有库存的数据，
                         //标记是否有期初
-                        tb_Inventory inv = await ctrinv.IsExistEntityAsync(i => i.ProdDetailID == child.ProdDetailID && i.Location_ID == child.Location_ID);
+                        // ✅ 从预加载字典获取（死锁优化）
+                        var key = (child.ProdDetailID, child.Location_ID);
+                        invDict2.TryGetValue(key, out var inv);
                         if (inv != null)
                         {
                             //更新库存

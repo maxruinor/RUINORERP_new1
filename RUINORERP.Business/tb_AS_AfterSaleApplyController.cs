@@ -224,6 +224,12 @@ namespace RUINORERP.Business
             return await querySqlQueryable.ToListAsync();
         }
         
+        /// <summary>
+        /// 1
+        /// </summary>
+        /// <typeparam name="C"></typeparam>
+        /// <param name="model"></param>
+        /// <returns></returns>
         public async override Task<ReturnMainSubResults<T>> BaseSaveOrUpdateWithChild<C>(T model) where C : class
         {
             bool rs = false;
@@ -278,6 +284,14 @@ namespace RUINORERP.Business
                 rsms.ErrorMsg = ex.Message;
                 rsms.Succeeded = false;
                 _logger.Error(ex);
+            }
+            finally
+            {
+                // 确保事务状态清理
+                if (_unitOfWorkManage.GetTransactionState().IsActive)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                }
             }
 
             return rsms;

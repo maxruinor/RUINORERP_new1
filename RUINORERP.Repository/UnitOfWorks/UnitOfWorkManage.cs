@@ -1,12 +1,16 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
+using System.Data;
+using System.Data.Common;
 using Microsoft.Extensions.Logging;
 using SqlSugar;
 using RUINORERP.Common.DI;
 using RUINORERP.Model.Context;
+using System.Data.SqlClient;
 
 namespace RUINORERP.Repository.UnitOfWorks
 {
@@ -15,7 +19,7 @@ namespace RUINORERP.Repository.UnitOfWorks
     /// <summary>
     /// 事务管理类，确认后的优化版本
     /// </summary>
-    public class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository
+    public class UnitOfWorkManage : IUnitOfWorkManage, IDependencyRepository, IDisposable
     {
         private readonly ILogger<UnitOfWorkManage> _logger;
         private readonly ISqlSugarClient _sqlSugarClient;
@@ -31,6 +35,12 @@ namespace RUINORERP.Repository.UnitOfWorks
 
         // 简单的嵌套计数器（兼容旧代码）
         private readonly AsyncLocal<int> _tranDepth = new AsyncLocal<int>();
+        
+        // 默认事务超时时间（秒）
+        private const int DEFAULT_TRANSACTION_TIMEOUT = 60;
+        
+        // 最大重试次数（针对死锁等瞬态故障）
+        private const int MAX_RETRY_COUNT = 3;
 
         public UnitOfWorkManage(ISqlSugarClient sqlSugarClient, ILogger<UnitOfWorkManage> logger, ApplicationContext appContext = null)
         {
@@ -51,21 +61,20 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 // 复制原始连接配置，创建新的连接实例
                 var originalConfig = (_sqlSugarClient as SqlSugarScope)?.CurrentConnectionConfig;
-
+        
                 if (originalConfig != null)
                 {
                     var newConfig = new ConnectionConfig
                     {
-                        
                         ConnectionString = originalConfig.ConnectionString,
-                        DbType = originalConfig.DbType,
+                        DbType = (SqlSugar.DbType)originalConfig.DbType, // 显式转换避免歧义
                         IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
                         InitKeyType = originalConfig.InitKeyType,
                         MoreSettings = originalConfig.MoreSettings,
                         ConfigureExternalServices = originalConfig.ConfigureExternalServices,
                         AopEvents = originalConfig.AopEvents
                     };
-
+        
                     _asyncLocalClient.Value = new SqlSugarScope(newConfig);
                 }
                 else
@@ -74,28 +83,29 @@ namespace RUINORERP.Repository.UnitOfWorks
                     _asyncLocalClient.Value = new SqlSugarScope(new ConnectionConfig
                     {
                         ConnectionString = _sqlSugarClient.Ado.Connection.ConnectionString,
-                        DbType = DbType.SqlServer,
+                        DbType = SqlSugar.DbType.SqlServer, // 使用 SqlSugar.DbType 避免歧义
                         IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
                         InitKeyType = InitKeyType.Attribute
                     });
                 }
-
-                _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程ID: {Thread.CurrentThread.ManagedThreadId}");
+        
+                _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
             }
-
+        
             return _asyncLocalClient.Value as SqlSugarScope;
         }
 
         /// <summary>
         /// 开始事务
         /// </summary>
-        public void BeginTran()
+        /// <param name="isolationLevel">可选的隔离级别，不指定则使用数据库默认</param>
+        public void BeginTran(IsolationLevel? isolationLevel = null)
         {
             var context = GetOrCreateTransactionContext();
             var dbClient = GetDbClient();
-
+        
             // 锁住当前线程的连接
-            lock (dbClient) // 这是关键！每个连接有自己的锁
+            lock (dbClient)
             {
                 try
                 {
@@ -103,13 +113,13 @@ namespace RUINORERP.Repository.UnitOfWorks
                     if (context.Depth >= 8) // 限制最大嵌套深度
                     {
                         throw new InvalidOperationException(
-                            $"事务嵌套深度超过最大限制(8)，请检查业务逻辑");
+                            $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (8)，请检查业务逻辑");
                     }
-
+        
                     // 增加事务深度
                     context.Depth++;
                     _tranDepth.Value++;
-
+        
                     // 最外层事务：开启物理事务
                     if (context.Depth == 1)
                     {
@@ -118,19 +128,31 @@ namespace RUINORERP.Repository.UnitOfWorks
                         {
                             dbClient.Ado.Connection.Open();
                         }
-
-                        dbClient.Ado.BeginTran();
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，线程ID: {Thread.CurrentThread.ManagedThreadId}");
+        
+                        // 设置命令超时时间
+                        dbClient.Ado.CommandTimeOut = DEFAULT_TRANSACTION_TIMEOUT;
+                                
+                        // 根据隔离级别开启事务
+                        if (isolationLevel.HasValue)
+                        {
+                            dbClient.Ado.BeginTran(isolationLevel.Value);
+                            _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，隔离级别：{isolationLevel.Value}，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                        }
+                        else
+                        {
+                            dbClient.Ado.BeginTran();
+                            _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
+                        }
                     }
-                    // 嵌套事务：使用保存点（SQL Server支持）
+                    // 嵌套事务：使用保存点（SQL Server 支持）
                     else
                     {
                         var savePointName = $"SP_{context.TransactionId.ToString("N").Substring(0, 8)}_{context.Depth}";
                         dbClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
                         context.SavePointStack.Push(savePointName);
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点: {savePointName}");
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点：{savePointName}");
                     }
-
+        
                     context.Status = TransactionStatus.Active;
                     context.UpdateActivityTime();
                 }
@@ -139,7 +161,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     // 回滚深度计数
                     context.Depth = Math.Max(0, context.Depth - 1);
                     _tranDepth.Value = Math.Max(0, _tranDepth.Value - 1);
-
+        
                     _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务开启失败");
                     throw new InvalidOperationException("事务开启失败", ex);
                 }
@@ -149,7 +171,12 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// <summary>
         /// 提交事务
         /// </summary>
-        public void CommitTran()
+        public void CommitTran() => CommitTranInternal();
+                
+        /// <summary>
+        /// 提交事务内部实现
+        /// </summary>
+        private void CommitTranInternal()
         {
             var context = CurrentTransactionContext;
             if (context == null)
@@ -157,9 +184,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 _logger.LogWarning("提交请求但无事务上下文");
                 return;
             }
-
+        
             var dbClient = GetDbClient();
-
+        
             // 锁住当前线程的连接
             lock (dbClient)
             {
@@ -169,7 +196,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         return;
                     }
-
+        
                     // 检查回滚标记
                     if (context.ShouldRollback)
                     {
@@ -178,28 +205,28 @@ namespace RUINORERP.Repository.UnitOfWorks
                         _tranDepth.Value--;
                         return;
                     }
-
+        
                     // 减少深度
                     context.Depth--;
                     _tranDepth.Value--;
                     context.UpdateActivityTime();
-
+        
                     // 内层提交：仅更新深度
                     if (context.Depth > 0)
                     {
                         return;
                     }
-
+        
                     // 最外层提交
                     try
                     {
                         dbClient.Ado.CommitTran();
                         context.Status = TransactionStatus.Committed;
-
+        
                         var duration = context.GetDuration().TotalSeconds;
                         if (duration > 10)
                         {
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时: {duration:F2}秒");
+                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时：{duration:F2}秒");
                         }
                     }
                     catch (Exception commitEx)
@@ -217,7 +244,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     context.Status = TransactionStatus.RolledBack;
                     ForceRollback(dbClient);
-                    throw new InvalidOperationException($"事务提交失败: {ex.Message}", ex);
+                    throw new InvalidOperationException($"事务提交失败：{ex.Message}", ex);
                 }
             }
         }
@@ -233,9 +260,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                 _logger.LogWarning("回滚请求但无事务上下文");
                 return;
             }
-
+        
             var dbClient = GetDbClient();
-
+        
             // 锁住当前线程的连接
             lock (dbClient)
             {
@@ -245,15 +272,15 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         return;
                     }
-
+        
                     // 设置回滚标记
                     context.ShouldRollback = true;
                     context.UpdateActivityTime();
-
+        
                     // 减少深度
                     context.Depth--;
                     _tranDepth.Value--;
-
+        
                     // 最外层回滚
                     if (context.Depth == 0)
                     {
@@ -277,7 +304,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                         }
                         catch (Exception savePointEx)
                         {
-                            _logger.LogError(savePointEx, $"[Transaction-{context.TransactionId}] 保存点回滚失败: {savePoint}");
+                            _logger.LogError(savePointEx, $"[Transaction-{context.TransactionId}] 保存点回滚失败：{savePoint}");
                             throw;
                         }
                     }
@@ -286,7 +313,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 回滚操作失败");
                     ForceRollback(dbClient);
-                    throw new InvalidOperationException($"事务回滚失败: {ex.Message}", ex);
+                    throw new InvalidOperationException($"事务回滚失败：{ex.Message}", ex);
                 }
                 finally
                 {
@@ -318,6 +345,90 @@ namespace RUINORERP.Repository.UnitOfWorks
             finally
             {
                 ResetTransactionState();
+            }
+        }
+        
+        /// <summary>
+        /// 带重试的执行方法（用于处理死锁等瞬态故障）
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        /// <param name="maxRetryCount">最大重试次数，默认 3 次</param>
+        public void ExecuteWithRetry(Action action, int maxRetryCount = MAX_RETRY_COUNT)
+        {
+            int retryCount = 0;
+            var context = CurrentTransactionContext;
+            
+            while (true)
+            {
+                try
+                {
+                    action();
+                    return;
+                }
+                catch (SqlException sqlEx) when (sqlEx.Number == 1205 && retryCount < maxRetryCount)
+                {
+                    retryCount++;
+                    var delayMs = (int)(100 * Math.Pow(2, retryCount)); // 指数退避：200ms, 400ms, 800ms
+                    
+                    _logger.LogWarning(sqlEx, 
+                        $"[Transaction-{context?.TransactionId}] 检测到数据库死锁，正在进行第 {retryCount}/{maxRetryCount} 次重试，延迟 {delayMs}ms...");
+                    
+                    // 记录死锁上下文信息
+                    if (context != null)
+                    {
+                        _logger.LogWarning($"死锁事务上下文：{context.GetDebugInfo()}");
+                    }
+                    
+                    Thread.Sleep(delayMs);
+                }
+                catch (Exception ex)
+                {
+                    // 非死锁异常或其他异常，直接抛出
+                    _logger.LogError(ex, $"[Transaction-{context?.TransactionId}] 执行失败，不再重试");
+                    throw;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 异步版本的带重试执行方法
+        /// </summary>
+        /// <param name="action">要执行的操作</param>
+        /// <param name="maxRetryCount">最大重试次数，默认 3 次</param>
+        public async Task ExecuteWithRetryAsync(Func<Task> action, int maxRetryCount = MAX_RETRY_COUNT)
+        {
+            int retryCount = 0;
+            var context = CurrentTransactionContext;
+            
+            while (true)
+            {
+                try
+                {
+                    await action();
+                    return;
+                }
+                catch (SqlException sqlEx) when (sqlEx.Number == 1205 && retryCount < maxRetryCount)
+                {
+                    retryCount++;
+                    var delayMs = (int)(100 * Math.Pow(2, retryCount)); // 指数退避：200ms, 400ms, 800ms
+                    
+                    _logger.LogWarning(sqlEx, 
+                        $"[Transaction-{context?.TransactionId}] 检测到数据库死锁，正在进行第 {retryCount}/{maxRetryCount} 次重试，延迟 {delayMs}ms...");
+                    
+                    // 记录死锁上下文信息
+                    if (context != null)
+                    {
+                        _logger.LogWarning($"死锁事务上下文：{context.GetDebugInfo()}");
+                    }
+                    
+                    await Task.Delay(delayMs);
+                }
+                catch (Exception ex)
+                {
+                    // 非死锁异常或其他异常，直接抛出
+                    _logger.LogError(ex, $"[Transaction-{context?.TransactionId}] 执行失败，不再重试");
+                    throw;
+                }
             }
         }
 
@@ -381,17 +492,17 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 var transactionId = context.TransactionId;
                 var duration = context.GetDuration().TotalSeconds;
-
+        
                 // 长事务警告
                 if (duration > 60)
                 {
-                    _logger.LogWarning($"[Transaction-{transactionId}] 长事务警告: {duration:F2}秒");
+                    _logger.LogWarning($"[Transaction-{transactionId}] 长事务警告：{duration:F2}秒");
                 }
-
+        
                 // 清理上下文
                 _currentTransactionContext.Value = null;
                 _tranDepth.Value = 0;
-
+        
                 // 关键修复：清理数据库连接实例，避免连接泄漏
                 if (_asyncLocalClient.Value != null)
                 {
@@ -413,8 +524,55 @@ namespace RUINORERP.Repository.UnitOfWorks
                         _asyncLocalClient.Value = null;
                     }
                 }
-
+        
                 _logger.LogDebug($"[Transaction-{transactionId}] 事务状态已重置");
+            }
+        }
+                
+        /// <summary>
+        /// 释放资源（确保连接及时释放）
+        /// </summary>
+        public void Dispose()
+        {
+            var dbClient = _asyncLocalClient.Value;
+            if (dbClient != null)
+            {
+                try
+                {
+                    var context = _currentTransactionContext.Value;
+                            
+                    // 如果有未完成的事务，强制回滚
+                    if (context != null && context.Depth > 0)
+                    {
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 检测到未完成的事务，执行强制回滚");
+                        if (dbClient.Ado.Transaction != null)
+                        {
+                            dbClient.Ado.RollbackTran();
+                        }
+                    }
+                            
+                    // 关闭并释放连接
+                    if (dbClient.Ado.Connection != null)
+                    {
+                        if (dbClient.Ado.Connection.State == ConnectionState.Open)
+                        {
+                            dbClient.Ado.Connection.Close();
+                            _logger.LogDebug("Dispose 时已关闭数据库连接");
+                        }
+                        dbClient.Ado.Connection.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Dispose 时发生错误");
+                }
+                finally
+                {
+                    // 清理 AsyncLocal 引用
+                    _asyncLocalClient.Value = null;
+                    _currentTransactionContext.Value = null;
+                    _tranDepth.Value = 0;
+                }
             }
         }
 
@@ -494,6 +652,111 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 return $"Depth={Depth}, Rollback={ShouldRollback}, Active={IsActive}";
             }
+        }
+    }
+
+    /// <summary>
+    /// UnitOfWorkManage 扩展方法（死锁优化）
+    /// </summary>
+    public static class UnitOfWorkManageExtensions
+    {
+        /// <summary>
+        /// 带重试的事务执行
+        /// </summary>
+        /// <typeparam name="T">返回类型</typeparam>
+        /// <param name="unitOfWork">事务管理器</param>
+        /// <param name="action">业务操作</param>
+        /// <param name="maxRetries">最大重试次数，默认3</param>
+        /// <param name="retryDelayMs">初始重试延迟（毫秒），默认100</param>
+        /// <returns>操作结果</returns>
+        public static T ExecuteWithRetry<T>(
+            this IUnitOfWorkManage unitOfWork, 
+            Func<T> action, 
+            int maxRetries = 3,
+            int retryDelayMs = 100)
+        {
+            int retryCount = 0;
+            int currentDelay = retryDelayMs;
+
+            while (true)
+            {
+                try
+                {
+                    return action();
+                }
+                catch (Exception ex)
+                {
+                    bool isRetryable = IsRetryableException(ex);
+                    
+                    if (!isRetryable || retryCount >= maxRetries)
+                    {
+                        throw;
+                    }
+
+                    retryCount++;
+                    Thread.Sleep(currentDelay);
+                    
+                    // 指数退避
+                    currentDelay = Math.Min(currentDelay * 2, 2000);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 带重试的异步事务执行
+        /// </summary>
+        public static async Task<T> ExecuteWithRetryAsync<T>(
+            this IUnitOfWorkManage unitOfWork, 
+            Func<Task<T>> action, 
+            int maxRetries = 3,
+            int retryDelayMs = 100)
+        {
+            int retryCount = 0;
+            int currentDelay = retryDelayMs;
+
+            while (true)
+            {
+                try
+                {
+                    return await action();
+                }
+                catch (Exception ex)
+                {
+                    bool isRetryable = IsRetryableException(ex);
+                    
+                    if (!isRetryable || retryCount >= maxRetries)
+                    {
+                        throw;
+                    }
+
+                    retryCount++;
+                    await Task.Delay(currentDelay);
+                    
+                    // 指数退避
+                    currentDelay = Math.Min(currentDelay * 2, 2000);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 判断异常是否可重试
+        /// </summary>
+        private static bool IsRetryableException(Exception ex)
+        {
+            if (ex is SqlException sqlEx)
+            {
+                // SQL Server 死锁错误码: 1205
+                // 锁超时错误码: 1222
+                return sqlEx.Number == 1205 || sqlEx.Number == 1222;
+            }
+            
+            // 检查消息中是否包含死锁相关关键词
+            string message = ex.Message?.ToLower() ?? "";
+            return message.Contains("deadlock") || 
+                   message.Contains("dead locked") ||
+                   message.Contains("lock timeout") ||
+                   message.Contains("1205") ||
+                   message.Contains("1222");
         }
     }
 }

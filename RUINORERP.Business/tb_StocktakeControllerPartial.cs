@@ -49,7 +49,7 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var requiredKeys1 = entity.tb_StocktakeDetails
-                    .Select(c => (c.ProdDetailID, entity.Location_ID))
+                    .Select(c => new { ProdDetailID = c.ProdDetailID, Location_ID = entity.Location_ID })
                     .Distinct()
                     .ToList();
 
@@ -272,7 +272,7 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var requiredKeys2 = entity.tb_StocktakeDetails
-                    .Select(c => (c.ProdDetailID, entity.Location_ID))
+                    .Select(c => new { ProdDetailID = c.ProdDetailID, Location_ID = entity.Location_ID })
                     .Distinct()
                     .ToList();
 

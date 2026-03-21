@@ -77,7 +77,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                 List<tb_Inventory> invList = new List<tb_Inventory>();
 
-                var inventoryGroups = new Dictionary<(long ProdDetailID, long LocationID), (tb_Inventory Inventory, int SaleQtySum)>();
+                var inventoryGroups = new Dictionary<(long ProdDetailID, long Location_ID), (tb_Inventory Inventory, int SaleQtySum)>();
 
                 long[] childProdDetailIds = entity.tb_SaleOrderDetails.Select(c => c.ProdDetailID).ToList().ToArray();
 
@@ -442,7 +442,7 @@ namespace RUINORERP.Business
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
 
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
-                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                var allKeys = new List<(long ProdDetailID, long Location_ID)>();
                 if (approvalEntity.ApprovalResults && entitys != null)
                 {
                     foreach (var entity in entitys)
@@ -454,16 +454,14 @@ namespace RUINORERP.Business
                     }
                 }
 
-                var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                var invDict = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeys.Count > 0)
                 {
-                    var distinctProdDetailIds = allKeys.Select(k => k.ProdDetailID).Distinct().ToList();
-                    var requiredPairs = allKeys.Distinct().ToHashSet();
+                    var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
-                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
                     invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
                 #endregion
@@ -568,7 +566,7 @@ namespace RUINORERP.Business
             try
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
-                var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                var allKeys = new List<(long ProdDetailID, long Location_ID)>();
                 foreach (var entity in entitys)
                 {
                     if (entity.DataStatus == (int)DataStatus.确认 && entity.ApprovalResults.HasValue
@@ -581,16 +579,14 @@ namespace RUINORERP.Business
                     }
                 }
 
-                var invDict2 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeys.Count > 0)
                 {
-                    var distinctProdDetailIds = allKeys.Select(k => k.ProdDetailID).Distinct().ToList();
-                    var requiredPairs = allKeys.Distinct().ToHashSet();
+                    var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
-                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
                 #endregion
@@ -818,7 +814,7 @@ namespace RUINORERP.Business
             try
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
-                var allKeys3 = new List<(long ProdDetailID, long LocationID)>();
+                var allKeys3 = new List<(long ProdDetailID, long Location_ID)>();
                 foreach (var entity in entitys)
                 {
                     if (entity.DataStatus == (int)DataStatus.完结 && entity.ApprovalResults.HasValue
@@ -831,16 +827,14 @@ namespace RUINORERP.Business
                     }
                 }
 
-                var invDict3 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                var invDict3 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeys3.Count > 0)
                 {
-                    var distinctProdDetailIds = allKeys3.Select(k => k.ProdDetailID).Distinct().ToList();
-                    var requiredPairs = allKeys3.Distinct().ToHashSet();
+                    var requiredKeys = allKeys3.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
-                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
                     invDict3 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
                 #endregion
@@ -1035,22 +1029,20 @@ namespace RUINORERP.Business
                 //更新拟销售量减少
 
                 // ✅ 死锁优化：事务外批量预加载库存
-                var allKeysCancel = new List<(long ProdDetailID, long LocationID)>();
+                var allKeysCancel = new List<(long ProdDetailID, long Location_ID)>();
                 foreach (var child in entity.tb_SaleOrderDetails)
                 {
                     allKeysCancel.Add((child.ProdDetailID, child.Location_ID));
                 }
 
-                var invDict5 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
+                var invDict5 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeysCancel.Count > 0)
                 {
-                    var distinctProdDetailIds = allKeysCancel.Select(k => k.ProdDetailID).Distinct().ToList();
-                    var requiredPairs = allKeysCancel.Distinct().ToHashSet();
+                    var requiredKeys = allKeysCancel.Select(k => new { k.ProdDetailID, k.Location_ID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.Location_ID == i.Location_ID))
                         .ToListAsync();
-                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
                     invDict5 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
 
@@ -1814,13 +1806,11 @@ namespace RUINORERP.Business
                 var invDict5 = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
                 if (allKeysCancelOrder.Count > 0)
                 {
-                    var distinctProdDetailIds = allKeysCancelOrder.Select(k => k.ProdDetailID).Distinct().ToList();
-                    var requiredPairs = allKeysCancelOrder.Distinct().ToHashSet();
+                    var requiredKeys = allKeysCancelOrder.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctProdDetailIds.Contains(i.ProdDetailID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                         .ToListAsync();
-                    inventoryList = inventoryList.Where(i => requiredPairs.Contains((i.ProdDetailID, i.Location_ID))).ToList();
                     invDict5 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
 

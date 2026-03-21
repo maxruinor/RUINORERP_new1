@@ -56,7 +56,7 @@ namespace RUINORERP.Business
 
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var requiredKeys = entity.tb_PurEntryReDetails
-                    .Select(c => (c.ProdDetailID, c.Location_ID))
+                    .Select(c => new { c.ProdDetailID, c.Location_ID })
                     .Distinct()
                     .ToList();
 
@@ -374,7 +374,7 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
 
         #region 【死锁优化】预处理阶段（事务外批量预加载库存）
         var requiredKeys2 = entity.tb_PurEntryReDetails
-            .Select(c => (c.ProdDetailID, c.Location_ID))
+            .Select(c => new { c.ProdDetailID, c.Location_ID })
             .Distinct()
             .ToList();
 

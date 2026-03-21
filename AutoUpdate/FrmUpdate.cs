@@ -1268,10 +1268,6 @@ namespace AutoUpdate
         /// </summary>
         private void MaintainLogFileSize()
         {
-            // 只有在调试模式下才维护日志文件
-            if (!IsDebugMode)
-                return;
-
             try
             {
                 const long MaxLogSize = 1024 * 1024; // 1MB
@@ -2059,6 +2055,9 @@ namespace AutoUpdate
                 }
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
 
+                // 【新增】记录版本历史
+                RecordVersionHistory();
+
                 // 关键：使用AutoUpdateUpdater来更新AutoUpdate程序自身
                 string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
                 AppendAllText($"[AutoUpdate更新] 当前程序路径: {currentExePath}");
@@ -2736,6 +2735,97 @@ namespace AutoUpdate
                 AppendAllText($"[下载重试] 错误详情: {lastException.Message}");
             }
             return false;
+        }
+
+        #endregion
+
+        #region 版本历史记录管理
+
+        /// <summary>
+        /// 记录版本历史
+        /// 在更新成功后记录当前版本信息，用于版本回滚
+        /// </summary>
+        private void RecordVersionHistory()
+        {
+            try
+            {
+                AppendAllText("[版本历史] 开始记录版本历史...");
+
+                // 获取当前版本号
+                string currentVersion = NewVersion;
+                if (string.IsNullOrEmpty(currentVersion))
+                {
+                    // 从配置文件获取当前版本
+                    try
+                    {
+                        currentVersion = updaterXmlFiles.GetNodeValue("//Application/Version");
+                    }
+                    catch
+                    {
+                        currentVersion = "1.0.0.0";
+                    }
+                }
+
+                AppendAllText($"[版本历史] 当前版本: {currentVersion}");
+
+                // 创建版本文件夹管理器
+                VersionFolderManager folderManager = new VersionFolderManager();
+
+                // 创建版本文件夹
+                string folderName = folderManager.CreateVersionFolder(currentVersion);
+                if (string.IsNullOrEmpty(folderName))
+                {
+                    AppendAllText("[版本历史] 创建版本文件夹失败");
+                    return;
+                }
+
+                AppendAllText($"[版本历史] 创建版本文件夹: {folderName}");
+
+                // 复制核心文件到版本文件夹
+                string targetDir = AppDomain.CurrentDomain.BaseDirectory;
+                string[] coreFiles = Directory.GetFiles(targetDir, "*.*")
+                    .Where(file => !file.Contains("UpdaterData") &&
+                                   !file.Contains("Versions") &&
+                                   !file.Contains("Backup") &&
+                                   !file.Contains("temp") &&
+                                   !file.Contains("tmp"))
+                    .ToArray();
+
+                int copiedCount = 0;
+                foreach (string file in coreFiles)
+                {
+                    try
+                    {
+                        folderManager.CopyFileToVersionFolder(file, folderName);
+                        copiedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendAllText($"[版本历史] 复制文件失败: {Path.GetFileName(file)}, {ex.Message}");
+                    }
+                }
+
+                AppendAllText($"[版本历史] 已复制 {copiedCount} 个文件到版本文件夹");
+
+                // 获取版本文件列表和校验和
+                List<string> files = folderManager.GetVersionFiles(folderName);
+                string checksum = folderManager.CalculateVersionChecksum(folderName);
+
+                // 记录版本信息
+                VersionHistoryManager historyManager = new VersionHistoryManager();
+                historyManager.RecordNewVersion(currentVersion, folderName, files, checksum);
+
+                AppendAllText($"[版本历史] 版本历史记录成功: {currentVersion}");
+
+                // 清理旧版本（保留最新10个）
+                historyManager.CleanupOldVersions(10);
+                AppendAllText("[版本历史] 旧版本清理完成");
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[版本历史] 记录版本历史失败: {ex.Message}");
+                AppendAllText($"[版本历史] 异常详情: {ex.StackTrace}");
+            }
         }
 
         #endregion

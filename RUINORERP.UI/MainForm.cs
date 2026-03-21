@@ -720,6 +720,19 @@ namespace RUINORERP.UI
         {
             bool rs = false;
 
+            // 【关键修复】如果程序刚刚完成更新，跳过更新检测
+            // 这是防止重复更新检测的最直接方式
+            if (Program.JustUpdated)
+            {
+                System.Diagnostics.Debug.WriteLine("[更新系统] 程序刚刚完成更新，跳过本次更新检测");
+                if (ShowMessageBox)
+                {
+                    MessageBox.Show("系统刚刚完成更新，将在下次启动时检测新版本。", "更新提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                // 重置标记
+                Program.JustUpdated = false;
+                return false;
+            }
 
             // 如果未配置自动更新且非强制更新，则不执行更新检查
             if (!AppContext.SystemGlobalConfig.客户端自动更新 && !forceUpdate)
@@ -1016,14 +1029,37 @@ namespace RUINORERP.UI
                         System.Diagnostics.Debug.WriteLine("文件内容：");
                         System.Diagnostics.Debug.WriteLine(content);
 
-                        if (content == "取消升级")
+                        // 处理各种升级状态
+                        if (content == "取消升级" || content == "取消更新")
                         {
-                            // 处理取消升级逻辑
+                            // 处理取消升级逻辑 - 清除状态
+                            try { File.WriteAllText(UpdatefilePath, ""); } catch { }
                         }
-                        else if (content == "升级中" || content == "升级完成")
+                        else if (content == "正在更新" || content == "升级中" || content == "升级完成")
                         {
-                            // 确保当前程序退出
-                            Environment.Exit(0);
+                            // 升级中或升级完成时，关闭文件监控器
+                            watcher.EnableRaisingEvents = false;
+                            
+                            // 升级完成时不需要退出，升级中则等待完成后退出
+                            if (content == "升级完成")
+                            {
+                                System.Diagnostics.Debug.WriteLine("升级已完成，主程序继续运行");
+                                // 清除升级完成状态，避免影响后续更新检测
+                                try { File.WriteAllText(UpdatefilePath, ""); } catch { }
+                                // 不退出，让主程序继续运行
+                            }
+                            else
+                            {
+                                // 升级中状态，确保当前程序退出
+                                System.Diagnostics.Debug.WriteLine("检测到升级中状态，退出程序等待升级完成");
+                                Environment.Exit(0);
+                            }
+                        }
+                        else if (content == "跳过当前版本")
+                        {
+                            // 跳过版本更新 - 清除状态
+                            System.Diagnostics.Debug.WriteLine("用户选择跳过当前版本");
+                            try { File.WriteAllText(UpdatefilePath, ""); } catch { }
                         }
                     }
                     else

@@ -409,6 +409,9 @@ namespace AutoUpdate
 
         // 日志文件路径 - 使用统一的AutoUpdateLog.txt
         private string UpdateLogfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AutoUpdateLog.txt");
+        
+        // 主程序监控的更新状态文件路径（与MainForm保持一致）
+        private string MainProgramStatusFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UpdateLog.txt");
         /// <summary>
         /// 写入日志信息，更新时会在当前目录创建一个文本文件进行记录
         /// 第一次写入时创建文件
@@ -883,8 +886,7 @@ namespace AutoUpdate
 
         private void btnCancel_Click(object sender, System.EventArgs e)
         {
-
-            File.WriteAllText(UpdateLogfilePath, "取消更新");
+            WriteMainProgramStatus("取消更新");
             this.Close();
             Application.ExitThread();
             Application.Exit();
@@ -906,7 +908,7 @@ namespace AutoUpdate
 
             if (availableUpdate > 0)
             {
-                File.WriteAllText(UpdateLogfilePath, "正在更新");
+                WriteMainProgramStatus("正在更新");
 
                 btnNext.Enabled = false;
                 try
@@ -1316,6 +1318,33 @@ namespace AutoUpdate
                     System.Diagnostics.Debug.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] 日志维护失败: {ex.Message}");
                 }
                 catch { }
+            }
+        }
+
+        /// <summary>
+        /// 写入主程序监控的状态文件，通知更新进度
+        /// </summary>
+        /// <param name="status">状态值：取消更新、正在更新、升级完成、跳过当前版本</param>
+        private void WriteMainProgramStatus(string status)
+        {
+            try
+            {
+                string statusFilePath = MainProgramStatusFilePath;
+                
+                // 确保目录存在
+                string directory = Path.GetDirectoryName(statusFilePath);
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                
+                // 写入状态
+                File.WriteAllText(statusFilePath, status);
+                AppendAllText($"[状态通知] 已写入主程序状态文件: {statusFilePath}, 状态: {status}");
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[状态通知] 写入主程序状态文件失败: {ex.Message}");
             }
         }
 
@@ -1977,6 +2006,9 @@ namespace AutoUpdate
             System.Diagnostics.Debug.WriteLine($"当前版本: {version}");
             System.Diagnostics.Debug.WriteLine($"最后更新时间: {updateTime:yyyy-MM-dd}");
 
+            // 【修复】写入升级完成标记，通知主程序不再重复检测更新
+            WriteMainProgramStatus("升级完成");
+            
             // 无论自我更新是否成功，都要启动主程序
             StartEntryPointExe(NewVersion);
 
@@ -2095,6 +2127,36 @@ namespace AutoUpdate
                 Application.DoEvents();
                 
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
+
+                // 【关键修复】确保AutoUpdaterList.xml被正确复制到根目录
+                // 这是防止重复更新检测的核心：必须保证本地配置文件是最新的
+                string tempXmlFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                string targetXmlFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+                
+                if (File.Exists(tempXmlFile))
+                {
+                    try
+                    {
+                        // 直接复制，不做任何条件判断，确保本地配置与服务器同步
+                        File.Copy(tempXmlFile, targetXmlFile, true);
+                        AppendAllText($"[关键修复] AutoUpdaterList.xml已强制复制到根目录");
+                        
+                        // 验证复制结果
+                        if (File.Exists(targetXmlFile))
+                        {
+                            var (newVersion, _, _) = ParseXmlInfo(targetXmlFile);
+                            AppendAllText($"[关键修复] 本地版本已更新为: {newVersion}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendAllText($"[关键修复] 复制AutoUpdaterList.xml失败: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    AppendAllText($"[关键修复] 警告：临时目录中找不到AutoUpdaterList.xml");
+                }
 
                 // 【新增】记录版本历史
                 RecordVersionHistory();
@@ -3432,9 +3494,14 @@ namespace AutoUpdate
                 try
                 {
                     // 构建启动参数
-                    string arguments = tempUpdatePath;
-                    // 将参数转换为"|"分隔的字符串
-                    arguments = String.Join("|", args);
+                    // 【修复】传递更新完成标记，防止主程序重复检测更新
+                    string arguments = "--updated";
+                    
+                    // 如果有额外参数，追加到后面
+                    if (args != null && args.Length > 0)
+                    {
+                        arguments = arguments + "|" + String.Join("|", args);
+                    }
 
                     // 在调试模式下记录启动参数
                     if (IsDebugMode && frmDebug != null)
@@ -3618,7 +3685,7 @@ namespace AutoUpdate
                 }
 
                 // 保留原有功能，确保向后兼容
-                File.WriteAllText(UpdateLogfilePath, "跳过当前版本");
+                WriteMainProgramStatus("跳过当前版本");
 
                 // 设置跳过版本状态
                 mainResult = -9; // 使用标准的跳过版本返回值

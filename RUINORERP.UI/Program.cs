@@ -174,11 +174,30 @@ namespace RUINORERP.UI
         private static readonly System.Collections.Generic.HashSet<string> _assemblySearchPaths = new System.Collections.Generic.HashSet<string>();
 
         /// <summary>
+        /// 标记是否刚刚完成更新（用于跳过更新检测）
+        /// </summary>
+        public static bool JustUpdated { get; set; } = false;
+
+        /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
+            // 检查命令行参数，判断是否刚刚完成更新
+            if (args != null && args.Length > 0)
+            {
+                foreach (var arg in args)
+                {
+                    if (arg == "--updated" || arg.Contains("updated"))
+                    {
+                        JustUpdated = true;
+                        System.Diagnostics.Debug.WriteLine("[启动参数] 检测到刚刚完成更新，将跳过更新检测");
+                        break;
+                    }
+                }
+            }
+
             // 初始化基础日志系统（最先执行）
             InitializeLogging();
 

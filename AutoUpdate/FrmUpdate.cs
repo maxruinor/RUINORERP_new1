@@ -1454,8 +1454,10 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
-                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
+                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
+                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
+                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
+                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
                     {
                         //MessageBox.Show("正在更新自身");
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
@@ -1706,8 +1708,10 @@ namespace AutoUpdate
 
                     #region 复制文件
                     //如果正在更新自身 避免自身运行时被覆盖
-                    //但只有在非自我更新模式下才跳过，自我更新模式会通过辅助进程处理
-                    if (file == Path.Combine(sourcePath, currentexeName) && !selfUpdateStarted)
+                    //【关键修复】修改逻辑：只有当使用AutoUpdateUpdater辅助进程时才跳过复制
+                    //当selfUpdateStarted=true时，表示使用独立更新器，此时应跳过
+                    //当selfUpdateStarted=false时（如LastCopy流程），应复制文件
+                    if (file == Path.Combine(sourcePath, currentexeName) && selfUpdateStarted)
                     {
                         AppendAllText($"[CopyFile] 跳过自身更新文件，将由自我更新流程处理: {file}");
                         contents.Add(System.DateTime.Now.ToString() + "正在更新自身:" + file);

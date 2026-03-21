@@ -927,17 +927,35 @@ namespace AutoUpdate
                 AppendAllText($"当前工作目录: {Directory.GetCurrentDirectory()}");
                 AppendAllText($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
 
-                if (System.IO.File.Exists(mainAppExe))
+                // 【优化】确保使用绝对路径
+                string mainAppFullPath = mainAppExe;
+                if (!Path.IsPathRooted(mainAppExe))
                 {
-                    AppendAllText($"主程序文件存在，准备启动: {mainAppExe}");
-                    Process.Start(mainAppExe);
+                    mainAppFullPath = Path.GetFullPath(mainAppExe);
+                    AppendAllText($"转换为主程序绝对路径: {mainAppFullPath}");
+                }
+
+                if (System.IO.File.Exists(mainAppFullPath))
+                {
+                    AppendAllText($"主程序文件存在，准备启动: {mainAppFullPath}");
+                    Process.Start(mainAppFullPath);
                     AppendAllText("主程序启动成功");
                 }
                 else
                 {
-                    string errorMsg = "系统找不到指定的文件路径: " + mainAppExe;
-                    AppendAllText($"错误: {errorMsg}");
-                    MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 尝试在当前目录下查找
+                    string tryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mainAppExe);
+                    if (System.IO.File.Exists(tryPath))
+                    {
+                        AppendAllText($"在应用程序目录下找到主程序: {tryPath}");
+                        Process.Start(tryPath);
+                    }
+                    else
+                    {
+                        string errorMsg = "系统找不到指定的文件路径: " + mainAppExe;
+                        AppendAllText($"错误: {errorMsg}");
+                        MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
 
                 this.Close();
@@ -954,22 +972,9 @@ namespace AutoUpdate
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                //下载前 停止主程序进程
-                mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
-                Process[] allProcess = Process.GetProcesses();
-                foreach (Process p in allProcess)
-                {
-                    // MessageBox.Show(p.ProcessName.ToLower());
-                    if (p.ProcessName.ToLower() + ".exe" == mainAppExe.ToLower())
-                    {
-                        for (int i = 0; i < p.Threads.Count; i++)
-                            p.Threads[i].Dispose();
-                        p.Kill();
-                        Thread.Sleep(500);
-                        isRun = true;
-                        //break;
-                    }
-                }
+                // 【优化】下载前不再终止主进程，让主进程在更新时才终止
+                // 进程终止已移至LastCopy方法中执行
+                AppendAllText("[下载流程] 开始下载更新文件，主程序保持运行");
 
                 List<string> contents = new List<string>();
 
@@ -990,6 +995,7 @@ namespace AutoUpdate
                         long fileLength = 0;
                         string content = System.DateTime.Now.ToString() + "准备下载" + updateFileUrl;
                         WebRequest webReq = WebRequest.Create(updateFileUrl);
+                        webReq.Timeout = 30000; // 30秒超时
                         WebResponse webRes = webReq.GetResponse();
                         fileLength = webRes.ContentLength;
                         content += "fileLength:" + fileLength;
@@ -1063,7 +1069,30 @@ namespace AutoUpdate
                     }
                     catch (WebException ex)
                     {
-                        MessageBox.Show($"下载文件失败:\r\n{UpdateFile}" + ex.Message.ToString(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        // 【优化】使用带重试的下载方法
+                        string tempPathRetry = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
+                        string updateFileUrlRetry = updateUrl + lvUpdateList.Items[i].Text.Trim();
+
+                        AppendAllText($"[下载重试] 文件下载失败，准备重试: {UpdateFile}");
+                        bool retrySuccess = DownloadFileWithRetry(updateFileUrlRetry, tempPathRetry, 3);
+
+                        if (retrySuccess)
+                        {
+                            string fileHash = AppUpdater.CalculateFileHash(tempPathRetry);
+                            contents.Add(System.DateTime.Now.ToString() + $" 重试下载成功: {UpdateFile}, MD5: {fileHash}");
+                            AppendAllText($"[下载重试] 重试下载成功: {UpdateFile}");
+
+                            if (!versionDirList.Contains(VerNo))
+                            {
+                                versionDirList.Add(VerNo);
+                            }
+
+                            filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPathRetry));
+                        }
+                        else
+                        {
+                            MessageBox.Show($"下载文件失败:\r\n{UpdateFile}" + ex.Message.ToString(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
 
                     }
                 }
@@ -1991,6 +2020,9 @@ namespace AutoUpdate
                 AppendAllText($"[LastCopy] htUpdateFile 包含 {htUpdateFile.Count} 个文件记录");
                 AppendAllText($"[LastCopy] versionDirList 包含 {versionDirList.Count} 个版本目录");
 
+                // 【优化】在复制文件前优雅地终止主进程
+                KillProcessBeforeApply();
+
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
@@ -2457,6 +2489,256 @@ namespace AutoUpdate
             return isRun;
         }
 
+        #region 优化：优雅终止进程和下载重试机制
+
+        /// <summary>
+        /// 优雅地终止主进程（带重试机制）
+        /// </summary>
+        /// <param name="processName">进程名（不含.exe）</param>
+        /// <param name="timeoutMs">等待进程退出的超时时间（毫秒）</param>
+        /// <returns>是否成功终止进程</returns>
+        private bool GracefulKillMainProcess(string processName, int timeoutMs = 5000)
+        {
+            try
+            {
+                AppendAllText($"[进程管理] 开始优雅终止进程: {processName}");
+
+                // 获取所有匹配的进程
+                Process[] processes = Process.GetProcessesByName(processName);
+                if (processes.Length == 0)
+                {
+                    AppendAllText($"[进程管理] 进程 {processName} 未运行，无需终止");
+                    return true;
+                }
+
+                foreach (Process p in processes)
+                {
+                    try
+                    {
+                        AppendAllText($"[进程管理] 找到运行中的进程: {p.ProcessName} (PID: {p.Id})");
+
+                        // 检查进程是否已经退出
+                        if (p.HasExited)
+                        {
+                            AppendAllText($"[进程管理] 进程已退出");
+                            continue;
+                        }
+
+                        // 1. 尝试发送关闭消息（优雅退出）
+                        if (!p.HasExited && p.MainWindowHandle != IntPtr.Zero)
+                        {
+                            AppendAllText($"[进程管理] 发送关闭消息到主窗口");
+                            p.CloseMainWindow();
+
+                            // 等待进程退出
+                            int waitCount = 0;
+                            int maxWaitCount = timeoutMs / 100;
+                            while (!p.HasExited && waitCount < maxWaitCount)
+                            {
+                                Thread.Sleep(100);
+                                waitCount++;
+                            }
+
+                            if (!p.HasExited)
+                            {
+                                AppendAllText($"[进程管理] 优雅退出超时，强制终止进程");
+                            }
+                            else
+                            {
+                                AppendAllText($"[进程管理] 进程已优雅退出");
+                                continue;
+                            }
+                        }
+
+                        // 2. 强制终止
+                        if (!p.HasExited)
+                        {
+                            AppendAllText($"[进程管理] 强制终止进程");
+                            p.Kill();
+
+                            // 等待进程真正退出
+                            if (!p.WaitForExit(3000))
+                            {
+                                AppendAllText($"[进程管理] 警告: 进程未能及时退出");
+                            }
+                            else
+                            {
+                                AppendAllText($"[进程管理] 进程已终止");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AppendAllText($"[进程管理] 终止进程失败: {ex.Message}");
+                    }
+                }
+
+                // 再次检查是否还有进程运行
+                processes = Process.GetProcessesByName(processName);
+                if (processes.Length > 0)
+                {
+                    AppendAllText($"[进程管理] 警告: 仍有 {processes.Length} 个进程未终止");
+                    return false;
+                }
+
+                AppendAllText($"[进程管理] 进程终止完成");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[进程管理] 终止进程时发生异常: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 在应用更新前终止主进程（优化后的流程）
+        /// </summary>
+        private void KillProcessBeforeApply()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(mainAppExe))
+                {
+                    mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
+                }
+
+                // 去除.exe后缀（如果有）
+                string processName = mainAppExe;
+                if (processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    processName = processName.Substring(0, processName.Length - 4);
+                }
+
+                AppendAllText($"[流程优化] 开始在应用更新前终止主进程: {processName}");
+
+                // 使用优雅终止方法
+                bool killSuccess = GracefulKillMainProcess(processName, 5000);
+
+                if (!killSuccess)
+                {
+                    AppendAllText($"[流程优化] 优雅终止失败，尝试强制终止");
+                    // 强制终止
+                    Process[] processes = Process.GetProcessesByName(processName);
+                    foreach (Process p in processes)
+                    {
+                        try
+                        {
+                            p.Kill();
+                            AppendAllText($"[流程优化] 强制终止进程: {p.ProcessName}");
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendAllText($"[流程优化] 强制终止失败: {ex.Message}");
+                        }
+                    }
+                }
+
+                // 等待一下确保进程完全退出
+                Thread.Sleep(500);
+                AppendAllText($"[流程优化] 主进程终止完成");
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[流程优化] 终止主进程时发生异常: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 带重试机制的文件下载方法
+        /// </summary>
+        /// <param name="url">下载URL</param>
+        /// <param name="destPath">目标文件路径</param>
+        /// <param name="maxRetries">最大重试次数</param>
+        /// <returns>是否下载成功</returns>
+        private bool DownloadFileWithRetry(string url, string destPath, int maxRetries = 3)
+        {
+            Exception lastException = null;
+
+            for (int retry = 1; retry <= maxRetries; retry++)
+            {
+                try
+                {
+                    AppendAllText($"[下载重试] 第 {retry}/{maxRetries} 次尝试下载: {url}");
+
+                    // 创建下载请求
+                    WebRequest webReq = WebRequest.Create(url);
+                    webReq.Timeout = 30000; // 30秒超时
+
+                    using (WebResponse webRes = webReq.GetResponse())
+                    {
+                        long fileLength = webRes.ContentLength;
+                        if (fileLength < 0)
+                        {
+                            AppendAllText($"[下载重试] 无法获取文件大小，跳过: {url}");
+                            continue;
+                        }
+
+                        // 创建目录
+                        string destDir = Path.GetDirectoryName(destPath);
+                        if (!Directory.Exists(destDir))
+                        {
+                            Directory.CreateDirectory(destDir);
+                        }
+
+                        // 下载文件
+                        using (Stream srm = webRes.GetResponseStream())
+                        using (FileStream fs = new FileStream(destPath, FileMode.OpenOrCreate, FileAccess.Write))
+                        {
+                            byte[] buffer = new byte[8192];
+                            int bytesRead;
+                            while ((bytesRead = srm.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                fs.Write(buffer, 0, bytesRead);
+                                Application.DoEvents();
+                            }
+                        }
+                    }
+
+                    // 验证下载文件
+                    if (File.Exists(destPath))
+                    {
+                        var fileInfo = new FileInfo(destPath);
+                        AppendAllText($"[下载重试] 文件下载成功: {destPath} ({fileInfo.Length} 字节)");
+                        return true;
+                    }
+                }
+                catch (WebException ex)
+                {
+                    lastException = ex;
+                    AppendAllText($"[下载重试] 第 {retry} 次下载失败: {ex.Message}");
+
+                    // 如果是最后一次尝试，不再等待
+                    if (retry < maxRetries)
+                    {
+                        // 递增等待时间：1秒、2秒、3秒
+                        int waitTime = retry * 1000;
+                        AppendAllText($"[下载重试] 等待 {waitTime} 毫秒后重试...");
+                        Thread.Sleep(waitTime);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    AppendAllText($"[下载重试] 第 {retry} 次下载发生异常: {ex.Message}");
+
+                    if (retry < maxRetries)
+                    {
+                        Thread.Sleep(retry * 1000);
+                    }
+                }
+            }
+
+            // 所有重试都失败
+            AppendAllText($"[下载重试] 文件下载最终失败: {url}");
+            if (lastException != null)
+            {
+                AppendAllText($"[下载重试] 错误详情: {lastException.Message}");
+            }
+            return false;
+        }
+
+        #endregion
 
         #region 外部方法
 
@@ -2965,7 +3247,15 @@ namespace AutoUpdate
             }
 
             //return;
-            if (System.IO.File.Exists(mainAppExe))
+            // 【优化】确保使用绝对路径
+            string mainAppFullPath = mainAppExe;
+            if (!Path.IsPathRooted(mainAppExe))
+            {
+                mainAppFullPath = Path.GetFullPath(mainAppExe);
+                AppendAllText($"[启动优化] 转换为主程序绝对路径: {mainAppFullPath}");
+            }
+
+            if (System.IO.File.Exists(mainAppFullPath))
             {
                 try
                 {
@@ -2977,13 +3267,13 @@ namespace AutoUpdate
                     // 在调试模式下记录启动参数
                     if (IsDebugMode && frmDebug != null)
                     {
-                        frmDebug.AppendLog($"准备启动主程序: {mainAppExe}");
+                        frmDebug.AppendLog($"准备启动主程序: {mainAppFullPath}");
                         frmDebug.AppendLog($"启动参数: {arguments}");
-                        frmDebug.AppendLog($"工作目录: {Path.GetDirectoryName(mainAppExe)}");
+                        frmDebug.AppendLog($"工作目录: {Path.GetDirectoryName(mainAppFullPath)}");
                     }
 
                     // 创建进程启动信息
-                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppExe, arguments);
+                    ProcessStartInfo startInfo = new ProcessStartInfo(mainAppFullPath, arguments);
 
                     // 在调试模式下记录进程启动信息
                     if (IsDebugMode && frmDebug != null)
@@ -3003,7 +3293,7 @@ namespace AutoUpdate
                     }
 
                     // 记录日志
-                    AppendAllText($"成功启动主程序: {mainAppExe} 参数: {arguments}");
+                    AppendAllText($"成功启动主程序: {mainAppFullPath} 参数: {arguments}");
 
                     // 在调试模式下添加成功日志
                     if (IsDebugMode && frmDebug != null)
@@ -3029,18 +3319,35 @@ namespace AutoUpdate
             }
             else
             {
-                string errorMsg = $"系统找不到指定的文件路径: {mainAppExe}";
-                AppendAllText(errorMsg);
-
-                // 在调试模式下记录详细错误信息
-                if (IsDebugMode && frmDebug != null)
+                // 尝试在当前目录下查找
+                string tryPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, mainAppExe);
+                if (System.IO.File.Exists(tryPath))
                 {
-                    frmDebug.AppendLog($"错误: {errorMsg}");
-                    frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
-                    frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
+                    AppendAllText($"[启动优化] 在应用程序目录下找到主程序: {tryPath}");
+                    try
+                    {
+                        Process.Start(tryPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"启动主程序失败: {ex.Message}", "启动错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
+                else
+                {
+                    string errorMsg = $"系统找不到指定的文件路径: {mainAppExe}";
+                    AppendAllText(errorMsg);
 
-                MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 在调试模式下记录详细错误信息
+                    if (IsDebugMode && frmDebug != null)
+                    {
+                        frmDebug.AppendLog($"错误: {errorMsg}");
+                        frmDebug.AppendLog($"当前工作目录: {Directory.GetCurrentDirectory()}");
+                        frmDebug.AppendLog($"完整路径检查: {Path.GetFullPath(mainAppExe)}");
+                    }
+
+                    MessageBox.Show(errorMsg, "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
             }
             //MessageBox.Show(mainAppExe);
 

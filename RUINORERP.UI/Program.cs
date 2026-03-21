@@ -136,7 +136,17 @@ namespace RUINORERP.UI
 
             if (!createdNew)
             {
-                ActivateExistingInstance();
+                // 如果激活成功（等待到旧进程退出），则可以继续启动
+                if (ActivateExistingInstance())
+                {
+                    // 旧进程已退出，刷新Mutex后继续
+                    _mutex.Dispose();
+                    _mutex = new Mutex(true, mutexName, out createdNew);
+                    if (createdNew)
+                    {
+                        return true;
+                    }
+                }
                 return false;
             }
             return true;
@@ -392,7 +402,12 @@ namespace RUINORERP.UI
 
 
 
-        private static void ActivateExistingInstance()
+        /// <summary>
+        /// 激活已存在的实例（用于单实例检测）
+        /// 修改：增加对更新后启动场景的智能处理
+        /// </summary>
+        /// <returns>是否成功激活或等待到旧进程退出</returns>
+        private static bool ActivateExistingInstance()
         {
             // 获取当前进程名称（不带扩展名）
             string processName = Process.GetCurrentProcess().ProcessName;
@@ -406,6 +421,52 @@ namespace RUINORERP.UI
                 if (process.Id == Process.GetCurrentProcess().Id)
                     continue;
 
+                try
+                {
+                    // 检查旧进程的启动时间，判断是否是更新后刚刚启动的新进程
+                    // 如果旧进程启动时间很新（小于30秒），可能是更新场景
+                    TimeSpan runningTime = DateTime.Now - process.StartTime;
+                    if (runningTime.TotalSeconds < 30)
+                    {
+                        // 尝试等待旧进程退出，最多等待10秒
+                        for (int i = 0; i < 20; i++)
+                        {
+                            if (process.HasExited)
+                            {
+                                // 旧进程已退出，刷新进程列表后继续
+                                break;
+                            }
+                            Thread.Sleep(500);
+                        }
+
+                        // 如果旧进程已退出，重新检查
+                        if (process.HasExited)
+                        {
+                            // 刷新进程列表，确保没有其他残留进程
+                            Process[] newProcesses = Process.GetProcessesByName(processName);
+                            bool hasOtherInstances = false;
+                            foreach (Process p in newProcesses)
+                            {
+                                if (p.Id != Process.GetCurrentProcess().Id && !p.HasExited)
+                                {
+                                    hasOtherInstances = true;
+                                    break;
+                                }
+                            }
+
+                            if (!hasOtherInstances)
+                            {
+                                // 旧进程已退出，当前进程可以继续启动
+                                return true;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // 如果无法获取进程信息，继续原有逻辑
+                }
+
                 // 激活已有窗口
                 IntPtr handle = process.MainWindowHandle;
                 if (handle != IntPtr.Zero)
@@ -417,8 +478,9 @@ namespace RUINORERP.UI
                 MessageBox.Show("程序已经在运行中", "提示",
                               MessageBoxButtons.OK,
                               MessageBoxIcon.Information);
-                break;
+                return false;
             }
+            return false;
         }
 
         private static void OnApplicationExit(object sender, EventArgs e)

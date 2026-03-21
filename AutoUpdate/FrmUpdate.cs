@@ -2037,6 +2037,13 @@ namespace AutoUpdate
             {
                 AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
                 
+                // 初始化进度条，确保Maximum已设置
+                if (pbDownFile.Maximum != 100)
+                {
+                    pbDownFile.Minimum = 0;
+                    pbDownFile.Maximum = 100;
+                }
+
                 // 更新UI状态
                 lbState.Text = "正在准备更新文件，请稍候...";
                 pbDownFile.Visible = true;
@@ -2716,6 +2723,13 @@ namespace AutoUpdate
         {
             try
             {
+                // 初始化进度条，确保Maximum已设置
+                if (pbDownFile.Maximum != 100)
+                {
+                    pbDownFile.Minimum = 0;
+                    pbDownFile.Maximum = 100;
+                }
+
                 // 更新UI状态
                 lbState.Text = "正在检查主程序运行状态...";
                 pbDownFile.Value = 5;

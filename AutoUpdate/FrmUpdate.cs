@@ -594,6 +594,21 @@ namespace AutoUpdate
                 btnNext.Enabled = true;
                 btnskipCurrentVersion.Visible = SkipCurrentVersion;
 
+                // 检查是否有可回滚的版本，如果有则显示还原按钮
+                try
+                {
+                    if (appUpdater != null && appUpdater.CanRollback())
+                    {
+                        btnRollback.Visible = true;
+                        btnRollback.Enabled = true;
+                        AppendAllText("[回滚] 检测到可回滚版本，显示还原按钮");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AppendAllText($"检查回滚版本失败: {ex.Message}");
+                }
+
                 AppendAllText($"更新文件列表显示完成: {updateFiles.Count}个文件");
             }
             catch (Exception ex)
@@ -1989,6 +2004,13 @@ namespace AutoUpdate
             try
             {
                 AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
+                
+                // 更新UI状态
+                lbState.Text = "正在准备更新文件，请稍候...";
+                pbDownFile.Visible = true;
+                pbDownFile.Value = 0;
+                Application.DoEvents();
+                
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
 
                 string targetDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -2018,9 +2040,21 @@ namespace AutoUpdate
 
                 // 【优化】在复制文件前优雅地终止主进程
                 KillProcessBeforeApply();
+                
+                // 计算总进度
+                int totalVersions = versionDirList.Count;
+                int currentVersionProgress = 0;
 
                 for (int i = 0; i < versionDirList.Count; i++)
                 {
+                    // 更新整体进度
+                    currentVersionProgress++;
+                    int overallProgress = (currentVersionProgress * 100) / Math.Max(totalVersions, 1);
+                    lbState.Text = $"正在复制版本 {currentVersionProgress}/{totalVersions} 的文件...";
+                    pbDownFile.Value = Math.Min(overallProgress, 99);
+                    pbDownFile.Refresh();
+                    Application.DoEvents();
+                    
                     // 使用Path.Combine安全构建路径，避免双反斜杠问题
                     string sourcePath = Path.Combine(tempUpdatePath, versionDirList[i]);
                     AppendAllText($"[LastCopy] 处理版本 {i + 1}/{versionDirList.Count}: {versionDirList[i]}");
@@ -2053,6 +2087,13 @@ namespace AutoUpdate
                         AppendAllText($"[LastCopy] 警告: 源目录不存在: {sourcePath}");
                     }
                 }
+                
+                // 更新进度到90%
+                lbState.Text = "文件复制完成，正在处理自我更新...";
+                pbDownFile.Value = 90;
+                pbDownFile.Refresh();
+                Application.DoEvents();
+                
                 AppendAllText("文件复制完成，开始执行自我更新流程...");
 
                 // 【新增】记录版本历史
@@ -2067,6 +2108,12 @@ namespace AutoUpdate
 
                 if (selfUpdateStarted)
                 {
+                    // 更新进度到100%
+                    lbState.Text = "更新完成，正在启动主程序...";
+                    pbDownFile.Value = 100;
+                    pbDownFile.Refresh();
+                    Application.DoEvents();
+                    
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
                     // 在退出前确保配置文件已复制到根目录
@@ -2501,6 +2548,11 @@ namespace AutoUpdate
             try
             {
                 AppendAllText($"[进程管理] 开始优雅终止进程: {processName}");
+                
+                // 更新UI状态
+                lbState.Text = $"正在关闭 {processName} ...";
+                pbDownFile.Refresh();
+                Application.DoEvents();
 
                 // 获取所有匹配的进程
                 Process[] processes = Process.GetProcessesByName(processName);
@@ -2515,6 +2567,11 @@ namespace AutoUpdate
                     try
                     {
                         AppendAllText($"[进程管理] 找到运行中的进程: {p.ProcessName} (PID: {p.Id})");
+                        
+                        // 更新UI
+                        lbState.Text = $"正在关闭 {p.ProcessName} (PID: {p.Id})...";
+                        pbDownFile.Refresh();
+                        Application.DoEvents();
 
                         // 检查进程是否已经退出
                         if (p.HasExited)
@@ -2597,6 +2654,12 @@ namespace AutoUpdate
         {
             try
             {
+                // 更新UI状态
+                lbState.Text = "正在检查主程序运行状态...";
+                pbDownFile.Value = 5;
+                pbDownFile.Refresh();
+                Application.DoEvents();
+                
                 if (string.IsNullOrEmpty(mainAppExe))
                 {
                     mainAppExe = updaterXmlFiles.GetNodeValue("//EntryPoint");
@@ -2610,6 +2673,12 @@ namespace AutoUpdate
                 }
 
                 AppendAllText($"[流程优化] 开始在应用更新前终止主进程: {processName}");
+                
+                // 更新UI状态
+                lbState.Text = $"正在关闭主程序: {processName}...";
+                pbDownFile.Value = 10;
+                pbDownFile.Refresh();
+                Application.DoEvents();
 
                 // 使用优雅终止方法
                 bool killSuccess = GracefulKillMainProcess(processName, 5000);
@@ -2617,6 +2686,13 @@ namespace AutoUpdate
                 if (!killSuccess)
                 {
                     AppendAllText($"[流程优化] 优雅终止失败，尝试强制终止");
+                    
+                    // 更新UI状态
+                    lbState.Text = "正在强制关闭主程序...";
+                    pbDownFile.Value = 15;
+                    pbDownFile.Refresh();
+                    Application.DoEvents();
+                    
                     // 强制终止
                     Process[] processes = Process.GetProcessesByName(processName);
                     foreach (Process p in processes)
@@ -2636,6 +2712,12 @@ namespace AutoUpdate
                 // 等待一下确保进程完全退出
                 Thread.Sleep(500);
                 AppendAllText($"[流程优化] 主进程终止完成");
+                
+                // 更新UI状态
+                lbState.Text = "主程序已关闭，开始复制更新文件...";
+                pbDownFile.Value = 20;
+                pbDownFile.Refresh();
+                Application.DoEvents();
             }
             catch (Exception ex)
             {

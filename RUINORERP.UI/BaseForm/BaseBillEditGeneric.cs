@@ -3267,6 +3267,8 @@ namespace RUINORERP.UI.BaseForm
                             {
                                 btnCaseClosed.Enabled = StateManager.GetButtonState(EditEntity, "toolStripButtonCaseClosed");
                             }
+                            // 结案失败后刷新UI状态，确保按钮状态正确
+                            UpdateAllUIStates(EditEntity);
                         }
                         else
                         {
@@ -3602,7 +3604,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 结案处理
+        /// 结案处理1
         /// 一般会自动结案，但是有些需要人工结案
         /// </summary>
         /// <returns></returns>
@@ -3707,7 +3709,15 @@ namespace RUINORERP.UI.BaseForm
                 }
                 else
                 {
+                    // 结案失败时弹出明确的错误提示
+                    string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
+                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
+                        "结案失败", 
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                        Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                    
                     MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    return false;
                 }
                 return true;
             }

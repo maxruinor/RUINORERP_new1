@@ -38,6 +38,7 @@ using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UCSourceGrid;
+using Krypton.Toolkit;
 using SourceGrid;
 using SqlSugar;
 using System;
@@ -1503,7 +1504,15 @@ namespace RUINORERP.UI.PSI.SAL
                 }
                 else
                 {
+                    // 结案失败时弹出明确的错误提示
+                    string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
+                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
+                        "结案失败", 
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                        Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                    
                     MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    return false;
                 }
                 return true;
             }

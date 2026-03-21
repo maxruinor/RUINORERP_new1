@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -1182,14 +1182,23 @@ namespace RUINORERP.UI.PSI.PUR
                     //审核成功
                     toolStripbtnReview.Enabled = true;
                     MainForm.Instance.AuditLogHelper.CreateAuditLog<tb_PurOrder>("结案", EditEntity, $"结案意见:{ae.CloseCaseOpinions}");
+                    return true;
                 }
                 else
                 {
-                    //审核失败 要恢复之前的值
+                    //结案失败 要恢复之前的值
                     command.Undo();
-                    MainForm.Instance.PrintInfoLog($"{EditEntity.PurOrderNo}结案失败,请联系管理员！", Color.Red);
+                    
+                    // 结案失败时弹出明确的错误提示
+                    string errorMsg = string.IsNullOrEmpty(returnResults.ErrorMsg) ? "未知错误" : returnResults.ErrorMsg;
+                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
+                        "结案失败", 
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                        Krypton.Toolkit.KryptonMessageBoxIcon.Error);
+                    
+                    MainForm.Instance.PrintInfoLog($"{EditEntity.PurOrderNo}结案失败,原因是{returnResults.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
+                    return false;
                 }
-                return true;
             }
             else
             {

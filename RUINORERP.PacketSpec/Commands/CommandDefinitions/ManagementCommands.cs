@@ -1,10 +1,10 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
     /// <summary>
     /// 顶级服务器管理相关命令
-    /// 用于RUINORERP.ManagementServer与其他下级服务器之间的通信
+    /// 用于RUINORERP.TopServer与其他下级服务器之间的通信
     /// 使用独立的Management命令类别(0x12xx)，与系统命令完全分离
     /// </summary>
     public static class ManagementCommands

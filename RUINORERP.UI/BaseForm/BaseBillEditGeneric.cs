@@ -1913,6 +1913,14 @@ namespace RUINORERP.UI.BaseForm
                                 continue;
                             }
 
+                            // 检查图片数据是否有效
+                            if (imageInfo.ImageData == null || imageInfo.ImageData.Length == 0)
+                            {
+                                logger.LogWarning("跳过空图片数据: FileName={FileName}, OriginalFileName={OriginalFileName}",
+                                    imageInfo.FileName, imageInfo.OriginalFileName);
+                                continue;
+                            }
+
                             // 调用FileBusinessService上传
                             var uploadResponse = await fileBusinessService.UploadImageAsync(
                                 businessEntity,
@@ -4698,8 +4706,21 @@ namespace RUINORERP.UI.BaseForm
 
                         if (cell != null && detail != null)
                         {
-                            // 确保文件名包含扩展名
+                            // 检查文件名和图片数据是否有效
                             string uploadFileName = imageInfo.FileName;
+                            byte[] imageData = imageInfo.ImageData;
+
+                            if (string.IsNullOrEmpty(uploadFileName) || imageData == null || imageData.Length == 0)
+                            {
+                                // 图片数据无效，跳过上传
+                                MainForm.Instance.PrintInfoLog($"图片数据无效，跳过上传: {imageInfo.FileName ?? "未知文件"}", Color.Red);
+                                RUINORERP.Lib.BusinessImage.ImageStateManager.Instance.UpdateImageStatus(imageInfo.ImageId, RUINORERP.Lib.BusinessImage.ImageStatus.PendingUpload);
+                                failedImageIds.Add(imageInfo.ImageId);
+                                rs = false;
+                                continue;
+                            }
+
+                            // 确保文件名包含扩展名
                             if (string.IsNullOrEmpty(Path.GetExtension(uploadFileName)))
                             {
                                 // 如果文件名没有扩展名，添加默认扩展名
@@ -4710,7 +4731,7 @@ namespace RUINORERP.UI.BaseForm
                             var uploadResult = await fileService.UploadImageAsync(
                                 detail as BaseEntity,
                                 uploadFileName,
-                                imageInfo.ImageData,
+                                imageData,
                                 "EvidenceImagePath");
 
                             if (uploadResult != null && uploadResult.IsSuccess)

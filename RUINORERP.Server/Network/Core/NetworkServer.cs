@@ -31,6 +31,7 @@ using RUINORERP.PacketSpec.Serialization;
 using System.Net.Sockets;
 using System.Net;
 using System.Management;
+using RUINORERP.PacketSpec.Models.ServerManagement;
 
 namespace RUINORERP.Server.Network.Core
 {
@@ -44,6 +45,7 @@ namespace RUINORERP.Server.Network.Core
         private readonly ILogger<NetworkServer> _logger;
         private readonly ISessionService _sessionManager;
         private readonly CommandDispatcher _commandDispatcher;  // 修改为具体类型
+        private readonly ITopServerClientService _topServerClientService;  // TopServer客户端服务
         private IHost _host;
 
         /// <summary>
@@ -62,11 +64,13 @@ namespace RUINORERP.Server.Network.Core
         /// <param name="logger">日志记录器</param>
         /// <param name="sessionManager">会话管理器</param>
         /// <param name="commandDispatcher">命令调度器</param>
-        public NetworkServer(ILogger<NetworkServer> logger, ISessionService sessionManager, CommandDispatcher commandDispatcher)
+        /// <param name="topServerClientService">TopServer客户端服务（可选）</param>
+        public NetworkServer(ILogger<NetworkServer> logger, ISessionService sessionManager, CommandDispatcher commandDispatcher, ITopServerClientService topServerClientService = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _sessionManager = sessionManager ?? throw new ArgumentNullException(nameof(sessionManager));
             _commandDispatcher = commandDispatcher ?? throw new ArgumentNullException(nameof(commandDispatcher));
+            _topServerClientService = topServerClientService;
         }
 
         /// <summary>
@@ -79,6 +83,17 @@ namespace RUINORERP.Server.Network.Core
             // 使用全局服务提供者，避免创建多个SessionService实例
             _sessionManager = Program.ServiceProvider.GetRequiredService<ISessionService>();
             _commandDispatcher = Program.ServiceProvider.GetRequiredService<CommandDispatcher>();  // 修改为具体类型
+
+            // 尝试获取TopServer客户端服务（可选）
+            try
+            {
+                _topServerClientService = Program.ServiceProvider.GetService<ITopServerClientService>();
+            }
+            catch
+            {
+                // TopServer客户端服务不可用，继续启动
+                _topServerClientService = null;
+            }
         }
 
         /// <summary>
@@ -344,6 +359,9 @@ namespace RUINORERP.Server.Network.Core
 
                 // 记录服务器启动时间
                 StartTime = DateTime.Now;
+
+                // 3. 自动连接到TopServer（总部友好监控）
+                await ConnectToTopServerAsync(cancellationToken);
 
                 return _host;
             }
@@ -994,14 +1012,14 @@ namespace RUINORERP.Server.Network.Core
             {
                 // 检查是否处于调试模式
                 bool isDebugMode = false;
-                
+
                 // 尝试获取主窗体的调试模式状态
                 var mainForm = System.Windows.Forms.Application.OpenForms.OfType<RUINORERP.Server.frmMainNew>().FirstOrDefault();
                 if (mainForm != null)
                 {
                     isDebugMode = mainForm.IsDebug;
                 }
-                
+
                 // 调试模式下跳过注册验证
                 if (isDebugMode)
                 {
@@ -1010,16 +1028,16 @@ namespace RUINORERP.Server.Network.Core
 
                 // 获取注册服务
                 var registrationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Server.Services.IRegistrationService>();
-                
+
                 // 验证注册信息
                 var registrationInfo = await registrationService.GetRegistrationInfoAsync();
-                
+
                 if (registrationInfo == null)
                 {
                     _logger.LogError("无法获取注册信息，无法启动服务器");
                     throw new InvalidOperationException("无法获取注册信息，无法启动服务器");
                 }
-                
+
                 if (!registrationInfo.IsRegistered)
                 {
                     _logger.LogError("系统未注册，无法启动服务器");
@@ -1044,6 +1062,117 @@ namespace RUINORERP.Server.Network.Core
             {
                 _logger.LogError(ex, "验证注册信息时发生未预期的错误");
                 // 非致命异常，记录日志后继续启动
+            }
+        }
+
+        /// <summary>
+        /// 自动连接到TopServer（总部友好监控）
+        /// 在服务器启动成功后自动执行，无需用户干预
+        /// 静默执行，不影响ERP Server性能
+        /// </summary>
+        /// <param name="cancellationToken">取消令牌</param>
+        private async Task ConnectToTopServerAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                // 如果TopServer客户端服务未注册，则跳过
+                if (_topServerClientService == null)
+                {
+                    return;  // 静默跳过
+                }
+
+                // 读取TopServer配置
+                IConfiguration config = Program.ServiceProvider.GetRequiredService<IConfiguration>();
+                var topServerConfigSection = config.GetSection("TopServerConfiguration");
+
+                if (topServerConfigSection == null || !topServerConfigSection.GetChildren().Any())
+                {
+                    return;  // 静默跳过
+                }
+
+                var topServerConfig = topServerConfigSection.Get<TopServerConfig>();
+                if (topServerConfig == null)
+                {
+                    return;  // 静默跳过
+                }
+
+                // 检查是否启用自动管理
+                var enableAutoManagement = topServerConfigSection.GetValue<bool>("EnableAutoManagement");
+                if (!enableAutoManagement)
+                {
+                    return;  // 静默跳过
+                }
+
+                // 静默连接到TopServer（不记录日志）
+                bool connected = await _topServerClientService.ConnectAsync(topServerConfig, cancellationToken);
+                if (!connected)
+                {
+                    // 连接失败，静默跳过，不记录日志，不影响服务器启动
+                    return;
+                }
+
+                // 准备注册信息
+                var registrationInfo = new ServerRegistrationInfo
+                {
+                    ServerId = config.GetSection("serverOptions:name").Value ?? "ERPServer",
+                    ServerName = config.GetSection("serverOptions:name").Value ?? "RUINOR ERP Server",
+                    ServerType = "ERP",
+                    IpAddress = GetLocalIPAddress(),
+                    Port = Serverport,
+                    Version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "1.0.0",
+                    Capabilities = new ServerCapabilities
+                    {
+                        MaxConnections = _sessionManager.ActiveSessionCount,
+                        SupportedBusinessTypes = new List<string> { "All" },
+                        SupportedCommandCategories = new List<string> { "All" },
+                        Features = new Dictionary<string, object>
+                        {
+                            { "UserManagement", true },
+                            { "SessionMonitoring", true },
+                            { "PerformanceMonitoring", true }
+                        }
+                    },
+                    AuthToken = topServerConfig.AuthToken
+                };
+
+                // 注册到TopServer
+                bool registered = await _topServerClientService.RegisterAsync(registrationInfo, cancellationToken);
+                if (!registered)
+                {
+                    // 注册失败，静默跳过，不记录日志
+                    return;
+                }
+
+                // 启动自动管理（心跳、状态上报等）
+                var heartbeatInterval = topServerConfigSection.GetValue<int>("HeartbeatIntervalSeconds", 30);
+                var statusReportInterval = topServerConfigSection.GetValue<int>("StatusReportIntervalSeconds", 300);
+
+                _topServerClientService.StartAutoManagement(heartbeatInterval, statusReportInterval);
+
+                // 静默完成，不记录日志
+            }
+            catch
+            {
+                // 静默忽略所有异常，确保对ERP Server零影响
+                // 不记录任何日志，避免性能影响
+            }
+        }
+
+        /// <summary>
+        /// 获取本地IPv4地址
+        /// </summary>
+        private static string GetLocalIPAddress()
+        {
+            try
+            {
+                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0);
+                socket.Connect("8.8.8.8", 65530);
+                var endPoint = socket.LocalEndPoint as IPEndPoint;
+                return endPoint?.Address.ToString() ?? "127.0.0.1";
+            }
+            catch
+            {
+                return "127.0.0.1";
             }
         }
 

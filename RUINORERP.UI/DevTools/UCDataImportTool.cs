@@ -18,7 +18,6 @@ using RUINORERP.Common.Helper;
 using HLH.Lib.Helper;
 using ReflectionHelper = RUINORERP.Common.Helper.ReflectionHelper;
 using SqlSugar;
-using CommonProcess.StringProcess;
 using RUINORERP.Common.CollectionExtension;
 
 namespace RUINORERP.UI.DevTools
@@ -968,32 +967,9 @@ new { table_catalog = "erpnew" });
                     processInputResult.Add(kv);
                 }
             }
-
-            frmTextProcesserTest frm = new frmTextProcesserTest();
-            frm.ProcessInputResult = processInputResult;
-            frm.OtherEvent += Frm_OtherEvent;
-            frm.Show();
         }
 
-        private void Frm_OtherEvent(Form frmPro, object Parameters)
-        {
-
-            frmTextProcesserTest frm = frmPro as frmTextProcesserTest;
-            List<KeyValue<string, string>> processInputResult = new List<KeyValue<string, string>>();
-            processInputResult = Parameters as List<KeyValue<string, string>>;
-            //进出处理值 。变更到DG中
-            foreach (DataGridViewCell item in dataGridView1.SelectedCells)
-            {
-                if (item.Selected)
-                {
-                    if (item.Selected)
-                    {
-                        item.Value = frm.ProcessData("", item.Value.ToString());
-                    }
-
-                }
-            }
-        }
+      
 
         private void 从导入结果表格中更新数据ToolStripMenuItem_Click(object sender, EventArgs e)
         {

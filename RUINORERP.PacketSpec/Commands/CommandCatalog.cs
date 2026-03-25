@@ -590,7 +590,7 @@ namespace RUINORERP.PacketSpec.Commands
         public const ushort Special_DebugInfo = 0x9002;
         #endregion
 
-        #region 服务器管理命令 (0x12xx) - 用于RUINORERP.ManagementServer
+        #region 服务器管理命令 (0x12xx) - 用于RUINORERP.TopServer
         /// <summary>
         /// 服务器注册 - 下级服务器向顶级服务器注册
         /// </summary>

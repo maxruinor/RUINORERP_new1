@@ -288,33 +288,36 @@ namespace RUINORERP.Server.Network.Services
         {
             try
             {
+                bool shouldStop = false;
                 lock (_lock)
                 {
                     if (_isDisposed)
                         return;
-
-                    // 停止定时器
-                    _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                    _maintenanceTimer.Change(Timeout.Infinite, Timeout.Infinite);
-
-                    // 取消订阅会话服务的断开事件
-                    if (_sessionService != null)
-                    {
-                        _sessionService.SessionDisconnected -= HandleSessionDisconnected;
-                    }
-
-                    // 停止孤儿锁检测器
-                    _orphanedLockDetector.StopAsync().GetAwaiter().GetResult();
-
-                    // 清理所有锁
-                    var lockIds = _documentLocks.Keys.ToList();
-                    foreach (var lockId in lockIds)
-                    {
-                        _documentLocks.TryRemove(lockId, out _);
-                    }
+                    shouldStop = !_isDisposed;
                 }
 
-                await Task.CompletedTask;
+                if (!shouldStop)
+                    return;
+
+                // 停止定时器
+                _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _maintenanceTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+                // 取消订阅会话服务的断开事件
+                if (_sessionService != null)
+                {
+                    _sessionService.SessionDisconnected -= HandleSessionDisconnected;
+                }
+
+                // 停止孤儿锁检测器 (使用await避免阻塞)
+                await _orphanedLockDetector.StopAsync();
+
+                // 清理所有锁
+                var lockIds = _documentLocks.Keys.ToList();
+                foreach (var lockId in lockIds)
+                {
+                    _documentLocks.TryRemove(lockId, out _);
+                }
             }
             catch (Exception ex)
             {
@@ -1939,8 +1942,9 @@ namespace RUINORERP.Server.Network.Services
 
             try
             {
-                // 停止服务
-                StopAsync().GetAwaiter().GetResult();
+                // 停止服务 - 使用Task.Run在Dispose中安全调用异步方法
+                // 注意：Dispose中无法使用await，这是可接受的模式
+                Task.Run(async () => await StopAsync()).GetAwaiter().GetResult();
 
                 // 释放定时器
                 _cleanupTimer?.Dispose();

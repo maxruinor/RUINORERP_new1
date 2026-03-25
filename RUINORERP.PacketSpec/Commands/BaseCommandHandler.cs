@@ -640,7 +640,8 @@ namespace RUINORERP.PacketSpec.Commands
             {
                 try
                 {
-                    StopAsync(CancellationToken.None).GetAwaiter().GetResult();
+                    // 使用Task.Run在Dispose中安全调用异步方法
+                    Task.Run(async () => await StopAsync(CancellationToken.None)).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {

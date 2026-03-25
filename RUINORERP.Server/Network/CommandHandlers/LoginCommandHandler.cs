@@ -57,7 +57,23 @@ namespace RUINORERP.Server.Network.CommandHandlers
         // 最大并发用户数现在从注册信息中获取
         private int MaxConcurrentUsers => frmMainNew.Instance?.registrationInfo?.ConcurrentUsers ?? 1000;
         private static readonly ConcurrentDictionary<string, int> _loginAttempts = new ConcurrentDictionary<string, int>();
+        /// <summary>
+        /// 记录每个用户名的首次登录尝试时间（用于保守式清理）
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, DateTime> _loginAttemptTimes = new ConcurrentDictionary<string, DateTime>();
         private static readonly object _lock = new object();
+        /// <summary>
+        /// 登录尝试记录过期时间（30分钟）
+        /// </summary>
+        private static readonly TimeSpan LoginAttemptExpiryDuration = TimeSpan.FromMinutes(30);
+        /// <summary>
+        /// 保守清理阈值：失败次数少于该值才清理（避免误清理正在暴力破解的账号）
+        /// </summary>
+        private const int ConservativeCleanupThreshold = 3;
+        /// <summary>
+        /// 是否已启动清理定时器
+        /// </summary>
+        private static bool _cleanupTimerStarted = false;
         /// <summary>
         /// 日志记录器
         /// </summary>
@@ -749,6 +765,9 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private void IncrementLoginAttempts(string username)
         {
             _loginAttempts.AddOrUpdate(username, 1, (key, oldValue) => oldValue + 1);
+            // 记录首次登录尝试时间
+            _loginAttemptTimes.TryAdd(username, DateTime.Now);
+            EnsureCleanupTimerStarted();
         }
 
         /// <summary>
@@ -757,6 +776,77 @@ namespace RUINORERP.Server.Network.CommandHandlers
         private void ResetLoginAttempts(string username)
         {
             _loginAttempts.TryRemove(username, out _);
+            _loginAttemptTimes.TryRemove(username, out _);
+        }
+
+        /// <summary>
+        /// 确保清理定时器已启动（延迟初始化，避免多线程竞争）
+        /// </summary>
+        private static void EnsureCleanupTimerStarted()
+        {
+            if (_cleanupTimerStarted) return;
+
+            lock (_lock)
+            {
+                if (_cleanupTimerStarted) return;
+
+                // 启动定时清理任务，每5分钟清理一次
+                var timer = new System.Threading.Timer(
+                    _ => CleanupExpiredLoginAttempts(),
+                    null,
+                    TimeSpan.FromMinutes(5),  // 首次延迟5分钟
+                    TimeSpan.FromMinutes(5)   // 之后每5分钟执行一次
+                );
+
+                _cleanupTimerStarted = true;
+            }
+        }
+
+        /// <summary>
+        /// 保守式清理过期的登录尝试记录
+        /// 注意：不能清理真正在线的用户，只能清理长时间未成功的登录尝试记录
+        /// 保守策略：只清理超过过期时间且失败次数较少的记录
+        /// </summary>
+        private static void CleanupExpiredLoginAttempts()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                var keysToRemove = new List<string>();
+
+                foreach (var kvp in _loginAttemptTimes)
+                {
+                    var username = kvp.Key;
+                    var firstAttemptTime = kvp.Value;
+
+                    // 检查是否超过过期时间
+                    if (now - firstAttemptTime > LoginAttemptExpiryDuration)
+                    {
+                        // 保守策略：只有失败次数较少时才清理
+                        // 如果失败次数很多（>=阈值），可能是暴力破解攻击，保留记录以便封锁
+                        if (_loginAttempts.TryGetValue(username, out var attempts) && attempts < ConservativeCleanupThreshold)
+                        {
+                            keysToRemove.Add(username);
+                        }
+                    }
+                }
+
+                // 执行清理
+                foreach (var key in keysToRemove)
+                {
+                    _loginAttempts.TryRemove(key, out _);
+                    _loginAttemptTimes.TryRemove(key, out _);
+                }
+
+                if (keysToRemove.Any())
+                {
+                    System.Diagnostics.Debug.WriteLine($"[LoginCommandHandler] 保守清理了 {keysToRemove.Count} 个过期的登录尝试记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[LoginCommandHandler] 清理登录尝试记录时发生错误: {ex.Message}");
+            }
         }
 
         /// <summary>

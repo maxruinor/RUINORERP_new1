@@ -110,7 +110,22 @@ namespace RUINORERP.Server.Network.Services
                 }
 
                 // 检查磁盘空间
-                var driveInfo = new System.IO.DriveInfo(storagePath);
+                System.IO.DriveInfo driveInfo;
+                try
+                {
+                    driveInfo = new System.IO.DriveInfo(storagePath);
+                    if (!driveInfo.IsReady)
+                    {
+                        _logger.LogWarning("磁盘驱动器不可用,Path: {Path}", storagePath);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "获取磁盘信息失败,Path: {Path}", storagePath);
+                    return;
+                }
+
                 long totalDiskSpace = driveInfo.TotalSize;
                 long freeDiskSpace = driveInfo.AvailableFreeSpace;
                 long usedDiskSpace = totalDiskSpace - freeDiskSpace;
@@ -143,8 +158,8 @@ namespace RUINORERP.Server.Network.Services
                     // 检查是否超过阈值
                     if (fileStorageUsagePercentage >= CriticalThreshold)
                     {
-                        _logger.LogError(
-                            "❌ 文件存储空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                        _logger.LogWarning(
+                            "⚠️ 文件存储空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
                             fileStorageUsagePercentage,
                             CriticalThreshold
                         );
@@ -165,8 +180,8 @@ namespace RUINORERP.Server.Network.Services
                 // 检查磁盘空间
                 if (diskUsagePercentage >= CriticalThreshold)
                 {
-                    _logger.LogError(
-                        "❌ 磁盘空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
+                    _logger.LogWarning(
+                        "⚠️ 磁盘空间紧急警告! 当前使用率: {UsagePercent:F2}%, 阈值: {Threshold:F2}%",
                         diskUsagePercentage,
                         CriticalThreshold
                     );
@@ -237,10 +252,23 @@ namespace RUINORERP.Server.Network.Services
 
                 if (!string.IsNullOrEmpty(storagePath))
                 {
-                    var driveInfo = new System.IO.DriveInfo(storagePath);
-                    totalDiskSpaceGB = driveInfo.TotalSize / 1024.0 / 1024 / 1024;
-                    freeDiskSpaceGB = driveInfo.AvailableFreeSpace / 1024.0 / 1024 / 1024;
-                    diskUsagePercentage = (1.0 - freeDiskSpaceGB / totalDiskSpaceGB) * 100;
+                    try
+                    {
+                        var driveInfo = new System.IO.DriveInfo(storagePath);
+                        if (driveInfo.IsReady)
+                        {
+                            totalDiskSpaceGB = driveInfo.TotalSize / 1024.0 / 1024 / 1024;
+                            freeDiskSpaceGB = driveInfo.AvailableFreeSpace / 1024.0 / 1024 / 1024;
+                            if (totalDiskSpaceGB > 0)
+                            {
+                                diskUsagePercentage = (1.0 - freeDiskSpaceGB / totalDiskSpaceGB) * 100;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "获取磁盘信息失败,Path: {Path}", storagePath);
+                    }
                 }
 
                 double fileStorageUsagePercentage = 0;

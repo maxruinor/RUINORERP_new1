@@ -567,10 +567,23 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys = new List<(long ProdDetailID, long Location_ID)>();
+
+                // 【性能优化】预计算每个订单的已出库数量和订单数量，避免循环内重复计算
+                var entityStatusMap = new Dictionary<tb_SaleOrder, (decimal DeliveredQty, decimal OrderQty)>();
                 foreach (var entity in entitys)
                 {
-                    if (entity.DataStatus == (int)DataStatus.确认 && entity.ApprovalResults.HasValue
-                        && entity.tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entity.tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
+                    if (entity.DataStatus == (int)DataStatus.确认 && entity.ApprovalResults.HasValue)
+                    {
+                        var deliveredQty = entity.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty);
+                        var orderQty = entity.tb_SaleOrderDetails.Sum(c => c.Quantity);
+                        entityStatusMap[entity] = (deliveredQty, orderQty);
+                    }
+                }
+
+                foreach (var entity in entitys)
+                {
+                    // 使用预计算的值进行比较
+                    if (entityStatusMap.TryGetValue(entity, out var status) && status.DeliveredQty < status.OrderQty)
                     {
                         foreach (var child in entity.tb_SaleOrderDetails)
                         {
@@ -608,7 +621,8 @@ namespace RUINORERP.Business
 
                     //更新拟销售量
                     //如果销售订单明细中的出库数量小于订单中数量，则拟销售量要减去这个差值，因为这种情况是强制结案，意思是可能出库只出一半。就不会自动结案。
-                    if (entitys[m].tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entitys[m].tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
+                    // 【性能优化】使用预计算的值进行比较
+                    if (entityStatusMap.TryGetValue(entitys[m], out var status) && status.DeliveredQty < status.OrderQty)
                     {
                         tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                         List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -630,22 +644,8 @@ namespace RUINORERP.Business
                                 BusinessHelper.Instance.InitEntity(inv);
                                 invDict2[key] = inv;
                             }
-                            //更新在途库存
+                            //更新在途库存 - 只更新一次
                             inv.Sale_Qty = inv.Sale_Qty - (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
-                            BusinessHelper.Instance.EditEntity(inv);
-                            if (inv == null)
-                            {
-                                inv = new tb_Inventory();
-                                inv.ProdDetailID = entitys[m].tb_SaleOrderDetails[c].ProdDetailID;
-                                inv.Location_ID = entitys[m].tb_SaleOrderDetails[c].Location_ID;
-                                inv.Quantity = 0;
-                                inv.InitInventory = 0;
-                                inv.Notes = "";//后面修改数据库是不需要？
-                                               //inv.LatestStorageTime = System.DateTime.Now;
-                                BusinessHelper.Instance.InitEntity(inv);
-                            }
-                            //更新在途库存 ,如果订单明细中，在途=在途-(订单数量-已出库数)
-                            inv.Sale_Qty -= (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
                             BusinessHelper.Instance.EditEntity(inv);
                             #endregion
                             invUpdateList.Add(inv);
@@ -815,10 +815,23 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys3 = new List<(long ProdDetailID, long Location_ID)>();
+
+                // 【性能优化】预计算每个订单的已出库数量和订单数量，避免循环内重复计算
+                var entityStatusMap3 = new Dictionary<tb_SaleOrder, (decimal DeliveredQty, decimal OrderQty)>();
                 foreach (var entity in entitys)
                 {
-                    if (entity.DataStatus == (int)DataStatus.完结 && entity.ApprovalResults.HasValue
-                        && entity.tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entity.tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
+                    if (entity.DataStatus == (int)DataStatus.完结 && entity.ApprovalResults.HasValue)
+                    {
+                        var deliveredQty = entity.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty);
+                        var orderQty = entity.tb_SaleOrderDetails.Sum(c => c.Quantity);
+                        entityStatusMap3[entity] = (deliveredQty, orderQty);
+                    }
+                }
+
+                foreach (var entity in entitys)
+                {
+                    // 使用预计算的值进行比较
+                    if (entityStatusMap3.TryGetValue(entity, out var status) && status.DeliveredQty < status.OrderQty)
                     {
                         foreach (var child in entity.tb_SaleOrderDetails)
                         {
@@ -856,7 +869,8 @@ namespace RUINORERP.Business
 
                     //更新拟销售量
                     //如果销售订单明细中的出库数量小于订单中数量，则拟销售量要减去这个差值，因为这种情况是强制结案，意思是可能出库只出一半。就不会自动结案。
-                    if (entitys[m].tb_SaleOrderDetails.Select(c => c.TotalDeliveredQty).Sum() < entitys[m].tb_SaleOrderDetails.Select(c => c.Quantity).Sum())
+                    // 【性能优化】使用预计算的值进行比较
+                    if (entityStatusMap3.TryGetValue(entitys[m], out var status) && status.DeliveredQty < status.OrderQty)
                     {
                         tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                         List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
@@ -878,23 +892,8 @@ namespace RUINORERP.Business
                                 BusinessHelper.Instance.InitEntity(inv);
                                 invDict3[key] = inv;
                             }
-                            //更新在途库存
+                            //更新在途库存 - 只更新一次
                             inv.Sale_Qty = inv.Sale_Qty + (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
-                            BusinessHelper.Instance.EditEntity(inv);
-                     
-                            if (inv == null)
-                            {
-                                inv = new tb_Inventory();
-                                inv.ProdDetailID = entitys[m].tb_SaleOrderDetails[c].ProdDetailID;
-                                inv.Location_ID = entitys[m].tb_SaleOrderDetails[c].Location_ID;
-                                inv.Quantity = 0;
-                                inv.InitInventory = 0;
-                                inv.Notes = "";//后面修改数据库是不需要？
-                                               //inv.LatestStorageTime = System.DateTime.Now;
-                                BusinessHelper.Instance.InitEntity(inv);
-                            }
-                            //更新在途库存 ,如果订单明细中，在途=在途+(订单数量-已出库数)
-                            inv.Sale_Qty += (entitys[m].tb_SaleOrderDetails[c].Quantity - entitys[m].tb_SaleOrderDetails[c].TotalDeliveredQty);
                             BusinessHelper.Instance.EditEntity(inv);
                             #endregion
                             invUpdateList.Add(inv);
@@ -1432,12 +1431,16 @@ namespace RUINORERP.Business
                 List<tb_SaleOutDetail> NewDetails = new List<tb_SaleOutDetail>();
 
 
+                // 【性能优化】在循环外预先计算重复的ProdDetailID，避免每次迭代都执行GroupBy
+                var duplicateProdDetailIds = details.Select(c => c.ProdDetailID).ToList()
+                    .GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
+
                 //多行相同产品时 可能还在仔细优化核对
                 for (global::System.Int32 i = 0; i < details.Count; i++)
                 {
                     View_ProdDetail obj = null;
-                    var aa = details.Select(c => c.ProdDetailID).ToList().GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToList();
-                    if (aa.Count > 0 && details[i].SaleOrderDetail_ID > 0)
+                    // 使用预计算的结果进行比较
+                    if (duplicateProdDetailIds.Count > 0 && details[i].SaleOrderDetail_ID > 0)
                     {
                         obj = _cacheManager.GetEntity<View_ProdDetail>(details[i].ProdDetailID);
                         #region 产品ID可能大于1行，共用料号情况

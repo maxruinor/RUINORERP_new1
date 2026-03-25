@@ -2209,12 +2209,6 @@
     <Compile Include="DevTools\UCDataImportTool.Designer.cs">
       <DependentUpon>UCDataImportTool.cs</DependentUpon>
     </Compile>
-    <Compile Include="DevTools\UCDataProcDevTool.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="DevTools\UCDataProcDevTool.Designer.cs">
-      <DependentUpon>UCDataProcDevTool.cs</DependentUpon>
-    </Compile>
     <Compile Include="FM\UCExpenseClaim.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -4370,9 +4364,6 @@
     <EmbeddedResource Include="DevTools\UCDataImportTool.resx">
       <DependentUpon>UCDataImportTool.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DevTools\UCDataProcDevTool.resx">
-      <DependentUpon>UCDataProcDevTool.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FM\UCExpenseClaim.resx">
       <DependentUpon>UCExpenseClaim.cs</DependentUpon>
     </EmbeddedResource>
@@ -5070,10 +5061,6 @@
     <ProjectReference Include="..\AutoUpdate\AutoUpdate.csproj">
       <Project>{300df611-e6a4-447f-86cb-fd409c50ce8a}</Project>
       <Name>AutoUpdate</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\CommonProcess\CommonProcess.csproj">
-      <Project>{3a6491bd-4731-42ea-8ffe-61489c2f7c55}</Project>
-      <Name>CommonProcess</Name>
     </ProjectReference>
     <ProjectReference Include="..\HLH.Control\HLH.WinControl.csproj">
       <Project>{fbc35412-5c4c-4461-a281-ebf1b1a0a785}</Project>

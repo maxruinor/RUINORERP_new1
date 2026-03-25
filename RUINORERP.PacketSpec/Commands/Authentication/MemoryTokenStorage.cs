@@ -31,11 +31,10 @@ namespace RUINORERP.PacketSpec.Commands.Authentication
             return Task.CompletedTask;
         }
 
-        public Task<bool> IsTokenValidAsync()
+        public async Task<bool> IsTokenValidAsync()
         {
-            var tokenInfo = GetTokenAsync().GetAwaiter().GetResult();
-            var result = tokenInfo != null && !tokenInfo.IsExpired();
-            return Task.FromResult(result);
+            var tokenInfo = await GetTokenAsync();
+            return tokenInfo != null && !tokenInfo.IsExpired();
         }
     }
 }

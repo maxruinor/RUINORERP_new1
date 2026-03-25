@@ -59,11 +59,15 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                var orderStatusMap = new Dictionary<tb_PurOrder, (decimal DeliveredQty, decimal OrderQty)>();
                 foreach (var entity in entitys)
                 {
                     if (entity.DataStatus == (int)DataStatus.确认 && (entity.ApprovalStatus.HasValue && entity.ApprovalStatus.Value == (int)ApprovalStatus.审核通过 && entity.ApprovalResults.Value))
                     {
-                        if (entity.tb_PurOrderDetails.Select(c => c.DeliveredQuantity).Sum() < entity.tb_PurOrderDetails.Select(c => c.Quantity).Sum())
+                        decimal deliveredQty = entity.tb_PurOrderDetails.Select(c => c.DeliveredQuantity).Sum();
+                        decimal orderQty = entity.tb_PurOrderDetails.Select(c => c.Quantity).Sum();
+                        orderStatusMap[entity] = (deliveredQty, orderQty);
+                        if (deliveredQty < orderQty)
                         {
                             foreach (var child in entity.tb_PurOrderDetails)
                             {
@@ -96,7 +100,7 @@ namespace RUINORERP.Business
 
                         //更新在途库存
                         //如果采购明细中的入库数量小于订单中数量，则在途数量要减去这个差值,比方说采购入库只入了一半，那么在途库存就要减去这个差值，另一半可能不要了。
-                        if (entity.tb_PurOrderDetails.Select(c => c.DeliveredQuantity).Sum() < entity.tb_PurOrderDetails.Select(c => c.Quantity).Sum())
+                        if (orderStatusMap.TryGetValue(entity, out var status) && status.DeliveredQty < status.OrderQty)
                         {
                             tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
                             List<tb_Inventory> invUpdateList = new List<tb_Inventory>();

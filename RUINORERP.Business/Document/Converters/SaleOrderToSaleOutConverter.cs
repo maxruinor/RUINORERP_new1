@@ -15,7 +15,6 @@ using RUINORERP.Global.EnumExt;
 using RUINORERP.IServices;
 using RUINORERP.Model;
 using RUINORERP.Model.Context;
-using RUINORERP.Model.Context;
 using RUINORERP.Repository.UnitOfWorks; // 确保引入IUnitOfWorkManage所在的命名空间
 using System;
 using System.Collections.Generic;
@@ -29,6 +28,7 @@ namespace RUINORERP.Business.Document.Converters
     /// 销售订单到销售出库单转换器
     /// 负责将销售订单及其明细转换为销售出库单及其明细
     /// 复用业务层的核心转换逻辑（SaleOrderToSaleOut），确保数据一致性
+    /// 1
     /// </summary>
     public class SaleOrderToSaleOutConverter : DocumentConverterBase<tb_SaleOrder, tb_SaleOut>
     {

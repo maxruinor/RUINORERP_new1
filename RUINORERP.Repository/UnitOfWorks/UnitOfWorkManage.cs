@@ -54,7 +54,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// <summary>
         /// 获取异步上下文独立的数据库客户端
         /// </summary>
-        public SqlSugarScope GetDbClient()
+        public ISqlSugarClient GetDbClient()
         {
             // 每个异步上下文使用独立的连接实例
             if (_asyncLocalClient.Value == null)
@@ -67,24 +67,23 @@ namespace RUINORERP.Repository.UnitOfWorks
                     var newConfig = new ConnectionConfig
                     {
                         ConnectionString = originalConfig.ConnectionString,
-                        DbType = (SqlSugar.DbType)originalConfig.DbType, // 显式转换避免歧义
-                        IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
+                        DbType = (SqlSugar.DbType)originalConfig.DbType,
+                        IsAutoCloseConnection = false,
                         InitKeyType = originalConfig.InitKeyType,
                         MoreSettings = originalConfig.MoreSettings,
                         ConfigureExternalServices = originalConfig.ConfigureExternalServices,
                         AopEvents = originalConfig.AopEvents
                     };
         
-                    _asyncLocalClient.Value = new SqlSugarScope(newConfig);
+                    _asyncLocalClient.Value = new SqlSugarClient(newConfig);
                 }
                 else
                 {
-                    // 后备方案：创建新实例
-                    _asyncLocalClient.Value = new SqlSugarScope(new ConnectionConfig
+                    _asyncLocalClient.Value = new SqlSugarClient(new ConnectionConfig
                     {
                         ConnectionString = _sqlSugarClient.Ado.Connection.ConnectionString,
-                        DbType = SqlSugar.DbType.SqlServer, // 使用 SqlSugar.DbType 避免歧义
-                        IsAutoCloseConnection = false, // 重要：保持连接打开用于事务
+                        DbType = SqlSugar.DbType.SqlServer,
+                        IsAutoCloseConnection = false,
                         InitKeyType = InitKeyType.Attribute
                     });
                 }
@@ -92,7 +91,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 _logger.LogDebug($"为异步上下文创建了新的数据库连接实例，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
             }
         
-            return _asyncLocalClient.Value as SqlSugarScope;
+            return _asyncLocalClient.Value;
         }
 
         /// <summary>

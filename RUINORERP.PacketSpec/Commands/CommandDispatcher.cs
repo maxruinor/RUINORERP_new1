@@ -421,8 +421,8 @@ namespace RUINORERP.PacketSpec.Commands
 
                     if (handlers == null || !handlers.Any())
                     {
-                        // 使用回退处理器
-                        var fallbackHandler = GetFallbackHandler();
+                        // 使用回退处理器 (异步版本)
+                        var fallbackHandler = await GetFallbackHandlerAsync();
                         if (fallbackHandler != null)
                         {
                             try
@@ -641,7 +641,7 @@ namespace RUINORERP.PacketSpec.Commands
         /// </summary>
         /// <param name="command">命令对象</param>
         /// <returns>包含处理器列表和命令类型的HandlerCollection</returns>
-        private FallbackGenericCommandHandler GetFallbackHandler()
+        private async Task<FallbackGenericCommandHandler> GetFallbackHandlerAsync()
         {
             // 使用双重检查锁定模式确保线程安全
             if (_fallbackHandler == null)
@@ -654,41 +654,51 @@ namespace RUINORERP.PacketSpec.Commands
                         {
                             // 创建并初始化回退处理器
                             _fallbackHandler = new FallbackGenericCommandHandler();
-
-                            // 初始化处理器
-                            var initTask = _fallbackHandler.InitializeAsync(CancellationToken.None);
-                            initTask.Wait(); // 同步等待初始化完成
-
-                            if (!initTask.Result)
-                            {
-                                LogError("回退处理器初始化失败");
-                                _fallbackHandler = null;
-                                return null;
-                            }
-
-                            // 启动处理器
-                            var startTask = _fallbackHandler.StartAsync(CancellationToken.None);
-                            startTask.Wait(); // 同步等待启动完成
-
-                            if (!startTask.Result)
-                            {
-                                LogError("回退处理器启动失败");
-                                _fallbackHandler = null;
-                                return null;
-                            }
-
-                            // 减少信息日志，在生产环境中不记录
-#if DEBUG
-                            LogInfo("回退处理器初始化并启动成功");
-#endif
                         }
                         catch (Exception ex)
                         {
                             LogError("创建回退处理器时发生异常", ex);
                             _fallbackHandler = null;
+                            return null;
                         }
                     }
                 }
+            }
+
+            // 异步初始化和启动处理器
+            try
+            {
+                if (!_fallbackHandler.IsInitialized)
+                {
+                    var initResult = await _fallbackHandler.InitializeAsync(CancellationToken.None);
+                    if (!initResult)
+                    {
+                        LogError("回退处理器初始化失败");
+                        _fallbackHandler = null;
+                        return null;
+                    }
+                }
+
+                if (_fallbackHandler.Status != HandlerStatus.Running)
+                {
+                    var startResult = await _fallbackHandler.StartAsync(CancellationToken.None);
+                    if (!startResult)
+                    {
+                        LogError("回退处理器启动失败");
+                        _fallbackHandler = null;
+                        return null;
+                    }
+                }
+
+#if DEBUG
+                LogInfo("回退处理器初始化并启动成功");
+#endif
+            }
+            catch (Exception ex)
+            {
+                LogError("回退处理器启动时发生异常", ex);
+                _fallbackHandler = null;
+                return null;
             }
 
             return _fallbackHandler;
@@ -1103,22 +1113,22 @@ namespace RUINORERP.PacketSpec.Commands
                         channel?.Writer.TryComplete();
                     }
 
-                    // 等待所有处理任务完成，过滤掉可能的null任务
+                    // 等待所有处理任务完成 - 使用Task.Run避免阻塞
                     var validChannelProcessors = _channelProcessors.Where(p => p != null).ToList();
                     if (validChannelProcessors.Any())
                     {
-                        Task.WhenAll(validChannelProcessors).GetAwaiter().GetResult();
+                        Task.Run(async () => await Task.WhenAll(validChannelProcessors)).GetAwaiter().GetResult();
                     }
 
                     // 使用处理器注册表获取所有处理器
                     List<ICommandHandler> allHandlers = _handlerRegistry?.GetAllHandlers().ToList() ?? new List<ICommandHandler>();
 
-                    // 停止所有处理器，过滤掉可能的null任务
+                    // 停止所有处理器 - 使用Task.Run避免阻塞
                     var stopTasks = allHandlers.Select(h => h.StopAsync(CancellationToken.None));
                     var validStopTasks = stopTasks.Where(t => t != null).ToList();
                     if (validStopTasks.Any())
                     {
-                        Task.WhenAll(validStopTasks).GetAwaiter().GetResult();
+                        Task.Run(async () => await Task.WhenAll(validStopTasks)).GetAwaiter().GetResult();
                     }
 
                     // 释放所有处理器

@@ -42,6 +42,9 @@ namespace RUINORERP.Server.Network.DI
             services.AddSingleton<SessionService>();
             services.AddSingleton<ISessionService>(provider => provider.GetRequiredService<SessionService>());
 
+            // 注册TopServer客户端服务 - 总部友好监控
+            services.AddSingleton<ITopServerClientService, TopServerClientService>();
+
             // 注册服务器消息服务
             services.AddSingleton<ServerMessageService>();
 
@@ -152,6 +155,7 @@ namespace RUINORERP.Server.Network.DI
             //  services.AddSingleton<IFileStorageService, FileStorageService>();
             // 使用链式注册确保SessionService和ISessionService指向同一个实例
             builder.RegisterType<SessionService>().AsSelf().As<ISessionService>().SingleInstance();
+            builder.RegisterType<TopServerClientService>().As<ITopServerClientService>().SingleInstance();
             builder.RegisterType<ServerMessageService>().AsSelf().SingleInstance();
             builder.RegisterType<TodoNotificationService>().AsSelf().SingleInstance();
             //    builder.RegisterType<UserService>().As<IUserService>().AsSelf().SingleInstance();

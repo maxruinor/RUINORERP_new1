@@ -2404,10 +2404,13 @@ namespace RUINORERP.Business
             }
 
             #region 单独处理运费 ,这里是应收。意思是收取客户的运费。应该以运费成本为标准。佣金不需要
-            // 添加运费行（关键部分）
-            if (entity.FreightCost > 0 && !IsProcessCommission)
+            // 关键修复：出库单的 TotalAmount 已经包含了 FreightIncome（运费收入）
+            // 应收款单明细的 LocalPayableAmount 累加后应该等于 TotalAmount
+            // 收入只会一次，在销售出库单中处理好了。这里不再处理这个逻辑
+            if (entity.FreightIncome > 0 && !IsProcessCommission)
             {
-                payable.ShippingFee = entity.FreightCost;
+                payable.ShippingFee = entity.FreightIncome;
+                // 注释说明：ShippingFee 只是信息记录，已在 TotalAmount 中体现，无需重复累加
             }
 
             #endregion

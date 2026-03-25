@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
@@ -298,7 +298,7 @@ namespace RUINORERP.PacketSpec.Commands
         Special = 0x90,
 
         /// <summary>
-        /// 服务器管理命令 - 用于RUINORERP.ManagementServer与其他下级服务器之间的通信
+        /// 服务器管理命令 - 用于RUINORERP.TopServer与其他下级服务器之间的通信
         /// </summary>
         [Description("服务器管理命令")]
         Management = 0x12

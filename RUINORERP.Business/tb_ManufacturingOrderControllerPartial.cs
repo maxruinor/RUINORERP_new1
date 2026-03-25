@@ -57,6 +57,7 @@ namespace RUINORERP.Business
             {
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys = new List<(long ProdDetailID, long LocationID)>();
+                var orderStatusMap = new Dictionary<tb_ManufacturingOrder, (decimal SentQty, decimal ShouldSendQty)>();
                 foreach (var entity in entitys)
                 {
                     if (entity.tb_ManufacturingOrderDetails != null)
@@ -65,6 +66,9 @@ namespace RUINORERP.Business
                         {
                             allKeys.Add((detail.ProdDetailID, detail.Location_ID));
                         }
+                        decimal sentQty = entity.tb_ManufacturingOrderDetails.Select(c => c.ActualSentQty).Sum();
+                        decimal shouldSendQty = entity.tb_ManufacturingOrderDetails.Select(c => c.ShouldSendQty).Sum();
+                        orderStatusMap[entity] = (sentQty, shouldSendQty);
                     }
                 }
 
@@ -97,52 +101,55 @@ namespace RUINORERP.Business
 
                     //更新 未发数量？
                     //如果领料明细中的出库数量小于制令单中应发数量，则未发数要减去这个差值
-                    decimal 已发数 = entitys[m].tb_ManufacturingOrderDetails.Select(c => c.ActualSentQty).Sum();
-                    decimal 应发数 = entitys[m].tb_ManufacturingOrderDetails.Select(c => c.ShouldSendQty).Sum();
-
-                    tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-
-                    List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
-
-
-                    for (int c = 0; c < entitys[m].tb_ManufacturingOrderDetails.Count; c++)
+                    if (orderStatusMap.TryGetValue(entitys[m], out var status))
                     {
-                        #region 库存表的更新 ，
-                        // ✅ 从预加载字典获取（死锁优化）
-                        var key = (entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID, entitys[m].tb_ManufacturingOrderDetails[c].Location_ID);
-                        invDictBatch.TryGetValue(key, out var inv);
-                        if (inv == null)
+                        decimal 已发数 = status.SentQty;
+                        decimal 应发数 = status.ShouldSendQty;
+
+                        tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+
+                        List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
+
+
+                        for (int c = 0; c < entitys[m].tb_ManufacturingOrderDetails.Count; c++)
                         {
-                            //应该不会到这里面来了。
-                            //View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
-                            //    .Where(c => c.ProdDetailID == entitys[m].ProdDetailID && c.Location_ID==entitys[m].tb_ManufacturingOrderDetails[c].Location_ID).FirstAsync();
-                            _unitOfWorkManage.RollbackTran();
-                            rs.ErrorMsg = $"{entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID}库存中没有当前的产品。请使用【期初盘点】的方式进行盘点后，再操作。";
-                            rs.Succeeded = false;
-                            return rs;
-                        }
-                        //更新未发数,这种情况是少发领料，强制结案时。
-                        if (已发数 < 应发数)
-                        {
-                            decimal diffqty = 应发数 - 已发数;
-                            inv.NotOutQty = inv.NotOutQty - diffqty.ToInt();
+                            #region 库存表的更新 ，
+                            // ✅ 从预加载字典获取（死锁优化）
+                            var key = (entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID, entitys[m].tb_ManufacturingOrderDetails[c].Location_ID);
+                            invDictBatch.TryGetValue(key, out var inv);
+                            if (inv == null)
+                            {
+                                //应该不会到这里面来了。
+                                //View_ProdDetail view_Prod = await _unitOfWorkManage.GetDbClient().Queryable<View_ProdDetail>()
+                                //    .Where(c => c.ProdDetailID == entitys[m].ProdDetailID && c.Location_ID==entitys[m].tb_ManufacturingOrderDetails[c].Location_ID).FirstAsync();
+                                _unitOfWorkManage.RollbackTran();
+                                rs.ErrorMsg = $"{entitys[m].tb_ManufacturingOrderDetails[c].ProdDetailID}库存中没有当前的产品。请使用【期初盘点】的方式进行盘点后，再操作。";
+                                rs.Succeeded = false;
+                                return rs;
+                            }
+                            //更新未发数,这种情况是少发领料，强制结案时。
+                            if (已发数 < 应发数)
+                            {
+                                decimal diffqty = 应发数 - 已发数;
+                                inv.NotOutQty = inv.NotOutQty - diffqty.ToInt();
+                            }
+
+                            //这个情况时。领料时候，已经发完了。超发也不会负数。 notoutqty=0  相对于这个品这个单而言
+                            if (已发数 >= 应发数)
+                            {
+                                //inv.NotOutQty -= (entitys[m].tb_ManufacturingOrderDetails[c].ShouldSendQty - entitys[m].tb_ManufacturingOrderDetails[c].ActualSentQty);
+                            }
+                            BusinessHelper.Instance.EditEntity(inv);
+                            #endregion
+                            invUpdateList.Add(inv);
                         }
 
-                        //这个情况时。领料时候，已经发完了。超发也不会负数。 notoutqty=0  相对于这个品这个单而言
-                        if (已发数 >= 应发数)
+                        DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
+                        var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
+                        if (InvMainCounter == 0)
                         {
-                            //inv.NotOutQty -= (entitys[m].tb_ManufacturingOrderDetails[c].ShouldSendQty - entitys[m].tb_ManufacturingOrderDetails[c].ActualSentQty);
+                            _logger.Debug($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
                         }
-                        BusinessHelper.Instance.EditEntity(inv);
-                        #endregion
-                        invUpdateList.Add(inv);
-                    }
-
-                    DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
-                    var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
-                    if (InvMainCounter == 0)
-                    {
-                        _logger.Debug($"{entitys[m].MONO}更新库存结果为0行，请检查数据！");
                     }
 
                     //这部分是否能提出到上一级公共部分？

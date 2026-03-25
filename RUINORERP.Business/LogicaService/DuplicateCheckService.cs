@@ -30,6 +30,10 @@ namespace RUINORERP.Business.LogicaService
     {
         private readonly ISqlSugarClient _db;
         private readonly ICacheManager<object> _cache;
+        /// <summary>
+        /// JaroWinkler相似度算法实例（静态复用，避免重复创建）
+        /// </summary>
+        private static readonly JaroWinkler _jaroWinkler = new JaroWinkler();
 
         public DuplicateCheckService(ISqlSugarClient db, ICacheManager<object> cache)
         {
@@ -81,16 +85,14 @@ namespace RUINORERP.Business.LogicaService
 
         private double CalcScore(tb_CustomerVendor a, tb_CustomerVendor b)
         {
-            var jw = new JaroWinkler();   // 只需 new 一次
-
             double score = 0;
 
-            // 名称 Jaro-Winkler
-            score += 0.35 * jw.Similarity(a.CVName, b.CVName);
+            // 名称 Jaro-Winkler（使用静态实例避免重复创建）
+            score += 0.35 * _jaroWinkler.Similarity(a.CVName, b.CVName);
 
-            // 简称
+            // 简称（使用静态实例避免重复创建）
             if (!string.IsNullOrWhiteSpace(a.ShortName) && !string.IsNullOrWhiteSpace(b.ShortName))
-                score += 0.20 * jw.Similarity(a.ShortName, b.ShortName);
+                score += 0.20 * _jaroWinkler.Similarity(a.ShortName, b.ShortName);
 
             // 电话/手机/邮箱/传真/地址
             score += AddEqualBonus(a.MobilePhone, b.MobilePhone, 0.15);

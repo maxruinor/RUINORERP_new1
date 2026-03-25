@@ -170,6 +170,7 @@ namespace RUINORERP.Business.LogicaService
 
         /// <summary>
         /// 根据链路规则获取通知目标用户
+        /// 优化：避免N+1查询，先批量收集所有角色和部门ID，然后一次性查询
         /// </summary>
         /// <param name="linkRules">匹配到的链路规则列表</param>
         /// <returns>通知目标用户ID列表</returns>
@@ -179,6 +180,45 @@ namespace RUINORERP.Business.LogicaService
             {
                 var targetIds = new List<long>();
 
+                if (linkRules == null || !linkRules.Any())
+                    return targetIds;
+
+                // 第一步：收集所有需要的角色ID和部门ID（避免N+1查询）
+                var roleIds = linkRules
+                    .Where(l => l.TargetType == (int)SourceTargetType.角色 && l.TargetValue.HasValue)
+                    .Select(l => l.TargetValue.Value)
+                    .Distinct()
+                    .ToList();
+
+                var departmentIds = linkRules
+                    .Where(l => l.TargetType == (int)SourceTargetType.部门 && l.TargetValue.HasValue)
+                    .Select(l => l.TargetValue.Value)
+                    .Distinct()
+                    .ToList();
+
+                // 第二步：批量查询所有角色对应的用户（一次查询代替N次查询）
+                var roleUserMap = new Dictionary<long, List<long>>();
+                if (roleIds.Any())
+                {
+                    var allRoleUsers = GetUsersByRoles(roleIds);
+                    foreach (var roleId in roleIds)
+                    {
+                        roleUserMap[roleId] = allRoleUsers.ContainsKey(roleId) ? allRoleUsers[roleId] : new List<long>();
+                    }
+                }
+
+                // 第三步：批量查询所有部门对应的用户（一次查询代替N次查询）
+                var deptUserMap = new Dictionary<long, List<long>>();
+                if (departmentIds.Any())
+                {
+                    var allDeptUsers = GetUsersByDepartments(departmentIds);
+                    foreach (var deptId in departmentIds)
+                    {
+                        deptUserMap[deptId] = allDeptUsers.ContainsKey(deptId) ? allDeptUsers[deptId] : new List<long>();
+                    }
+                }
+
+                // 第四步：遍历规则，使用预查询的数据
                 foreach (var linkRule in linkRules)
                 {
                     switch ((SourceTargetType)linkRule.TargetType)
@@ -191,18 +231,16 @@ namespace RUINORERP.Business.LogicaService
                             }
                             break;
                         case SourceTargetType.角色:
-                            // 添加该角色下的所有用户ID
-                            if (linkRule.TargetValue.HasValue)
+                            // 使用预查询的角色用户映射
+                            if (linkRule.TargetValue.HasValue && roleUserMap.TryGetValue(linkRule.TargetValue.Value, out var roleUsers))
                             {
-                                var roleUsers = GetUsersByRole(linkRule.TargetValue.Value);
                                 targetIds.AddRange(roleUsers);
                             }
                             break;
                         case SourceTargetType.部门:
-                            // 添加该部门下的所有用户ID
-                            if (linkRule.TargetValue.HasValue)
+                            // 使用预查询的部门用户映射
+                            if (linkRule.TargetValue.HasValue && deptUserMap.TryGetValue(linkRule.TargetValue.Value, out var deptUsers))
                             {
-                                var deptUsers = GetUsersByDepartment(linkRule.TargetValue.Value);
                                 targetIds.AddRange(deptUsers);
                             }
                             break;
@@ -217,6 +255,80 @@ namespace RUINORERP.Business.LogicaService
                 _logger?.LogError(ex, "获取通知目标时发生错误");
                 return new List<long>();
             }
+        }
+
+        /// <summary>
+        /// 批量获取多个角色下的所有用户ID（优化：一次查询代替多次查询）
+        /// </summary>
+        /// <param name="roleIds">角色ID列表</param>
+        /// <returns>角色ID到用户ID列表的映射字典</returns>
+        private Dictionary<long, List<long>> GetUsersByRoles(List<long> roleIds)
+        {
+            var result = new Dictionary<long, List<long>>();
+            try
+            {
+                if (_unitOfWorkManage == null || roleIds == null || !roleIds.Any())
+                    return result;
+
+                var db = _unitOfWorkManage.GetDbClient();
+
+                // 一次查询获取所有角色对应的用户
+                var allUserIds = db.Queryable<tb_User_Role>()
+                    .Where(ru => roleIds.Contains(ru.RoleID))
+                    .Select(ru => new { ru.RoleID, ru.User_ID })
+                    .ToList();
+
+                // 按角色分组
+                foreach (var roleId in roleIds)
+                {
+                    result[roleId] = allUserIds
+                        .Where(u => u.RoleID == roleId)
+                        .Select(u => u.User_ID)
+                        .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量获取角色用户列表时发生错误");
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 批量获取多个部门下的所有用户ID（优化：一次查询代替多次查询）
+        /// </summary>
+        /// <param name="departmentIds">部门ID列表</param>
+        /// <returns>部门ID到用户ID列表的映射字典</returns>
+        private Dictionary<long, List<long>> GetUsersByDepartments(List<long> departmentIds)
+        {
+            var result = new Dictionary<long, List<long>>();
+            try
+            {
+                if (_unitOfWorkManage == null || departmentIds == null || !departmentIds.Any())
+                    return result;
+
+                var db = _unitOfWorkManage.GetDbClient();
+
+                // 一次查询获取所有部门对应的用户
+                var allUserIds = db.Queryable<tb_Employee>()
+                    .Where(e => departmentIds.Contains(e.DepartmentID))
+                    .Select(e => new { e.DepartmentID, e.Employee_ID })
+                    .ToList();
+
+                // 按部门分组
+                foreach (var deptId in departmentIds)
+                {
+                    result[deptId] = allUserIds
+                        .Where(u => u.DepartmentID == deptId)
+                        .Select(u => u.Employee_ID)
+                        .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量获取部门用户列表时发生错误");
+            }
+            return result;
         }
 
         /// <summary>

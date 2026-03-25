@@ -942,10 +942,30 @@ namespace RUINORERP.Business
                     #endregion
 
                     //运费检测  如果一个订单有运费。多次出库时。运费也默认加到了每次的出库单。
-                    //多次出库第一次加上运费。 第二次起都是为0. 代码要在财务前面处理。因为应收明细中会将运费为一行添加。
-                    if (entity.tb_saleorder.tb_SaleOuts.Count > 1)
+                    //多次出库第一次加上运费。 第二次起都是为 0. 代码要在财务前面处理。因为应收明细中会将运费为一行添加。
+                    //关键修复：需要判断当前出库单是否为该订单的第一次出库
+                    if (entity.tb_saleorder != null && entity.tb_saleorder.tb_SaleOuts != null)
                     {
-                        entity.FreightIncome = 0;
+                        // 获取所有已审核的出库单（排除当前正在审核的这张）
+                        var auditedSaleOuts = entity.tb_saleorder.tb_SaleOuts
+                            .Where(o => o.SaleOut_MainID != entity.SaleOut_MainID
+                                     && o.DataStatus >= (int)DataStatus.确认
+                                     && o.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                            .OrderBy(o => o.Created_at)
+                            .ToList();
+
+                        // 如果已经有审核过的出库单，则当前出库单的运费收入应该为 0
+                        if (auditedSaleOuts.Count > 0)
+                        {
+                            entity.FreightIncome = 0;
+                            // 同时调整总金额，扣除运费收入
+                            entity.TotalAmount = entity.TotalAmount - entity.FreightIncome;
+                            // MainForm.Instance.uclog.AddLog($"销售出库单{entity.SaleOutNo}不是第一次出库，运费收入已调整为 0，调整后总金额：{entity.TotalAmount}");
+                        }
+                        else
+                        {
+                            //  MainForm.Instance.uclog.AddLog($"销售出库单{entity.SaleOutNo}是第一次出库，保留运费收入：{entity.FreightIncome}");
+                        }
                     }
 
 
@@ -1050,7 +1070,7 @@ namespace RUINORERP.Business
 
                                     if (rmr.Succeeded)
                                     {
-                                        fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{saleOutNo}审核：应收款单生成成功，单号：{rmr.ReturnObject?.ARAPNo}", rmr.ReturnObject as tb_FM_ReceivablePayable);
+                                        fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{saleOutNo}审核：生成应收款单，单号：{rmr.ReturnObject?.ARAPNo}", rmr.ReturnObject as tb_FM_ReceivablePayable);
 
                                         //如果是平台单，则自动审核
                                         if (payable.IsFromPlatform)
@@ -1111,8 +1131,7 @@ namespace RUINORERP.Business
 
                                     if (rmrCommission.Succeeded)
                                     {
-                                        _logger.LogInformation(
-                                            $"销售出库单{saleOutNo}审核：佣金应付款单生成成功，单号：{rmrCommission.ReturnObject?.ARAPNo}");
+                                        fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>($"销售出库单{saleOutNo}审核：佣金应付款单生成成功，单号：{rmrCommission.ReturnObject?.ARAPNo}", rmrCommission.ReturnObject as tb_FM_ReceivablePayable);
                                     }
                                     else
                                     {

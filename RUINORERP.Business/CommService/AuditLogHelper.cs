@@ -36,7 +36,8 @@ namespace RUINORERP.Business.CommService
 
         public void CreateAuditLog<T>(string action, T entity) where T : class
         {
-            CreateAuditLog(action, entity, "").Wait();
+            // 使用Task.Run避免阻塞调用线程 (参考FMAuditLogHelper的正确模式)
+            _ = Task.Run(() => CreateAuditLog(action, entity, ""));
         }
 
         public async Task CreateAuditLog(string action, string description)

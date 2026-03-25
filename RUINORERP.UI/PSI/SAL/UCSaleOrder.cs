@@ -903,6 +903,7 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 AmountCalculate(details);
+               
 
             }
             catch (Exception ex)
@@ -1159,6 +1160,30 @@ namespace RUINORERP.UI.PSI.SAL
 
                 AmountCalculate(details);
 
+                #region 订单金额与状态关系的提示
+                // 根据订金金额自动设置付款状态
+                if (EditEntity.Deposit > 0)
+                {
+                    if (EditEntity.Deposit >= EditEntity.TotalAmount && EditEntity.PayStatus != (int)PayStatus.全额预付)
+                    {
+                        EditEntity.PayStatus = (int)PayStatus.全额预付;
+                        MainForm.Instance.uclog.AddLog($"订金金额 ({EditEntity.Deposit}) 大于等于总金额 ({EditEntity.TotalAmount})，已自动设置为【全额预付】");
+                    }
+                    else if (EditEntity.Deposit < EditEntity.TotalAmount && EditEntity.PayStatus != (int)PayStatus.部分预付)
+                    {
+                        EditEntity.PayStatus = (int)PayStatus.部分预付;
+                        MainForm.Instance.uclog.AddLog($"订金金额 ({EditEntity.Deposit}) 小于总金额 ({EditEntity.TotalAmount})，已自动设置为【部分预付】");
+                    }
+                }
+
+                //如果没有有效的明细。直接提示
+                if (NeedValidated && details.Count == 0)
+                {
+                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                #endregion
                 //如果没有有效的明细。直接提示
                 if (NeedValidated && details.Count == 0)
                 {

@@ -1522,17 +1522,35 @@ namespace RUINORERP.Business
                     tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
                 }
 
-                //如果这个订单已经有出库单 则第二次运费为0
+                //关键修复：如果这个订单已经有【已审核】的出库单，则当前出库单的运费收入应该为 0
+                //只有已审核的出库单才代表运费已经确认收入，草稿状态的出库单不应该影响运费计算
                 if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
                 {
-                    if (saleorder.FreightIncome > 0)
+                    // 检查是否存在已审核的出库单（排除草稿和未审核的）
+                    var auditedSaleOuts = saleorder.tb_SaleOuts
+                        .Where(o => o.DataStatus >= (int)DataStatus.确认 
+                                 && o.ApprovalStatus == (int)ApprovalStatus.审核通过)
+                        .ToList();
+                                    
+                    if (auditedSaleOuts.Count > 0)
                     {
-                        tipsMsg.Add($"当前订单已经有出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
-                        entity.FreightIncome = 0;
+                        if (saleorder.FreightIncome > 0)
+                        {
+                            tipsMsg.Add($"当前订单已有已审核的出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
+                            entity.FreightIncome = 0;
+                        }
+                        else
+                        {
+                            tipsMsg.Add($"当前订单已有已审核的出库记录！");
+                        }
                     }
                     else
                     {
-                        tipsMsg.Add($"当前订单已经有出库记录！");
+                        // 没有已审核的出库单，保留运费收入
+                        if (saleorder.FreightIncome > 0)
+                        {
+                            tipsMsg.Add($"当前订单是第一次出库（或以前出库单未审核），保留运费收入：{saleorder.FreightIncome}");
+                        }
                     }
                 }
 

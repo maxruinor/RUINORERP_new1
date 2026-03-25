@@ -1,4 +1,4 @@
-using AutoUpdateTools;
+﻿using AutoUpdateTools;
 using ExCSS;
 using FastReport.Data;
 using FastReport.DevComponents.DotNetBar.Controls;
@@ -51,7 +51,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 namespace RUINORERP.UI.ProductEAV
 {
     /// <summary>
-    /// 对于单个产品SKU来说，我们要处理的是产品明细下面的关系1
+    /// 对于单个产品SKU来说，我们要处理的是产品明细下面的关系
     /// </summary>
     [MenuAttrAssemblyInfo("多属性编辑", ModuleMenuDefine.模块定义.基础资料, ModuleMenuDefine.基础资料.产品资料)]
     public partial class UCMultiPropertyEditor : UCBaseClass
@@ -229,7 +229,6 @@ namespace RUINORERP.UI.ProductEAV
                     return;
                 }
                 AddProperty(ppv);
-                BindCheckBoxEvents();
                 listView1.UpdateUI();
             }
         }
@@ -605,11 +604,11 @@ namespace RUINORERP.UI.ProductEAV
 
                 if (isAddingNewProperty)
                 {
-                    // 场景1：添加全新属性（如在颜色属性基础上增加尺寸属性） - 保留原有SKU，添加新属性关系
-                    // 规则：如SKU存在则只变属性值的关系数据，如不存在则生成新的SKU
-                    // 所有新组合都是需要添加的（因为原有SKU缺少新属性）
-                    combinationsToRemove = new List<AttributeCombination>(); // 不删除任何现有SKU
-                    combinationsToAdd = newCombinations; // 所有新组合都需要处理
+                    // 场景1：添加全新属性 - 保留原有组合，只添加新组合
+                    // 当添加新属性时，我们需要删除所有现有组合（因为它们缺少新属性），
+                    // 并添加包含新属性的完整组合集合
+                    combinationsToRemove = existingCombinations.ToList();
+                    combinationsToAdd = newCombinations;
                 }
                 else
                 {
@@ -619,11 +618,14 @@ namespace RUINORERP.UI.ProductEAV
                 }
 
                 // 检查是否有需要处理的组合
-                // 规则：CheckBox取消勾选时，只允许删除临时生成的属性关系数据（ActionStatus == 新增）
-                // 数据库加载的数据不能通过CheckBox删除，只能通过右键菜单删除
                 if (combinationsToAdd.Count > 0 || combinationsToRemove.Count > 0)
                 {
                     List<AttributeCombination> userSelectedCombinations = combinationsToAdd;
+
+                    // 判断是否有临时产品详情（使用MultiPropertyEditorSEQ标记）
+                    // 或者产品本身是新产品（ProductID == 0）
+                    //bool hasTempDetails = EditEntity.tb_ProdDetails.Any(d => !string.IsNullOrEmpty(d.MultiPropertyEditorSEQ));
+
 
                     // 按需生成：让用户选择需要添加的组合
                     // 条件：有新组合需要添加 且 不是取消全部勾选
@@ -646,11 +648,11 @@ namespace RUINORERP.UI.ProductEAV
                         }
                     }
 
-                    // 处理需要删除的组合 - 只删除临时生成的属性关系数据
+                    // 处理需要删除的组合 只删除了临时的，数据库的已经有的没有删除
                     HandleCombinationsToRemove(combinationsToRemove);
 
                     // 处理需要添加的组合 - 异步等待完成
-                    await HandleCombinationsToAdd(userSelectedCombinations, existingGroupIds, existingCombinations);
+                    await HandleCombinationsToAdd(userSelectedCombinations);
 
                     treeGridView1.Refresh();
                     this.btnOk.Enabled = true;
@@ -859,7 +861,8 @@ namespace RUINORERP.UI.ProductEAV
                     foreach (TreeGridNode subNode in node.Nodes)
                     {
                         if (subNode.Tag is tb_Prod_Attr_Relation relation &&
-                            relation.Property_ID != null)
+                            relation.Property_ID != null &&
+                            relation.PropertyValueID != null)
                         {
                             combination.Properties.Add(new AttributeValuePair
                             {
@@ -870,17 +873,20 @@ namespace RUINORERP.UI.ProductEAV
                     }
 
                     // 如果组合有属性，则添加到结果列表
-                    // 注意：单属性产品的属性值为空，也需要添加到列表中用于判断
-                    if (combination.Properties.Count > 0 || detail.tb_Prod_Attr_Relations.Any(r => r.PropertyValueID == null))
+                    if (combination.Properties.Count > 0)
                     {
                         // 按固定顺序排列属性列表
                         combination.Properties = combination.Properties
-                            .Where(p => p.Property != null)
-                            .OrderBy(p => p.Property?.Property_ID)
-                            .ThenBy(p => p.PropertyValue?.PropertyValueID)
+                            .Where(p => p.Property != null && p.PropertyValue != null)
+                            .OrderBy(p => p.Property.Property_ID)
+                            .ThenBy(p => p.PropertyValue.PropertyValueID)
                             .ToList();
 
-                        existingCombinations.Add(combination);
+                        // 属性存在才添加，因为如果是从单属性转换为多属性时，第一个是没有特性的
+                        if (combination.Properties.Count > 0)
+                        {
+                            existingCombinations.Add(combination);
+                        }
                     }
                 }
             }
@@ -1049,166 +1055,99 @@ namespace RUINORERP.UI.ProductEAV
         /// 处理需要添加的属性组合
         /// </summary>
         /// <param name="combinationsToAdd">需要添加的组合列表</param>
-        /// <param name="existingGroupIds">现有属性组ID集合，用于判断新属性</param>
-        /// <param name="existingCombinations">现有属性组合列表，用于判断单属性转多属性场景</param>
-        private async Task HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd, HashSet<long> existingGroupIds, List<AttributeCombination> existingCombinations)
+        private async Task HandleCombinationsToAdd(List<AttributeCombination> combinationsToAdd)
         {
             if (combinationsToAdd.Count == 0)
             {
                 return;
             }
 
-            #region 先根据treeGrid中的数据情况给组合赋值->产品详情实体
-            // 场景说明：
-            // 场景1：单属性转多属性 - 原SKU只有1个空的属性关系，第一个组合复用原ProductDetail，其余创建新ProductDetail
-            // 场景2：多属性添加新属性 - 匹配现有ProductDetail并添加新属性关系，或创建新ProductDetail
-            // 判断是否是单属性转多属性：原ProductDetail只有1个且属性类型为单属性，且现有属性组合为空或只有空属性值
-            bool isSingleToMulti = EditEntity.tb_ProdDetails.Count == 1 &&
-                EditEntity.PropertyType == (int)ProductAttributeType.单属性 &&
-                (existingCombinations.Count == 0 ||
-                 (existingCombinations.Count == 1 && existingCombinations[0].Properties.All(p => p.PropertyValue == null)));
-
+            #region 先根据treeGrid中的数据情况给组合赋值->产品详情实体    这里是已经有一个种属性的情况下再增加其它属性的设置。
+            //如果从单属性的空白到新增第一个属性时则需要另外的实现
+            // 遍历TreeGrid中的产品详情节点，匹配属性组合并复制产品详情实体
             List<TreeGridNode> DetailNodes = treeGridView1.Nodes.Where(c => c.Tag is tb_ProdDetail).ToList();
-
-            // 场景1：单属性转多属性 - 第一个组合复用原ProductDetail
-            if (isSingleToMulti && combinationsToAdd.Count > 0)
+            foreach (var combination in combinationsToAdd)
             {
-                combinationsToAdd[0].ProductDetail = EditEntity.tb_ProdDetails[0];
-            }
-
-            // 场景2：多属性添加新属性 - 匹配现有ProductDetail或创建新ProductDetail
-            if (!isSingleToMulti)
-            {
-                foreach (var combination in combinationsToAdd)
+                // 遍历TreeGrid中的产品详情节点
+                foreach (var node in DetailNodes)
                 {
-                    // 检查是否存在匹配现有ProductDetail的情况
-                    // 匹配条件：现有ProductDetail的属性关系包含新组合中的所有属性（除了新属性）
-                    tb_ProdDetail matchedDetail = null;
-
-                    foreach (var node in DetailNodes)
+                    if (node.Tag is tb_ProdDetail existingDetail && node.HasChildren && node.Nodes.Count > 0)
                     {
-                        if (node.Tag is tb_ProdDetail existingDetail && node.HasChildren && node.Nodes.Count > 0)
+                        // 获取当前节点的属性关系
+                        var existingRelations = node.Nodes
+                            .Where(n => n.Tag is tb_Prod_Attr_Relation)
+                            .Select(n => n.Tag as tb_Prod_Attr_Relation)
+                            .ToList();
+
+                        // 检查现有关系中是否包含新组合的所有属性值
+                        // 只要新组合的属性值都已经在现有产品的属性关系中，就使用现有产品
+                        bool allAttributesMatch = true;
+                        foreach (var attrValuePair in combination.Properties)
                         {
-                            var existingRelations = node.Nodes
-                                .Where(n => n.Tag is tb_Prod_Attr_Relation)
-                                .Select(n => n.Tag as tb_Prod_Attr_Relation)
-                                .ToList();
-
-                            // 新组合的属性（排除新添加的属性）
-                            var oldAttributes = combination.Properties
-                                .Where(p => existingGroupIds.Contains(p.Property?.Property_ID ?? 0))
-                                .ToList();
-
-                            // 如果现有ProductDetail的属性关系完全包含新组合中的旧属性，则匹配
-                            if (oldAttributes.Count > 0)
+                            // 检查现有关系中是否包含当前组合的每个属性值对
+                            bool foundMatch = existingRelations.Any(r =>
+                                r.Property_ID == attrValuePair.Property.Property_ID &&
+                                r.PropertyValueID == attrValuePair.PropertyValue.PropertyValueID);
+                            if (!foundMatch)
                             {
-                                bool allOldAttributesMatch = true;
-                                foreach (var attrValuePair in oldAttributes)
-                                {
-                                    bool foundMatch = existingRelations.Any(r =>
-                                        r.Property_ID == attrValuePair.Property?.Property_ID &&
-                                        r.PropertyValueID == attrValuePair.PropertyValue?.PropertyValueID);
-                                    if (!foundMatch)
-                                    {
-                                        allOldAttributesMatch = false;
-                                        break;
-                                    }
-                                }
-
-                                if (allOldAttributesMatch)
-                                {
-                                    matchedDetail = existingDetail;
-                                    break;
-                                }
+                                allAttributesMatch = false;
+                                break;
                             }
                         }
-                    }
 
-                    if (matchedDetail != null)
-                    {
-                        combination.ProductDetail = matchedDetail;
+                        // 如果新组合的所有属性值都包含在现有产品中，则使用现有产品详情
+                        if (allAttributesMatch)
+                        {
+                            // 复制现有产品详情实体到组合中
+                            combination.ProductDetail = existingDetail;
+                            break;
+                        }
                     }
                 }
             }
             #endregion
-
-            // 场景1：单属性转多属性 - 更新原SKU的空属性关系行，而不是新增
-            if (isSingleToMulti && combinationsToAdd.Count > 0)
+            bool IsOriginalNode = false;
+            //所有产品的对应关系中的这个关系的属性为空时才是第一个默认的
+            List<TreeGridNode> ProdDetailNodes = treeGridView1.Nodes.Where(c => c.Tag is tb_ProdDetail).ToList();
+            foreach (TreeGridNode item in ProdDetailNodes)
             {
-                var firstCombination = combinationsToAdd[0];
-                if (firstCombination.ProductDetail != null && firstCombination.ProductDetail == EditEntity.tb_ProdDetails[0])
+                var AttrsSubNodes = item.Nodes.Where(c => c.Tag is tb_Prod_Attr_Relation).ToList();
+                foreach (TreeGridNode SubNode in AttrsSubNodes)
                 {
-                    // 找到原有SKU下的空属性关系行并更新它
-                    var originalEmptyRelation = firstCombination.ProductDetail.tb_Prod_Attr_Relations
-                        .FirstOrDefault(r => r.PropertyValueID == null || r.tb_prodpropertyvalue == null);
-
-                    if (originalEmptyRelation != null)
+                    if (SubNode.Tag is tb_Prod_Attr_Relation relation)
                     {
-                        // 更新原有的空属性关系行
-                        // 取第一个属性的第一个属性值
-                        if (firstCombination.Properties.Count > 0)
+                        if (relation.tb_prodproperty == null)
                         {
-                            var firstAttrValue = firstCombination.Properties[0];
-                            originalEmptyRelation.Property_ID = firstAttrValue.Property.Property_ID;
-                            originalEmptyRelation.PropertyValueID = firstAttrValue.PropertyValue.PropertyValueID;
-                            originalEmptyRelation.tb_prodproperty = firstAttrValue.Property;
-                            originalEmptyRelation.tb_prodpropertyvalue = firstAttrValue.PropertyValue;
-
-                            // 更新状态为修改
-                            if (originalEmptyRelation.ActionStatus == ActionStatus.加载)
-                            {
-                                originalEmptyRelation.ActionStatus = ActionStatus.修改;
-                            }
+                            IsOriginalNode = true;
+                            break;
                         }
-
-                        // 原有SKU有多属性后，可能需要添加其他属性值的关系
-                        // 添加除第一个属性外的其他属性值关系
-                        for (int i = 1; i < firstCombination.Properties.Count; i++)
-                        {
-                            var attrValuePair = firstCombination.Properties[i];
-                            long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                            var relation = new tb_Prod_Attr_Relation
-                            {
-                                Property_ID = attrValuePair.Property.Property_ID,
-                                PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
-                                ProdBaseID = EditEntity.ProdBaseID,
-                                RAR_ID = RARId,
-                                ProdDetailID = firstCombination.ProductDetail.ProdDetailID,
-                                ActionStatus = ActionStatus.新增,
-                                tb_prodproperty = attrValuePair.Property,
-                                tb_prodpropertyvalue = attrValuePair.PropertyValue
-                            };
-                            firstCombination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
-                        }
-                    }
-                    else
-                    {
-                        // 如果没有找到空属性关系行，则新增
-                        for (int i = 0; i < firstCombination.Properties.Count; i++)
-                        {
-                            var attrValuePair = firstCombination.Properties[i];
-                            long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                            var relation = new tb_Prod_Attr_Relation
-                            {
-                                Property_ID = attrValuePair.Property.Property_ID,
-                                PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
-                                ProdBaseID = EditEntity.ProdBaseID,
-                                RAR_ID = RARId,
-                                ProdDetailID = firstCombination.ProductDetail.ProdDetailID,
-                                ActionStatus = ActionStatus.新增,
-                                tb_prodproperty = attrValuePair.Property,
-                                tb_prodpropertyvalue = attrValuePair.PropertyValue
-                            };
-                            firstCombination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
-                        }
-                    }
-
-                    // 更新ProductDetail状态为修改
-                    if (firstCombination.ProductDetail.ActionStatus != ActionStatus.新增)
-                    {
-                        firstCombination.ProductDetail.ActionStatus = ActionStatus.修改;
                     }
                 }
+                if (IsOriginalNode)
+                {
+                    break;
+                }
+            }
+
+            //说明还没有设置成功。则认为是第一个默认的由单属性过来的
+            if (combinationsToAdd.Where(c => c.ProductDetail != null).ToList().Count == 0
+                && EditEntity.tb_ProdDetails.Count == 1
+                && IsOriginalNode
+                )
+            {
+                AttributeCombination combination = combinationsToAdd[0];
+                combination.ProductDetail = EditEntity.tb_ProdDetails[0];
+                for (int i = 0; i < combination.Properties.Count; i++)
+                {
+                    for (int j = 0; j < combination.ProductDetail.tb_Prod_Attr_Relations.Count; j++)
+                    {
+                        combination.ProductDetail.tb_Prod_Attr_Relations[j].Property_ID = combination.Properties[i].Property.Property_ID;
+                        combination.ProductDetail.tb_Prod_Attr_Relations[j].PropertyValueID = combination.Properties[i].PropertyValue.PropertyValueID;
+                        combination.ProductDetail.tb_Prod_Attr_Relations[j].tb_prodproperty = combination.Properties[i].Property;
+                        combination.ProductDetail.tb_Prod_Attr_Relations[j].tb_prodpropertyvalue = combination.Properties[i].PropertyValue;
+                    }
+                }
+
             }
 
 
@@ -1299,41 +1238,36 @@ namespace RUINORERP.UI.ProductEAV
                 else
                 {
                     #region 更新关系，处理已存在的产品
-                    // 规则：如SKU存在则只变属性值的关系数据，如不存在则生成新的SKU
-                    // 对于已存在的产品，只添加新属性关系，不清空现有属性关系
-                    // 检查每个属性关系是否存在，不存在则新增
+
+                    // 对于已存在的产品，清空其现有属性关系，然后根据新组合重新设置
+                    // 避免属性关系累积导致重复或多余属性值
+                    combination.ProductDetail.tb_Prod_Attr_Relations.Clear();
+
+                    // 为每个属性值创建属性关系
                     foreach (var attrValuePair in combination.Properties)
                     {
-                        // 检查该属性关系是否已存在
-                        var existingRelation = combination.ProductDetail.tb_Prod_Attr_Relations.FirstOrDefault(r =>
-                            r.Property_ID == attrValuePair.Property.Property_ID &&
-                            r.PropertyValueID == attrValuePair.PropertyValue.PropertyValueID);
-
-                        if (existingRelation == null)
+                        long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
+                        var relation = new tb_Prod_Attr_Relation
                         {
-                            long RARId = RUINORERP.Common.SnowflakeIdHelper.IdHelper.GetLongId();
-                            var relation = new tb_Prod_Attr_Relation
-                            {
-                                Property_ID = attrValuePair.Property.Property_ID,
-                                PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
-                                ProdBaseID = EditEntity.ProdBaseID,
-                                RAR_ID = RARId,
-                                ProdDetailID = combination.ProductDetail.ProdDetailID,
-                                ActionStatus = ActionStatus.新增,
-                                tb_prodproperty = attrValuePair.Property,
-                                tb_prodpropertyvalue = attrValuePair.PropertyValue
-                            };
-                            combination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
-                        }
+                            Property_ID = attrValuePair.Property.Property_ID,
+                            PropertyValueID = attrValuePair.PropertyValue.PropertyValueID,
+                            ProdBaseID = EditEntity.ProdBaseID,
+                            RAR_ID = RARId,
+                            ProdDetailID = combination.ProductDetail.ProdDetailID,
+                            ActionStatus = ActionStatus.新增,
+                            tb_prodproperty = attrValuePair.Property,
+                            tb_prodpropertyvalue = attrValuePair.PropertyValue
+                        };
+                        combination.ProductDetail.tb_Prod_Attr_Relations.Add(relation);
                     }
 
                     if (combination.ProductDetail.ActionStatus == ActionStatus.新增)
                     {
-                        BusinessHelper.Instance.InitEntity(combination.ProductDetail);
+                        BusinessHelper.Instance.InitEntity(combination.ProductDetail); // 初始化编辑信息
                     }
                     else
                     {
-                        BusinessHelper.Instance.EditEntity(combination.ProductDetail);
+                        BusinessHelper.Instance.EditEntity(combination.ProductDetail); // 初始化编辑信息
                     }
 
                     if (string.IsNullOrEmpty(combination.ProductDetail.SKU) && combination.ProductDetail.ActionStatus == ActionStatus.新增)

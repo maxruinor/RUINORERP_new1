@@ -786,7 +786,11 @@ namespace RUINORERP.UI.ProductEAV
                 }
                 if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.单属性)
                 {
-                    this.dataGridView1.HideColumn<tb_ProdDetail>(c => c.PropertyGroupName);
+                    UpdatePropertyGroupNameColumnVisibility(false);
+                }
+                else if (EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)
+                {
+                    UpdatePropertyGroupNameColumnVisibility(true);
                 }
             }
 
@@ -943,8 +947,6 @@ namespace RUINORERP.UI.ProductEAV
                                 if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ProdBaseID == 0)
                                 {
                                     bindingSourceList.Clear();
-                                    //listView1.ShowGroups = true;  //记得要设置ShowGroups属性为true（默认是false），否则显示不出分组
-
                                     if (dataGridView1.Rows.Count == 0)
                                     {
                                         BindToSkulistGrid(new List<tb_ProdDetail>());
@@ -953,11 +955,9 @@ namespace RUINORERP.UI.ProductEAV
                                     {
                                         tb_ProdDetail ppg = new tb_ProdDetail();
                                         ppg.PropertyGroupName = "";
-                                        // 验证生成产品编号规则所需的前置条件
                                         var (validationMessage3, isValid3) = ValidateProductCodeGeneration(EditEntity);
                                         if (!isValid3)
                                         {
-                                            // 显示验证失败消息并返回
                                             MessageBox.Show(validationMessage3, "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                             return;
                                         }
@@ -977,32 +977,16 @@ namespace RUINORERP.UI.ProductEAV
                                 {
                                     dataGridView1.Columns["GroupName"].Visible = false;
                                 }
-                                // 检查产品是否为多属性类型
-                                if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.单属性)
-                                {
-                                    this.dataGridView1.HideColumn<tb_ProdDetail>(c => c.PropertyGroupName);
-                                }
+                                UpdatePropertyGroupNameColumnVisibility(false);
                                 break;
                             case ProductAttributeType.可配置多属性:
                                 ControlBtn(pt, EditEntity.ActionStatus);
                                 cmb属性.Enabled = true;
                                 btnAddProperty.Enabled = true;
                                 bindingSourceList.Clear();
-                                // listView1.ItemCheck -= ListView1_ItemCheck;
-                                //  listView1.ItemCheck += ListView1_ItemCheck;
-                                //绑定对应的选项及其值
                                 DataBindingHelper.InitDataToCmb<tb_ProdProperty>(p => p.Property_ID, t => t.PropertyName, cmb属性);
                                 cmb属性.SelectedIndex = -1;
-                                if (EditEntity.tb_Prod_Attr_Relations != null)
-                                {
-                                    //编辑性加载
-                                }
-                                // 检查产品是否为多属性类型
-                                if (EditEntity != null && EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)
-                                {
-                                    this.dataGridView1.ShowColumn<tb_ProdDetail>(c => c.PropertyGroupName);
-                                }
-
+                                UpdatePropertyGroupNameColumnVisibility(true);
                                 break;
                             case ProductAttributeType.捆绑:
                                 break;
@@ -1262,22 +1246,12 @@ namespace RUINORERP.UI.ProductEAV
                     cmb属性.Enabled = false;
                     btnAddProperty.Enabled = false;
                     btnClear.Enabled = false;
-
-                    if (action == ActionStatus.加载)
-                    {
-
-                    }
+                    UpdatePropertyGroupNameColumnVisibility(false);
                     break;
                 case ProductAttributeType.可配置多属性:
                     cmb属性.Enabled = true;
                     btnAddProperty.Enabled = true;
                     btnClear.Enabled = true;
-
-
-                    if (action == ActionStatus.加载)
-                    {
-
-                    }
                     break;
                 case ProductAttributeType.捆绑:
                     break;
@@ -1296,9 +1270,31 @@ namespace RUINORERP.UI.ProductEAV
         private void LoadBaseInfoSKUList(tb_Prod entityProdBase)
         {
             List<tb_Prod_Attr_Relation> relations = entityProdBase.tb_Prod_Attr_Relations;
+            #region SKU表格初始化
+            if (dataGridView1.Rows.Count == 0)
+            {
+                BindToSkulistGrid(new List<tb_ProdDetail>());
+                bindingSourceList.ListChanged += BindingSourceList_ListChanged;
+            }
+            bindingSourceList.Clear();
+            #endregion
+
             if (relations == null || relations.Count == 0)
             {
-                //正常数据都不会为空
+                #region 单属性场景处理
+                if (EditEntity.PropertyType == (int)ProductAttributeType.单属性 && EditEntity.tb_ProdDetails.Count > 0)
+                {
+                    foreach (var detail in EditEntity.tb_ProdDetails)
+                    {
+                        bindingSourceList.Add(detail);
+                    }
+                    UpdatePropertyGroupNameColumnVisibility(false);
+                }
+                else if (EditEntity.PropertyType == (int)ProductAttributeType.可配置多属性)
+                {
+                    UpdatePropertyGroupNameColumnVisibility(false);
+                }
+                #endregion
                 return;
             }
             else
@@ -1347,18 +1343,7 @@ namespace RUINORERP.UI.ProductEAV
             }
             #endregion
 
-            #region SKU表格
-
-            if (dataGridView1.Rows.Count == 0)
-            {
-                //先绑一个空的架构
-                BindToSkulistGrid(new List<tb_ProdDetail>());
-                bindingSourceList.ListChanged += BindingSourceList_ListChanged;
-            }
-
-            // 清空现有数据，避免重复加载
-            bindingSourceList.Clear();
-
+            #region SKU表格加载
             //显示表格内容 根据sku更新
             LoadRelationToEavSku(entityProdBase);
             #endregion
@@ -1545,61 +1530,68 @@ namespace RUINORERP.UI.ProductEAV
         /// <summary>
         /// 加载SKU表格
         /// </summary>
-        /// <param name="isMultProperty"></param>
-        /// <param name="entityProdBase"></param>
+        /// <param name="entityProdBase">产品基本信息</param>
         private void LoadRelationToEavSku(tb_Prod entityProdBase)
         {
             bool isMultProperty = false;
             List<tb_Prod_Attr_Relation> relations = entityProdBase.tb_Prod_Attr_Relations;
-            List<tb_ProdDetail> propGroups = new List<tb_ProdDetail>();
-            if (bindingSourceList.DataSource is List<tb_ProdDetail>)
-            {
-                propGroups = bindingSourceList.DataSource as List<tb_ProdDetail>;
-            }
 
-            //为了显示属性值中文
-            //根据关系明细中的详情id分组 相同明细有多行属性值时，
-            #region 新思路
             foreach (tb_ProdDetail detail in entityProdBase.tb_ProdDetails)
             {
                 tb_ProdDetail ppg = MainForm.Instance.mapper.Map<tb_ProdDetail>(detail);
                 ppg.tb_Prod_Attr_Relations = new List<tb_Prod_Attr_Relation>();
 
-                List<tb_Prod_Attr_Relation> pars = relations.FindAll(w => w.ProdDetailID == detail.ProdDetailID).ToList();
+                List<tb_Prod_Attr_Relation> pars = relations?.FindAll(w => w.ProdDetailID == detail.ProdDetailID) ?? new List<tb_Prod_Attr_Relation>();
+                
+                var uniquePropertyValues = new HashSet<string>();
                 string groupName = string.Empty;
+
                 foreach (tb_Prod_Attr_Relation par in pars)
                 {
                     ppg.tb_Prod_Attr_Relations.Add(par);
                     if (par.Property_ID != null && par.PropertyValueID != null)
                     {
                         tb_ProdPropertyValue ppv = prodpropValueList.FirstOrDefault(f => f.PropertyValueID == par.PropertyValueID);
-                        groupName += ppv.PropertyValueName + ",";
-                    }
-                    else
-                    {
-                        groupName = "";
+                        if (ppv != null && !string.IsNullOrEmpty(ppv.PropertyValueName))
+                        {
+                            if (uniquePropertyValues.Add(ppv.PropertyValueName))
+                            {
+                                groupName += ppv.PropertyValueName + ",";
+                            }
+                        }
                     }
                 }
                 groupName = groupName.TrimEnd(',');
-                if (groupName.Split(',').Length > 0)
+                ppg.PropertyGroupName = groupName;
+
+                if (!string.IsNullOrEmpty(groupName) && groupName.Contains(","))
                 {
                     isMultProperty = true;
                 }
+                else if (!string.IsNullOrEmpty(groupName))
+                {
+                    var firstRelation = pars.FirstOrDefault();
+                    if (firstRelation != null)
+                    {
+                        var otherRelations = pars.Where(r => r != firstRelation && r.Property_ID != null).ToList();
+                        if (otherRelations.Count > 0)
+                        {
+                            isMultProperty = true;
+                        }
+                    }
+                }
 
-                //使用现有的tb_ProdDetail对象，添加GroupName临时字段
-                ppg.PropertyGroupName = groupName;
                 bindingSourceList.Add(ppg);
                 ppg.ActionStatus = ActionStatus.加载;
             }
 
-            #endregion
+            UpdatePropertyGroupNameColumnVisibility(isMultProperty);
 
             if (!isMultProperty)
             {
                 btnAddProperty.Enabled = false;
                 btnClear.Enabled = false;
             }
-
         }
 
 
@@ -1778,13 +1770,76 @@ namespace RUINORERP.UI.ProductEAV
 
         private void BindToSkulistGrid(List<tb_ProdDetail> propGroups)
         {
-
             dataGridView1.RowHeadersVisible = false;
+            if (propGroups == null)
+            {
+                propGroups = new List<tb_ProdDetail>();
+            }
             bindingSourceList.DataSource = propGroups;
-            dataGridView1.DataSource = bindingSourceList;
-
-            // 配置SKU图片列 - 使用SKUImageColumn显示图片
+            this.dataGridView1.DataSource = bindingSourceList;
             ConfigureSKUImageColumn();
+            InitializePropertyGroupNameColumn();
+        }
+
+        /// <summary>
+        /// 初始化PropertyGroupName列的位置和宽度
+        /// </summary>
+        private void InitializePropertyGroupNameColumn()
+        {
+            try
+            {
+                if (!dataGridView1.Columns.Contains("PropertyGroupName"))
+                {
+                    return;
+                }
+
+                var column = dataGridView1.Columns["PropertyGroupName"];
+                column.DisplayIndex = 1;
+                column.HeaderText = "多属性组合";
+                column.Width = 200;
+                column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"初始化PropertyGroupName列失败: {ex.Message}", Global.UILogType.警告);
+            }
+        }
+
+        /// <summary>
+        /// 更新PropertyGroupName特殊列的显示状态
+        /// 多属性时显示，单属性时隐藏
+        /// </summary>
+        /// <param name="isMultiAttribute">是否为多属性类型</param>
+        private void UpdatePropertyGroupNameColumnVisibility(bool isMultiAttribute)
+        {
+            try
+            {
+                if (!dataGridView1.Columns.Contains("PropertyGroupName"))
+                {
+                    return;
+                }
+
+                var column = dataGridView1.Columns["PropertyGroupName"];
+                column.Visible = isMultiAttribute;
+
+                if (isMultiAttribute)
+                {
+                    if (dataGridView1.Columns.Contains("GroupName"))
+                    {
+                        dataGridView1.Columns["GroupName"].Visible = false;
+                    }
+
+                    int targetIndex = 1;
+                    if (column.Index != targetIndex)
+                    {
+                        column.DisplayIndex = targetIndex;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.uclog.AddLog($"更新PropertyGroupName列显示状态失败: {ex.Message}", Global.UILogType.警告);
+            }
         }
 
         /// <summary>
@@ -2097,10 +2152,9 @@ namespace RUINORERP.UI.ProductEAV
                 // 添加到绑定源
                 bindingSourceList.Add(newDetail);
             }
+
+            UpdatePropertyGroupNameColumnVisibility(true);
         }
-
-
-
 
         private void btnClear_Click(object sender, EventArgs e)
         {
@@ -2115,21 +2169,15 @@ namespace RUINORERP.UI.ProductEAV
             }
             #region 单属性
 
-            ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));// EnumHelper.GetEnumByString<ProductAttributeType>(cmbPropertyType.SelectedItem.ToString());
+            ProductAttributeType pt = (ProductAttributeType)(int.Parse(cmbPropertyType.SelectedValue.ToString()));
             switch (pt)
             {
                 case ProductAttributeType.单属性:
                     if (cmb属性.SelectedItem == null)
                     {
-                        //添加单属性时的SKU
-                        #region
                         btnAddProperty.Enabled = false;
-
-                        //UCSKUlist ucskulist = new UCSKUlist();
-
-                        //tableLayoutPanel1.Controls.Remove(ucskulist);
-                        #endregion
                     }
+                    UpdatePropertyGroupNameColumnVisibility(false);
                     break;
                 case ProductAttributeType.可配置多属性:
                     btnAddProperty.Enabled = true;
@@ -2541,19 +2589,6 @@ namespace RUINORERP.UI.ProductEAV
 
         #endregion
 
-
-
-        public System.Windows.Forms.BindingSource _ListDataSoure = null;
-
-        [Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
-        /// <summary>
-        /// 列表的数据源(实际要显示的)
-        /// </summary>
-        public System.Windows.Forms.BindingSource ListDataSoure
-        {
-            get { return _ListDataSoure; }
-            set { _ListDataSoure = value; }
-        }
         private bool editflag;
 
 
@@ -2563,10 +2598,7 @@ namespace RUINORERP.UI.ProductEAV
         internal void InitListData()
         {
             this.dataGridView1.DataSource = null;
-
-            ListDataSoure = bindingSourceList;
-
-            this.dataGridView1.DataSource = ListDataSoure.DataSource;
+            this.dataGridView1.DataSource = bindingSourceList;
         }
 
 

@@ -1,4 +1,4 @@
-﻿using Krypton.Toolkit;
+using Krypton.Toolkit;
 using FastReport.Service;
 using HLH.Lib.Helper;
 using RUINORERP.Business;
@@ -29,11 +29,21 @@ using RUINORERP.Business.BizMapperService;
 namespace RUINORERP.UI.Report
 {
     /// <summary>
-    /// 每个打印业务都是来自于菜单的按钮
+    /// 每个打印业务都是来自于菜单的按钮1
     /// 菜单对应的是一个表 一个实体。一个实体对应一个业务类型
     /// </summary>
     public partial class RptPrintConfig : KryptonForm
     {
+        /// <summary>
+        /// 当前菜单ID
+        /// </summary>
+        private long _currentMenuId;
+
+        /// <summary>
+        /// 是否为个人配置
+        /// </summary>
+        private bool _isPersonalConfig;
+
         /// <summary>
         /// 打印配置
         /// </summary>
@@ -218,10 +228,7 @@ namespace RUINORERP.UI.Report
 
         }
 
-        private void chkSelectPrinter_CheckedChanged(object sender, EventArgs e)
-        {
-            GroupBoxSelectPrinter.Visible = chkSelectPrinter.Checked;
-        }
+      
      
         //设计报表
         private void PrintReport(RptMode rptMode)
@@ -280,25 +287,15 @@ namespace RUINORERP.UI.Report
 
                 //准备
                 //TargetReport.Prepare();
-                //准备合并上次的 多页时候才需要
+                //准备合并上次的 多页时候才需要1
                 TargetReport.Prepare(true);
 
-
-                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
-                            && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
+                // 使用新的优先级配置获取打印机
+                string printerNameRpt = PrintHelper<object>.GetPrinterWithPriority(printConfig, printConfig?.BizName);
+                if (!string.IsNullOrEmpty(printerNameRpt))
                 {
-                    //优先使用用户个性化设置指定的打印机
                     TargetReport.PrintSettings.ShowDialog = false;
-                    TargetReport.PrintSettings.Printer = MainForm.Instance.AppContext.CurrentUser_Role_Personalized.PrinterName;
-                }
-                else
-                {
-                    //设置默认打印机
-                    if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
-                    {
-                        TargetReport.PrintSettings.ShowDialog = false;
-                        TargetReport.PrintSettings.Printer = printConfig.PrinterName;
-                    }
+                    TargetReport.PrintSettings.Printer = printerNameRpt;
                 }
 
                 //操作方式：DESIGN-设计;PREVIEW-预览;PRINT-打印
@@ -421,6 +418,14 @@ namespace RUINORERP.UI.Report
         {
             try
             {
+                _currentMenuId = GetCurrentMenuId();
+                var personalConfig = GetMenuPersonalPrintConfig(_currentMenuId);
+                _isPersonalConfig = personalConfig != null && personalConfig.UsePersonalPrintConfig == true;
+
+                LoadPrinterSettings(personalConfig);
+
+                UpdateFormTitle();
+                UpdateConfigStatusIndicator();
 
                 listboxBIll.Items.Clear();
                 if (PrintDataSources != null)
@@ -443,19 +448,6 @@ namespace RUINORERP.UI.Report
                     }
                 }
 
-                DataBindingHelper.BindData4CheckBox<tb_PrintConfig>(printConfig, t => t.PrinterSelected, chkSelectPrinter, false);
-
-                cmbPrinterList.Items.Clear();
-                var printers = LocalPrinter.GetLocalPrinters();
-                foreach (var item in printers)
-                {
-                    cmbPrinterList.Items.Add(item);
-                }
-                if (printConfig.PrinterSelected.HasValue && printConfig.PrinterSelected.Value)
-                {
-                    cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printConfig.PrinterName);
-                }
-
                 newSumDataGridView1.NeedSaveColumnsXml = true;
                 newSumDataGridView1.XmlFileName = typeof(tb_PrintTemplate).Name;
                 newSumDataGridView1.FieldNameList = Common.UIHelper.GetFieldNameColList(typeof(tb_PrintTemplate));
@@ -471,18 +463,244 @@ namespace RUINORERP.UI.Report
                 newSumDataGridView1.DataSource = null;
                 newSumDataGridView1.DataSource = bindingSourcePrintTemplate;
 
-                //如果个人的个性化打印设置了优先个人的设置
-                if (MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.HasValue
-                               && MainForm.Instance.AppContext.CurrentUser_Role_Personalized.UseUserOwnPrinter.Value)
-                {
-                    chkSelectPrinter.Visible = false;
-                    GroupBoxSelectPrinter.Visible = false;
-                }
+              
+
+                UpdateButtonStates();
             }
             catch (Exception ex)
             {
                 MainForm.Instance.logger.Error("打印配置加载异常", ex);
             }
+        }
+
+        /// <summary>
+        /// 加载打印机设置（支持个人配置和系统配置）
+        /// </summary>
+        private void LoadPrinterSettings(tb_UIMenuPersonalization personalConfig)
+        {
+            cmbPrinterList.Items.Clear();
+            var printers = LocalPrinter.GetLocalPrinters();
+            foreach (var item in printers)
+            {
+                cmbPrinterList.Items.Add(item);
+            }
+
+            string printerName = null;
+            bool printerSelected = false;
+
+            if (_isPersonalConfig && personalConfig?.PrintConfigDict != null)
+            {
+                printerName = personalConfig.PrintConfigDict.PrinterName;
+                printerSelected = personalConfig.PrintConfigDict.PrinterSelected;
+            }
+            else
+            {
+                printerName = printConfig.PrinterName;
+                printerSelected = printConfig.PrinterSelected ?? false;
+            }
+
+      
+            GroupBoxSelectPrinter.Visible = printerSelected;
+
+            if (printerSelected && !string.IsNullOrEmpty(printerName))
+            {
+                cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printerName);
+            }
+        }
+
+        /// <summary>
+        /// 获取当前菜单ID
+        /// </summary>
+        private long GetCurrentMenuId()
+        {
+            if (PrintDataSources != null && PrintDataSources.Count > 0)
+            {
+                var firstItem = PrintDataSources[0];
+                var billData = EntityMappingHelper.GetBillData(firstItem.GetType(), firstItem);
+                var menuInfo = MainForm.Instance.AppContext.Db.Queryable<tb_MenuInfo>()
+                    .Where(m => m.BizType == (int)billData.BizType)
+                    .First();
+                return menuInfo?.MenuID ?? 0;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// 获取菜单个人打印配置
+        /// </summary>
+        private tb_UIMenuPersonalization GetMenuPersonalPrintConfig(long menuId)
+        {
+            if (menuId == 0) return null;
+
+            var userPersonalizedId = MainForm.Instance.AppContext.CurrentUser_Role_Personalized?.UserPersonalizedID;
+            if (userPersonalizedId == null || userPersonalizedId == 0) return null;
+
+            return MainForm.Instance.AppContext.Db.Queryable<tb_UIMenuPersonalization>()
+                .Where(m => m.MenuID == menuId && m.UserPersonalizedID == userPersonalizedId)
+                .First();
+        }
+
+        /// <summary>
+        /// 更新窗体标题
+        /// </summary>
+        private void UpdateFormTitle()
+        {
+            if (_isPersonalConfig)
+            {
+                this.Text = "打印操作 - 【个人独有】";
+            }
+            else
+            {
+                this.Text = "打印操作";
+            }
+        }
+
+        /// <summary>
+        /// 更新配置状态指示器
+        /// </summary>
+        private void UpdateConfigStatusIndicator()
+        {
+        }
+
+        /// <summary>
+        /// 更新按钮状态
+        /// </summary>
+        private void UpdateButtonStates()
+        {
+            if (_isPersonalConfig)
+            {
+                btnSavePersonalConfig.Enabled = false;
+                btnSavePersonalConfig.Values.Text = "已为个人独有";
+                btnRevertToSystem.Enabled = true;
+                btnRevertToSystem.Values.Text = "恢复系统配置";
+            }
+            else
+            {
+                btnSavePersonalConfig.Enabled = true;
+                btnSavePersonalConfig.Values.Text = "保存为个人配置";
+                btnRevertToSystem.Enabled = false;
+                btnRevertToSystem.Values.Text = "使用系统配置";
+            }
+        }
+
+        /// <summary>
+        /// 保存为个人配置
+        /// </summary>
+        private async Task SaveAsPersonalConfigAsync()
+        {
+            try
+            {
+                var userPersonalizedId = MainForm.Instance.AppContext.CurrentUser_Role_Personalized?.UserPersonalizedID;
+                if (userPersonalizedId == null || userPersonalizedId == 0)
+                {
+                    MessageBox.Show("无法获取用户个性化设置ID，请重新登录后重试。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
+                if (menuPersonalization == null)
+                {
+                    menuPersonalization = new tb_UIMenuPersonalization
+                    {
+                        MenuID = _currentMenuId,
+                        UserPersonalizedID = userPersonalizedId.Value,
+                        QueryConditionCols = 4,
+                        Sort = 150
+                    };
+                    await MainForm.Instance.AppContext.Db.Insertable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteReturnIdentityAsync();
+                }
+
+                var configData = new MenuPrintConfigData
+                {
+                    PrinterName = printConfig.PrinterName ?? string.Empty,
+                    PrinterSelected = printConfig.PrinterSelected ?? false,
+                    Landscape = printConfig.Landscape ?? false,
+                    TemplateId = 0,
+                    TemplateName = string.Empty,
+                    IsDefaultTemplate = true,
+                    BizType = printConfig.BizType,
+                    BizName = printConfig.BizName ?? string.Empty,
+                    LastModified = DateTime.Now
+                };
+
+                if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                {
+                    var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true) ?? printConfig.tb_PrintTemplates[0];
+                    configData.TemplateId = defaultTemplate.ID;
+                    configData.TemplateName = defaultTemplate.Template_Name ?? string.Empty;
+                    configData.IsDefaultTemplate = defaultTemplate.IsDefaultTemplate ?? false;
+                }
+
+                menuPersonalization.PrintConfigDict = configData;
+                menuPersonalization.UsePersonalPrintConfig = true;
+
+                await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
+
+                _isPersonalConfig = true;
+                UpdateFormTitle();
+                UpdateButtonStates();
+
+                MessageBox.Show("已成功保存为个人独有配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error(ex, "保存个人配置失败");
+                MessageBox.Show($"保存个人配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 恢复使用系统配置
+        /// </summary>
+        private async Task RevertToSystemConfigAsync()
+        {
+            try
+            {
+                var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
+                if (menuPersonalization == null)
+                {
+                    MessageBox.Show("当前使用的是系统配置，无需恢复。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (MessageBox.Show("确定要恢复使用系统配置吗？恢复后将删除个人独有配置。", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    menuPersonalization.UsePersonalPrintConfig = false;
+                    menuPersonalization.PrintConfigJson = null;
+
+                    await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
+
+                    _isPersonalConfig = false;
+                    UpdateFormTitle();
+                    UpdateButtonStates();
+
+                    MessageBox.Show("已成功恢复使用系统配置！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error(ex, "恢复系统配置失败");
+                MessageBox.Show($"恢复系统配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 获取当前打印配置（优先使用个人配置）
+        /// </summary>
+        public tb_PrintConfig GetEffectivePrintConfig()
+        {
+            if (_isPersonalConfig && printConfig != null)
+            {
+                var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
+                if (menuPersonalization?.PrintConfigDict != null)
+                {
+                    var personalConfig = menuPersonalization.PrintConfigDict;
+                    printConfig.PrinterName = personalConfig.PrinterName;
+                    printConfig.PrinterSelected = personalConfig.PrinterSelected;
+                    printConfig.Landscape = personalConfig.Landscape;
+                }
+            }
+            return printConfig;
         }
 
         private async void btnPrinter_Click(object sender, EventArgs e)
@@ -493,7 +711,7 @@ namespace RUINORERP.UI.Report
             {
                 printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
             }
-            printConfig.PrinterSelected = chkSelectPrinter.Checked;
+        
             if (printConfig.PrintConfigID > 0)
             {
                 BusinessHelper.Instance.EditEntity(printConfig);
@@ -558,6 +776,16 @@ namespace RUINORERP.UI.Report
         private void btnToPDF_Click(object sender, EventArgs e)
         {
             PrintReport(RptMode.ToPDF);
+        }
+
+        private void btnSavePersonalConfig_Click(object sender, EventArgs e)
+        {
+            SaveAsPersonalConfigAsync();
+        }
+
+        private void btnRevertToSystem_Click(object sender, EventArgs e)
+        {
+            RevertToSystemConfigAsync();
         }
 
         private void ShowCustomExportDialog(FastReport.Report report)

@@ -41,7 +41,6 @@
     <Compile Remove="CacheManager.cs" />
     <Compile Remove="CommandService\CommandProcessor.cs" />
     <Compile Remove="CommandService\CommandQueue.cs" />
-    <Compile Remove="Common\RetryPolicy.cs" />
     <Compile Remove="Comm\AutoMapperProfile.cs" />
     <Compile Remove="Comm\CacheHelper.cs" />
     <Compile Remove="Controls\UserManagementControl_old.cs" />
@@ -214,7 +213,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\" />
     <Folder Include="Helpers\" />
     <Folder Include="Network\Common\" />
     <Folder Include="Network\CoreServices\" />
@@ -229,9 +227,6 @@
 
   <ItemGroup>
     <Content Include="Log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="SysConfigFiles\ServerGlobalConfig.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

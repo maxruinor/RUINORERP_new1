@@ -80,6 +80,7 @@ using RUINORERP.Server.Network.Core;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Business.BNR;
 using RUINORERP.Business.Config;
+using RUINORERP.Server.Comm;
 
 namespace RUINORERP.Server
 {
@@ -155,7 +156,7 @@ namespace RUINORERP.Server
             services = new ServiceCollection();
 
             // 初始化应用程序上下文
-            string conn = AppSettings.GetValue("ConnectString");
+            //string conn = AppSettings.GetValue("ConnectString");
             Program.InitAppcontextValue(Program.AppContextData);
 
             // 首先初始化 log4net 配置，确保日志仓库在所有服务使用前已经创建
@@ -270,6 +271,42 @@ namespace RUINORERP.Server
                 });
             });
 
+            // 注册Redis缓存服务
+            services.AddSingleton<IRedisCacheService>(sp =>
+            {
+                try
+                {
+                    // 直接从appsettings.json读取Redis配置
+                    var configuration = sp.GetRequiredService<IConfiguration>();
+                    var redisServer = configuration.GetValue<string>("RedisServer");
+                    var redisPassword = configuration.GetValue<string>("RedisServerPWD");
+
+                    var redisConnectionString = redisServer;
+                    if (!string.IsNullOrEmpty(redisPassword))
+                    {
+                        redisConnectionString = $"{redisServer},password={redisPassword}";
+                    }
+
+                    if (string.IsNullOrEmpty(redisConnectionString))
+                    {
+                        // 如果未配置Redis，返回内存缓存适配器作为降级
+                        var memoryCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                        var memLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.MemoryCacheAdapterForRedis>>();
+                        return new RUINORERP.Server.Comm.MemoryCacheAdapterForRedis(memoryCache, memLogger) as IRedisCacheService;
+                    }
+
+                    var redisLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.RedisCacheService>>();
+                    var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString);
+                    return new RUINORERP.Server.Comm.RedisCacheService(multiplexer, redisLogger);
+                }
+                catch
+                {
+                    // Redis连接失败时降级到内存缓存
+                    var memoryCache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                    var memLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.MemoryCacheAdapterForRedis>>();
+                    return new RUINORERP.Server.Comm.MemoryCacheAdapterForRedis(memoryCache, memLogger) as IRedisCacheService;
+                }
+            });
 
             // 注册BNR工厂
             builder.RegisterType<BNRFactory>().AsSelf().SingleInstance(); // 注册BNR工厂

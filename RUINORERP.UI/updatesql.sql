@@ -1,4 +1,8 @@
-﻿UPDATE a
+﻿ALTER TABLE tb_UserPersonalized 
+ADD PrinterConfigJson NVARCHAR(MAX) NULL;
+
+
+UPDATE a
 SET a.PurOrder_NO = b.PurOrderNo  FROM tb_PurEntry a , tb_PurOrder b
 WHERE
 	a.PurOrder_ID= b.PurOrder_ID

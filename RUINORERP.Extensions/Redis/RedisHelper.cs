@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace RUINORERP.Extensions.Redis
 {
+    //11
     public static class RedisHelper
     {
         public static readonly ConnectionMultiplexer _connectin;

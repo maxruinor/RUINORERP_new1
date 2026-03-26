@@ -31,18 +31,10 @@
             this.btnOk = new Krypton.Toolkit.KryptonButton();
             this.btnCancel = new Krypton.Toolkit.KryptonButton();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
-            this.chkSelectPrinter = new Krypton.Toolkit.KryptonCheckBox();
-            this.GroupBoxSelectPrinter = new Krypton.Toolkit.KryptonGroupBox();
-            this.cmbPrinterList = new Krypton.Toolkit.KryptonComboBox();
-            this.chkSelectTemplatePrint = new Krypton.Toolkit.KryptonCheckBox();
             this.lblDesc = new Krypton.Toolkit.KryptonLabel();
+            this.chkSelectTemplatePrint = new Krypton.Toolkit.KryptonCheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).BeginInit();
             this.kryptonPanel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.GroupBoxSelectPrinter)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.GroupBoxSelectPrinter.Panel)).BeginInit();
-            this.GroupBoxSelectPrinter.Panel.SuspendLayout();
-            this.GroupBoxSelectPrinter.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.cmbPrinterList)).BeginInit();
             this.SuspendLayout();
             // 
             // btnOk
@@ -67,8 +59,6 @@
             // 
             this.kryptonPanel1.Controls.Add(this.lblDesc);
             this.kryptonPanel1.Controls.Add(this.chkSelectTemplatePrint);
-            this.kryptonPanel1.Controls.Add(this.chkSelectPrinter);
-            this.kryptonPanel1.Controls.Add(this.GroupBoxSelectPrinter);
             this.kryptonPanel1.Controls.Add(this.btnCancel);
             this.kryptonPanel1.Controls.Add(this.btnOk);
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -77,34 +67,13 @@
             this.kryptonPanel1.Size = new System.Drawing.Size(607, 459);
             this.kryptonPanel1.TabIndex = 2;
             // 
-            // chkSelectPrinter
+            // lblDesc
             // 
-            this.chkSelectPrinter.Location = new System.Drawing.Point(35, 227);
-            this.chkSelectPrinter.Name = "chkSelectPrinter";
-            this.chkSelectPrinter.Size = new System.Drawing.Size(114, 20);
-            this.chkSelectPrinter.TabIndex = 21;
-            this.chkSelectPrinter.Values.Text = "设置指定打印机";
-            // 
-            // GroupBoxSelectPrinter
-            // 
-            this.GroupBoxSelectPrinter.Location = new System.Drawing.Point(35, 253);
-            this.GroupBoxSelectPrinter.Name = "GroupBoxSelectPrinter";
-            // 
-            // GroupBoxSelectPrinter.Panel
-            // 
-            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.cmbPrinterList);
-            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(535, 57);
-            this.GroupBoxSelectPrinter.TabIndex = 20;
-            this.GroupBoxSelectPrinter.Values.Heading = "专属打印机默认名称";
-            // 
-            // cmbPrinterList
-            // 
-            this.cmbPrinterList.DropDownWidth = 429;
-            this.cmbPrinterList.IntegralHeight = false;
-            this.cmbPrinterList.Location = new System.Drawing.Point(3, 7);
-            this.cmbPrinterList.Name = "cmbPrinterList";
-            this.cmbPrinterList.Size = new System.Drawing.Size(514, 21);
-            this.cmbPrinterList.TabIndex = 11;
+            this.lblDesc.Location = new System.Drawing.Point(142, 51);
+            this.lblDesc.Name = "lblDesc";
+            this.lblDesc.Size = new System.Drawing.Size(243, 20);
+            this.lblDesc.TabIndex = 23;
+            this.lblDesc.Values.Text = "（单据要根据不同模板打印时，请勾选）";
             // 
             // chkSelectTemplatePrint
             // 
@@ -112,15 +81,7 @@
             this.chkSelectTemplatePrint.Name = "chkSelectTemplatePrint";
             this.chkSelectTemplatePrint.Size = new System.Drawing.Size(101, 20);
             this.chkSelectTemplatePrint.TabIndex = 22;
-            this.chkSelectTemplatePrint.Values.Text = "选择模板打印";
-            // 
-            // lblDesc
-            // 
-            this.lblDesc.Location = new System.Drawing.Point(133, 51);
-            this.lblDesc.Name = "lblDesc";
-            this.lblDesc.Size = new System.Drawing.Size(269, 20);
-            this.lblDesc.TabIndex = 23;
-            this.lblDesc.Values.Text = "（相同单据要根据不同内容打印时，请勾选）";
+            this.chkSelectTemplatePrint.Values.Text = "选择打印模板";
             // 
             // UCUserPersonalizedEdit
             // 
@@ -133,11 +94,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel1)).EndInit();
             this.kryptonPanel1.ResumeLayout(false);
             this.kryptonPanel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.GroupBoxSelectPrinter.Panel)).EndInit();
-            this.GroupBoxSelectPrinter.Panel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.GroupBoxSelectPrinter)).EndInit();
-            this.GroupBoxSelectPrinter.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.cmbPrinterList)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -147,9 +103,6 @@
         private Krypton.Toolkit.KryptonButton btnOk;
         private Krypton.Toolkit.KryptonButton btnCancel;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
-        private Krypton.Toolkit.KryptonGroupBox GroupBoxSelectPrinter;
-        private Krypton.Toolkit.KryptonComboBox cmbPrinterList;
-        private Krypton.Toolkit.KryptonCheckBox chkSelectPrinter;
         private Krypton.Toolkit.KryptonCheckBox chkSelectTemplatePrint;
         private Krypton.Toolkit.KryptonLabel lblDesc;
     }

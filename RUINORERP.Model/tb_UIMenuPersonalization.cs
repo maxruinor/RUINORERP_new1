@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据
+    /// 用户角色菜单个性化设置表一个角色用户菜单 三个字段为联合主键 就一行数据1
     /// </summary>
     [Serializable()]
     [Description("用户角色菜单个性化设置表")]
@@ -193,6 +193,30 @@ namespace RUINORERP.Model
                         }
         }
 
+        private string _PrintConfigJson;
+        /// <summary>
+        /// 打印配置JSON(包含打印机和模板配置)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "PrintConfigJson", ColDesc = "打印配置JSON")]
+        [SugarColumn(ColumnDataType = "nvarchar(max)", SqlParameterDbType = "String", ColumnName = "PrintConfigJson", Length = -1, IsNullable = true, ColumnDescription = "打印配置JSON")]
+        public string PrintConfigJson
+        {
+            get { return _PrintConfigJson; }
+            set { SetProperty(ref _PrintConfigJson, value); }
+        }
+
+        private bool? _UsePersonalPrintConfig;
+        /// <summary>
+        /// 是否使用个人打印配置(true=使用个人配置, false/null=使用系统配置)
+        /// </summary>
+        [AdvQueryAttribute(ColName = "UsePersonalPrintConfig", ColDesc = "是否使用个人打印配置")]
+        [SugarColumn(ColumnDataType = "bit", SqlParameterDbType = "Boolean", ColumnName = "UsePersonalPrintConfig", IsNullable = true, ColumnDescription = "是否使用个人打印配置")]
+        public bool? UsePersonalPrintConfig
+        {
+            get { return _UsePersonalPrintConfig; }
+            set { SetProperty(ref _UsePersonalPrintConfig, value); }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -220,7 +244,7 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToMany, nameof(tb_UIGridSetting.UIMenuPID))]
         public virtual List<tb_UIGridSetting> tb_UIGridSettings { get; set; }
         //tb_UIGridSetting.UIMenuPID)
-        //UIMenuPID.FK_UIGRIDSETTING_REF_UIMENUPERSONALIZATION)
+        //UIMENUPI.FK_UIGRIDSETTING_REF_UIMENUPERSONALIZATION)
         //tb_UIMenuPersonalization.UIMenuPID)
 
         //[Browsable(false)]打印报表时的数据源会不显示
@@ -228,9 +252,36 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToMany, nameof(tb_UIInputDataField.UIMenuPID))]
         public virtual List<tb_UIInputDataField> tb_UIInputDataFields { get; set; }
         //tb_UIInputDataField.UIMenuPID)
-        //UIMenuPID.FK_tb_UIInputDataField_REF_UIMENUPersonalization)
+        //UIMENUPI.FK_tb_UIInputDataField_REF_UIMENUPersonalization)
         //tb_UIMenuPersonalization.UIMenuPID)
 
+        /// <summary>
+        /// 打印配置字典(包含打印机和模板配置)
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        public MenuPrintConfigData PrintConfigDict
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(PrintConfigJson))
+                    return null;
+                try
+                {
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<MenuPrintConfigData>(PrintConfigJson);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            set
+            {
+                if (value == null)
+                    PrintConfigJson = null;
+                else
+                    PrintConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(value);
+            }
+        }
 
         #endregion
 

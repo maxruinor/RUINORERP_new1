@@ -63,12 +63,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Config\log4net.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Config\log4net.unix.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="项目说明.txt" />
   </ItemGroup>
 

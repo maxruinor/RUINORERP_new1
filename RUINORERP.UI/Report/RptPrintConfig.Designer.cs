@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.Report
+namespace RUINORERP.UI.Report
 {
     partial class RptPrintConfig
     {
@@ -29,8 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RptPrintConfig));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.kryptonSplitContainer1 = new Krypton.Toolkit.KryptonSplitContainer();
             this.kryptonPanel2 = new Krypton.Toolkit.KryptonPanel();
             this.kryptonGroupBox2 = new Krypton.Toolkit.KryptonGroupBox();
@@ -46,19 +45,20 @@
             this.GroupBoxSelectPrinter = new Krypton.Toolkit.KryptonGroupBox();
             this.cmbPrinterList = new Krypton.Toolkit.KryptonComboBox();
             this.btnPrinter = new Krypton.Toolkit.KryptonButton();
-            this.chkSelectPrinter = new Krypton.Toolkit.KryptonCheckBox();
+            this.btnSavePersonalConfig = new Krypton.Toolkit.KryptonButton();
+            this.btnRevertToSystem = new Krypton.Toolkit.KryptonButton();
             this.btnDesign = new Krypton.Toolkit.KryptonButton();
             this.btnExit = new Krypton.Toolkit.KryptonButton();
             this.btnPrint = new Krypton.Toolkit.KryptonButton();
             this.btnPreView = new Krypton.Toolkit.KryptonButton();
             this.btnDelete = new Krypton.Toolkit.KryptonButton();
+            this.btnToPDF = new Krypton.Toolkit.KryptonButton();
             this.btnCreate = new Krypton.Toolkit.KryptonButton();
             this.btnQueryBill = new Krypton.Toolkit.KryptonButton();
             this.kryptonContextMenuLinkLabel1 = new Krypton.Toolkit.KryptonContextMenuLinkLabel();
             this.kryptonContextMenuColorColumns1 = new Krypton.Toolkit.KryptonContextMenuColorColumns();
             this.kryptonContextMenuCheckButton1 = new Krypton.Toolkit.KryptonContextMenuCheckButton();
             this.bindingSourcePrintTemplate = new System.Windows.Forms.BindingSource(this.components);
-            this.btnToPDF = new Krypton.Toolkit.KryptonButton();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -104,7 +104,8 @@
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.GroupBoxSelectPrinter);
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.chkSelectPrinter);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnSavePersonalConfig);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnRevertToSystem);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDesign);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnExit);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPrint);
@@ -113,8 +114,8 @@
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnToPDF);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnCreate);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnQueryBill);
-            this.kryptonSplitContainer1.Size = new System.Drawing.Size(664, 473);
-            this.kryptonSplitContainer1.SplitterDistance = 276;
+            this.kryptonSplitContainer1.Size = new System.Drawing.Size(1003, 592);
+            this.kryptonSplitContainer1.SplitterDistance = 382;
             this.kryptonSplitContainer1.TabIndex = 0;
             // 
             // kryptonPanel2
@@ -123,7 +124,7 @@
             this.kryptonPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.kryptonPanel2.Location = new System.Drawing.Point(206, 0);
             this.kryptonPanel2.Name = "kryptonPanel2";
-            this.kryptonPanel2.Size = new System.Drawing.Size(458, 276);
+            this.kryptonPanel2.Size = new System.Drawing.Size(797, 382);
             this.kryptonPanel2.TabIndex = 2;
             // 
             // kryptonGroupBox2
@@ -135,7 +136,7 @@
             // kryptonGroupBox2.Panel
             // 
             this.kryptonGroupBox2.Panel.Controls.Add(this.newSumDataGridView1);
-            this.kryptonGroupBox2.Size = new System.Drawing.Size(458, 276);
+            this.kryptonGroupBox2.Size = new System.Drawing.Size(797, 382);
             this.kryptonGroupBox2.TabIndex = 0;
             this.kryptonGroupBox2.Values.Heading = "模板种类";
             // 
@@ -144,8 +145,8 @@
             this.newSumDataGridView1.AllowUserToAddRows = false;
             this.newSumDataGridView1.AllowUserToDeleteRows = false;
             this.newSumDataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle2.BackColor = System.Drawing.Color.Beige;
-            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.BackColor = System.Drawing.Color.Beige;
+            this.newSumDataGridView1.AlternatingRowsDefaultCellStyle = dataGridViewCellStyle1;
             this.newSumDataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -155,13 +156,14 @@
             this.newSumDataGridView1.CustomRowNo = false;
             this.newSumDataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.newSumDataGridView1.EnableFiltering = false;
+            this.newSumDataGridView1.EnablePagination = false;
             this.newSumDataGridView1.IsShowSumRow = false;
             this.newSumDataGridView1.Location = new System.Drawing.Point(0, 0);
             this.newSumDataGridView1.Name = "newSumDataGridView1";
             this.newSumDataGridView1.NeedSaveColumnsXml = false;
             this.newSumDataGridView1.RowTemplate.Height = 23;
             this.newSumDataGridView1.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.newSumDataGridView1.Size = new System.Drawing.Size(454, 252);
+            this.newSumDataGridView1.Size = new System.Drawing.Size(793, 358);
             this.newSumDataGridView1.SumColumns = null;
             this.newSumDataGridView1.SummaryDescription = "2020-08最新 带有合计列功能;";
             this.newSumDataGridView1.SumRowCellFormat = "N2";
@@ -223,7 +225,7 @@
             this.kryptonPanel1.Dock = System.Windows.Forms.DockStyle.Left;
             this.kryptonPanel1.Location = new System.Drawing.Point(0, 0);
             this.kryptonPanel1.Name = "kryptonPanel1";
-            this.kryptonPanel1.Size = new System.Drawing.Size(198, 276);
+            this.kryptonPanel1.Size = new System.Drawing.Size(198, 382);
             this.kryptonPanel1.TabIndex = 0;
             // 
             // kryptonGroupBox1
@@ -235,7 +237,7 @@
             // kryptonGroupBox1.Panel
             // 
             this.kryptonGroupBox1.Panel.Controls.Add(this.listboxBIll);
-            this.kryptonGroupBox1.Size = new System.Drawing.Size(198, 276);
+            this.kryptonGroupBox1.Size = new System.Drawing.Size(198, 382);
             this.kryptonGroupBox1.TabIndex = 0;
             this.kryptonGroupBox1.Values.Heading = "单据号";
             // 
@@ -244,12 +246,12 @@
             this.listboxBIll.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listboxBIll.Location = new System.Drawing.Point(0, 0);
             this.listboxBIll.Name = "listboxBIll";
-            this.listboxBIll.Size = new System.Drawing.Size(194, 252);
+            this.listboxBIll.Size = new System.Drawing.Size(194, 358);
             this.listboxBIll.TabIndex = 0;
             // 
             // GroupBoxSelectPrinter
             // 
-            this.GroupBoxSelectPrinter.Location = new System.Drawing.Point(27, 103);
+            this.GroupBoxSelectPrinter.Location = new System.Drawing.Point(32, 108);
             this.GroupBoxSelectPrinter.Name = "GroupBoxSelectPrinter";
             // 
             // GroupBoxSelectPrinter.Panel
@@ -278,18 +280,27 @@
             this.btnPrinter.Values.Text = "保存";
             this.btnPrinter.Click += new System.EventHandler(this.btnPrinter_Click);
             // 
-            // chkSelectPrinter
+            // btnSavePersonalConfig
             // 
-            this.chkSelectPrinter.Location = new System.Drawing.Point(27, 77);
-            this.chkSelectPrinter.Name = "chkSelectPrinter";
-            this.chkSelectPrinter.Size = new System.Drawing.Size(179, 20);
-            this.chkSelectPrinter.TabIndex = 9;
-            this.chkSelectPrinter.Values.Text = "设置当前模板的指定打印机";
-            this.chkSelectPrinter.CheckedChanged += new System.EventHandler(this.chkSelectPrinter_CheckedChanged);
+            this.btnSavePersonalConfig.Location = new System.Drawing.Point(506, 77);
+            this.btnSavePersonalConfig.Name = "btnSavePersonalConfig";
+            this.btnSavePersonalConfig.Size = new System.Drawing.Size(130, 25);
+            this.btnSavePersonalConfig.TabIndex = 12;
+            this.btnSavePersonalConfig.Values.Text = "保存为个人配置";
+            this.btnSavePersonalConfig.Click += new System.EventHandler(this.btnSavePersonalConfig_Click);
+            // 
+            // btnRevertToSystem
+            // 
+            this.btnRevertToSystem.Location = new System.Drawing.Point(840, 105);
+            this.btnRevertToSystem.Name = "btnRevertToSystem";
+            this.btnRevertToSystem.Size = new System.Drawing.Size(130, 25);
+            this.btnRevertToSystem.TabIndex = 13;
+            this.btnRevertToSystem.Values.Text = "恢复系统配置";
+            this.btnRevertToSystem.Click += new System.EventHandler(this.btnRevertToSystem_Click);
             // 
             // btnDesign
             // 
-            this.btnDesign.Location = new System.Drawing.Point(396, 15);
+            this.btnDesign.Location = new System.Drawing.Point(401, 14);
             this.btnDesign.Name = "btnDesign";
             this.btnDesign.Size = new System.Drawing.Size(90, 25);
             this.btnDesign.TabIndex = 8;
@@ -299,7 +310,7 @@
             // btnExit
             // 
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnExit.Location = new System.Drawing.Point(541, 69);
+            this.btnExit.Location = new System.Drawing.Point(840, 14);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(90, 25);
             this.btnExit.TabIndex = 7;
@@ -308,7 +319,7 @@
             // 
             // btnPrint
             // 
-            this.btnPrint.Location = new System.Drawing.Point(396, 69);
+            this.btnPrint.Location = new System.Drawing.Point(695, 14);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(90, 25);
             this.btnPrint.TabIndex = 6;
@@ -317,7 +328,7 @@
             // 
             // btnPreView
             // 
-            this.btnPreView.Location = new System.Drawing.Point(231, 69);
+            this.btnPreView.Location = new System.Drawing.Point(695, 55);
             this.btnPreView.Name = "btnPreView";
             this.btnPreView.Size = new System.Drawing.Size(90, 25);
             this.btnPreView.TabIndex = 5;
@@ -326,16 +337,25 @@
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(541, 15);
+            this.btnDelete.Location = new System.Drawing.Point(546, 14);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(90, 25);
             this.btnDelete.TabIndex = 4;
             this.btnDelete.Values.Text = "删除";
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
+            // btnToPDF
+            // 
+            this.btnToPDF.Location = new System.Drawing.Point(125, 14);
+            this.btnToPDF.Name = "btnToPDF";
+            this.btnToPDF.Size = new System.Drawing.Size(90, 25);
+            this.btnToPDF.TabIndex = 2;
+            this.btnToPDF.Values.Text = "转为PDF";
+            this.btnToPDF.Click += new System.EventHandler(this.btnToPDF_Click);
+            // 
             // btnCreate
             // 
-            this.btnCreate.Location = new System.Drawing.Point(231, 15);
+            this.btnCreate.Location = new System.Drawing.Point(244, 14);
             this.btnCreate.Name = "btnCreate";
             this.btnCreate.Size = new System.Drawing.Size(90, 25);
             this.btnCreate.TabIndex = 2;
@@ -344,7 +364,7 @@
             // 
             // btnQueryBill
             // 
-            this.btnQueryBill.Location = new System.Drawing.Point(27, 15);
+            this.btnQueryBill.Location = new System.Drawing.Point(32, 14);
             this.btnQueryBill.Name = "btnQueryBill";
             this.btnQueryBill.Size = new System.Drawing.Size(72, 25);
             this.btnQueryBill.TabIndex = 1;
@@ -363,22 +383,13 @@
             // 
             this.kryptonContextMenuCheckButton1.Text = "CheckButton";
             // 
-            // btnToPDF
-            // 
-            this.btnToPDF.Location = new System.Drawing.Point(120, 15);
-            this.btnToPDF.Name = "btnToPDF";
-            this.btnToPDF.Size = new System.Drawing.Size(90, 25);
-            this.btnToPDF.TabIndex = 2;
-            this.btnToPDF.Values.Text = "转为PDF";
-            this.btnToPDF.Click += new System.EventHandler(this.btnToPDF_Click);
-            // 
             // RptPrintConfig
             // 
             this.AcceptButton = this.btnPrint;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnExit;
-            this.ClientSize = new System.Drawing.Size(664, 473);
+            this.ClientSize = new System.Drawing.Size(1003, 592);
             this.Controls.Add(this.kryptonSplitContainer1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "RptPrintConfig";
@@ -389,7 +400,6 @@
             this.kryptonSplitContainer1.Panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel2)).EndInit();
             this.kryptonSplitContainer1.Panel2.ResumeLayout(false);
-            this.kryptonSplitContainer1.Panel2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).EndInit();
             this.kryptonSplitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.kryptonPanel2)).EndInit();
@@ -428,7 +438,6 @@
         private Krypton.Toolkit.KryptonButton btnPreView;
         private Krypton.Toolkit.KryptonButton btnDelete;
         private Krypton.Toolkit.KryptonButton btnDesign;
-        private Krypton.Toolkit.KryptonCheckBox chkSelectPrinter;
         private Krypton.Toolkit.KryptonListBox listboxBIll;
         private Krypton.Toolkit.KryptonPanel kryptonPanel2;
         private RUINOR.WinFormsUI.CollapsibleSplitter collapsibleSplitter1;
@@ -446,5 +455,7 @@
         private System.Windows.Forms.ToolStripMenuItem 复制当前模板ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 保存模板设置ToolStripMenuItem;
         private Krypton.Toolkit.KryptonButton btnToPDF;
+        private Krypton.Toolkit.KryptonButton btnSavePersonalConfig;
+        private Krypton.Toolkit.KryptonButton btnRevertToSystem;
     }
 }

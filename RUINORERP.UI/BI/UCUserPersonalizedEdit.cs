@@ -40,11 +40,10 @@ namespace RUINORERP.UI.BI
 
         private async void btnOk_Click(object sender, EventArgs e)
         {
-            if (cmbPrinterList.SelectedItem != null)
+            if (!Personalized.HasChanged)
             {
-                Personalized.PrinterName = cmbPrinterList.SelectedItem.ToString();
+                return;
             }
-            Personalized.UseUserOwnPrinter = chkSelectPrinter.Checked;
 
             var ctr = MainForm.Instance.AppContext.GetRequiredService<tb_UserPersonalizedController<tb_UserPersonalized>>();
             ReturnResults<tb_UserPersonalized> rs = await ctr.SaveOrUpdate(Personalized);
@@ -65,19 +64,7 @@ namespace RUINORERP.UI.BI
         private void UCUserPersonalizedEdit_Load(object sender, EventArgs e)
         {
             Personalized = MainForm.Instance.AppContext.CurrentUser_Role_Personalized;
-            DataBindingHelper.BindData4CheckBox<tb_UserPersonalized>(Personalized, t => t.UseUserOwnPrinter, chkSelectPrinter, false);
             DataBindingHelper.BindData4CheckBox<tb_UserPersonalized>(Personalized, t => t.SelectTemplatePrint, chkSelectTemplatePrint, false);
-
-            cmbPrinterList.Items.Clear();
-            var printers = LocalPrinter.GetLocalPrinters();
-            foreach (var item in printers)
-            {
-                cmbPrinterList.Items.Add(item);
-            }
-            if (Personalized.UseUserOwnPrinter.HasValue && Personalized.UseUserOwnPrinter.Value)
-            {
-                cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(Personalized.PrinterName);
-            }
         }
 
         private void CloseTheForm(object thisform)

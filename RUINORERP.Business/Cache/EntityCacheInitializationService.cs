@@ -50,7 +50,7 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 初始化所有缓存
+        /// 初始化所有缓存（性能优化版本：并行加载）
         /// 简化实现，直接使用框架能力
         /// 确保基础表缓存信息也被正确初始化和管理
         /// </summary>
@@ -59,7 +59,7 @@ namespace RUINORERP.Business.Cache
         {
             try
             {
-                _logger.Debug("开始初始化缓存服务");
+                _logger.Debug("开始初始化缓存服务（并行优化版本）");
 
                 // 初始化所有表结构信息
                 InitializeAllTableSchemas();
@@ -67,29 +67,36 @@ namespace RUINORERP.Business.Cache
                 // 获取需要缓存的表名
                 var tableNames = _tableSchemaManager.GetCacheableTableNamesList();
 
-
                 int successCount = 0;
                 int failedCount = 0;
 
-                // 使用异步方法初始化表缓存，提高性能
-                foreach (var tableName in tableNames)
+                // 使用并行处理提高性能
+                var options = new ParallelOptions
                 {
-                    try
+                    MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) // 使用一半的CPU核心，避免阻塞其他操作
+                };
+
+                _logger.Debug($"使用并行加载，最大并行度: {options.MaxDegreeOfParallelism}");
+
+                // 使用并行循环处理缓存初始化
+                await Task.Run(() =>
+                {
+                    Parallel.ForEach(tableNames, options, tableName =>
                     {
-                        // 使用异步方法初始化，提高性能
-                        await InitializeCacheForTableAsync(tableName);
-                        successCount++;
-                        _logger.Debug($"表 {tableName} 异步缓存初始化成功 ({successCount}/{tableNames.Count})");
-                        // 短暂延迟，减少数据库压力
-                        await Task.Delay(123);
-                    }
-                    catch (Exception ex)
-                    {
-                        failedCount++;
-                        _logger.LogError(ex, $"表 {tableName} 异步缓存初始化失败 ({failedCount}个表失败)");
-                        // 继续处理下一个表
-                    }
-                }
+                        try
+                        {
+                            // 同步初始化（在并行线程中）
+                            InitializeCacheForTable(tableName);
+                            Interlocked.Increment(ref successCount);
+                            _logger.Debug($"表 {tableName} 缓存初始化成功 ({successCount}/{tableNames.Count})");
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.Increment(ref failedCount);
+                            _logger.LogError(ex, $"表 {tableName} 缓存初始化失败 ({failedCount}个表失败)");
+                        }
+                    });
+                });
 
                 _logger.LogDebug($"缓存初始化完成: 成功 {successCount} 个表, 失败 {failedCount} 个表");
             }

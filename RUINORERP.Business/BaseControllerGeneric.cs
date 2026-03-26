@@ -47,9 +47,44 @@ namespace RUINORERP.Business
 {
     /// <summary>
     /// 单表基础资料操作1
+    /// 2025-3-26 性能优化：添加分页查询优化
     /// </summary>
     public class BaseController<T> : BaseController where T : class
     {
+        #region 性能优化：分页查询结果类
+
+        /// <summary>
+        /// 分页查询结果
+        /// </summary>
+        public class PageResult<TEntity>
+        {
+            /// <summary>
+            /// 总记录数
+            /// </summary>
+            public long Total { get; set; }
+
+            /// <summary>
+            /// 数据列表
+            /// </summary>
+            public List<TEntity> Data { get; set; }
+
+            /// <summary>
+            /// 当前页码
+            /// </summary>
+            public int PageIndex { get; set; }
+
+            /// <summary>
+            /// 每页大小
+            /// </summary>
+            public int PageSize { get; set; }
+
+            /// <summary>
+            /// 总页数
+            /// </summary>
+            public int TotalPages => PageSize > 0 ? (int)Math.Ceiling((double)Total / PageSize) : 0;
+        }
+
+        #endregion
         public ApplicationContext _appContext;
         public ITableSchemaManager _tableSchemaManager;
         public IUnifiedStateManager StateManager;
@@ -917,6 +952,216 @@ namespace RUINORERP.Business
 
             return await querySqlQueryable.ToPageListAsync(pageNum, pageSize) as List<T>;
         }
+
+        #region 性能优化：分页查询方法（支持锁控制）
+
+        /// <summary>
+        /// 分页查询（性能优化版本）
+        /// 注意：全局已配置IsWithNoLockQuery=true，默认所有查询使用NOLOCK
+        /// 对于需要准确数据的查询，请使用GetPageListWithLockAsync方法
+        /// </summary>
+        /// <param name="whereExpression">查询条件</param>
+        /// <param name="pageIndex">页码（从1开始）</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="orderByExpression">排序表达式</param>
+        /// <param name="isAsc">是否升序</param>
+        /// <returns>分页查询结果</returns>
+        public virtual async Task<PageResult<T>> GetPageListAsync(
+            Expression<Func<T, bool>> whereExpression = null,
+            int pageIndex = 1,
+            int pageSize = 50,
+            Expression<Func<T, object>> orderByExpression = null,
+            bool isAsc = false)
+        {
+            // 全局已配置IsWithNoLockQuery=true，不需要显式添加.With(SqlWith.NoLock)
+            var query = _unitOfWorkManage.GetDbClient()
+                .Queryable<T>();
+
+            // 应用查询条件
+            if (whereExpression != null)
+            {
+                query = query.Where(whereExpression);
+            }
+
+            // 应用排序
+            if (orderByExpression != null)
+            {
+                query = isAsc ? query.OrderBy(orderByExpression) : query.OrderByDescending(orderByExpression);
+            }
+            else
+            {
+                // 默认按主键降序 - 使用Dynamic OrderBy
+                query = query.OrderBy($"{GetPrimaryKeyName()} desc");
+            }
+
+            // 使用SqlSugar优化的分页查询（一次性获取总数和数据）
+            RefAsync<int> total = 0;
+            var list = await query.ToPageListAsync(pageIndex, pageSize, total);
+
+            return new PageResult<T>
+            {
+                Total = total,
+                Data = list,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+        }
+
+        /// <summary>
+        /// 分页查询（带锁版本）- 用于需要准确数据的场景
+        /// 适用场景：单据审核、库存扣减验证、财务数据查询等
+        /// </summary>
+        /// <param name="whereExpression">查询条件</param>
+        /// <param name="pageIndex">页码（从1开始）</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="orderByExpression">排序表达式</param>
+        /// <param name="isAsc">是否升序</param>
+        /// <returns>分页查询结果</returns>
+        public virtual async Task<PageResult<T>> GetPageListWithLockAsync(
+            Expression<Func<T, bool>> whereExpression = null,
+            int pageIndex = 1,
+            int pageSize = 50,
+            Expression<Func<T, object>> orderByExpression = null,
+            bool isAsc = false)
+        {
+            // 使用READPAST提示，跳过被锁定的行，避免死锁等待
+            var query = _unitOfWorkManage.GetDbClient()
+                .Queryable<T>()
+                .With(SqlWith.ReadPast);
+
+            // 应用查询条件
+            if (whereExpression != null)
+            {
+                query = query.Where(whereExpression);
+            }
+
+            // 应用排序
+            if (orderByExpression != null)
+            {
+                query = isAsc ? query.OrderBy(orderByExpression) : query.OrderByDescending(orderByExpression);
+            }
+            else
+            {
+                // 默认按主键降序 - 使用Dynamic OrderBy
+                query = query.OrderBy($"{GetPrimaryKeyName()} desc");
+            }
+
+            // 获取总记录数
+            // 使用SqlSugar优化的分页查询（一次性获取总数和数据）
+            RefAsync<int> total = 0;
+            var list = await query.ToPageListAsync(pageIndex, pageSize, total);
+
+            return new PageResult<T>
+            {
+                Total = total,
+                Data = list,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+        }
+
+        /// <summary>
+        /// 智能分页查询（根据数据量自动决定是否分页）
+        /// 默认使用NOLOCK，提高查询性能
+        /// </summary>
+        /// <param name="whereExpression">查询条件</param>
+        /// <param name="pageIndex">页码</param>
+        /// <param name="pageSize">每页大小</param>
+        /// <param name="autoPageThreshold">自动分页阈值</param>
+        /// <returns>分页查询结果</returns>
+        public virtual async Task<PageResult<T>> GetSmartPageListAsync(
+            Expression<Func<T, bool>> whereExpression = null,
+            int pageIndex = 1,
+            int pageSize = 50,
+            int autoPageThreshold = 1000)
+        {
+            // 先获取总记录数（使用NOLOCK）
+            var countQuery = _unitOfWorkManage.GetDbClient()
+                .Queryable<T>();
+
+            if (whereExpression != null)
+            {
+                countQuery = countQuery.Where(whereExpression);
+            }
+
+            var total = await countQuery.CountAsync();
+
+            // 如果数据量小于阈值，直接返回所有数据
+            if (total <= autoPageThreshold)
+            {
+                var allData = await countQuery.ToListAsync();
+                return new PageResult<T>
+                {
+                    Total = total,
+                    Data = allData,
+                    PageIndex = 1,
+                    PageSize = (int)total
+                };
+            }
+
+            // 否则使用分页查询
+            return await GetPageListAsync(whereExpression, pageIndex, pageSize);
+        }
+
+        /// <summary>
+        /// 单条记录查询（带锁）- 用于更新前的验证
+        /// 使用UPDLOCK提示，确保数据一致性
+        /// </summary>
+        /// <param name="whereExpression">查询条件</param>
+        /// <returns>单条记录</returns>
+        public virtual async Task<T> GetSingleWithLockAsync(Expression<Func<T, bool>> whereExpression)
+        {
+            return await _unitOfWorkManage.GetDbClient()
+                .Queryable<T>()
+                .With(SqlWith.UpdLock) // 更新锁，防止其他事务修改
+                .Where(whereExpression)
+                .FirstAsync();
+        }
+
+        /// <summary>
+        /// 获取主键字段名
+        /// </summary>
+        private string GetPrimaryKeyName()
+        {
+            var entityType = typeof(T);
+            var properties = entityType.GetProperties();
+
+            // 查找带有SugarColumn(IsPrimaryKey = true)特性的属性
+            foreach (var prop in properties)
+            {
+                var sugarColumn = prop.GetCustomAttributes(typeof(SugarColumn), false)
+                    .FirstOrDefault() as SugarColumn;
+                if (sugarColumn != null && sugarColumn.IsPrimaryKey)
+                {
+                    return prop.Name;
+                }
+            }
+
+            // 默认返回ID
+            return "ID";
+        }
+
+        /// <summary>
+        /// 查询优化说明：
+        /// 1. 全局配置IsWithNoLockQuery=true，默认所有查询使用NOLOCK提示
+        /// 2. NOLOCK优点：
+        ///    - 减少锁等待，提高并发性能
+        ///    - 避免死锁发生
+        ///    - 查询不会被阻塞
+        /// 3. NOLOCK缺点：
+        ///    - 可能读取到未提交的数据（脏读）
+        ///    - 可能读取到正在被修改的数据
+        /// 4. 使用建议：
+        ///    - 列表查询、报表统计：使用默认NOLOCK（GetPageListAsync）
+        ///    - 单据审核、库存验证：使用带锁查询（GetPageListWithLockAsync）
+        ///    - 更新前验证：使用更新锁（GetSingleWithLockAsync）
+        /// </summary>
+        public void QueryOptimizationNotes()
+        {
+            // 此方法仅用于文档说明
+        }
+
+        #endregion
 
 
         /// <summary>

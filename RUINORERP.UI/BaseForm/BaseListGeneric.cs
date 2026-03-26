@@ -73,10 +73,55 @@ namespace RUINORERP.UI.BaseForm
 
     /// <summary>
     /// 基本资料的列表，是否需要加一个标记来表示 在菜单中编辑 ，还是在 其他窗体时 关联编辑。看后面的业务情况。
+    /// 2025-3-26 性能优化：添加反射缓存、延迟加载
     /// </summary>
     [PreCheckMustOverrideBaseClass]
     public partial class BaseListGeneric<T> : BaseUControl, IContextMenuInfoAuth, IToolStripMenuInfoAuth where T : class
     {
+        #region 性能优化：静态反射缓存
+
+        /// <summary>
+        /// 属性信息缓存，避免重复反射
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+
+        /// <summary>
+        /// 外键关系缓存
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, List<FKRelationAttribute>> _fkRelationCache = new ConcurrentDictionary<Type, List<FKRelationAttribute>>();
+
+        /// <summary>
+        /// 获取缓存的属性信息
+        /// </summary>
+        private PropertyInfo[] GetCachedProperties(Type type)
+        {
+            return _propertyCache.GetOrAdd(type, t => t.GetProperties());
+        }
+
+        /// <summary>
+        /// 获取缓存的外键关系
+        /// </summary>
+        private List<FKRelationAttribute> GetCachedFKRelations(Type type)
+        {
+            return _fkRelationCache.GetOrAdd(type, t =>
+            {
+                var relations = new List<FKRelationAttribute>();
+                foreach (var field in t.GetProperties())
+                {
+                    var attrs = field.GetCustomAttributes(false);
+                    foreach (var attr in attrs)
+                    {
+                        if (attr is FKRelationAttribute fkrattr)
+                        {
+                            relations.Add(fkrattr);
+                        }
+                    }
+                }
+                return relations;
+            });
+        }
+
+        #endregion
         #region 帮助系统集成
 
         /// <summary>
@@ -198,25 +243,19 @@ namespace RUINORERP.UI.BaseForm
         private List<string> SummaryStrCols { get; set; } = new List<string>();
 
         /// <summary>
-        /// 设置关联表名
+        /// 设置关联表名（性能优化版本，使用缓存）
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="exp">可为空用另一个两名方法无参的</param>
         private void InitBaseValue()
         {
             string tableName = typeof(T).Name;
-            foreach (var field in typeof(T).GetProperties())
+
+            // 使用缓存的外键关系，避免重复反射
+            var fkRelations = GetCachedFKRelations(typeof(T));
+            foreach (var fkrattr in fkRelations)
             {
-                //获取指定类型的自定义特性
-                object[] attrs = field.GetCustomAttributes(false);
-                foreach (var attr in attrs)
-                {
-                    if (attr is FKRelationAttribute)
-                    {
-                        FKRelationAttribute fkrattr = attr as FKRelationAttribute;
-                        FKValueColNameTBList.TryAdd(fkrattr.FK_IDColName, fkrattr.FKTableName);
-                    }
-                }
+                FKValueColNameTBList.TryAdd(fkrattr.FK_IDColName, fkrattr.FKTableName);
             }
 
 

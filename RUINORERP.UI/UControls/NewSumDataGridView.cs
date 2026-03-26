@@ -46,6 +46,7 @@ namespace RUINORERP.UI.UControls
     /// kryptonDataGridView1.UseSelectedColumn = MultipleChoices;
     /// 2023-11-25 优化列显示控制：this.dataGridView1.FieldNameList = UIHelper.GetFieldNameColList(typeof(T));
     /// 2025 添加了很多功能，如多选模式，批量编辑列,分页等
+    /// 2025-3-26 性能优化：添加虚拟模式支持、行号缓存、数据绑定优化
     /// </summary>
     [Serializable]
     public class NewSumDataGridView : KryptonDataGridView
@@ -57,6 +58,40 @@ namespace RUINORERP.UI.UControls
         /// </summary>
         [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
         public HashSet<string> BizInvisibleCols { get; set; } = new HashSet<string>();
+
+        #region 性能优化相关字段
+
+        /// <summary>
+        /// 是否启用虚拟模式（大数据量时自动启用）
+        /// </summary>
+        private bool _enableVirtualMode = true;
+
+        /// <summary>
+        /// 虚拟模式自动启用阈值（行数超过此值自动启用虚拟模式）
+        /// </summary>
+        private int _virtualModeThreshold = 5000;
+
+        /// <summary>
+        /// 行号缓存，避免重复计算
+        /// </summary>
+        private Dictionary<int, string> _rowNumberCache = new Dictionary<int, string>();
+
+        /// <summary>
+        /// 数据绑定锁，防止并发操作
+        /// </summary>
+        private readonly object _dataBindingLock = new object();
+
+        /// <summary>
+        /// 是否正在批量更新中
+        /// </summary>
+        private bool _isBatchUpdating = false;
+
+        /// <summary>
+        /// 延迟刷新计时器
+        /// </summary>
+        private System.Threading.Timer _deferredRefreshTimer;
+
+        #endregion
 
 
         private bool _CustomRowNo = false;
@@ -78,6 +113,34 @@ namespace RUINORERP.UI.UControls
 
             }
         }
+
+        #region 性能优化属性
+
+        /// <summary>
+        /// 获取或设置是否启用虚拟模式
+        /// </summary>
+        [Browsable(true)]
+        [Category("性能优化")]
+        [Description("是否启用虚拟模式处理大数据量，默认true")]
+        public bool EnableVirtualMode
+        {
+            get => _enableVirtualMode;
+            set => _enableVirtualMode = value;
+        }
+
+        /// <summary>
+        /// 获取或设置虚拟模式自动启用阈值
+        /// </summary>
+        [Browsable(true)]
+        [Category("性能优化")]
+        [Description("虚拟模式自动启用阈值（行数），默认5000")]
+        public int VirtualModeThreshold
+        {
+            get => _virtualModeThreshold;
+            set => _virtualModeThreshold = value;
+        }
+
+        #endregion
 
         public event EventHandler 删除选中行;
         private bool _是否使用内置右键功能 = true;
@@ -1262,7 +1325,204 @@ namespace RUINORERP.UI.UControls
             // 分页功能初始化
             InitializePaginationPanel();
 
+            // 注册虚拟模式事件（使用正确的事件名称）
+            this.CellValueNeeded += NewSumDataGridView_CellValueNeeded;
         }
+
+        #region 性能优化方法
+
+        /// <summary>
+        /// 优化的数据绑定方法（自动处理大数据量）
+        /// </summary>
+        /// <param name="dataSource">数据源</param>
+        public void BindDataOptimized(object dataSource)
+        {
+            lock (_dataBindingLock)
+            {
+                this.SuspendLayout();
+                _isBatchUpdating = true;
+                try
+                {
+                    // 清除行号缓存
+                    _rowNumberCache.Clear();
+
+                    // 先解除绑定，避免触发多次事件
+                    var oldDataSource = this.DataSource;
+                    if (oldDataSource != null)
+                    {
+                        this.DataSource = null;
+                    }
+
+                    // 检查是否需要启用虚拟模式
+                    int rowCount = GetDataSourceRowCount(dataSource);
+                    if (_enableVirtualMode && rowCount > _virtualModeThreshold)
+                    {
+                        this.VirtualMode = true;
+                        this.RowCount = rowCount;
+                        // 存储数据源供虚拟模式使用
+                        this.Tag = dataSource;
+                    }
+                    else
+                    {
+                        this.VirtualMode = false;
+                        this.DataSource = dataSource;
+                    }
+
+                    // 延迟计算合计，避免阻塞UI
+                    if (_isShowSumRow && SumColumns != null && SumColumns.Length > 0)
+                    {
+                        CalculateSummaryAsync();
+                    }
+                }
+                finally
+                {
+                    _isBatchUpdating = false;
+                    this.ResumeLayout(true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 异步计算合计行
+        /// </summary>
+        private async void CalculateSummaryAsync()
+        {
+            await Task.Run(() =>
+            {
+                // 延迟100ms，等待UI更新完成
+                Thread.Sleep(100);
+            });
+
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() =>
+                {
+                    if (!_isBatchUpdating)
+                    {
+                        SumData();
+                    }
+                }));
+            }
+            else
+            {
+                if (!_isBatchUpdating)
+                {
+                    SumData();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 获取数据源行数
+        /// </summary>
+        private int GetDataSourceRowCount(object dataSource)
+        {
+            if (dataSource == null) return 0;
+
+            if (dataSource is System.Collections.IList list)
+            {
+                return list.Count;
+            }
+
+            if (dataSource is DataTable dt)
+            {
+                return dt.Rows.Count;
+            }
+
+            if (dataSource is DataView dv)
+            {
+                return dv.Count;
+            }
+
+            if (dataSource is BindingSource bs)
+            {
+                return bs.Count;
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// 虚拟模式数据提供事件（CellValueNeeded）
+        /// </summary>
+        private void NewSumDataGridView_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
+        {
+            if (!_enableVirtualMode || this.Tag == null) return;
+
+            var dataSource = this.Tag;
+            object value = GetCellValueFromDataSource(dataSource, e.RowIndex, e.ColumnIndex);
+            e.Value = value;
+        }
+
+        /// <summary>
+        /// 从数据源获取单元格值
+        /// </summary>
+        private object GetCellValueFromDataSource(object dataSource, int rowIndex, int columnIndex)
+        {
+            try
+            {
+                if (dataSource is System.Collections.IList list && rowIndex < list.Count)
+                {
+                    var item = list[rowIndex];
+                    if (item != null && columnIndex < this.Columns.Count)
+                    {
+                        var column = this.Columns[columnIndex];
+                        if (!string.IsNullOrEmpty(column.DataPropertyName))
+                        {
+                            var property = item.GetType().GetProperty(column.DataPropertyName);
+                            if (property != null)
+                            {
+                                return property.GetValue(item, null);
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略错误，返回null
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 延迟刷新方法（防抖）
+        /// </summary>
+        public void DeferredRefresh(int delayMilliseconds = 100)
+        {
+            _deferredRefreshTimer?.Dispose();
+            _deferredRefreshTimer = new System.Threading.Timer(_ =>
+            {
+                this.Invoke(new Action(() =>
+                {
+                    if (!_isBatchUpdating)
+                    {
+                        this.Refresh();
+                    }
+                }));
+            }, null, delayMilliseconds, Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// 批量更新开始
+        /// </summary>
+        public void BeginBatchUpdate()
+        {
+            _isBatchUpdating = true;
+            this.SuspendLayout();
+        }
+
+        /// <summary>
+        /// 批量更新结束
+        /// </summary>
+        public void EndBatchUpdate()
+        {
+            _isBatchUpdating = false;
+            this.ResumeLayout(true);
+            this.Refresh();
+        }
+
+        #endregion
 
         private void CustomizeGrid_InitializeDefaultColumnCustomizeGrid(List<ColDisplayController> ColumnDisplays)
         {
@@ -3548,7 +3808,7 @@ namespace RUINORERP.UI.UControls
 
 
         /// <summary>
-        /// 合计数据
+        /// 合计数据（性能优化版本）
         /// </summary>
         private void SumData()
         {
@@ -3598,54 +3858,58 @@ namespace RUINORERP.UI.UControls
 
                 var sumRowDataDic = new Dictionary<int, decimal>();
 
-                #region 按设置的需要合计的列求和
-                Array.ForEach(SumColumns, col =>
+                #region 按设置的需要合计的列求和（性能优化）
+                // 预获取列索引，避免重复查找
+                var columnIndexCache = new Dictionary<string, int>();
+                foreach (var col in SumColumns)
                 {
                     if (!_dgvSumRow.Columns.Contains(col))
                     {
-                        return;
+                        continue;
                     }
+                    columnIndexCache[col] = _dgvSumRow.Columns[col].Index;
+                }
+
+                // 批量处理，减少方法调用开销
+                int rowCount = this.Rows.Count;
+                foreach (var kvp in columnIndexCache)
+                {
+                    var colName = kvp.Key;
+                    var colIndex = kvp.Value;
                     var tempSumVal = 0m;
-                    var colIndex = _dgvSumRow.Columns[col].Index;
-                    for (int i = 0; i < this.Rows.Count; i++)
+
+                    for (int i = 0; i < rowCount; i++)
                     {
-                        if (this.Rows[i].IsNewRow) continue;
+                        var row = this.Rows[i];
+                        if (row.IsNewRow) continue;
 
-                        if (this[colIndex, i].Value == null || this[colIndex, i].Value == DBNull.Value)
+                        var cell = row.Cells[colIndex];
+                        if (cell.Value == null || cell.Value == DBNull.Value)
                         {
                             continue;
                         }
-                        if (string.IsNullOrEmpty(this[colIndex, i].Value.ToString()))
+
+                        var cellValue = cell.Value.ToString();
+                        if (string.IsNullOrEmpty(cellValue))
                         {
                             continue;
                         }
 
-                        var tempVal = 0m;
-                        //try
-                        //{
-                        //    //这里要优化，当值为空时，可以跳过
-                        //    tempVal = (decimal)Convert.ChangeType(this[colIndex, i].Value, typeof(decimal));
-                        //}
-                        //catch
-                        //{
-                        //}
-                        //tempSumVal += tempVal;
-
-                        if (decimal.TryParse(this[colIndex, i].Value.ToString(), out decimal value))
+                        if (decimal.TryParse(cellValue, out decimal value))
                         {
                             tempSumVal += value;
                         }
                     }
                     sumRowDataDic[colIndex] = tempSumVal;
-                });
+                }
                 #endregion
 
                 if (sumRowDataDic.Count > 0)
                 {
-                    sumRowDataDic.Keys.ToList().ForEach(colIndex =>
+                    foreach (var kvp in sumRowDataDic)
                     {
-                        _dgvSumRow[colIndex, 0].Value = sumRowDataDic[colIndex];
-                    });
+                        _dgvSumRow[kvp.Key, 0].Value = kvp.Value;
+                    }
                 }
             }
             catch (Exception ex)
@@ -4292,8 +4556,7 @@ namespace RUINORERP.UI.UControls
             {
                 if (!CustomRowNo)
                 {
-                    #region 画行号
-
+                    #region 画行号（使用缓存优化）
 
                     if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
                     {
@@ -4310,8 +4573,11 @@ namespace RUINORERP.UI.UControls
                         Rectangle indexRect = e.CellBounds;
                         indexRect.Inflate(-2, -2);
 
+                        // 使用缓存的行号，避免重复ToString()
+                        string rowNumber = GetCachedRowNumber(e.RowIndex + 1);
+
                         TextRenderer.DrawText(e.Graphics,
-                            (e.RowIndex + 1).ToString(),
+                            rowNumber,
                             e.CellStyle.Font,
                             indexRect,
                             e.CellStyle.ForeColor,
@@ -4329,8 +4595,11 @@ namespace RUINORERP.UI.UControls
                     Rectangle indexRect = e.CellBounds;
                     indexRect.Inflate(-2, -2);
 
+                    // 使用缓存的总行数
+                    string totalRowCount = GetCachedRowNumber(Rows.Count) + "#";
+
                     TextRenderer.DrawText(e.Graphics,
-                        (Rows.Count + "#").ToString(),
+                        totalRowCount,
                         e.CellStyle.Font,
                         indexRect,
                         e.CellStyle.ForeColor,
@@ -4338,6 +4607,23 @@ namespace RUINORERP.UI.UControls
                     e.Handled = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取缓存的行号字符串
+        /// </summary>
+        private string GetCachedRowNumber(int rowIndex)
+        {
+            if (!_rowNumberCache.TryGetValue(rowIndex, out string rowNumber))
+            {
+                rowNumber = rowIndex.ToString();
+                // 限制缓存大小，避免内存无限增长
+                if (_rowNumberCache.Count < 10000)
+                {
+                    _rowNumberCache[rowIndex] = rowNumber;
+                }
+            }
+            return rowNumber;
         }
 
         #region 分页功能实现

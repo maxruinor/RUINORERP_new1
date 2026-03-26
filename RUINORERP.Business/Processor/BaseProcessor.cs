@@ -14,6 +14,7 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using System.Windows.Media.Media3D;
+using System.Collections.Concurrent;
 
 
 
@@ -22,12 +23,36 @@ namespace RUINORERP.Business.Processor
 
     /// <summary>
     /// GetQueryFilter  在最基础查询时。是否要将条件判断一个等级层次。是枚举类型确认，还是指定固定两个方法来指定条件呢？如 启用可用。应用时生效。基础维护时不生产（不能过滤掉)
+    /// 2025-3-26 性能优化：添加表达式编译缓存
     /// </summary>
     public class BaseProcessor
     {
         public ApplicationContext _appContext;
         public ILogger<BaseProcessor> _logger;
         public IUnitOfWorkManage _unitOfWorkManage;
+
+        #region 性能优化：表达式编译缓存
+
+        /// <summary>
+        /// 表达式编译缓存，避免重复编译
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, Delegate> _compiledExpressionCache = new ConcurrentDictionary<string, Delegate>();
+
+        /// <summary>
+        /// 获取缓存的编译后表达式
+        /// </summary>
+        private Func<T, bool> GetCachedCompiledExpression<T>(LambdaExpression expression)
+        {
+            var cacheKey = $"{typeof(T).FullName}_{expression.ToString()}";
+
+            return (Func<T, bool>)_compiledExpressionCache.GetOrAdd(cacheKey, key =>
+            {
+                return expression.Compile();
+            });
+        }
+
+        #endregion
+
         public BaseProcessor(ILogger<BaseProcessor> logger, IUnitOfWorkManage unitOfWorkManage, ApplicationContext appContext = null)
         {
             _logger = logger;

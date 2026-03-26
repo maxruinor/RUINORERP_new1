@@ -30,7 +30,7 @@ namespace RUINORERP.Business
     /// <summary>
     /// 销售订单
     /// </summary>
-    public partial class tb_SaleOrderController<T>:BaseController<T> where T : class
+    public partial class tb_SaleOrderController<T> : BaseController<T> where T : class
     {
         /// <summary>
         /// 本为私有修改为公有，暴露出来方便使用
@@ -38,30 +38,30 @@ namespace RUINORERP.Business
         //public readonly IUnitOfWorkManage _unitOfWorkManage;
         //public readonly ILogger<BaseController<T>> _logger;
         public Itb_SaleOrderServices _tb_SaleOrderServices { get; set; }
-        private readonly EventDrivenCacheManager _eventDrivenCacheManager; 
-       // private readonly ApplicationContext _appContext;
-       
-        public tb_SaleOrderController(ILogger<tb_SaleOrderController<T>> logger, IUnitOfWorkManage unitOfWorkManage,tb_SaleOrderServices tb_SaleOrderServices ,EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null): base(logger, unitOfWorkManage, appContext)
+        private readonly EventDrivenCacheManager _eventDrivenCacheManager;
+        // private readonly ApplicationContext _appContext;
+
+        public tb_SaleOrderController(ILogger<tb_SaleOrderController<T>> logger, IUnitOfWorkManage unitOfWorkManage, tb_SaleOrderServices tb_SaleOrderServices, EventDrivenCacheManager eventDrivenCacheManager, ApplicationContext appContext = null) : base(logger, unitOfWorkManage, appContext)
         {
             _logger = logger;
-           _unitOfWorkManage = unitOfWorkManage;
-           _tb_SaleOrderServices = tb_SaleOrderServices;
-           _appContext = appContext;
-           _eventDrivenCacheManager = eventDrivenCacheManager;
+            _unitOfWorkManage = unitOfWorkManage;
+            _tb_SaleOrderServices = tb_SaleOrderServices;
+            _appContext = appContext;
+            _eventDrivenCacheManager = eventDrivenCacheManager;
         }
-      
-        
+
+
         public ValidationResult Validator(tb_SaleOrder info)
         {
 
-           // tb_SaleOrderValidator validator = new tb_SaleOrderValidator();
-           tb_SaleOrderValidator validator = _appContext.GetRequiredService<tb_SaleOrderValidator>();
+            // tb_SaleOrderValidator validator = new tb_SaleOrderValidator();
+            tb_SaleOrderValidator validator = _appContext.GetRequiredService<tb_SaleOrderValidator>();
             ValidationResult results = validator.Validate(info);
             return results;
         }
-        
+
         #region 扩展方法
-        
+
         /// <summary>
         /// 某字段是否存在
         /// </summary>
@@ -71,8 +71,8 @@ namespace RUINORERP.Business
         {
             return await _unitOfWorkManage.GetDbClient().Queryable<T>().Where(exp).AnyAsync();
         }
-      
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
@@ -111,49 +111,59 @@ namespace RUINORERP.Business
             }
             return rr;
         }
-        
-        
+
+
         /// <summary>
         /// 雪花ID模式下的新增和修改
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public async override Task<ReturnResults<T>>  BaseSaveOrUpdate(T model)
+        public async override Task<ReturnResults<T>> BaseSaveOrUpdate(T model)
         {
             ReturnResults<T> rr = new ReturnResults<T>();
             tb_SaleOrder entity = model as tb_SaleOrder;
             T Returnobj;
+
+            // 获取明细数据（从tb_SaleOrderDetails属性中获取）
+            List<tb_SaleOrderDetail> details = null;
+            if (entity != null && entity.tb_SaleOrderDetails != null)
+            {
+                details = entity.tb_SaleOrderDetails.ToList();
+            }
+
+            bool isUpdate = entity?.SOrder_ID > 0;
+
             try
             {
-                //生成时暂时只考虑了一个主键的情况
-                if (entity.SOrder_ID > 0)
+                // 使用Controller中的带事务的保存方法
+                // 将 this 强制转换为具体的 tb_SaleOrderController<tb_SaleOrder> 类型
+                var controller = this as tb_SaleOrderController<tb_SaleOrder>;
+                var saveResult = await controller.SaveWithDetailsAsync(entity, details, isUpdate);
+
+                if (saveResult.Succeeded)
                 {
-                    bool rs = await _tb_SaleOrderServices.Update(entity);
-                    if (rs)
-                    {
-                        _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
-                    }
+                    _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
                     Returnobj = entity as T;
+                    rr.ReturnObject = Returnobj;
+                    rr.Succeeded = true;
+                    entity.ActionStatus = ActionStatus.无操作;
                 }
                 else
                 {
-                    Returnobj = await _tb_SaleOrderServices.AddReEntityAsync(entity) as T ;
-                    _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
+                    rr.Succeeded = false;
+                    rr.ErrorMsg = saveResult.ErrorMsg;
                 }
-
-                rr.ReturnObject = Returnobj;
-                rr.Succeeded = true;
-                entity.ActionStatus = ActionStatus.无操作;
             }
             catch (Exception ex)
             {
-                ////这里需要进一步优化处理？
-                throw ex;
+                rr.Succeeded = false;
+                rr.ErrorMsg = ex.Message;
             }
+
             return rr;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync(string wheresql) 
+
+        public async override Task<List<T>> BaseQueryAsync(string wheresql)
         {
             List<T> list = await _tb_SaleOrderServices.QueryAsync(wheresql) as List<T>;
             foreach (var item in list)
@@ -164,11 +174,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 _eventDrivenCacheManager.UpdateEntityList<T>(list);
-             }
+            }
             return list;
         }
-        
-        public async override Task<List<T>> BaseQueryAsync() 
+
+        public async override Task<List<T>> BaseQueryAsync()
         {
             List<T> list = await _tb_SaleOrderServices.QueryAsync() as List<T>;
             foreach (var item in list)
@@ -179,11 +189,11 @@ namespace RUINORERP.Business
             if (list != null)
             {
                 _eventDrivenCacheManager.UpdateEntityList<T>(list);
-             }
+            }
             return list;
         }
-        
-        
+
+
         public async override Task<bool> BaseDeleteAsync(T model)
         {
             tb_SaleOrder entity = model as tb_SaleOrder;
@@ -195,35 +205,35 @@ namespace RUINORERP.Business
             }
             return rs;
         }
-        
+
         public async override Task<bool> BaseDeleteAsync(List<T> models)
         {
-            bool rs=false;
+            bool rs = false;
             List<tb_SaleOrder> entitys = models as List<tb_SaleOrder>;
             int c = await _unitOfWorkManage.GetDbClient().Deleteable<tb_SaleOrder>(entitys).ExecuteCommandAsync();
-            if (c>0)
+            if (c > 0)
             {
-                rs=true;
+                rs = true;
                 _eventDrivenCacheManager.DeleteEntityList<tb_SaleOrder>(entitys);
             }
             return rs;
         }
-        
+
         public override ValidationResult BaseValidator(T info)
         {
             //tb_SaleOrderValidator validator = new tb_SaleOrderValidator();
-           tb_SaleOrderValidator validator = _appContext.GetRequiredService<tb_SaleOrderValidator>();
+            tb_SaleOrderValidator validator = _appContext.GetRequiredService<tb_SaleOrderValidator>();
             ValidationResult results = validator.Validate(info as tb_SaleOrder);
             return results;
         }
-        
-        
-        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike,object dto) 
+
+
+        public async override Task<List<T>> BaseQueryByAdvancedAsync(bool useLike, object dto)
         {
-            var  querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<T>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
-        
+
 
         /// <summary>
         /// 11
@@ -236,8 +246,8 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-                             //缓存当前编辑的对象。如果撤销就回原来的值
-                T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
             try
             {
 
@@ -247,37 +257,37 @@ namespace RUINORERP.Business
                     //Undo操作会执行到的代码
                     CloneHelper.SetValues<T>(entity, oldobj);
                 };
-                       // 开启事务，保证数据一致性
+                // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
-            if (entity.SOrder_ID > 0)
-            {
-            
-                             rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
-                        .Include(m => m.tb_SaleOuts)
-                    .Include(m => m.tb_PurOrders)
-                    .Include(m => m.tb_SaleOrderDetails)
-                    .Include(m => m.tb_ProductionPlans)
-                    .Include(m => m.tb_OrderPackings)
-                    .ExecuteCommandAsync();
-                 }
-        else    
-        {
-                        rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
-                .Include(m => m.tb_SaleOuts)
-                .Include(m => m.tb_PurOrders)
-                .Include(m => m.tb_SaleOrderDetails)
-                .Include(m => m.tb_ProductionPlans)
-                .Include(m => m.tb_OrderPackings)
-         
-                .ExecuteCommandAsync();
-                                          
-                     
-        }
-        
+
+                if (entity.SOrder_ID > 0)
+                {
+
+                    rs = await _unitOfWorkManage.GetDbClient().UpdateNav<tb_SaleOrder>(entity as tb_SaleOrder)
+               //.Include(m => m.tb_SaleOuts)
+           //.Include(m => m.tb_PurOrders)
+           .Include(m => m.tb_SaleOrderDetails)
+           //.Include(m => m.tb_ProductionPlans)
+           //.Include(m => m.tb_OrderPackings)
+           .ExecuteCommandAsync();
+                }
+                else
+                {
+                    rs = await _unitOfWorkManage.GetDbClient().InsertNav<tb_SaleOrder>(entity as tb_SaleOrder)
+            //.Include(m => m.tb_SaleOuts)
+            //.Include(m => m.tb_PurOrders)
+            .Include(m => m.tb_SaleOrderDetails)
+            //.Include(m => m.tb_ProductionPlans)
+            //.Include(m => m.tb_OrderPackings)
+
+            .ExecuteCommandAsync();
+
+
+                }
+
                 // 注意信息的完整性
                 _unitOfWorkManage.CommitTran();
-                rsms.ReturnObject = entity as T ;
+                rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.SOrder_ID;
                 rsms.Succeeded = rs;
             }
@@ -293,10 +303,10 @@ namespace RUINORERP.Business
 
             return rsms;
         }
-        
+
         #endregion
-        
-        
+
+
         #region override mothed
 
         public async override Task<List<T>> BaseQueryByAdvancedNavAsync(bool useLike, object dto)
@@ -313,161 +323,161 @@ namespace RUINORERP.Business
                         .Includes(m => m.tb_SaleOrderDetails)
                         .Includes(m => m.tb_ProductionPlans)
                         .Includes(m => m.tb_OrderPackings)
-                                        .WhereCustom(useLike, dto);;
-            return await querySqlQueryable.ToListAsync()as List<T>;
+                                        .WhereCustom(useLike, dto); ;
+            return await querySqlQueryable.ToListAsync() as List<T>;
         }
 
 
-        public async override Task<bool> BaseDeleteByNavAsync(T model) 
+        public async override Task<bool> BaseDeleteByNavAsync(T model)
         {
             tb_SaleOrder entity = model as tb_SaleOrder;
-             bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOrder>(m => m.SOrder_ID== entity.SOrder_ID)
-                                .Include(m => m.tb_SaleOuts)
-                        .Include(m => m.tb_PurOrders)
-                        .Include(m => m.tb_SaleOrderDetails)
-                        .Include(m => m.tb_ProductionPlans)
-                        .Include(m => m.tb_OrderPackings)
-                                        .ExecuteCommandAsync();
+            bool rs = await _unitOfWorkManage.GetDbClient().DeleteNav<tb_SaleOrder>(m => m.SOrder_ID == entity.SOrder_ID)
+                               .Include(m => m.tb_SaleOuts)
+                       .Include(m => m.tb_PurOrders)
+                       .Include(m => m.tb_SaleOrderDetails)
+                       .Include(m => m.tb_ProductionPlans)
+                       .Include(m => m.tb_OrderPackings)
+                                       .ExecuteCommandAsync();
             if (rs)
             {
                 //////生成时暂时只考虑了一个主键的情况
-                 _eventDrivenCacheManager.DeleteEntity<T>(model);
+                _eventDrivenCacheManager.DeleteEntity<T>(model);
             }
             return rs;
         }
         #endregion
-        
-        
-        
+
+
+
         public tb_SaleOrder AddReEntity(tb_SaleOrder entity)
         {
-            tb_SaleOrder AddEntity =  _tb_SaleOrderServices.AddReEntity(entity);
-     
-             _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(AddEntity);
+            tb_SaleOrder AddEntity = _tb_SaleOrderServices.AddReEntity(entity);
+
+            _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
-         public async Task<tb_SaleOrder> AddReEntityAsync(tb_SaleOrder entity)
+
+        public async Task<tb_SaleOrder> AddReEntityAsync(tb_SaleOrder entity)
         {
             tb_SaleOrder AddEntity = await _tb_SaleOrderServices.AddReEntityAsync(entity);
             _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(AddEntity);
             entity.ActionStatus = ActionStatus.无操作;
             return AddEntity;
         }
-        
+
         public async Task<long> AddAsync(tb_SaleOrder entity)
         {
             long id = await _tb_SaleOrderServices.Add(entity);
-            if(id>0)
+            if (id > 0)
             {
-                 _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
+                _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
             }
             return id;
         }
-        
+
         public async Task<List<long>> AddAsync(List<tb_SaleOrder> infos)
         {
             List<long> ids = await _tb_SaleOrderServices.Add(infos);
-            if(ids.Count>0)//成功的个数 这里缓存 对不对呢？
+            if (ids.Count > 0)//成功的个数 这里缓存 对不对呢？
             {
-                 _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(infos);
+                _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(infos);
             }
             return ids;
         }
-        
-        
+
+
         public async Task<bool> DeleteAsync(tb_SaleOrder entity)
         {
             bool rs = await _tb_SaleOrderServices.Delete(entity);
             if (rs)
             {
                 _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(entity);
-                
+
             }
             return rs;
         }
-        
+
         public async Task<bool> UpdateAsync(tb_SaleOrder entity)
         {
             bool rs = await _tb_SaleOrderServices.Update(entity);
             if (rs)
             {
-                 _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(entity);
+                _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(entity);
                 entity.ActionStatus = ActionStatus.无操作;
             }
             return rs;
         }
-        
+
         public async Task<bool> DeleteAsync(long id)
         {
             bool rs = await _tb_SaleOrderServices.DeleteById(id);
             if (rs)
             {
-               _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(id);
+                _eventDrivenCacheManager.DeleteEntity<tb_SaleOrder>(id);
             }
             return rs;
         }
-        
-         public async Task<bool> DeleteAsync(long[] ids)
+
+        public async Task<bool> DeleteAsync(long[] ids)
         {
             bool rs = await _tb_SaleOrderServices.DeleteByIds(ids);
             if (rs)
             {
-            
-                   _eventDrivenCacheManager.DeleteEntities<tb_SaleOrder>(ids.Cast<object>().ToArray());
+
+                _eventDrivenCacheManager.DeleteEntities<tb_SaleOrder>(ids.Cast<object>().ToArray());
             }
             return rs;
         }
-        
+
         public virtual async Task<List<tb_SaleOrder>> QueryAsync()
         {
-            List<tb_SaleOrder> list = await  _tb_SaleOrderServices.QueryAsync();
+            List<tb_SaleOrder> list = await _tb_SaleOrderServices.QueryAsync();
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-     
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
+
         public virtual List<tb_SaleOrder> Query()
         {
-            List<tb_SaleOrder> list =  _tb_SaleOrderServices.Query();
+            List<tb_SaleOrder> list = _tb_SaleOrderServices.Query();
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-    
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
+
         public virtual List<tb_SaleOrder> Query(string wheresql)
         {
-            List<tb_SaleOrder> list =  _tb_SaleOrderServices.Query(wheresql);
+            List<tb_SaleOrder> list = _tb_SaleOrderServices.Query(wheresql);
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-  
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
-        public virtual async Task<List<tb_SaleOrder>> QueryAsync(string wheresql) 
+
+        public virtual async Task<List<tb_SaleOrder>> QueryAsync(string wheresql)
         {
             List<tb_SaleOrder> list = await _tb_SaleOrderServices.QueryAsync(wheresql);
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
- 
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
+
 
 
         /// <summary>
@@ -482,40 +492,40 @@ namespace RUINORERP.Business
             {
                 item.AcceptChanges();
             }
-   
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
-        
-        
+
+
+
         /// <summary>
         /// 无参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync()
+        public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync()
         {
             List<tb_SaleOrder> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
-                               .Includes(t => t.tb_currency )
-                               .Includes(t => t.tb_fm_account )
-                               .Includes(t => t.tb_projectgroup )
-                               .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_paymentmethod )
-                                            .Includes(t => t.tb_SaleOuts )
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOrderDetails )
-                                .Includes(t => t.tb_ProductionPlans )
-                                .Includes(t => t.tb_OrderPackings )
+                               .Includes(t => t.tb_currency)
+                               .Includes(t => t.tb_fm_account)
+                               .Includes(t => t.tb_projectgroup)
+                               .Includes(t => t.tb_customervendor)
+                               .Includes(t => t.tb_employee)
+                               .Includes(t => t.tb_paymentmethod)
+                                            .Includes(t => t.tb_SaleOuts)
+                                .Includes(t => t.tb_PurOrders)
+                                .Includes(t => t.tb_SaleOrderDetails)
+                                .Includes(t => t.tb_ProductionPlans)
+                                .Includes(t => t.tb_OrderPackings)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
- 
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
 
@@ -524,72 +534,72 @@ namespace RUINORERP.Business
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync(Expression<Func<tb_SaleOrder, bool>> exp)
+        public virtual async Task<List<tb_SaleOrder>> QueryByNavAsync(Expression<Func<tb_SaleOrder, bool>> exp)
         {
             List<tb_SaleOrder> list = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(exp)
-                               .Includes(t => t.tb_currency )
-                               .Includes(t => t.tb_fm_account )
-                               .Includes(t => t.tb_projectgroup )
-                               .Includes(t => t.tb_customervendor )
-                               .Includes(t => t.tb_employee )
-                               .Includes(t => t.tb_paymentmethod )
-                                            .Includes(t => t.tb_SaleOuts )
-                                .Includes(t => t.tb_PurOrders )
-                                .Includes(t => t.tb_SaleOrderDetails )
-                                .Includes(t => t.tb_ProductionPlans )
-                                .Includes(t => t.tb_OrderPackings )
+                               .Includes(t => t.tb_currency)
+                               .Includes(t => t.tb_fm_account)
+                               .Includes(t => t.tb_projectgroup)
+                               .Includes(t => t.tb_customervendor)
+                               .Includes(t => t.tb_employee)
+                               .Includes(t => t.tb_paymentmethod)
+                                            .Includes(t => t.tb_SaleOuts)
+                                .Includes(t => t.tb_PurOrders)
+                                .Includes(t => t.tb_SaleOrderDetails)
+                                .Includes(t => t.tb_ProductionPlans)
+                                .Includes(t => t.tb_OrderPackings)
                         .ToListAsync();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
-  
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
-        
+
+
         /// <summary>
         /// 带参数异步导航查询
         /// </summary>
         /// <returns>数据列表</returns>
-         public virtual List<tb_SaleOrder> QueryByNav(Expression<Func<tb_SaleOrder, bool>> exp)
+        public virtual List<tb_SaleOrder> QueryByNav(Expression<Func<tb_SaleOrder, bool>> exp)
         {
             List<tb_SaleOrder> list = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(exp)
-                            .Includes(t => t.tb_currency )
-                            .Includes(t => t.tb_fm_account )
-                            .Includes(t => t.tb_projectgroup )
-                            .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_paymentmethod )
-                                        .Includes(t => t.tb_SaleOuts )
-                            .Includes(t => t.tb_PurOrders )
-                            .Includes(t => t.tb_SaleOrderDetails )
-                            .Includes(t => t.tb_ProductionPlans )
-                            .Includes(t => t.tb_OrderPackings )
+                            .Includes(t => t.tb_currency)
+                            .Includes(t => t.tb_fm_account)
+                            .Includes(t => t.tb_projectgroup)
+                            .Includes(t => t.tb_customervendor)
+                            .Includes(t => t.tb_employee)
+                            .Includes(t => t.tb_paymentmethod)
+                                        .Includes(t => t.tb_SaleOuts)
+                            .Includes(t => t.tb_PurOrders)
+                            .Includes(t => t.tb_SaleOrderDetails)
+                            .Includes(t => t.tb_ProductionPlans)
+                            .Includes(t => t.tb_OrderPackings)
                         .ToList();
-            
+
             foreach (var item in list)
             {
                 item.AcceptChanges();
             }
-            
-     
-             _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
+
+
+            _eventDrivenCacheManager.UpdateEntityList<tb_SaleOrder>(list);
             return list;
         }
-        
-        
+
+
 
         /// <summary>
         /// 高级查询
         /// </summary>
         /// <returns></returns>
-        public async Task<List<tb_SaleOrder>> QueryByAdvancedAsync(bool useLike,object dto)
+        public async Task<List<tb_SaleOrder>> QueryByAdvancedAsync(bool useLike, object dto)
         {
-            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().WhereCustom(useLike,dto);
+            var querySqlQueryable = _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().WhereCustom(useLike, dto);
             return await querySqlQueryable.ToListAsync();
         }
 
@@ -600,41 +610,41 @@ namespace RUINORERP.Business
             T entity = await _tb_SaleOrderServices.QueryByIdAsync(id) as T;
             return entity;
         }
-        
-        
-        
+
+
+
         public override async Task<T> BaseQueryByIdNavAsync(object id)
         {
             tb_SaleOrder entity = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>().Where(w => w.SOrder_ID == (long)id)
-                             .Includes(t => t.tb_currency )
-                            .Includes(t => t.tb_fm_account )
-                            .Includes(t => t.tb_projectgroup )
-                            .Includes(t => t.tb_customervendor )
-                            .Includes(t => t.tb_employee )
-                            .Includes(t => t.tb_paymentmethod )
-                        
+                             .Includes(t => t.tb_currency)
+                            .Includes(t => t.tb_fm_account)
+                            .Includes(t => t.tb_projectgroup)
+                            .Includes(t => t.tb_customervendor)
+                            .Includes(t => t.tb_employee)
+                            .Includes(t => t.tb_paymentmethod)
 
-                                            .Includes(t => t.tb_SaleOuts )
-                                            .Includes(t => t.tb_PurOrders )
-                                            .Includes(t => t.tb_SaleOrderDetails )
-                                            .Includes(t => t.tb_ProductionPlans )
-                                            .Includes(t => t.tb_OrderPackings )
+
+                                            .Includes(t => t.tb_SaleOuts)
+                                            .Includes(t => t.tb_PurOrders)
+                                            .Includes(t => t.tb_SaleOrderDetails)
+                                            .Includes(t => t.tb_ProductionPlans)
+                                            .Includes(t => t.tb_OrderPackings)
                                 .FirstAsync();
-            if(entity!=null)
+            if (entity != null)
             {
                 entity.AcceptChanges();
             }
 
-         
-             _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
+
+            _eventDrivenCacheManager.UpdateEntity<tb_SaleOrder>(entity);
             return entity as T;
         }
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
     }
 }
 

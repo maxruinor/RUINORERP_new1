@@ -18,7 +18,6 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using System.Linq;
 using RUINORERP.Business.CommService;
-using RUINOR.Core;
 using RUINORERP.Common.Helper;
 using System.Security.Policy;
 using AutoMapper;
@@ -28,6 +27,7 @@ using System.Collections;
 using RUINORERP.Business.BizMapperService;
 using System.Threading;
 using RUINORERP.Business.EntityLoadService;
+using RUINOR.Core;
 
 namespace RUINORERP.Business
 {
@@ -39,6 +39,99 @@ namespace RUINORERP.Business
             ReturnResults<T> result = new ReturnResults<T>();
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值
+        }
+
+        /// <summary>
+        /// 保存订单及明细（带事务保护）
+        /// </summary>
+        public async Task<ReturnResults<tb_SaleOrder>> SaveWithDetailsAsync(tb_SaleOrder order, List<tb_SaleOrderDetail> details, bool isUpdate)
+        {
+            ReturnResults<tb_SaleOrder> result = new ReturnResults<tb_SaleOrder>();
+            
+            var db = _unitOfWorkManage.GetDbClient();
+            
+            try
+            {
+                // 开启事务
+                _unitOfWorkManage.BeginTran();
+                
+                try
+                {
+                    // 1. 保存主表
+                    if (isUpdate)
+                    {
+                        await db.Updateable(order).ExecuteCommandAsync();
+                    }
+                    else
+                    {
+                        await db.Insertable(order).ExecuteReturnSnowflakeIdAsync();
+                    }
+                    
+                    // 2. 处理明细
+                    if (order.SOrder_ID > 0 && details != null && details.Any())
+                    {
+                        // 2.1 查询已有明细
+                        var existingDetails = await db.Queryable<tb_SaleOrderDetail>()
+                            .Where(fk => fk.SOrder_ID == order.SOrder_ID)
+                            .ToListAsync();
+                        
+                        //// 获取主键
+                        //string pkName = "SaleOrderDetail_ID";
+                        
+                        // 2.2 分类处理
+                        var existingIds = existingDetails.Select(d => d.SaleOrderDetail_ID).ToHashSet();
+                        var currentIds = details.Where(d => d.SaleOrderDetail_ID > 0)
+                                               .Select(d => d.SaleOrderDetail_ID).ToHashSet();
+                        
+                        // 删除已移除的明细
+                        var idsToDelete = existingIds.Except(currentIds).ToList();
+                        if (idsToDelete.Any())
+                        {
+                            await db.Deleteable<tb_SaleOrderDetail>()
+                                .In(idsToDelete.ToArray())
+                                .ExecuteCommandAsync();
+                        }
+                        
+                        // 更新现有明细
+                        var detailsToUpdate = details.Where(d => d.SaleOrderDetail_ID > 0 && existingIds.Contains(d.SaleOrderDetail_ID)).ToList();
+                        if (detailsToUpdate.Any())
+                        {
+                            await db.Updateable(detailsToUpdate).ExecuteCommandAsync();
+                        }
+                        
+                        // 新增新明细
+                        var detailsToAdd = details.Where(d => d.SaleOrderDetail_ID == 0).ToList();
+                        if (detailsToAdd.Any())
+                        {
+                            foreach (var detail in detailsToAdd)
+                            {
+                                detail.SOrder_ID = order.SOrder_ID;
+                            }
+                            await db.Insertable(detailsToAdd).ExecuteCommandAsync();
+                        }
+                    }
+                    
+                    // 提交事务
+                    _unitOfWorkManage.CommitTran();
+                    
+                    result.Succeeded = true;
+                    result.ReturnObject = order;
+                }
+                catch (Exception ex)
+                {
+                    _unitOfWorkManage.RollbackTran();
+                    result.Succeeded = false;
+                    result.ErrorMsg = ex.Message;
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Succeeded = false;
+                result.ErrorMsg = ex.Message;
+            }
+            
+            return result;
         }
 
         /// <summary>

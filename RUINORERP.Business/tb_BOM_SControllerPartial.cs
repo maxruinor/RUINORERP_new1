@@ -133,7 +133,7 @@ namespace RUINORERP.Business
         //删除指定配方主表和明细，同时清空产品明细中的对应关系，要使用事务处理
         public async Task<ReturnResults<T>> DeleteBOM_SDetail_Clear_ProdDetailMapping(T bom)
         {
-            ReturnResults<T> rrs = new Business.ReturnResults<T>();
+            ReturnResults<T> rrs = new ReturnResults<T>();
             try
             {
                 tb_BOM_S _bom = bom as tb_BOM_S;

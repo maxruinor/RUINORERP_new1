@@ -1049,7 +1049,7 @@ namespace RUINORERP.Business
         public async Task<ReturnResults<tb_FM_ReceivablePayable>> WriteOffBadDebt(tb_FM_ReceivablePayable receivablePayable, string reason)
         {
 
-            ReturnResults<tb_FM_ReceivablePayable> returnResults = new Business.ReturnResults<tb_FM_ReceivablePayable>();
+            ReturnResults<tb_FM_ReceivablePayable> returnResults = new ReturnResults<tb_FM_ReceivablePayable>();
 
             // 0. 验证
             if (receivablePayable == null)

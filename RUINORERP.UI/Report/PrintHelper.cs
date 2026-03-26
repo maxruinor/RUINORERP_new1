@@ -23,7 +23,7 @@ namespace RUINORERP.UI.Report
     {
         /// <summary>
         /// 获取打印机（支持优先级配置）
-        /// 优先级: 菜单个人配置 > 用户业务类型配置 > 用户全局配置 > 系统配置 > 本地默认
+        /// 优先级: 菜单个人配置 > 系统配置 > 本地默认
         /// </summary>
         /// <param name="printConfig">系统打印配置</param>
         /// <param name="bizName">业务名称</param>
@@ -40,22 +40,22 @@ namespace RUINORERP.UI.Report
             var menuPrinter = GetMenuPersonalPrinter(printConfig);
             if (!string.IsNullOrEmpty(menuPrinter))
             {
-                MainForm.Instance.uclog.AddLog($"使用菜单个人打印机: {menuPrinter}");
+                MainForm.Instance.uclog.AddLog($"[打印配置] 使用菜单个人打印机: {menuPrinter}");
                 return menuPrinter;
             }
          
 
-            // 优先级4: 系统配置的该单据类型打印机
+            // 优先级2: 系统配置的该单据类型打印机
             var systemPrinter = GetSystemPrinter(printConfig);
             if (!string.IsNullOrEmpty(systemPrinter))
             {
-                MainForm.Instance.uclog.AddLog($"使用系统打印机: {systemPrinter}");
+                MainForm.Instance.uclog.AddLog($"[打印配置] 使用系统打印机: {systemPrinter}");
                 return systemPrinter;
             }
 
-            // 优先级5: 客户端本地默认打印机
+            // 优先级3: 客户端本地默认打印机
             var localPrinter = LocalPrinter.DefaultPrinter();
-            MainForm.Instance.uclog.AddLog($"使用本地默认打印机: {localPrinter}");
+            MainForm.Instance.uclog.AddLog($"[打印配置] 使用本地默认打印机: {localPrinter}");
             return localPrinter;
         }
 
@@ -141,6 +141,7 @@ namespace RUINORERP.UI.Report
                             .First();
                         if (template != null && template.TemplateFileStream != null)
                         {
+                            MainForm.Instance.uclog.AddLog($"[打印配置] 使用个人打印模板: {template.Template_Name}");
                             return template;
                         }
                     }

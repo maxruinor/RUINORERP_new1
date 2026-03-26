@@ -648,8 +648,8 @@ namespace RUINORERP.UI.Report
 
                 var configData = new MenuPrintConfigData
                 {
-                    PrinterName = printConfig.PrinterName ?? string.Empty,
-                    PrinterSelected = printConfig.PrinterSelected ?? false,
+                    PrinterName = cmbPrinterList.SelectedItem?.ToString() ?? string.Empty,
+                    PrinterSelected = cmbPrinterList.SelectedItem != null,
                     Landscape = printConfig.Landscape ?? false,
                     TemplateId = 0,
                     TemplateName = string.Empty,
@@ -716,6 +716,7 @@ namespace RUINORERP.UI.Report
                 {
                     menuPersonalization.UsePersonalPrintConfig = false;
                     menuPersonalization.PrintConfigJson = null;
+                    menuPersonalization.PrintConfigDict = null;
 
                     await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
 

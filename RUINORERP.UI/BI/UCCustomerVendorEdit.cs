@@ -465,7 +465,7 @@ namespace RUINORERP.UI.BI
             frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
 
-            var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P).Name);
+            var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(P));
             string BizTypeText = string.Empty;
             // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
             if (bizType == RUINORERP.Global.BizType.无对应数据)

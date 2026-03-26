@@ -201,7 +201,7 @@ namespace RUINORERP.UI.AdvancedUIModule
                     frmedit.kryptonPanel1.Controls.Add(ucBaseList);
 
                     // 设置窗口标题
-                    var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(entityTypeName);
+                    var bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(_targetEntityType);
                     string BizTypeText = string.Empty;
                     // 如果业务类型为"无对应数据"，则尝试获取实体的描述信息
                     if (bizType == RUINORERP.Global.BizType.无对应数据)

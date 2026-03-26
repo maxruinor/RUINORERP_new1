@@ -79,9 +79,9 @@
             // 
             this.chkSelectTemplatePrint.Location = new System.Drawing.Point(35, 51);
             this.chkSelectTemplatePrint.Name = "chkSelectTemplatePrint";
-            this.chkSelectTemplatePrint.Size = new System.Drawing.Size(101, 20);
+            this.chkSelectTemplatePrint.Size = new System.Drawing.Size(127, 20);
             this.chkSelectTemplatePrint.TabIndex = 22;
-            this.chkSelectTemplatePrint.Values.Text = "选择打印模板";
+            this.chkSelectTemplatePrint.Values.Text = "手动选择打印模板";
             // 
             // UCUserPersonalizedEdit
             // 

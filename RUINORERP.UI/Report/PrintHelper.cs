@@ -85,10 +85,7 @@ namespace RUINORERP.UI.Report
                     var config = menuPersonalization.PrintConfigDict;
                     if (config.PrinterSelected && !string.IsNullOrEmpty(config.PrinterName))
                     {
-                        if (CheckPrinterAvailable(config.PrinterName))
-                        {
-                            return config.PrinterName;
-                        }
+                        return config.PrinterName;
                     }
                 }
             }
@@ -107,6 +104,51 @@ namespace RUINORERP.UI.Report
             if (printConfig?.PrinterSelected == true && !string.IsNullOrEmpty(printConfig.PrinterName))
             {
                 return printConfig.PrinterName;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取个人配置的打印模板
+        /// 优先级: 菜单个人配置模板 > 系统默认模板
+        /// </summary>
+        private static tb_PrintTemplate GetPersonalPrintTemplate(tb_PrintConfig printConfig)
+        {
+            try
+            {
+                if (printConfig == null) return null;
+
+                var menuInfo = MainForm.Instance.AppContext.Db.Queryable<tb_MenuInfo>()
+                    .Where(m => m.BizType == printConfig.BizType)
+                    .First();
+                if (menuInfo == null) return null;
+
+                var userPersonalizedId = MainForm.Instance.AppContext.CurrentUser_Role_Personalized?.UserPersonalizedID;
+                if (userPersonalizedId == null || userPersonalizedId == 0) return null;
+
+                var menuPersonalization = MainForm.Instance.AppContext.Db.Queryable<tb_UIMenuPersonalization>()
+                    .Where(m => m.MenuID == menuInfo.MenuID && m.UserPersonalizedID == userPersonalizedId)
+                    .First();
+
+                if (menuPersonalization?.UsePersonalPrintConfig == true && menuPersonalization.PrintConfigDict != null)
+                {
+                    var config = menuPersonalization.PrintConfigDict;
+                    if (config.TemplateId > 0)
+                    {
+                        // 根据个人配置中的模板ID获取模板
+                        var template = MainForm.Instance.AppContext.Db.Queryable<tb_PrintTemplate>()
+                            .Where(t => t.ID == config.TemplateId)
+                            .First();
+                        if (template != null && template.TemplateFileStream != null)
+                        {
+                            return template;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.LogWarning(ex, "获取菜单个人打印模板失败");
             }
             return null;
         }
@@ -229,15 +271,25 @@ namespace RUINORERP.UI.Report
                         if (printConfig.tb_PrintTemplates == null)
                         {
                             MessageBox.Show("请先配置正确的打印模板！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            ////释放资源
                             FReport.Dispose();
                             return rs;
                         }
-                        var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
-                        if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
+
+                        // 优先使用个人配置的模板
+                        var printTemplate = GetPersonalPrintTemplate(printConfig);
+                        if (printTemplate == null)
                         {
-                            printTemplate = printConfig.tb_PrintTemplates[0];
-                            MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                            // 使用系统默认模板
+                            printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
+                            if (printTemplate == null && printConfig.tb_PrintTemplates.Count > 0)
+                            {
+                                printTemplate = printConfig.tb_PrintTemplates[0];
+                                MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                            }
+                        }
+                        else
+                        {
+                            MainForm.Instance.uclog.AddLog($"使用个人打印模板: {printTemplate.Template_Name}");
                         }
 
                         if (printTemplate != null && printTemplate.TemplateFileStream != null)
@@ -418,15 +470,24 @@ namespace RUINORERP.UI.Report
             }
             else
             {
-                //报表控件注册数据
                 FReport.RegisterData(objlist, "rd");
                 FReport.RegisterData(currUserInfo, "currUserInfo");
                 FReport.RegisterData(companyInfo, "companyInfo");
-                var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
-                if (printTemplate == null && printConfig != null && printConfig.tb_PrintTemplates.Count > 0)
+
+                // 优先使用个人配置的模板
+                var printTemplate = GetPersonalPrintTemplate(printConfig);
+                if (printTemplate == null)
                 {
-                    printTemplate = printConfig.tb_PrintTemplates[0];
-                    MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                    printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
+                    if (printTemplate == null && printConfig.tb_PrintTemplates.Count > 0)
+                    {
+                        printTemplate = printConfig.tb_PrintTemplates[0];
+                        MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                    }
+                }
+                else
+                {
+                    MainForm.Instance.uclog.AddLog($"使用个人打印模板: {printTemplate.Template_Name}");
                 }
 
                 if (printTemplate != null && printTemplate.TemplateFileStream != null)
@@ -544,26 +605,36 @@ namespace RUINORERP.UI.Report
             }
             else
             {
-                if (printConfig.tb_PrintTemplates.Count == 0 || string.IsNullOrEmpty(printConfig.PrinterName))
+                // 使用优先级配置获取实际会使用的打印机（支持个人配置）
+                string effectivePrinterName = GetPrinterWithPriority(printConfig, printConfig?.BizName);
+
+                if (printConfig.tb_PrintTemplates.Count == 0 || string.IsNullOrEmpty(effectivePrinterName))
                 {
                     MessageBox.Show("请先配置打印参数后再重新打印！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
                 else
                 {
-                    if (!CheckPrinter(printConfig.PrinterName))
+                    if (!CheckPrinter(effectivePrinterName))
                     {
-                        // (MessageBox.Show($"系统检测到打印机{printConfig.PrinterName}的状态无法正常工作，检查确认!", "提示", MessageBoxButtons.RetryCancel);  
-                        MessageBox.Show($"系统检测到打印机{printConfig.PrinterName}的状态无法正常工作，检查确认!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show($"系统检测到打印机{effectivePrinterName}的状态无法正常工作，检查确认!", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
-                var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
-                if (printTemplate == null && printConfig.tb_PrintTemplates.Count > 0)
-                {
-                    printTemplate = printConfig.tb_PrintTemplates[0];
-                    MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
-                }
-              
 
+                // 检查是否有个人配置，如果有则更新模板信息
+                var personalTemplate = GetPersonalPrintTemplate(printConfig);
+                if (personalTemplate != null)
+                {
+                    MainForm.Instance.uclog.AddLog($"使用个人打印模板: {personalTemplate.Template_Name}");
+                }
+                else
+                {
+                    var printTemplate = printConfig.tb_PrintTemplates.Where(t => t.IsDefaultTemplate == true).FirstOrDefault();
+                    if (printTemplate == null && printConfig.tb_PrintTemplates.Count > 0)
+                    {
+                        printTemplate = printConfig.tb_PrintTemplates[0];
+                        MainForm.Instance.uclog.AddLog(string.Format("当前打印配置:{0}的没有指定默认值，系统使用了第一个模板{1}打印。", printConfig.BizName, printTemplate.Template_Name));
+                    }
+                }
             }
             return printConfig;
         }
@@ -597,13 +668,16 @@ namespace RUINORERP.UI.Report
                 CommBillData cbd = EntityMappingHelper.GetBillData(typeof(M), EditEntitys[0]);
                 var printConfig = await Task.Run(() => GetPrintConfig(cbd)).ConfigureAwait(false);
                 
-                if (printConfig != null && !string.IsNullOrEmpty(printConfig.PrinterName))
+                // 使用优先级配置获取实际会使用的打印机（支持个人配置）
+                string effectivePrinterName = GetPrinterWithPriority(printConfig, printConfig?.BizName);
+                
+                if (!string.IsNullOrEmpty(effectivePrinterName))
                 {
-                    // 在后台线程检查打印机状态，避免阻塞UI
-                    bool printerOk = await Task.Run(() => CheckPrinter(printConfig.PrinterName)).ConfigureAwait(false);
+                    // 在后台线程检查实际打印机状态，避免阻塞UI
+                    bool printerOk = await Task.Run(() => CheckPrinter(effectivePrinterName)).ConfigureAwait(false);
                     if (!printerOk)
                     {
-                        MessageBox.Show($"系统检测到打印机 {printConfig.PrinterName} 的状态无法正常工作，请检查确认！", 
+                        MessageBox.Show($"系统检测到打印机 {effectivePrinterName} 的状态无法正常工作，请检查确认！", 
                             "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return false;
                     }
@@ -615,16 +689,6 @@ namespace RUINORERP.UI.Report
         }
 
  
-
-        private static bool PrintExecute(List<M> EditEntitys, RptMode rptMode)
-        {
-            bool rs = false;
-
-
-
-            rs = true;
-            return rs;
-        }
 
 
 

@@ -44,9 +44,9 @@ namespace RUINORERP.UI.Report
             this.listboxBIll = new Krypton.Toolkit.KryptonListBox();
             this.GroupBoxSelectPrinter = new Krypton.Toolkit.KryptonGroupBox();
             this.cmbPrinterList = new Krypton.Toolkit.KryptonComboBox();
-            this.btnPrinter = new Krypton.Toolkit.KryptonButton();
+            this.btnSaveGlobalConfig = new Krypton.Toolkit.KryptonButton();
             this.btnSavePersonalConfig = new Krypton.Toolkit.KryptonButton();
-            this.btnRevertToSystem = new Krypton.Toolkit.KryptonButton();
+            this.btnRevertToGlobalConfig = new Krypton.Toolkit.KryptonButton();
             this.btnDesign = new Krypton.Toolkit.KryptonButton();
             this.btnExit = new Krypton.Toolkit.KryptonButton();
             this.btnPrint = new Krypton.Toolkit.KryptonButton();
@@ -104,8 +104,7 @@ namespace RUINORERP.UI.Report
             // kryptonSplitContainer1.Panel2
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.GroupBoxSelectPrinter);
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnSavePersonalConfig);
-            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnRevertToSystem);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnRevertToGlobalConfig);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnDesign);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnExit);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.btnPrint);
@@ -257,8 +256,9 @@ namespace RUINORERP.UI.Report
             // GroupBoxSelectPrinter.Panel
             // 
             this.GroupBoxSelectPrinter.Panel.Controls.Add(this.cmbPrinterList);
-            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.btnPrinter);
-            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(604, 61);
+            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.btnSaveGlobalConfig);
+            this.GroupBoxSelectPrinter.Panel.Controls.Add(this.btnSavePersonalConfig);
+            this.GroupBoxSelectPrinter.Size = new System.Drawing.Size(802, 68);
             this.GroupBoxSelectPrinter.TabIndex = 11;
             this.GroupBoxSelectPrinter.Values.Heading = "默认打印机设置";
             // 
@@ -266,41 +266,42 @@ namespace RUINORERP.UI.Report
             // 
             this.cmbPrinterList.DropDownWidth = 429;
             this.cmbPrinterList.IntegralHeight = false;
-            this.cmbPrinterList.Location = new System.Drawing.Point(3, 7);
+            this.cmbPrinterList.Location = new System.Drawing.Point(7, 13);
             this.cmbPrinterList.Name = "cmbPrinterList";
             this.cmbPrinterList.Size = new System.Drawing.Size(498, 21);
             this.cmbPrinterList.TabIndex = 11;
+            this.cmbPrinterList.SelectedIndexChanged += new System.EventHandler(this.cmbPrinterList_SelectedIndexChanged);
             // 
-            // btnPrinter
+            // btnSaveGlobalConfig
             // 
-            this.btnPrinter.Location = new System.Drawing.Point(512, 5);
-            this.btnPrinter.Name = "btnPrinter";
-            this.btnPrinter.Size = new System.Drawing.Size(71, 25);
-            this.btnPrinter.TabIndex = 10;
-            this.btnPrinter.Values.Text = "保存";
-            this.btnPrinter.Click += new System.EventHandler(this.btnPrinter_Click);
+            this.btnSaveGlobalConfig.Location = new System.Drawing.Point(665, 9);
+            this.btnSaveGlobalConfig.Name = "btnSaveGlobalConfig";
+            this.btnSaveGlobalConfig.Size = new System.Drawing.Size(115, 25);
+            this.btnSaveGlobalConfig.TabIndex = 10;
+            this.btnSaveGlobalConfig.Values.Text = "保存为系统配置";
+            this.btnSaveGlobalConfig.Click += new System.EventHandler(this.btnPrinter_Click);
             // 
             // btnSavePersonalConfig
             // 
-            this.btnSavePersonalConfig.Location = new System.Drawing.Point(506, 77);
+            this.btnSavePersonalConfig.Location = new System.Drawing.Point(516, 9);
             this.btnSavePersonalConfig.Name = "btnSavePersonalConfig";
             this.btnSavePersonalConfig.Size = new System.Drawing.Size(130, 25);
             this.btnSavePersonalConfig.TabIndex = 12;
             this.btnSavePersonalConfig.Values.Text = "保存为个人配置";
             this.btnSavePersonalConfig.Click += new System.EventHandler(this.btnSavePersonalConfig_Click);
             // 
-            // btnRevertToSystem
+            // btnRevertToGlobalConfig
             // 
-            this.btnRevertToSystem.Location = new System.Drawing.Point(840, 105);
-            this.btnRevertToSystem.Name = "btnRevertToSystem";
-            this.btnRevertToSystem.Size = new System.Drawing.Size(130, 25);
-            this.btnRevertToSystem.TabIndex = 13;
-            this.btnRevertToSystem.Values.Text = "恢复系统配置";
-            this.btnRevertToSystem.Click += new System.EventHandler(this.btnRevertToSystem_Click);
+            this.btnRevertToGlobalConfig.Location = new System.Drawing.Point(840, 139);
+            this.btnRevertToGlobalConfig.Name = "btnRevertToGlobalConfig";
+            this.btnRevertToGlobalConfig.Size = new System.Drawing.Size(130, 25);
+            this.btnRevertToGlobalConfig.TabIndex = 13;
+            this.btnRevertToGlobalConfig.Values.Text = "恢复系统配置";
+            this.btnRevertToGlobalConfig.Click += new System.EventHandler(this.btnRevertToSystem_Click);
             // 
             // btnDesign
             // 
-            this.btnDesign.Location = new System.Drawing.Point(401, 14);
+            this.btnDesign.Location = new System.Drawing.Point(387, 14);
             this.btnDesign.Name = "btnDesign";
             this.btnDesign.Size = new System.Drawing.Size(90, 25);
             this.btnDesign.TabIndex = 8;
@@ -310,7 +311,7 @@ namespace RUINORERP.UI.Report
             // btnExit
             // 
             this.btnExit.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnExit.Location = new System.Drawing.Point(840, 14);
+            this.btnExit.Location = new System.Drawing.Point(887, 14);
             this.btnExit.Name = "btnExit";
             this.btnExit.Size = new System.Drawing.Size(90, 25);
             this.btnExit.TabIndex = 7;
@@ -319,7 +320,7 @@ namespace RUINORERP.UI.Report
             // 
             // btnPrint
             // 
-            this.btnPrint.Location = new System.Drawing.Point(695, 14);
+            this.btnPrint.Location = new System.Drawing.Point(637, 14);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(90, 25);
             this.btnPrint.TabIndex = 6;
@@ -328,7 +329,7 @@ namespace RUINORERP.UI.Report
             // 
             // btnPreView
             // 
-            this.btnPreView.Location = new System.Drawing.Point(695, 55);
+            this.btnPreView.Location = new System.Drawing.Point(762, 14);
             this.btnPreView.Name = "btnPreView";
             this.btnPreView.Size = new System.Drawing.Size(90, 25);
             this.btnPreView.TabIndex = 5;
@@ -337,7 +338,7 @@ namespace RUINORERP.UI.Report
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(546, 14);
+            this.btnDelete.Location = new System.Drawing.Point(512, 14);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(90, 25);
             this.btnDelete.TabIndex = 4;
@@ -346,7 +347,7 @@ namespace RUINORERP.UI.Report
             // 
             // btnToPDF
             // 
-            this.btnToPDF.Location = new System.Drawing.Point(125, 14);
+            this.btnToPDF.Location = new System.Drawing.Point(137, 14);
             this.btnToPDF.Name = "btnToPDF";
             this.btnToPDF.Size = new System.Drawing.Size(90, 25);
             this.btnToPDF.TabIndex = 2;
@@ -355,7 +356,7 @@ namespace RUINORERP.UI.Report
             // 
             // btnCreate
             // 
-            this.btnCreate.Location = new System.Drawing.Point(244, 14);
+            this.btnCreate.Location = new System.Drawing.Point(262, 14);
             this.btnCreate.Name = "btnCreate";
             this.btnCreate.Size = new System.Drawing.Size(90, 25);
             this.btnCreate.TabIndex = 2;
@@ -364,9 +365,9 @@ namespace RUINORERP.UI.Report
             // 
             // btnQueryBill
             // 
-            this.btnQueryBill.Location = new System.Drawing.Point(32, 14);
+            this.btnQueryBill.Location = new System.Drawing.Point(12, 14);
             this.btnQueryBill.Name = "btnQueryBill";
-            this.btnQueryBill.Size = new System.Drawing.Size(72, 25);
+            this.btnQueryBill.Size = new System.Drawing.Size(90, 25);
             this.btnQueryBill.TabIndex = 1;
             this.btnQueryBill.Values.Text = "查询单据";
             this.btnQueryBill.Click += new System.EventHandler(this.btnQueryBill_Click);
@@ -449,13 +450,13 @@ namespace RUINORERP.UI.Report
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem 设为默认ToolStripMenuItem;
         public System.Windows.Forms.BindingSource bindingSourcePrintTemplate;
-        private Krypton.Toolkit.KryptonButton btnPrinter;
+        private Krypton.Toolkit.KryptonButton btnSaveGlobalConfig;
         private Krypton.Toolkit.KryptonGroupBox GroupBoxSelectPrinter;
         private Krypton.Toolkit.KryptonComboBox cmbPrinterList;
         private System.Windows.Forms.ToolStripMenuItem 复制当前模板ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 保存模板设置ToolStripMenuItem;
         private Krypton.Toolkit.KryptonButton btnToPDF;
         private Krypton.Toolkit.KryptonButton btnSavePersonalConfig;
-        private Krypton.Toolkit.KryptonButton btnRevertToSystem;
+        private Krypton.Toolkit.KryptonButton btnRevertToGlobalConfig;
     }
 }

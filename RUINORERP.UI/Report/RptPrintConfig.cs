@@ -45,6 +45,11 @@ namespace RUINORERP.UI.Report
         private bool _isPersonalConfig;
 
         /// <summary>
+        /// 原始打印机名称（用于检测变化）
+        /// </summary>
+        private string _originalPrinterName;
+
+        /// <summary>
         /// 打印配置
         /// </summary>
         public RUINORERP.Model.tb_PrintConfig printConfig { get; set; }
@@ -499,12 +504,41 @@ namespace RUINORERP.UI.Report
                 printerSelected = printConfig.PrinterSelected ?? false;
             }
 
+            _originalPrinterName = printerName;
       
             GroupBoxSelectPrinter.Visible = printerSelected;
 
             if (printerSelected && !string.IsNullOrEmpty(printerName))
             {
                 cmbPrinterList.SelectedIndex = cmbPrinterList.FindString(printerName);
+            }
+        }
+
+        /// <summary>
+        /// 打印机下拉框选择变化事件
+        /// </summary>
+        private void cmbPrinterList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateSaveButtonState();
+        }
+
+        /// <summary>
+        /// 更新保存按钮状态
+        /// </summary>
+        private void UpdateSaveButtonState()
+        {
+            string currentPrinter = cmbPrinterList.SelectedItem?.ToString();
+            bool hasChanged = !string.Equals(_originalPrinterName, currentPrinter, StringComparison.OrdinalIgnoreCase);
+            
+            if (_isPersonalConfig)
+            {
+                btnSavePersonalConfig.Enabled = hasChanged;
+                btnSaveGlobalConfig.Enabled = hasChanged;
+            }
+            else
+            {
+                btnSaveGlobalConfig.Enabled = hasChanged;
+                btnSavePersonalConfig.Enabled = hasChanged;
             }
         }
 
@@ -571,16 +605,18 @@ namespace RUINORERP.UI.Report
             {
                 btnSavePersonalConfig.Enabled = false;
                 btnSavePersonalConfig.Values.Text = "已为个人独有";
-                btnRevertToSystem.Enabled = true;
-                btnRevertToSystem.Values.Text = "恢复系统配置";
+                btnRevertToGlobalConfig.Enabled = true;
+                btnRevertToGlobalConfig.Values.Text = "恢复系统配置";
             }
             else
             {
                 btnSavePersonalConfig.Enabled = true;
                 btnSavePersonalConfig.Values.Text = "保存为个人配置";
-                btnRevertToSystem.Enabled = false;
-                btnRevertToSystem.Values.Text = "使用系统配置";
+                btnRevertToGlobalConfig.Enabled = false;
+                btnRevertToGlobalConfig.Values.Text = "使用系统配置";
             }
+
+            UpdateSaveButtonState();
         }
 
         /// <summary>
@@ -623,7 +659,19 @@ namespace RUINORERP.UI.Report
                     LastModified = DateTime.Now
                 };
 
-                if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
+                tb_PrintTemplate selectedTemplate = null;
+                if (newSumDataGridView1.CurrentRow != null)
+                {
+                    selectedTemplate = newSumDataGridView1.CurrentRow.DataBoundItem as tb_PrintTemplate;
+                }
+
+                if (selectedTemplate != null)
+                {
+                    configData.TemplateId = selectedTemplate.ID;
+                    configData.TemplateName = selectedTemplate.Template_Name ?? string.Empty;
+                    configData.IsDefaultTemplate = selectedTemplate.IsDefaultTemplate ?? false;
+                }
+                else if (printConfig.tb_PrintTemplates != null && printConfig.tb_PrintTemplates.Count > 0)
                 {
                     var defaultTemplate = printConfig.tb_PrintTemplates.FirstOrDefault(t => t.IsDefaultTemplate == true) ?? printConfig.tb_PrintTemplates[0];
                     configData.TemplateId = defaultTemplate.ID;
@@ -637,6 +685,7 @@ namespace RUINORERP.UI.Report
                 await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
 
                 _isPersonalConfig = true;
+                _originalPrinterName = configData.PrinterName;
                 UpdateFormTitle();
                 UpdateButtonStates();
 
@@ -671,6 +720,7 @@ namespace RUINORERP.UI.Report
                     await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
 
                     _isPersonalConfig = false;
+                    _originalPrinterName = printConfig.PrinterName;
                     UpdateFormTitle();
                     UpdateButtonStates();
 
@@ -705,8 +755,6 @@ namespace RUINORERP.UI.Report
 
         private async void btnPrinter_Click(object sender, EventArgs e)
         {
-
-
             if (cmbPrinterList.SelectedItem != null)
             {
                 printConfig.PrinterName = cmbPrinterList.SelectedItem.ToString();
@@ -722,6 +770,20 @@ namespace RUINORERP.UI.Report
             }
             await MainForm.Instance.AppContext.Db.Updateable<tb_PrintConfig>(printConfig).ExecuteCommandAsync();
 
+            if (_isPersonalConfig)
+            {
+                var menuPersonalization = GetMenuPersonalPrintConfig(_currentMenuId);
+                if (menuPersonalization?.PrintConfigDict != null)
+                {
+                    menuPersonalization.PrintConfigDict.PrinterName = printConfig.PrinterName ?? string.Empty;
+                    menuPersonalization.PrintConfigDict.PrinterSelected = printConfig.PrinterSelected ?? false;
+                    menuPersonalization.PrintConfigDict.LastModified = DateTime.Now;
+                    await MainForm.Instance.AppContext.Db.Updateable<tb_UIMenuPersonalization>(menuPersonalization).ExecuteCommandAsync();
+                }
+            }
+
+            _originalPrinterName = printConfig.PrinterName;
+            UpdateSaveButtonState();
         }
 
         private void 设为默认ToolStripMenuItem_Click(object sender, EventArgs e)

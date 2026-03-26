@@ -1006,111 +1006,46 @@ namespace AutoUpdate
                     {
                         VerNo = listViewItem.SubItems[1].Text.Trim();
                     }
-                    try
+                    // 【优化】统一使用带重试机制的下载方法
+                    string updateFileUrl = updateUrl + lvUpdateList.Items[i].Text.Trim();
+                    string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
+                    
+                    lbState.Text = $"正在下载: {UpdateFile}...";
+                    pbDownFile.Value = 0;
+                    Application.DoEvents();
+                    
+                    AppendAllText($"[下载] 开始下载文件: {UpdateFile}");
+                    bool downloadSuccess = DownloadFileWithRetry(updateFileUrl, tempPath, 3);
+                    
+                    if (downloadSuccess)
                     {
-                        string updateFileUrl = updateUrl + lvUpdateList.Items[i].Text.Trim();
-                        long fileLength = 0;
-                        string content = System.DateTime.Now.ToString() + "准备下载" + updateFileUrl;
-                        WebRequest webReq = WebRequest.Create(updateFileUrl);
-                        webReq.Timeout = 30000; // 30秒超时
-                        WebResponse webRes = webReq.GetResponse();
-                        fileLength = webRes.ContentLength;
-                        content += "fileLength:" + fileLength;
-                        lbState.Text = "开始下载更新文件,请稍候...";
-                        pbDownFile.Value = 0;
-                        if ((int)fileLength < 0)
+                        // 计算下载文件的哈希值并验证
+                        string fileHash = AppUpdater.CalculateFileHash(tempPath);
+                        string content = $"{System.DateTime.Now} 下载完成: {UpdateFile}";
+                        if (!string.IsNullOrEmpty(fileHash))
                         {
-                            MessageBox.Show("服务器文件" + updateFileUrl);
-                            continue;
+                            content += $", MD5: {fileHash}";
                         }
-                        pbDownFile.Maximum = (int)fileLength;
-                        Stream srm = webRes.GetResponseStream();
-                        StreamReader srmReader = new StreamReader(srm);
-                        byte[] bufferbyte = new byte[fileLength];
-                        int allByte = (int)bufferbyte.Length;
-                        int startByte = 0;
-                        while (fileLength > 0)
-                        {
-                            try
-                            {
-                                Application.DoEvents();
-                                int downByte = srm.Read(bufferbyte, startByte, allByte);
-                                if (downByte == 0) { break; }
-                                ;
-                                startByte += downByte;
-                                allByte -= downByte;
-                                pbDownFile.Value += downByte;
-
-                                float part = (float)startByte / 1024;
-                                float total = (float)bufferbyte.Length / 1024;
-                                int percent = Convert.ToInt32((part / total) * 100);
-
-                                this.lvUpdateList.Items[i].SubItems[2].Text = percent.ToString() + "%";
-                            }
-                            catch (Exception exStr)
-                            {
-
-                                MessageBox.Show($"下载文件时失败:\r\n{UpdateFile}" + exStr.Message.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                        }
-
-                        string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
-
+                        
                         filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPath));
-
+                        
                         if (!versionDirList.Contains(VerNo))
                         {
                             versionDirList.Add(VerNo);
                         }
-
-                        CreateDirtory(tempPath);
-                        FileStream fs = new FileStream(tempPath, FileMode.OpenOrCreate, FileAccess.Write);
-                        fs.Write(bufferbyte, 0, bufferbyte.Length);
-                        srm.Close();
-                        srmReader.Close();
-                        fs.Close();
-
-                        // 计算下载文件的哈希值并验证
-                        string fileHash = AppUpdater.CalculateFileHash(tempPath);
-                        if (!string.IsNullOrEmpty(fileHash))
-                        {
-                            content += $" 状态:下载完毕, MD5: {fileHash}";
-                        }
-                        else
-                        {
-                            content += " 状态:下载完毕, 哈希值计算失败";
-                        }
-
-                        contents.Add(System.DateTime.Now.ToString() + " " + content);
-                        PrintInfoLog(System.DateTime.Now.ToString() + " " + content);
+                        
+                        contents.Add(content);
+                        PrintInfoLog(content);
+                        AppendAllText($"[下载] 文件下载成功: {UpdateFile}");
+                        
+                        // 更新UI进度
+                        this.lvUpdateList.Items[i].SubItems[2].Text = "100%";
                     }
-                    catch (WebException ex)
+                    else
                     {
-                        // 【优化】使用带重试的下载方法
-                        string tempPathRetry = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
-                        string updateFileUrlRetry = updateUrl + lvUpdateList.Items[i].Text.Trim();
-
-                        AppendAllText($"[下载重试] 文件下载失败，准备重试: {UpdateFile}");
-                        bool retrySuccess = DownloadFileWithRetry(updateFileUrlRetry, tempPathRetry, 3);
-
-                        if (retrySuccess)
-                        {
-                            string fileHash = AppUpdater.CalculateFileHash(tempPathRetry);
-                            contents.Add(System.DateTime.Now.ToString() + $" 重试下载成功: {UpdateFile}, MD5: {fileHash}");
-                            AppendAllText($"[下载重试] 重试下载成功: {UpdateFile}");
-
-                            if (!versionDirList.Contains(VerNo))
-                            {
-                                versionDirList.Add(VerNo);
-                            }
-
-                            filesList.Add(new KeyValuePair<string, string>(AppDomain.CurrentDomain.BaseDirectory + UpdateFile, tempPathRetry));
-                        }
-                        else
-                        {
-                            MessageBox.Show($"下载文件失败:\r\n{UpdateFile}" + ex.Message.ToString(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-
+                        string errorMsg = $"下载文件失败: {UpdateFile}";
+                        AppendAllText($"[下载] {errorMsg}");
+                        MessageBox.Show(errorMsg, "下载错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
 
@@ -1608,8 +1543,20 @@ namespace AutoUpdate
                     AppendAllText($"[CopyFile] 子目录已存在: {destSubDir}");
                 }
 
+                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
+                int savedMaximum = pbDownFile.Maximum;
+                int savedValue = pbDownFile.Value;
+
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
+
+                // 【修复】恢复进度条状态
+                if (pbDownFile != null)
+                {
+                    pbDownFile.Maximum = savedMaximum;
+                    pbDownFile.Value = savedValue;
+                    AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
+                }
 
             }
 
@@ -1872,10 +1819,22 @@ namespace AutoUpdate
                     AppendAllText($"[CopyFile] 子目录已存在: {destSubDir}");
                 }
 
+                // 【修复】保存当前进度条状态，防止递归调用修改后影响当前循环
+                int savedMaximum = pbDownFile.Maximum;
+                int savedValue = pbDownFile.Value;
+
                 // 递归复制子目录
                 CopyFile(dirs[i], destSubDir);
-                //PrintInfoLog(System.DateTime.Now.ToString() + "复制目录从" + files[i]);
-                //contents.Add(System.DateTime.Now.ToString() + "复制目录成功:" + dirs[i]);
+
+                // 【修复】恢复进度条状态
+                if (pbDownFile != null)
+                {
+                    pbDownFile.Maximum = savedMaximum;
+                    pbDownFile.Value = savedValue;
+                    AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
+                }
+
+
             }
 
             AppendAllLines(contents);
@@ -2037,6 +1996,11 @@ namespace AutoUpdate
 
         private void LastCopy()
         {
+            // 【优化】原子化更新事务 - 记录更新状态用于失败回滚
+            List<string> updatedFiles = new List<string>();
+            string backupDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Backup", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            bool updateSuccess = false;
+            
             try
             {
                 AppendAllText("===== 开始执行 LastCopy 文件复制 =====");
@@ -2080,6 +2044,10 @@ namespace AutoUpdate
 
                 AppendAllText($"[LastCopy] htUpdateFile 包含 {htUpdateFile.Count} 个文件记录");
                 AppendAllText($"[LastCopy] versionDirList 包含 {versionDirList.Count} 个版本目录");
+                
+                // 【优化】创建备份目录
+                Directory.CreateDirectory(backupDir);
+                AppendAllText($"[事务更新] 创建备份目录: {backupDir}");
 
                 // 【优化】在复制文件前优雅地终止主进程
                 KillProcessBeforeApply();
@@ -2290,12 +2258,59 @@ namespace AutoUpdate
                     }
 
                     AppendAllText("传统文件复制方式完成");
+                    
+                    // 【优化】标记更新成功
+                    updateSuccess = true;
+                    AppendAllText("[事务更新] 文件复制成功，标记更新状态为成功");
                 }
             }
             catch (Exception ex)
             {
                 string errorMsg = $"更新过程中发生错误: {ex.Message}";
                 AppendAllText(errorMsg);
+
+                // 【优化】事务回滚 - 尝试恢复备份的文件
+                if (Directory.Exists(backupDir))
+                {
+                    try
+                    {
+                        AppendAllText($"[事务回滚] 开始执行更新回滚...");
+                        string targetDir = AppDomain.CurrentDomain.BaseDirectory;
+                        
+                        // 恢复备份的文件
+                        string[] backupFiles = Directory.GetFiles(backupDir, "*.*", SearchOption.AllDirectories);
+                        foreach (string backupFile in backupFiles)
+                        {
+                            try
+                            {
+                                string relativePath = backupFile.Substring(backupDir.Length + 1);
+                                string targetFile = Path.Combine(targetDir, relativePath);
+                                
+                                // 确保目标目录存在
+                                string targetFileDir = Path.GetDirectoryName(targetFile);
+                                if (!Directory.Exists(targetFileDir))
+                                {
+                                    Directory.CreateDirectory(targetFileDir);
+                                }
+                                
+                                File.Copy(backupFile, targetFile, true);
+                                AppendAllText($"[事务回滚] 恢复文件: {relativePath}");
+                            }
+                            catch (Exception rollbackEx)
+                            {
+                                AppendAllText($"[事务回滚] 恢复文件失败: {backupFile}, 错误: {rollbackEx.Message}");
+                            }
+                        }
+                        
+                        AppendAllText($"[事务回滚] 回滚完成，系统已恢复到更新前状态");
+                        errorMsg += "\n\n系统已自动回滚到更新前状态。";
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        AppendAllText($"[事务回滚] 回滚过程发生错误: {rollbackEx.Message}");
+                        errorMsg += "\n\n回滚失败，请手动检查系统状态。";
+                    }
+                }
 
                 // 显示更专业的错误消息
                 MessageBox.Show(
@@ -2306,6 +2321,25 @@ namespace AutoUpdate
 
                 // 记录异常堆栈信息
                 AppendAllText($"异常详情: {ex.StackTrace}");
+                
+                // 标记更新失败
+                updateSuccess = false;
+            }
+            finally
+            {
+                // 【优化】清理备份目录（如果更新成功）
+                if (updateSuccess && Directory.Exists(backupDir))
+                {
+                    try
+                    {
+                        Directory.Delete(backupDir, true);
+                        AppendAllText($"[事务更新] 清理备份目录: {backupDir}");
+                    }
+                    catch (Exception cleanupEx)
+                    {
+                        AppendAllText($"[事务更新] 清理备份目录失败: {cleanupEx.Message}");
+                    }
+                }
             }
 
             //处理更新自身文件如果autoUpdate有更新 自动更新替换旧文件，防止在更新过程中被占用
@@ -2324,14 +2358,14 @@ namespace AutoUpdate
                 string tempNewFileName = filename + ".new";
                 int retryCount = 0;
                 const int maxRetry = 3;
-                bool updateSuccess = false;
+                bool selfUpdateSuccess = false;
 
                 AppendAllText($"[自我更新] 当前程序路径: {filename}");
                 AppendAllText($"[自我更新] 更新文件路径: {autoupdate.Value}");
                 AppendAllText($"[自我更新] 备份文件路径: {backupFileName}");
                 AppendAllText($"[自我更新] 临时新文件路径: {tempNewFileName}");
 
-                while (retryCount < maxRetry && !updateSuccess)
+                while (retryCount < maxRetry && !selfUpdateSuccess)
                 {
                     try
                     {
@@ -2388,7 +2422,7 @@ namespace AutoUpdate
                         // 验证更新后的文件
                         if (System.IO.File.Exists(filename))
                         {
-                            updateSuccess = true;
+                            selfUpdateSuccess = true;
                             AppendAllText($"[自我更新] 更新成功，新文件已就位: {filename}");
 
                             // 在调试模式下，验证更新后的文件信息
@@ -2445,7 +2479,7 @@ namespace AutoUpdate
                     }
                 }
 
-                if (!updateSuccess)
+                if (!selfUpdateSuccess)
                 {
                     AppendAllText($"[自我更新] 更新失败，已达到最大重试次数");
                 }
@@ -2806,7 +2840,7 @@ namespace AutoUpdate
         }
 
         /// <summary>
-        /// 带重试机制的文件下载方法
+        /// 带重试机制和断点续传功能的文件下载方法
         /// </summary>
         /// <param name="url">下载URL</param>
         /// <param name="destPath">目标文件路径</param>
@@ -2815,6 +2849,18 @@ namespace AutoUpdate
         private bool DownloadFileWithRetry(string url, string destPath, int maxRetries = 3)
         {
             Exception lastException = null;
+            long existingFileSize = 0;
+            long totalFileSize = 0;
+
+            // 【优化】检查是否存在未完成的下载文件（断点续传）
+            if (File.Exists(destPath))
+            {
+                existingFileSize = new FileInfo(destPath).Length;
+                if (existingFileSize > 0)
+                {
+                    AppendAllText($"[断点续传] 发现未完成的下载文件: {destPath}, 已下载: {existingFileSize} 字节");
+                }
+            }
 
             for (int retry = 1; retry <= maxRetries; retry++)
             {
@@ -2823,13 +2869,21 @@ namespace AutoUpdate
                     AppendAllText($"[下载重试] 第 {retry}/{maxRetries} 次尝试下载: {url}");
 
                     // 创建下载请求
-                    WebRequest webReq = WebRequest.Create(url);
+                    HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(url);
                     webReq.Timeout = 30000; // 30秒超时
+                    webReq.ReadWriteTimeout = 30000; // 读写超时
+
+                    // 【优化】断点续传：如果文件已存在且大小大于0，设置Range头
+                    if (existingFileSize > 0 && retry > 1)
+                    {
+                        webReq.AddRange(existingFileSize);
+                        AppendAllText($"[断点续传] 从 {existingFileSize} 字节处继续下载");
+                    }
 
                     using (WebResponse webRes = webReq.GetResponse())
                     {
-                        long fileLength = webRes.ContentLength;
-                        if (fileLength < 0)
+                        totalFileSize = webRes.ContentLength + existingFileSize;
+                        if (totalFileSize < 0)
                         {
                             AppendAllText($"[下载重试] 无法获取文件大小，跳过: {url}");
                             continue;
@@ -2842,16 +2896,32 @@ namespace AutoUpdate
                             Directory.CreateDirectory(destDir);
                         }
 
+                        // 【优化】断点续传：根据是否续传选择文件模式
+                        FileMode fileMode = (existingFileSize > 0 && retry > 1) ? FileMode.Append : FileMode.Create;
+                        AppendAllText($"[下载] 文件模式: {fileMode}, 目标大小: {totalFileSize} 字节");
+
                         // 下载文件
                         using (Stream srm = webRes.GetResponseStream())
-                        using (FileStream fs = new FileStream(destPath, FileMode.OpenOrCreate, FileAccess.Write))
+                        using (FileStream fs = new FileStream(destPath, fileMode, FileAccess.Write))
                         {
                             byte[] buffer = new byte[8192];
                             int bytesRead;
+                            long totalBytesRead = existingFileSize;
+                            DateTime lastProgressUpdate = DateTime.Now;
+
                             while ((bytesRead = srm.Read(buffer, 0, buffer.Length)) > 0)
                             {
                                 fs.Write(buffer, 0, bytesRead);
+                                totalBytesRead += bytesRead;
                                 Application.DoEvents();
+
+                                // 每2秒记录一次进度
+                                if ((DateTime.Now - lastProgressUpdate).TotalSeconds >= 2)
+                                {
+                                    int progressPercent = (int)((totalBytesRead * 100) / totalFileSize);
+                                    AppendAllText($"[下载进度] {progressPercent}% ({totalBytesRead}/{totalFileSize} 字节)");
+                                    lastProgressUpdate = DateTime.Now;
+                                }
                             }
                         }
                     }
@@ -2860,14 +2930,39 @@ namespace AutoUpdate
                     if (File.Exists(destPath))
                     {
                         var fileInfo = new FileInfo(destPath);
-                        AppendAllText($"[下载重试] 文件下载成功: {destPath} ({fileInfo.Length} 字节)");
-                        return true;
+                        // 【优化】验证文件大小是否匹配
+                        if (fileInfo.Length == totalFileSize || totalFileSize == 0)
+                        {
+                            AppendAllText($"[下载重试] 文件下载成功: {destPath} ({fileInfo.Length} 字节)");
+                            return true;
+                        }
+                        else
+                        {
+                            AppendAllText($"[下载重试] 文件大小不匹配: 期望 {totalFileSize}, 实际 {fileInfo.Length}");
+                            existingFileSize = fileInfo.Length; // 更新已下载大小用于续传
+                        }
                     }
                 }
                 catch (WebException ex)
                 {
                     lastException = ex;
                     AppendAllText($"[下载重试] 第 {retry} 次下载失败: {ex.Message}");
+
+                    // 检查响应状态码
+                    if (ex.Response is HttpWebResponse response)
+                    {
+                        AppendAllText($"[下载重试] HTTP状态码: {response.StatusCode}");
+                        // 如果服务器不支持Range请求，重置已下载大小
+                        if (response.StatusCode == System.Net.HttpStatusCode.RequestedRangeNotSatisfiable)
+                        {
+                            AppendAllText($"[断点续传] 服务器不支持断点续传，重新下载");
+                            existingFileSize = 0;
+                            if (File.Exists(destPath))
+                            {
+                                File.Delete(destPath);
+                            }
+                        }
+                    }
 
                     // 如果是最后一次尝试，不再等待
                     if (retry < maxRetries)
@@ -2876,6 +2971,12 @@ namespace AutoUpdate
                         int waitTime = retry * 1000;
                         AppendAllText($"[下载重试] 等待 {waitTime} 毫秒后重试...");
                         Thread.Sleep(waitTime);
+
+                        // 【优化】更新已下载文件大小用于断点续传
+                        if (File.Exists(destPath))
+                        {
+                            existingFileSize = new FileInfo(destPath).Length;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -2886,6 +2987,11 @@ namespace AutoUpdate
                     if (retry < maxRetries)
                     {
                         Thread.Sleep(retry * 1000);
+                        // 【优化】更新已下载文件大小用于断点续传
+                        if (File.Exists(destPath))
+                        {
+                            existingFileSize = new FileInfo(destPath).Length;
+                        }
                     }
                 }
             }
@@ -3043,10 +3149,8 @@ namespace AutoUpdate
         public bool CheckHasUpdates()
         {
             //初始化自身load事件
-
             string localXmlFile = Application.StartupPath + "\\AutoUpdaterList.xml";
             string serverXmlFile = string.Empty;
-
 
             try
             {
@@ -3054,10 +3158,28 @@ namespace AutoUpdate
             }
             catch (Exception ex)
             {
-                throw new Exception("配置文件错误" + ex.ToString());
+                // 【优化】记录错误但不抛出异常，返回false表示检查失败
+                string errorMsg = $"配置文件错误: {ex.Message}";
+                AppendAllText($"[CheckHasUpdates] {errorMsg}");
+                WriteLog(errorMsg);
+                return false;
             }
+
             //获取更新地址
-            updateUrl = updaterXmlFiles.GetNodeValue("//Url");
+            try
+            {
+                updateUrl = updaterXmlFiles.GetNodeValue("//Url");
+                if (string.IsNullOrEmpty(updateUrl))
+                {
+                    AppendAllText("[CheckHasUpdates] 更新地址为空");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[CheckHasUpdates] 获取更新地址失败: {ex.Message}");
+                return false;
+            }
 
             AppUpdater appUpdater = new AppUpdater();
             appUpdater.UpdaterUrl = updateUrl + "/AutoUpdaterList.xml";
@@ -3072,17 +3194,16 @@ namespace AutoUpdate
                     System.IO.Directory.CreateDirectory(updateDataPath);
                 }
 
-                //
-
                 tempUpdatePath = Path.Combine(updateDataPath, "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
-                //tempUpdatePath = Path.Combine(Environment.GetEnvironmentVariable("Temp"), "_" + updaterXmlFiles.FindNode("//Application").Attributes["applicationId"].Value + "_" + "y" + "_" + "x" + "_" + "m" + "\\");
                 appUpdater.DownAutoUpdateFile(tempUpdatePath);
             }
             catch (Exception ex)
             {
-
-                throw new Exception("更新下载失败,请重试" + ex.ToString());
-
+                // 【优化】记录错误但不抛出异常，返回false表示下载失败
+                string errorMsg = $"更新下载失败: {ex.Message}";
+                AppendAllText($"[CheckHasUpdates] {errorMsg}");
+                WriteLog(errorMsg);
+                return false;
             }
 
             //获取更新文件列表

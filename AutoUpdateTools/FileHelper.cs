@@ -10,7 +10,7 @@ namespace AutoUpdateTools
     public static class FileHelper
     {
         /// <summary>
-        /// 向指定文件写入内容，使用默认编码
+        /// 向指定文件写入内容，使用UTF8编码
         /// </summary>
         /// <param name="path">要写入内容的文件完整路径</param>
         /// <param name="content">要写入的内容</param>
@@ -18,7 +18,7 @@ namespace AutoUpdateTools
         /// <exception cref="IOException">当文件写入失败时抛出</exception>
         public static void WriteFile(string path, string content)
         {
-            WriteFile(path, content, Encoding.Default);
+            WriteFile(path, content, Encoding.UTF8);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace AutoUpdateTools
         }
 
         /// <summary>
-        /// 读取文件内容，使用默认编码
+        /// 读取文件内容，使用UTF8编码
         /// </summary>
         /// <param name="path">要读取的文件路径</param>
         /// <returns>返回文件内容</returns>
@@ -72,7 +72,7 @@ namespace AutoUpdateTools
         /// <exception cref="IOException">当文件读取失败时抛出</exception>
         public static string ReadFile(string path)
         {
-            return ReadFile(path, Encoding.Default);
+            return ReadFile(path, Encoding.UTF8);
         }
 
         /// <summary>

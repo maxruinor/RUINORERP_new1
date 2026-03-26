@@ -108,6 +108,20 @@ namespace RUINORERP.Model
                         }
         }
 
+        private long? _MenuID;
+        /// <summary>
+        /// 关联的菜单ID（点击节点打开对应窗体）
+        /// </summary>
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "MenuID" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "关联的菜单ID" )]
+        [FKRelationAttribute("tb_MenuInfo","MenuID")]
+        public long? MenuID
+        { 
+            get{return _MenuID;}
+            set{
+            SetProperty(ref _MenuID, value);
+                        }
+        }
+
         #endregion
 
         #region 扩展属性
@@ -116,7 +130,9 @@ namespace RUINORERP.Model
         [Navigate(NavigateType.OneToOne, nameof(ID))]
         public virtual tb_FlowchartDefinition tb_flowchartdefinition { get; set; }
 
-
+        [SugarColumn(IsIgnore = true)]
+        [Navigate(NavigateType.OneToOne, nameof(MenuID))]
+        public virtual tb_MenuInfo tb_menuinfo { get; set; }
 
         #endregion
 

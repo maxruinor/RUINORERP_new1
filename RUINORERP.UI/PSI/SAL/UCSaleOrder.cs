@@ -2,6 +2,7 @@ using AutoMapper;
 using AutoUpdateTools;
 using DevAge.Windows.Forms;
 using FastReport.DevComponents.DotNetBar.Controls;
+using Krypton.Toolkit;
 using LiveChartsCore.Geo;
 using MathNet.Numerics;
 using Microsoft.Extensions.Logging;
@@ -19,13 +20,13 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Processor;
 using RUINORERP.Business.Security;
 using RUINORERP.Common;
-using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Common.Helper;
 using RUINORERP.Global;
 using RUINORERP.Global.CustomAttribute;
 using RUINORERP.Global.EnumExt;
+using RUINORERP.Lib.BusinessImage;
 using RUINORERP.Model;
 using RUINORERP.Model.Base;
 using RUINORERP.Model.CommonModel;
@@ -34,11 +35,11 @@ using RUINORERP.UI.AdvancedUIModule;
 using RUINORERP.UI.BaseForm;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.CommonUI;
+using RUINORERP.UI.FM;
 using RUINORERP.UI.Monitoring.Auditing;
 using RUINORERP.UI.Network.Services;
 using RUINORERP.UI.Report;
 using RUINORERP.UI.UCSourceGrid;
-using Krypton.Toolkit;
 using SourceGrid;
 using SqlSugar;
 using System;
@@ -903,7 +904,7 @@ namespace RUINORERP.UI.PSI.SAL
                     return;
                 }
                 AmountCalculate(details);
-               
+
 
             }
             catch (Exception ex)
@@ -1280,13 +1281,19 @@ namespace RUINORERP.UI.PSI.SAL
 
                 if (NeedValidated && !MainForm.Instance.AppContext.SysConfig.CheckNegativeInventory)
                 {
-                    var queryable = dc.BaseGetQueryable();
-                    list = await queryable.ToListAsync();
+                    // 先提取订单明细中所有需要检查库存的 ProdDetailID 和 Location_ID 组合
+                    var prodDetailIds = details.Where(d => d.ProdDetailID > 0).Select(d => d.ProdDetailID).Distinct().ToList();
+                    var locationIds = details.Where(d => d.Location_ID > 0).Select(d => d.Location_ID).Distinct().ToList();
+
+                    // 只查询需要的库存数据，而不是查询所有
+                    var queryable = dc.BaseGetQueryable()
+                        .Where(x => prodDetailIds.Contains(x.ProdDetailID) && locationIds.Contains(x.Location_ID.Value));
+                    var inventoryList = await queryable.ToListAsync();
 
                     StringBuilder NegativeInventorymsg = new StringBuilder();
                     foreach (var item in details)
                     {
-                        var detail = list.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID && c.Location_ID == item.Location_ID);
+                        var detail = inventoryList.FirstOrDefault(c => c.ProdDetailID == item.ProdDetailID && c.Location_ID == item.Location_ID);
                         if (detail != null)
                         {
                             if (NeedValidated && (detail.Quantity - item.Quantity) < 0)
@@ -1531,11 +1538,11 @@ namespace RUINORERP.UI.PSI.SAL
                 {
                     // 结案失败时弹出明确的错误提示
                     string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
-                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
-                        "结案失败", 
-                        Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！",
+                        "结案失败",
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK,
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
-                    
+
                     MainForm.Instance.PrintInfoLog($"{EditEntity.SOrderNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
                     return false;
                 }

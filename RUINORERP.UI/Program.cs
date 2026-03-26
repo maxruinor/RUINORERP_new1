@@ -407,10 +407,18 @@ namespace RUINORERP.UI
         /// 修改：增加对更新后启动场景的智能处理
         /// </summary>
         /// <returns>是否成功激活或等待到旧进程退出</returns>
+        /// <summary>
+        /// 激活已存在的实例或等待旧实例退出
+        /// 【修复】优化更新场景的处理，增加对更新程序启动参数的检测
+        /// </summary>
         private static bool ActivateExistingInstance()
         {
             // 获取当前进程名称（不带扩展名）
             string processName = Process.GetCurrentProcess().ProcessName;
+            
+            // 【修复】检测是否从更新程序启动
+            string[] args = Environment.GetCommandLineArgs();
+            bool isFromUpdater = args.Any(arg => arg.Contains("updated"));
 
             // 查找同名的运行中进程
             Process[] processes = Process.GetProcessesByName(processName);
@@ -426,22 +434,37 @@ namespace RUINORERP.UI
                     // 检查旧进程的启动时间，判断是否是更新后刚刚启动的新进程
                     // 如果旧进程启动时间很新（小于30秒），可能是更新场景
                     TimeSpan runningTime = DateTime.Now - process.StartTime;
-                    if (runningTime.TotalSeconds < 30)
+                    
+                    // 【修复】从更新程序启动时，无论进程启动时间如何都进行等待
+                    if (runningTime.TotalSeconds < 30 || isFromUpdater)
                     {
-                        // 尝试等待旧进程退出，最多等待10秒
-                        for (int i = 0; i < 20; i++)
+                        // 【修复】从更新程序启动时增加等待时间（30秒），正常场景保持10秒
+                        int waitTimeout = isFromUpdater ? 30 : 10;
+                        int waitInterval = 500;
+                        int maxRetries = (waitTimeout * 1000) / waitInterval;
+                        
+                        System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 检测到{(isFromUpdater ? "更新程序启动" : "可能的更新场景")}，等待旧进程退出，超时时间: {waitTimeout}秒");
+                        
+                        // 尝试等待旧进程退出
+                        for (int i = 0; i < maxRetries; i++)
                         {
                             if (process.HasExited)
                             {
                                 // 旧进程已退出，刷新进程列表后继续
+                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 旧进程已退出，等待次数: {i}");
                                 break;
                             }
-                            Thread.Sleep(500);
+                            Thread.Sleep(waitInterval);
                         }
 
                         // 如果旧进程已退出，重新检查
                         if (process.HasExited)
                         {
+                            // 【修复】额外等待确保资源释放（更新场景等待2秒，正常场景等待0.5秒）
+                            int extraWait = isFromUpdater ? 2000 : 500;
+                            System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 额外等待 {extraWait}ms 确保资源释放");
+                            Thread.Sleep(extraWait);
+                            
                             // 刷新进程列表，确保没有其他残留进程
                             Process[] newProcesses = Process.GetProcessesByName(processName);
                             bool hasOtherInstances = false;
@@ -457,14 +480,24 @@ namespace RUINORERP.UI
                             if (!hasOtherInstances)
                             {
                                 // 旧进程已退出，当前进程可以继续启动
+                                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 旧进程已完全退出，允许当前进程启动");
                                 return true;
                             }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 仍有其他实例在运行");
+                            }
+                        }
+                        else
+                        {
+                            System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 等待超时，旧进程仍未退出");
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     // 如果无法获取进程信息，继续原有逻辑
+                    System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 异常: {ex.Message}");
                 }
 
                 // 激活已有窗口

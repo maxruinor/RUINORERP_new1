@@ -2140,6 +2140,20 @@ namespace AutoUpdate
                 // 【新增】记录版本历史
                 RecordVersionHistory();
 
+                // 【修复】确保配置文件已复制，再启动AutoUpdateUpdater
+                // 这是确保AutoUpdateUpdater能读取最新配置的关键步骤
+                AppendAllText("[配置同步] 开始强制复制配置文件到根目录...");
+                bool configCopied = CopyConfigFileToRoot();
+                if (!configCopied)
+                {
+                    AppendAllText("[配置同步] 警告: 配置文件复制可能未成功，AutoUpdateUpdater将使用默认配置");
+                }
+                else
+                {
+                    // 验证版本一致性
+                    ValidateConfigVersion();
+                }
+
                 // 关键：使用AutoUpdateUpdater来更新AutoUpdate程序自身
                 string currentExePath = Process.GetCurrentProcess().MainModule.FileName;
                 AppendAllText($"[AutoUpdate更新] 当前程序路径: {currentExePath}");
@@ -2157,8 +2171,9 @@ namespace AutoUpdate
                     
                     AppendAllText("自我更新辅助进程已成功启动，主进程即将退出...");
                     
-                    // 在退出前确保配置文件已复制到根目录
-                    EnsureConfigFileCopied();
+                    // 【修复】再次确保配置文件已复制到根目录（双重保险）
+                    AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
+                    CopyConfigFileToRoot();
                     
                     Thread.Sleep(1000); // 给辅助进程一点启动时间
 
@@ -2170,8 +2185,9 @@ namespace AutoUpdate
                 {
                     AppendAllText("警告：自我更新辅助进程启动失败，使用传统文件复制方式");
                     
-                    // 自我更新失败后，确保配置文件正确复制到根目录
-                    EnsureConfigFileCopied();
+                    // 【修复】自我更新失败后，使用统一的配置复制方法
+                    AppendAllText("[配置同步] 自我更新失败，确保配置文件正确复制到根目录...");
+                    CopyConfigFileToRoot();
                     
                     // 启动ERP系统
                     StartERPApplication();
@@ -2756,6 +2772,7 @@ namespace AutoUpdate
 
         /// <summary>
         /// 在应用更新前终止主进程（优化后的流程）
+        /// 【修复】增加超时时间和进程终止验证，确保主进程完全退出
         /// </summary>
         private void KillProcessBeforeApply()
         {
@@ -2794,8 +2811,8 @@ namespace AutoUpdate
                 pbDownFile.Refresh();
                 Application.DoEvents();
 
-                // 使用优雅终止方法
-                bool killSuccess = GracefulKillMainProcess(processName, 5000);
+                // 【修复】使用优雅终止方法，增加超时时间从5秒到10秒
+                bool killSuccess = GracefulKillMainProcess(processName, 10000);
 
                 if (!killSuccess)
                 {
@@ -2814,6 +2831,8 @@ namespace AutoUpdate
                         try
                         {
                             p.Kill();
+                            // 【修复】等待进程真正退出
+                            p.WaitForExit(3000);
                             AppendAllText($"[流程优化] 强制终止进程: {p.ProcessName}");
                         }
                         catch (Exception ex)
@@ -2823,8 +2842,31 @@ namespace AutoUpdate
                     }
                 }
 
-                // 等待一下确保进程完全退出
-                Thread.Sleep(500);
+                // 【修复】增加等待时间从500ms到2000ms，确保进程完全退出
+                Thread.Sleep(2000);
+                
+                // 【新增】验证进程是否真正终止
+                Process[] remainingProcesses = Process.GetProcessesByName(processName);
+                if (remainingProcesses.Length > 0)
+                {
+                    AppendAllText($"[流程优化] 警告: 仍有 {remainingProcesses.Length} 个进程未终止，执行强制终止");
+                    foreach (Process p in remainingProcesses)
+                    {
+                        try
+                        {
+                            p.Kill();
+                            p.WaitForExit(3000);
+                            AppendAllText($"[流程优化] 强制终止残留进程: {p.ProcessName} (PID: {p.Id})");
+                        }
+                        catch (Exception ex)
+                        {
+                            AppendAllText($"[流程优化] 强制终止残留进程失败: {ex.Message}");
+                        }
+                    }
+                    // 额外等待确保资源释放
+                    Thread.Sleep(1000);
+                }
+                
                 AppendAllText($"[流程优化] 主进程终止完成");
                 
                 // 更新UI状态
@@ -4069,6 +4111,101 @@ namespace AutoUpdate
             catch (Exception ex)
             {
                 AppendAllText($"[配置修复] 配置文件处理失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 【修复】统一配置文件复制方法
+        /// 确保AutoUpdaterList.xml从临时目录正确复制到根目录
+        /// </summary>
+        private bool CopyConfigFileToRoot()
+        {
+            try
+            {
+                string sourceConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                string targetConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+
+                AppendAllText($"[配置复制] 源文件: {sourceConfigFile}");
+                AppendAllText($"[配置复制] 目标文件: {targetConfigFile}");
+
+                if (!File.Exists(sourceConfigFile))
+                {
+                    AppendAllText($"[配置复制] 错误: 源配置文件不存在");
+                    return false;
+                }
+
+                // 无条件强制复制，确保配置最新
+                File.Copy(sourceConfigFile, targetConfigFile, true);
+
+                // 验证复制结果
+                if (File.Exists(targetConfigFile))
+                {
+                    var targetInfo = new FileInfo(targetConfigFile);
+                    var sourceInfo = new FileInfo(sourceConfigFile);
+
+                    if (targetInfo.Length == sourceInfo.Length)
+                    {
+                        AppendAllText($"[配置复制] 成功: 文件大小 {targetInfo.Length} 字节");
+
+                        // 验证版本信息
+                        var (version, _, _) = ParseXmlInfo(targetConfigFile);
+                        AppendAllText($"[配置复制] 配置文件版本: {version}");
+
+                        return true;
+                    }
+                    else
+                    {
+                        AppendAllText($"[配置复制] 警告: 文件大小不匹配");
+                        return false;
+                    }
+                }
+                else
+                {
+                    AppendAllText($"[配置复制] 错误: 复制后文件不存在");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[配置复制] 异常: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 【修复】验证配置文件版本
+        /// 确保本地配置文件与服务器版本一致
+        /// </summary>
+        private bool ValidateConfigVersion()
+        {
+            try
+            {
+                string serverConfigFile = Path.Combine(tempUpdatePath, "AutoUpdaterList.xml");
+                string localConfigFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "AutoUpdaterList.xml");
+
+                if (!File.Exists(serverConfigFile) || !File.Exists(localConfigFile))
+                {
+                    return false;
+                }
+
+                var (serverVersion, _, _) = ParseXmlInfo(serverConfigFile);
+                var (localVersion, _, _) = ParseXmlInfo(localConfigFile);
+
+                if (serverVersion == localVersion)
+                {
+                    AppendAllText($"[版本验证] 配置文件版本一致: {localVersion}");
+                    return true;
+                }
+                else
+                {
+                    AppendAllText($"[版本验证] 警告: 版本不一致 - 服务器:{serverVersion}, 本地:{localVersion}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[版本验证] 异常: {ex.Message}");
+                return false;
             }
         }
 

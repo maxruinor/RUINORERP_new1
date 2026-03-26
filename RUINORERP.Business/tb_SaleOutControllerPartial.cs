@@ -921,7 +921,7 @@ namespace RUINORERP.Business
                         && entity.tb_saleorder.DataStatus == (int)DataStatus.确认)
                     {
                         entity.tb_saleorder.DataStatus = (int)DataStatus.完结;
-                        entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
+                        entity.tb_saleorder.CloseCaseOpinions = "【系统自动结案】" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核销售库单时:" + entity.SaleOutNo + "结案。"; ;
                         entity.tb_saleorder.TotalCost = entity.tb_SaleOutDetails.Sum(c => (c.Cost + c.CustomizedCost) * c.Quantity);
 
                         // 关键修复：在事务提交前更新订单状态，确保与库存扣减的原子性

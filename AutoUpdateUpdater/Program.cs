@@ -579,47 +579,72 @@ namespace AutoUpdateUpdater
         }
 
         /// <summary>
+        /// 【修复】读取配置文件获取主程序路径
+        /// 增加重试机制和错误处理
+        /// </summary>
+        private static string GetMainAppPathFromConfig(string currentDir)
+        {
+            string configFile = Path.Combine(currentDir, "AutoUpdaterList.xml");
+            string defaultAppExe = "企业数字化集成ERP.exe";
+
+            // 重试3次
+            for (int i = 0; i < 3; i++)
+            {
+                try
+                {
+                    if (File.Exists(configFile))
+                    {
+                        var xmlDoc = new System.Xml.XmlDocument();
+                        xmlDoc.Load(configFile);
+
+                        var entryPointNode = xmlDoc.SelectSingleNode("//EntryPoint");
+                        if (entryPointNode != null && !string.IsNullOrEmpty(entryPointNode.InnerText))
+                        {
+                            string mainAppExe = entryPointNode.InnerText;
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 成功获取主程序路径: {mainAppExe} (尝试{i + 1})");
+                            return mainAppExe;
+                        }
+                        else
+                        {
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] EntryPoint节点为空，使用默认值");
+                        }
+                    }
+                    else
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 配置文件不存在，等待后重试... (尝试{i + 1})");
+                        Thread.Sleep(500); // 等待500ms后重试
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 异常: {ex.Message} (尝试{i + 1})");
+                    Thread.Sleep(500);
+                }
+            }
+
+            WriteLog("AutoUpdateUpdaterLog.txt", $"[配置读取] 使用默认主程序路径: {defaultAppExe}");
+            return defaultAppExe;
+        }
+
+        /// <summary>
         /// 启动ERP系统应用程序
+        /// 【修复】增加等待AutoUpdate进程退出的逻辑，确保资源完全释放
         /// </summary>
         private static void StartERPApplication()
         {
             try
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", "开始启动ERP系统应用程序...");
-                
+
+                // 【新增】等待AutoUpdate进程完全退出
+                WaitForAutoUpdateExit();
+
                 // 获取当前目录
                 string currentDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                
-                // 尝试从配置文件获取入口程序路径
-                string configFile = Path.Combine(currentDir, "AutoUpdaterList.xml");
-                string mainAppExe = "企业数字化集成ERP.exe";
-                
-                if (File.Exists(configFile))
-                {
-                    try
-                    {
-                        // 使用System.Xml命名空间读取配置文件
-                        var xmlDoc = new System.Xml.XmlDocument();
-                        xmlDoc.Load(configFile);
-                        
-                        var entryPointNode = xmlDoc.SelectSingleNode("//EntryPoint");
-                        if (entryPointNode != null && !string.IsNullOrEmpty(entryPointNode.InnerText))
-                        {
-                            mainAppExe = entryPointNode.InnerText;
-                            WriteLog("AutoUpdateUpdaterLog.txt", $"从配置文件读取主程序路径: {mainAppExe}");
-                        }
-                        else
-                        {
-                            WriteLog("AutoUpdateUpdaterLog.txt", $"使用默认主程序路径: {mainAppExe}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteLog("AutoUpdateUpdaterLog.txt", $"读取配置文件失败: {ex.Message}，使用默认路径");
-                        MessageBox.Show($"读取配置文件失败: {ex.Message}，使用默认路径", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
-                
+
+                // 【修复】使用新的配置读取方法，增加重试机制
+                string mainAppExe = GetMainAppPathFromConfig(currentDir);
+
                 // 确保路径是完整的绝对路径
                 if (!Path.IsPathRooted(mainAppExe))
                 {
@@ -637,8 +662,8 @@ namespace AutoUpdateUpdater
                     startInfo.WorkingDirectory = Path.GetDirectoryName(mainAppExe);
                     startInfo.UseShellExecute = true;
                     
-                    // 添加启动参数，标识从AutoUpdateUpdater启动
-                    startInfo.Arguments = "--updated-from-auto-updater";
+                    // 【修复】统一使用--updated参数
+                    startInfo.Arguments = "--updated";
                     
                     WriteLog("AutoUpdateUpdaterLog.txt", $"工作目录: {startInfo.WorkingDirectory}");
                     WriteLog("AutoUpdateUpdaterLog.txt", $"启动参数: {startInfo.Arguments}");
@@ -667,6 +692,57 @@ namespace AutoUpdateUpdater
                 WriteLog("AutoUpdateUpdaterLog.txt", errorMsg);
                 WriteLog("AutoUpdateUpdaterLog.txt", $"异常详情: {ex.StackTrace}");
                 MessageBox.Show(errorMsg, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
+        /// <summary>
+        /// 【新增】等待AutoUpdate进程退出
+        /// 确保AutoUpdate完全退出后再启动主程序，避免"程序已经在运行中"错误
+        /// </summary>
+        private static void WaitForAutoUpdateExit()
+        {
+            try
+            {
+                string[] autoUpdateProcessNames = new[] { "AutoUpdate", "AutoUpdate.vshost" };
+                int maxWaitTime = 15000; // 最大等待15秒
+                int waitInterval = 500;
+                int elapsedTime = 0;
+                
+                WriteLog("AutoUpdateUpdaterLog.txt", "开始等待AutoUpdate进程退出...");
+                
+                while (elapsedTime < maxWaitTime)
+                {
+                    bool hasAutoUpdateRunning = false;
+                    foreach (var processName in autoUpdateProcessNames)
+                    {
+                        Process[] processes = Process.GetProcessesByName(processName);
+                        // 排除当前进程
+                        processes = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
+                        if (processes.Length > 0)
+                        {
+                            hasAutoUpdateRunning = true;
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"检测到AutoUpdate进程仍在运行: {processName} (数量: {processes.Length})");
+                            break;
+                        }
+                    }
+                    
+                    if (!hasAutoUpdateRunning)
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", "AutoUpdate进程已退出，继续启动主程序");
+                        // 额外等待确保资源释放
+                        Thread.Sleep(1000);
+                        return;
+                    }
+                    
+                    Thread.Sleep(waitInterval);
+                    elapsedTime += waitInterval;
+                }
+                
+                WriteLog("AutoUpdateUpdaterLog.txt", "警告: 等待AutoUpdate进程退出超时，将继续启动主程序");
+            }
+            catch (Exception ex)
+            {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"等待AutoUpdate退出时发生异常: {ex.Message}");
             }
         }
     }

@@ -25,6 +25,9 @@ namespace RUINORERP.Repository.UnitOfWorks
         private readonly ISqlSugarClient _sqlSugarClient;
         private readonly ApplicationContext _appContext;
 
+        // 读写锁：允许并发读，独占写，优化高并发性能
+        private readonly ReaderWriterLockSlim _rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+
         // 使用 AsyncLocal 保证异步安全
         private readonly AsyncLocal<TransactionContext> _currentTransactionContext =
             new AsyncLocal<TransactionContext>();
@@ -52,11 +55,15 @@ namespace RUINORERP.Repository.UnitOfWorks
         }
 
         /// <summary>
-        /// 获取异步上下文独立的数据库客户端
+        /// 获取异步上下文独立的数据库客户端 - 不持有锁，直接返回
+        /// 注意：此方法在事务操作前调用，不与事务锁冲突
         /// </summary>
         public ISqlSugarClient GetDbClient()
         {
             // 每个异步上下文使用独立的连接实例
+            // 注意：此处不再加锁，因为每个AsyncLocal上下文是独立的，
+            // 不存在并发访问同一个AsyncLocal.Value的情况
+            // 锁的职责交给需要事务保护的方法（BeginTran/CommitTran/RollbackTran）
             if (_asyncLocalClient.Value == null)
             {
                 // 复制原始连接配置，创建新的连接实例
@@ -95,7 +102,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         }
 
         /// <summary>
-        /// 开始事务
+        /// 开始事务 - 使用写锁确保独占访问
         /// </summary>
         /// <param name="isolationLevel">可选的隔离级别，不指定则使用数据库默认</param>
         public void BeginTran(IsolationLevel? isolationLevel = null)
@@ -103,67 +110,75 @@ namespace RUINORERP.Repository.UnitOfWorks
             var context = GetOrCreateTransactionContext();
             var dbClient = GetDbClient();
         
-            // 锁住当前线程的连接
-            lock (dbClient)
+            // 使用写锁保护事务开始操作
+            _rwLock.EnterWriteLock();
+            try
             {
-                try
+                // 检查嵌套深度
+                if (context.Depth >= 15) // 限制最大嵌套深度为15，满足复杂ERP业务场景需求
                 {
-                    // 检查嵌套深度
-                    if (context.Depth >= 8) // 限制最大嵌套深度
+                    throw new InvalidOperationException(
+                        $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (15)，请检查业务逻辑是否存在循环调用或过度嵌套");
+                }
+
+                // 增加事务深度
+                context.Depth++;
+                _tranDepth.Value++;
+
+                // 超过10层时记录警告日志，便于后续优化
+                if (context.Depth > 10)
+                {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务嵌套深度已达到 {context.Depth} 层，超过建议的10层限制，建议检查业务逻辑是否可以优化");
+                }
+        
+                // 最外层事务：开启物理事务
+                if (context.Depth == 1)
+                {
+                    // 确保连接是打开的
+                    if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
                     {
-                        throw new InvalidOperationException(
-                            $"[Transaction-{context.TransactionId}] 事务嵌套深度超过最大限制 (8)，请检查业务逻辑");
+                        dbClient.Ado.Connection.Open();
                     }
         
-                    // 增加事务深度
-                    context.Depth++;
-                    _tranDepth.Value++;
-        
-                    // 最外层事务：开启物理事务
-                    if (context.Depth == 1)
-                    {
-                        // 确保连接是打开的
-                        if (dbClient.Ado.Connection.State != System.Data.ConnectionState.Open)
-                        {
-                            dbClient.Ado.Connection.Open();
-                        }
-        
-                        // 设置命令超时时间
-                        dbClient.Ado.CommandTimeOut = DEFAULT_TRANSACTION_TIMEOUT;
+                    // 设置命令超时时间
+                    dbClient.Ado.CommandTimeOut = DEFAULT_TRANSACTION_TIMEOUT;
                                 
-                        // 根据隔离级别开启事务
-                        if (isolationLevel.HasValue)
-                        {
-                            dbClient.Ado.BeginTran(isolationLevel.Value);
-                            _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，隔离级别：{isolationLevel.Value}，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
-                        }
-                        else
-                        {
-                            dbClient.Ado.BeginTran();
-                            _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
-                        }
+                    // 根据隔离级别开启事务
+                    if (isolationLevel.HasValue)
+                    {
+                        dbClient.Ado.BeginTran(isolationLevel.Value);
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，隔离级别：{isolationLevel.Value}，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
                     }
-                    // 嵌套事务：使用保存点（SQL Server 支持）
                     else
                     {
-                        var savePointName = $"SP_{context.TransactionId.ToString("N").Substring(0, 8)}_{context.Depth}";
-                        dbClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
-                        context.SavePointStack.Push(savePointName);
-                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点：{savePointName}");
+                        dbClient.Ado.BeginTran();
+                        _logger.LogDebug($"[Transaction-{context.TransactionId}] 事务已开启，线程 ID: {Thread.CurrentThread.ManagedThreadId}");
                     }
-        
-                    context.Status = TransactionStatus.Active;
-                    context.UpdateActivityTime();
                 }
-                catch (Exception ex)
+                // 嵌套事务：使用保存点（SQL Server 支持）
+                else
                 {
-                    // 回滚深度计数
-                    context.Depth = Math.Max(0, context.Depth - 1);
-                    _tranDepth.Value = Math.Max(0, _tranDepth.Value - 1);
-        
-                    _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务开启失败");
-                    throw new InvalidOperationException("事务开启失败", ex);
+                    var savePointName = $"SP_{context.TransactionId.ToString("N").Substring(0, 8)}_{context.Depth}";
+                    dbClient.Ado.ExecuteCommand($"SAVE TRANSACTION {savePointName}");
+                    context.SavePointStack.Push(savePointName);
+                    _logger.LogDebug($"[Transaction-{context.TransactionId}] 创建保存点：{savePointName}");
                 }
+        
+                context.Status = TransactionStatus.Active;
+                context.UpdateActivityTime();
+            }
+            catch (Exception ex)
+            {
+                // 回滚深度计数
+                context.Depth = Math.Max(0, context.Depth - 1);
+                _tranDepth.Value = Math.Max(0, _tranDepth.Value - 1);
+        
+                _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 事务开启失败");
+                throw new InvalidOperationException("事务开启失败", ex);
+            }
+            finally
+            {
+                _rwLock.ExitWriteLock();
             }
         }
 
@@ -173,7 +188,7 @@ namespace RUINORERP.Repository.UnitOfWorks
         public void CommitTran() => CommitTranInternal();
                 
         /// <summary>
-        /// 提交事务内部实现
+        /// 提交事务内部实现 - 使用写锁保护
         /// </summary>
         private void CommitTranInternal()
         {
@@ -186,70 +201,72 @@ namespace RUINORERP.Repository.UnitOfWorks
         
             var dbClient = GetDbClient();
         
-            // 锁住当前线程的连接
-            lock (dbClient)
+            // 使用写锁保护事务提交操作
+            _rwLock.EnterWriteLock();
+            try
             {
-                try
+                if (context.Depth <= 0)
                 {
-                    if (context.Depth <= 0)
-                    {
-                        return;
-                    }
+                    return;
+                }
         
-                    // 检查回滚标记
-                    if (context.ShouldRollback)
-                    {
-                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务已标记为回滚，跳过提交");
-                        context.Depth--;
-                        _tranDepth.Value--;
-                        return;
-                    }
-        
-                    // 减少深度
+                // 检查回滚标记
+                if (context.ShouldRollback)
+                {
+                    _logger.LogWarning($"[Transaction-{context.TransactionId}] 事务已标记为回滚，跳过提交");
                     context.Depth--;
                     _tranDepth.Value--;
-                    context.UpdateActivityTime();
+                    return;
+                }
         
-                    // 内层提交：仅更新深度
-                    if (context.Depth > 0)
-                    {
-                        return;
-                    }
+                // 减少深度
+                context.Depth--;
+                _tranDepth.Value--;
+                context.UpdateActivityTime();
         
-                    // 最外层提交
-                    try
-                    {
-                        dbClient.Ado.CommitTran();
-                        context.Status = TransactionStatus.Committed;
+                // 内层提交：仅更新深度
+                if (context.Depth > 0)
+                {
+                    return;
+                }
         
-                        var duration = context.GetDuration().TotalSeconds;
-                        if (duration > 10)
-                        {
-                            _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时：{duration:F2}秒");
-                        }
-                    }
-                    catch (Exception commitEx)
+                // 最外层提交
+                try
+                {
+                    dbClient.Ado.CommitTran();
+                    context.Status = TransactionStatus.Committed;
+        
+                    var duration = context.GetDuration().TotalSeconds;
+                    if (duration > 10)
                     {
-                        context.Status = TransactionStatus.RolledBack;
-                        _logger.LogError(commitEx, $"[Transaction-{context.TransactionId}] 事务提交失败");
-                        throw;
-                    }
-                    finally
-                    {
-                        ResetTransactionState();
+                        _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时：{duration:F2}秒");
                     }
                 }
-                catch (Exception ex)
+                catch (Exception commitEx)
                 {
                     context.Status = TransactionStatus.RolledBack;
-                    ForceRollback(dbClient);
-                    throw new InvalidOperationException($"事务提交失败：{ex.Message}", ex);
+                    _logger.LogError(commitEx, $"[Transaction-{context.TransactionId}] 事务提交失败");
+                    throw;
                 }
+                finally
+                {
+                    ResetTransactionState();
+                }
+            }
+            catch (Exception ex)
+            {
+                context.Status = TransactionStatus.RolledBack;
+                ForceRollback(dbClient);
+                throw new InvalidOperationException($"事务提交失败：{ex.Message}", ex);
+            }
+            finally
+            {
+                _rwLock.ExitWriteLock();
             }
         }
 
         /// <summary>
-        /// 回滚事务
+        /// 回滚事务 - 使用写锁保护
         /// </summary>
         public void RollbackTran()
         {
@@ -262,65 +279,64 @@ namespace RUINORERP.Repository.UnitOfWorks
         
             var dbClient = GetDbClient();
         
-            // 锁住当前线程的连接
-            lock (dbClient)
+            // 使用写锁保护事务回滚操作
+            _rwLock.EnterWriteLock();
+            try
             {
-                try
+                if (context.Depth <= 0)
                 {
-                    if (context.Depth <= 0)
+                    return;
+                }
+        
+                // 设置回滚标记
+                context.ShouldRollback = true;
+                context.UpdateActivityTime();
+        
+                // 减少深度
+                context.Depth--;
+                _tranDepth.Value--;
+        
+                // 最外层回滚
+                if (context.Depth == 0)
+                {
+                    try
                     {
-                        return;
+                        dbClient.Ado.RollbackTran();
+                        context.Status = TransactionStatus.RolledBack;
                     }
-        
-                    // 设置回滚标记
-                    context.ShouldRollback = true;
-                    context.UpdateActivityTime();
-        
-                    // 减少深度
-                    context.Depth--;
-                    _tranDepth.Value--;
-        
-                    // 最外层回滚
-                    if (context.Depth == 0)
+                    catch (Exception rollbackEx)
                     {
-                        try
-                        {
-                            dbClient.Ado.RollbackTran();
-                            context.Status = TransactionStatus.RolledBack;
-                        }
-                        catch (Exception rollbackEx)
-                        {
-                            _logger.LogError(rollbackEx, $"[Transaction-{context.TransactionId}] 事务回滚失败");
-                            throw;
-                        }
-                    }
-                    // 嵌套事务：回滚到保存点
-                    else if (context.SavePointStack.TryPop(out var savePoint))
-                    {
-                        try
-                        {
-                            dbClient.Ado.ExecuteCommand($"ROLLBACK TRANSACTION {savePoint}");
-                        }
-                        catch (Exception savePointEx)
-                        {
-                            _logger.LogError(savePointEx, $"[Transaction-{context.TransactionId}] 保存点回滚失败：{savePoint}");
-                            throw;
-                        }
+                        _logger.LogError(rollbackEx, $"[Transaction-{context.TransactionId}] 事务回滚失败");
+                        throw;
                     }
                 }
-                catch (Exception ex)
+                // 嵌套事务：回滚到保存点
+                else if (context.SavePointStack.TryPop(out var savePoint))
                 {
-                    _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 回滚操作失败");
-                    ForceRollback(dbClient);
-                    throw new InvalidOperationException($"事务回滚失败：{ex.Message}", ex);
-                }
-                finally
-                {
-                    if (context.Depth <= 0)
+                    try
                     {
-                        ResetTransactionState();
+                        dbClient.Ado.ExecuteCommand($"ROLLBACK TRANSACTION {savePoint}");
+                    }
+                    catch (Exception savePointEx)
+                    {
+                        _logger.LogError(savePointEx, $"[Transaction-{context.TransactionId}] 保存点回滚失败：{savePoint}");
+                        throw;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 回滚操作失败");
+                ForceRollback(dbClient);
+                throw new InvalidOperationException($"事务回滚失败：{ex.Message}", ex);
+            }
+            finally
+            {
+                if (context.Depth <= 0)
+                {
+                    ResetTransactionState();
+                }
+                _rwLock.ExitWriteLock();
             }
         }
 
@@ -573,6 +589,9 @@ namespace RUINORERP.Repository.UnitOfWorks
                     _tranDepth.Value = 0;
                 }
             }
+            
+            // 释放读写锁
+            _rwLock?.Dispose();
         }
 
         /// <summary>

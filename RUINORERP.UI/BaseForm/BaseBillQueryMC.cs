@@ -843,6 +843,9 @@ namespace RUINORERP.UI.BaseForm
 
 
 
+        /// <summary>
+        /// 打印操作
+        /// </summary>
         public virtual async Task Print(RptMode rptMode)
         {
             List<M> printItems = new List<M>();
@@ -861,7 +864,7 @@ namespace RUINORERP.UI.BaseForm
                 {
                     if (item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.草稿).ToString() || item.GetPropertyValue("DataStatus").ToString() == ((int)DataStatus.新建).ToString())
                     {
-                        BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M).Name);
+                        BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M));
                         if (MessageBox.Show($"当前【{bizType.ToString()}】没有审核,你确定要打印吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
                             continue;
@@ -872,7 +875,7 @@ namespace RUINORERP.UI.BaseForm
                 //打印次数提醒
                 if (item.ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M).Name);
+                    BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(typeof(M));
                     int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {

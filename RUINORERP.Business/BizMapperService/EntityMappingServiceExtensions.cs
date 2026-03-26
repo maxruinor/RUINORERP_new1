@@ -155,13 +155,17 @@ namespace RUINORERP.Business.BizMapperService
             return Current.GetBizTypeByEntity(entity);
         }
 
+
+
+
         /// <summary>
         /// 根据实体对象获取业务类型（泛型版本）
+        /// 约束为 BaseEntity 或其子类，确保传入的实体对象具有基本的实体属性（如ID、No等），从而能够正确映射到业务类型。
         /// </summary>
         /// <typeparam name="T">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
         /// <returns>业务类型</returns>
-        public static BizType GetBizType<T>(T entity) where T : class
+        public static BizType GetBizType<T>(T entity) where T : BaseEntity
         {
             if (entity == null)
                 return BizType.无对应数据;

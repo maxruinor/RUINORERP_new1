@@ -80,7 +80,7 @@ namespace RUINORERP.Business.CommService
             _unitOfWorkManage = unitOfWorkManage ?? throw new ArgumentNullException(nameof(unitOfWorkManage));
             _appContext = appContext;
 
-            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
+            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T));
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
         }

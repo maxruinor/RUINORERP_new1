@@ -836,7 +836,7 @@ namespace RUINORERP.UI.BaseForm
                     // 添加设计时检查，避免泛型约束错误
                     try
                     {
-                        CurrentBizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+                        CurrentBizType = EntityMappingHelper.GetBizType(typeof(T));
                         CurrentBizTypeName = CurrentBizType.ToString();
                     }
                     catch
@@ -8200,7 +8200,7 @@ namespace RUINORERP.UI.BaseForm
             frm.kryptonPanel1.Controls.Add(ucBaseList);
             ucBaseList.OnSelectDataRow += UcBaseList_OnSelectDataRow;
             // 使用EntityMappingHelper代替BizTypeMapper
-            var BizTypeText = EntityMappingHelper.GetBizType(typeof(T).Name).ToString();
+            var BizTypeText = EntityMappingHelper.GetBizType(typeof(T)).ToString();
             frm.Text = "关联查询" + "-" + BizTypeText;
             frm.Show();
 
@@ -8614,7 +8614,6 @@ namespace RUINORERP.UI.BaseForm
             set
             {
                 printConfig = value;
-
             }
         }
 
@@ -8680,7 +8679,7 @@ namespace RUINORERP.UI.BaseForm
                 //打印次数提醒
                 if (item.ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = EntityMappingHelper.GetBizType(typeof(T).Name);
+                    BizType bizType = EntityMappingHelper.GetBizType(typeof(T));
                     int printCounter = item.GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {

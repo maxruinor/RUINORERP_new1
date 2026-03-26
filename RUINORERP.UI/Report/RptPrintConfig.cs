@@ -254,7 +254,7 @@ namespace RUINORERP.UI.Report
                 //打印次数提醒
                 if (PrintDataSources.Count > 0 && PrintDataSources[0].ContainsProperty("PrintStatus"))
                 {
-                    BizType bizType = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name);
+                   var bizType = Business.BizMapperService.EntityMappingHelper.GetBizTypeByEntity(PrintDataSources[0]);
                     int printCounter = PrintDataSources[0].GetPropertyValue("PrintStatus").ToString().ToInt();
                     if (printCounter > 0)
                     {
@@ -334,10 +334,10 @@ namespace RUINORERP.UI.Report
                     using (var dialog = new SaveFileDialog())
                     {
                         dialog.Filter = "PDF Files (*.pdf)|*.pdf";
-                        string pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + ".pdf";
+                        string pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType()).ToString() + ".pdf";
                         if (listboxBIll.Items.Count > 0)
                         {
-                            pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType().Name).ToString() + listboxBIll.Items[0].ToString() + ".pdf";
+                            pdfName = Business.BizMapperService.EntityMappingHelper.GetBizType(PrintDataSources[0].GetType()).ToString() + listboxBIll.Items[0].ToString() + ".pdf";
                         }
                         dialog.FileName = pdfName;
                         if (dialog.ShowDialog() == DialogResult.OK)

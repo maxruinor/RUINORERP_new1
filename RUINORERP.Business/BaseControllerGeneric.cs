@@ -75,7 +75,7 @@ namespace RUINORERP.Business
             _appContext = appContext;
             _rowLevelAuthFilter = _appContext.GetRequiredService<SqlSugarRowLevelAuthFilter>();
             _tableSchemaManager = appContext.GetRequiredService<ITableSchemaManager>();
-            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T).Name);
+            BizType bizType = BizMapperService.EntityMappingHelper.GetBizType(typeof(T));
             BizTypeText = bizType.ToString();
             BizTypeInt = (int)bizType;
             _cacheManager = appContext.GetRequiredService<IEntityCacheManager>();

@@ -155,7 +155,6 @@ namespace RUINORERP.UI
 
 
 
-
         static void CreateConfig()
         {
             //这里可以弄一个ICONFIG
@@ -403,100 +402,145 @@ namespace RUINORERP.UI
 
 
         /// <summary>
-        /// 激活已存在的实例（用于单实例检测）
-        /// 修改：增加对更新后启动场景的智能处理
-        /// </summary>
-        /// <returns>是否成功激活或等待到旧进程退出</returns>
-        /// <summary>
         /// 激活已存在的实例或等待旧实例退出
         /// 【修复】优化更新场景的处理，增加对更新程序启动参数的检测
+        /// 【关键修改】改进进程等待逻辑，确保Mutex正确释放
         /// </summary>
         private static bool ActivateExistingInstance()
         {
             // 获取当前进程名称（不带扩展名）
             string processName = Process.GetCurrentProcess().ProcessName;
+            int currentProcessId = Process.GetCurrentProcess().Id;
             
             // 【修复】检测是否从更新程序启动
             string[] args = Environment.GetCommandLineArgs();
             bool isFromUpdater = args.Any(arg => arg.Contains("updated"));
 
             // 查找同名的运行中进程
-            Process[] processes = Process.GetProcessesByName(processName);
+            Process[] processes = Process.GetProcessesByName(processName)
+                .Where(p => p.Id != currentProcessId).ToArray();
 
+            if (processes.Length == 0)
+            {
+                return true; // 没有其他实例在运行
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 检测到 {processes.Length} 个其他实例在运行");
+
+            // 【修复】从更新程序启动时的特殊处理
+            if (isFromUpdater)
+            {
+                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 从更新程序启动，执行特殊等待逻辑");
+                
+                int waitTimeout = 35000; // 35秒超时
+                int waitInterval = 300;
+                int elapsedTime = 0;
+                int checkCount = 0;
+                
+                while (elapsedTime < waitTimeout)
+                {
+                    checkCount++;
+                    
+                    // 刷新进程列表
+                    Process[] currentProcesses = Process.GetProcessesByName(processName)
+                        .Where(p => p.Id != currentProcessId).ToArray();
+                    
+                    if (currentProcesses.Length == 0)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 所有旧进程已退出，检查次数: {checkCount}");
+                        Thread.Sleep(3000); // 额外等待确保Mutex完全释放
+                        System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 额外等待完成，允许当前进程启动");
+                        return true;
+                    }
+                    
+                    // 尝试关闭旧进程
+                    foreach (Process process in currentProcesses)
+                    {
+                        try
+                        {
+                            if (!process.HasExited)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
+                                process.CloseMainWindow();
+                                if (!process.WaitForExit(200))
+                                {
+                                    process.Kill();
+                                    process.WaitForExit(500);
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 关闭进程时出错: {ex.Message}");
+                        }
+                    }
+                    
+                    Thread.Sleep(waitInterval);
+                    elapsedTime += waitInterval;
+                }
+                
+                // 最终检查
+                Process[] finalCheck = Process.GetProcessesByName(processName)
+                    .Where(p => p.Id != currentProcessId).ToArray();
+                
+                if (finalCheck.Length == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 最终检查：所有旧进程已退出");
+                    Thread.Sleep(3000);
+                    return true;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 警告: 等待超时，仍有 {finalCheck.Length} 个进程在运行");
+                    Thread.Sleep(3000);
+                }
+            }
+
+            // 处理正常场景
             foreach (Process process in processes)
             {
-                // 跳过当前进程（尚未启动的进程）
-                if (process.Id == Process.GetCurrentProcess().Id)
+                if (process.Id == currentProcessId)
                     continue;
 
                 try
                 {
-                    // 检查旧进程的启动时间，判断是否是更新后刚刚启动的新进程
-                    // 如果旧进程启动时间很新（小于30秒），可能是更新场景
                     TimeSpan runningTime = DateTime.Now - process.StartTime;
                     
-                    // 【修复】从更新程序启动时，无论进程启动时间如何都进行等待
-                    if (runningTime.TotalSeconds < 30 || isFromUpdater)
+                    if (runningTime.TotalSeconds < 30)
                     {
-                        // 【修复】从更新程序启动时增加等待时间（30秒），正常场景保持10秒
-                        int waitTimeout = isFromUpdater ? 30 : 10;
+                        int waitTimeout = 10;
                         int waitInterval = 500;
                         int maxRetries = (waitTimeout * 1000) / waitInterval;
                         
-                        System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 检测到{(isFromUpdater ? "更新程序启动" : "可能的更新场景")}，等待旧进程退出，超时时间: {waitTimeout}秒");
+                        System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 检测到可能的更新场景，等待旧进程退出");
                         
-                        // 尝试等待旧进程退出
                         for (int i = 0; i < maxRetries; i++)
                         {
                             if (process.HasExited)
                             {
-                                // 旧进程已退出，刷新进程列表后继续
-                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 旧进程已退出，等待次数: {i}");
+                                System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 旧进程已退出");
                                 break;
                             }
                             Thread.Sleep(waitInterval);
                         }
 
-                        // 如果旧进程已退出，重新检查
                         if (process.HasExited)
                         {
-                            // 【修复】额外等待确保资源释放（更新场景等待2秒，正常场景等待0.5秒）
-                            int extraWait = isFromUpdater ? 2000 : 500;
-                            System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 额外等待 {extraWait}ms 确保资源释放");
-                            Thread.Sleep(extraWait);
+                            Thread.Sleep(500);
                             
-                            // 刷新进程列表，确保没有其他残留进程
-                            Process[] newProcesses = Process.GetProcessesByName(processName);
-                            bool hasOtherInstances = false;
-                            foreach (Process p in newProcesses)
-                            {
-                                if (p.Id != Process.GetCurrentProcess().Id && !p.HasExited)
-                                {
-                                    hasOtherInstances = true;
-                                    break;
-                                }
-                            }
+                            Process[] newProcesses = Process.GetProcessesByName(processName)
+                                .Where(p => p.Id != currentProcessId && !p.HasExited).ToArray();
 
-                            if (!hasOtherInstances)
+                            if (newProcesses.Length == 0)
                             {
-                                // 旧进程已退出，当前进程可以继续启动
-                                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 旧进程已完全退出，允许当前进程启动");
+                                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 旧进程已完全退出");
                                 return true;
                             }
-                            else
-                            {
-                                System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 仍有其他实例在运行");
-                            }
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine("[ActivateExistingInstance] 警告: 等待超时，旧进程仍未退出");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    // 如果无法获取进程信息，继续原有逻辑
                     System.Diagnostics.Debug.WriteLine($"[ActivateExistingInstance] 异常: {ex.Message}");
                 }
 
@@ -504,8 +548,8 @@ namespace RUINORERP.UI
                 IntPtr handle = process.MainWindowHandle;
                 if (handle != IntPtr.Zero)
                 {
-                    ShowWindow(handle, SW_RESTORE); // 恢复窗口
-                    SetForegroundWindow(handle);    // 置顶窗口
+                    ShowWindow(handle, SW_RESTORE);
+                    SetForegroundWindow(handle);
                 }
 
                 MessageBox.Show("程序已经在运行中", "提示",
@@ -513,7 +557,8 @@ namespace RUINORERP.UI
                               MessageBoxIcon.Information);
                 return false;
             }
-            return false;
+            
+            return true;
         }
 
         private static void OnApplicationExit(object sender, EventArgs e)
@@ -544,7 +589,6 @@ namespace RUINORERP.UI
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         private const int SW_RESTORE = 9;
-
 
 
 
@@ -762,7 +806,7 @@ namespace RUINORERP.UI
                         }
                     });
 
-                    Application.Run(form1);//
+                    Application.Run(form1);
 
                 }
                 catch (Exception ex)
@@ -1154,4 +1198,3 @@ namespace RUINORERP.UI
 
     }
 }
-

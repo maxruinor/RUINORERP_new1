@@ -96,38 +96,42 @@ namespace RUINORERP.UI.Common
         // 单元格格式化事件处理
         private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            DataGridView dataGridView = sender as DataGridView;
-            string oldValue = e.Value?.ToString();
-            if (e.FormattingApplied)
+            // 快速前置检查
+            if (e.FormattingApplied || e.Value == null)
             {
-                return;
-            }
-            // 如果列是隐藏的，直接返回
-            if (!dataGridView.Columns[e.ColumnIndex].Visible)
-            {
+                e.Value = string.Empty;
                 return;
             }
 
-            if (e.Value == null)
+            DataGridView dataGridView = sender as DataGridView;
+            var column = dataGridView.Columns[e.ColumnIndex];
+
+            // 如果列是隐藏的，直接返回
+            if (!column.Visible)
             {
-                e.Value = "";
                 return;
             }
 
             // 获取列名
-            string columnName = dataGridView.Columns[e.ColumnIndex].Name;
+            string columnName = column.Name;
+
             // 处理特殊列类型（如图片）
             if (HandleSpecialColumnDisplay(e, columnName))
             {
                 return;
             }
 
-            e.Value = GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
-            if (!e.Value.Equals(oldValue))
+            // 保存原始值用于比较
+            object oldValue = e.Value;
+
+            // 获取显示文本
+            string displayText = GetGridViewDisplayText(typeof(T).Name, columnName, e.Value);
+
+            if (!string.IsNullOrEmpty(displayText))
             {
+                e.Value = displayText;
                 e.FormattingApplied = true;
             }
-            return;
         }
     }
 

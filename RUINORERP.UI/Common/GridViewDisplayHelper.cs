@@ -136,8 +136,15 @@ namespace RUINORERP.UI.Common
         /// </summary>
         public ConcurrentDictionary<string, List<KeyValuePair<string, string>>> ReferenceTableList { get; set; } = new ConcurrentDictionary<string, List<KeyValuePair<string, string>>>();
 
+        /// <summary>
+        /// 缓存固定字典映射查找结果，键格式为 "TableName|ColumnName"
+        /// </summary>
+        private readonly ConcurrentDictionary<string, FixedDictionaryMapping> _fixedDictLookupCache = new ConcurrentDictionary<string, FixedDictionaryMapping>();
 
-
+        /// <summary>
+        /// 缓存外键映射查找结果，键格式为 "TargetTableName|IdColName"
+        /// </summary>
+        private readonly ConcurrentDictionary<string, ReferenceKeyMapping> _refKeyLookupCache = new ConcurrentDictionary<string, ReferenceKeyMapping>();
 
         // 已在构造函数区域声明，此处删除重复声明
 
@@ -443,18 +450,32 @@ namespace RUINORERP.UI.Common
 
         public string GetGridViewDisplayText(string tableName, string columnName, object value)
         {
+            if (value == null)
+            {
+                return string.Empty;
+            }
+
             string DisplayText = string.Empty;
-            #region 
-            // 处理固定字典值
-            var fixedMapping = FixedDictionaryMappings.FirstOrDefault(t => t.TableName == tableName && t.KeyFieldName == columnName);
+            string cacheKey = $"{tableName}|{columnName}";
+
+            // 处理固定字典值 - 使用缓存查找
+            var fixedMapping = _fixedDictLookupCache.GetOrAdd(cacheKey, key =>
+            {
+                return FixedDictionaryMappings.FirstOrDefault(t =>
+                    string.Equals(t.TableName, tableName, StringComparison.Ordinal) &&
+                    string.Equals(t.KeyFieldName, columnName, StringComparison.Ordinal));
+            });
+
             if (fixedMapping != null)
             {
                 List<KeyValuePair<object, string>> mappings = fixedMapping.KeyValuePairList;
-                KeyValuePair<object, string> matchedPair = mappings.FirstOrDefault(pair => pair.Key.ToString().ToLower() == value.ToString().ToLower());
-                if (matchedPair.Value != null)
+                string valueStr = value.ToString();
+                foreach (var pair in mappings)
                 {
-                    DisplayText = matchedPair.Value;
-                    return DisplayText;
+                    if (string.Equals(pair.Key?.ToString(), valueStr, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return pair.Value ?? string.Empty;
+                    }
                 }
             }
 
@@ -462,11 +483,9 @@ namespace RUINORERP.UI.Common
             string displayName = GetDisplayNameByReferenceKeyMappings(tableName, columnName, value);
             if (!string.IsNullOrEmpty(displayName))
             {
-                DisplayText = displayName;
-                return DisplayText;
+                return displayName;
             }
 
-            #endregion
             return DisplayText;
         }
 
@@ -482,38 +501,30 @@ namespace RUINORERP.UI.Common
                     return string.Empty;
                 }
 
+                Type idValueType = IdValue.GetType();
+
                 // 如果值是 decimal 类型，直接返回
-                if (IdValue.GetType().Name == "Decimal")
+                if (idValueType == typeof(decimal))
                 {
                     return IdValue.ToString();
                 }
 
                 // 如果值不是 long 类型，直接返回
-                if (IdValue.GetType().Name != "Int64")
+                if (idValueType != typeof(long))
                 {
                     return IdValue.ToString();
                 }
 
-                // 特殊字段处理（如创建人、修改人）
-                #region
-                //如果是修改人创建人统一处理,并且要放在前面
-                //定义两个字段为了怕后面修改，不使用字符串
-                Expression<Func<tb_Employee, long>> Created_by;
-                Expression<Func<tb_Employee, long>> Modified_by;
-                Expression<Func<tb_Employee, long>> Approver_by;
+                long idValueLong = (long)IdValue;
 
-                Approver_by = c => c.Employee_ID;
-                Created_by = c => c.Created_by.Value;
-                Modified_by = c => c.Modified_by.Value;
-
-                if (idColName == Created_by.GetMemberInfo().Name || idColName == Modified_by.GetMemberInfo().Name || idColName == "Approver_by")
+                // 特殊字段处理（如创建人、修改人）- 使用硬编码字段名避免反射
+                if (idColName == "Created_by" || idColName == "Modified_by" || idColName == "Approver_by")
                 {
-                    if (IdValue.ToString() == "0")
+                    if (idValueLong == 0)
                     {
-                        return "";
+                        return string.Empty;
                     }
-                    string SourceTableName = typeof(tb_Employee).Name;
-                    // 使用静态缓存管理器方法获取显示值
+                    string SourceTableName = "tb_Employee";
                     object objText = CacheManager?.GetDisplayValue(SourceTableName, IdValue);
 
                     if (objText != null && objText.ToString() != "System.Object")
@@ -521,69 +532,53 @@ namespace RUINORERP.UI.Common
                         return objText.ToString();
                     }
                 }
-                #endregion
 
-                //优先使用有CustomDisplayColumnName的映射
-                ReferenceKeyMapping mapping = ReferenceKeyMappings
-                    .Where(c => c.MappedTargetTableName == TargetTableName && c.MappedTargetFieldName == idColName)
-                    .OrderByDescending(c => !string.IsNullOrEmpty(c.CustomDisplayColumnName))
-                    .FirstOrDefault();
+                // 使用缓存查找外键映射
+                string cacheKey = $"{TargetTableName}|{idColName}";
+                var mapping = _refKeyLookupCache.GetOrAdd(cacheKey, key =>
+                {
+                    return ReferenceKeyMappings
+                        .Where(c => string.Equals(c.MappedTargetTableName, TargetTableName, StringComparison.Ordinal) &&
+                                    string.Equals(c.MappedTargetFieldName, idColName, StringComparison.Ordinal))
+                        .OrderByDescending(c => !string.IsNullOrEmpty(c.CustomDisplayColumnName))
+                        .FirstOrDefault();
+                });
+
                 if (mapping != null)
                 {
-                    if (mapping.MappedTargetFieldName == idColName)
+                    if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
                     {
-                        if (!string.IsNullOrEmpty(mapping.CustomDisplayColumnName))
+                        object displayObj = CacheManager?.GetEntity(mapping.ReferenceTableName, IdValue);
+                        if (displayObj != null)
                         {
-                            // 使用静态缓存管理器方法获取显示值
-                            object displayObj = CacheManager?.GetEntity(mapping.ReferenceTableName, IdValue);
-                            if (displayObj != null && displayObj.GetPropertyValue(mapping.CustomDisplayColumnName) != null)
+                            object propValue = displayObj.GetPropertyValue(mapping.CustomDisplayColumnName);
+                            if (propValue != null)
                             {
-                                return displayObj.GetPropertyValue(mapping.CustomDisplayColumnName).ToString();
+                                return propValue.ToString();
                             }
                         }
-                        else
+                    }
+                    else
+                    {
+                        object displayValue = CacheManager?.GetDisplayValue(mapping.ReferenceTableName, IdValue);
+                        if (displayValue != null)
                         {
-                            // 使用静态缓存管理器方法获取显示值
-                            object displayValue = CacheManager?.GetDisplayValue(mapping.ReferenceTableName, IdValue);
-                            if (displayValue != null)
-                            {
-                                return displayValue.ToString();
-                            }
+                            return displayValue.ToString();
                         }
-
                     }
                 }
                 else
                 {
-                    #region 没有映射的情况
-                    // 使用静态缓存管理器方法获取显示值
-                    var schemaInfo = Startup.GetFromFac<ITableSchemaManager>().GetSchemaInfo(TargetTableName);
-                    // 先尝试直接从目标表获取
+                    // 没有映射的情况 - 直接从目标表获取
                     object nameValue = CacheManager?.GetDisplayValue(TargetTableName, IdValue);
                     if (nameValue != null && !string.IsNullOrWhiteSpace(nameValue.ToString()))
                     {
                         return nameValue.ToString();
                     }
-
-                    // 再尝试外键关联
-                    //if (cacheManager.FkPairTableList.TryGetValue(TargetTableName, out List<KeyValuePair<string, string>> kvlist))
-                    //{
-                    //    var kv = kvlist.Find(k => k.Key == idColName);
-                    //    if (kv.Key != null)
-                    //    {
-                    //        string baseTableName = kv.Value;
-                    //        nameValue = cacheManager.GetDisplayValue(baseTableName, IdValue);
-                    //        if (nameValue != null)
-                    //        {
-                    //            return nameValue.ToString();
-                    //        }
-                    //    }
-                    //}
-                    #endregion
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
                 return string.Empty;
             }

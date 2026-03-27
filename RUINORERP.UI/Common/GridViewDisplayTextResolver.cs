@@ -140,41 +140,54 @@ namespace RUINORERP.UI.Common
         // 单元格格式化事件处理
         private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
-            DataGridView dataGridView = sender as DataGridView;
-
-            // 如果列是隐藏的，直接返回
-            if (!dataGridView.Columns[e.ColumnIndex].Visible)
+            // 快速前置检查
+            if (e.Value == null)
             {
+                e.Value = string.Empty;
                 return;
             }
 
-            if (e.Value == null)
+            DataGridView dataGridView = sender as DataGridView;
+            var column = dataGridView.Columns[e.ColumnIndex];
+
+            // 如果列是隐藏的，直接返回
+            if (!column.Visible)
             {
-                e.Value = "";
                 return;
             }
 
             // 获取列名
-            string columnName = dataGridView.Columns[e.ColumnIndex].Name;
-            
+            string columnName = column.Name;
+
             // 处理特殊列类型（如图片）
             if (HandleSpecialColumnDisplay(e, columnName))
             {
                 return;
             }
 
-            if (_entityType.Name.Contains("View_") || _entityType.Name.Contains("Proc_"))
+            string entityTypeName = _entityType.Name;
+
+            // 视图类型处理
+            if (entityTypeName.StartsWith("View_", StringComparison.Ordinal) ||
+                entityTypeName.StartsWith("Proc_", StringComparison.Ordinal))
             {
-                //视图优先添加本身 subsequent to 关联表
-                List<Type> relatedTableTypes = new List<Type>();
-                relatedTableTypes.Add(_entityType);
-                relatedTableTypes.AddRange(GetRelatedTableTypes(_entityType));
-                foreach (var item in relatedTableTypes)
+                // 优先从当前实体类型查找
+                string displayName = GetGridViewDisplayText(entityTypeName, columnName, e.Value);
+                if (!string.IsNullOrEmpty(displayName))
                 {
-                    string displayName = GetGridViewDisplayText(item.Name, columnName, e.Value);
+                    e.Value = displayName;
+                    e.FormattingApplied = true;
+                    return;
+                }
+
+                // 再从关联表查找
+                foreach (var item in GetRelatedTableTypes(_entityType))
+                {
+                    displayName = GetGridViewDisplayText(item.Name, columnName, e.Value);
                     if (!string.IsNullOrEmpty(displayName))
                     {
                         e.Value = displayName;
+                        e.FormattingApplied = true;
                         return;
                     }
                 }
@@ -182,8 +195,12 @@ namespace RUINORERP.UI.Common
             else
             {
                 // 处理外键映射
-                e.Value = GetGridViewDisplayText(_entityType.Name, columnName, e.Value);
-                return;
+                string displayName = GetGridViewDisplayText(entityTypeName, columnName, e.Value);
+                if (!string.IsNullOrEmpty(displayName))
+                {
+                    e.Value = displayName;
+                    e.FormattingApplied = true;
+                }
             }
         }
 

@@ -506,8 +506,8 @@ namespace AutoUpdate
                     startInfo.WorkingDirectory = Path.GetDirectoryName(mainAppExe);
                     startInfo.UseShellExecute = true;
                     
-                    // 添加启动参数
-                    string arguments = $"--updated-from-auto-update";
+                    // 添加启动参数 - 使用统一的参数格式，与 Program.cs 保持一致
+                    string arguments = "--updated";
                     startInfo.Arguments = arguments;
                     
                     WriteLog("AutoUpdateLog.txt", $"[ERP启动] 工作目录: {startInfo.WorkingDirectory}");

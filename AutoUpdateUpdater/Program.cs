@@ -204,58 +204,90 @@ namespace AutoUpdateUpdater
         
         /// <summary>
         /// 等待并关闭指定进程
+        /// 【修复】增加更激进的进程关闭策略，确保AutoUpdate完全退出
         /// </summary>
         private static bool WaitAndKillProcess(string processName, int timeoutMs)
         {
             try
             {
                 DateTime startTime = DateTime.Now;
+                int checkCount = 0;
+                
+                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 开始等待进程退出: {processName}, 超时时间: {timeoutMs}ms");
                 
                 while ((DateTime.Now - startTime).TotalMilliseconds < timeoutMs)
                 {
+                    checkCount++;
                     Process[] processes = Process.GetProcessesByName(processName);
                     
                     // 排除当前进程
-                    processes = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
+                    int currentProcessId = Process.GetCurrentProcess().Id;
+                    processes = processes.Where(p => p.Id != currentProcessId).ToArray();
                     
                     if (processes.Length == 0)
                     {
-                        return true; // 没有找到相关进程
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已完全退出: {processName}, 检查次数: {checkCount}");
+                        // 额外等待确保资源完全释放
+                        Thread.Sleep(1000);
+                        return true;
                     }
                     
-                    // 尝试关闭进程
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 发现 {processes.Length} 个进程仍在运行, 检查次数: {checkCount}");
+                    
+                    // 尝试关闭进程 - 使用更激进的策略
                     foreach (Process process in processes)
                     {
                         try
                         {
                             if (!process.HasExited)
                             {
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
+                                
+                                // 首先尝试优雅关闭
                                 process.CloseMainWindow();
                                 
-                                if (!process.WaitForExit(1000))
+                                // 等待进程响应
+                                if (process.WaitForExit(500))
                                 {
-                                    process.Kill();
-                                    process.WaitForExit(1000);
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程正常退出: {process.ProcessName}");
+                                    continue;
                                 }
+                                
+                                // 如果优雅关闭失败，强制终止
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 强制终止进程: {process.ProcessName}");
+                                process.Kill();
+                                process.WaitForExit(1000);
+                                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 进程已强制终止: {process.ProcessName}");
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // 忽略关闭失败的情况
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 关闭进程时出错: {ex.Message}");
                         }
                     }
                     
-                    Thread.Sleep(500);
+                    Thread.Sleep(300);
                 }
                 
-                // 检查是否还有进程在运行
-                Process[] remainingProcesses = Process.GetProcessesByName(processName);
-                remainingProcesses = remainingProcesses.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
+                // 最终检查
+                Process[] finalCheck = Process.GetProcessesByName(processName);
+                finalCheck = finalCheck.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
                 
-                return remainingProcesses.Length == 0;
+                if (finalCheck.Length == 0)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", "[进程管理] 最终检查：进程已完全退出");
+                    Thread.Sleep(1000);
+                    return true;
+                }
+                else
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 警告: 等待超时，仍有 {finalCheck.Length} 个进程在运行");
+                    return false;
+                }
             }
-            catch
+            catch (Exception ex)
             {
+                WriteLog("AutoUpdateUpdaterLog.txt", $"[进程管理] 异常: {ex.Message}");
                 return false;
             }
         }
@@ -696,41 +728,73 @@ namespace AutoUpdateUpdater
         }
         
         /// <summary>
-        /// 【新增】等待AutoUpdate进程退出
+        /// 【修复】等待AutoUpdate进程退出
         /// 确保AutoUpdate完全退出后再启动主程序，避免"程序已经在运行中"错误
+        /// 【关键修改】增加更长的等待时间和更激进的进程关闭策略
         /// </summary>
         private static void WaitForAutoUpdateExit()
         {
             try
             {
                 string[] autoUpdateProcessNames = new[] { "AutoUpdate", "AutoUpdate.vshost" };
-                int maxWaitTime = 15000; // 最大等待15秒
-                int waitInterval = 500;
+                int maxWaitTime = 20000; // 最大等待20秒（增加等待时间）
+                int waitInterval = 300;
                 int elapsedTime = 0;
+                int checkCount = 0;
                 
-                WriteLog("AutoUpdateUpdaterLog.txt", "开始等待AutoUpdate进程退出...");
+                WriteLog("AutoUpdateUpdaterLog.txt", "[等待退出] 开始等待AutoUpdate进程退出...");
                 
                 while (elapsedTime < maxWaitTime)
                 {
+                    checkCount++;
                     bool hasAutoUpdateRunning = false;
+                    Process[] runningProcesses = null;
+                    
                     foreach (var processName in autoUpdateProcessNames)
                     {
                         Process[] processes = Process.GetProcessesByName(processName);
                         // 排除当前进程
-                        processes = processes.Where(p => p.Id != Process.GetCurrentProcess().Id).ToArray();
+                        int currentProcessId = Process.GetCurrentProcess().Id;
+                        processes = processes.Where(p => p.Id != currentProcessId).ToArray();
+                        
                         if (processes.Length > 0)
                         {
                             hasAutoUpdateRunning = true;
-                            WriteLog("AutoUpdateUpdaterLog.txt", $"检测到AutoUpdate进程仍在运行: {processName} (数量: {processes.Length})");
+                            runningProcesses = processes;
+                            WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 检测到进程仍在运行: {processName} (数量: {processes.Length}), 检查次数: {checkCount}");
+                            
+                            // 【新增】主动尝试关闭进程
+                            foreach (var process in processes)
+                            {
+                                try
+                                {
+                                    if (!process.HasExited)
+                                    {
+                                        WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 尝试关闭进程: {process.ProcessName} (ID: {process.Id})");
+                                        process.CloseMainWindow();
+                                        if (!process.WaitForExit(200))
+                                        {
+                                            process.Kill();
+                                            process.WaitForExit(500);
+                                            WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 进程已强制终止: {process.ProcessName}");
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 关闭进程时出错: {ex.Message}");
+                                }
+                            }
                             break;
                         }
                     }
                     
                     if (!hasAutoUpdateRunning)
                     {
-                        WriteLog("AutoUpdateUpdaterLog.txt", "AutoUpdate进程已退出，继续启动主程序");
-                        // 额外等待确保资源释放
-                        Thread.Sleep(1000);
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] AutoUpdate进程已完全退出，检查次数: {checkCount}");
+                        // 额外等待确保Mutex等资源完全释放
+                        Thread.Sleep(2000);
+                        WriteLog("AutoUpdateUpdaterLog.txt", "[等待退出] 继续启动主程序");
                         return;
                     }
                     
@@ -738,11 +802,13 @@ namespace AutoUpdateUpdater
                     elapsedTime += waitInterval;
                 }
                 
-                WriteLog("AutoUpdateUpdaterLog.txt", "警告: 等待AutoUpdate进程退出超时，将继续启动主程序");
+                WriteLog("AutoUpdateUpdaterLog.txt", "[等待退出] 警告: 等待AutoUpdate进程退出超时，将继续启动主程序");
+                // 即使超时也等待一段时间，确保资源释放
+                Thread.Sleep(2000);
             }
             catch (Exception ex)
             {
-                WriteLog("AutoUpdateUpdaterLog.txt", $"等待AutoUpdate退出时发生异常: {ex.Message}");
+                WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 等待AutoUpdate退出时发生异常: {ex.Message}");
             }
         }
     }

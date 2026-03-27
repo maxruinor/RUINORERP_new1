@@ -817,8 +817,8 @@ namespace RUINORERP.UI
                         s += "\r\n";
                         s += ex.InnerException.Message + "\r\n" + ex.InnerException.StackTrace;
                     }
-                    MessageBox.Show(s);
                     System.Diagnostics.Debug.WriteLine(s);
+                    MessageBox.Show(s);
                 }
 
 

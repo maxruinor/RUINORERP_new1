@@ -25,8 +25,5 @@ namespace RUINORERP.Common.CustomAttribute
             }
         */
 
-
-
-
     }
 }

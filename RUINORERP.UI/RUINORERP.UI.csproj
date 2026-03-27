@@ -2485,6 +2485,10 @@
     <Compile Include="SysConfig\BasicDataImport\UCBasicDataImport.designer.cs">
       <DependentUpon>UCBasicDataImport.cs</DependentUpon>
     </Compile>
+    <Compile Include="SysConfig\BatchPermissionOperator.cs" />
+    <Compile Include="SysConfig\PermissionDiffComparer.cs" />
+    <Compile Include="SysConfig\PermissionDuplicateChecker.cs" />
+    <Compile Include="SysConfig\RolePermissionCacheService.cs" />
     <!-- StatusTransitionContext.cs 已移至实体层，UI层不再包含此文件 -->
     <!-- <Compile Include="StateManagement\Core\StatusTransitionContext.cs" /> -->
     <Compile Include="SysConfig\UCClientLockManage.cs">

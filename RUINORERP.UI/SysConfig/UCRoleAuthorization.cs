@@ -168,7 +168,7 @@ namespace RUINORERP.UI.SysConfig
                     .Include<tb_P4Button>(c => c.RoleID);
 
                 //数据源开始绑定时用的BindingSortCollection
-                var oklist = UITools.CheckDuplicateData<tb_P4Button>(ListDataSoure1.Cast<tb_P4Button>().ToList(), ButtonProperties.ToList());
+                var oklist = UITools.CheckDuplicateData<tb_P4Button>(bindingSource1.Cast<tb_P4Button>().ToList(), ButtonProperties.ToList());
                 List<long> buttonids = oklist.Select(c => c.P4Btn_ID).ToList();
                 if (dataGridViewButton.UseSelectedColumn)
                 {
@@ -205,7 +205,7 @@ namespace RUINORERP.UI.SysConfig
                     .Include<tb_P4Field>(c => c.FieldInfo_ID)
                     .Include<tb_P4Field>(c => c.RoleID);
 
-                var okList = UITools.CheckDuplicateData<tb_P4Field>(ListDataSoure2.Cast<tb_P4Field>().ToList(), includeProperties.ToList());
+                var okList = UITools.CheckDuplicateData<tb_P4Field>(bindingSource2.Cast<tb_P4Field>().ToList(), includeProperties.ToList());
                 if (dataGridViewButton.UseSelectedColumn)
                 {
                     for (int i = 0; i < dataGridViewButton.Rows.Count; i++)
@@ -704,31 +704,6 @@ namespace RUINORERP.UI.SysConfig
            */
         }
 
-        public System.Windows.Forms.BindingSource _ListDataSoure1 = null;
-
-        [Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
-        /// <summary>
-        /// 列表的数据源(实际要显示的)
-        /// </summary>
-        public System.Windows.Forms.BindingSource ListDataSoure1
-        {
-            get { return _ListDataSoure1; }
-            set { _ListDataSoure1 = value; }
-        }
-
-
-        public System.Windows.Forms.BindingSource _ListDataSoure2 = null;
-
-        [Description("列表中的要显示的数据来源[BindingSource]"), Category("自定属性"), Browsable(true)]
-        /// <summary>
-        /// 列表的数据源(实际要显示的)
-        /// </summary>
-        public System.Windows.Forms.BindingSource ListDataSoure2
-        {
-            get { return _ListDataSoure2; }
-            set { _ListDataSoure2 = value; }
-        }
-
         /// <summary>
         /// 初始化列表数据
         /// </summary>
@@ -739,18 +714,16 @@ namespace RUINORERP.UI.SysConfig
             dataGridViewButton.XmlFileName = "UCRoleAuthorization1";
             dataGridViewButton.FieldNameList = FieldNameList1;
             dataGridViewButton.DataSource = null;
-            ListDataSoure1 = bindingSource1;
-            //绑定导航
-            dataGridViewButton.DataSource = ListDataSoure1.DataSource;
+            // 直接绑定到 bindingSource1
+            dataGridViewButton.DataSource = bindingSource1;
 
             dataGridViewField.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList2 = UIHelper.GetFieldNameColList(typeof(tb_P4Field));
             dataGridViewField.XmlFileName = "UCRoleAuthorization2";
             dataGridViewField.FieldNameList = FieldNameList2;
             dataGridViewField.DataSource = null;
-            ListDataSoure2 = bindingSource2;
-            //绑定导航
-            dataGridViewField.DataSource = ListDataSoure2.DataSource;
+            // 直接绑定到 bindingSource2
+            dataGridViewField.DataSource = bindingSource2;
 
 
             newSumDataGridViewRowAuthPolicy.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -758,8 +731,8 @@ namespace RUINORERP.UI.SysConfig
             newSumDataGridViewRowAuthPolicy.XmlFileName = "UCtb_P4RowAuthPolicyByRole";
             newSumDataGridViewRowAuthPolicy.FieldNameList = FieldNameList3;
             newSumDataGridViewRowAuthPolicy.DataSource = null;
-            //绑定导航
-            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy.DataSource;
+            // 直接绑定到 bindingSourceRowAuthPolicy
+            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy;
 
         }
 
@@ -1082,33 +1055,13 @@ namespace RUINORERP.UI.SysConfig
 
                 toolStripCopyRoleConfig.Enabled = roleList.Any();
 
-                // 使用SqlSugar异步查询并传递CancellationToken
-                var db = MainForm.Instance.AppContext.Db.CopyNew();
+                // 【修复1】重新从数据库加载完整的角色权限数据
+                await ReloadRolePermissionsAsync(CurrentRole);
 
-                // 设置合理的超时时间（单位：秒）
-                db.Ado.CommandTimeOut = 30;
+                // 重新加载
+                TreeView1.Nodes.Clear();
+                await LoadTreeView();
 
-                // 检查是否需要加载菜单权限数据
-                var pmlis = await db.Queryable<tb_P4Menu>()
-                    .Where(r => r.RoleID == CurrentRole.RoleID)
-                    .Includes(t => t.tb_menuinfo, b => b.tb_P4Buttons)
-                    .Includes(t => t.tb_menuinfo, b => b.tb_P4Fields)
-                    .Includes(t => t.tb_menuinfo, b => b.tb_P4Menus)
-                    .ToListAsync(_loadingCancellationTokenSource.Token)
-                    .ConfigureAwait(false);
-
-                if (pmlis.Count == 0)
-                {
-                    // 改为异步初始化
-                    await InitMenuByRoleAsync(CurrentRole, true)
-                        .ConfigureAwait(false);
-                }
-
-                // 只在菜单树为空时重新加载
-                if (TreeView1.Nodes.Count <= 1)
-                {
-                    await LoadTreeView();
-                }
 
                 // 检查取消请求
                 _loadingCancellationTokenSource.Token.ThrowIfCancellationRequested();
@@ -1144,6 +1097,84 @@ namespace RUINORERP.UI.SysConfig
                 _isLoading = false;
                 _loadingCancellationTokenSource?.Dispose();
                 _loadingCancellationTokenSource = null;
+            }
+        }
+
+        /// <summary>
+        /// 重新加载角色的所有权限数据
+        /// 【修复1】新增方法：确保角色切换时，所有权限数据一次性正确加载
+        /// </summary>
+        /// <param name="role">角色信息</param>
+        private async Task ReloadRolePermissionsAsync(tb_RoleInfo role)
+        {
+            if (role == null) return;
+
+            try
+            {
+                // SqlSugarClient 不是线程安全的，每个任务使用独立的实例
+                // 加载菜单权限
+                var menuTask = Task.Run(async () =>
+                {
+                    var db = MainForm.Instance.AppContext.Db.CopyNew();
+                    db.Ado.CommandTimeOut = 30;
+                    var menus = await db.Queryable<tb_P4Menu>()
+                        .Where(r => r.RoleID == role.RoleID)
+                        .ToListAsync();
+                    return menus ?? new List<tb_P4Menu>();
+                });
+
+                // 加载按钮权限（包含按钮信息）
+                var buttonTask = Task.Run(async () =>
+                {
+                    var db = MainForm.Instance.AppContext.Db.CopyNew();
+                    db.Ado.CommandTimeOut = 30;
+                    var buttons = await db.Queryable<tb_P4Button>()
+                        .Where(r => r.RoleID == role.RoleID)
+                        .Includes(c => c.tb_buttoninfo)
+                        .ToListAsync();
+                    return buttons ?? new List<tb_P4Button>();
+                });
+
+                // 加载字段权限（包含字段信息）
+                var fieldTask = Task.Run(async () =>
+                {
+                    var db = MainForm.Instance.AppContext.Db.CopyNew();
+                    db.Ado.CommandTimeOut = 30;
+                    var fields = await db.Queryable<tb_P4Field>()
+                        .Where(r => r.RoleID == role.RoleID)
+                        .Includes(c => c.tb_fieldinfo)
+                        .ToListAsync();
+                    return fields ?? new List<tb_P4Field>();
+                });
+
+                // 加载行级权限
+                var rowAuthTask = Task.Run(async () =>
+                {
+                    var db = MainForm.Instance.AppContext.Db.CopyNew();
+                    db.Ado.CommandTimeOut = 30;
+                    var rowAuths = await db.Queryable<tb_P4RowAuthPolicyByRole>()
+                        .Where(r => r.RoleID == role.RoleID)
+                        .Includes(c => c.tb_rowauthpolicy)
+                        .ToListAsync();
+                    return rowAuths ?? new List<tb_P4RowAuthPolicyByRole>();
+                });
+
+                // 等待所有任务完成
+                await Task.WhenAll(menuTask, buttonTask, fieldTask, rowAuthTask);
+
+                // 安全地更新角色对象（避免并发修改）
+                role.tb_P4Menus = menuTask.Result;
+                role.tb_P4Buttons = buttonTask.Result;
+                role.tb_P4Fields = fieldTask.Result;
+                role.tb_P4RowAuthPolicyByRoles = rowAuthTask.Result;
+
+                MainForm.Instance.logger?.LogInformation($"角色 [{role.RoleName}] 权限数据加载完成：" +
+                    $"菜单{role.tb_P4Menus.Count}个，按钮{role.tb_P4Buttons.Count}个，字段{role.tb_P4Fields.Count}个");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance.logger.Error($"加载角色权限数据失败: {role.RoleName}", ex);
+                throw;
             }
         }
 
@@ -1433,29 +1464,10 @@ namespace RUINORERP.UI.SysConfig
                 _initializationTasks.TryRemove(menuId, out _);
             }
 
-            // 优化去重逻辑 - 使用更高效的查询
+            // 【修复5】使用统一的防重复检查器
             var currentRoleId = CurrentRole.RoleID;
-
-            // 检查并清理重复数据
-            var duplicateButtons = CurrentRole.tb_P4Buttons
-                .Where(c => c.RoleID == currentRoleId && c.MenuID == menuId)
-                .GroupBy(p => p.ButtonInfo_ID)
-                .Where(g => g.Count() > 1)
-                .SelectMany(g => g.Skip(1)) // 保留第一个，删除后续重复项
-                .ToList();
-
-            if (duplicateButtons.Any())
-            {
-                MainForm.Instance.logger.Warn($"发现重复按钮权限，菜单ID:{menuId},角色ID:{currentRoleId}");
-
-                // 批量删除重复数据
-                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Button>()
-                    .Where(p => duplicateButtons.Select(d => d.P4Btn_ID).Contains(p.P4Btn_ID))
-                    .ExecuteCommandAsync();
-
-                // 从内存中移除重复项
-                duplicateButtons.ForEach(d => CurrentRole.tb_P4Buttons.Remove(d));
-            }
+            await PermissionDuplicateChecker.CheckAndCleanDuplicateButtonsAsync(
+                CurrentRole.tb_P4Buttons, currentRoleId, menuId);
 
             // 使用字典优化查找性能
             var existingButtons = CurrentRole.tb_P4Buttons
@@ -1472,7 +1484,10 @@ namespace RUINORERP.UI.SysConfig
                 {
                     try
                     {
-                        if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button))
+                        // 【修复6】添加前再次检查是否已存在（双重保险）
+                        if (!existingButtons.TryGetValue(buttonInfo.ButtonInfo_ID, out tb_P4Button button)
+                            && !PermissionDuplicateChecker.IsButtonPermissionExists(
+                                CurrentRole.tb_P4Buttons, currentRoleId, buttonInfo.ButtonInfo_ID, menuId))
                         {
                             // 创建新按钮权限
                             button = new tb_P4Button
@@ -1700,30 +1715,12 @@ namespace RUINORERP.UI.SysConfig
                 }
             }
 
-            // 优化去重逻辑
+            // 【修复5】使用统一的防重复检查器
             var currentRoleId = CurrentRole.RoleID;
             var menuId = SelectedMenuInfo.MenuID;
 
-            // 检查并清理重复数据
-            var duplicateFields = CurrentRole.tb_P4Fields
-                .Where(c => c.RoleID == currentRoleId && c.MenuID == menuId)
-                .GroupBy(p => p.FieldInfo_ID)
-                .Where(g => g.Count() > 1)
-                .SelectMany(g => g.Skip(1)) // 保留第一个，删除后续重复项
-                .ToList();
-
-            if (duplicateFields.Any())
-            {
-                MainForm.Instance.logger.Warn($"发现重复字段权限，菜单ID:{menuId},角色ID:{currentRoleId}");
-
-                // 批量删除重复数据
-                await MainForm.Instance.AppContext.Db.Deleteable<tb_P4Field>()
-                    .Where(p => duplicateFields.Select(d => d.P4Field_ID).Contains(p.P4Field_ID))
-                    .ExecuteCommandAsync();
-
-                // 从内存中移除重复项
-                duplicateFields.ForEach(d => CurrentRole.tb_P4Fields.Remove(d));
-            }
+            await PermissionDuplicateChecker.CheckAndCleanDuplicateFieldsAsync(
+                CurrentRole.tb_P4Fields, currentRoleId, menuId);
 
             // 使用字典优化查找性能
             var existingFields = CurrentRole.tb_P4Fields
@@ -1902,36 +1899,31 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            // 使用缓存机制避免重复查询
+            // 【修复2】直接从已加载的角色数据中获取，不再查询数据库
             List<tb_P4Button> pblist = CurrentRole.tb_P4Buttons?
                 .Where(c => c.MenuID == selectMenu.MenuID)
                 .ToList() ?? new List<tb_P4Button>();
 
-            // 只有在需要时才重新初始化数据
-            // InitBtnByRole 内部已有完整的去重逻辑，直接使用其返回值即可
+            // 如果没有数据或强制刷新，则初始化
             if (pblist.Count == 0 || InitLoadData)
             {
                 pblist = await InitBtnByRole(CurrentRole, selectMenu);
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
-            // 优化UI更新 - 只在必要时更新数据源
-            if (bindingSource1.DataSource == null || InitLoadData)
+            // 【修复3】强制重新绑定数据源，确保UI刷新
+            await MainForm.Instance.InvokeAsync(() =>
             {
+                bindingSource1.DataSource = null; // 先清空
                 bindingSource1.DataSource = pblist.ToBindingSortCollection();
-                dataGridViewButton.DataSource = ListDataSoure1;
-            }
-            else
-            {
-                // 如果只是更新数据，刷新数据源而不是重建
-                bindingSource1.ResetBindings(false);
-            }
+                dataGridViewButton.DataSource = bindingSource1;
 
-            // 设置右键菜单和列属性（每次加载后都尝试设置，确保可用）
-            SetupDataGridViewContextMenu(dataGridViewButton, ref _dataGridView1Configured);
+                // 设置列属性
+                SetupDataGridViewContextMenu(dataGridViewButton, ref _dataGridView1Configured);
 
-            // 批量更新保存状态
-            pblist.ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
+                // 更新保存状态监听
+                pblist.ForEach(x => UpdateSaveEnabled<tb_P4Button>(x));
+            });
         }
 
 
@@ -1948,37 +1940,27 @@ namespace RUINORERP.UI.SysConfig
                 return;
             }
 
-            // 使用缓存机制避免重复查询
+            // 【修复2】直接从已加载的角色数据中获取
             List<tb_P4Field> pflist = CurrentRole.tb_P4Fields?
                 .Where(c => c.MenuID == selectMenu.MenuID)
                 .ToList() ?? new List<tb_P4Field>();
 
-            // 只有在需要时才重新初始化数据
-            // InitLoadData=true 时表示用户主动触发初始化（如右键菜单），此时需要强制刷新字段信息以支持增量添加
-            // InitFiledByRole 内部已有完整的去重逻辑，直接使用其返回值即可
             if (pflist.Count == 0 || InitLoadData)
             {
                 pflist = await InitFiledByRole(CurrentRole, selectMenu, false, InitLoadData);
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
-            // 优化UI更新 - 只在必要时更新数据源
-            if (bindingSource2.DataSource == null || InitLoadData)
+            // 【修复3】强制重新绑定数据源
+            await MainForm.Instance.InvokeAsync(() =>
             {
+                bindingSource2.DataSource = null;
                 bindingSource2.DataSource = pflist.ToBindingSortCollection();
-                dataGridViewField.DataSource = ListDataSoure2;
-            }
-            else
-            {
-                // 如果只是更新数据，刷新数据源而不是重建
-                bindingSource2.ResetBindings(false);
-            }
+                dataGridViewField.DataSource = bindingSource2.DataSource;
 
-            // 设置右键菜单和列属性（每次加载后都尝试设置，确保可用）
-            SetupDataGridViewContextMenu(dataGridViewField, ref _dataGridView2Configured);
-
-            // 批量更新保存状态
-            pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
+                SetupDataGridViewContextMenu(dataGridViewField, ref _dataGridView2Configured);
+                pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));
+            });
         }
 
         /// <summary>
@@ -2096,32 +2078,7 @@ namespace RUINORERP.UI.SysConfig
              };
         }
 
-        /*
-        //说明：CellContextMenuStripNeeded事件处理方法的参数中，e.RowIndex=-1表示列头，e.ColumnIndex=-1表示行头。RowContextMenuStripNeeded则不存在e.ColumnIndex=-1的情况。
-        //这个方法可以控制不同位置 显示不同的右键菜单。灵活 控制
-        private void dataGridView1_CellContextMenuStripNeeded(object sender, DataGridViewCellContextMenuStripNeededEventArgs e)
-        {
-            DataGridView dgv = sender as DataGridView;
-            if (e.RowIndex < 0)
-            {
-                //设置列头右键
-                //e.ContextMenuStrip = cmsHeaderCell;
-            }
-            else if (e.ColumnIndex < 0)
-            {
-                //设置行头右键菜单
-                //e.ContextMenuStrip = cmsRow;
-            }
-            else if (dgv[e.ColumnIndex, e.RowIndex].Value.ToString().Equals("男"))
-            {
-                //e.ContextMenuStrip = cmsCell;
-            }
-            else
-            {
-                //e.ContextMenuStrip = cmsDgv;
-            }
-        }
-        */
+   
 
         #region 显示值
 
@@ -2302,23 +2259,28 @@ namespace RUINORERP.UI.SysConfig
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void toolStripMenuItemInitBtn_Click(object sender, EventArgs e)
+        private async void toolStripMenuItemInitBtn_Click(object sender, EventArgs e)
         {
-            if (CurrentRole == null)
-            {
+            if (CurrentRole == null || TreeView1.SelectedNode?.Tag is not tb_MenuInfo mInfo)
                 return;
-            }
-            if (TreeView1.SelectedNode == null)
+
+            // 【修复7】添加前确认是否已存在
+            var existingCount = CurrentRole.tb_P4Buttons?
+                .Count(c => c.MenuID == mInfo.MenuID) ?? 0;
+
+            if (existingCount > 0)
             {
-                return;
-            }
-            if (!(TreeView1.SelectedNode.Tag is tb_MenuInfo))
-            {
-                return;
+                var result = MessageBox.Show(
+                    $"该菜单已存在 {existingCount} 个按钮权限，确定要重新初始化吗？\n" +
+                    "重新初始化将保留现有权限，只添加缺失的按钮。",
+                    "确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes) return;
             }
 
-            tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
-            InitLoadP4Button(mInfo, true);
+            await InitLoadP4Button(mInfo, true);
         }
 
         /// <summary>
@@ -2338,23 +2300,26 @@ namespace RUINORERP.UI.SysConfig
         /// <param name="e"></param>
         private async Task toolStripMenuItemInitField_ClickAsync(object sender, EventArgs e)
         {
-            if (CurrentRole == null)
-            {
+            if (CurrentRole == null || TreeView1.SelectedNode?.Tag is not tb_MenuInfo mInfo)
                 return;
-            }
-            if (TreeView1.SelectedNode == null)
-            {
-                return;
-            }
-            if (!(TreeView1.SelectedNode.Tag is tb_MenuInfo))
-            {
-                return;
-            }
-            tb_MenuInfo mInfo = TreeView1.SelectedNode.Tag as tb_MenuInfo;
 
+            // 【修复7】添加前确认是否已存在
+            var existingCount = CurrentRole.tb_P4Fields?
+                .Count(c => c.MenuID == mInfo.MenuID) ?? 0;
+
+            if (existingCount > 0)
+            {
+                var result = MessageBox.Show(
+                    $"该菜单已存在 {existingCount} 个字段权限，确定要重新初始化吗？\n" +
+                    "重新初始化将保留现有权限，只添加缺失的字段。",
+                    "确认",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes) return;
+            }
 
             await InitLoadP4Field(mInfo, true);
-
         }
 
         private void TreeView1_AfterCheck(object sender, TreeViewEventArgs e)
@@ -2516,11 +2481,11 @@ namespace RUINORERP.UI.SysConfig
             {
                 if (dataGridViewButton.UseSelectedColumn)
                 {
-                    await BatchDelete<tb_P4Button>(ListDataSoure1, true);
+                    await BatchDelete<tb_P4Button>(bindingSource1, true);
                 }
                 else
                 {
-                    await Delete<tb_P4Button>(ListDataSoure1);
+                    await Delete<tb_P4Button>(bindingSource1);
                 }
             }
 
@@ -2529,12 +2494,12 @@ namespace RUINORERP.UI.SysConfig
                 tb_MenuInfo selectMenu = TreeView1.SelectedNode.Tag as tb_MenuInfo;
                 if (dataGridViewButton.UseSelectedColumn)
                 {
-                    List<long> ids = await BatchDelete<tb_P4Field>(ListDataSoure2, true);
+                    List<long> ids = await BatchDelete<tb_P4Field>(bindingSource2, true);
                     selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => !ids.Contains(c.P4Field_ID)).ToList();
                 }
                 else
                 {
-                    long id = await Delete<tb_P4Field>(ListDataSoure2);
+                    long id = await Delete<tb_P4Field>(bindingSource2);
                     selectMenu.tb_P4Fields = selectMenu.tb_P4Fields.Where(c => c.P4Field_ID != id).ToList();
                 }
             }

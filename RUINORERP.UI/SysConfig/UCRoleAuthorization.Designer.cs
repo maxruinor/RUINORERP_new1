@@ -1,4 +1,4 @@
-﻿namespace RUINORERP.UI.SysConfig
+namespace RUINORERP.UI.SysConfig
 {
     partial class UCRoleAuthorization
     {
@@ -71,6 +71,11 @@
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSource2 = new System.Windows.Forms.BindingSource(this.components);
             this.bindingSourceRowAuthPolicy = new System.Windows.Forms.BindingSource(this.components);
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.tsslStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsslDirtyIndicator = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsslLockStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tsslChangeCount = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.kryptonSplitContainer1.Panel1)).BeginInit();
             this.kryptonSplitContainer1.Panel1.SuspendLayout();
@@ -118,6 +123,7 @@
             // 
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.kryptonNavigator1);
             this.kryptonSplitContainer1.Panel2.Controls.Add(this.BaseToolStrip);
+            this.kryptonSplitContainer1.Panel2.Controls.Add(this.statusStrip1);
             this.kryptonSplitContainer1.Size = new System.Drawing.Size(853, 645);
             this.kryptonSplitContainer1.SplitterDistance = 199;
             this.kryptonSplitContainer1.TabIndex = 1;
@@ -133,6 +139,42 @@
             this.TreeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.TreeView1_AfterCheck);
             this.TreeView1.DrawNode += new System.Windows.Forms.DrawTreeNodeEventHandler(this.tVtypeList_DrawNode);
             this.TreeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TreeView1_AfterSelect);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tsslStatus,
+            this.tsslDirtyIndicator,
+            this.tsslLockStatus,
+            this.tsslChangeCount});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 623);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(649, 22);
+            this.statusStrip1.TabIndex = 57;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // tsslStatus
+            // 
+            this.tsslStatus.Name = "tsslStatus";
+            this.tsslStatus.Size = new System.Drawing.Size(44, 17);
+            this.tsslStatus.Text = "就绪";
+            // 
+            // tsslDirtyIndicator
+            // 
+            this.tsslDirtyIndicator.ForeColor = System.Drawing.Color.Red;
+            this.tsslDirtyIndicator.Name = "tsslDirtyIndicator";
+            this.tsslDirtyIndicator.Size = new System.Drawing.Size(0, 17);
+            // 
+            // tsslLockStatus
+            // 
+            this.tsslLockStatus.Name = "tsslLockStatus";
+            this.tsslLockStatus.Size = new System.Drawing.Size(0, 17);
+            // 
+            // tsslChangeCount
+            // 
+            this.tsslChangeCount.Name = "tsslChangeCount";
+            this.tsslChangeCount.Size = new System.Drawing.Size(0, 17);
             // 
             // kryptonNavigator1
             // 
@@ -161,7 +203,7 @@
             this.kryptonPageFieldInfo,
             this.kryptonPageRowAuthPolicy});
             this.kryptonNavigator1.SelectedIndex = 0;
-            this.kryptonNavigator1.Size = new System.Drawing.Size(649, 620);
+            this.kryptonNavigator1.Size = new System.Drawing.Size(649, 598);
             this.kryptonNavigator1.TabIndex = 1;
             this.kryptonNavigator1.Text = "kryptonNavigator1";
             this.kryptonNavigator1.SelectedPageChanged += new System.EventHandler(this.kryptonNavigator1_SelectedPageChanged);
@@ -526,6 +568,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.cmbRowAuthPolicy)).EndInit();
             this.BaseToolStrip.ResumeLayout(false);
             this.BaseToolStrip.PerformLayout();
+            this.statusStrip1.ResumeLayout(false);
+            this.statusStrip1.PerformLayout();
             this.contextMenuStrip4InitData.ResumeLayout(false);
             this.contextMenuStrip1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
@@ -568,5 +612,22 @@
         private System.Windows.Forms.BindingSource bindingSourceRowAuthPolicy;
         private Krypton.Toolkit.KryptonComboBox cmbRowAuthPolicy;
         private Krypton.Toolkit.KryptonLabel lblType_ID;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripButton tsbtnUndo;
+        private System.Windows.Forms.ToolStripButton tsbtnRedo;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripButton tsbtnRefresh;
+        private System.Windows.Forms.ToolStripButton tsbtnCompare;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
+        private System.Windows.Forms.ToolStripDropDownButton tsbtnTemplate;
+        private System.Windows.Forms.ToolStripMenuItem tsmiSaveTemplate;
+        private System.Windows.Forms.ToolStripMenuItem tsmiLoadTemplate;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
+        private System.Windows.Forms.ToolStripMenuItem tsmiManageTemplates;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel tsslStatus;
+        private System.Windows.Forms.ToolStripStatusLabel tsslDirtyIndicator;
+        private System.Windows.Forms.ToolStripStatusLabel tsslLockStatus;
+        private System.Windows.Forms.ToolStripStatusLabel tsslChangeCount;
     }
 }

@@ -407,6 +407,45 @@ namespace AutoUpdate
         int _Next = 0;
         public int Next { get { return _Next; } set { _Next = value; } }
 
+        /// <summary>
+        /// 初始化进度条，确保Maximum > 0
+        /// </summary>
+        private void InitializeProgressBar()
+        {
+            if (pbDownFile.Maximum <= 0)
+            {
+                pbDownFile.Minimum = 0;
+                pbDownFile.Maximum = 100;
+                pbDownFile.Value = 0;
+            }
+        }
+
+        /// <summary>
+        /// 安全设置进度条值，自动处理边界和初始化
+        /// </summary>
+        private void SafeSetProgressValue(int value)
+        {
+            try
+            {
+                if (pbDownFile.Maximum <= 0)
+                {
+                    pbDownFile.Minimum = 0;
+                    pbDownFile.Maximum = 100;
+                }
+                
+                if (value > pbDownFile.Maximum)
+                    value = pbDownFile.Maximum;
+                if (value < pbDownFile.Minimum)
+                    value = pbDownFile.Minimum;
+                    
+                pbDownFile.Value = value;
+            }
+            catch (Exception ex)
+            {
+                AppendAllText($"[进度条] 设置值失败: {ex.Message}");
+            }
+        }
+
         // 日志文件路径 - 使用统一的AutoUpdateLog.txt
         private string UpdateLogfilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AutoUpdateLog.txt");
         
@@ -746,7 +785,7 @@ namespace AutoUpdate
 
                 // 更新状态显示
                 lbState.Text = string.Format("正在准备回滚到版本 {0}...", targetVersion);
-                pbDownFile.Value = 0;
+                SafeSetProgressValue(0);
                 pbDownFile.Visible = true;
                 Application.DoEvents();
 
@@ -762,12 +801,12 @@ namespace AutoUpdate
 
                     // 执行回滚操作
                     lbState.Text = string.Format("正在回滚到版本 {0}...", targetVersion);
-                    pbDownFile.Value = 30;
+                    SafeSetProgressValue(30);
                     Application.DoEvents();
 
                     rollbackSuccess = appUpdater.RollbackToVersion(targetVersion);
 
-                    pbDownFile.Value = 100;
+                    SafeSetProgressValue(100);
 
                     // 记录回滚日志
                     string logMessage = string.Format("回滚操作{0}完成，目标版本: {1}", rollbackSuccess ? "" : "未", targetVersion);
@@ -1011,7 +1050,7 @@ namespace AutoUpdate
                     string tempPath = Path.Combine(tempUpdatePath, VerNo, UpdateFile);
                     
                     lbState.Text = $"正在下载: {UpdateFile}...";
-                    pbDownFile.Value = 0;
+                    SafeSetProgressValue(0);
                     Application.DoEvents();
                     
                     AppendAllText($"[下载] 开始下载文件: {UpdateFile}");
@@ -1367,7 +1406,7 @@ namespace AutoUpdate
                 pbDownFile.Visible = true;
                 pbDownFile.Minimum = 0;
                 pbDownFile.Maximum = files.Length;
-                pbDownFile.Value = 0;
+                SafeSetProgressValue(0);
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
@@ -1498,7 +1537,7 @@ namespace AutoUpdate
                     // 更新进度条
                     if (pbDownFile != null)
                     {
-                        pbDownFile.Value = i + 1;
+                        SafeSetProgressValue(i + 1);
                         pbDownFile.Update();
                         Application.DoEvents();
                     }
@@ -1554,7 +1593,7 @@ namespace AutoUpdate
                 if (pbDownFile != null)
                 {
                     pbDownFile.Maximum = savedMaximum;
-                    pbDownFile.Value = savedValue;
+                    SafeSetProgressValue(savedValue);
                     AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
                 }
 
@@ -1633,7 +1672,7 @@ namespace AutoUpdate
                 pbDownFile.Visible = true;
                 pbDownFile.Minimum = 0;
                 pbDownFile.Maximum = files.Length;
-                pbDownFile.Value = 0;
+                SafeSetProgressValue(0);
                 Application.DoEvents();
                 AppendAllText($"[CopyFile] 初始化进度条，最大值: {files.Length}");
             }
@@ -1774,7 +1813,7 @@ namespace AutoUpdate
                     // 更新进度条
                     if (pbDownFile != null)
                     {
-                        pbDownFile.Value = i + 1;
+                        SafeSetProgressValue(i + 1);
                         pbDownFile.Update();
                         Application.DoEvents();
                     }
@@ -1830,7 +1869,7 @@ namespace AutoUpdate
                 if (pbDownFile != null)
                 {
                     pbDownFile.Maximum = savedMaximum;
-                    pbDownFile.Value = savedValue;
+                    SafeSetProgressValue(savedValue);
                     AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
                 }
 
@@ -2015,7 +2054,7 @@ namespace AutoUpdate
                 // 更新UI状态
                 lbState.Text = "正在准备更新文件，请稍候...";
                 pbDownFile.Visible = true;
-                pbDownFile.Value = 0;
+                SafeSetProgressValue(0);
                 Application.DoEvents();
                 
                 //更新完成后copy文件，将下载的临时文件夹中的新文件复制到对应目标目录使其生效
@@ -2062,7 +2101,7 @@ namespace AutoUpdate
                     currentVersionProgress++;
                     int overallProgress = (currentVersionProgress * 100) / Math.Max(totalVersions, 1);
                     lbState.Text = $"正在复制版本 {currentVersionProgress}/{totalVersions} 的文件...";
-                    pbDownFile.Value = Math.Min(overallProgress, 99);
+                    SafeSetProgressValue(Math.Min(overallProgress, 100));
                     pbDownFile.Refresh();
                     Application.DoEvents();
                     
@@ -2101,7 +2140,7 @@ namespace AutoUpdate
                 
                 // 更新进度到90%
                 lbState.Text = "文件复制完成，正在处理自我更新...";
-                pbDownFile.Value = 90;
+                SafeSetProgressValue(90);
                 pbDownFile.Refresh();
                 Application.DoEvents();
                 
@@ -2165,7 +2204,7 @@ namespace AutoUpdate
                 {
                     // 更新进度到100%
                     lbState.Text = "更新完成，正在启动主程序...";
-                    pbDownFile.Value = 100;
+                    SafeSetProgressValue(100);
                     pbDownFile.Refresh();
                     Application.DoEvents();
                     
@@ -2787,7 +2826,7 @@ namespace AutoUpdate
 
                 // 更新UI状态
                 lbState.Text = "正在检查主程序运行状态...";
-                pbDownFile.Value = 5;
+                SafeSetProgressValue(5);
                 pbDownFile.Refresh();
                 Application.DoEvents();
                 
@@ -2807,7 +2846,7 @@ namespace AutoUpdate
                 
                 // 更新UI状态
                 lbState.Text = $"正在关闭主程序: {processName}...";
-                pbDownFile.Value = 10;
+                SafeSetProgressValue(10);
                 pbDownFile.Refresh();
                 Application.DoEvents();
 
@@ -2820,7 +2859,7 @@ namespace AutoUpdate
                     
                     // 更新UI状态
                     lbState.Text = "正在强制关闭主程序...";
-                    pbDownFile.Value = 15;
+                    SafeSetProgressValue(15);
                     pbDownFile.Refresh();
                     Application.DoEvents();
                     
@@ -2871,7 +2910,7 @@ namespace AutoUpdate
                 
                 // 更新UI状态
                 lbState.Text = "主程序已关闭，开始复制更新文件...";
-                pbDownFile.Value = 20;
+                SafeSetProgressValue(20);
                 pbDownFile.Refresh();
                 Application.DoEvents();
             }
@@ -3453,8 +3492,8 @@ namespace AutoUpdate
                     WebResponse webRes = webReq.GetResponse();
                     fileLength = webRes.ContentLength;
 
-                    pbDownFile.Value = 0;
                     pbDownFile.Maximum = (int)fileLength;
+                    SafeSetProgressValue(0);
 
                     try
                     {
@@ -3471,7 +3510,7 @@ namespace AutoUpdate
                             ;
                             startByte += downByte;
                             allByte -= downByte;
-                            pbDownFile.Value += downByte;
+                            SafeSetProgressValue(pbDownFile.Value + downByte);
 
                             float part = (float)startByte / 1024;
                             float total = (float)bufferbyte.Length / 1024;

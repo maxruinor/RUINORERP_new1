@@ -714,16 +714,16 @@ namespace RUINORERP.UI.SysConfig
             dataGridViewButton.XmlFileName = "UCRoleAuthorization1";
             dataGridViewButton.FieldNameList = FieldNameList1;
             dataGridViewButton.DataSource = null;
-            // 直接绑定到 bindingSource1
-            dataGridViewButton.DataSource = bindingSource1;
+            // 绑定到 bindingSource1.DataSource
+            dataGridViewButton.DataSource = bindingSource1.DataSource;
 
             dataGridViewField.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             FieldNameList2 = UIHelper.GetFieldNameColList(typeof(tb_P4Field));
             dataGridViewField.XmlFileName = "UCRoleAuthorization2";
             dataGridViewField.FieldNameList = FieldNameList2;
             dataGridViewField.DataSource = null;
-            // 直接绑定到 bindingSource2
-            dataGridViewField.DataSource = bindingSource2;
+            // 绑定到 bindingSource2.DataSource
+            dataGridViewField.DataSource = bindingSource2.DataSource;
 
 
             newSumDataGridViewRowAuthPolicy.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -731,8 +731,8 @@ namespace RUINORERP.UI.SysConfig
             newSumDataGridViewRowAuthPolicy.XmlFileName = "UCtb_P4RowAuthPolicyByRole";
             newSumDataGridViewRowAuthPolicy.FieldNameList = FieldNameList3;
             newSumDataGridViewRowAuthPolicy.DataSource = null;
-            // 直接绑定到 bindingSourceRowAuthPolicy
-            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy;
+            // 绑定到 bindingSourceRowAuthPolicy.DataSource
+            newSumDataGridViewRowAuthPolicy.DataSource = bindingSourceRowAuthPolicy.DataSource;
 
         }
 
@@ -1956,7 +1956,7 @@ namespace RUINORERP.UI.SysConfig
             {
                 bindingSource2.DataSource = null;
                 bindingSource2.DataSource = pflist.ToBindingSortCollection();
-                dataGridViewField.DataSource = bindingSource2.DataSource;
+                dataGridViewField.DataSource = bindingSource2;
 
                 SetupDataGridViewContextMenu(dataGridViewField, ref _dataGridView2Configured);
                 pflist.ForEach(x => UpdateSaveEnabled<tb_P4Field>(x));

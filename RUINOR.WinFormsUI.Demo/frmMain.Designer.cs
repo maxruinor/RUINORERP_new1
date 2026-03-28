@@ -36,6 +36,7 @@
             this.button3 = new System.Windows.Forms.Button();
             this.kryptonButton1 = new Krypton.Toolkit.KryptonButton();
             this.btnTest平铺chk = new Krypton.Toolkit.KryptonButton();
+            this.btnNativeDataGridViewDemo = new System.Windows.Forms.Button();
             this.kryptonPanel1 = new Krypton.Toolkit.KryptonPanel();
             this.tileListView = new RUINOR.WinFormsUI.TileListView.TileListView();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
@@ -108,6 +109,16 @@
             this.btnTest平铺chk.TabIndex = 9;
             this.btnTest平铺chk.Values.Text = "平铺";
             this.btnTest平铺chk.Click += new System.EventHandler(this.btnTest平铺chk_Click);
+            // 
+            // btnNativeDataGridViewDemo
+            // 
+            this.btnNativeDataGridViewDemo.Location = new System.Drawing.Point(540, 67);
+            this.btnNativeDataGridViewDemo.Name = "btnNativeDataGridViewDemo";
+            this.btnNativeDataGridViewDemo.Size = new System.Drawing.Size(150, 25);
+            this.btnNativeDataGridViewDemo.TabIndex = 10;
+            this.btnNativeDataGridViewDemo.Text = "原生 DataGridView CheckBox 演示 (&D)";
+            this.btnNativeDataGridViewDemo.UseVisualStyleBackColor = true;
+            this.btnNativeDataGridViewDemo.Click += new System.EventHandler(this.btnNativeDataGridViewDemo_Click);
             // 
             // kryptonPanel1
             // 
@@ -261,6 +272,8 @@
             this.Controls.Add(this.popupComboBox1);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.kryptonPanel1);
+            this.Controls.Add(this.btnNativeDataGridViewDemo);
+            this.Controls.Add(this.btnNativeDataGridViewDemo);
             this.Controls.Add(this.btnTest平铺chk);
             this.Controls.Add(this.kryptonButton1);
             this.Controls.Add(this.button3);
@@ -290,6 +303,7 @@
         private System.Windows.Forms.Button button3;
         private Krypton.Toolkit.KryptonButton kryptonButton1;
         private Krypton.Toolkit.KryptonButton btnTest平铺chk;
+        private System.Windows.Forms.Button btnNativeDataGridViewDemo;
         private Krypton.Toolkit.KryptonPanel kryptonPanel1;
         private TileListView.TileListView tileListView;
         private System.Windows.Forms.CheckBox checkBox1;

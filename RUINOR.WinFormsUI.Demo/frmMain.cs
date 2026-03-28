@@ -1,4 +1,5 @@
 ﻿using RUINOR.WinFormsUI.Demo.ChkComboBoxDemo;
+using RUINOR.WinFormsUI.Demo.NativeDataGridViewDemo;
 using RUINOR.WinFormsUI.TileListView;
 using RUINORERP.Extensions.Redis;
 using System;
@@ -53,24 +54,30 @@ namespace RUINOR.WinFormsUI.Demo
 
         private void btnTest平铺chk_Click(object sender, EventArgs e)
         {
-
+        
             tileListView.Clear();
             tileListView.AddGroup("1", "颜色");
             for (int i = 0; i < 15; i++)
             {
-                //tileListView.AddItemToGroup("颜色", i + "Item属",true);
-                tileListView.AddItemToGroup("1", i + "Item属性值很长呢？ ", true);
+                //tileListView.AddItemToGroup("颜色", i + "Item 属",true);
+                tileListView.AddItemToGroup("1", i + "Item 属性值很长呢？ ", true);
             }
-
+        
             tileListView.AddItemToGroup("1", "Item 2", false);
-
+        
             tileListView.AddGroup("2","Group 2");
             tileListView.AddItemToGroup("2","Group 2", true);
             tileListView.AddItemToGroup("2","Group 2",  false);
-
+        
             tileListView.UpdateUI();
-
-
+        
+        
+        }
+        
+        private void btnNativeDataGridViewDemo_Click(object sender, EventArgs e)
+        {
+            frmNativeDataGridViewDemo demoForm = new frmNativeDataGridViewDemo();
+            demoForm.Show();
         }
     }
 }

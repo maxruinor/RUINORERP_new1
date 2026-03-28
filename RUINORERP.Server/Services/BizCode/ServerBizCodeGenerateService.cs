@@ -363,9 +363,6 @@ namespace RUINORERP.Server.Services.BizCode
                 // 生成原始编号
                 string generatedNumber = _bnrFactory.Create(rule);
 
-                // 根据显示模式处理编号
-                //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, displayMode, encryptionMethod);
-
                 return generatedNumber;
             }
             catch (Exception ex)
@@ -608,12 +605,9 @@ namespace RUINORERP.Server.Services.BizCode
                     rule = rule.Replace("{S:Const}", $"{{S:{paraConst}}}");
                 }
 
-                // 生成原始编号1
+                // 生成原始编号 1
                 string generatedNumber = _bnrFactory.Create(rule);
-
-                // 根据显示模式处理编号
-                //  string finalNumber = ProcessNumberByDisplayMode(generatedNumber, encryptionMethod);
-
+                
                 return generatedNumber;
             }
             catch (Exception ex)

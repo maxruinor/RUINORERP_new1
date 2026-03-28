@@ -269,28 +269,41 @@ namespace RUINORERP.Server.Services.BizCode
         /// </summary>
         /// <param name="categoryCode">可选的类目编码，如果提供则只加载该类目的SKU</param>
         /// <returns>异步任务</returns>
-        public async Task RefreshSKUCacheAsync()
+        public async Task RefreshSKUCacheAsync(string categoryCode = null)
         {
             // 清理上一批次的生成记录
             ClearGeneratingSkus();
             try
             {
-                // 清空现有缓存
-                _skuCache.Clear();
-
+                // 不再清空现有缓存，采用增量更新策略
+                // _skuCache.Clear(); // 已移除
+                
                 // 根据是否指定类目编码决定查询范围
-                var query = _db.Queryable<tb_ProdDetail>().Select(p => p.SKU);
-
-
-                // 批量加载SKU到缓存
-                var skus = await query.ToListAsync();
-
-                foreach (var sku in skus)
+                // 增量更新：只加载最近 24 小时的 SKU
+                var query = _db.Queryable<tb_ProdDetail>()
+                    .Where(p => p.CreateTime > DateTime.Now.AddHours(-24));
+                
+                // 如果指定了类目编码，则只加载该类目的 SKU
+                if (!string.IsNullOrEmpty(categoryCode))
                 {
-                    _skuCache.TryAdd(sku, true);
+                    query = query.Where(p => p.SKU.StartsWith(categoryCode));
                 }
-
-                _logger.LogInformation("SKU缓存刷新完成，共加载 {Count} 个SKU", skus.Count);
+                
+                // 批量加载 SKU 到缓存
+                var newSkus = await query.Select(p => p.SKU).ToListAsync();
+                
+                int addedCount = 0;
+                foreach (var sku in newSkus)
+                {
+                    if (_skuCache.TryAdd(sku, true))
+                    {
+                        addedCount++;
+                    }
+                }
+                
+                _logger.LogInformation(
+                    "SKU 缓存增量更新完成 - 新增：{AddedCount}, 总数：{TotalCount}, 类目：{CategoryCode}",
+                    addedCount, _skuCache.Count, categoryCode ?? "全部");
             }
             catch (Exception ex)
             {
@@ -969,38 +982,60 @@ namespace RUINORERP.Server.Services.BizCode
                     return GenerateUniqueVariantInBatch(baseSkuCode);
                 }
 
-                // 第2步：检查缓存中是否已存在
+                // 第 2 步：检查内存缓存（精确匹配）
                 if (!_skuCache.ContainsKey(baseSkuCode))
                 {
-                    // 第3步：查询数据库确认唯一性
-                    var similarSkus = _db.Queryable<tb_ProdDetail>()
-                        .Where(p => p.SKU.StartsWith(baseSkuCode))
-                        .Select(p => p.SKU)
-                        .ToList();
-
-                    // 将查询结果缓存
-                    foreach (var sku in similarSkus)
+                    // 第 3 步：查询数据库确认唯一性（精确匹配，非前缀）
+                    bool exists = _db.Queryable<tb_ProdDetail>()
+                        .Any(p => p.SKU == baseSkuCode);
+                                    
+                    if (!exists)
                     {
-                        _skuCache.TryAdd(sku, true);
-                    }
-
-                    // 如果基础SKU不在缓存中，则它是唯一的
-                    if (!_skuCache.ContainsKey(baseSkuCode))
-                    {
-                        // 添加到持久缓存并返回
+                        // 不存在，直接添加到缓存并返回
                         _skuCache.TryAdd(baseSkuCode, true);
                         return baseSkuCode;
                     }
+                                    
+                    // 如果存在冲突，加载相似的 SKU 以便生成变体
+                    LoadSimilarSkus(baseSkuCode);
                 }
 
-                // SKU已存在（在缓存或数据库中），生成唯一变体
+                // SKU 已存在（在缓存或数据库中），生成唯一变体
                 return GenerateUniqueVariant(baseSkuCode);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "检查SKU唯一性时发生错误，基础SKU: {BaseSkuCode}", baseSkuCode);
+                _logger.LogError(ex, "检查 SKU 唯一性时发生错误，基础 SKU: {BaseSkuCode}", baseSkuCode);
                 // 如果检查失败，添加时间戳确保唯一性
                 return $"{baseSkuCode}{DateTime.Now:HHmmss}";
+            }
+        }
+        
+        /// <summary>
+        /// 加载相似的 SKU 到缓存（用于生成唯一变体时参考）
+        /// </summary>
+        /// <param name="baseSkuCode">基础 SKU 编码</param>
+        private void LoadSimilarSkus(string baseSkuCode)
+        {
+            try
+            {
+                // 只加载前缀匹配的 SKU，用于后续生成变体
+                var similarSkus = _db.Queryable<tb_ProdDetail>()
+                    .Where(p => p.SKU.StartsWith(baseSkuCode + "-") || p.SKU == baseSkuCode)
+                    .Select(p => p.SKU)
+                    .ToList();
+        
+                // 将查询结果缓存
+                foreach (var sku in similarSkus)
+                {
+                    _skuCache.TryAdd(sku, true);
+                }
+                        
+                _logger.LogDebug("加载相似 SKU 完成 - 基础码：{BaseSkuCode}, 数量：{Count}", baseSkuCode, similarSkus.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "加载相似 SKU 失败，基础码：{BaseSkuCode}", baseSkuCode);
             }
         }
 

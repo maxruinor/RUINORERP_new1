@@ -19,7 +19,7 @@ namespace RUINOR.WinFormsUI.Demo
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmChkComboBoxDemo());
+            Application.Run(new frmMain());
             return;
             Application.Run(new frmMain());
             Application.Run(new RUINOR.WinFormsUI.TreeViewColumns.TreeViewColumnsDemo.Form1());

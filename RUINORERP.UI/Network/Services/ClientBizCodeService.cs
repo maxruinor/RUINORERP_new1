@@ -20,6 +20,7 @@ using RUINORERP.PacketSpec.Models.BizCodeGenerate;
 using RUINORERP.Model.ProductAttribute;
 // 引入BNR架构命名空间
 using RUINORERP.Business.BNR;
+using System.Collections.Concurrent;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -33,7 +34,11 @@ namespace RUINORERP.UI.Network.Services
     {
         private readonly ClientCommunicationService _communicationService;
         private readonly ILogger<ClientBizCodeService> _logger;
-        private readonly SemaphoreSlim _operationLock = new SemaphoreSlim(1, 1); // 防止并发操作请求
+        /// <summary>
+        /// 按类型加锁的字典，用于并发控制（移除全局锁，改为细粒度锁）
+        /// </summary>
+        private readonly ConcurrentDictionary<string, SemaphoreSlim> _typeLocks 
+            = new ConcurrentDictionary<string, SemaphoreSlim>();
         private bool _isDisposed = false;
 
         /// <summary>
@@ -127,29 +132,32 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
-        /// 根据基础信息类型获取BNR生成规则
+        /// 根据基础信息类型获取 BNR 生成规则
         /// </summary>
         /// <param name="baseInfoType">基础信息类型</param>
-        /// <returns>BNR生成规则字符串</returns>
+        /// <returns>BNR 生成规则字符串</returns>
+        /// <remarks>
+        /// 客户端本地生成规则使用 "L" 前缀标识，与服务器端规则区分，避免重复
+        /// 格式说明：{S:前缀}{D:日期格式}{N:序号键/序号格式}
+        /// </remarks>
         private string GetBNRRuleByBaseInfoType(BaseInfoType baseInfoType)
         {
-            // 根据不同的基础信息类型返回不同的BNR生成规则
-            // 规则格式说明：{S:前缀}{D:日期格式}{N:序号键/序号格式}
+            // 客户端本地生成规则添加 "L" 前缀标识（L=Local），确保与服务器端编号体系隔离
             return baseInfoType switch
             {
-                BaseInfoType.ModuleDefinition => "{S:MOD}{D:yyyyMMdd}{N:ModuleDefinition/0000}",
-                BaseInfoType.Customer => "{S:CUST}{D:yyyyMMdd}{N:Customer/00000}",
-                BaseInfoType.Supplier => "{S:SUPP}{D:yyyyMMdd}{N:Supplier/00000}",
-                BaseInfoType.CVOther => "{S:CV}{D:yyyyMMdd}{N:CVOther/00000}",
-                BaseInfoType.BusinessPartner => "{S:BP}{D:yyyyMMdd}{N:BusinessPartner/00000}",
-                BaseInfoType.CRM_RegionCode => "{S:REG}{D:yyyyMM}{N:CRM_RegionCode/0000}",
-                BaseInfoType.Department => "{S:DEPT}{D:yyyyMM}{N:Department/000}",
-                BaseInfoType.Employee => "{S:EMP}{D:yyyyMM}{N:Employee/0000}",
-                BaseInfoType.Location => "{S:LOC}{D:yyyyMM}{N:Location/0000}",
-                BaseInfoType.ProjectGroupCode => "{S:PG}{D:yyyyMM}{N:ProjectGroup/0000}",
-                BaseInfoType.StoreCode => "{S:STORE}{D:yyyyMM}{N:Store/0000}",
-                BaseInfoType.FMSubject => "{S:FS}{D:yyyyMM}{N:FMSubject/0000}",
-                _ => "{S:BASE}{D:yyyyMMdd}{N:Default/0000}"
+                BaseInfoType.ModuleDefinition => "{S:L_MOD}{D:yyyyMMdd}{N:ModuleDefinition/0000}",
+                BaseInfoType.Customer => "{S:L_CUST}{D:yyyyMMdd}{N:Customer/00000}",
+                BaseInfoType.Supplier => "{S:L_SUPP}{D:yyyyMMdd}{N:Supplier/00000}",
+                BaseInfoType.CVOther => "{S:L_CV}{D:yyyyMMdd}{N:CVOther/00000}",
+                BaseInfoType.BusinessPartner => "{S:L_BP}{D:yyyyMMdd}{N:BusinessPartner/00000}",
+                BaseInfoType.CRM_RegionCode => "{S:L_REG}{D:yyyyMM}{N:CRM_RegionCode/0000}",
+                BaseInfoType.Department => "{S:L_DEPT}{D:yyyyMM}{N:Department/000}",
+                BaseInfoType.Employee => "{S:L_EMP}{D:yyyyMM}{N:Employee/0000}",
+                BaseInfoType.Location => "{S:L_LOC}{D:yyyyMM}{N:Location/0000}",
+                BaseInfoType.ProjectGroupCode => "{S:L_PG}{D:yyyyMM}{N:ProjectGroup/0000}",
+                BaseInfoType.StoreCode => "{S:L_STORE}{D:yyyyMM}{N:Store/0000}",
+                BaseInfoType.FMSubject => "{S:L_FS}{D:yyyyMM}{N:FMSubject/0000}",
+                _ => "{S:L_BASE}{D:yyyyMMdd}{N:Default/0000}"
             };
         }
 
@@ -373,7 +381,7 @@ namespace RUINORERP.UI.Network.Services
         /// 发送业务编码生成命令的通用方法
         /// </summary>
         /// <typeparam name="TResponse">响应类型</typeparam>
-        /// <param name="commandId">命令ID</param>
+        /// <param name="commandId">命令 ID</param>
         /// <param name="request">请求对象</param>
         /// <param name="ct">取消令牌</param>
         /// <returns>响应对象</returns>
@@ -381,15 +389,18 @@ namespace RUINORERP.UI.Network.Services
         {
             // 创建带超时的取消令牌源
             using var timeoutCts = new CancellationTokenSource();
-            // 设置默认超时时间为10秒
+            // 设置默认超时时间为 10 秒
             timeoutCts.CancelAfter(TimeSpan.FromSeconds(10));
-
+        
             // 创建组合取消令牌，任一令牌取消都会导致操作取消
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
             var combinedCt = linkedCts.Token;
-
-            // 使用信号量确保同一时间只有一个请求
-            await _operationLock.WaitAsync(combinedCt);
+        
+            // 获取或创建对应类型的信号量（细粒度锁，允许不同类型的请求并发）
+            var lockKey = $"{commandId}_{request.BizType}_{request.BaseInfoType}";
+            var operationLock = _typeLocks.GetOrAdd(lockKey, _ => new SemaphoreSlim(1, 1));
+                    
+            await operationLock.WaitAsync(combinedCt);
             try
             {
                 // 检查连接状态
@@ -476,7 +487,7 @@ namespace RUINORERP.UI.Network.Services
             }
             finally
             {
-                _operationLock.Release();
+                operationLock.Release();
             }
         }
 
@@ -504,16 +515,21 @@ namespace RUINORERP.UI.Network.Services
         {
             if (_isDisposed)
                 return;
-
+        
             _isDisposed = true;
-
+        
             try
             {
-                _operationLock.Dispose();
+                // 释放所有类型的信号量锁
+                foreach (var kvp in _typeLocks)
+                {
+                    kvp.Value.Dispose();
+                }
+                _typeLocks.Clear();
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "释放BizCodeService资源时发生异常");
+                _logger?.LogError(ex, "释放 BizCodeService 资源时发生异常");
             }
         }
 
@@ -595,6 +611,10 @@ namespace RUINORERP.UI.Network.Services
         /// <param name="paraConst">参数常量（可选）</param>
         /// <returns>生成的基础信息编号</returns>
         /// <exception cref="Exception">生成失败时抛出异常</exception>
+        /// <remarks>
+        /// 兜底策略：只有确定本地生成失败时才回退到远程方式
+        /// 排除超时等不确定异常，避免重复生成
+        /// </remarks>
         public static string GetLocalBaseInfoNo(BaseInfoType baseInfoType, string paraConst = null)
         {
             try
@@ -603,31 +623,75 @@ namespace RUINORERP.UI.Network.Services
                 var bizCodeService = Startup.GetFromFac<ClientBizCodeService>();
                 if (bizCodeService == null)
                 {
-                    throw new Exception("无法从容器中获取BizCodeService实例");
+                    throw new Exception("无法从容器中获取 BizCodeService 实例");
                 }
-
+        
                 // 同步调用本地异步方法
-                // 使用Task.Run以避免可能的死锁
+                // 使用 Task.Run 以避免可能的死锁
                 return Task.Run(async () => await bizCodeService.GenerateLocalBaseInfoNoAsync(baseInfoType, paraConst)).GetAwaiter().GetResult();
             }
             catch (AggregateException ex)
             {
-                // 解包AggregateException，获取内部异常
-                if (ex.InnerException != null)
+                // 解包 AggregateException，获取内部异常
+                var innerEx = ex.InnerException ?? ex;
+                        
+                // 判断是否为确定性失败（非超时类异常）
+                if (IsDefiniteFailure(innerEx))
                 {
-                    throw ex.InnerException;
+                    var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
+                    logger?.LogWarning(innerEx, "本地生成确认失败，回退到远程生成方式 - 类型：{BaseInfoType}", baseInfoType.ToString());
+                            
+                    // 回退到原有的远程生成方式
+                    return GetBaseInfoNo(baseInfoType, paraConst);
                 }
-                throw;
+                else
+                {
+                    // 不确定失败（可能是超时），直接抛出异常让调用方处理
+                    throw innerEx;
+                }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (IsDefiniteFailure(ex))
             {
-                // 如果本地生成失败，尝试使用原有的远程生成方式作为备选
+                // 确定性失败，回退到远程方式
                 var logger = Startup.GetFromFac<ILogger<ClientBizCodeService>>();
-                logger?.LogWarning(ex, "本地生成基础信息编号失败，尝试使用远程生成方式 - 类型: {BaseInfoType}", baseInfoType.ToString());
-                
-                // 回退到原有的远程生成方式
+                logger?.LogWarning(ex, "本地生成确认失败，回退到远程生成方式 - 类型：{BaseInfoType}", baseInfoType.ToString());
+                        
                 return GetBaseInfoNo(baseInfoType, paraConst);
             }
+        }
+        
+        /// <summary>
+        /// 判断异常是否为确定性失败（应该回退到远程方式）
+        /// </summary>
+        /// <param name="ex">异常对象</param>
+        /// <returns>是否为确定性失败</returns>
+        /// <remarks>
+        /// 确定性失败包括：空指针、规则缺失等明确错误
+        /// 不确定性失败包括：超时、网络中断（可能已成功但不确定）
+        /// </remarks>
+        private static bool IsDefiniteFailure(Exception ex)
+        {
+            // 明确失败场景：空指针、参数验证失败、规则缺失等
+            if (ex is ArgumentNullException || 
+                ex is ArgumentException ||
+                ex.Message.Contains("规则不存在") ||
+                ex.Message.Contains("无法识别"))
+            {
+                return true;
+            }
+                    
+            // 不确定性失败：超时、网络问题（可能本地已生成成功）
+            if (ex is TimeoutException ||
+                ex is OperationCanceledException ||
+                (ex.Message != null && (
+                    ex.Message.IndexOf("timeout", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    ex.Message.IndexOf("取消", StringComparison.OrdinalIgnoreCase) >= 0)))
+            {
+                return false;
+            }
+                    
+            // 其他异常默认按不确定性失败处理，避免盲目回退
+            return false;
         }
 
 

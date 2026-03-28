@@ -164,6 +164,13 @@
     <Compile Include="TreeViewColumnsDemo\Form1.designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="NativeDataGridViewDemo\RolePermissionDto.cs" />
+    <Compile Include="NativeDataGridViewDemo\frmNativeDataGridViewDemo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NativeDataGridViewDemo\frmNativeDataGridViewDemo.Designer.cs">
+      <DependentUpon>frmNativeDataGridViewDemo.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="ChkComboBoxDemo\frmChkComboBoxDemo.resx">
       <DependentUpon>frmChkComboBoxDemo.cs</DependentUpon>
     </EmbeddedResource>
@@ -197,6 +204,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="TreeViewColumnsDemo\Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NativeDataGridViewDemo\frmNativeDataGridViewDemo.resx">
+      <DependentUpon>frmNativeDataGridViewDemo.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="img\Thumbs.db" />
     <None Include="packages.config" />

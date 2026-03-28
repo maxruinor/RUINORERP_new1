@@ -547,6 +547,7 @@ namespace RUINORERP.Business
                     }
                 }
 
+
                 var invDict = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeys.Count > 0)
                 {

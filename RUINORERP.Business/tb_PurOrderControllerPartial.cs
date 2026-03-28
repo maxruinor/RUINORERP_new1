@@ -80,10 +80,10 @@ namespace RUINORERP.Business
                 var invDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
                 if (allKeys.Count > 0)
                 {
-                    var distinctKeys = allKeys.Distinct().ToList();
+                    var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
                     var inventoryList = await _unitOfWorkManage.GetDbClient()
                         .Queryable<tb_Inventory>()
-                        .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                        .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                         .ToListAsync();
                     invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }

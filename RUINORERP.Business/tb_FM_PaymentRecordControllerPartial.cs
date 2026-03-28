@@ -1141,10 +1141,10 @@ namespace RUINORERP.Business
                                                     var saleOrderInvDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
                                                     if (saleOrderKeys.Count > 0)
                                                     {
-                                                        var distinctKeys = saleOrderKeys.Distinct().ToList();
+                                                        var requiredKeys = saleOrderKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
                                                         var inventoryList = await _unitOfWorkManage.GetDbClient()
                                                             .Queryable<tb_Inventory>()
-                                                            .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                                                            .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                                                             .ToListAsync();
                                                         saleOrderInvDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                                                     }
@@ -1214,10 +1214,10 @@ namespace RUINORERP.Business
                                                     var purOrderInvDict = new Dictionary<(long ProdDetailID, long LocationID), tb_Inventory>();
                                                     if (purOrderKeys.Count > 0)
                                                     {
-                                                        var distinctKeys = purOrderKeys.Distinct().ToList();
+                                                        var requiredKeys = purOrderKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
                                                         var inventoryList = await _unitOfWorkManage.GetDbClient()
                                                             .Queryable<tb_Inventory>()
-                                                            .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                                                            .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                                                             .ToListAsync();
                                                         purOrderInvDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                                                     }

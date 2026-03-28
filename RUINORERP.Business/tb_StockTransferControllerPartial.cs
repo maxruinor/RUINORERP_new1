@@ -1,4 +1,4 @@
-﻿// *************************************
+// *************************************
 // 生成：CodeBuilder (http://www.fireasy.cn/codebuilder)
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -58,11 +58,11 @@ namespace RUINORERP.Business
                     allKeys.Add((child.ProdDetailID, entity.Location_ID_to));
                 }
 
-                var distinctKeys = allKeys.Distinct().ToList();
+                var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
 
                 var inventoryList = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_Inventory>()
-                    .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                     .ToListAsync();
 
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
@@ -263,11 +263,11 @@ namespace RUINORERP.Business
                     allKeys.Add((child.ProdDetailID, entity.Location_ID_to));
                 }
 
-                var distinctKeys = allKeys.Distinct().ToList();
+                var requiredKeys = allKeys.Select(k => new { k.ProdDetailID, k.LocationID }).Distinct().ToList();
 
                 var inventoryList = await _unitOfWorkManage.GetDbClient()
                     .Queryable<tb_Inventory>()
-                    .Where(i => distinctKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
+                    .Where(i => requiredKeys.Any(k => k.ProdDetailID == i.ProdDetailID && k.LocationID == i.Location_ID))
                     .ToListAsync();
 
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));

@@ -277,5 +277,29 @@ namespace RUINOR.WinFormsUI.ChkComboBox
         }
 
         #endregion
+
+        /// <summary>
+        /// 重写 Text 属性，防御基类 OnValidating 触发自动完成时访问未初始化编辑控件导致的 NullReferenceException
+        /// WinForms ComboBox.OnValidating → NotifyAutoComplete → UpdateText → Text.get 时内部编辑控件可能为 null
+        /// </summary>
+        public override string Text
+        {
+            get
+            {
+                try
+                {
+                    return base.Text;
+                }
+                catch (NullReferenceException)
+                {
+                    // 内部编辑控件未初始化时返回空字符串
+                    return string.Empty;
+                }
+            }
+            set
+            {
+                base.Text = value;
+            }
+        }
     }
 }

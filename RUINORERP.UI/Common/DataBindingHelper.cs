@@ -1688,7 +1688,7 @@ namespace RUINORERP.UI.Common
 
 
         /// <summary>
-        /// 绑定数据到UI，要求引用的外键名要和表ID名一致
+        /// 绑定数据到UI，要求引用的外键名要和表ID名一致1
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="entity"></param>

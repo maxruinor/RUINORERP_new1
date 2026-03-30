@@ -86,6 +86,11 @@ namespace RUINORERP.UI.BaseForm
         private RepeatOperationGuardService _guardService;
 
         /// <summary>
+        /// ComboBox内部控件是否已初始化（避免重复初始化）
+        /// </summary>
+        private bool _comboBoxInternalControlsInitialized = false;
+
+        /// <summary>
         /// 单据业务操作服务
         /// </summary>
         protected readonly IBillOperationService BillOperationService;
@@ -439,6 +444,11 @@ namespace RUINORERP.UI.BaseForm
             // 记录操作
             _guardService.RecordOperation(menuItem, this.GetType().Name, currentEntityId);
 
+          
+
+            //操作前确保所有ComboBox内部编辑控件已初始化（已初始化过则跳过）
+            InitializeComboBoxInternalControls(this);
+
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             MainForm.Instance.AppContext.log.ActionName = menuItem.ToString();
@@ -446,8 +456,6 @@ namespace RUINORERP.UI.BaseForm
             {
 
             }
-            //操作前将数据收集
-            this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
             List<M> selectlist = GetSelectResult();
             switch (menuItem)
             {
@@ -3586,6 +3594,13 @@ namespace RUINORERP.UI.BaseForm
 
             //await UIBizService.RequestCache<M>();
 
+            //窗体加载完成后，同步初始化ComboBox内部控件，确保在查询前完成
+            if (!_comboBoxInternalControlsInitialized)
+            {
+                InitializeComboBoxInternalControls(this);
+                _comboBoxInternalControlsInitialized = true;
+            }
+
         }
 
 
@@ -4536,5 +4551,53 @@ namespace RUINORERP.UI.BaseForm
         }
 
         #endregion
+
+        /// <summary>
+        /// 初始化所有ComboBox的内部编辑控件，确保在ValidateChildren时内部控件已创建
+        /// 使用Windows API静默初始化，避免视觉闪烁
+        /// </summary>
+        private void InitializeComboBoxInternalControls(Control container)
+        {
+            // 已初始化过则跳过
+            if (_comboBoxInternalControlsInitialized || container == null) return;
+
+            foreach (Control ctrl in container.Controls)
+            {
+                // 递归处理子容器
+                if (ctrl.HasChildren)
+                {
+                    InitializeComboBoxInternalControls(ctrl);
+                }
+
+                // 确保ComboBox类型的内部编辑控件已初始化
+                if (ctrl is ComboBox cmb)
+                {
+                    // 使用Windows API静默初始化内部编辑控件，不触发重绘
+                    InitializeComboBoxEditControl(cmb);
+                }
+
+                // 处理KryptonComboBox - 其内部有InternalComboBox
+                if (ctrl.GetType().FullName == "Krypton.Toolkit.KryptonComboBox")
+                {
+                    // 通过反射获取内部的_comboBox字段并静默初始化
+                    var field = ctrl.GetType().GetField("_comboBox", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    if (field?.GetValue(ctrl) is ComboBox internalCmb)
+                    {
+                        InitializeComboBoxEditControl(internalCmb);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 使用Windows API静默初始化ComboBox内部编辑控件，不触发视觉重绘
+        /// </summary>
+        private void InitializeComboBoxEditControl(ComboBox cmb)
+        {
+            if (cmb == null) return;
+
+            // 使用公共辅助类静默初始化
+            CommonHelper.InitializeComboBoxEditControl(cmb);
+        }
     }
 }

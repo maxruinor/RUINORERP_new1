@@ -59,7 +59,7 @@ namespace RUINORERP.UI.FM
 {
 
     /// <summary>
-    /// 应收应付对账单
+    /// 应收应付对账单1
     /// 如果对账模式为余额模式，对账单最后总金额为0，则需要添加一个扩展按钮，红蓝单对冲核销
     /// </summary>
     [MenuAttrAssemblyInfo("对账单", ModuleMenuDefine.模块定义.财务管理, ModuleMenuDefine.财务管理.对账管理, BizType.对账单)]
@@ -297,9 +297,17 @@ namespace RUINORERP.UI.FM
         {
             lblPrintStatus.Text = "";
             lblReview.Text = "";
-            DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            if (cmbEmployee_ID != null)
+            {
+                DataBindingHelper.InitDataToCmb<tb_Employee>(k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID);
+            }
         }
 
+        /// <summary>
+        /// 绑定数据
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="actionStatus"></param>
         public override void BindData(tb_FM_Statement entity, ActionStatus actionStatus)
         {
             if (entity == null)
@@ -348,9 +356,12 @@ namespace RUINORERP.UI.FM
                 entity.StatementStatus = (int)StatementStatus.草稿;
 
                 // 清空 DataSource（如果适用）
-                cmbPayeeInfoID.DataSource = null;
-                cmbPayeeInfoID.DataBindings.Clear();
-                cmbPayeeInfoID.Items.Clear();
+                if (cmbPayeeInfoID != null)
+                {
+                    cmbPayeeInfoID.DataSource = null;
+                    cmbPayeeInfoID.DataBindings.Clear();
+                    cmbPayeeInfoID.Items.Clear();
+                }
                 LoadPayeeInfo(entity, true);
             }
 
@@ -363,15 +374,24 @@ namespace RUINORERP.UI.FM
                 lblBillText.Text = "收款对账单";
             }
 
-            DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
+            if (cmbAccount_id != null)
+            {
+                DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
+            }
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.ApprovalOpinions, txtApprovalOpinions, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
+            if (cmbEmployee_ID != null)
+            {
+                DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
+            }
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.Summary, txtSummary, BindDataType4TextBox.Text, false);
             //DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_Statement>(entity, t => t.StatementStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(StatementStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_Statement>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.StatementNo, txtStatementNo, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+            if (cmbCustomerVendor_ID != null)
+            {
+                DataBindingHelper.BindData4Cmb<tb_CustomerVendor>(entity, k => k.CustomerVendor_ID, v => v.CVName, cmbCustomerVendor_ID);
+            }
             DataBindingHelper.BindData4Label<tb_FM_Statement>(entity, k => k.PamountInWords, lblMoneyUpper, BindDataType4TextBox.Text, true);
             //冗余的
             //DataBindingHelper.BindData4TextBox<tb_FM_Statement>(entity, t => t.PayeeAccountNo, txtPayeeAccountNo, BindDataType4TextBox.Text, false);
@@ -478,7 +498,10 @@ namespace RUINORERP.UI.FM
 
                     if (s2.PropertyName == entity.GetPropertyName<tb_FM_Statement>(c => c.PayeeInfoID))
                     {
-                        cmbPayeeInfoID.Enabled = true;
+                        if (cmbPayeeInfoID != null)
+                        {
+                            cmbPayeeInfoID.Enabled = true;
+                        }
                         //加载收款信息
                         if (entity.PayeeInfoID > 0)
                         {
@@ -544,7 +567,10 @@ namespace RUINORERP.UI.FM
 
                 btnInfo.Visible = false;
                 lblPayeeInfoID.Visible = false;
-                cmbPayeeInfoID.Visible = false;
+                if (cmbPayeeInfoID != null)
+                {
+                    cmbPayeeInfoID.Visible = false;
+                }
 
             }
             else
@@ -628,6 +654,11 @@ namespace RUINORERP.UI.FM
         private void LoadCustomerVendor(tb_FM_Statement entity)
         {
             // 检查是否需要在UI线程上执行
+            if (cmbCustomerVendor_ID == null)
+            {
+                return;
+            }
+            
             if (cmbCustomerVendor_ID.InvokeRequired)
             {
                 cmbCustomerVendor_ID.Invoke(new Action(() => LoadCustomerVendor(entity)));
@@ -654,6 +685,11 @@ namespace RUINORERP.UI.FM
         public void LoadPayeeInfo(tb_FM_Statement entity, bool NeedEdit)
         {
             // 检查是否需要在UI线程上执行
+            if (cmbCustomerVendor_ID == null)
+            {
+                return;
+            }
+            
             if (cmbCustomerVendor_ID.InvokeRequired)
             {
                 cmbCustomerVendor_ID.Invoke(new Action(() => LoadPayeeInfo(entity, NeedEdit)));
@@ -674,7 +710,6 @@ namespace RUINORERP.UI.FM
 
             // 最后转换为表达式
             Expression<Func<tb_FM_PayeeInfo, bool>> lambdaPayeeInfo = expressionable.ToExpression();
-
 
             BaseProcessor baseProcessorPayeeInfo = Startup.GetFromFacByName<BaseProcessor>(typeof(tb_FM_PayeeInfo).Name + "Processor");
             QueryFilter queryFilterPayeeInfo = baseProcessorPayeeInfo.GetQueryFilter();
@@ -697,12 +732,14 @@ namespace RUINORERP.UI.FM
                 }
             }
 
-            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
-            if (NeedEdit)
+            if (cmbPayeeInfoID != null)
             {
-                DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+                DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, queryFilterPayeeInfo.GetFilterExpression<tb_FM_PayeeInfo>(), true);
+                if (NeedEdit)
+                {
+                    DataBindingHelper.InitFilterForControlByExpCanEdit<tb_FM_PayeeInfo>(entity, cmbPayeeInfoID, c => c.DisplayText, queryFilterPayeeInfo, true);
+                }
             }
-
 
 
             #endregion

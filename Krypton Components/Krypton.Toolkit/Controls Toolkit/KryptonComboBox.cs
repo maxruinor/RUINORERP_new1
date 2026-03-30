@@ -299,6 +299,23 @@ namespace Krypton.Toolkit
                 DrawMode = DrawMode.OwnerDrawVariable;
                 SetStyle(/*ControlStyles.UserPaint | */ControlStyles.AllPaintingInWmPaint | ControlStyles.DoubleBuffer | ControlStyles.OptimizedDoubleBuffer, true);
             }
+
+            /// <summary>
+            /// 重写 OnValidating，防御验证时访问未初始化编辑控件导致的 NullReferenceException
+            /// WinForms ComboBox.OnValidating → NotifyAutoComplete → UpdateText → Text.get 时内部编辑控件可能为 null
+            /// </summary>
+            protected override void OnValidating(CancelEventArgs e)
+            {
+                try
+                {
+                    base.OnValidating(e);
+                }
+                catch (NullReferenceException)
+                {
+                    // 内部编辑控件未初始化时忽略验证错误
+                    e.Cancel = false;
+                }
+            }
             #endregion
 
             #region Public

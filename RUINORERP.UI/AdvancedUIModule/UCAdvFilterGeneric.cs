@@ -186,7 +186,7 @@ namespace RUINORERP.UI.AdvancedUIModule
         }
 
         /// <summary>
-        /// 控制功能按钮
+        /// 控制功能按钮1
         /// </summary>
         /// <param name="p_Text"></param>
         protected virtual void DoButtonClick(MenuItemEnums menuItem)

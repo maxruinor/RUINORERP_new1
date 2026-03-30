@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -159,5 +160,51 @@ namespace RUINORERP.UI.Common
 
 
 
+
+        #region ComboBox 静默初始化
+
+        private const int WM_SETREDRAW = 0x000B;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        /// <summary>
+        /// 静默初始化ComboBox内部编辑控件，使用WM_SETREDRAW避免闪烁
+        /// </summary>
+        public static void InitializeComboBoxEditControl(ComboBox cmb)
+        {
+            if (cmb == null) return;
+
+            // 只处理DropDown样式的ComboBox
+            if (cmb.DropDownStyle != ComboBoxStyle.DropDown) return;
+
+            // 确保控件句柄已创建
+            if (!cmb.IsHandleCreated)
+            {
+                cmb.CreateControl();
+            }
+
+            if (cmb.Handle == IntPtr.Zero) return;
+
+            // 禁用重绘
+            SendMessage(cmb.Handle, WM_SETREDRAW, IntPtr.Zero, IntPtr.Zero);
+
+            try
+            {
+                // 执行DropDownStyle切换，触发内部编辑控件创建
+                var originalStyle = cmb.DropDownStyle;
+                cmb.DropDownStyle = ComboBoxStyle.DropDownList;
+                cmb.DropDownStyle = originalStyle;
+            }
+            finally
+            {
+                // 启用重绘
+                SendMessage(cmb.Handle, WM_SETREDRAW, (IntPtr)1, IntPtr.Zero);
+                // 强制重绘
+                cmb.Invalidate();
+            }
+        }
+
+        #endregion
     }
 }

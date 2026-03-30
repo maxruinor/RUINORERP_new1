@@ -99,7 +99,21 @@ namespace RUINORERP.UI.Common
             // 快速前置检查
             if (e.FormattingApplied || e.Value == null)
             {
-                e.Value = string.Empty;
+                // 特殊处理：如果是 CheckBox 列且值为 null，不要设置为空字符串
+                if (!e.FormattingApplied && e.Value == null)
+                {
+                    DataGridView dg = sender as DataGridView;
+                    if (dg?.Columns[e.ColumnIndex] is DataGridViewCheckBoxColumn)
+                    {
+                        // CheckBox 列允许 null 值显示为未勾选
+                        return;
+                    }
+                }
+                
+                if (e.Value == null)
+                {
+                    e.Value = string.Empty;
+                }
                 return;
             }
 
@@ -109,6 +123,13 @@ namespace RUINORERP.UI.Common
             // 如果列是隐藏的，直接返回
             if (!column.Visible)
             {
+                return;
+            }
+
+            // 如果是 CheckBox 列，不要修改它的值
+            if (column is DataGridViewCheckBoxColumn)
+            {
+                // CheckBox 列保持原始布尔值，不进行任何格式化
                 return;
             }
 

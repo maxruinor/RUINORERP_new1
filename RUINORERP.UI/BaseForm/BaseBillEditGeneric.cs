@@ -7394,17 +7394,18 @@ namespace RUINORERP.UI.BaseForm
                 var dataStatus = (DataStatus)(editEntity.GetPropertyValue(typeof(DataStatus).Name).ToInt());
                 if (dataStatus == DataStatus.新建 || dataStatus == DataStatus.草稿)
                 {
+                    //销售订单出库时，跟单提交后检测没有库存。得由仓库组装入库后再出库。目前暂时没有处理。就直接重新 做。重复存在的话，则检查不过。
                     //如果草稿。都可以删除。如果是新建，则提交过了。要创建人或超级管理员才能删除
-                    if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
-                    {
-                        if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.EmpID.ToString())
-                        {
-                            MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            rss.ErrorMsg = "只有创建人才能删除提交的单据。";
-                            rss.Succeeded = false;
-                            return rss;
-                        }
-                    }
+                    //if (dataStatus == DataStatus.新建 && !AppContext.IsSuperUser)
+                    //{
+                    //    if (ReflectionHelper.ExistPropertyName<T>("Created_by") && ReflectionHelper.GetPropertyValue(editEntity, "Created_by").ToString() != AppContext.CurUserInfo.EmpID.ToString())
+                    //    {
+                    //        MessageBox.Show("只有创建人才能删除提交的单据。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    //        rss.ErrorMsg = "只有创建人才能删除提交的单据。";
+                    //        rss.Succeeded = false;
+                    //        return rss;
+                    //    }
+                    //}
                     bool rs = false;
                     BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
                     //这个表特殊当时没有命名好

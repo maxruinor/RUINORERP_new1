@@ -1890,6 +1890,8 @@ namespace RUINORERP.UI.UControls
             this.SuspendLayout();
             try
             {
+                // 确保布尔类型的列使用 CheckBoxColumn 渲染
+                EnsureCheckBoxColumns();
 
                 #region 处理特殊列 Selected
 
@@ -1945,7 +1947,6 @@ namespace RUINORERP.UI.UControls
 
                     if (Columns.Contains(displayController.ColName))
                     {
-
                         #region 设置列
 
                         Columns[displayController.ColName].HeaderText = displayController.ColDisplayText;
@@ -1977,14 +1978,15 @@ namespace RUINORERP.UI.UControls
                         {
                             Columns[displayController.ColName].Visible = false;
                         }
-
-                        //最后处理特别情况，如果整个dg只读为假，则checkbox可以选择？
+                        
+                        //最后处理特别情况，如果整个 dg 只读为假，则 checkbox 可以选择？
                         if (Columns[displayController.ColName].ValueType.Name.Contains("Boolean") && displayController.ColName != "Selected")
                         {
-                            Columns[displayController.ColName].ReadOnly = this.ReadOnly;
+                            // 优化：CheckBox 列应该始终可编辑，不受网格 ReadOnly 影响
+                            // 因为 CheckBox 通常用于切换状态，应该始终可交互
+                            Columns[displayController.ColName].ReadOnly = false;
                         }
                         #endregion
-
                     }
 
                 }
@@ -2055,6 +2057,170 @@ namespace RUINORERP.UI.UControls
                     #endregion
                 }
             }
+        }
+
+        /// <summary>
+        /// 确保布尔类型的列使用 CheckBoxColumn 渲染
+        /// </summary>
+        private void EnsureCheckBoxColumns()
+        {
+            try
+            {
+                // === 调试代码开始 ===
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] 开始执行");
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] Columns.Count: {this.Columns.Count}");
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] DataSource: {this.DataSource?.GetType().Name ?? "null"}");
+                
+                if (this.Columns.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("[EnsureCheckBoxColumns] 退出：Columns.Count == 0");
+                    return;
+                }
+                
+                if (this.DataSource == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("[EnsureCheckBoxColumns] 退出：DataSource == null");
+                    return;
+                }
+                // === 调试代码结束 ===
+                
+                // 获取数据源的元素类型
+                Type dataSourceType = GetDataSourceElementType(this.DataSource);
+                
+                // === 调试代码 ===
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] DataSourceElementType: {dataSourceType?.FullName ?? "null"}");
+                // ================
+                
+                if (dataSourceType == null)
+                    return;
+
+                // 查找所有布尔属性
+                var boolProperties = dataSourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(p => p.PropertyType == typeof(bool) || p.PropertyType == typeof(bool?));
+
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] 找到布尔属性数量：{boolProperties.Count()}");
+                
+                foreach (var prop in boolProperties)
+                {
+                    var column = this.Columns[prop.Name];
+                    System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] 检查列：{prop.Name}, 当前类型：{column?.GetType().Name ?? "null"}");
+                    
+                    if (column != null && !(column is DataGridViewCheckBoxColumn))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 转换列：{prop.Name} from {column.GetType().Name} to DataGridViewCheckBoxColumn");
+                        
+                        // 记录当前列的状态
+                        int displayIndex = column.DisplayIndex;
+                        int width = column.Width;
+                        bool visible = column.Visible;
+                        string headerText = column.HeaderText;
+                        
+                        try
+                        {
+                            // 移除旧列
+                            this.Columns.Remove(column);
+                            
+                            // 创建新的 CheckBox 列
+                            var checkBoxColumn = new DataGridViewCheckBoxColumn
+                            {
+                                Name = prop.Name,
+                                DataPropertyName = prop.Name,
+                                HeaderText = string.IsNullOrEmpty(headerText) ? prop.Name : headerText,
+                                Width = width,
+                                DisplayIndex = displayIndex,
+                                Visible = visible,
+                                TrueValue = true,
+                                FalseValue = false,
+                                ThreeState = false,
+                                DefaultCellStyle = new DataGridViewCellStyle
+                                {
+                                    Alignment = DataGridViewContentAlignment.MiddleCenter,
+                                    NullValue = false
+                                }
+                            };
+                            
+                            // 插入到正确位置
+                            if (displayIndex < this.Columns.Count)
+                            {
+                                this.Columns.Insert(displayIndex, checkBoxColumn);
+                            }
+                            else
+                            {
+                                this.Columns.Add(checkBoxColumn);
+                            }
+                            
+                            System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 转换完成：{prop.Name}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 转换失败：{prop.Name}, 错误：{ex.Message}");
+                            System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 堆栈跟踪：{ex.StackTrace}");
+                        }
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] 执行完毕");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 外层异常：{ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[EnsureCheckBoxColumns] *** 堆栈跟踪：{ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// 获取数据源的元素类型
+        /// </summary>
+        private Type GetDataSourceElementType(object dataSource)
+        {
+            if (dataSource == null)
+                return null;
+
+            // 处理 BindingSource 情况
+            if (dataSource is BindingSource bindingSource)
+            {
+                return GetDataSourceElementType(bindingSource.DataSource);
+            }
+
+            // 处理 IList 情况
+            if (dataSource is System.Collections.IList list && list.Count > 0)
+            {
+                return list[0].GetType();
+            }
+
+            // 处理 Array 情况
+            if (dataSource is Array array && array.Length > 0)
+            {
+                return array.GetValue(0).GetType();
+            }
+
+            // 处理 DataView 情况
+            if (dataSource is System.Data.DataView dataView && dataView.Table != null)
+            {
+                return typeof(System.Data.DataRowView);
+            }
+
+            // 处理 DataTable 情况
+            if (dataSource is System.Data.DataTable dataTable)
+            {
+                return typeof(System.Data.DataRowView);
+            }
+
+            // 尝试从泛型接口获取类型
+            var sourceType = dataSource.GetType();
+            
+            // 检查是否是泛型列表
+            if (sourceType.IsGenericType)
+            {
+                var genericTypeArgs = sourceType.GetGenericArguments();
+                if (genericTypeArgs.Length > 0)
+                {
+                    return genericTypeArgs[0];
+                }
+            }
+
+            // 如果以上都不行，返回源类型本身
+            return sourceType;
         }
 
 
@@ -2799,7 +2965,56 @@ namespace RUINORERP.UI.UControls
 
         private void NewSumDataGridView_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
-
+            // === 调试代码开始 ===
+            System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] 触发，IsCurrentCellDirty: {this.IsCurrentCellDirty}");
+            if (this.CurrentCell != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] CurrentCell: Row={this.CurrentCell.RowIndex}, Col={this.CurrentCell.ColumnIndex}, Type={this.CurrentCell.GetType().Name}");
+                
+                // 如果是 CheckBox 列，强制刷新值
+                if (this.CurrentCell is DataGridViewCheckBoxCell checkBoxCell)
+                {
+                    var currentValue = checkBoxCell.EditedFormattedValue;
+                    System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] CheckBox 当前编辑值：{currentValue}");
+                }
+            }
+            // === 调试代码结束 ===
+            
+            // 提交当前单元格的编辑，这对 CheckBoxColumn 至关重要
+            // 当用户点击 CheckBox 时，必须调用此方法才能更新值
+            if (this.IsCurrentCellDirty && this.CurrentCell != null)
+            {
+                try
+                {
+                    // 第一次提交：将 UI 值提交到单元格
+                    this.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                    System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] ✓ 第一次提交成功");
+                    
+                    // 第二次提交：确保 BindingSource 更新数据源
+                    if (this.BindingContext != null && this.DataSource != null)
+                    {
+                        var bindingManagerBase = this.BindingContext[this.DataSource];
+                        if (bindingManagerBase != null)
+                        {
+                            bindingManagerBase.EndCurrentEdit();
+                            System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] ✓ BindingSource 更新成功");
+                        }
+                    }
+                    
+                    // 验证值是否真的改变了
+                    if (this.CurrentRow?.DataBoundItem != null)
+                    {
+                        string propertyName = this.CurrentCell.OwningColumn.DataPropertyName;
+                        var dataValue = this.CurrentRow.DataBoundItem.GetPropertyValue(propertyName);
+                        System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] ✓ 数据对象中的值：{propertyName} = {dataValue}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] ✗ 提交编辑失败：{ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[CurrentCellDirtyStateChanged] ✗ 堆栈跟踪：{ex.StackTrace}");
+                }
+            }
         }
 
         private void NewSumDataGridView_CurrentCellChanged(object sender, EventArgs e)

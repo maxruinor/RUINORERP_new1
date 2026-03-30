@@ -35,7 +35,7 @@ using RUINORERP.Business.EntityLoadService;
 namespace RUINORERP.Business
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
+    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新1
     /// </summary>
     public partial class tb_AS_AfterSaleApplyController<T> : BaseController<T> where T : class
     {

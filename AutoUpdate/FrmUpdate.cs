@@ -427,22 +427,48 @@ namespace AutoUpdate
         {
             try
             {
-                if (pbDownFile.Maximum <= 0)
+                // 确保进度条控件有效
+                if (pbDownFile == null || pbDownFile.IsDisposed)
+                {
+                    return;
+                }
+                
+                // 确保Minimum和Maximum设置合理
+                if (pbDownFile.Maximum <= pbDownFile.Minimum)
                 {
                     pbDownFile.Minimum = 0;
                     pbDownFile.Maximum = 100;
+                    pbDownFile.Value = 0;
                 }
                 
+                // 确保输入值在合理范围内
+                if (value < 0)
+                    value = 0;
+                
+                // 如果目标值大于当前Maximum，需要先调整顺序
                 if (value > pbDownFile.Maximum)
-                    value = pbDownFile.Maximum;
-                if (value < pbDownFile.Minimum)
+                {
+                    // 先把Value设为0
+                    pbDownFile.Value = 0;
+                    // 再设置新的Maximum
+                    pbDownFile.Maximum = value;
+                    // 最后设置Value
+                    pbDownFile.Value = value;
+                }
+                else if (value < pbDownFile.Minimum)
+                {
                     value = pbDownFile.Minimum;
-                    
-                pbDownFile.Value = value;
+                    pbDownFile.Value = value;
+                }
+                else
+                {
+                    pbDownFile.Value = value;
+                }
             }
             catch (Exception ex)
             {
                 AppendAllText($"[进度条] 设置值失败: {ex.Message}");
+                AppendAllText($"[进度条] 异常详情: {ex.StackTrace}");
             }
         }
 
@@ -1592,7 +1618,19 @@ namespace AutoUpdate
                 // 【修复】恢复进度条状态
                 if (pbDownFile != null)
                 {
+                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
+                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
+                    if (savedValue > savedMaximum)
+                    {
+                        savedValue = savedMaximum;
+                        AppendAllText($"[CopyFile] 调整保存的进度值: {savedValue} (防止超过最大值)");
+                    }
+                    
+                    // 先临时把Value设为0，避免设置Maximum时触发异常
+                    pbDownFile.Value = 0;
+                    // 再设置Maximum
                     pbDownFile.Maximum = savedMaximum;
+                    // 最后用安全方法设置实际Value
                     SafeSetProgressValue(savedValue);
                     AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
                 }
@@ -1868,7 +1906,19 @@ namespace AutoUpdate
                 // 【修复】恢复进度条状态
                 if (pbDownFile != null)
                 {
+                    // 安全恢复：先确保Value在合理范围内，再设置Maximum
+                    // 如果savedValue > savedMaximum，先把Value降到不超过savedMaximum
+                    if (savedValue > savedMaximum)
+                    {
+                        savedValue = savedMaximum;
+                        AppendAllText($"[CopyFile] 调整保存的进度值: {savedValue} (防止超过最大值)");
+                    }
+                    
+                    // 先临时把Value设为0，避免设置Maximum时触发异常
+                    pbDownFile.Value = 0;
+                    // 再设置Maximum
                     pbDownFile.Maximum = savedMaximum;
+                    // 最后用安全方法设置实际Value
                     SafeSetProgressValue(savedValue);
                     AppendAllText($"[CopyFile] 恢复进度条状态: Maximum={savedMaximum}, Value={savedValue}");
                 }

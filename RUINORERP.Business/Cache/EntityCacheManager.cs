@@ -93,12 +93,12 @@ namespace RUINORERP.Business.Cache
         private readonly object _statisticsLock = new object();
 
         /// <summary>
-        /// 最大缓存大小（已调整为800MB以避免频繁清理）
+        /// 最大缓存大小（已调整为 400MB 以降低内存占用）
         /// </summary>
-        private readonly long _maxCacheSize = 800 * 1024 * 1024;
+        private readonly long _maxCacheSize = 400 * 1024 * 1024;
 
         /// <summary>
-        /// 缓存大小检查阈值（达到最大大小的80%时触发清理）
+        /// 缓存大小检查阈值（达到最大大小的 70% 时触发清理，降低内存压力）
         /// </summary>
         private readonly long _cacheSizeThreshold;
         #endregion
@@ -418,8 +418,8 @@ namespace RUINORERP.Business.Cache
             _tableSchemaManager = tableSchemaManager ?? throw new ArgumentNullException(nameof(tableSchemaManager));
             _cacheDataProvider = cacheDataProvider;
             _cacheSyncMetadata = cacheSyncMetadata; // 可选依赖
-            // 设置缓存大小阈值（最大大小的80%）
-            _cacheSizeThreshold = (long)(_maxCacheSize * 0.8);
+            // 设置缓存大小阈值（最大大小的 70%，降低内存压力）
+            _cacheSizeThreshold = (long)(_maxCacheSize * 0.7);
 
             // 初始化统一缓存管理器 - 优化：使用单一缓存管理器，统一存储结构
             _cacheManager = CacheFactory.Build<object>(settings =>
@@ -1971,7 +1971,7 @@ namespace RUINORERP.Business.Cache
         }
 
         /// <summary>
-        /// 按最少使用原则清理缓存
+        /// 按最少使用原则清理缓存（增强版：每次移除 20% 以提高清理效率）
         /// </summary>
         private void CleanCacheByLeastRecentlyUsed()
         {
@@ -1980,10 +1980,10 @@ namespace RUINORERP.Business.Cache
                 // 获取所有缓存项并按最后访问时间排序（最久未使用的在前）
                 var itemsToRemove = _cacheItemStatistics.Values
                     .OrderBy(s => s.LastAccessedTime)
-                    .Take(_cacheItemStatistics.Count / 10) // 减少为移除10%的项，降低清理频率
+                    .Take(_cacheItemStatistics.Count / 5) // 增强：移除 20% 的项，提高清理效率
                     .Select(s => s.Key)
                     .ToList();
-
+        
                 // 记录详细的缓存清理日志
                 if (itemsToRemove.Any())
                 {
@@ -1991,7 +1991,7 @@ namespace RUINORERP.Business.Cache
                         itemsToRemove.Count,
                         string.Join(", ", itemsToRemove.Select(k => _cacheItemStatistics[k].TableName)));
                 }
-
+        
                 // 移除选定的缓存项
                 foreach (var key in itemsToRemove)
                 {

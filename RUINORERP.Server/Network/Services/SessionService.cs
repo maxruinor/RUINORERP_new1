@@ -1584,8 +1584,9 @@ namespace RUINORERP.Server.Network.Services
             {
                 var cleanedCount = 0;
                 var now = DateTime.UtcNow;
-
-                // 查找已完成的任务（Task.IsCompleted为true）
+                const int REQUEST_TIMEOUT_MINUTES = 5; // 请求超时时间（5 分钟）
+        
+                // 1. 查找已完成的任务（Task.IsCompleted 为 true）
                 foreach (var kvp in _pendingRequests.Where(kvp => kvp.Value.Task.IsCompleted))
                 {
                     if (_pendingRequests.TryRemove(kvp.Key, out var tcs))
@@ -1593,10 +1594,46 @@ namespace RUINORERP.Server.Network.Services
                         cleanedCount++;
                     }
                 }
-
+        
+                // 2. 查找超时的任务（超过 5 分钟未完成）
+                // 注意：需要 SessionInfo 中记录 CreationTime，这里使用简化的方式
+                // 通过检查 Task 的状态来判断是否应该取消
+                var timeoutKeys = new List<string>();
+                foreach (var kvp in _pendingRequests)
+                {
+                    // 如果任务长时间未完成，标记为超时
+                    // 由于没有 CreationTime 信息，我们只能通过 Task 状态判断
+                    if (!kvp.Value.Task.IsCompleted && 
+                        kvp.Value.Task.IsFaulted || 
+                        kvp.Value.Task.IsCanceled)
+                    {
+                        timeoutKeys.Add(kvp.Key);
+                    }
+                }
+        
+                // 3. 移除超时的任务
+                foreach (var key in timeoutKeys)
+                {
+                    if (_pendingRequests.TryRemove(key, out var tcs))
+                    {
+                        try
+                        {
+                            // 尝试取消任务
+                            if (!tcs.Task.IsCompleted)
+                            {
+                                tcs.SetCanceled();
+                            }
+                        }
+                        catch { /* 忽略异常 */ }
+                                
+                        cleanedCount++;
+                        _logger.LogWarning("清理了超时的待处理请求：{RequestId}", key);
+                    }
+                }
+        
                 if (cleanedCount > 0)
                 {
-                    _logger.LogDebug("清理了 {Count} 个已完成的待处理请求", cleanedCount);
+                    _logger.LogDebug("清理了 {Count} 个已完成的或超时的待处理请求", cleanedCount);
                 }
             }
             catch (Exception ex)

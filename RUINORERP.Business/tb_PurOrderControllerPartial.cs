@@ -893,13 +893,6 @@ namespace RUINORERP.Business
         /// <returns></returns>
         public async Task<(bool CanDo, string Message)> CheckOrderPaymentWithMessage(decimal PrepaidAmount, tb_PurOrder entity)
         {
-            // 检查1：订单订金+当前预付金额 ≤ 订单总金额
-            if (entity.Deposit + PrepaidAmount > entity.TotalAmount)
-            {
-                return (false, $"当前预付金额与订单订金之和已经超过订单总金额");
-            }
-
-            // 检查2：已生效的预付款单金额+当前预付金额 ≤ 订单总金额
             List<tb_FM_PreReceivedPayment> prePaidList = await _appContext.Db.CopyNew().Queryable<tb_FM_PreReceivedPayment>()
                 .Where(m => m.SourceBizType == (int)BizType.采购订单 && m.SourceBillId == entity.PurOrder_ID)
                 .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.已生效)
@@ -907,25 +900,7 @@ namespace RUINORERP.Business
             decimal totalPrePaid = prePaidList.Sum(c => c.LocalPrepaidAmount);
             if (totalPrePaid + PrepaidAmount > entity.TotalAmount)
             {
-                return (false, $"当前预付金额与已预付款之和已经超过订单总金额");
-            }
-
-            // 检查3：已支付的支付记录金额+当前预付金额 ≤ 订单总金额
-            List<tb_FM_PaymentRecord> paymentRecords = await _appContext.Db.CopyNew().Queryable<tb_FM_PaymentRecord>()
-                .Where(m => m.SourceBillNos.Contains(entity.PurOrderNo))
-                .Where(c => c.PaymentStatus == (int)PaymentStatus.已支付)
-                .Where(c => !c.IsReversed)
-                .ToListAsync();
-            decimal totalPaidAmount = paymentRecords.Sum(c => c.TotalLocalAmount);
-            if (totalPaidAmount + PrepaidAmount > entity.TotalAmount)
-            {
-                return (false, $"当前预付金额与已支付金额之和已经超过订单总金额");
-            }
-
-            // 检查4：订单订金+已生效预付款+已支付金额+当前预付金额 ≤ 订单总金额
-            if (entity.Deposit + totalPrePaid + totalPaidAmount + PrepaidAmount > entity.TotalAmount)
-            {
-                return (false, $"当前预付金额与订单订金、已预付款及已支付金额之和已经超过订单总金额");
+                return (false, $"采购订单【{entity.PurOrderNo}】：已生效预付款金额【{totalPrePaid:F2}】+ 本次预付金额【{PrepaidAmount:F2}】= 【{(totalPrePaid + PrepaidAmount):F2}】，已超过订单总金额【{entity.TotalAmount:F2}】，请检查！");
             }
 
             return (true, $"");

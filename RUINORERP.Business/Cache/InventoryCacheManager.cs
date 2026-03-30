@@ -26,9 +26,9 @@ namespace RUINORERP.Business.Cache
         private const string SnapshotKeyPrefix = "InventorySnapshot:";
         private const string TransactionKeyPrefix = "InventoryTransaction:";
 
-        // 缓存过期策略（历史数据可设置较长有效期）
-        private readonly TimeSpan _snapshotExpiration = TimeSpan.FromHours(24);
-        private readonly TimeSpan _transactionExpiration = TimeSpan.FromHours(12);
+        // 缓存过期策略（已缩短过期时间以降低内存占用）
+        private readonly TimeSpan _snapshotExpiration = TimeSpan.FromHours(6); // 从 24h 降至 6h
+        private readonly TimeSpan _transactionExpiration = TimeSpan.FromHours(2); // 从 12h 降至 2h
 
         /// <summary>
         /// 构造函数

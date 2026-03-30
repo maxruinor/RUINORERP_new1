@@ -954,43 +954,64 @@ namespace RUINORERP.UI.SysConfig
                         List<tb_ProductionDemand> needupdateProductionDemands = new List<tb_ProductionDemand>();
                         List<tb_ManufacturingOrder> needupdateManufacturingOrders = new List<tb_ManufacturingOrder>();
 
-                        var Plans = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
-                                  .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
-                                   .Where(c => c.DataStatus == (int)DataStatus.完结)
-                                    .ToListAsync();
-
-                        foreach (var Plan in Plans)
+                        // 优化：分批处理大数据集，避免一次性加载过多数据到内存
+                        const int BATCH_SIZE = 100;
+                        int page = 1;
+                        int totalProcessed = 0;
+                        
+                        while (true)
                         {
-                            var Demands = Plan.tb_ProductionDemands.Where(c => c.DataStatus != (int)DataStatus.完结).ToList();
-                            for (int a = 0; a < Demands.Count; a++)
+                            var batchPlans = await MainForm.Instance.AppContext.Db.Queryable<tb_ProductionPlan>()
+                                      .Includes(c => c.tb_ProductionDemands, d => d.tb_ManufacturingOrders)
+                                      .Where(c => c.DataStatus == (int)DataStatus.完结)
+                                      .Skip((page - 1) * BATCH_SIZE)
+                                      .Take(BATCH_SIZE)
+                                      .ToListAsync();
+                            
+                            if (!batchPlans.Any()) break; // 没有更多数据，退出循环
+                            
+                            foreach (var Plan in batchPlans)
                             {
-                                var Demand = Demands[a];
-                                Demand.DataStatus = (int)DataStatus.完结;
-                                if (!needupdateProductionDemands.Contains(Demand))
+                                var Demands = Plan.tb_ProductionDemands.Where(c => c.DataStatus != (int)DataStatus.完结).ToList();
+                                for (int a = 0; a < Demands.Count; a++)
                                 {
-                                    needupdateProductionDemands.Add(Demand);
-                                }
-
-
-                                #region 存在制令单时才处理
-                                //存在退回单时才处理
-                                if (Demand.tb_ManufacturingOrders.Any())
-                                {
-                                    foreach (var item in Demand.tb_ManufacturingOrders)
+                                    var Demand = Demands[a];
+                                    Demand.DataStatus = (int)DataStatus.完结;
+                                    if (!needupdateProductionDemands.Contains(Demand))
                                     {
-                                        if (item.DataStatus != (int)DataStatus.完结)
+                                        needupdateProductionDemands.Add(Demand);
+                                    }
+
+                                    #region 存在制令单时才处理
+                                    //存在退回单时才处理
+                                    if (Demand.tb_ManufacturingOrders.Any())
+                                    {
+                                        foreach (var item in Demand.tb_ManufacturingOrders)
                                         {
-                                            item.DataStatus = (int)DataStatus.完结;
-                                            if (!needupdateManufacturingOrders.Contains(item))
+                                            if (item.DataStatus != (int)DataStatus.完结)
                                             {
-                                                needupdateManufacturingOrders.Add(item);
+                                                item.DataStatus = (int)DataStatus.完结;
+                                                if (!needupdateManufacturingOrders.Contains(item))
+                                                {
+                                                    needupdateManufacturingOrders.Add(item);
+                                                }
                                             }
                                         }
                                     }
+                                    #endregion
                                 }
-                                #endregion
                             }
-
+                            
+                            page++;
+                            totalProcessed += batchPlans.Count;
+                            
+                            // 每处理 10 批强制 GC 一次，避免内存累积
+                            if (page % 10 == 0)
+                            {
+                                GC.Collect();
+                                GC.WaitForPendingFinalizers();
+                                richTextBoxLog.AppendText($"已处理 {totalProcessed} 条生产计划记录...\r\n");
+                            }
                         }
 
 

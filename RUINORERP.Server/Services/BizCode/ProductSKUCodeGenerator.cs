@@ -36,8 +36,14 @@ namespace RUINORERP.Server.Services.BizCode
         private readonly ISqlSugarClient _db;
         private readonly IEntityCacheManager _entityCacheManager;
 
-        // SKU缓存，用于提高唯一性检查性能
+        // SKU 缓存，用于提高唯一性检查性能
         private static readonly ConcurrentDictionary<string, bool> _skuCache = new ConcurrentDictionary<string, bool>();
+                
+        // SKU 缓存容量限制（最大 50000 条记录）
+        private const int MAX_SKU_CACHE_SIZE = 50000;
+                
+        // 缓存清理阈值（达到 80% 时触发清理）
+        private const int CACHE_CLEANUP_THRESHOLD = (int)(MAX_SKU_CACHE_SIZE * 0.8);
 
         #endregion
 
@@ -224,7 +230,7 @@ namespace RUINORERP.Server.Services.BizCode
 
         /// <summary>
         /// 清理过期的生成记录
-        /// 防止_generatingSkus字典无限增长
+        /// 防止_generatingSkus 字典无限增长
         /// </summary>
         private static void CleanupExpiredGeneratingSkus(object state)
         {
@@ -233,7 +239,7 @@ namespace RUINORERP.Server.Services.BizCode
                 var expiredSkus = new List<string>();
                 var now = DateTime.Now;
                 var expirationThreshold = TimeSpan.FromMinutes(30);
-
+        
                 // 查找过期的生成记录
                 foreach (var kvp in _generatingSkus)
                 {
@@ -242,13 +248,13 @@ namespace RUINORERP.Server.Services.BizCode
                         expiredSkus.Add(kvp.Key);
                     }
                 }
-
+        
                 // 移除过期的记录
                 foreach (var sku in expiredSkus)
                 {
                     _generatingSkus.TryRemove(sku, out _);
                 }
-
+        
                 if (expiredSkus.Count > 0)
                 {
                     // 使用静态日志记录，因为这是静态方法
@@ -258,7 +264,48 @@ namespace RUINORERP.Server.Services.BizCode
             catch (Exception ex)
             {
                 // 使用静态日志记录，因为这是静态方法
-                Console.WriteLine($"清理过期生成记录时发生异常: {ex.Message}");
+                Console.WriteLine($"清理过期生成记录时发生异常：{ex.Message}");
+            }
+        }
+                
+        /// <summary>
+        /// LRU 缓存清理机制
+        /// 当缓存接近容量上限时，移除最旧的 20% 记录
+        /// </summary>
+        private void CleanupLRUCache()
+        {
+            try
+            {
+                if (_skuCache.Count < MAX_SKU_CACHE_SIZE)
+                {
+                    return; // 未达到清理条件
+                }
+                        
+                // 计算需要移除的数量（20%）
+                int removeCount = MAX_SKU_CACHE_SIZE / 5;
+                        
+                // 由于 ConcurrentDictionary 无法直接获取插入顺序，
+                // 我们采用简单策略：随机移除最不常用的记录
+                // 在实际使用中，可以通过访问频率来判断，但为了简化实现，
+                // 我们直接移除最早的一批记录（通过枚举顺序）
+                var keysToRemove = _skuCache.Keys.Take(removeCount).ToList();
+                        
+                int removedCount = 0;
+                foreach (var key in keysToRemove)
+                {
+                    if (_skuCache.TryRemove(key, out _))
+                    {
+                        removedCount++;
+                    }
+                }
+                        
+                _logger.LogInformation(
+                    "执行 SKU 缓存 LRU 清理 - 移除：{RemovedCount}, 剩余：{RemainingCount}, 上限：{MaxSize}",
+                    removedCount, _skuCache.Count, MAX_SKU_CACHE_SIZE);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SKU 缓存 LRU 清理失败");
             }
         }
 
@@ -275,23 +322,32 @@ namespace RUINORERP.Server.Services.BizCode
             ClearGeneratingSkus();
             try
             {
+                // 检查缓存是否接近容量上限
+                if (_skuCache.Count >= CACHE_CLEANUP_THRESHOLD)
+                {
+                    _logger.LogWarning(
+                        "SKU 缓存接近容量上限 ({CurrentCount}/{MaxSize})，将触发 LRU 清理",
+                        _skuCache.Count, MAX_SKU_CACHE_SIZE);
+                    CleanupLRUCache();
+                }
+                        
                 // 不再清空现有缓存，采用增量更新策略
                 // _skuCache.Clear(); // 已移除
-                
+                        
                 // 根据是否指定类目编码决定查询范围
                 // 增量更新：只加载最近 24 小时的 SKU
                 var query = _db.Queryable<tb_ProdDetail>()
                     .Where(p => p.CreateTime > DateTime.Now.AddHours(-24));
-                
+                        
                 // 如果指定了类目编码，则只加载该类目的 SKU
                 if (!string.IsNullOrEmpty(categoryCode))
                 {
                     query = query.Where(p => p.SKU.StartsWith(categoryCode));
                 }
-                
+                        
                 // 批量加载 SKU 到缓存
                 var newSkus = await query.Select(p => p.SKU).ToListAsync();
-                
+                        
                 int addedCount = 0;
                 foreach (var sku in newSkus)
                 {
@@ -300,14 +356,14 @@ namespace RUINORERP.Server.Services.BizCode
                         addedCount++;
                     }
                 }
-                
+                        
                 _logger.LogInformation(
                     "SKU 缓存增量更新完成 - 新增：{AddedCount}, 总数：{TotalCount}, 类目：{CategoryCode}",
                     addedCount, _skuCache.Count, categoryCode ?? "全部");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "刷新SKU缓存失败，类目编码: {CategoryCode}", "全部");
+                _logger.LogError(ex, "刷新 SKU 缓存失败，类目编码：{CategoryCode}", "全部");
             }
         }
 

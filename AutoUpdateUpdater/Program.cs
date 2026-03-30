@@ -152,24 +152,55 @@ namespace AutoUpdateUpdater
                 {
                     string processName = Path.GetFileNameWithoutExtension(exeName);
                     
-                    // 等待并关闭正在运行的AutoUpdate进程
-                    if (!WaitAndKillProcess(processName, 5000))
+                    // 【增强】增加等待时间到15秒，确保进程完全退出
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 开始等待AutoUpdate进程完全退出...");
+                    if (!WaitAndKillProcess(processName, 15000))
                     {
-                        MessageBox.Show("无法关闭正在运行的AutoUpdate进程，请手动关闭后重试", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return false;
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 警告: 进程关闭超时，但将继续尝试更新");
+                        // 不再直接返回false，而是继续尝试更新
                     }
                     
-                    // 备份原文件
+                    // 【新增】额外等待，确保文件句柄完全释放
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 额外等待3秒，确保文件句柄释放...");
+                    Thread.Sleep(3000);
+                    
+                    // 备份原文件（带重试机制）
                     string backupFile = targetFile + ".bak";
-                    if (File.Exists(backupFile))
+                    bool backupSuccess = SafeFileOperation(() =>
                     {
-                        File.Delete(backupFile);
+                        if (File.Exists(backupFile))
+                        {
+                            File.Delete(backupFile);
+                        }
+                        File.Move(targetFile, backupFile);
+                    }, "备份文件", 5);
+                    
+                    if (!backupSuccess)
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 备份文件失败，尝试直接删除目标文件");
+                        // 尝试删除目标文件
+                        SafeFileOperation(() => File.Delete(targetFile), "删除目标文件", 5);
                     }
-                    File.Move(targetFile, backupFile);
                 }
                 
-                // 复制新文件
-                File.Copy(sourceFile, targetFile, true);
+                // 【增强】复制新文件，带重试机制
+                WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 开始复制新文件: {sourceFile} -> {targetFile}");
+                bool copySuccess = SafeFileOperation(() => File.Copy(sourceFile, targetFile, true), "复制新文件", 10);
+                
+                if (!copySuccess)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件更新] 直接复制失败，尝试使用临时文件方式");
+                    
+                    // 使用临时文件方式复制
+                    string tempFile = targetFile + ".temp";
+                    SafeFileOperation(() => File.Copy(sourceFile, tempFile, true), "复制到临时文件", 5);
+                    
+                    // 删除目标文件
+                    SafeFileOperation(() => File.Delete(targetFile), "删除目标文件", 5);
+                    
+                    // 重命名临时文件
+                    SafeFileOperation(() => File.Move(tempFile, targetFile), "重命名临时文件", 5);
+                }
                 
                 // 验证文件复制成功
                 if (File.Exists(targetFile))
@@ -810,6 +841,51 @@ namespace AutoUpdateUpdater
             {
                 WriteLog("AutoUpdateUpdaterLog.txt", $"[等待退出] 等待AutoUpdate退出时发生异常: {ex.Message}");
             }
+        }
+        
+        /// <summary>
+        /// 安全的文件操作方法，带重试机制
+        /// </summary>
+        /// <param name="fileOperation">文件操作委托</param>
+        /// <param name="operationName">操作名称（用于日志）</param>
+        /// <param name="maxRetries">最大重试次数</param>
+        /// <returns>操作是否成功</returns>
+        private static bool SafeFileOperation(Action fileOperation, string operationName, int maxRetries = 5)
+        {
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] {operationName} - 尝试 {attempt}/{maxRetries}");
+                    fileOperation();
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] {operationName} - 成功");
+                    return true;
+                }
+                catch (IOException ioEx)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] {operationName} - IO异常（尝试 {attempt}/{maxRetries}）: {ioEx.Message}");
+                    
+                    if (attempt < maxRetries)
+                    {
+                        // 指数退避策略：1秒、2秒、4秒、8秒、16秒
+                        int waitTime = (int)Math.Pow(2, attempt - 1) * 1000;
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] 等待 {waitTime}ms 后重试...");
+                        Thread.Sleep(waitTime);
+                    }
+                    else
+                    {
+                        WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] {operationName} - 达到最大重试次数，操作失败");
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog("AutoUpdateUpdaterLog.txt", $"[文件操作] {operationName} - 异常: {ex.Message}");
+                    return false;
+                }
+            }
+            
+            return false;
         }
     }
 }

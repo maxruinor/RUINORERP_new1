@@ -182,7 +182,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompressedUpdateTester.cs" />
     <Compile Include="EnhancedVersionManager.cs" />
     <Compile Include="frmDebugInfo.cs">
       <SubType>Form</SubType>

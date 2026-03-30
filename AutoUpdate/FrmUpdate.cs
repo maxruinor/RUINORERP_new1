@@ -2248,6 +2248,34 @@ namespace AutoUpdate
                 AppendAllText($"[AutoUpdate更新] 当前程序路径: {currentExePath}");
                 AppendAllText($"[AutoUpdate更新] 临时更新路径: {tempUpdatePath}");
 
+                // 【增强】在启动AutoUpdateUpdater之前，确保所有资源释放
+                AppendAllText("[AutoUpdate更新] 开始释放所有资源...");
+                
+                // 关闭所有打开的文件流和资源
+                if (appUpdater != null)
+                {
+                    appUpdater.Dispose();
+                    AppendAllText("[AutoUpdate更新] 已释放AppUpdater资源");
+                }
+                
+                // 关闭调试窗口
+                if (frmDebug != null)
+                {
+                    try
+                    {
+                        frmDebug.Close();
+                        frmDebug.Dispose();
+                        AppendAllText("[AutoUpdate更新] 已关闭调试窗口");
+                    }
+                    catch { }
+                }
+                
+                // 强制垃圾回收
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                AppendAllText("[AutoUpdate更新] 已执行垃圾回收");
+
                 selfUpdateStarted = SelfUpdateHelper.StartAutoUpdateUpdater(currentExePath, tempUpdatePath);
 
                 if (selfUpdateStarted)
@@ -2264,9 +2292,17 @@ namespace AutoUpdate
                     AppendAllText("[配置同步] 退出前再次确保配置文件已复制...");
                     CopyConfigFileToRoot();
                     
-                    Thread.Sleep(1000); // 给辅助进程一点启动时间
+                    // 【增强】增加等待时间，确保AutoUpdateUpdater完全启动
+                    AppendAllText("[AutoUpdate更新] 等待3秒，确保AutoUpdateUpdater完全启动...");
+                    Thread.Sleep(3000);
 
+                    // 【增强】关闭所有窗口和控件
+                    AppendAllText("[AutoUpdate更新] 开始关闭所有窗口和控件...");
+                    this.Close();
+                    this.Dispose();
+                    
                     // 正常退出主进程，让辅助进程接管更新
+                    AppendAllText("[AutoUpdate更新] 主进程退出");
                     Application.Exit();
                     Environment.Exit(0);
                 }

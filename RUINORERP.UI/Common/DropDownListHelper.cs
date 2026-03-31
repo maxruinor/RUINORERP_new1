@@ -49,9 +49,11 @@ namespace RUINORERP.UI.Common
 
             if (DropStyle == ComboBoxStyle.DropDown)
             {
-                cmb.AutoCompleteCustomSource = sc;
-                cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                cmb.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                // 完全禁用 AutoComplete，避免干扰自定义智能搜索
+                // AutoComplete 会自动选择第一个匹配项，导致下拉立即关闭
+                // cmb.AutoCompleteCustomSource = sc;
+                // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
             }
 
             cmb.EndUpdate();
@@ -134,10 +136,10 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 禁用 AutoComplete，避免干扰自定义智能搜索
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
             cmb.BeginUpdate();
@@ -178,10 +180,10 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 禁用 AutoComplete，避免干扰自定义智能搜索
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
 
@@ -219,19 +221,33 @@ namespace RUINORERP.UI.Common
                 return;
             }
 
-            // 统一设置搜索功能为禁用（当前实现不需要搜索功能）
-            cmb.EnableSearch = false;
-            
-            // 仅在非DropDownList样式时设置搜索延迟
-            if (DropStyle != ComboBoxStyle.DropDownList)
+            // 根据参数决定是否启用智能搜索功能
+            // auto=true: 启用搜索，支持中文、拼音、模糊匹配（适用于业务员、产品等需要搜索的场景）
+            // auto=false: 不启用搜索（适用于枚举、固定选项等场景）
+            cmb.EnableSearch = auto;
+
+            // 设置搜索延迟时间（仅在启用搜索时生效）
+            if (auto)
             {
-                cmb.SearchDelay = 500; // 设置500ms延迟
+                cmb.SearchDelay = 300; // 设置300ms延迟以获得更好的响应速度
             }
-            
+
             cmb.BeginUpdate();
-            
-            // 仅在启用自动完成且数据源不为空时构建自动完成集合
-            if (!cmb.EnableSearch && auto && DropStyle == ComboBoxStyle.DropDown && bs != null && bs.List != null)
+
+            // 只有在启用搜索时才修改 DropStyle，否则使用传入的 DropStyle
+            // 搜索功能需要用户能够输入文本，所以必须使用 DropDown
+            if (cmb.EnableSearch)
+            {
+                cmb.DropDownStyle = ComboBoxStyle.DropDown;
+            }
+            else
+            {
+                cmb.DropDownStyle = DropStyle; // 使用传入的 DropStyle（如 DropDownList）
+            }
+
+            // 仅在数据源不为空时构建自动完成集合
+            // 注意：auto 参数现在用于控制是否启用搜索，这里只是为了兼容性保留
+            if (auto && cmb.DropDownStyle == ComboBoxStyle.DropDown && bs != null && bs.List != null)
             {
                 AutoCompleteStringCollection sc = new AutoCompleteStringCollection();
                 
@@ -260,17 +276,24 @@ namespace RUINORERP.UI.Common
                         }
                     }
                 }
-                
-                cmb.AutoCompleteCustomSource = sc;
-                cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+
+                // 禁用 AutoComplete，避免干扰自定义智能搜索
+                // cmb.AutoCompleteCustomSource = sc;
+                // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
             }
 
             cmb.DataSource = bs;
-            cmb.DropDownStyle = DropStyle;
-            cmb.DisplayMember = DisplayMember;
+            // 注意：DropDownStyle 已在前面设置为 effectiveDropStyle
+            // cmb.DropDownStyle = DropStyle;  // 已注释，使用上面的 effectiveDropStyle
             
-            // 仅在值成员为空时设置
+            // 统一设置 DisplayMember 和 ValueMember，确保行为一致
+            // 只在当前值为空时才设置，避免覆盖已有的正确绑定
+            if (string.IsNullOrEmpty(cmb.DisplayMember))
+            {
+                cmb.DisplayMember = DisplayMember;
+            }
+            
             if (string.IsNullOrEmpty(cmb.ValueMember))
             {
                 cmb.ValueMember = ValueMember;
@@ -308,10 +331,10 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 禁用 AutoComplete，避免干扰自定义智能搜索
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
             #endregion
@@ -367,10 +390,10 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 禁用 AutoComplete，避免干扰自定义智能搜索
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
 
@@ -415,10 +438,10 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 禁用 AutoComplete，避免干扰自定义智能搜索
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
             cmb.BeginUpdate();

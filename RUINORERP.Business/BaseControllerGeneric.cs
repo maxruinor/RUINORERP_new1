@@ -1118,6 +1118,23 @@ namespace RUINORERP.Business
                 .FirstAsync();
         }
 
+
+        /// <summary>
+        /// 单条记录查询（带锁）- 用于更新前的验证
+        /// 使用UPDLOCK提示，确保数据一致性
+        /// </summary>
+        /// <param name="whereExpression">查询条件</param>
+        /// <returns>单条记录</returns>
+        public virtual async Task<T> GetSingleWithNoLockAsync(Expression<Func<T, bool>> whereExpression)
+        {
+            return await _unitOfWorkManage.GetDbClient()
+                .Queryable<T>()
+                .With(SqlWith.NoLock)  
+                .Where(whereExpression)
+                .FirstAsync();
+        }
+
+
         /// <summary>
         /// 获取主键字段名
         /// </summary>

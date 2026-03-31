@@ -418,7 +418,47 @@ namespace RUINORERP.UI.FM
             base.BindData(entity);
         }
 
-
+        // 忽略属性配置
+        // 重写忽略属性配置
+        protected override IgnorePropertyConfiguration ConfigureIgnoreProperties()
+        {
+            return base.ConfigureIgnoreProperties()
+                // 主表忽略的属性
+                .Ignore<tb_FM_ExpenseClaim>(
+                    e => e.DataStatus,
+                    e => e.ApprovalStatus,
+                    e => e.ApprovalResults,
+                    e => e.Approver_by,
+                    e => e.Approver_at,
+                    e => e.PrintStatus,
+                    e => e.Paytype_ID,
+                    e => e.PayStatus,
+                    e => e.ApprovalOpinions,
+                    e => e.PayStatus,
+                    e => e.FileStorageInfoList,
+                    e => e.FKRelations,
+                    e => e.EvidenceImages,
+                    e => e.InvoiceImages,
+                    e => e.isdeleted,
+                    e => e.PrintStatus,
+                    e => e.ChangedProperties)
+                // 明细表忽略的属性
+                .Ignore<tb_FM_ExpenseClaimDetail>(
+                    e => e.EvidenceImagePath,
+                    e => e.ActionStatus,
+                    e => e.ChangedProperties,
+                    e => e.ClaimMainID,
+                    e => e.ClaimSubID,
+                    e => e.DeleteIDs,
+                    e => e.FileStorageInfoList,
+                    e => e.TaxAmount,
+                    e => e.FieldNameList,
+                    e => e.HasChanged,
+                    e => e.TaxRate,
+                    e => e.PrimaryKeyID,
+                    e => e.RowImage,
+                    e => e.HelpInfos);
+        }
         private void LoadPayeeInfo(tb_FM_ExpenseClaim entity)
         {
             cmbPayeeInfoID.DataBindings.Clear();

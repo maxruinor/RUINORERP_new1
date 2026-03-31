@@ -309,7 +309,8 @@ namespace RUINORERP.UI.PSI.SAL
             DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
             DataBindingHelper.BindData4Cmb<tb_FM_Account>(entity, k => k.Account_id, v => v.Account_name, cmbAccount_id);
 
-            cmbEmployee_ID.EnableSearch = false;
+            // 启用业务员的智能搜索功能
+            cmbEmployee_ID.EnableSearch = true;
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, true);
 
             if (AppContext.projectGroups != null && AppContext.projectGroups.Count > 0)

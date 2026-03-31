@@ -55,6 +55,10 @@ using FastReport.Utils;
 
 namespace RUINORERP.UI.Common
 {
+
+    /// <summary>
+    /// 
+    /// </summary>
     public class DataBindingHelper
     {
         // 在类开始处添加：
@@ -620,6 +624,10 @@ namespace RUINORERP.UI.Common
                     if (item.GetType().Name == "KryptonComboBox")
                     {
                         KryptonComboBox ktb = item as KryptonComboBox;
+                        
+                        // 启用智能搜索功能
+                        ktb.EnableSearch = true;
+                        
                         //不重复添加
                         if (ktb.ButtonSpecs.Where(b => b.UniqueName == "btnQuery").Any())
                         {
@@ -3665,10 +3673,11 @@ namespace RUINORERP.UI.Common
             {
                 if (DropStyle == ComboBoxStyle.DropDown)
                 {
-
-                    cmb.AutoCompleteCustomSource = sc;
-                    cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                    cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
+                    // 不使用 AutoComplete，避免自动选择第一个匹配项
+                    // AutoComplete 会干扰自定义智能搜索功能
+                    // cmb.AutoCompleteCustomSource = sc;
+                    // cmb.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    // cmb.AutoCompleteMode = AutoCompleteMode.Suggest;
                 }
             }
 
@@ -3690,6 +3699,11 @@ namespace RUINORERP.UI.Common
         public static void InitDataToCmb(BindingSource bs, string ValueMember, string DisplayMember, KryptonComboBox cmbBox)
         {
             //Business.CommService.ICommonController bdc = Startup.GetFromFac<Business.CommService.ICommonController>();
+            
+            // 重要：必须在调用 InitDropList 之前启用搜索，因为 InitDropList 会检查 EnableSearch
+            // 来决定是否使用 ComboBoxStyle.DropDown（搜索需要用户能输入）
+            cmbBox.EnableSearch = true;
+            
             ComboBoxHelper.InitDropList(bs, cmbBox, ValueMember, DisplayMember, ComboBoxStyle.DropDownList, false);
         }
 

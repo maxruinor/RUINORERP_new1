@@ -854,7 +854,11 @@ namespace RUINORERP.UI.BaseForm
                     _guardService = Startup.GetFromFac<RepeatOperationGuardService>();
                     BillOperationService = Startup.GetFromFac<IBillOperationService>();
 
-                    AddExtendButton(CurMenuInfo);
+                    // 添加扩展按钮（仅在 CurMenuInfo 不为 null 时）
+                    if (CurMenuInfo != null)
+                    {
+                        AddExtendButton(CurMenuInfo);
+                    }
                 }
             }
         }

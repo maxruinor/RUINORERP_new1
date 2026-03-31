@@ -90,13 +90,17 @@ namespace RUINORERP.UI.FM
 
         public override ToolStripItem[] AddExtendButton(tb_MenuInfo menuInfo)
         {
+            if (menuInfo == null)
+            {
+                return null;
+            }
 
             toolStripButton红蓝单对冲核销.Text = "红蓝单对冲核销";
             toolStripButton红蓝单对冲核销.Image = global::RUINORERP.UI.Properties.Resources.MakeSureCost;
             toolStripButton红蓝单对冲核销.ImageTransparentColor = System.Drawing.Color.Magenta;
             toolStripButton红蓝单对冲核销.Name = "红蓝单对冲核销";
             toolStripButton红蓝单对冲核销.Visible = false;
-            UIHelper.ControlButton<ToolStripButton>(CurMenuInfo, toolStripButton红蓝单对冲核销);
+            UIHelper.ControlButton<ToolStripButton>(menuInfo, toolStripButton红蓝单对冲核销);
             toolStripButton红蓝单对冲核销.ToolTipText = "执行红蓝单对冲核销操作,将正负金额相互抵消。";
             toolStripButton红蓝单对冲核销.Click += new System.EventHandler(this.toolStripButton红蓝单对冲核销_Click);
 

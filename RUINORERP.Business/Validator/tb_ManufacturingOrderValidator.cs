@@ -39,7 +39,7 @@ namespace RUINORERP.Business
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDNO).MaximumMixedLength(100).WithMessage("需求单号:不能超过最大长度,100.");
 
- RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).Must(CheckForeignKeyValueCanNull).WithMessage("自制品:下拉选择值不正确。");
+ RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).Must(CheckForeignKeyValueCanNull).WithMessage("自制品:下拉选择值不正确,请确保存需求分析中生成了自制品建议！");
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDCID).NotEmpty().When(x => x.PDCID.HasValue);
 
  RuleFor(tb_ManufacturingOrder =>tb_ManufacturingOrder.PDID).Must(CheckForeignKeyValueCanNull).WithMessage("需求单据:下拉选择值不正确。");

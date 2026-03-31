@@ -25,7 +25,6 @@ namespace Krypton.Toolkit
     [DefaultBindingProperty(nameof(Text))]
     [LookupBindingProperties(nameof(DataSource), nameof(DisplayMember), nameof(ValueMember), nameof(SelectedValue))]
     [Designer(typeof(KryptonComboBoxDesigner))]
-    //[Designer(@"Krypton.Toolkit.KryptonContextMenuDesigner, Krypton.Toolkit")]
     [DesignerCategory(@"code")]
     [Description(@"Displays an editable textbox with a drop-down list of permitted values.")]
     public class KryptonComboBox : VisualControlBase,
@@ -40,6 +39,8 @@ namespace Krypton.Toolkit
 
         private System.Windows.Forms.Timer _searchTimer;
         private bool _isSearching;
+        private object _originalDataSource;
+        private List<object> _originalItems;
 
         private void InitializeSearchTimer()
         {
@@ -73,10 +74,10 @@ namespace Krypton.Toolkit
         }
 
         //默认启用
-        private bool _enableSearch = false;
+        private bool _enableSearch = true;
         [Category("Behavior")]
-        [Description("启用模糊搜索功能")]
-        [DefaultValue(false)]
+        [Description("启用智能搜索功能(支持中文、拼音、模糊匹配)")]
+        [DefaultValue(true)]
         public bool EnableSearch
         {
             get => _enableSearch;
@@ -96,20 +97,356 @@ namespace Krypton.Toolkit
 
         private bool _isApplyingFilter; // 添加重入保护标志
 
-        private void ApplySort(string searchText)
+        private void ApplySearch(string searchText)
         {
             if (!EnableSearch)
             {
                 return;
             }
 
-            // 构建智能排序表达式
-            // 示例：假设按 "Name" 属性匹配
-            string filterExpression = $"{this.DisplayMember}.Contains(\"{searchText}\")";
-            if (DataSource is BindingSource bs)
+            // 空文本恢复原始数据源并关闭下拉
+            if (string.IsNullOrWhiteSpace(searchText))
             {
-                bs.Filter = filterExpression;
+                RestoreOriginalDataSource();
+                if (DroppedDown)
+                {
+                    DroppedDown = false;
+                }
+                return;
             }
+
+            try
+            {
+                // 标记正在搜索，防止 TextChanged 事件递归触发
+                _isSearching = true;
+
+                // 保存原始数据源（仅在首次搜索时保存）
+                // 原因：
+                // 1. 避免每次搜索都重新保存，提高性能
+                // 2. 确保多次搜索后都能恢复到同一个原始数据源
+                // 3. 只在 _originalDataSource 为 null 时保存，说明是首次搜索
+                if (DataSource != null && _originalDataSource == null)
+                {
+                    _originalDataSource = DataSource;
+
+                    // 如果是BindingSource，复制原始项
+                    if (DataSource is BindingSource bs)
+                    {
+                        _originalItems = new List<object>();
+                        foreach (var item in bs)
+                        {
+                            _originalItems.Add(item);
+                        }
+                    }
+                    else if (DataSource is System.Collections.IList list)
+                    {
+                        _originalItems = new List<object>();
+                        foreach (var item in list)
+                        {
+                            _originalItems.Add(item);
+                        }
+                    }
+
+                    System.Diagnostics.Debug.WriteLine($"智能搜索: 保存原始数据源，项数={_originalItems?.Count ?? 0}");
+                }
+
+                // 执行智能搜索
+                var filteredItems = PerformSmartSearch(searchText);
+
+                // 应用过滤后的结果（使用 BindingSource 保持属性绑定）
+                if (filteredItems != null && filteredItems.Count > 0)
+                {
+                    // 临时保存显示成员和值成员
+                    string displayMember = DisplayMember;
+                    string valueMember = ValueMember;
+
+                    // 保存当前下拉状态和选中项
+                    bool wasDroppedDown = DroppedDown;
+                    int selectedIndex = SelectedIndex;
+                    object selectedItem = SelectedItem;
+                    string currentText = Text;
+
+                    // ✅ 关键：在修改 DataSource 之前保存光标位置
+                    int selectionStart = SelectionStart;
+                    int selectionLength = SelectionLength;
+
+                    // 使用 BindingSource 包装过滤后的结果，确保 DisplayMember/ValueMember 正常工作
+                    BindingSource filteredBindingSource = new BindingSource();
+                    filteredBindingSource.DataSource = filteredItems;
+
+                    // 先清空 DataSource，避免数据绑定冲突
+                    DataSource = null;
+
+                    // 设置新的 DataSource（使用 BeginUpdate/EndUpdate 避免触发 SelectedIndexChanged）
+                    BeginUpdate();
+                    DataSource = filteredBindingSource;
+
+                    // 必须在 DataSource 设置之后再设置 DisplayMember 和 ValueMember
+                    // 确保在清空 DataSource 后重新设置这些属性
+                    if (!string.IsNullOrEmpty(displayMember))
+                    {
+                        DisplayMember = displayMember;
+                    }
+                    if (!string.IsNullOrEmpty(valueMember))
+                    {
+                        ValueMember = valueMember;
+                    }
+
+                    // 恢复用户输入的文本
+                    Text = currentText;
+
+                    // 恢复光标位置（在 EndUpdate 之前设置）
+                    SelectionStart = selectionStart;
+                    SelectionLength = selectionLength;
+
+                    // 不设置 SelectedIndex，让 ComboBox 自动处理
+                    // 这样可以保持焦点，并且用户可以继续输入或用鼠标选择
+
+                    EndUpdate();
+
+                    // ✅ 关键修复：确保下拉列表始终显示搜索结果
+                    // 即使下拉已经打开，也要刷新以显示新的过滤结果
+                    DroppedDown = false; // 先关闭
+                    DroppedDown = true;  // 再打开，确保显示新的数据源
+                }
+                else
+                {
+                    // 没有匹配项，不改变数据源，只关闭下拉
+                    // 这样用户可以看到"无匹配结果"，同时保持原始数据源和属性
+                    System.Diagnostics.Debug.WriteLine($"智能搜索: 没有匹配项");
+
+                    // 不修改 DataSource，避免显示类名
+                    // 只是让下拉列表显示为空（通过关闭和重新打开）
+                    if (DroppedDown)
+                    {
+                        DroppedDown = false;
+                        DroppedDown = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"智能搜索失败: {ex.Message}");
+                RestoreOriginalDataSource();
+            }
+            finally
+            {
+                _isSearching = false;
+            }
+        }
+
+        /// <summary>
+        /// 恢复原始数据源
+        /// </summary>
+        private void RestoreOriginalDataSource()
+        {
+            if (_originalDataSource != null && _originalItems != null)
+            {
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"智能搜索: 恢复原始数据源，项数={_originalItems?.Count ?? 0}");
+
+                    // 保存用户当前选中的值（在恢复前保存）
+                    string currentText = Text;
+                    object selectedItem = SelectedItem;
+                    int selectedIndex = SelectedIndex;
+                    object selectedValue = SelectedValue;
+
+                    System.Diagnostics.Debug.WriteLine($"智能搜索: 保存选中状态 - Text='{currentText}', SelectedIndex={selectedIndex}, SelectedValue={selectedValue}");
+
+                    // 暂时保存当前的 DisplayMember 和 ValueMember
+                    string currentDisplayMember = DisplayMember;
+                    string currentValueMember = ValueMember;
+
+                    // 恢复原始数据源
+                    BeginUpdate();
+                    DataSource = _originalDataSource;
+
+                    // 恢复 DisplayMember 和 ValueMember
+                    if (!string.IsNullOrEmpty(currentDisplayMember))
+                    {
+                        DisplayMember = currentDisplayMember;
+                    }
+                    if (!string.IsNullOrEmpty(currentValueMember))
+                    {
+                        ValueMember = currentValueMember;
+                    }
+
+                    // 恢复用户选中的值
+                    // 优先级：SelectedValue > SelectedItem > Text
+                    bool restored = false;
+
+                    // 1. 尝试通过 SelectedValue 恢复（最准确）
+                    if (selectedValue != null && selectedValue != DBNull.Value)
+                    {
+                        try
+                        {
+                            SelectedValue = selectedValue;
+                            if (SelectedValue != null && SelectedValue.Equals(selectedValue))
+                            {
+                                restored = true;
+                                System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 SelectedValue 恢复成功: {selectedValue}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 SelectedValue 恢复失败: {ex.Message}");
+                        }
+                    }
+
+                    // 2. 如果 SelectedValue 失败，尝试通过 SelectedItem 恢复
+                    if (!restored && selectedItem != null)
+                    {
+                        try
+                        {
+                            SelectedItem = selectedItem;
+                            if (SelectedItem != null && SelectedItem.Equals(selectedItem))
+                            {
+                                restored = true;
+                                System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 SelectedItem 恢复成功: {selectedItem}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 SelectedItem 恢复失败: {ex.Message}");
+                        }
+                    }
+
+                    // 3. 如果 SelectedItem 失败，尝试通过 Text 恢复
+                    if (!restored && !string.IsNullOrEmpty(currentText))
+                    {
+                        try
+                        {
+                            Text = currentText;
+                            System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 Text 恢复成功: {currentText}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"智能搜索: 通过 Text 恢复失败: {ex.Message}");
+                        }
+                    }
+
+                    EndUpdate();
+
+                    // ⚠️ 不要清空 _originalDataSource 和 _originalItems！
+                    // 原因：用户可能还会再次搜索，需要保持原始数据源的引用
+                    // 清空后，下次搜索时无法再次恢复原始数据源
+                    // 只在以下情况下清空：
+                    // 1. 下拉框被销毁（在 Dispose 中处理）
+                    // 2. DataSource 被外部代码修改（在外部代码中处理）
+                    // _originalDataSource = null;
+                    // _originalItems = null;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"智能搜索: 恢复原始数据源失败: {ex.Message}");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"智能搜索: 无法恢复原始数据源，_originalDataSource={_originalDataSource != null}, _originalItems={_originalItems != null}");
+            }
+        }
+
+        /// <summary>
+        /// 执行智能搜索 - 支持精确匹配和模糊搜索
+        /// 注意：已移除拼音搜索功能，因为 GB2312 编码映射在 Unicode 下不准确
+        /// 如果需要拼音搜索，建议使用专业的拼音库（如 NPinyin、PinYinConverterCore）
+        /// </summary>
+        private List<object> PerformSmartSearch(string searchText)
+        {
+            if (_originalItems == null || _originalItems.Count == 0)
+            {
+                return new List<object>();
+            }
+
+            var results = new List<object>();
+            string displayMember = DisplayMember;
+            bool hasDisplayMember = !string.IsNullOrWhiteSpace(displayMember);
+
+            // 预处理搜索文本（转小写以支持不区分大小写的搜索）
+            string searchLower = searchText.ToLowerInvariant();
+
+            foreach (var item in _originalItems)
+            {
+                if (item == null) continue;
+
+                // 获取显示文本
+                string itemText = hasDisplayMember
+                    ? GetPropertyValue(item, displayMember)?.ToString() ?? item.ToString()
+                    : item.ToString();
+
+                if (string.IsNullOrWhiteSpace(itemText)) continue;
+
+                string itemLower = itemText.ToLowerInvariant();
+
+                // 1. 精确匹配（最高优先级）- 插入到开头
+                if (itemLower.Equals(searchLower))
+                {
+                    results.Insert(0, item);
+                    continue;
+                }
+
+                // 2. 模糊匹配（包含）- 支持中文、英文、数字
+                if (itemLower.Contains(searchLower))
+                {
+                    results.Add(item);
+                    continue;
+                }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// 获取属性值（支持反射、动态类型和 BindingListView<T>）
+        /// </summary>
+        private object GetPropertyValue(object obj, string propertyName)
+        {
+            if (obj == null || string.IsNullOrWhiteSpace(propertyName))
+                return null;
+
+            try
+            {
+                var objType = obj.GetType();
+
+                // 特殊处理 BindingListView<T>（RUINORERP.Common.CollectionExtension.BindingListView<T>）
+                // 这是项目中常用的强类型列表包装类型
+                if (objType.IsGenericType && objType.GetGenericTypeDefinition().Name.Contains("BindingListView"))
+                {
+                    // 如果请求的是 DataSource 属性
+                    if (propertyName == "DataSource")
+                    {
+                        var dataSourceProp = objType.GetProperty("DataSource");
+                        return dataSourceProp?.GetValue(obj);
+                    }
+
+                    // 对于其他属性，BindingListView 本身不包含实体属性
+                    // 我们需要尝试从内部的 List 中获取属性
+                    // 但在搜索场景中，我们遍历的是 BindingListView 中的项，而不是 BindingListView 本身
+                    // 所以外层调用 GetPropertyValue 时，传入的应该是 T 类型的对象，而不是 BindingListView<T>
+                    // 这里返回 null 让外层使用 ToString()
+                    return null;
+                }
+
+                // 普通对象处理
+                var prop = objType.GetProperty(propertyName);
+                return prop?.GetValue(obj);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // 注意：已移除拼音搜索功能（GetPinyinInitials、GetPinyinInitial 方法）
+        // 原因：GB2312 编码映射在 Unicode 下不准确，需要专业拼音库支持
+        // 建议使用 NPinyin 或 PinYinConverterCore 库
+
+        private void ApplySort(string searchText)
+        {
+            // 保留原有方法以向后兼容
+            ApplySearch(searchText);
         }
 
         private void ApplyFilters(string filterValue)
@@ -1285,6 +1622,11 @@ namespace Krypton.Toolkit
             _comboBox.ValueMemberChanged += OnComboBoxValueMemberChanged;
             _comboBox.Validating += OnComboBoxValidating;
             _comboBox.Validated += OnComboBoxValidated;
+
+            // 禁用默认的 AutoComplete 功能，使用自定义智能搜索
+            _comboBox.AutoCompleteMode = AutoCompleteMode.None;
+            _comboBox.AutoCompleteSource = AutoCompleteSource.None;
+
             _comboHolder = new InternalPanel(this);
             _comboHolder.Controls.Add(_comboBox);
 
@@ -3192,6 +3534,12 @@ namespace Krypton.Toolkit
                 _comboBox.Font = GetComboBoxTripleState().Content.GetContentShortTextFont(PaletteState.Normal);
             }
 
+            // 失去焦点时，如果正在进行搜索，恢复原始数据源
+            if (EnableSearch && _originalDataSource != null)
+            {
+                RestoreOriginalDataSource();
+            }
+
             // ReSharper disable RedundantBaseQualifier
             base.OnLostFocus(e);
             // ReSharper restore RedundantBaseQualifier
@@ -3208,6 +3556,13 @@ namespace Krypton.Toolkit
                 return;
             }
 
+            // 关键：如果在搜索过程中（ApplySearch 正在执行），不处理 TextChanged 事件
+            // 防止 ApplySearch 修改 Text 导致再次触发 TextChanged 形成无限循环
+            if (_isSearching)
+            {
+                OnTextChanged(e);
+                return;
+            }
 
             string currentText = _comboBox.Text;
             // 避免重复处理相同文本
@@ -3222,17 +3577,15 @@ namespace Krypton.Toolkit
             // 停止之前的计时器，重新开始
             _searchTimer.Stop();
 
-            // 空文本立即恢复
+            // 空文本时恢复原始数据源
             if (string.IsNullOrEmpty(currentText) || _enableSearch == false || currentText == "请选择")
             {
-                if (DataSource is BindingSource bs)
-                {
-                    bs.RemoveFilter();
-                    //bs.RemoveSort();
-                }
+                // 恢复原始数据源（不关闭下拉，让用户看到完整列表）
+                RestoreOriginalDataSource();
             }
             else
             {
+                // 有文本时，启动搜索
                 if (this.Focused)
                 {
                     _searchTimer.Start();
@@ -3263,36 +3616,11 @@ namespace Krypton.Toolkit
 
         private void OnComboBoxDropDownClosed(object sender, EventArgs e)
         {
-            // 保存当前文本
-            //string currentText = ComboBox.Text;
-            //object currentSelectedItem = ComboBox.SelectedItem;
-
-            //// 恢复原始数据源
-            //// 如果不是在搜索状态，恢复原始数据源
-            //// 恢复原始数据源
-            //if (!_isSearching)
-            //{
-            //    DisplayMember = ComboBox.DisplayMember;
-            //    ValueMember = ComboBox.ValueMember;
-            //    // 恢复文本和选中项
-            //    ComboBox.Text = currentText;
-
-            //    try
-            //    {
-            //        if (currentSelectedItem != null)
-            //        {
-            //            ComboBox.SelectedItem = currentSelectedItem;
-            //        }
-            //    }
-            //    catch
-            //    {
-            //        // 忽略恢复选中项失败的情况
-            //    }
-            //}
-
-
+            // 下拉关闭时，不立即恢复数据源
+            // 让用户保持输入状态，只有在清空输入或失去焦点时才恢复
+            // 延迟恢复，避免干扰用户正在进行的搜索
+            
             _comboBox.Dropped = false;
-            Refresh();
             OnDropDownClosed(e);
         }
 

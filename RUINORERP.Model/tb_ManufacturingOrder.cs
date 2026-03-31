@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("制令单-生产工单 ，工单(MO)各种企业的叫法不一样，比如生产单，制令单，生产指导单，裁单，等等。其实都是同一个东西–MO,    来源于 销售订单，计划单，生产需求单，我在下文都以工单简称。https://blog.csdn.net/qq_37365475/article/details/106612960tb_ManufacturingOrder" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("制令单-生产工单" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

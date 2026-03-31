@@ -285,7 +285,7 @@ namespace RUINORERP.UI.AdvancedUIModule
             }
 
             #region 定义表格布局的行和列
-            //把时间排后面
+            //把时间排后面1
             queryFields = queryFields.OrderBy(d => d.ExtendedAttribute.Count).ToList();
             if (queryConditions.Count > 0)
             {

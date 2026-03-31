@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -1886,6 +1887,18 @@ namespace RUINORERP.Server.Controls
                     case "断开连接":
                         DisconnectSelectedSessions();
                         break;
+                    case "强制用户退出":
+                        ForceUserExit();
+                        break;
+                    case "删除列配置文件":
+                        DeleteColumnConfigFile();
+                        break;
+                    case "更新全局配置":
+                        UpdateGlobalConfig();
+                        break;
+                    case "关机":
+                        ShutdownClient();
+                        break;
                     case "切换服务器":
                         HandleSwitchServer();
                         break;
@@ -2167,9 +2180,367 @@ namespace RUINORERP.Server.Controls
             }
         }
 
+        /// <summary>
+        /// 关机客户端
+        /// </summary>
+        private async void ShutdownClient()
+        {
+            try
+            {
+                var selectedSessions = SelectSessions();
+                if (selectedSessions.Count == 0)
+                {
+                    MessageBox.Show("请先选择要关机的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认关机操作
+                var result = MessageBox.Show(
+                    $"确定要关闭选中的 {selectedSessions.Count} 个客户端电脑吗？\n\n警告：\n1. 此操作将关闭客户端电脑\n2. 可能导致用户未保存的数据丢失\n3. 关机后客户端将无法连接服务器\n\n请谨慎操作！",
+                    "确认关机",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                // 询问延迟时间
+                string delayInput = Microsoft.VisualBasic.Interaction.InputBox(
+                    "请输入延迟关机时间（秒）\n输入0表示立即关机",
+                    "延迟关机",
+                    "0");
+
+                if (string.IsNullOrEmpty(delayInput))
+                {
+                    return; // 用户取消
+                }
+
+                if (!int.TryParse(delayInput, out int delaySeconds) || delaySeconds < 0)
+                {
+                    MessageBox.Show("延迟时间输入无效，请输入有效的正整数", "输入错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                int successCount = 0;
+                int failedCount = 0;
+
+                foreach (var sessionInfo in selectedSessions)
+                {
+                    try
+                    {
+                        if (!IsSessionValid(sessionInfo))
+                        {
+                            failedCount++;
+                            LogError($"会话无效: {sessionInfo.SessionID}");
+                            continue;
+                        }
+
+                        // 获取用户ID
+                        string userId = sessionInfo.UserInfo?.用户ID?.ToString() ?? sessionInfo.UserInfo?.用户名;
+
+                        if (string.IsNullOrEmpty(userId))
+                        {
+                            failedCount++;
+                            LogError($"用户ID为空: {sessionInfo.SessionID}");
+                            continue;
+                        }
+
+                        // 创建关机命令
+                        var shutdownRequest = SystemCommandRequest.CreateShutdownRequest(userId, "Shutdown", delaySeconds, "管理员远程关机");
+
+                        // 发送命令到客户端
+                        bool success = await _sessionService.SendCommandAsync(
+                            sessionInfo.SessionID,
+                            SystemCommands.SystemManagement,
+                            shutdownRequest);
+
+                        if (success)
+                        {
+                            successCount++;
+                            string delayText = delaySeconds == 0 ? "立即" : $"{delaySeconds}秒后";
+                            LogStatusChange(sessionInfo, $"管理员发送关机命令({delayText}): {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"发送关机命令失败: {sessionInfo.SessionID} - {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        LogError($"发送关机命令时发生异常: {sessionInfo.SessionID} - {ex.Message}", ex);
+                    }
+                }
+
+                // 显示操作结果
+                string message = $"关机命令发送完成:\n成功: {successCount} 个会话\n失败: {failedCount} 个会话";
+                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 刷新统计信息
+                UpdateStatistics();
+            }
+            catch (Exception ex)
+            {
+                LogError("执行关机操作时出错", ex);
+                MessageBox.Show("关机操作时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 更新全局配置到选中客户端
+        /// </summary>
+        private async void UpdateGlobalConfig()
+        {
+            var selectedSessions = SelectSessions();
+            if (selectedSessions.Count == 0)
+            {
+                MessageBox.Show("请先选择要更新全局配置的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            // 过滤有效会话
+            var validSessions = selectedSessions.Where(IsSessionValid).ToList();
+            if (validSessions.Count == 0)
+            {
+                MessageBox.Show("所选会话均无效或已断开连接", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 统一确认更新操作
+            var confirmResult = MessageBox.Show(
+                $"确定要向选中的 {validSessions.Count} 个会话更新全局配置吗？\n将推送 SystemGlobalConfig 和 GlobalValidatorConfig",
+                "确认更新全局配置",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirmResult != DialogResult.Yes)
+            {
+                return;
+            }
+
+            try
+            {
+                // 获取配置管理服务
+                var configManagerService = Program.ServiceProvider.GetRequiredService<IConfigManagerService>();
+
+                // 加载 SystemGlobalConfig
+                var systemGlobalConfig = configManagerService.LoadConfig<SystemGlobalConfig>("SystemGlobalConfig");
+
+                // 加载 GlobalValidatorConfig
+                var globalValidatorConfig = configManagerService.LoadConfig<GlobalValidatorConfig>("GlobalValidatorConfig");
+
+                int successCount = 0;
+                int failedCount = 0;
+
+                foreach (var session in validSessions)
+                {
+                    try
+                    {
+                        // 推送 SystemGlobalConfig
+                        bool systemConfigSuccess = await PushConfigToSession(session, systemGlobalConfig, "SystemGlobalConfig");
+                        if (systemConfigSuccess)
+                        {
+                            LogStatusChange(session, "已更新 SystemGlobalConfig");
+                        }
+
+                        // 推送 GlobalValidatorConfig
+                        bool validatorConfigSuccess = await PushConfigToSession(session, globalValidatorConfig, "GlobalValidatorConfig");
+                        if (validatorConfigSuccess)
+                        {
+                            LogStatusChange(session, "已更新 GlobalValidatorConfig");
+                        }
+
+                        // 两个配置都推送成功才算成功
+                        if (systemConfigSuccess && validatorConfigSuccess)
+                        {
+                            successCount++;
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 更新全局配置部分失败", null, session);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        LogError($"向用户 {GetDisplayUserName(session.UserInfo)} 更新全局配置时出错", ex, session);
+                    }
+                }
+
+                // 显示操作结果
+                string resultMessage = $"全局配置更新完成: 成功 {successCount} 个会话, 失败 {failedCount} 个会话";
+                MessageBox.Show(
+                    resultMessage,
+                    "更新结果",
+                    MessageBoxButtons.OK,
+                    successCount == validSessions.Count ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            }
+            catch (Exception ex)
+            {
+                LogError("更新全局配置时发生错误", ex);
+                MessageBox.Show($"更新全局配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 删除列配置文件
+        /// </summary>
+        private void DeleteColumnConfigFile()
+        {
+            try
+            {
+                // 构造配置文件路径
+                string configPath = Path.Combine(Directory.GetCurrentDirectory(), "SysConfigFiles", "UserManagementControl_ColumnConfig.json");
+
+                // 检查文件是否存在
+                if (!File.Exists(configPath))
+                {
+                    MessageBox.Show("列配置文件不存在，无需删除", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认删除
+                var result = MessageBox.Show(
+                    $"确定要删除列配置文件吗？\n文件路径: {configPath}\n\n删除后将恢复默认列显示设置。",
+                    "确认删除列配置文件",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                // 删除文件
+                File.Delete(configPath);
+
+                // 重新初始化列显示选项
+                InitializeColumnDisplayOptions();
+
+                // 显示操作结果
+                MessageBox.Show("列配置文件已删除，已恢复默认列显示设置", "操作完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                LogStatusChange(null, "已删除列配置文件: UserManagementControl_ColumnConfig.json");
+            }
+            catch (Exception ex)
+            {
+                LogError("删除列配置文件时出错", ex);
+                MessageBox.Show("删除列配置文件时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 强制用户退出系统
+        /// </summary>
+        private async void ForceUserExit()
+        {
+            try
+            {
+                var selectedSessions = SelectSessions();
+                if (selectedSessions.Count == 0)
+                {
+                    MessageBox.Show("请先选择要强制退出的会话", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                // 确认强制退出
+                var result = MessageBox.Show(
+                    $"确定要强制选中的 {selectedSessions.Count} 个用户退出系统吗？\n此操作将强制用户退出ERP系统，可能导致用户未保存的数据丢失。",
+                    "确认强制退出",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                    return;
+
+                int successCount = 0;
+                int failedCount = 0;
+
+                foreach (var sessionInfo in selectedSessions)
+                {
+                    try
+                    {
+                        if (!IsSessionValid(sessionInfo))
+                        {
+                            failedCount++;
+                            LogError($"会话无效: {sessionInfo.SessionID}");
+                            continue;
+                        }
+
+                        // 获取用户ID
+                        string userId = sessionInfo.UserInfo?.用户ID?.ToString() ?? sessionInfo.UserInfo?.用户名;
+
+                        if (string.IsNullOrEmpty(userId))
+                        {
+                            failedCount++;
+                            LogError($"用户ID为空: {sessionInfo.SessionID}");
+                            continue;
+                        }
+
+                        // 创建退出系统命令
+                        var exitRequest = SystemCommandRequest.CreateExitSystemRequest(userId, 0, "管理员强制退出");
+
+                        // 发送命令到客户端
+                        bool success = await _sessionService.SendCommandAsync(
+                            sessionInfo.SessionID,
+                            SystemCommands.SystemManagement,
+                            exitRequest);
+
+                        if (success)
+                        {
+                            successCount++;
+                            LogStatusChange(sessionInfo, $"管理员强制用户退出系统: {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                        else
+                        {
+                            failedCount++;
+                            LogError($"强制用户退出失败: {sessionInfo.SessionID} - {GetDisplayUserName(sessionInfo.UserInfo)}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        LogError($"强制用户退出时发生异常: {sessionInfo.SessionID} - {ex.Message}", ex);
+                    }
+                }
+
+                // 显示操作结果
+                string message = $"强制用户退出操作完成:\n成功: {successCount} 个会话\n失败: {failedCount} 个会话";
+                MessageBox.Show(message, "操作结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                // 刷新统计信息
+                UpdateStatistics();
+            }
+            catch (Exception ex)
+            {
+                LogError("执行强制用户退出操作时出错", ex);
+                MessageBox.Show("强制用户退出操作时发生错误: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void 发消息给客户端ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tsbtn发送消息_Click(sender, e);
+        }
+
+        private void 强制用户退出ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ForceUserExit();
+        }
+
+        private void 删除列配置文件ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DeleteColumnConfigFile();
+        }
+
+        private void 更新全局配置ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            UpdateGlobalConfig();
+        }
+
+        private void 关机ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShutdownClient();
         }
 
         #endregion

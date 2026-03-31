@@ -147,6 +147,60 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             }
                         });
                     }
+                    else if (commandRequest.CommandType == SystemManagementType.ShutdownComputer)
+                    {
+                        // 在UI线程显示关机提示并执行关机
+                        await Task.Run(() =>
+                        {
+                            try
+                            {
+                                int delaySeconds = commandRequest.DelaySeconds;
+                                
+                                if (delaySeconds > 0)
+                                {
+                                    // 显示倒计时提示
+                                    string message = $"计算机将在 {delaySeconds} 秒后关闭，这是管理员要求的操作。\n请立即保存您的工作！";
+                                    string title = "计算机即将关机";
+                                    
+                                    // 创建一个新的线程来执行延时关机
+                                    ThreadPool.QueueUserWorkItem((state) =>
+                                    {
+                                        try
+                                        {
+                                            // 等待指定的延时时间
+                                            Thread.Sleep(delaySeconds * 1000);
+                                            
+                                            // 延时后执行关机
+                                            ExecuteSystemShutdown();
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            _logger.LogError(ex, "执行延时关机时发生异常");
+                                        }
+                                    });
+                                    
+                                    // 显示提示信息
+                                    MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                }
+                                else
+                                {
+                                    // 立即执行关机，先显示提示
+                                    string message = "计算机将立即关闭，这是管理员要求的操作。\n请立即保存您的工作！";
+                                    string title = "计算机即将关机";
+                                    
+                                    if (MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Warning) == DialogResult.OK)
+                                    {
+                                        // 用户确认后执行关机
+                                        ExecuteSystemShutdown();
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "处理关机命令时发生异常");
+                            }
+                        });
+                    }
 
                     if (commandRequest.CommandType==SystemManagementType.PushVersionUpdate)
                     {
@@ -488,6 +542,41 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             }
             
             return statusInfo;
+        }
+
+        /// <summary>
+        /// 执行系统关机
+        /// </summary>
+        private void ExecuteSystemShutdown()
+        {
+            try
+            {
+                _logger.LogDebug("开始执行系统关机");
+                
+                // 使用Windows API执行关机
+                ProcessStartInfo startInfo = new ProcessStartInfo
+                {
+                    FileName = "shutdown.exe",
+                    Arguments = "/s /t 0 /f",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                
+                Process.Start(startInfo);
+                
+                _logger.LogInformation("系统关机命令已执行");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "执行系统关机失败");
+                
+                // 显示错误提示
+                MessageBox.Show(
+                    $"执行关机失败: {ex.Message}\n\n请手动关闭计算机。",
+                    "关机失败",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         /// <summary>

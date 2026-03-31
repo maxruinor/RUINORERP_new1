@@ -227,6 +227,7 @@ namespace RUINORERP.Server.Controls
             强制用户退出ToolStripMenuItem.Name = "强制用户退出ToolStripMenuItem";
             强制用户退出ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             强制用户退出ToolStripMenuItem.Text = "强制用户退出";
+            强制用户退出ToolStripMenuItem.Click += new System.EventHandler(强制用户退出ToolStripMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -349,6 +350,7 @@ namespace RUINORERP.Server.Controls
             删除列配置文件ToolStripMenuItem.Name = "删除列配置文件ToolStripMenuItem";
             删除列配置文件ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             删除列配置文件ToolStripMenuItem.Text = "删除列配置文件";
+            删除列配置文件ToolStripMenuItem.Click += new System.EventHandler(删除列配置文件ToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
@@ -373,6 +375,7 @@ namespace RUINORERP.Server.Controls
             更新全局配置ToolStripMenuItem.Name = "更新全局配置ToolStripMenuItem";
             更新全局配置ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             更新全局配置ToolStripMenuItem.Text = "更新全局配置";
+            更新全局配置ToolStripMenuItem.Click += new System.EventHandler(更新全局配置ToolStripMenuItem_Click);
             // 
             // 推送缓存数据ToolStripMenuItem
             // 
@@ -390,6 +393,7 @@ namespace RUINORERP.Server.Controls
             关机ToolStripMenuItem.Name = "关机ToolStripMenuItem";
             关机ToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             关机ToolStripMenuItem.Text = "关机";
+            关机ToolStripMenuItem.Click += new System.EventHandler(关机ToolStripMenuItem_Click);
             // 
             // 切换服务器ToolStripMenuItem
             // 

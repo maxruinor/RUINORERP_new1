@@ -34,6 +34,7 @@ using System.Reflection;
 using RUINORERP.Business.Security;
 using RUINORERP.Business.CommService;
 using System.Numerics;
+using RUINORERP.Repository.UnitOfWorks;
 
 
 
@@ -50,6 +51,10 @@ namespace RUINORERP.UI.CRM
 
         private tb_CRM_Customer _EditEntity;
         public tb_CRM_Customer EditEntity { get => _EditEntity; set => _EditEntity = value; }
+
+        //标记是否正在保存，避免保存时触发 PropertyChanged 的查询
+        private bool _isSaving = false;
+
         public async override void BindData(BaseEntity entity, ActionStatus actionStatus = ActionStatus.无操作)
         {
 
@@ -133,6 +138,12 @@ namespace RUINORERP.UI.CRM
             }
             entity.PropertyChanged += async (sender, s2) =>
             {
+                //如果正在保存，不触发查询，避免与保存操作冲突
+                if (_isSaving)
+                {
+                    return;
+                }
+
                 //如果线索引入相关数据
                 if ((customer.ActionStatus == ActionStatus.新增 || customer.ActionStatus == ActionStatus.修改) && customer.LeadID.HasValue && customer.LeadID.Value > 0 && s2.PropertyName == entity.GetPropertyName<tb_CRM_Customer>(c => c.LeadID))
                 {
@@ -189,7 +200,9 @@ namespace RUINORERP.UI.CRM
 
             if (CRMConfig == null)
             {
-                CRMConfig = await MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().FirstAsync();
+                // 使用 New() 创建新的数据库上下文，避免与主上下文的 DataReader 冲突
+                tb_CRMConfigController<tb_CRMConfig> ctr = Startup.GetFromFac<tb_CRMConfigController<tb_CRMConfig>>();
+                CRMConfig = await ctr.GetSingleWithNoLockAsync(c => c.CRMConfigID > 0);
                 if (CRMConfig != null && CRMConfig.CS_UseLeadsFunction)
                 {
                     tb_CRM_LeadsController<tb_CRM_Leads> cvctr = Startup.GetFromFac<tb_CRM_LeadsController<tb_CRM_Leads>>();
@@ -356,36 +369,43 @@ namespace RUINORERP.UI.CRM
 
         private async Task<tb_CRM_Customer> ToCustomer(tb_CRM_Customer entity, long refId)
         {
-            tb_CRM_Leads crmLeads;
-            ButtonSpecAny bsa = cmbLeadID.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
-            if (bsa == null)
+            try
             {
-                return null;
+                tb_CRM_Leads crmLeads;
+                ButtonSpecAny bsa = cmbLeadID.ButtonSpecs.FirstOrDefault(c => c.UniqueName == "btnQuery");
+                if (bsa == null)
+                {
+                    return null;
+                }
+                //saleorder = bsa.Tag as tb_SaleOrder;
+
+                tb_CRM_LeadsController<tb_CRM_Leads> ctr = Startup.GetFromFac<tb_CRM_LeadsController<tb_CRM_Leads>>();
+                crmLeads = await ctr.GetSingleWithNoLockAsync(c => c.LeadID == refId);
+
+                MainForm.Instance.mapper.Map(crmLeads, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
+                                                                 // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
+                entity.ActionStatus = ActionStatus.新增;
+
+                List<string> tipsMsg = new List<string>();
+
+                StringBuilder msg = new StringBuilder();
+                foreach (var item in tipsMsg)
+                {
+                    msg.Append(item).Append("\r\n");
+                }
+                if (tipsMsg.Count > 0)
+                {
+                    MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                BusinessHelper.Instance.InitEntity(entity);
+                MainForm.Instance.PrintInfoLog($"从线索引入数据成功：LeadID={refId}");
+                return entity;
             }
-            //saleorder = bsa.Tag as tb_SaleOrder;
-
-            crmLeads = await MainForm.Instance.AppContext.Db.Queryable<tb_CRM_Leads>()
-            .Where(c => c.LeadID == refId)
-            .SingleAsync();
-
-
-            MainForm.Instance.mapper.Map(crmLeads, entity);  // 直接将 crmLeads 的值映射到传入的 entity 对象上，保持了引用
-                                                             // entity = mapper.Map<tb_CRM_Customer>(crmLeads);//这个是直接重新生成了对象。
-            entity.ActionStatus = ActionStatus.新增;
-
-            List<string> tipsMsg = new List<string>();
-
-            StringBuilder msg = new StringBuilder();
-            foreach (var item in tipsMsg)
+            catch (Exception ex)
             {
-                msg.Append(item).Append("\r\n");
+                MainForm.Instance.PrintInfoLog($"从线索引入数据失败：LeadID={refId}, 错误：{ex.Message}");
+                throw;
             }
-            if (tipsMsg.Count > 0)
-            {
-                MessageBox.Show(msg.ToString(), "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-            BusinessHelper.Instance.InitEntity(entity);
-            return entity;
         }
         private void btnCancel_Click(object sender, EventArgs e)
         {
@@ -399,16 +419,29 @@ namespace RUINORERP.UI.CRM
         {
             if (base.Validator(EditEntity))
             {
-                bindingSourceEdit.EndEdit();
-                this.DialogResult = DialogResult.OK;
-                this.Close();
+                //标记正在保存，防止 PropertyChanged 触发查询
+                _isSaving = true;
+                try
+                {
+                    bindingSourceEdit.EndEdit();
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                finally
+                {
+                    //保存完成后重置标志（虽然窗体即将关闭，但为了安全起见）
+                    _isSaving = false;
+                }
             }
         }
         tb_CRMConfig CRMConfig = null;
         private async void UCLeadsEdit_Load(object sender, EventArgs e)
         {
             // tb_CRMConfigController<tb_CRMConfig> ctr = Startup.GetFromFac<tb_CRMConfigController<tb_CRMConfig>>();
-            CRMConfig = await MainForm.Instance.AppContext.Db.Queryable<tb_CRMConfig>().FirstAsync();
+            // 使用 New() 创建新的数据库上下文，避免与主上下文的 DataReader 冲突
+
+            tb_CRMConfigController<tb_CRMConfig> ctr = Startup.GetFromFac<tb_CRMConfigController<tb_CRMConfig>>();
+            CRMConfig = await ctr.GetSingleWithNoLockAsync(c => c.CRMConfigID > 0);
             if (CRMConfig != null)
             {
                 if (CRMConfig.CS_UseLeadsFunction)

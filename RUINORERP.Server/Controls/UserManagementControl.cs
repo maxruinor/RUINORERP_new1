@@ -2236,7 +2236,7 @@ namespace RUINORERP.Server.Controls
                         }
 
                         // 获取用户ID
-                        string userId = sessionInfo.UserInfo?.用户ID?.ToString() ?? sessionInfo.UserInfo?.用户名;
+                        string userId = sessionInfo.UserInfo?.UserID.ToString() ?? sessionInfo.UserInfo?.用户名;
 
                         if (string.IsNullOrEmpty(userId))
                         {
@@ -2468,7 +2468,7 @@ namespace RUINORERP.Server.Controls
                         }
 
                         // 获取用户ID
-                        string userId = sessionInfo.UserInfo?.用户ID?.ToString() ?? sessionInfo.UserInfo?.用户名;
+                        string userId = sessionInfo.UserInfo?.UserID.ToString() ?? sessionInfo.UserInfo?.用户名;
 
                         if (string.IsNullOrEmpty(userId))
                         {

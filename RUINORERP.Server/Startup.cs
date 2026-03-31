@@ -564,6 +564,12 @@ namespace RUINORERP.Server
 
             // 注册文件清理工作流
             FileCleanupWorkflowConfig.RegisterWorkflow(services);
+
+            // 注册注册到期提醒工作流
+            RegistrationExpirationReminderWorkflowConfig.RegisterWorkflow(services);
+
+            // 注册注册信息更新工作流
+            RegistrationInfoUpdateWorkflowConfig.RegisterWorkflow(services);
             #endregion
 
             services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>)); // 注入仓储

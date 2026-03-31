@@ -1,4 +1,5 @@
 using RUINORERP.Model;
+using RUINORERP.PacketSpec.Models.Authentication;
 using System.Threading.Tasks;
 
 namespace RUINORERP.Server.Services
@@ -50,6 +51,37 @@ namespace RUINORERP.Server.Services
         /// <returns>是否过期</returns>
         bool IsRegistrationExpired(tb_sys_RegistrationInfo registrationInfo);
 
- 
+        /// <summary>
+        /// 获取注册状态（从内存获取）
+        /// </summary>
+        /// <returns>注册状态</returns>
+        Task<RegistrationStatus> GetRegistrationStatusAsync();
+
+        /// <summary>
+        /// 检查是否需要到期提醒（从内存判断）
+        /// </summary>
+        /// <param name="reminderDays">提醒提前天数</param>
+        /// <returns>是否需要提醒</returns>
+        Task<bool> CheckExpirationReminderAsync(int reminderDays = 30);
+
+        /// <summary>
+        /// 获取到期提醒信息（从内存获取）
+        /// </summary>
+        /// <param name="reminderDays">提醒提前天数</param>
+        /// <returns>到期提醒信息</returns>
+        Task<ExpirationReminder> GetExpirationReminderInfoAsync(int reminderDays = 30);
+
+        /// <summary>
+        /// 更新注册信息缓存（从数据库重新加载到内存）
+        /// </summary>
+        /// <returns>是否更新成功</returns>
+        Task<bool> UpdateRegistrationInfoCacheAsync();
+
+        /// <summary>
+        /// 验证系统注册状态（统一验证方法）
+        /// 此方法整合了所有注册验证逻辑，包括：注册状态、过期检查、用户数限制等
+        /// </summary>
+        /// <returns>注册验证结果</returns>
+        Task<RegistrationValidationResult> ValidateSystemRegistrationAsync();
     }
 }

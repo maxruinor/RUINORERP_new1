@@ -8,6 +8,7 @@ using RUINORERP.Server.Network.Models;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -270,6 +271,160 @@ namespace RUINORERP.Server.Network.Services
             {
                 _logger?.LogError(ex, "发送系统通知时发生异常");
                 return MessageResponse.Fail(MessageType.System, $"发送通知失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 发送注册到期提醒给指定用户
+        /// </summary>
+        /// <param name="targetUserId">目标用户ID</param>
+        /// <param name="expirationReminder">到期提醒信息</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>消息响应</returns>
+        public async Task<MessageResponse> SendExpirationReminderAsync(
+            string targetUserId,
+            PacketSpec.Models.Authentication.ExpirationReminder expirationReminder,
+            int timeoutMs = 30000,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                if (expirationReminder == null || !expirationReminder.NeedsReminder)
+                {
+                    return MessageResponse.Success(MessageType.System, "无需发送到期提醒");
+                }
+
+                var messageData = new MessageData
+                {
+                    MessageId = IdHelper.GetLongId(),
+                    MessageType = MessageType.System,
+                    Title = "注册到期提醒",
+                    Content = expirationReminder.ReminderMessage,
+                    SenderName = "系统提醒",
+                    ReceiverIds = new List<long> { long.TryParse(targetUserId, out long userId) ? userId : 0 },
+                    SendTime = DateTime.Now
+                };
+
+                // 添加扩展数据
+                messageData.ExtendedData["ExpirationDate"] = expirationReminder.ExpirationDate.ToString("yyyy-MM-dd");
+                messageData.ExtendedData["DaysRemaining"] = expirationReminder.DaysRemaining;
+                messageData.ExtendedData["RenewalMethod"] = expirationReminder.RenewalMethod;
+                messageData.ExtendedData["ContactInfo"] = expirationReminder.ContactInfo;
+
+                var request = new MessageRequest(messageData.MessageType, messageData);
+
+                // 获取目标用户的所有会话
+                var sessions = _sessionService.GetUserSessions(targetUserId);
+
+                // 向所有会话发送消息
+                int successCount = 0;
+                foreach (var session in sessions)
+                {
+                    if (session is SessionInfo sessionInfo)
+                    {
+                        try
+                        {
+                            await _sessionService.SendCommandAsync(
+                                session.SessionID,
+                                MessageCommands.SendMessageToUser,
+                                request);
+                            successCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, $"向会话 {session.SessionID} 发送到期提醒失败");
+                        }
+                    }
+                }
+
+                _logger?.LogInformation($"已向用户 {targetUserId} 发送注册到期提醒，成功 {successCount} 个会话");
+                return MessageResponse.Success(MessageType.System, new { SendCount = successCount });
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "发送注册到期提醒时发生异常");
+                return MessageResponse.Fail(MessageType.System, $"发送到期提醒失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 批量发送注册到期提醒
+        /// </summary>
+        /// <param name="expirationReminder">到期提醒信息</param>
+        /// <param name="timeoutMs">超时时间（毫秒）</param>
+        /// <param name="ct">取消令牌</param>
+        /// <returns>发送结果统计</returns>
+        public async Task<Dictionary<string, int>> SendExpirationReminderBatchAsync(
+            PacketSpec.Models.Authentication.ExpirationReminder expirationReminder,
+            int timeoutMs = 30000,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                if (expirationReminder == null || !expirationReminder.NeedsReminder)
+                {
+                    return new Dictionary<string, int> { { "Total", 0 }, { "Success", 0 }, { "Failed", 0 } };
+                }
+
+                var result = new Dictionary<string, int>
+                {
+                    { "Total", 0 },
+                    { "Success", 0 },
+                    { "Failed", 0 }
+                };
+
+                // 获取所有用户会话
+                var sessions = _sessionService.GetAllUserSessions();
+                result["Total"] = sessions.Count();
+
+                // 向所有会话发送消息
+                foreach (var session in sessions)
+                {
+                    if (session is SessionInfo sessionInfo)
+                    {
+                        try
+                        {
+                            var messageData = new MessageData
+                            {
+                                MessageId = IdHelper.GetLongId(),
+                                MessageType = MessageType.System,
+                                Title = "注册到期提醒",
+                                Content = expirationReminder.ReminderMessage,
+                                SenderName = "系统提醒",
+                                SendTime = DateTime.Now
+                            };
+
+                            // 添加扩展数据
+                            messageData.ExtendedData["ExpirationDate"] = expirationReminder.ExpirationDate.ToString("yyyy-MM-dd");
+                            messageData.ExtendedData["DaysRemaining"] = expirationReminder.DaysRemaining;
+                            messageData.ExtendedData["RenewalMethod"] = expirationReminder.RenewalMethod;
+                            messageData.ExtendedData["ContactInfo"] = expirationReminder.ContactInfo;
+
+                            var request = new MessageRequest(messageData.MessageType, messageData);
+
+                            await _sessionService.SendCommandAsync(
+                                session.SessionID,
+                                MessageCommands.SendMessageToUser,
+                                request);
+
+                            result["Success"]++;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogWarning(ex, $"向会话 {session.SessionID} 发送到期提醒失败");
+                            result["Failed"]++;
+                        }
+                    }
+                }
+
+                _logger?.LogInformation($"批量发送注册到期提醒完成，总数：{result["Total"]}，成功：{result["Success"]}，失败：{result["Failed"]}");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "批量发送注册到期提醒时发生异常");
+                return new Dictionary<string, int> { { "Total", 0 }, { "Success", 0 }, { "Failed", 1 } };
             }
         }
     }

@@ -1450,7 +1450,7 @@ namespace RUINORERP.Server
                 SetServerButtonsEnabled(false);
 
                 // 检查系统注册状态
-                if (!await ValidateSystemRegistrationAsync())
+                if (!await CheckSystemRegistration(showMessageBox: true))
                 {
                     PrintErrorLog("系统注册验证失败，服务器启动被终止");
                     throw new Exception("系统注册验证失败，无法启动服务器");
@@ -1771,8 +1771,8 @@ namespace RUINORERP.Server
         {
             try
             {
-                // 检查系统注册状态
-                CheckSystemRegistration();
+                // 检查系统注册状态（不显示MessageBox）
+                await CheckSystemRegistration(showMessageBox: false);
 
                 // 初始化界面
                 InitializeUI();
@@ -1817,6 +1817,8 @@ namespace RUINORERP.Server
                 await InventorySnapshotWorkflowConfig.ScheduleInventorySnapshot(WorkflowHost);
                 await TempImageCleanupWorkflowConfig.ScheduleTempImageCleanup(WorkflowHost);
                 await FileCleanupWorkflowConfig.ScheduleFileCleanup(WorkflowHost);
+                await RegistrationExpirationReminderWorkflowConfig.ScheduleRegistrationExpirationReminder(WorkflowHost);
+                await RegistrationInfoUpdateWorkflowConfig.ScheduleRegistrationInfoUpdate(WorkflowHost);
 
                 PrintInfoLog("工作流调度完成");
             }
@@ -2684,76 +2686,71 @@ namespace RUINORERP.Server
 
         /// <summary>
         /// 检查系统注册状态并加载注册信息
+        /// 使用统一的注册验证服务，根据参数决定是否显示提示窗口
         /// </summary>
-        private async Task CheckSystemRegistration()
+        /// <param name="showMessageBox">是否显示MessageBox提示</param>
+        /// <returns>注册验证是否通过</returns>
+        private async Task<bool> CheckSystemRegistration(bool showMessageBox = false)
         {
             try
             {
                 PrintInfoLog("正在检查系统注册状态...");
-
-                // 检查是否处于调试模式
-                if (IsDebug)
-                {
-                    PrintInfoLog("系统处于调试模式，跳过注册状态检查");
-                    return;
-                }
 
                 // 从依赖注入容器获取注册服务
                 var registrationService = Startup.GetFromFac<IRegistrationService>();
                 if (registrationService == null)
                 {
                     PrintErrorLog("无法获取注册服务，注册检查失败");
-                    return;
+                    if (showMessageBox)
+                    {
+                        MessageBox.Show("无法获取注册服务，注册验证失败。",
+                                      "服务错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    return false;
                 }
 
-                // 从数据库获取注册信息
-                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
-                if (registrationInfo == null)
-                {
-                    PrintErrorLog("无法从数据库获取注册信息");
-                    return;
-                }
+                // 使用统一的验证方法进行注册验证
+                var validationResult = await registrationService.ValidateSystemRegistrationAsync();
 
                 // 将注册信息赋值给实例变量
-                frmMainNew.Instance.registrationInfo = registrationInfo;
-
-                // 检查注册状态
-                bool isRegistered = registrationService.CheckRegistered(registrationInfo);
-
-                if (isRegistered)
+                if (validationResult.RegistrationInfo != null)
                 {
-                    PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
-                    PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
+                    frmMainNew.Instance.registrationInfo = validationResult.RegistrationInfo;
+                }
 
-                    // 检查是否即将过期（7天内）
-                    var daysUntilExpiration = registrationInfo.ExpirationDate - DateTime.Now;
-                    if (daysUntilExpiration.TotalDays <= 7 && daysUntilExpiration.TotalDays > 0)
+                // 检查验证结果
+                if (!validationResult.IsValid)
+                {
+                    PrintErrorLog($"注册验证失败: {validationResult.FailureReason}");
+                    // 根据参数决定是否显示MessageBox
+                    if (showMessageBox)
                     {
-                        PrintInfoLog($"警告：注册许可将在 {daysUntilExpiration.TotalDays:F0} 天后到期");
+                        MessageBox.Show(validationResult.Message,
+                                      "注册验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    return false;
+                }
+
+                // 如果需要警告，记录日志并根据参数决定是否显示MessageBox
+                if (validationResult.NeedsWarning)
+                {
+                    PrintInfoLog($"注册状态警告: {validationResult.Message}");
+                    if (showMessageBox)
+                    {
+                        MessageBox.Show(validationResult.Message,
+                                      "注册到期提醒", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
                 }
-                else
-                {
-                    PrintErrorLog("系统未注册或注册已过期，请及时进行系统注册");
 
-                    // 检查是否过期
-                    if (registrationService.IsRegistrationExpired(registrationInfo))
-                    {
-                        PrintErrorLog("注册许可已过期");
-                    }
-                    else if (!registrationInfo.IsRegistered)
-                    {
-                        PrintErrorLog("系统尚未注册");
-                    }
-                }
+                PrintInfoLog($"系统注册验证成功，许可用户数: {validationResult.RegistrationInfo?.ConcurrentUsers}");
+                PrintInfoLog($"注册到期时间: {validationResult.RegistrationInfo?.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
 
                 // 记录功能模块信息
-                if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
+                if (validationResult.RegistrationInfo != null && !string.IsNullOrEmpty(validationResult.RegistrationInfo.FunctionModule))
                 {
                     try
                     {
-                        //string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
-                        string decryptedModules = registrationInfo.FunctionModule;
+                        string decryptedModules = validationResult.RegistrationInfo.FunctionModule;
                         PrintInfoLog($"已授权功能模块: {decryptedModules}");
                     }
                     catch (Exception ex)
@@ -2763,140 +2760,17 @@ namespace RUINORERP.Server
                 }
 
                 PrintInfoLog("系统注册状态检查完成");
+                return true;
             }
             catch (Exception ex)
             {
                 PrintErrorLog($"检查系统注册状态时发生错误: {ex.Message}");
                 _logger?.LogError(ex, "检查系统注册状态失败");
-            }
-        }
-
-        /// <summary>
-        /// 验证系统注册状态（用于服务器启动时的严格验证）
-        /// </summary>
-        /// <returns>注册验证是否通过</returns>
-        private async Task<bool> ValidateSystemRegistrationAsync()
-        {
-            try
-            {
-                PrintInfoLog("正在执行服务器启动时的注册验证...");
-
-                // 检查是否处于调试模式
-                if (IsDebug)
+                if (showMessageBox)
                 {
-                    PrintInfoLog("系统处于调试模式，跳过注册严格验证");
-                    return true;
+                    MessageBox.Show($"执行注册验证时发生错误: {ex.Message}",
+                                  "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-
-                // 从依赖注入容器获取注册服务
-                var registrationService = Startup.GetFromFac<IRegistrationService>();
-                if (registrationService == null)
-                {
-                    PrintErrorLog("无法获取注册服务，注册验证失败");
-                    return false;
-                }
-
-                // 从数据库获取注册信息
-                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
-                if (registrationInfo == null)
-                {
-                    PrintErrorLog("无法从数据库获取注册信息，注册验证失败");
-                    return false;
-                }
-
-                // 将注册信息赋值给实例变量
-                frmMainNew.Instance.registrationInfo = registrationInfo;
-
-                /*
-                // 生成机器码
-                string machineCode = _registrationService.CreateMachineCode(registrationInfo);
-                //根据注册信息实时生成机器码与注册信息中的机器码比较检测
-                if (!machineCode.Equals(registrationInfo.MachineCode))
-                {
-                    PrintErrorLog("机器码检测失败，服务器无法启动");
-                    MessageBox.Show("机器码检测失败,如果您有更换过主机，请联系软件提供商更新注册信息。",
-                                  "机器码检测失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-                */
-
-
-                // 执行严格的注册验证
-                bool isRegistered = registrationService.CheckRegistered(registrationInfo);
-
-                if (!isRegistered)
-                {
-                    if (registrationService.IsRegistrationExpired(registrationInfo))
-                    {
-                        PrintErrorLog("注册许可已过期，服务器无法启动");
-                        MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。",
-                                      "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    else if (!registrationInfo.IsRegistered)
-                    {
-                        PrintErrorLog("系统未注册，服务器无法启动");
-                        MessageBox.Show("系统未注册，请先进行系统注册。",
-                                      "未注册", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                    else
-                    {
-                        PrintErrorLog("注册信息验证失败，服务器无法启动");
-                        MessageBox.Show("注册信息验证失败，请检查注册码是否正确。",
-                                      "注册验证失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    return false;
-                }
-
-                // 验证用户数限制
-                if (registrationInfo.ConcurrentUsers <= 0)
-                {
-                    PrintErrorLog("注册许可的用户数配置无效，服务器无法启动");
-                    MessageBox.Show("注册许可的并发用户数配置无效。",
-                                  "配置错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-
-                // 检查注册到期时间
-                var daysUntilExpiration = registrationInfo.ExpirationDate - DateTime.Now;
-                if (daysUntilExpiration.TotalDays <= 0)
-                {
-                    PrintErrorLog("注册许可已过期，服务器无法启动");
-                    MessageBox.Show("系统注册许可已过期，请联系软件提供商续期。",
-                                  "注册过期", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-                else if (daysUntilExpiration.TotalDays <= 7)
-                {
-                    PrintInfoLog($"警告：注册许可将在 {daysUntilExpiration.TotalDays:F0} 天后到期");
-                }
-
-                PrintInfoLog($"系统注册验证成功，许可用户数: {registrationInfo.ConcurrentUsers}");
-                PrintInfoLog($"注册到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd HH:mm:ss}");
-
-                // 记录功能模块信息
-                if (!string.IsNullOrEmpty(registrationInfo.FunctionModule))
-                {
-                    try
-                    {
-                        //string decryptedModules = EncryptionHelper.AesDecryptByHashKey(registrationInfo.FunctionModule, "FunctionModule");
-                        string decryptedModules = registrationInfo.FunctionModule;
-                        PrintInfoLog($"已授权功能模块: {decryptedModules}");
-                    }
-                    catch (Exception ex)
-                    {
-                        PrintErrorLog($"解析功能模块信息失败: {ex.Message}");
-                    }
-                }
-
-                PrintInfoLog("服务器启动时的注册验证完成");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                PrintErrorLog($"执行注册验证时发生错误: {ex.Message}");
-                _logger?.LogError(ex, "服务器启动时注册验证失败");
-                MessageBox.Show($"执行注册验证时发生错误: {ex.Message}",
-                              "验证错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }

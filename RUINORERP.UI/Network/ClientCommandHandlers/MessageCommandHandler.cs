@@ -10,6 +10,7 @@ using RUINORERP.PacketSpec.Models.Core;
 using RUINORERP.PacketSpec.Models.Common;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.Global.EnumExt;
+using System.Windows.Forms;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -215,13 +216,81 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
             {
                 // 确保系统通知使用正确的消息类型
                 messageData.MessageType = MessageType.System;
-                // 触发系统通知事件
-                _messageService.OnSystemNotificationReceived(messageData);
+
+                // 检查是否是注册到期提醒
+                if (messageData.Title == "注册到期提醒" || 
+                    (messageData.ExtendedData != null && 
+                     messageData.ExtendedData.ContainsKey("ExpirationDate")))
+                {
+                    // 处理注册到期提醒
+                    await HandleExpirationReminderAsync(messageData);
+                }
+                else
+                {
+                    // 触发系统通知事件
+                    _messageService.OnSystemNotificationReceived(messageData);
+                }
+
                 _logger.LogDebug("系统通知已处理");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "处理系统通知命令时发生异常");
+            }
+        }
+
+        /// <summary>
+        /// 处理注册到期提醒
+        /// </summary>
+        /// <param name="messageData">消息数据</param>
+        private async Task HandleExpirationReminderAsync(MessageData messageData)
+        {
+            try
+            {
+                _logger?.LogInformation($"收到注册到期提醒：{messageData.Content}");
+
+                // 在主线程上显示提醒
+                if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                {
+                    MainForm.Instance.Invoke(new Action(() =>
+                    {
+                        var message = messageData.Content;
+                        
+                        // 添加扩展信息
+                        if (messageData.ExtendedData != null)
+                        {
+                            if (messageData.ExtendedData.ContainsKey("ExpirationDate"))
+                            {
+                                message += $"\n\n到期日期：{messageData.ExtendedData["ExpirationDate"]}";
+                            }
+                            if (messageData.ExtendedData.ContainsKey("DaysRemaining"))
+                            {
+                                message += $"\n剩余天数：{messageData.ExtendedData["DaysRemaining"]}";
+                            }
+                            if (messageData.ExtendedData.ContainsKey("RenewalMethod"))
+                            {
+                                message += $"\n\n续费方式：{messageData.ExtendedData["RenewalMethod"]}";
+                            }
+                            if (messageData.ExtendedData.ContainsKey("ContactInfo") && 
+                                !string.IsNullOrEmpty(messageData.ExtendedData["ContactInfo"]?.ToString()))
+                            {
+                                message += $"\n联系方式：{messageData.ExtendedData["ContactInfo"]}";
+                            }
+                        }
+
+                        MessageBox.Show(
+                            message,
+                            "注册到期提醒",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                    }));
+                }
+
+                _logger.LogDebug("注册到期提醒已处理");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理注册到期提醒时发生异常");
             }
         }
 

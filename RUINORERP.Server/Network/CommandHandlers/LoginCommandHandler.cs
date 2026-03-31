@@ -28,6 +28,7 @@ using RUINORERP.Server.Adapters;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Services;
 using SuperSocket.Channel;
 using SuperSocket.Connection;
 using SuperSocket.Server.Abstractions.Session;
@@ -97,6 +98,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
         /// </summary>
         protected TokenManager TokenManager { get; set; }
 
+        /// <summary>
+        /// 注册服务
+        /// </summary>
+        protected IRegistrationService RegistrationService { get; set; }
 
 
         //public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger) : base(_Logger)
@@ -119,7 +124,8 @@ namespace RUINORERP.Server.Network.CommandHandlers
         public LoginCommandHandler(ILogger<LoginCommandHandler> _Logger, ISessionService sessionService,
                                   ITokenService tokenService, TokenManager tokenManager,
                                   ServerMessageService _MessageService,
-                                  SystemManagementService _managementService
+                                  SystemManagementService _managementService,
+                                  IRegistrationService _registrationService
 
             ) : base(_Logger)
         {
@@ -129,6 +135,7 @@ namespace RUINORERP.Server.Network.CommandHandlers
             TokenManager = tokenManager ?? throw new ArgumentNullException(nameof(tokenManager));
             MessageService = _MessageService;
             managementService = _managementService;
+            RegistrationService = _registrationService ?? throw new ArgumentNullException(nameof(_registrationService));
             // 使用安全方法设置支持的命令
             SetSupportedCommands(
                 AuthenticationCommands.Login,
@@ -317,6 +324,17 @@ namespace RUINORERP.Server.Network.CommandHandlers
                 // 生成Token
                 var tokenInfo = await GenerateTokenInfoAsync(userInfo, sessionInfo.SessionID, loginRequest.ClientIp);
 
+                // 检查注册状态
+                var registrationStatus = await RegistrationService.GetRegistrationStatusAsync();
+                var expirationReminder = await RegistrationService.GetExpirationReminderInfoAsync();
+
+                // 如果注册已过期，拒绝登录
+                if (registrationStatus == RegistrationStatus.Expired)
+                {
+                    return ResponseFactory.CreateSpecificErrorResponse(executionContext, 
+                        "系统注册已过期，请联系软件提供商续费。续费方式：请联系软件提供商");
+                }
+
                 // 返回成功结果 - 使用强类型 BaseCommand<LoginResponse>
                 var loginResponse = new LoginResponse
                 {
@@ -328,7 +346,10 @@ namespace RUINORERP.Server.Network.CommandHandlers
                     Token = tokenInfo,
                     // 新增：添加重复登录信息，让客户端决定后续处理
                     HasDuplicateLogin = duplicateResult.HasDuplicateLogin,
-                    DuplicateLoginResult = duplicateResult
+                    DuplicateLoginResult = duplicateResult,
+                    // 新增：添加注册状态信息
+                    RegistrationStatus = registrationStatus,
+                    ExpirationReminder = expirationReminder
                 };
 
 

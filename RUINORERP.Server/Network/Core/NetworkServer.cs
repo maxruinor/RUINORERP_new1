@@ -1,3 +1,6 @@
+// 测试模式：如果定义了SKIP_REGISTRATION_VALIDATION，则跳过注册码验证
+#define SKIP_REGISTRATION_VALIDATION
+
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -1005,52 +1008,30 @@ namespace RUINORERP.Server.Network.Core
 
         /// <summary>
         /// 服务器启动时验证注册信息
+        /// 使用统一的注册验证服务，确保验证逻辑的一致性
         /// </summary>
         private async Task ValidateRegistrationOnStartupAsync()
         {
             try
             {
-                // 检查是否处于调试模式
-                bool isDebugMode = false;
-
-                // 尝试获取主窗体的调试模式状态
-                var mainForm = System.Windows.Forms.Application.OpenForms.OfType<RUINORERP.Server.frmMainNew>().FirstOrDefault();
-                if (mainForm != null)
-                {
-                    isDebugMode = mainForm.IsDebug;
-                }
-
-                // 调试模式下跳过注册验证
-                if (isDebugMode)
-                {
-                    return;
-                }
-
                 // 获取注册服务
                 var registrationService = Program.ServiceProvider.GetRequiredService<RUINORERP.Server.Services.IRegistrationService>();
 
-                // 验证注册信息
-                var registrationInfo = await registrationService.GetRegistrationInfoAsync();
+                // 使用统一的验证方法进行注册验证
+                var validationResult = await registrationService.ValidateSystemRegistrationAsync();
 
-                if (registrationInfo == null)
+                // 检查验证结果
+                if (!validationResult.IsValid)
                 {
-                    _logger.LogError("无法获取注册信息，无法启动服务器");
-                    throw new InvalidOperationException("无法获取注册信息，无法启动服务器");
+                    _logger.LogError("注册验证失败: {FailureReason}", validationResult.FailureReason);
+                    throw new InvalidOperationException(validationResult.FailureReason);
                 }
 
-                if (!registrationInfo.IsRegistered)
+                // 如果需要警告，记录日志
+                if (validationResult.NeedsWarning)
                 {
-                    _logger.LogError("系统未注册，无法启动服务器");
-                    throw new InvalidOperationException("系统未注册，无法启动服务器");
+                    _logger.LogWarning("注册状态警告: {Message}", validationResult.Message);
                 }
-
-                // 检查注册是否过期
-                if (registrationService.IsRegistrationExpired(registrationInfo))
-                {
-                    _logger.LogError("系统注册已过期，无法启动服务器，到期时间: {ExpirationDate}", registrationInfo.ExpirationDate);
-                    throw new InvalidOperationException($"系统注册已过期，到期时间: {registrationInfo.ExpirationDate:yyyy-MM-dd}");
-                }
-
             }
             catch (InvalidOperationException ex)
             {

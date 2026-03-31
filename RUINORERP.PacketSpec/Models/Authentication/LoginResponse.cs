@@ -1,4 +1,4 @@
-﻿using RUINORERP.PacketSpec.Commands.Authentication;
+using RUINORERP.PacketSpec.Commands.Authentication;
 using RUINORERP.PacketSpec.Core;
 using RUINORERP.PacketSpec.Models.Authentication;
 using RUINORERP.PacketSpec.Models.Common;
@@ -63,5 +63,15 @@ namespace RUINORERP.PacketSpec.Models.Responses
         /// 重复登录信息
         /// </summary>
         public DuplicateLoginResult DuplicateLoginResult { get; set; }
+
+        /// <summary>
+        /// 注册状态
+        /// </summary>
+        public RegistrationStatus RegistrationStatus { get; set; }
+
+        /// <summary>
+        /// 到期提醒信息
+        /// </summary>
+        public ExpirationReminder ExpirationReminder { get; set; }
     }
 }

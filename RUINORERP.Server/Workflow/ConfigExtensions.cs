@@ -1,4 +1,4 @@
-﻿using Autofac.Core;
+using Autofac.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Debug;
@@ -101,7 +101,6 @@ namespace RUINORERP.Server.Workflow
             host.RegisterWorkflow<ReminderWorkflow, ReminderData>();
 
             host.RegisterWorkflow<WFPush.PushBaseInfoWorkflow, PushData>();
-
 
         }
     }

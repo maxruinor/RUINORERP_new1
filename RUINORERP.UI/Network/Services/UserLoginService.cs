@@ -10,6 +10,7 @@ using RUINORERP.UI.Network.Authentication;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace RUINORERP.UI.Network.Services
 {
@@ -136,6 +137,9 @@ namespace RUINORERP.UI.Network.Services
                 {
 
                 }
+
+                // 处理注册状态和到期提醒
+                await HandleRegistrationStatusAsync(response);
 
                 return response;
             }
@@ -309,6 +313,51 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
 
+            }
+        }
+
+        /// <summary>
+        /// 处理注册状态和到期提醒
+        /// </summary>
+        /// <param name="loginResponse">登录响应</param>
+        private async Task HandleRegistrationStatusAsync(LoginResponse loginResponse)
+        {
+            try
+            {
+                // 检查是否需要显示到期提醒
+                if (loginResponse.ExpirationReminder != null && loginResponse.ExpirationReminder.NeedsReminder)
+                {
+                    _logger?.LogInformation($"收到注册到期提醒：{loginResponse.ExpirationReminder.ReminderMessage}");
+
+                    // 在主线程上显示提醒
+                    if (MainForm.Instance != null && !MainForm.Instance.IsDisposed)
+                    {
+                        MainForm.Instance.Invoke(new Action(() =>
+                        {
+                            MessageBox.Show(
+                                loginResponse.ExpirationReminder.ReminderMessage + "\n\n" +
+                                $"续费方式：{loginResponse.ExpirationReminder.RenewalMethod}\n" +
+                                $"联系方式：{loginResponse.ExpirationReminder.ContactInfo}",
+                                "注册到期提醒",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Warning);
+                        }));
+                    }
+                }
+
+                // 检查注册状态
+                if (loginResponse.RegistrationStatus == RegistrationStatus.ExpiringSoon)
+                {
+                    _logger?.LogInformation("系统注册即将到期");
+                }
+                else if (loginResponse.RegistrationStatus == RegistrationStatus.Normal)
+                {
+                    _logger?.LogInformation("系统注册状态正常");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "处理注册状态时发生异常");
             }
         }
 

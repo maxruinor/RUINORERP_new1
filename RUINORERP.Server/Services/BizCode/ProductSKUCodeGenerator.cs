@@ -337,7 +337,7 @@ namespace RUINORERP.Server.Services.BizCode
                 // 根据是否指定类目编码决定查询范围
                 // 增量更新：只加载最近 24 小时的 SKU
                 var query = _db.Queryable<tb_ProdDetail>()
-                    .Where(p => p.CreateTime > DateTime.Now.AddHours(-24));
+                    .Where(p => p.Created_at > DateTime.Now.AddHours(-24));
                         
                 // 如果指定了类目编码，则只加载该类目的 SKU
                 if (!string.IsNullOrEmpty(categoryCode))

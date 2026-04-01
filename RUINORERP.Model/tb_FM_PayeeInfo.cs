@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 收款信息，供应商报销人的收款账号
+    /// 收款信息, 供应商报销人的收款账号
     /// </summary>
     [Serializable()]
-    [Description("收款信息，供应商报销人的收款账号")]
+    [Description("收款信息, 供应商报销人的收款账号")]
     [SugarTable("tb_FM_PayeeInfo")]
     public partial class tb_FM_PayeeInfo : BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
 
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("收款信息，供应商报销人的收款账号tb_FM_PayeeInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("收款信息, 供应商报销人的收款账号tb_FM_PayeeInfo" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

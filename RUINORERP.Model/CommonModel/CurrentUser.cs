@@ -10,7 +10,7 @@ namespace RUINORERP.Model
     /// <summary>
     /// 用户操作界面信息实体类
     /// 包含服务器端用户管理界面所需的简要信息
-    /// 通过心跳机制传输，用于服务器端用户管理系统显示
+    /// 通过心跳机制传输, 用于服务器端用户管理系统显示
     /// </summary>
     public class UserOperationInfo
     {
@@ -97,7 +97,7 @@ namespace RUINORERP.Model
     {
 
         /// <summary>
-        /// 获取员工姓名，值来自tb_Employee.Employee_Name
+        /// 获取员工姓名, 值来自tb_Employee.Employee_Name
         /// 打印系统中使用。暂时保留
         /// </summary>
         public string Name { get { return tb_Employee?.Employee_Name ?? string.Empty; } }
@@ -337,7 +337,7 @@ namespace RUINORERP.Model
         }
 
         /// <summary>
-        /// 登录过，还保持连接时，客户端会定时发送心跳包，服务器会记录最后一次收到心跳包的时间
+        /// 登录过, 还保持连接时, 客户端会定时发送心跳包, 服务器会记录最后一次收到心跳包的时间
         /// </summary>
         public bool 在线状态
         {

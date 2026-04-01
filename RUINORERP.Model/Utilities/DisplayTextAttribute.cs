@@ -3,7 +3,7 @@
 namespace RUINORERP.Model.Utilities
 {
     /// <summary>
-    /// 像提醒规则配置实体中，用List<int>保存了枚举值，但显示用另一个属性，需要用这个特性标记。
+    /// 像提醒规则配置实体中, 用List<int>保存了枚举值, 但显示用另一个属性, 需要用这个特性标记。
     /// 
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, Inherited = true)]

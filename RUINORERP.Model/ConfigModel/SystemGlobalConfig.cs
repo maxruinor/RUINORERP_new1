@@ -55,7 +55,7 @@ namespace RUINORERP.Model.ConfigModel
 
         [JsonProperty("UseSharedPrinter")]
         [Category("使用共享打印机")]
-        [Description("如果为否，则每个客户端指定一个打印机。为真则使用默认服务器的打印机")]
+        [Description("如果为否, 则每个客户端指定一个打印机。为真则使用默认服务器的打印机")]
         public bool UseSharedPrinter { get; set; }
 
         [JsonProperty("SomeSetting")]
@@ -113,7 +113,7 @@ namespace RUINORERP.Model.ConfigModel
         //
         [JsonProperty("LogLevel")]
         [Category("日志配置")]
-        [Description("日志级别，可选值：Trace、Debug、Information、Warning、Error、Critical、None")]
+        [Description("日志级别, 可选值：Trace、Debug、Information、Warning、Error、Critical、None")]
         public string LogLevel { get; set; }
 
         [JsonProperty("EnableBillStatusMessage")]

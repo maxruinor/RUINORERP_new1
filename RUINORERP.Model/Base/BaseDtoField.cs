@@ -55,7 +55,7 @@ namespace RUINORERP.Model.Base
         #region 外键相关
 
         /// <summary>
-        ///  外键关联属性,（生成的，依赖于DB的关联） 直接保存特性更简单？
+        ///  外键关联属性,（生成的, 依赖于DB的关联） 直接保存特性更简单？
         /// </summary>
         public FKRelationAttribute fKRelationAttribute { get; set; }
 

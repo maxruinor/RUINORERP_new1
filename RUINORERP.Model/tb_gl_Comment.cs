@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息，提高沟通效率和透明度
+    /// 全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息, 提高沟通效率和透明度
     /// </summary>
     [Serializable()]
     [Description("全局级批注表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息，提高沟通效率和透明度tb_gl_Comment" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("全局级批注表-对于重点关注的业务帮助记录和跟踪相关的额外信息, 提高沟通效率和透明度tb_gl_Comment" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

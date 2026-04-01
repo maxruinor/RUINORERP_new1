@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
-    /// 全局验证配置类,随时根据业务需求进行修改，来验证单据输入的数据合法性。
+    /// 全局验证配置类,随时根据业务需求进行修改, 来验证单据输入的数据合法性。
     /// 可以从客户端或服务器端分发这些配置
     /// </summary>
     [Serializable()]
@@ -51,7 +51,7 @@ namespace RUINORERP.Model.ConfigModel
         /// </summary>
         [JsonProperty("计划提前提示天数")]
         [Category("客户关系")]
-        [Description("中进计划提前多少天提醒，默认提前1天。")]
+        [Description("中进计划提前多少天提醒, 默认提前1天。")]
         public int 计划提前提示天数 { get; set; } = 1;
         #endregion
 
@@ -90,7 +90,7 @@ namespace RUINORERP.Model.ConfigModel
         /// </summary>
         [JsonProperty("收付款账户必填")]
         [Category("财务模块")]
-        [Description("应收款/应付款审核时，收付款账户信息是否必填")]
+        [Description("应收款/应付款审核时, 收付款账户信息是否必填")]
         public bool 收付款账户必填 { get; set; } = true;
         
  

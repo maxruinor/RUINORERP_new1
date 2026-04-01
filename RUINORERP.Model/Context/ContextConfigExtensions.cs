@@ -37,7 +37,7 @@ namespace RUINORERP.Model.Context
             // ApplicationContext defaults
             //services.AddScoped<ApplicationContext>();
            
-            //注入单例，全程共享数据
+            //注入单例, 全程共享数据
             services.AddSingleton<ApplicationContext>(context);
             RegisterContextManager(services);
 

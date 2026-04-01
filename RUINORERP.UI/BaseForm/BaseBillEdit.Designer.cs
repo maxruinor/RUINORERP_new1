@@ -53,6 +53,8 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripbtnReview = new System.Windows.Forms.ToolStripButton();
             this.toolStripBtnReverseReview = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnConfirmExecution = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnAntiConfirmExecution = new System.Windows.Forms.ToolStripButton();
             this.toolStripButtonCaseClosed = new System.Windows.Forms.ToolStripButton();
             this.toolStripDropDownbtnFuncation = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,12 +63,11 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnConvertDocuments = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnBillInfo = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -92,7 +93,8 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripSeparator1,
             this.toolStripbtnReview,
             this.toolStripBtnReverseReview,
-            this.toolStripbtnClose,
+            this.toolStripbtnConfirmExecution,
+            this.toolStripbtnAntiConfirmExecution,
             this.toolStripButtonCaseClosed,
             this.toolStripDropDownbtnFuncation,
             this.toolStripbtnRelatedQuery,
@@ -215,6 +217,26 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripBtnReverseReview.Size = new System.Drawing.Size(53, 22);
             this.toolStripBtnReverseReview.Text = "反审";
             // 
+            // toolStripbtnConfirmExecution
+            // 
+            this.toolStripbtnConfirmExecution.Image = global::RUINORERP.UI.Properties.Resources.yesOk;
+            this.toolStripbtnConfirmExecution.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnConfirmExecution.Name = "toolStripbtnConfirmExecution";
+            this.toolStripbtnConfirmExecution.Size = new System.Drawing.Size(53, 22);
+            this.toolStripbtnConfirmExecution.Text = "执行";
+            this.toolStripbtnConfirmExecution.ToolTipText = "确认执行";
+            this.toolStripbtnConfirmExecution.Visible = false;
+            // 
+            // toolStripbtnAntiConfirmExecution
+            // 
+            this.toolStripbtnAntiConfirmExecution.Image = global::RUINORERP.UI.Properties.Resources.AntiExec;
+            this.toolStripbtnAntiConfirmExecution.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnAntiConfirmExecution.Name = "toolStripbtnAntiConfirmExecution";
+            this.toolStripbtnAntiConfirmExecution.Size = new System.Drawing.Size(66, 22);
+            this.toolStripbtnAntiConfirmExecution.Text = "反执行";
+            this.toolStripbtnAntiConfirmExecution.ToolTipText = "确认执行";
+            this.toolStripbtnAntiConfirmExecution.Visible = false;
+            // 
             // toolStripButtonCaseClosed
             // 
             this.toolStripButtonCaseClosed.Image = global::RUINORERP.UI.Properties.Resources.ok;
@@ -278,14 +300,13 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnBillInfo.Size = new System.Drawing.Size(79, 22);
             this.toolStripbtnBillInfo.Text = "操作记录";
             // 
-            // toolStripbtnClose
+            // toolStripButton1
             // 
-            this.toolStripbtnClose.Image = global::RUINORERP.UI.Properties.Resources.yesOk;
-            this.toolStripbtnClose.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnClose.Name = "toolStripbtnClose";
-            this.toolStripbtnClose.Size = new System.Drawing.Size(79, 22);
-            this.toolStripbtnClose.Text = "确认执行";
-            this.toolStripbtnClose.ToolTipText = "确认执行";
+            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(53, 20);
+            this.toolStripButton1.Text = "关闭";
             // 
             // tsBtnLocked
             // 
@@ -303,14 +324,6 @@ namespace RUINORERP.UI.BaseForm
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
-            // 
-            // toolStripButton1
-            // 
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(53, 22);
-            this.toolStripButton1.Text = "关闭";
             // 
             // BaseBillEdit
             // 
@@ -339,7 +352,7 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.ToolStripButton toolStripbtnModify;
         public System.Windows.Forms.ToolStripButton toolStripButtonSave;
         public System.Windows.Forms.ToolStripButton toolStripbtnQuery;
-        public System.Windows.Forms.ToolStripButton toolStripbtnClose;
+        public System.Windows.Forms.ToolStripButton toolStripbtnConfirmExecution;
         public System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         public System.Windows.Forms.ErrorProvider errorProviderForAllInput;
         public System.Windows.Forms.ToolStripButton toolStripbtnProperty;
@@ -362,5 +375,6 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.ToolStripButton toolStripBtnCancelSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnBillInfo;
         public System.Windows.Forms.ToolStripButton toolStripButton1;
+        public System.Windows.Forms.ToolStripButton toolStripbtnAntiConfirmExecution;
     }
 }

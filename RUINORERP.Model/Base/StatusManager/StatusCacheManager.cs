@@ -14,7 +14,7 @@ namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 简化版缓存管理器 - 提供基本的缓存功能
-    /// 替代原来复杂的缓存机制，保留必要的性能优化
+    /// 替代原来复杂的缓存机制, 保留必要的性能优化
     /// </summary>
     public class StatusCacheManager
     {
@@ -26,7 +26,7 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ConcurrentDictionary<string, bool> _transitionRuleCache;
 
         /// <summary>
-        /// UI控件状态缓存 - 仅缓存Enabled状态，Visible状态由权限系统管理
+        /// UI控件状态缓存 - 仅缓存Enabled状态, Visible状态由权限系统管理
         /// </summary>
         private readonly ConcurrentDictionary<string, bool> _uiControlStateCache;
 
@@ -36,7 +36,7 @@ namespace RUINORERP.Model.Base.StatusManager
         private readonly ConcurrentDictionary<string, bool> _actionPermissionCache;
 
         /// <summary>
-        /// 通用缓存字典，用于存储各种类型的数据
+        /// 通用缓存字典, 用于存储各种类型的数据
         /// </summary>
         private readonly ConcurrentDictionary<string, List<object>> _generalCache;
 
@@ -73,7 +73,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="fromStatus">源状态</param>
         /// <param name="toStatus">目标状态</param>
         /// <param name="statusType">状态类型</param>
-        /// <returns>是否允许转换，如果缓存中不存在则返回null</returns>
+        /// <returns>是否允许转换, 如果缓存中不存在则返回null</returns>
         public bool? GetTransitionRuleCache(Enum fromStatus, Enum toStatus, Type statusType)
         {
             string cacheKey = $"{statusType.Name}_{fromStatus}_{toStatus}";
@@ -105,7 +105,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 获取状态转换规则缓存（通过缓存键）
         /// </summary>
         /// <param name="cacheKey">缓存键</param>
-        /// <returns>缓存的数据列表，如果缓存中不存在则返回null</returns>
+        /// <returns>缓存的数据列表, 如果缓存中不存在则返回null</returns>
         public List<object> GetTransitionRuleCache(string cacheKey)
         {
             if (_generalCache.TryGetValue(cacheKey, out List<object> cachedValue))
@@ -134,12 +134,12 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 获取UI控件状态缓存 - 仅返回Enabled状态
-        /// 注意：Visible状态由权限系统统一管理，不在此缓存中处理
+        /// 注意：Visible状态由权限系统统一管理, 不在此缓存中处理
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controlName">控件名称</param>
         /// <param name="statusType">状态类型</param>
-        /// <returns>控件Enabled状态，如果缓存中不存在则返回null</returns>
+        /// <returns>控件Enabled状态, 如果缓存中不存在则返回null</returns>
         public bool? GetUIControlStateCache(Enum status, string controlName, Type statusType)
         {
             string cacheKey = $"{statusType.Name}_{status}_{controlName}";
@@ -155,7 +155,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 设置UI控件状态缓存 - 仅缓存Enabled状态
-        /// 注意：Visible状态由权限系统统一管理，不在此缓存中处理
+        /// 注意：Visible状态由权限系统统一管理, 不在此缓存中处理
         /// </summary>
         /// <param name="status">状态</param>
         /// <param name="controlName">控件名称</param>
@@ -178,7 +178,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="status">状态</param>
         /// <param name="actionName">操作名称</param>
         /// <param name="statusType">状态类型</param>
-        /// <returns>是否允许操作，如果缓存中不存在则返回null</returns>
+        /// <returns>是否允许操作, 如果缓存中不存在则返回null</returns>
         public bool? GetActionPermissionCache(Enum status, string actionName, Type statusType)
         {
             string cacheKey = $"{statusType.Name}_{status}_{actionName}";
@@ -219,7 +219,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 获取状态类型名称
         /// </summary>
         /// <param name="statusType">状态类型</param>
-        /// <returns>状态类型名称，如果缓存中不存在则返回null</returns>
+        /// <returns>状态类型名称, 如果缓存中不存在则返回null</returns>
         public string GetStatusType(Type statusType)
         {
             if (statusType == null) return null;

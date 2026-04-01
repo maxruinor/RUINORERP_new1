@@ -11,7 +11,7 @@ using System.Text;
 namespace RUINORERP.Model.Dto
 {
     /// <summary>
-    /// 产品共用部分，用于动态合并，体现于明细中表格中
+    /// 产品共用部分, 用于动态合并, 体现于明细中表格中
     /// 只有基本产品信息
     /// </summary>
     public class BaseProductInfo

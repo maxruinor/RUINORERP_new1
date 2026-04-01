@@ -27,7 +27,7 @@ namespace RUINORERP.Model
         {
             // 初始化静态属性
             RelatedTableTypes.Clear();
-            //// 如果需要，可以在此处调用基类的方法
+            //// 如果需要, 可以在此处调用基类的方法
             base.SetRelatedTableTypes(typeof(tb_StockOut));
             base.SetRelatedTableTypes(typeof(tb_StockOutDetail));
             base.SetRelatedTableTypes(typeof(tb_Prod));

@@ -43,7 +43,7 @@ namespace RUINORERP.Model.Context
         public int NamedServiceCacheSize { get; set; }
         
         /// <summary>
-        /// 重写ToString方法，提供格式化的统计信息
+        /// 重写ToString方法, 提供格式化的统计信息
         /// </summary>
         /// <returns>格式化的统计信息字符串</returns>
         public override string ToString()

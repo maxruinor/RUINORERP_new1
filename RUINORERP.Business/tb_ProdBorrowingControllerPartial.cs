@@ -35,11 +35,67 @@ namespace RUINORERP.Business
     {
 
         /// <summary>
-        /// 审核借出 注意逻辑是减少库存，并且更新单据本身状态
+        /// 审核借出 单据状态审核部分：负责验证单据数据合法性、权限检查及状态更新
+        /// 不包含库存操作逻辑，库存操作由ConfirmExecution方法处理
         /// </summary>
-        /// <param name="entity"></param>
+        /// <param name="ObjectEntity"></param>
         /// <returns></returns>
         public async override Task<ReturnResults<T>> ApprovalAsync(T ObjectEntity)
+        {
+            ReturnResults<T> rsms = new ReturnResults<T>();
+            tb_ProdBorrowing entity = ObjectEntity as tb_ProdBorrowing;
+
+            try
+            {
+                // 验证单据数据合法性
+                if (entity == null)
+                {
+                    rsms.ErrorMsg = "单据实体为空，无法审核";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+
+                if (entity.tb_ProdBorrowingDetails == null || entity.tb_ProdBorrowingDetails.Count == 0)
+                {
+                    rsms.ErrorMsg = "借出单明细为空，无法审核";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+
+                // 更新单据状态为确认
+                entity.DataStatus = (int)DataStatus.确认;
+                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                BusinessHelper.Instance.ApproverEntity(entity);
+
+                // 只更新指定列
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                              .ExecuteCommandHasChangeAsync();
+                _unitOfWorkManage.CommitTran();
+
+                rsms.ReturnObject = entity as T;
+                rsms.Succeeded = true;
+                return rsms;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
+                rsms.ErrorMsg = "审核事务回滚=>" + ex.Message;
+                return rsms;
+            }
+        }
+
+        /// <summary>
+        /// 确认执行借出单 库存操作执行部分：负责实际的库存变动逻辑实现
+        /// 该方法从审核方法中分离出来，作为独立的库存操作入口
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<T>> ConfirmExecutionAsync(T ObjectEntity)
         {
             ReturnResults<T> rsms = new ReturnResults<T>();
             tb_ProdBorrowing entity = ObjectEntity as tb_ProdBorrowing;
@@ -71,7 +127,7 @@ namespace RUINORERP.Business
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
                 tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
-                
+
                 // 创建库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
@@ -100,7 +156,7 @@ namespace RUINORERP.Business
                         _unitOfWorkManage.RollbackTran();
                         throw new Exception($"当前仓库{child.Location_ID}无产品{child.ProdDetailID}的库存数据,请联系管理员");
                     }
-                  
+
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity;
                     inv.LatestOutboundTime = System.DateTime.Now;
                     #endregion
@@ -109,11 +165,11 @@ namespace RUINORERP.Business
                     {
                         // 实时获取当前库存成本
                         decimal realtimeCost = inv.Inv_Cost;
-                        
+
                         // 更新借出明细的成本为实时成本
                         child.Cost = realtimeCost;
                         child.SubtotalCostAmount = realtimeCost * child.Qty;
-                        
+
                         // 创建库存流水记录
                         tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                         transaction.ProdDetailID = inv.ProdDetailID;
@@ -126,66 +182,140 @@ namespace RUINORERP.Business
                         transaction.UnitCost = realtimeCost; // 使用实时成本
                         transaction.TransactionTime = DateTime.Now;
                         transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                        transaction.Notes = $"借出单审核：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+                        transaction.Notes = $"借出单确认执行：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
 
                         transactionList.Add(transaction);
                     }
                 }
-                
+
                 // 记录库存流水
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                 await tranController.BatchRecordTransactionsWithRetry(transactionList);
 
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.确认;
-                //entity.ApprovalOpinions = approvalEntity.ApprovalComments;
-                //后面已经修改为
-                // entity.ApprovalResults = approvalEntity.ApprovalResults;
-                entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                BusinessHelper.Instance.ApproverEntity(entity);
-                //只更新指定列
-                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                              .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
-                                              .ExecuteCommandHasChangeAsync();
+                // 更新借出明细的成本信息
+                await _unitOfWorkManage.GetDbClient().Updateable(entity.tb_ProdBorrowingDetails)
+                    .UpdateColumns(it => new { it.Cost, it.SubtotalCostAmount })
+                    .ExecuteCommandHasChangeAsync();
+
+                entity.DataStatus = (int)DataStatus.完结;
+                entity.CloseCaseOpinions = "确认执行";
+                // 更新借出单的状态
+                await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                    .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions })
+                    .ExecuteCommandHasChangeAsync();
+
+
                 _unitOfWorkManage.CommitTran();
 
-                // entitys[ii].tb_purorder.CloseCaseOpinions = "【系统自动结案】==》" + System.DateTime.Now.ToString() + _appContext.CurUserInfo.UserInfo.tb_employee.Employee_Name + "审核入库单:" + entitys[ii].PurEntryNo + "结案。"; ;
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
                 return rsms;
             }
             catch (Exception ex)
             {
-           
                 _unitOfWorkManage.RollbackTran();
-
-
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
-                rsms.ErrorMsg = "事务回滚=>" + ex.Message;
+                rsms.ErrorMsg = "确认执行事务回滚=>" + ex.Message;
                 return rsms;
             }
-
         }
 
 
         /// <summary>
-        /// 反审核 库存加回来
+        /// 反审核（仅状态回退）：将单据状态从确认回退到新建
+        /// 不包含库存操作，库存操作由 AntiConfirmExecutionAsync 处理
         /// </summary>
-        /// <param name="entity"></param>
+        /// <param name="ObjectEntity"></param>
         /// <returns></returns>
-
         public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
         {
             ReturnResults<T> rsms = new ReturnResults<T>();
             tb_ProdBorrowing entity = ObjectEntity as tb_ProdBorrowing;
-
+        
             try
             {
+                // 验证单据数据合法性
+                if (entity == null)
+                {
+                    rsms.ErrorMsg = "单据实体为空，无法反审核";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+        
+                // 判断是否能反审？必须是已审核但未执行的状态
+                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
+                {
+                    rsms.ErrorMsg = "只有已审核的单据才能反审核";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+        
+                // 检查是否已执行（完结状态），已执行的单据不能直接反审核
+                if (entity.DataStatus == (int)DataStatus.完结)
+                {
+                    rsms.ErrorMsg = "此单据已执行，无法直接反审核！\n\n请先执行【反执行】操作回滚库存，然后再反审核。";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+        
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
-                
-                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+        
+                // 更新单据状态为新建（仅状态变更）
+                entity.DataStatus = (int)DataStatus.新建;
+                entity.ApprovalResults = false;
+                entity.ApprovalStatus = (int)ApprovalStatus.未审核;
+                BusinessHelper.Instance.ApproverEntity(entity);
+        
+                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                                         .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
+                                         .ExecuteCommandHasChangeAsync();
+        
+                _unitOfWorkManage.CommitTran();
+        
+                rsms.ReturnObject = entity as T;
+                rsms.Succeeded = true;
+                return rsms;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex);
+                rsms.ErrorMsg = "反审核事务回滚=>" + ex.Message;
+                return rsms;
+            }
+        }
 
+        /// <summary>
+        /// 反执行（库存回滚）：回滚借出单的库存操作
+        /// 将库存反向变动（增加），并回退状态到确认
+        /// 注意：此方法仅处理已执行的单据（DataStatus=完结）
+        /// </summary>
+        /// <param name="ObjectEntity"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<T>> AntiConfirmExecutionAsync(T ObjectEntity)
+        {
+            ReturnResults<T> rsms = new ReturnResults<T>();
+            tb_ProdBorrowing entity = ObjectEntity as tb_ProdBorrowing;
+        
+            try
+            {
+                // 验证单据数据合法性
+                if (entity == null)
+                {
+                    rsms.ErrorMsg = "单据实体为空，无法反执行";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+        
+                // 只有完结状态的单据才能反执行
+                if (entity.DataStatus != (int)DataStatus.完结)
+                {
+                    rsms.ErrorMsg = "只有已执行的单据才能反执行！";
+                    rsms.Succeeded = false;
+                    return rsms;
+                }
+        
                 #region 【死锁优化】预处理阶段（事务外批量预加载库存）
                 var allKeys2 = new List<(long ProdDetailID, long Location_ID)>();
                 if (entity.tb_ProdBorrowingDetails != null)
@@ -195,7 +325,7 @@ namespace RUINORERP.Business
                         allKeys2.Add((detail.ProdDetailID, detail.Location_ID));
                     }
                 }
-
+        
                 var invDict2 = new Dictionary<(long ProdDetailID, long Location_ID), tb_Inventory>();
                 if (allKeys2.Count > 0)
                 {
@@ -207,43 +337,40 @@ namespace RUINORERP.Business
                     invDict2 = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 }
                 #endregion
-
-                //判断是否能反审?
-                if (entity.DataStatus != (int)DataStatus.确认 || !entity.ApprovalResults.HasValue)
-                {
-                    //return false;
-                    return rsms;
-                }
+        
+                // 开启事务，保证数据一致性
+                _unitOfWorkManage.BeginTran();
+        
+                tb_InventoryController<tb_Inventory> ctrinv = _appContext.GetRequiredService<tb_InventoryController<tb_Inventory>>();
+        
                 List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                 // 创建反向库存流水记录列表
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
-                
+        
                 foreach (var child in entity.tb_ProdBorrowingDetails)
                 {
-                    #region 库存表的更新 ，
+                    #region 库存表的更新（反向操作：增加库存）
                     // ✅ 从预加载字典获取（死锁优化）
                     var key = (child.ProdDetailID, child.Location_ID);
                     invDict2.TryGetValue(key, out var inv);
                     if (inv == null)
                     {
                         _unitOfWorkManage.RollbackTran();
-                        rsms.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】】【生产缴库】的方式进行盘点后，再操作。";
+                        rsms.ErrorMsg = $"{child.ProdDetailID}当前产品无库存数据，无法借出。请使用【期初盘点】【采购入库】【生产缴库】的方式进行盘点后，再操作。";
                         rsms.Succeeded = false;
                         return rsms;
-                          
+        
                     }
                     //更新在途库存
-                    //反审，出库的要加回来，要卖的也要加回来
+                    //反执行：出库的要加回来
                     inv.Quantity = inv.Quantity + child.Qty;
-                    //最后出库时间要改回来，这里没有处理
-                    //inv.LatestStorageTime
                     BusinessHelper.Instance.EditEntity(inv);
                     #endregion
                     invUpdateList.Add(inv);
-                    
+        
                     // 实时获取当前库存成本
                     decimal realtimeCost = inv.Inv_Cost;
-                    
+        
                     // 创建反向库存流水记录
                     tb_InventoryTransaction transaction = new tb_InventoryTransaction();
                     transaction.ProdDetailID = inv.ProdDetailID;
@@ -251,55 +378,48 @@ namespace RUINORERP.Business
                     transaction.BizType = (int)BizType.借出单;
                     transaction.ReferenceId = entity.BorrowID;
                     transaction.ReferenceNo = entity.BorrowNo;
-                    transaction.QuantityChange = child.Qty; // 反审核增加库存
+                    transaction.QuantityChange = child.Qty; // 反执行增加库存
                     transaction.AfterQuantity = inv.Quantity;
                     transaction.UnitCost = realtimeCost; // 使用实时成本
                     transaction.TransactionTime = DateTime.Now;
                     transaction.OperatorId = _appContext.CurUserInfo.UserInfo.User_ID;
-                    transaction.Notes = $"借出单反审核：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
-
+                    transaction.Notes = $"借出单反确认执行：{entity.BorrowNo}，产品：{inv.tb_proddetail?.tb_prod?.CNName}";
+        
                     transactionList.Add(transaction);
                 }
+                        
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvMainCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);
                 if (InvMainCounter == 0)
                 {
-                    _logger.Debug($"{entity.BorrowNo}更新库存结果为0行，请检查数据！");
+                    _logger.Debug($"{entity.BorrowNo}更新库存结果为 0 行，请检查数据！");
                 }
-                
+        
                 // 记录反向库存流水（带死锁重试机制）
                 tb_InventoryTransactionController<tb_InventoryTransaction> tranController = _appContext.GetRequiredService<tb_InventoryTransactionController<tb_InventoryTransaction>>();
                 await tranController.BatchRecordTransactionsWithRetry(transactionList);
-
-                
-
-                //这部分是否能提出到上一级公共部分？
-                entity.DataStatus = (int)DataStatus.新建;
-                    entity.ApprovalResults = false;
-                    entity.ApprovalStatus = (int)ApprovalStatus.未审核;
-                    BusinessHelper.Instance.ApproverEntity(entity);
-
-                var result = await _unitOfWorkManage.GetDbClient().Updateable(entity)
-                                         .UpdateColumns(it => new { it.DataStatus, it.ApprovalOpinions, it.ApprovalResults, it.ApprovalStatus, it.Approver_at, it.Approver_by })
-                                         .ExecuteCommandHasChangeAsync();
-
-
-                // 注意信息的完整性
+        
+                // 回退单据状态到确认
+                entity.DataStatus = (int)DataStatus.确认;
+                entity.CloseCaseOpinions = "反执行";
+                        
+                await _unitOfWorkManage.GetDbClient().Updateable(entity)
+                    .UpdateColumns(it => new { it.DataStatus, it.CloseCaseOpinions })
+                    .ExecuteCommandHasChangeAsync();
+        
                 _unitOfWorkManage.CommitTran();
-                //  _logger.Info(approvalEntity.bizName + "审核事务成功");
+        
                 rsms.ReturnObject = entity as T;
                 rsms.Succeeded = true;
                 return rsms;
             }
             catch (Exception ex)
             {
-              
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex);
-                //  _logger.Error(approvalEntity.bizName + "事务回滚");
+                rsms.ErrorMsg = "反确认执行事务回滚=>" + ex.Message;
                 return rsms;
             }
-
         }
 
         public async override Task<List<T>> GetPrintDataSource(long ID)

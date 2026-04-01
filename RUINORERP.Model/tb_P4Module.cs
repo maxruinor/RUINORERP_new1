@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 模块权限表（暂时没有使用，逻辑上用菜单的代替了）
+    /// 模块权限表（暂时没有使用, 逻辑上用菜单的代替了）
     /// </summary>
     [Serializable()]
-    [Description("模块权限表（暂时没有使用，逻辑上用菜单的代替了）")]
+    [Description("模块权限表（暂时没有使用, 逻辑上用菜单的代替了）")]
     [SugarTable("tb_P4Module")]
     public partial class tb_P4Module: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("模块权限表（暂时没有使用，逻辑上用菜单的代替了）tb_P4Module" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("模块权限表（暂时没有使用, 逻辑上用菜单的代替了）tb_P4Module" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

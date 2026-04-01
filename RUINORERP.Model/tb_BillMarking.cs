@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？
+    /// 单据标识 保存在主单中一个字段, 作用于各种单明细的搜索过滤 有必要吗？
     /// </summary>
     [Serializable()]
     [Description("单据标识")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("单据标识 保存在主单中一个字段，作用于各种单明细的搜索过滤 有必要吗？tb_BillMarking" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("单据标识 保存在主单中一个字段, 作用于各种单明细的搜索过滤 有必要吗？tb_BillMarking" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

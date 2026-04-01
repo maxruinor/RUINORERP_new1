@@ -17,7 +17,7 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 凭证图片路径（直接存储）
-        /// 此字段为高频必填单图，直接存储在业务表中
+        /// 此字段为高频必填单图, 直接存储在业务表中
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -29,7 +29,7 @@ namespace RUINORERP.Model
         #region 低频图片字段（通过关联表）
 
         /// <summary>
-        /// 证据图片列表（关联表，延迟加载）
+        /// 证据图片列表（关联表, 延迟加载）
         /// 用于存储订单相关的多张证据图片
         /// </summary>
         [SugarColumn(IsIgnore = true)]
@@ -38,7 +38,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> EvidenceImages { get; set; }
 
         /// <summary>
-        /// 结案图片列表（关联表，延迟加载）
+        /// 结案图片列表（关联表, 延迟加载）
         /// 用于存储订单结案时的图片
         /// </summary>
         [SugarColumn(IsIgnore = true)]
@@ -47,7 +47,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> CloseImages { get; set; }
 
         /// <summary>
-        /// 备注图片列表（关联表，延迟加载）
+        /// 备注图片列表（关联表, 延迟加载）
         /// 用于存储订单相关的备注图片
         /// </summary>
         [SugarColumn(IsIgnore = true)]
@@ -123,7 +123,7 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 产品主图路径（直接存储）
-        /// 此字段为高频必填单图，直接存储在业务表中
+        /// 此字段为高频必填单图, 直接存储在业务表中
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -135,7 +135,7 @@ namespace RUINORERP.Model
         #region 低频图片字段（关联表）
 
         /// <summary>
-        /// 包装图片列表（关联表，延迟加载）
+        /// 包装图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -143,7 +143,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> PackageImages { get; set; }
 
         /// <summary>
-        /// 质检图片列表（关联表，延迟加载）
+        /// 质检图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -151,7 +151,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> QualityImages { get; set; }
 
         /// <summary>
-        /// 标签图片列表（关联表，延迟加载）
+        /// 标签图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -224,7 +224,7 @@ namespace RUINORERP.Model
         #region 图片字段
 
         /// <summary>
-        /// 细节图片列表（关联表，延迟加载）
+        /// 细节图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -242,7 +242,7 @@ namespace RUINORERP.Model
         #region 图片字段
 
         /// <summary>
-        /// 凭证图片列表（关联表，延迟加载）
+        /// 凭证图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -250,7 +250,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> EvidenceImages { get; set; }
 
         /// <summary>
-        /// 发票图片列表（关联表，延迟加载）
+        /// 发票图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -292,7 +292,7 @@ namespace RUINORERP.Model
         #region 图片字段
 
         /// <summary>
-        /// 付款凭证图片列表（关联表，延迟加载）
+        /// 付款凭证图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -300,7 +300,7 @@ namespace RUINORERP.Model
         public List<tb_FS_FileStorageInfo> PaymentVoucherImages { get; set; }
 
         /// <summary>
-        /// 收款凭证图片列表（关联表，延迟加载）
+        /// 收款凭证图片列表（关联表, 延迟加载）
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]

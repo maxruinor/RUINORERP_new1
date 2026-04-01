@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。
+    /// 归还单, 如果部分无法归还, 则强制结案借出单。生成一个财务数据做记录。
     /// </summary>
     [Serializable()]
-    [Description("归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。")]
+    [Description("归还单, 如果部分无法归还, 则强制结案借出单。生成一个财务数据做记录。")]
     [SugarTable("tb_ProdReturning")]
     public partial class tb_ProdReturning: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("归还单，如果部分无法归还，则强制结案借出单。生成一个财务数据做记录。tb_ProdReturning" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("归还单, 如果部分无法归还, 则强制结案借出单。生成一个财务数据做记录。tb_ProdReturning" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

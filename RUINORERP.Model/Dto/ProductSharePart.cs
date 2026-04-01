@@ -12,7 +12,7 @@ using System.Xml.Serialization;
 namespace RUINORERP.Model.Dto
 {
     /// <summary>
-    /// 产品共用部分，用于动态合并，体现于明细中表格中
+    /// 产品共用部分, 用于动态合并, 体现于明细中表格中
     /// </summary>
     [Serializable]
     [Description("ProductSharePart")]

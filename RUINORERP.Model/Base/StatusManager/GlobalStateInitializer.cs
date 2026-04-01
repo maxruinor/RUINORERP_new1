@@ -33,9 +33,9 @@ namespace RUINORERP.Model.Base.StatusManager
     {
         /// <summary>
         /// 初始化全局状态规则
-        /// 确保规则只初始化一次，通常在应用启动时调用
+        /// 确保规则只初始化一次, 通常在应用启动时调用
         /// </summary>
-        /// <param name="serviceProvider">服务提供者（可选），用于设置提交修改模式</param>
+        /// <param name="serviceProvider">服务提供者（可选）, 用于设置提交修改模式</param>
         public static void InitializeGlobalRules(IServiceProvider serviceProvider = null)
         {
             try
@@ -43,7 +43,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 获取全局规则管理器实例并初始化规则
                 var rulesManager = GlobalStateRulesManager.Instance;
 
-                // 如果提供了服务提供者且存在应用上下文，则设置提交修改模式
+                // 如果提供了服务提供者且存在应用上下文, 则设置提交修改模式
                 if (serviceProvider != null &&
                     Context.ApplicationContext.Current != null &&
                     Context.ApplicationContext.Current.SystemGlobalConfig != null)
@@ -55,7 +55,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
             catch (Exception)
             {
-                // 忽略异常，避免应用启动失败
+                // 忽略异常, 避免应用启动失败
             }
         }
 

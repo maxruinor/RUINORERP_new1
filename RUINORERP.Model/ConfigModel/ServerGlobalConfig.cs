@@ -6,7 +6,7 @@ namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
     /// 服务器配置类
-    /// 专注于服务器相关的配置项，包括网络设置、数据库连接、文件存储等
+    /// 专注于服务器相关的配置项, 包括网络设置、数据库连接、文件存储等
     /// </summary>
     [Serializable()]
     [DisplayName("服务器配置")]
@@ -33,7 +33,7 @@ namespace RUINORERP.Model.ConfigModel
         #region 文件存储配置
         [JsonProperty("FileStoragePath")]
         [Category("文件存储设置")]
-        [Description("服务器文件存储位置，用于保存上传的图片等文件，建议不要设置为程序运行目录。支持使用环境变量，格式: %ENV_VAR%\\path")]
+        [Description("服务器文件存储位置, 用于保存上传的图片等文件, 建议不要设置为程序运行目录。支持使用环境变量, 格式: %ENV_VAR%\\path")]
         public string FileStoragePath { get; set; } = "%APPDATA%\\RUINORERP\\FileStorage";
 
         [JsonProperty("MaxFileSizeMB")]

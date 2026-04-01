@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 往来单位类型,如级别，电商，大客户，亚马逊等
+    /// 往来单位类型,如级别, 电商, 大客户, 亚马逊等
     /// </summary>
     [Serializable()]
     [Description("往来单位类型")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("往来单位类型,如级别，电商，大客户，亚马逊等tb_CustomerVendorType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("往来单位类型,如级别, 电商, 大客户, 亚马逊等tb_CustomerVendorType" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

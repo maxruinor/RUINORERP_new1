@@ -13,14 +13,14 @@ namespace RUINORERP.Model.CommonModel
     public class AuditLogOptions
     {
         /// <summary>
-        /// 批量写入大小，默认50条
-        /// 建议范围：20-100，根据数据库性能调整
+        /// 批量写入大小, 默认50条
+        /// 建议范围：20-100, 根据数据库性能调整
         /// </summary>
         public int BatchSize { get; set; } = 50;
 
         /// <summary>
-        /// 自动刷新间隔(毫秒)，默认1000ms
-        /// 建议范围：500-3000，平衡实时性和性能
+        /// 自动刷新间隔(毫秒), 默认1000ms
+        /// 建议范围：500-3000, 平衡实时性和性能
         /// </summary>
         public int FlushInterval { get; set; } = 1000;
 
@@ -30,25 +30,25 @@ namespace RUINORERP.Model.CommonModel
         public bool EnableAudit { get; set; } = true;
 
         /// <summary>
-        /// 队列最大容量，默认10000条
+        /// 队列最大容量, 默认10000条
         /// 超过此限制将丢弃新日志并记录警告
         /// </summary>
         public int MaxQueueSize { get; set; } = 10000;
 
         /// <summary>
-        /// 刷新操作超时时间(毫秒)，默认30000ms
+        /// 刷新操作超时时间(毫秒), 默认30000ms
         /// 防止数据库操作异常导致长时间阻塞
         /// </summary>
         public int FlushTimeout { get; set; } = 30000;
 
         /// <summary>
-        /// 数据库写入失败时的最大重试次数，默认3次
+        /// 数据库写入失败时的最大重试次数, 默认3次
         /// 超过此限制将丢弃日志并记录错误
         /// </summary>
         public int MaxRetryCount { get; set; } = 3;
 
         /// <summary>
-        /// 是否启用性能监控，默认true
+        /// 是否启用性能监控, 默认true
         /// 监控队列大小、刷新耗时、成功/失败次数
         /// </summary>
         public bool EnableMetrics { get; set; } = true;

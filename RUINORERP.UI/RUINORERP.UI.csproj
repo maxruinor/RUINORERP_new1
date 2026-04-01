@@ -3791,6 +3791,7 @@
     <Content Include="FM\财务核销逻辑.txt" />
     <None Include="ResourceFile\Hint.ico" />
     <Content Include="ProductEAV\UCMultiPropertyEditor_old.txt" />
+    <None Include="ResourceFile\AntiExec.bmp" />
     <Content Include="ResourceFile\copy.png" />
     <None Include="ResourceFile\guanlianchaxun.png" />
     <Content Include="ResourceFile\menulist_16x16.png" />

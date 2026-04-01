@@ -630,32 +630,32 @@ namespace RUINORERP.Global
     {
         [Description("【草稿】未提交")]
         /// <summary>
-        /// 草稿Draft
+        /// 草稿 Draft
         /// </summary>
         草稿 = 1,
-
-
+    
+    
         [Description("【新建】已提交")]
         /// <summary>
         /// 提交后才会推送给审核人员
         /// </summary>
         新建 = 2,
-
-
+    
+    
         [Description("【确认】已审核")]
         /// <summary>
         /// Confimmed,
         /// </summary>
         确认 = 4,
-
-
+    
+    
         [Description("【完结】已结案")]
         /// <summary>
         /// close
         /// </summary>
         //结案
         完结 = 8,
-
+    
         [Description("【取消】作废")]
         作废 = 16
     }
@@ -785,6 +785,33 @@ var description = typeof(BoxRuleBasis)
     //    同意, 
     //    否决
     //}
+
+    /// <summary>
+    /// 确认执行状态
+    /// 用于标识业务单据是否已执行库存操作等业务逻辑
+    /// </summary>
+    public enum ConfirmExecutionStatus
+    {
+        /// <summary>
+        /// 未执行 - 单据已审核但尚未执行业务操作
+        /// </summary>
+        未执行 = 0,
+
+        /// <summary>
+        /// 已执行 - 单据已审核并完成业务操作（如库存变动）
+        /// </summary>
+        已执行 = 1,
+
+        /// <summary>
+        /// 执行中 - 业务操作正在处理中
+        /// </summary>
+        执行中 = 2,
+
+        /// <summary>
+        /// 执行失败 - 业务操作执行失败
+        /// </summary>
+        执行失败 = 3
+    }
 
     /// <summary>
     /// 存货成本计算方式 的摘要说明。如先进先出法（FIFO）、加权平均法（WA）

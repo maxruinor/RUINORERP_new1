@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 流程步骤 为转移条件集合，Field为条件左参数，Operator为操作操作符如果值类型为String则表达式只能为==或者!=，Value为表达式值
+    /// 流程步骤 为转移条件集合, Field为条件左参数, Operator为操作操作符如果值类型为String则表达式只能为==或者!=, Value为表达式值
     /// </summary>
     [Serializable()]
     [Description("流程步骤")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("流程步骤 为转移条件集合，Field为条件左参数，Operator为操作操作符如果值类型为String则表达式只能为==或者!=，Value为表达式值tb_ConNodeConditions" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("流程步骤 为转移条件集合, Field为条件左参数, Operator为操作操作符如果值类型为String则表达式只能为==或者!=, Value为表达式值tb_ConNodeConditions" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

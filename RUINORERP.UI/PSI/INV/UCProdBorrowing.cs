@@ -144,7 +144,8 @@ namespace RUINORERP.UI.PSI.INV
         public override void AddExcludeMenuList()
         {
             //通过付款单来联动结案
-            base.AddExcludeMenuList(MenuItemEnums.确认执行);
+            base.AddExcludeMenuList(MenuItemEnums.执行);
+            base.AddExcludeMenuList(MenuItemEnums.反执行);
         }
 
         /// <summary>
@@ -240,7 +241,7 @@ namespace RUINORERP.UI.PSI.INV
             //如果属性变化 则状态为修改
             entity.PropertyChanged += (sender, s2) =>
             {
-               
+
                 if (entity.ActionStatus == ActionStatus.新增 || entity.ActionStatus == ActionStatus.修改)
                 {
                     base.InitRequiredToControl(MainForm.Instance.AppContext.GetRequiredService<tb_ProdBorrowingValidator>(), kryptonPanelMainInfo.Controls);
@@ -349,7 +350,7 @@ namespace RUINORERP.UI.PSI.INV
             var sw = new Stopwatch();
             sw.Start();
             InitDataTocmbbox();
-            
+
 
 
             grid1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -545,7 +546,5 @@ namespace RUINORERP.UI.PSI.INV
             }
             return false;
         }
-
-
     }
 }

@@ -793,13 +793,35 @@ namespace RUINORERP.Business
 
 
         /// <summary>
-        /// 反审核  反审核本身就是一个特殊情况。所以不能批量处理
+        /// 反审核（仅状态回退）：将单据状态从确认回退到新建
+        /// 不包含库存操作，库存操作由 AntiConfirmExecutionAsync 处理
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
         public async virtual Task<ReturnResults<T>> AntiApprovalAsync(T entity)
         {
-            throw new Exception("子类要重写AntiApprovalAsync,请联系管理员");
+            throw new Exception("子类要重写 AntiApprovalAsync,请联系管理员");
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0); // 模拟异步操作
+            return result; // 或者根据实际情况返回值
+        }
+                
+        /// <summary>
+        /// 反执行（库存回滚）：回滚执行时的库存操作
+        /// 将库存操作反向变动，并回退状态到确认
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public async virtual Task<ReturnResults<T>> AntiConfirmExecutionAsync(T entity)
+        {
+            throw new Exception("子类要重写 AntiConfirmExecutionAsync,请联系管理员");
+            ReturnResults<T> result = new ReturnResults<T>();
+            await Task.Delay(0);
+            return result;
+        }
+                
+        public async virtual Task<ReturnResults<T>> ConfirmExecutionAsync(T entity)
+        {
             ReturnResults<T> result = new ReturnResults<T>();
             await Task.Delay(0); // 模拟异步操作
             return result; // 或者根据实际情况返回值

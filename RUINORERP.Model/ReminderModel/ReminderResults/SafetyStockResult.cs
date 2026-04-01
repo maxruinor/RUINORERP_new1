@@ -12,7 +12,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderResults
     {
         public override ReminderBizType BusinessType => ReminderBizType.安全库存提醒;
         public override string Title => $"安全库存预警 - {ProductName}";
-        public override string Summary => $"当前库存: {CurrentStock}，安全范围: [{MinStock}-{MaxStock}]";
+        public override string Summary => $"当前库存: {CurrentStock}, 安全范围: [{MinStock}-{MaxStock}]";
 
         // 具体业务属性
         public string ProductName { get; set; }

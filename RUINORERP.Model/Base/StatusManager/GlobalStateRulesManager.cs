@@ -1,10 +1,10 @@
 /**
  * 文件: GlobalStateRulesManager.cs
  * 版本: V4 - 优化版全局状态规则管理器
- * 说明: 统一管理系统中的所有状态转换规则和UI控件规则，采用单例模式确保全局唯一
+ * 说明: 统一管理系统中的所有状态转换规则和UI控件规则, 采用单例模式确保全局唯一
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
- * 更新日期: 2025-01-12 - V4版本优化，简化规则管理和缓存机制
+ * 更新日期: 2025-01-12 - V4版本优化, 简化规则管理和缓存机制
  */
 
 using RUINORERP.Global;
@@ -19,8 +19,8 @@ namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 全局状态规则管理器
-    /// 统一管理系统中的所有状态转换规则和UI控件规则，采用单例模式确保全局唯一
-    /// 支持全局提交修改模式设置，控制单据提交后的修改权限
+    /// 统一管理系统中的所有状态转换规则和UI控件规则, 采用单例模式确保全局唯一
+    /// 支持全局提交修改模式设置, 控制单据提交后的修改权限
     /// </summary>
     /// <remarks>
     /// 使用示例 - 提交修改模式设置：
@@ -48,7 +48,7 @@ namespace RUINORERP.Model.Base.StatusManager
         public static GlobalStateRulesManager Instance => _lazyInstance.Value;
 
         /// <summary>
-        /// 私有构造函数，防止外部实例化
+        /// 私有构造函数, 防止外部实例化
         /// </summary>
         private GlobalStateRulesManager()
         {
@@ -77,7 +77,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 设置提交修改模式
         /// 设置后需要重新初始化规则以应用新的模式设置
-        /// 注意：调用此方法后，UnifiedStateManager需要清除缓存以确保新模式生效
+        /// 注意：调用此方法后, UnifiedStateManager需要清除缓存以确保新模式生效
         /// </summary>
         /// <param name="mode">新的提交修改模式</param>
         public void SetSubmitModifyRuleMode(SubmitModifyRuleMode mode)
@@ -102,7 +102,7 @@ namespace RUINORERP.Model.Base.StatusManager
         private Dictionary<Type, Dictionary<object, List<object>>> _stateTransitionRules;
 
         /// <summary>
-        /// UI按钮状态规则字典 - 仅包含Enabled状态，Visible由权限系统管理
+        /// UI按钮状态规则字典 - 仅包含Enabled状态, Visible由权限系统管理
         /// </summary>
         private Dictionary<Type, Dictionary<object, Dictionary<string, bool>>> _uiButtonRules;
 
@@ -190,6 +190,8 @@ namespace RUINORERP.Model.Base.StatusManager
             MenuItemEnums.反审,
             MenuItemEnums.结案,
             MenuItemEnums.反结案,
+            MenuItemEnums.执行,
+            MenuItemEnums.反执行,  // 新增：反执行也是状态转换操作
             MenuItemEnums.作废
         };
 
@@ -257,16 +259,19 @@ namespace RUINORERP.Model.Base.StatusManager
                 [DataStatus.草稿] = new List<object> { DataStatus.新建, DataStatus.作废 },
 
                 // 新建态（已提交/待审核）：可撤回/驳回（转草稿）、可审核通过（转确认）、可作废（待审核单据直接作废）
-                // 核心调整：删除 DataStatus.新建（去掉多次提交逻辑），新增 DataStatus.草稿（撤回/驳回路径）
+                // 核心调整：删除 DataStatus.新建（去掉多次提交逻辑）, 新增 DataStatus.草稿（撤回/驳回路径）
                 [DataStatus.新建] = new List<object> { DataStatus.草稿, DataStatus.确认, DataStatus.作废 },
 
-                // 确认态（已审核）：可反审核（转新建）、可结案（转完结）、可作废（已审核单据特殊情况作废，需权限管控）
-                [DataStatus.确认] = new List<object> { DataStatus.新建, DataStatus.完结, DataStatus.作废 },
+                // 确认态（已审核）：可反审核（转新建）、可执行（转完结）、可结案（转完结）、可作废
+                [DataStatus.确认] = new List<object> { DataStatus.新建,DataStatus.完结,DataStatus.作废 },
+                
+                // 完结态（已执行或已结案）：可反执行（转确认）、可反结案（转确认）
+                [DataStatus.完结] = new List<object> { DataStatus.确认 },
 
-                // 完结态：无任何转换可能，终身锁定
+                // 完结态：无任何转换可能, 终身锁定
                 [DataStatus.完结] = new List<object> { },
 
-                // 作废态：无任何转换可能，终身锁定
+                // 作废态：无任何转换可能, 终身锁定
                 [DataStatus.作废] = new List<object> { }
 
             };
@@ -327,9 +332,9 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销 },
                 [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
                 [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
-                [PrePaymentStatus.全额核销] = new List<object> { }, // 终态，不可转换
+                [PrePaymentStatus.全额核销] = new List<object> { }, // 终态, 不可转换
                 [PrePaymentStatus.部分退款] = new List<object> { PrePaymentStatus.全额退款 },
-                [PrePaymentStatus.全额退款] = new List<object> { }  // 终态，不可转换
+                [PrePaymentStatus.全额退款] = new List<object> { }  // 终态, 不可转换
             };
         }
 
@@ -370,7 +375,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 部分结算状态可以转换到全部结清状态
                 [StatementStatus.部分结算] = new List<object> { StatementStatus.全部结清 },
 
-                // 全部结清和已作废是终态，不能再转换
+                // 全部结清和已作废是终态, 不能再转换
                 [StatementStatus.全部结清] = new List<object> { },
                 [StatementStatus.已作废] = new List<object> { }
             };
@@ -408,7 +413,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否合法</returns>
         public bool IsValidTransition<T>(T fromStatus, T toStatus) where T : struct
         {
-            // 如果源状态和目标状态相同，则始终合法
+            // 如果源状态和目标状态相同, 则始终合法
             if (EqualityComparer<T>.Default.Equals(fromStatus, toStatus))
                 return true;
 
@@ -444,7 +449,7 @@ namespace RUINORERP.Model.Base.StatusManager
             // 根据不同的状态类型和操作类型判断是否需要二次确认
             var statusType = typeof(T);
 
-            // 对于已审核状态的单据，删除、作废、反审核操作均需要二次确认
+            // 对于已审核状态的单据, 删除、作废、反审核操作均需要二次确认
             if (statusType == typeof(DataStatus) && status.Equals(DataStatus.确认) ||
                 statusType == typeof(PaymentStatus) && status.Equals(PaymentStatus.已支付) ||
                 statusType == typeof(PrePaymentStatus) && status.Equals(PrePaymentStatus.已生效) ||
@@ -486,7 +491,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录状态变更操作日志
-        /// 用于记录所有关键状态变更，便于审计追踪
+        /// 用于记录所有关键状态变更, 便于审计追踪
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="entityId">实体ID</param>
@@ -516,7 +521,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 logBuilder.AppendLine($"操作用户ID: {operatorId}");
                 logBuilder.AppendLine($"操作用户: {operatorName}");
 
-                // 如果有备注，则添加
+                // 如果有备注, 则添加
                 if (!string.IsNullOrEmpty(remarks))
                 {
                     logBuilder.AppendLine($"备注: {remarks}");
@@ -530,7 +535,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 注意：实际实现时应替换为系统已有的日志记录器组件
                 // RUINORERP.Global.LogManager.Log(logBuilder.ToString(), LogType.Audit);
 
-                // 为了便于调试，可以输出到控制台或其他日志输出方式
+                // 为了便于调试, 可以输出到控制台或其他日志输出方式
                 System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
             }
             catch (Exception ex)
@@ -582,7 +587,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录关键操作
-        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// 用于记录非状态变更的关键操作, 如删除、打印等
         /// </summary>
         /// <param name="entityId">实体ID</param>
         /// <param name="entityType">实体类型名称</param>
@@ -603,7 +608,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 logBuilder.AppendLine($"操作用户ID: {operatorId}");
                 logBuilder.AppendLine($"操作用户: {operatorName}");
 
-                // 如果有备注，则添加
+                // 如果有备注, 则添加
                 if (!string.IsNullOrEmpty(remarks))
                 {
                     logBuilder.AppendLine($"备注: {remarks}");
@@ -613,7 +618,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 注意：实际实现时应替换为系统已有的日志记录器组件
                 // RUINORERP.Global.LogManager.Log(logBuilder.ToString(), LogType.Audit);
 
-                // 为了便于调试，可以输出到控制台或其他日志输出方式
+                // 为了便于调试, 可以输出到控制台或其他日志输出方式
                 System.Diagnostics.Debug.WriteLine(logBuilder.ToString());
             }
             catch (Exception ex)
@@ -647,7 +652,7 @@ namespace RUINORERP.Model.Base.StatusManager
         private void InitializeDataStatusUIButtonRules()
         {
             // 为不同状态添加通用按钮规则
-            //草稿状态：允许所有操作，除了审核和反审核
+            //草稿状态：允许所有操作, 除了审核和反审核
             AddStandardButtonRules(DataStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
@@ -657,11 +662,9 @@ namespace RUINORERP.Model.Base.StatusManager
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(DataStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: true);
 
-            /// 确认状态：不允许修改和删除，允许反审核，可以结案
+            /// 确认状态：不允许修改和删除, 允许反审核, 可以结案或执行
             AddStandardButtonRules(DataStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false, cancelSubmitEnabled: false);
-            // 注意：DataStatus.确认状态不允许直接删除，但可以通过作废操作实现类似功能，确保逻辑一致性
-            // 完结状态：仅允许查看和打印
-            AddStandardButtonRules(DataStatus.完结, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
+            // 注意：DataStatus.确认状态不允许直接删除, 但可以通过作废操作实现类似功能, 确保逻辑一致性
 
             /// 作废状态：仅允许查看操作
             AddStandardButtonRules(DataStatus.作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false, cancelSubmitEnabled: false);
@@ -727,15 +730,15 @@ namespace RUINORERP.Model.Base.StatusManager
             // 灵活模式：允许修改；严格模式：不允许修改
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(ARAPStatus.待审核, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: allowModifyInSubmittedState, submitEnabled: false, reviewEnabled: true);
-            // 待支付状态：允许查看和打印，不允许修改原始数据，但允许反审核操作
+            // 待支付状态：允许查看和打印, 不允许修改原始数据, 但允许反审核操作
             AddStandardButtonRules(ARAPStatus.待支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 部分支付状态：允许查看和打印，不允许修改原始数据
+            // 部分支付状态：允许查看和打印, 不允许修改原始数据
             AddStandardButtonRules(ARAPStatus.部分支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 全部支付状态：终态，只允许查看和打印
+            // 全部支付状态：终态, 只允许查看和打印
             AddStandardButtonRules(ARAPStatus.全部支付, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            // 坏账状态：特殊状态，允许查看和打印，可能需要反审核操作
+            // 坏账状态：特殊状态, 允许查看和打印, 可能需要反审核操作
             AddStandardButtonRules(ARAPStatus.坏账, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: true, antiClosedEnabled: false);
-            // 已冲销状态：终态，只允许查看和打印
+            // 已冲销状态：终态, 只允许查看和打印
             AddStandardButtonRules(ARAPStatus.已冲销, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
@@ -744,7 +747,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// </summary>
         private void InitializeStatementStatusUIButtonRules()
         {
-            // 草稿状态：允许所有操作，除了审核和反审核
+            // 草稿状态：允许所有操作, 除了审核和反审核
             AddStandardButtonRules(StatementStatus.草稿, addEnabled: true, modifyEnabled: true, saveEnabled: true, deleteEnabled: true, submitEnabled: true, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
             // 根据全局提交修改模式设置已新建状态的按钮规则
@@ -752,16 +755,16 @@ namespace RUINORERP.Model.Base.StatusManager
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(StatementStatus.新建, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: true, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
-            // 确认状态：不允许修改和删除，允许反审核和部分结算
+            // 确认状态：不允许修改和删除, 允许反审核和部分结算
             AddStandardButtonRules(StatementStatus.确认, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
 
-            // 部分结算状态：不允许修改和删除，只允许查看和继续结算操作
+            // 部分结算状态：不允许修改和删除, 只允许查看和继续结算操作
             AddStandardButtonRules(StatementStatus.部分结算, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
-            // 全部结清状态：终态，仅允许查看和打印
+            // 全部结清状态：终态, 仅允许查看和打印
             AddStandardButtonRules(StatementStatus.全部结清, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
-            // 已作废状态：终态，仅允许查看操作
+            // 已作废状态：终态, 仅允许查看操作
             AddStandardButtonRules(StatementStatus.已作废, addEnabled: true, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
@@ -836,7 +839,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 获取按钮状态 - 仅返回Enabled状态
-        /// 注意：Visible状态由权限系统统一管理，不在此处理
+        /// 注意：Visible状态由权限系统统一管理, 不在此处理
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="status">状态值</param>
@@ -865,17 +868,17 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 获取指定状态类型和状态值的按钮规则
         /// 自动处理int值到枚举类型的转换
-        /// 注意：状态管理只控制按钮的可用性(Enabled)，Visible由权限系统管理
+        /// 注意：状态管理只控制按钮的可用性(Enabled), Visible由权限系统管理
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="status">状态值</param>
-        /// <returns>按钮规则字典，键为按钮名称，值为Enabled状态</returns>
+        /// <returns>按钮规则字典, 键为按钮名称, 值为Enabled状态</returns>
         public Dictionary<string, bool> GetButtonRules(Type statusType, object status)
         {
             if (statusType == null || status == null)
                 return new Dictionary<string, bool>();
 
-            // 自动转换：如果状态值是int且状态类型是枚举，则进行转换
+            // 自动转换：如果状态值是int且状态类型是枚举, 则进行转换
             object workingStatus = status;
             if (status is int && statusType.IsEnum)
             {
@@ -900,11 +903,11 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 获取指定状态下的所有按钮规则 - 仅包含Enabled状态
-        /// 注意：Visible状态由权限系统统一管理，不在此处理
+        /// 注意：Visible状态由权限系统统一管理, 不在此处理
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="status">状态值</param>
-        /// <returns>按钮规则字典，键为按钮名称，值为Enabled状态</returns>
+        /// <returns>按钮规则字典, 键为按钮名称, 值为Enabled状态</returns>
         public Dictionary<string, bool> GetButtonRules<T>(T status) where T : struct
         {
             var statusType = typeof(T);
@@ -958,17 +961,17 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
                 [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核, MenuItemEnums.保存 }, // 支持多次提交
-                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
-                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.执行, MenuItemEnums.结案 },
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增,MenuItemEnums.反结案,MenuItemEnums.反执行 },  // 【修复】添加反执行权限
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
             };
 
             var strictModeRules = new Dictionary<object, List<MenuItemEnums>>
             {
                 [DataStatus.草稿] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.保存 },
-                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核 },//支持多次提交，不能修改
-                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.结案 },
-                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反结案 },
+                [DataStatus.新建] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.提交, MenuItemEnums.审核 },//支持多次提交, 不能修改
+                [DataStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.反审, MenuItemEnums.执行, MenuItemEnums.结案 },
+                [DataStatus.完结] = new List<MenuItemEnums> { MenuItemEnums.新增,MenuItemEnums.反结案,MenuItemEnums.反执行 },  // 【修复】添加反执行权限
                 [DataStatus.作废] = new List<MenuItemEnums> { MenuItemEnums.新增 }
             };
 
@@ -1052,7 +1055,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 // 部分结算状态：允许继续结算操作
                 [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
-                // 全部结清和已作废是终态，不允许操作
+                // 全部结清和已作废是终态, 不允许操作
                 [StatementStatus.全部结清] = new List<MenuItemEnums> { },
                 [StatementStatus.已作废] = new List<MenuItemEnums> { }
             };
@@ -1067,7 +1070,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 [StatementStatus.确认] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 // 部分结算状态：允许继续结算操作
                 [StatementStatus.部分结算] = new List<MenuItemEnums> { MenuItemEnums.结案 },
-                // 全部结清和已作废是终态，不允许操作
+                // 全部结清和已作废是终态, 不允许操作
                 [StatementStatus.全部结清] = new List<MenuItemEnums> { },
                 [StatementStatus.已作废] = new List<MenuItemEnums> { }
             };
@@ -1155,7 +1158,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 检查是否允许执行无目标状态操作（修改、删除、保存等）
-        /// 仅基于当前状态和全局规则进行判断，不涉及状态转换验证
+        /// 仅基于当前状态和全局规则进行判断, 不涉及状态转换验证
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="status">当前状态值</param>
@@ -1163,7 +1166,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否允许执行操作</returns>
         public bool CanExecuteNonStateTransitionAction<T>(T status, MenuItemEnums action) where T : struct
         {
-            // 如果不是无目标状态操作，直接返回false
+            // 如果不是无目标状态操作, 直接返回false
             if (!IsNonStateTransitionAction(action))
                 return false;
 
@@ -1181,7 +1184,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否允许执行操作</returns>
         public bool CanExecuteStateTransitionAction<T>(T status, MenuItemEnums action) where T : struct
         {
-            // 如果不是状态转换类操作，直接返回false
+            // 如果不是状态转换类操作, 直接返回false
             if (!IsStateTransitionAction(action))
                 return false;
 
@@ -1264,55 +1267,6 @@ namespace RUINORERP.Model.Base.StatusManager
         #endregion
 
         #region 新增方法 - 状态终态判断
-
-        /// <summary>
-        /// 判断指定状态是否为终态
-        /// 注意：这个方法已移动到IUnifiedStateManager接口中，这里保留是为了向后兼容
-        /// 建议使用IUnifiedStateManager.IsFinalStatus方法
-        /// </summary>
-        /// <typeparam name="TStatus">状态类型</typeparam>
-        /// <param name="status">状态值</param>
-        /// <returns>是否为终态</returns>
-        [Obsolete("请使用IUnifiedStateManager.IsFinalStatus方法替代此方法")]
-        public bool IsFinalStatus<TStatus>(TStatus status) where TStatus : struct
-        {
-            var statusType = typeof(TStatus);
-
-            // 针对不同状态类型的终态判断
-            if (statusType == typeof(DataStatus))
-            {
-                DataStatus dataStatus = (DataStatus)(object)status;
-                return dataStatus == DataStatus.完结 || dataStatus == DataStatus.作废;
-            }
-            else if (statusType == typeof(PaymentStatus))
-            {
-                PaymentStatus paymentStatus = (PaymentStatus)(object)status;
-                return paymentStatus == PaymentStatus.已支付;
-            }
-            else if (statusType == typeof(RefundStatus))
-            {
-                RefundStatus refundStatus = (RefundStatus)(object)status;
-                return refundStatus == RefundStatus.已退款已退货 || refundStatus == RefundStatus.已退款未退货 || refundStatus == RefundStatus.部分退款退货;
-            }
-            else if (statusType == typeof(PrePaymentStatus))
-            {
-                PrePaymentStatus prepayStatus = (PrePaymentStatus)(object)status;
-                return prepayStatus == PrePaymentStatus.全额核销 || prepayStatus == PrePaymentStatus.全额退款;
-            }
-            else if (statusType == typeof(ARAPStatus))
-            {
-                ARAPStatus arapStatus = (ARAPStatus)(object)status;
-                return arapStatus == ARAPStatus.全部支付 || arapStatus == ARAPStatus.已冲销;
-            }
-            else if (statusType == typeof(StatementStatus))
-            {
-                StatementStatus statementStatus = (StatementStatus)(object)status;
-                return statementStatus == StatementStatus.全部结清 || statementStatus == StatementStatus.已作废;
-            }
-
-            // 默认情况下，不是终态
-            return false;
-        }
 
 
 
@@ -1461,6 +1415,7 @@ namespace RUINORERP.Model.Base.StatusManager
             if (action == MenuItemEnums.审核) return "审核单据";
             if (action == MenuItemEnums.反审) return "反审单据";
             if (action == MenuItemEnums.结案) return "结案单据";
+            if (action == MenuItemEnums.执行) return "执行单据";
             if (action == MenuItemEnums.反结案) return "反结案单据";
             if (action == MenuItemEnums.保存) return "保存单据";
             return "未知操作";
@@ -1507,7 +1462,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 清空所有自定义处理器
-        /// 仅用于测试场景，请谨慎使用
+        /// 仅用于测试场景, 请谨慎使用
         /// </summary>
         public static void ClearCustomHandlers()
         {
@@ -1521,7 +1476,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// 内部状态映射逻辑
         /// 根据状态类型和操作类型返回目标状态值
         /// UI上的操作后将会变成的状态值
-        /// 注意：审核驳回（ApprovalResults=false）不通过此方法映射，而是在审核逻辑中直接设置状态为草稿
+        /// 注意：审核驳回（ApprovalResults=false）不通过此方法映射, 而是在审核逻辑中直接设置状态为草稿
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="currentStatus">当前状态值</param>
@@ -1529,7 +1484,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>目标状态值</returns>
         private static object MapActionToStatusInternal(Type statusType, object currentStatus, MenuItemEnums action)
         {
-            // 如果是DataStatus类型，直接映射
+            // 如果是DataStatus类型, 直接映射
             if (statusType == typeof(DataStatus))
             {
                 // 提交操作:根据当前状态决定目标状态
@@ -1557,13 +1512,15 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.审核) return DataStatus.确认;
                 if (action == MenuItemEnums.反审) return DataStatus.新建;
                 if (action == MenuItemEnums.结案) return DataStatus.完结;
+                if (action == MenuItemEnums.执行) return DataStatus.完结;
+                if (action == MenuItemEnums.反执行) return DataStatus.确认;  // 新增：反执行回到确认状态
                 if (action == MenuItemEnums.反结案) return DataStatus.新建;
                 if (action == MenuItemEnums.保存) return DataStatus.草稿;
                 if (action == MenuItemEnums.作废) return DataStatus.作废;
                 return currentStatus;
             }
 
-            // 如果是PrePaymentStatus类型，映射对应的状态
+            // 如果是PrePaymentStatus类型, 映射对应的状态
             if (statusType == typeof(PrePaymentStatus))
             {
                 if (action == MenuItemEnums.提交) return PrePaymentStatus.待审核;
@@ -1572,7 +1529,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return currentStatus;
             }
 
-            // 如果是ARAPStatus类型，映射对应的状态
+            // 如果是ARAPStatus类型, 映射对应的状态
             if (statusType == typeof(ARAPStatus))
             {
                 if (action == MenuItemEnums.提交) return ARAPStatus.待审核;
@@ -1581,7 +1538,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return currentStatus;
             }
 
-            // 如果是PaymentStatus类型，映射对应的状态
+            // 如果是PaymentStatus类型, 映射对应的状态
             if (statusType == typeof(PaymentStatus))
             {
                 if (action == MenuItemEnums.提交) return PaymentStatus.待审核;
@@ -1590,7 +1547,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return currentStatus;
             }
 
-            // 如果是StatementStatus类型，映射对应的状态
+            // 如果是StatementStatus类型, 映射对应的状态
             if (statusType == typeof(StatementStatus))
             {
                 if (action == MenuItemEnums.提交) return StatementStatus.新建;
@@ -1603,7 +1560,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
 
             // 其他业务状态类型的处理（需要子类或配置来指定）
-            // 这里返回当前状态，实际使用时应该由业务模块进行自定义处理
+            // 这里返回当前状态, 实际使用时应该由业务模块进行自定义处理
             return currentStatus;
         }
 

@@ -1,15 +1,15 @@
 /**
  * 文件: StateTransitionResult.cs
  * 版本: V4 - 合并版状态转换结果类
- * 说明: 合并了状态转换检查结果和转换结果，通过ResultType属性区分用途
+ * 说明: 合并了状态转换检查结果和转换结果, 通过ResultType属性区分用途
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
  * 更新日期: 2025-01-12 - 合并StateTransitionCheckResult和StateTransitionResult
  * 
  * 版本标识：
- * V4: 合并状态转换检查结果和转换结果，通过ResultType属性区分用途
- * 公共代码: 状态转换结果处理，V3和V4架构共用
- * 通用性: 状态转换结果处理，支持检查和实际转换两种场景
+ * V4: 合并状态转换检查结果和转换结果, 通过ResultType属性区分用途
+ * 公共代码: 状态转换结果处理, V3和V4架构共用
+ * 通用性: 状态转换结果处理, 支持检查和实际转换两种场景
  */
 
 using RUINORERP.Global;
@@ -36,7 +36,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
     /// <summary>
     /// 状态转换结果
-    /// 合并了状态转换检查结果和转换结果，通过ResultType属性区分用途
+    /// 合并了状态转换检查结果和转换结果, 通过ResultType属性区分用途
     /// </summary>
     public class StateTransitionResult
     {
@@ -71,8 +71,8 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 是否成功或允许
-        /// 对于检查结果，表示是否允许转换
-        /// 对于转换结果，表示转换是否成功
+        /// 对于检查结果, 表示是否允许转换
+        /// 对于转换结果, 表示转换是否成功
         /// </summary>
         public bool IsSuccess { get; set; }
 

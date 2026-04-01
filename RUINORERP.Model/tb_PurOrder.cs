@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 采购订单，可能来自销售订单也可能来自生产需求也可以直接录数据
+    /// 采购订单, 可能来自销售订单也可能来自生产需求也可以直接录数据
     /// </summary>
     [Serializable()]
     [Description("采购订单")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("采购订单，可能来自销售订单也可能来自生产需求也可以直接录数据tb_PurOrder" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("采购订单, 可能来自销售订单也可能来自生产需求也可以直接录数据tb_PurOrder" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

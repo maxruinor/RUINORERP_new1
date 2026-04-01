@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model.ReminderModel.ReminderRules
 {
     /// <summary>
-    /// 配置哪些业务需要谁来审核，实时（超时多少小时要提醒）
+    /// 配置哪些业务需要谁来审核, 实时（超时多少小时要提醒）
     /// </summary>
     public class DocApprovalConfig : RuleConfigBase
     {
 
-        //什么单 经过什么动作，什么状态 到什么单  
+        //什么单 经过什么动作, 什么状态 到什么单  
 
         /// <summary>
         /// 目标角色
@@ -27,13 +27,13 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
 
         /// <summary>
-        /// 比较提交，还是审核，还是完结 等动作
+        /// 比较提交, 还是审核, 还是完结 等动作
         /// 还是增加删除修改
         /// </summary>
         public int ActionType { get; set; }
 
         /// <summary>
-        /// 要处理的业务类型对，来源和目标
+        /// 要处理的业务类型对, 来源和目标
         /// </summary>
         public KeyValuePair<int, int> FromToBizType { get; set; }
 
@@ -57,7 +57,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         public bool EnableDelegateApproval { get; set; } // 启用委托审批
 
         /// <summary>
-        /// 重写验证方法，先执行基类验证，再添加子类特有验证
+        /// 重写验证方法, 先执行基类验证, 再添加子类特有验证
         /// </summary>
         /// <returns></returns>
         public override RuleValidationResult Validate()

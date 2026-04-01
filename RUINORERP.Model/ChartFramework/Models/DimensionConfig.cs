@@ -4,7 +4,7 @@ namespace RUINORERP.Model.ChartFramework.Models
 {
     /// <summary>
     /// 维度配置
-    /// 创建时间，业务员，区域
+    /// 创建时间, 业务员, 区域
     /// </summary>
     public class DimensionConfig
     {

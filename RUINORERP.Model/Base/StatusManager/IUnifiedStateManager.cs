@@ -1,10 +1,10 @@
 /**
  * 文件: IUnifiedStateManager.cs
  * 版本: V4 - 优化版统一状态管理器接口
- * 说明: 统一状态管理器接口 - 基于V4版本架构优化，简化方法定义，提升性能
+ * 说明: 统一状态管理器接口 - 基于V4版本架构优化, 简化方法定义, 提升性能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
- * 更新日期: 2025-01-12 - V4版本优化，简化接口定义
+ * 更新日期: 2025-01-12 - V4版本优化, 简化接口定义
  */
 
 using RUINORERP.Global;
@@ -17,8 +17,8 @@ namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 统一状态管理器接口
-    /// 基于V4版本架构优化，简化日志记录，提升性能1
-    /// 支持MenuItemEnums，实现操作权限检查和UI控件影响
+    /// 基于V4版本架构优化, 简化日志记录, 提升性能1
+    /// 支持MenuItemEnums, 实现操作权限检查和UI控件影响
     /// </summary>
     public interface IUnifiedStateManager : IDisposable
     {
@@ -104,7 +104,7 @@ namespace RUINORERP.Model.Base.StatusManager
         Task<StateTransitionResult> SetActionStatusAsync(BaseEntity entity, ActionStatus? status, string reason = null, string userId = null);
 
         /// <summary>
-        /// 检查是否可以执行指定操作，并返回详细消息
+        /// 检查是否可以执行指定操作, 并返回详细消息
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
@@ -144,7 +144,7 @@ namespace RUINORERP.Model.Base.StatusManager
         void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null);
 
         /// <summary>
-        /// 判断指定实体是否可以修改，并返回详细消息
+        /// 判断指定实体是否可以修改, 并返回详细消息
         /// </summary>
         /// <typeparam name="TEntity">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
@@ -162,7 +162,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 通过UI操作类型设置实体状态（通用方法）
         /// 支持提交、审核、反审等所有预定义的UI操作
-        /// 这是一个简化的通用接口，将UI操作自动映射到具体的状态值
+        /// 这是一个简化的通用接口, 将UI操作自动映射到具体的状态值
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型（提交、审核、反审等）</param>
@@ -201,7 +201,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录状态变更操作日志
-        /// 用于记录所有关键状态变更，便于审计追踪
+        /// 用于记录所有关键状态变更, 便于审计追踪
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="entityId">实体ID</param>
@@ -215,7 +215,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录关键操作
-        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// 用于记录非状态变更的关键操作, 如删除、打印等
         /// </summary>
         /// <param name="entityId">实体ID</param>
         /// <param name="entityType">实体类型名称</param>
@@ -242,7 +242,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 处理审核驳回操作
-        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿，财务状态转为草稿）
+        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿, 财务状态转为草稿）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="reason">驳回原因</param>

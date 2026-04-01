@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单
+    /// 其它费用记录表, 账户管理, 财务系统中使用,像基础资料一样单表操作简单
     /// </summary>
     [Serializable()]
     [Description("其它费用记录表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("其它费用记录表，账户管理，财务系统中使用,像基础资料一样单表操作简单tb_FM_OtherExpense" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("其它费用记录表, 账户管理, 财务系统中使用,像基础资料一样单表操作简单tb_FM_OtherExpense" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

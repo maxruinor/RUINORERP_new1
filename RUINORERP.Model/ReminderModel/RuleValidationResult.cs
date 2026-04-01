@@ -9,7 +9,7 @@ namespace RUINORERP.Model.ReminderModel
 
  
         /// <summary>
-        /// 验证结果类，包含验证状态和错误消息
+        /// 验证结果类, 包含验证状态和错误消息
         /// </summary>
         public class RuleValidationResult
         {
@@ -53,7 +53,7 @@ namespace RUINORERP.Model.ReminderModel
             }
 
             /// <summary>
-            /// 将所有错误消息组合成一个字符串，每行一条消息
+            /// 将所有错误消息组合成一个字符串, 每行一条消息
             /// </summary>
             /// <param name="prefix">每条消息前的前缀（如"• "、"- "）</param>
             /// <returns>组合后的字符串</returns>

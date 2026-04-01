@@ -22,17 +22,17 @@ using RUINORERP.Global.EnumExt;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// tb_ProdDetail 扩展类，用于存放临时字段和辅助功能1
+    /// tb_ProdDetail 扩展类, 用于存放临时字段和辅助功能1
     /// 后面按这个规律统一处理。如果实现中带有图片的字段。则需要额外处理
     /// 字段名：RowImage
-    /// 后面如果支持多图则可能是List<key,value> key是图片名，value是图片对象
+    /// 后面如果支持多图则可能是List<key,value> key是图片名, value是图片对象
     /// </summary>
     public partial class tb_ProdDetail 
     {
 
 
         /// <summary>
-        /// 属性组名称，用于多属性组合显示，此字段不存储到数据库
+        /// 属性组名称, 用于多属性组合显示, 此字段不存储到数据库
         /// </summary>
         [SugarColumn(IsIgnore = true, ColumnDescription = "多属性组合")]
         [Browsable(true)]
@@ -51,7 +51,7 @@ namespace RUINORERP.Model
 
 
         /// <summary>
-        /// 多属性新组合序号，用于多属性组合生成时的唯一 标识，此字段不存储到数据库1
+        /// 多属性新组合序号, 用于多属性组合生成时的唯一 标识, 此字段不存储到数据库1
         /// </summary>
         [SugarColumn(IsIgnore = true, ColumnDescription = "多属性新组合序号")]
         [Browsable(true)]
@@ -74,7 +74,7 @@ namespace RUINORERP.Model
                 // 使用HashSet自动去重
                 var uniqueParts = new HashSet<string>();
 
-                // 添加各属性值，自动忽略重复项
+                // 添加各属性值, 自动忽略重复项
                 if (!string.IsNullOrWhiteSpace(tb_prod?.CNName))
                     uniqueParts.Add(tb_prod.CNName);
 

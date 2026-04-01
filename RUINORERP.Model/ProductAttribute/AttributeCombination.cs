@@ -5,7 +5,7 @@ using System.Text;
 namespace RUINORERP.Model.ProductAttribute
 {
     /// <summary>
-    /// 属性组合类，包含一组属性值对和对应的产品详情
+    /// 属性组合类, 包含一组属性值对和对应的产品详情
     /// </summary>
     public class AttributeCombination
     {
@@ -28,7 +28,7 @@ namespace RUINORERP.Model.ProductAttribute
         }
 
         /// <summary>
-        /// 将属性组合转换为字符串表示，格式为：属性名称1:属性值名称1,属性名称2:属性值名称2,...
+        /// 将属性组合转换为字符串表示, 格式为：属性名称1:属性值名称1,属性名称2:属性值名称2,...
         /// </summary>
         /// <returns>属性组合的字符串表示</returns>
         public override string ToString()
@@ -47,7 +47,7 @@ namespace RUINORERP.Model.ProductAttribute
             // 移除末尾的逗号
             string result = stringBuilder.ToString().TrimEnd(',');
             
-            // 如果没有属性，返回默认值
+            // 如果没有属性, 返回默认值
             return string.IsNullOrEmpty(result) ? "无属性" : result;
         }
     }

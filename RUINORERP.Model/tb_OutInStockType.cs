@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？
+    /// 出入库类型  非生产领料/退料  借出, 归还  报损报溢？单独处理？
     /// </summary>
     [Serializable()]
     [Description("出入库类型")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("出入库类型  非生产领料/退料  借出，归还  报损报溢？单独处理？tb_OutInStockType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("出入库类型  非生产领料/退料  借出, 归还  报损报溢？单独处理？tb_OutInStockType" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

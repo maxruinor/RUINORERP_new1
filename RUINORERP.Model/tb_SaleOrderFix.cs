@@ -25,7 +25,7 @@ namespace RUINORERP.Model
     public partial class tb_SaleOrder
     {
         /// <summary>
-        /// 重写ToDataContent方法，只记录销售订单的关键数据
+        /// 重写ToDataContent方法, 只记录销售订单的关键数据
         /// </summary>
         /// <returns></returns>
         public override string ToDataContent()
@@ -45,7 +45,7 @@ namespace RUINORERP.Model
                 { nameof(ApprovalResults), ApprovalResults }
             };
 
-            // 如果需要记录明细信息，可以选择性地包含
+            // 如果需要记录明细信息, 可以选择性地包含
             if (tb_SaleOrderDetails != null && tb_SaleOrderDetails.Any())
             {
                 var detailsData = tb_SaleOrderDetails.Select(d => new
@@ -69,7 +69,7 @@ namespace RUINORERP.Model
     public partial class tb_SaleOrderDetail : BaseEntity, ICloneable
     {
         /// <summary>
-        /// 重写ToDataContent方法，只记录销售订单明细的关键数据
+        /// 重写ToDataContent方法, 只记录销售订单明细的关键数据
         /// </summary>
         /// <returns></returns>
         public override string ToDataContent()

@@ -61,7 +61,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
 
 
         /// <summary>
-        /// 重写验证方法，先执行基类验证，再添加子类特有验证
+        /// 重写验证方法, 先执行基类验证, 再添加子类特有验证
         /// </summary>
         /// <returns></returns>
         public override RuleValidationResult Validate()

@@ -254,7 +254,7 @@ namespace RUINORERP.Model
 
         private int _EncryptionMethod = 0;
         /// <summary>
-        /// 加密方法：0-None,1-16进制转换，2-字符串混淆，3-Base62编码
+        /// 加密方法：0-None,1-16进制转换, 2-字符串混淆, 3-Base62编码
         /// </summary>
         [AdvQueryAttribute(ColName = "EncryptionMethod",ColDesc = "加密方法")] 
         [SugarColumn(ColumnDataType = "int", SqlParameterDbType ="Int32",  ColumnName = "EncryptionMethod" , DecimalDigits = 0,IsNullable = false,ColumnDescription = "加密方法" )]

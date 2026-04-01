@@ -1,10 +1,10 @@
 /**
  * 文件: UnifiedStateManager.cs
  * 版本: V4 - 优化版统一状态管理器
- * 说明: 统一状态管理器 - 基于V4版本架构优化，简化日志记录，提升性能
+ * 说明: 统一状态管理器 - 基于V4版本架构优化, 简化日志记录, 提升性能
  * 创建日期: 2024年
  * 作者: RUINOR ERP开发团队
- * 更新日期: 2025-01-12 - V4版本优化，使用EntityStatus和StateTransitionResult
+ * 更新日期: 2025-01-12 - V4版本优化, 使用EntityStatus和StateTransitionResult
  */
 
 using Microsoft.Extensions.Logging;
@@ -21,8 +21,8 @@ namespace RUINORERP.Model.Base.StatusManager
 {
     /// <summary>
     /// 统一状态管理器 - V4优化版
-    /// 基于V4版本架构优化，简化日志记录，提升性能
-    /// 支持MenuItemEnums，实现操作权限检查和UI控件影响
+    /// 基于V4版本架构优化, 简化日志记录, 提升性能
+    /// 支持MenuItemEnums, 实现操作权限检查和UI控件影响
     /// </summary>
     public class UnifiedStateManager : IUnifiedStateManager, IDisposable
     {
@@ -67,7 +67,7 @@ namespace RUINORERP.Model.Base.StatusManager
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 不在构造函数中初始化规则，避免与Autofac冲突
+            // 不在构造函数中初始化规则, 避免与Autofac冲突
             // 规则初始化由GlobalStateInitializer在DI注册时完成
         }
 
@@ -101,7 +101,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (entity.ContainsProperty(typeof(StatementStatus).Name))
                     return typeof(StatementStatus);
 
-                // 实体不包含任何状态属性时，记录警告并返回null
+                // 实体不包含任何状态属性时, 记录警告并返回null
                 return null;
             }
             catch (Exception ex)
@@ -124,18 +124,18 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 return default;
 
-            // 如果没有指定状态类型，则使用泛型参数类型
+            // 如果没有指定状态类型, 则使用泛型参数类型
             if (statusType == null)
                 statusType = typeof(T);
 
             // 获取实体的状态类型
             var currentStatusType =  GetStatusType(entity);
 
-            // 如果指定了状态类型且与实体当前状态类型匹配，直接返回该状态
+            // 如果指定了状态类型且与实体当前状态类型匹配, 直接返回该状态
             if (statusType != null && currentStatusType == statusType)
             {
                 var statusValue = entity.GetPropertyValue(statusType.Name);
-                // 如果状态值是int且状态类型是枚举，则转换为枚举值
+                // 如果状态值是int且状态类型是枚举, 则转换为枚举值
                 if (statusValue is int && statusType.IsEnum)
                 {
                     try
@@ -151,7 +151,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 return statusValue;
             }
 
-            // 如果没有指定状态类型（或类型不匹配），返回当前状态类型的枚举值
+            // 如果没有指定状态类型（或类型不匹配）, 返回当前状态类型的枚举值
             if (currentStatusType != null && currentStatusType.IsEnum)
             {
                 try
@@ -190,7 +190,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 statusType = currentStatusType;
             }
 
-            // 如果指定了状态类型且它是枚举类型，确保返回枚举值
+            // 如果指定了状态类型且它是枚举类型, 确保返回枚举值
             if (statusType != null && statusType.IsEnum)
             {
                 try
@@ -381,11 +381,11 @@ namespace RUINORERP.Model.Base.StatusManager
                     return (StateTransitionResult)cachedItems[0];
                 }
 
-                // 如果源状态为空，允许设置任何状态
+                // 如果源状态为空, 允许设置任何状态
                 if (!fromStatus.HasValue)
                     return StateTransitionResult.Allowed();
 
-                // 如果目标状态为空，不允许转换
+                // 如果目标状态为空, 不允许转换
                 if (!toStatus.HasValue)
                     return StateTransitionResult.Denied("目标状态不能为空");
 
@@ -426,7 +426,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>状态转换结果</returns>
         public async Task<StateTransitionResult> ValidateActionStatusTransitionAsync(ActionStatus fromStatus, ActionStatus? toStatus)
         {
-            // 对于ActionStatus，不做特殊限制，只进行基本验证
+            // 对于ActionStatus, 不做特殊限制, 只进行基本验证
             if (!toStatus.HasValue)
                 return StateTransitionResult.Denied("目标状态不能为空");
 
@@ -458,10 +458,10 @@ namespace RUINORERP.Model.Base.StatusManager
             if (statusType == null)
                 return StateTransitionResult.Failure(null, newStatus, statusType, "状态类型不能为空");
 
-            // 获取旧状态 - 统一使用相同的方法获取，不再对DataStatus特殊处理
-            // GetBusinessStatus方法现在直接返回枚举值，无需额外转换
+            // 获取旧状态 - 统一使用相同的方法获取, 不再对DataStatus特殊处理
+            // GetBusinessStatus方法现在直接返回枚举值, 无需额外转换
             object oldStatus = GetBusinessStatus(entity, statusType);
-            // 直接使用oldStatus，它已经是枚举值（如果状态类型是枚举）
+            // 直接使用oldStatus, 它已经是枚举值（如果状态类型是枚举）
 
             // 检查状态是否实际发生了变更
             if (Equals(oldStatus, newStatus))
@@ -469,20 +469,20 @@ namespace RUINORERP.Model.Base.StatusManager
 
             try
             {
-                // 更新状态 - 统一使用属性名设置，不再对DataStatus特殊处理
+                // 更新状态 - 统一使用属性名设置, 不再对DataStatus特殊处理
                 // 首先尝试使用类型名称查找属性
                 var statusProperty = entity.GetType().GetProperty(statusType.Name);
 
-                // 如果找不到，尝试使用"DataStatus"作为属性名（兼容现有的实体）
+                // 如果找不到, 尝试使用"DataStatus"作为属性名（兼容现有的实体）
                 if (statusProperty == null || !statusProperty.CanWrite)
                 {
                     statusProperty = entity.GetType().GetProperty("DataStatus");
                 }
 
-                // 如果找到可写的属性，则设置值
+                // 如果找到可写的属性, 则设置值
                 if (statusProperty != null && statusProperty.CanWrite)
                 {
-                    // 确保设置的值是int类型，将枚举转换为int
+                    // 确保设置的值是int类型, 将枚举转换为int
                     object valueToSet = newStatus;
                     if (newStatus.GetType().IsEnum)
                     {
@@ -529,7 +529,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 // 更新状态
                 entity.ActionStatus = newStatus;
 
-                // 优化事件触发：单独异常处理，避免事件处理器异常影响核心功能
+                // 优化事件触发：单独异常处理, 避免事件处理器异常影响核心功能
                 try
                 {
                     // 触发状态变更事件
@@ -537,7 +537,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 }
                 catch (Exception eventEx) when (_logger != null)
                 {
-                    // 记录事件触发异常，但不影响状态更新结果
+                    // 记录事件触发异常, 但不影响状态更新结果
                     _logger.LogError(eventEx, "触发操作状态变更事件时发生异常");
                 }
 
@@ -561,7 +561,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <param name="userId">用户ID</param>
         public void TriggerStatusChangedEvent(BaseEntity entity, Type statusType, object oldStatus, object newStatus, string reason = null, string userId = null)
         {
-            // 快速检查是否有订阅者，避免不必要的对象创建
+            // 快速检查是否有订阅者, 避免不必要的对象创建
             if (StatusChanged == null) return;
 
             try
@@ -575,7 +575,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     reason,
                     userId);
 
-                // 获取事件委托副本，避免多线程情况下的空引用问题
+                // 获取事件委托副本, 避免多线程情况下的空引用问题
                 var statusChangedEvent = StatusChanged;
 
                 // 触发事件
@@ -583,7 +583,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
             catch (Exception ex) when (_logger != null)
             {
-                // 记录错误信息，但不中断程序流程
+                // 记录错误信息, 但不中断程序流程
                 _logger.LogError(ex, "触发状态变更事件时发生错误");
             }
         }
@@ -692,7 +692,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <summary>
         /// 通过UI操作类型设置实体状态（通用方法）
         /// 支持提交、审核、反审等所有预定义的UI操作
-        /// 这是一个简化的通用接口，将UI操作自动映射到具体的状态值
+        /// 这是一个简化的通用接口, 将UI操作自动映射到具体的状态值
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型（提交、审核、反审等）</param>
@@ -717,7 +717,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (targetStatus == null)
                     return Task.FromResult(StateTransitionResult.Denied($"无法映射操作类型 '{action}' 到状态值"));
 
-                // 如果目标状态为当前状态，返回提示
+                // 如果目标状态为当前状态, 返回提示
                 if (Equals(currentStatus, targetStatus))
                     return Task.FromResult(StateTransitionResult.Allowed()); // 无需变更
 
@@ -759,7 +759,7 @@ namespace RUINORERP.Model.Base.StatusManager
             if (entity == null)
                 return (false, "实体不能为空");
 
-            // 遵循终态不可修改原则：如果是终态，所有修改操作都不允许
+            // 遵循终态不可修改原则：如果是终态, 所有修改操作都不允许
             if (IsFinalStatus(entity))
             {
                 // 终态只允许查询和打印等只读操作
@@ -770,7 +770,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 }
                 else
                 {
-                    return (false, $"单据已达到终态，不允许执行{action}操作");
+                    return (false, $"单据已达到终态, 不允许执行{action}操作");
                 }
             }
 
@@ -778,7 +778,7 @@ namespace RUINORERP.Model.Base.StatusManager
             var statusType = GetStatusType(entity);
             var currentStatus = GetBusinessStatus(entity, statusType);
 
-            // 首先判断操作类型，采用不同的验证策略
+            // 首先判断操作类型, 采用不同的验证策略
             if (GlobalStateRulesManager.IsStateTransitionAction(action))
             {
                 // 状态转换类操作：需要验证状态转换的合法性
@@ -798,7 +798,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 验证无目标状态操作权限（修改、删除、保存等）
-        /// 仅基于当前状态和全局规则进行判断，不涉及状态转换验证
+        /// 仅基于当前状态和全局规则进行判断, 不涉及状态转换验证
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
@@ -828,7 +828,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
                 if (canExecute)
                 {
-                    // 对于修改操作，还需要检查提交后修改规则11
+                    // 对于修改操作, 还需要检查提交后修改规则11
                     if (action == MenuItemEnums.修改)
                     {
                         var modifyCheck = CanModifyWithMessage(entity);
@@ -851,7 +851,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 验证状态转换类操作权限（提交、审核、反审等）
-        /// 需要验证状态转换的合法性，并获取相应的执行条件说明
+        /// 需要验证状态转换的合法性, 并获取相应的执行条件说明
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="action">操作类型</param>
@@ -870,7 +870,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (targetStatus == null)
                     return (false, $"无法映射操作类型 '{action}' 到状态值");
                 
-                // 如果目标状态为当前状态，不允许重复执行该操作
+                // 如果目标状态为当前状态, 不允许重复执行该操作
                 if (Equals(currentStatus, targetStatus))
                 {
                     var statusName = currentStatus?.ToString() ?? "未知状态";
@@ -944,20 +944,20 @@ namespace RUINORERP.Model.Base.StatusManager
             // 获取当前状态
             var currentStatus = GetBusinessStatus(entity, statusType);
 
-            // 修改操作特殊处理：修改操作不改变状态，只要不是终态状态就应该允许
+            // 修改操作特殊处理：修改操作不改变状态, 只要不是终态状态就应该允许
             if (action == MenuItemEnums.修改)
             {
-                // 检查是否为终态状态，终态不允许修改
+                // 检查是否为终态状态, 终态不允许修改
                 bool isFinalStatus = IsFinalStatus(entity);
                 return !isFinalStatus;
             }
 
-            // 获取目标状态,只有提交，审核，反审核，结案，反结案这些才有目标状态。因为他们才是会改变状态的操作。其它没有目标状态！
+            // 获取目标状态,只有提交, 审核, 反审核, 结案, 反结案这些才有目标状态。因为他们才是会改变状态的操作。其它没有目标状态！
             var targetStatus = GlobalStateRulesManager.MapActionToStatus(entity, action);
             if (targetStatus == null)
                 return false;
 
-            // 如果目标状态为当前状态，返回false
+            // 如果目标状态为当前状态, 返回false
             if (Equals(currentStatus, targetStatus))
                 return false;
 
@@ -1065,7 +1065,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 获取UI控件状态 - 统一接口版本
-        /// 使用GlobalStateRulesManager的公共方法获取按钮状态，避免直接访问内部字段
+        /// 使用GlobalStateRulesManager的公共方法获取按钮状态, 避免直接访问内部字段
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <returns>UI控件状态</returns>
@@ -1090,7 +1090,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     return result;
                 }
                 
-                // 使用GlobalStateRulesManager的公共方法获取按钮规则，避免直接访问UIButtonRules
+                // 使用GlobalStateRulesManager的公共方法获取按钮规则, 避免直接访问UIButtonRules
                 var buttonStates = GlobalStateRulesManager.Instance.GetButtonRules(statusType, businessStatus);
                 
                 // 复制按钮状态到结果字典
@@ -1126,7 +1126,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 {
                     return state;
                 }
-                return false; // 默认禁用，可见
+                return false; // 默认禁用, 可见
             }
             catch (Exception ex) when (_logger != null)
             {
@@ -1194,7 +1194,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     return statementStatus == StatementStatus.全部结清 || statementStatus == StatementStatus.已作废;
                 }
 
-                // 默认情况下，不是终态
+                // 默认情况下, 不是终态
                 return false;
             }
             catch (Exception ex)
@@ -1259,7 +1259,7 @@ namespace RUINORERP.Model.Base.StatusManager
                     return statementStatus == StatementStatus.确认 || statementStatus == StatementStatus.全部结清;
                 }
 
-                // 默认情况下，不是审核后状态
+                // 默认情况下, 不是审核后状态
                 return false;
             }
             catch (Exception ex)
@@ -1319,7 +1319,7 @@ namespace RUINORERP.Model.Base.StatusManager
         }
 
         /// <summary>
-        /// 判断指定实体是否可以修改，并返回详细消息
+        /// 判断指定实体是否可以修改, 并返回详细消息
         /// </summary>
         /// <typeparam name="TEntity">实体类型</typeparam>
         /// <param name="entity">实体对象</param>
@@ -1382,7 +1382,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录状态变更操作日志
-        /// 用于记录所有关键状态变更，便于审计追踪
+        /// 用于记录所有关键状态变更, 便于审计追踪
         /// </summary>
         /// <typeparam name="T">状态类型</typeparam>
         /// <param name="entityId">实体ID</param>
@@ -1399,7 +1399,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 记录关键操作
-        /// 用于记录非状态变更的关键操作，如删除、打印等
+        /// 用于记录非状态变更的关键操作, 如删除、打印等
         /// </summary>
         /// <param name="entityId">实体ID</param>
         /// <param name="entityType">实体类型名称</param>
@@ -1430,7 +1430,7 @@ namespace RUINORERP.Model.Base.StatusManager
         /// <returns>是否允许修改</returns>
         public bool AllowModifyAfterSubmit(bool isSubmittedStatus)
         {
-            // 如果不是已提交状态，始终允许修改
+            // 如果不是已提交状态, 始终允许修改
             if (!isSubmittedStatus)
                 return true;
 
@@ -1442,7 +1442,7 @@ namespace RUINORERP.Model.Base.StatusManager
 
         /// <summary>
         /// 处理审核驳回操作
-        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿，财务状态转为草稿）
+        /// 根据实体状态类型自动转换为驳回后的状态（DataStatus转为草稿, 财务状态转为草稿）
         /// </summary>
         /// <param name="entity">实体对象</param>
         /// <param name="reason">驳回原因</param>
@@ -1486,7 +1486,7 @@ namespace RUINORERP.Model.Base.StatusManager
             }
             else
             {
-                // 未知状态类型，尝试通过反射获取"草稿"状态值
+                // 未知状态类型, 尝试通过反射获取"草稿"状态值
                 var draftStatusValue = statusType.GetEnumValues().Cast<object>()
                     .FirstOrDefault(v => v.ToString().Contains("草稿") || v.ToString().Equals("Draft", StringComparison.OrdinalIgnoreCase));
                 

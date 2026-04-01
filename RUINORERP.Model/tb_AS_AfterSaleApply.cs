@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 售后申请单 -登记，评估，清单，确认。目标是维修翻新
+    /// 售后申请单 -登记, 评估, 清单, 确认。目标是维修翻新
     /// </summary>
     [Serializable()]
-    [Description("售后申请单 -登记，评估，清单，确认。目标是维修翻新")]
+    [Description("售后申请单 -登记, 评估, 清单, 确认。目标是维修翻新")]
     [SugarTable("tb_AS_AfterSaleApply")]
     public partial class tb_AS_AfterSaleApply: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("售后申请单 -登记，评估，清单，确认。目标是维修翻新tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("售后申请单 -登记, 评估, 清单, 确认。目标是维修翻新tb_AS_AfterSaleApply" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

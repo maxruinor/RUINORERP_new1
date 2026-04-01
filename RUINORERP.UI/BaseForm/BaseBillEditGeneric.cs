@@ -459,7 +459,7 @@ namespace RUINORERP.UI.BaseForm
 
                 // 5. 字段显示权限控制
                 UIHelper.ControlForeignFieldInvisible<T>(this, false);
-        
+
             }
             catch (Exception ex)
             {
@@ -2946,7 +2946,7 @@ namespace RUINORERP.UI.BaseForm
                             // 实体没有变化但有图片需要同步，直接调用同步图片方法1
                             MainForm.Instance.uclog.AddLog("单据数据未变更，但检测到有图片需要同步");
                             var syncResults = await SyncImagesIfNeeded();
-                            
+
                             // 检查是否有图片同步成功
                             bool hasSyncedImages = syncResults.Any();
                             rsSave = hasSyncedImages; // 有图片同步成功视为保存成功
@@ -3723,11 +3723,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     // 结案失败时弹出明确的错误提示
                     string errorMsg = string.IsNullOrEmpty(rs.ErrorMsg) ? "未知错误" : rs.ErrorMsg;
-                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！", 
-                        "结案失败", 
-                        Krypton.Toolkit.KryptonMessageBoxButtons.OK, 
+                    KryptonMessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！",
+                        "结案失败",
+                        Krypton.Toolkit.KryptonMessageBoxButtons.OK,
                         Krypton.Toolkit.KryptonMessageBoxIcon.Error);
-                    
+
                     MainForm.Instance.PrintInfoLog($"{ae.BillNo}结案操作失败,原因是{rs.ErrorMsg},如果无法解决，请联系管理员！", Color.Red);
                     return false;
                 }
@@ -4207,6 +4207,224 @@ namespace RUINORERP.UI.BaseForm
             return reviewResult;
         }
 
+        protected virtual async Task<bool> AntiConfirmExecution()
+        {
+            await Task.Delay(0);
+            await Task.Delay(0);
+
+            bool rs = false;
+            if (EditEntity == null)
+            {
+                return rs;
+            }
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid > 0)
+            {
+                //判断是否锁定
+                var lockStatusReverse = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+                if (!lockStatusReverse.CanPerformCriticalOperations)
+                {
+                    MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
+                    return rs;
+                }
+            }
+
+            // 保存原始状态，用于失败时恢复
+            object originalStatus = null;
+            if (StateManager != null && EditEntity is BaseEntity)
+            {
+                originalStatus = StateManager.GetBusinessStatus(EditEntity as BaseEntity);
+            }
+
+            //使用StateManager检查是否可以执行
+            var (canReReview, reReviewMessage) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.反执行);
+            if (!canReReview)
+            {
+                KryptonMessageBox.Show(reReviewMessage, "反执行", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Warning);
+                return rs;
+            }
+
+            RevertCommand command = new RevertCommand();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果取消执行，内存中执行核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<T>(EditEntity, oldobj);
+                // 恢复原始状态
+                if (StateManager != null && EditEntity is BaseEntity && originalStatus != null)
+                {
+                    var statusType = StateManager.GetStatusType(EditEntity as BaseEntity);
+                    if (statusType != null)
+                    {
+                        ReflectionHelper.SetPropertyValue(EditEntity, statusType.Name, originalStatus);
+                    }
+                }
+            };
+
+            ReturnResults<T> rmr = new ReturnResults<T>();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+            //执行前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再执行。后面再优化为缓存处理锁单来不用查数据库刷新。
+            //锁定功能全部好后是不是可以去掉？
+            BaseEntity pkentity = (editEntity as T) as BaseEntity;
+
+            // 保存旧实体的状态订阅引用
+            BaseEntity oldEntity = EditEntity as BaseEntity;
+
+            // 重新查询实体数据
+            EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+
+            // 确保新实体有状态变更事件订阅
+            // 关键修复：重新查询实体后，StatusChanged事件订阅会丢失，需要重新订阅
+            if (EditEntity is BaseEntity newEntity)
+            {
+                HandleEntityStatusSubscription(newEntity, true);
+            }
+
+            rmr = await ctr.AntiConfirmExecutionAsync(EditEntity);
+            if (rmr.Succeeded)
+            {
+                BusinessHelper.Instance.ApproverEntity(EditEntity);
+                rs = true;
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
+
+                // 统一状态同步 - 执行操作
+                var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
+                if (updateData != null)
+                {
+                    await SyncTodoStatusAsync(updateData, "执行");
+                }
+                //这里推送到审核，启动工作流
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("执行", EditEntity, $"执行");
+            }
+            else
+            {
+                //审核失败 要恢复之前的值（包括状态）
+                command.Undo();
+                rs = false;
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("执行失败", EditEntity, $"执行原因{rmr.ErrorMsg}");
+            }
+
+            EditEntity.AcceptChanges();
+            return rs;
+        }
+
+
+        /// <summary>
+        /// 确认执行 - 执行业务单据的具体业务操作（如库存变动、财务记账等）
+        /// 该方法作为业务单据执行具体操作的统一入口，子类可重写实现具体业务逻辑
+        /// </summary>
+        /// <returns>执行结果，true表示执行成功，false表示执行失败</returns>
+        protected virtual async Task<bool> ConfirmExecution()
+        {
+            await Task.Delay(0);
+
+            bool rs = false;
+            if (EditEntity == null)
+            {
+                return rs;
+            }
+            string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+            long pkid = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+            if (pkid > 0)
+            {
+                //判断是否锁定
+                var lockStatusReverse = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+                if (!lockStatusReverse.CanPerformCriticalOperations)
+                {
+                    MainForm.Instance.uclog.AddLog($"单据已被锁定，请刷新后再试");
+                    return rs;
+                }
+            }
+
+            // 保存原始状态，用于失败时恢复
+            object originalStatus = null;
+            if (StateManager != null && EditEntity is BaseEntity)
+            {
+                originalStatus = StateManager.GetBusinessStatus(EditEntity as BaseEntity);
+            }
+
+            //使用StateManager检查是否可以执行
+            var (canReReview, reReviewMessage) = StateManager.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.执行);
+            if (!canReReview)
+            {
+                KryptonMessageBox.Show(reReviewMessage, "执行", Krypton.Toolkit.KryptonMessageBoxButtons.OK, Krypton.Toolkit.KryptonMessageBoxIcon.Warning);
+                return rs;
+            }
+
+            RevertCommand command = new RevertCommand();
+            //缓存当前编辑的对象。如果撤销就回原来的值
+            T oldobj = CloneHelper.DeepCloneObject_maxnew<T>(EditEntity);
+            command.UndoOperation = delegate ()
+            {
+                //Undo操作会执行到的代码 意思是如果取消执行，内存中执行核的数据要变为空白（之前的样子）
+                CloneHelper.SetValues<T>(EditEntity, oldobj);
+                // 恢复原始状态
+                if (StateManager != null && EditEntity is BaseEntity && originalStatus != null)
+                {
+                    var statusType = StateManager.GetStatusType(EditEntity as BaseEntity);
+                    if (statusType != null)
+                    {
+                        ReflectionHelper.SetPropertyValue(EditEntity, statusType.Name, originalStatus);
+                    }
+                }
+            };
+
+            ReturnResults<T> rmr = new ReturnResults<T>();
+            BaseController<T> ctr = Startup.GetFromFacByName<BaseController<T>>(typeof(T).Name + "Controller");
+
+            //执行前 刷新最新数据才能判断 比方销售订单 没有关掉当前UI时。已经出库。再执行。后面再优化为缓存处理锁单来不用查数据库刷新。
+            //锁定功能全部好后是不是可以去掉？
+            BaseEntity pkentity = (editEntity as T) as BaseEntity;
+
+            // 保存旧实体的状态订阅引用
+            BaseEntity oldEntity = EditEntity as BaseEntity;
+
+            // 重新查询实体数据
+            EditEntity = await ctr.BaseQueryByIdNavAsync(pkentity.PrimaryKeyID) as T;
+
+            // 确保新实体有状态变更事件订阅
+            // 关键修复：重新查询实体后，StatusChanged事件订阅会丢失，需要重新订阅
+            if (EditEntity is BaseEntity newEntity)
+            {
+                HandleEntityStatusSubscription(newEntity, true);
+            }
+
+            rmr = await ctr.ConfirmExecutionAsync(EditEntity);
+            if (rmr.Succeeded)
+            {
+                BusinessHelper.Instance.ApproverEntity(EditEntity);
+                rs = true;
+                var EntityInfo = EntityMappingHelper.GetEntityInfo<T>();
+
+                string billNo = EditEntity.GetPropertyValue(EntityInfo.NoField).ToString();
+
+                // 统一状态同步 - 执行操作
+                var updateData = ConvertToTodoUpdate(rmr.ReturnObject as T, TodoUpdateType.StatusChanged);
+                if (updateData != null)
+                {
+                    await SyncTodoStatusAsync(updateData, "执行");
+                }
+                //这里推送到审核，启动工作流
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("执行", EditEntity, $"执行");
+            }
+            else
+            {
+                //审核失败 要恢复之前的值（包括状态）
+                command.Undo();
+                rs = false;
+                await MainForm.Instance.AuditLogHelper.CreateAuditLog<T>("执行失败", EditEntity, $"执行原因{rmr.ErrorMsg}");
+            }
+
+            EditEntity.AcceptChanges();
+            return rs;
+
+        }
+
         /// <summary>
         /// 反审核 与审核相反
         /// </summary>
@@ -4248,9 +4466,7 @@ namespace RUINORERP.UI.BaseForm
             }
             ae.ApprovalResults = true;
 
-
             CommonUI.frmReApproval frm = new CommonUI.frmReApproval();
-
 
             ae.BillID = pkid;
             CommBillData cbd = EntityMappingHelper.GetBillData<T>(EditEntity);
@@ -6798,12 +7014,12 @@ namespace RUINORERP.UI.BaseForm
 
                 // 优化：添加本地缓存检查，避免不必要的网络请求
                 var lockInfo = await GetCachedLockInfoAsync(billId);
-                
+
                 if (lockInfo == null || lockInfo.IsExpired)
                 {
                     // 缓存过期或不存在，查询服务器
                     lockInfo = await BillLockHelper.CheckBillLockStatusAsync(billId, CurMenuInfo.MenuID, logger);
-                    
+
                     // 更新缓存
                     if (lockInfo != null)
                     {
@@ -6871,7 +7087,7 @@ namespace RUINORERP.UI.BaseForm
         {
             private readonly Dictionary<long, DateTime> _lastDetectionTimes = new Dictionary<long, DateTime>();
             private readonly TimeSpan _minDetectionInterval = TimeSpan.FromSeconds(3); // 最小检测间隔3秒
-            
+
             /// <summary>
             /// 检查是否需要执行状态检测
             /// </summary>
@@ -6883,11 +7099,11 @@ namespace RUINORERP.UI.BaseForm
                 {
                     return true;
                 }
-                
+
                 var lastTime = _lastDetectionTimes[billId];
                 return DateTime.Now - lastTime > _minDetectionInterval;
             }
-            
+
             /// <summary>
             /// 记录检测时间
             /// </summary>
@@ -6896,7 +7112,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 _lastDetectionTimes[billId] = DateTime.Now;
             }
-            
+
             /// <summary>
             /// 清理过期的检测记录
             /// </summary>
@@ -6907,7 +7123,7 @@ namespace RUINORERP.UI.BaseForm
                     .Where(kvp => kvp.Value < expiredTime)
                     .Select(kvp => kvp.Key)
                     .ToList();
-                    
+
                 foreach (var key in expiredKeys)
                 {
                     _lastDetectionTimes.Remove(key);
@@ -6985,7 +7201,7 @@ namespace RUINORERP.UI.BaseForm
             {
                 logger?.LogDebug(ex, "获取缓存锁信息失败: BillID={BillId}", billId);
             }
-            
+
             return null;
         }
 

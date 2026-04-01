@@ -56,7 +56,7 @@ namespace RUINORERP.Model
     }
 
     [Serializable()]
-    public class BaseEntity : INotifyPropertyChanged//, IDataErrorInfo//, IStatusProvider - 移除IDataErrorInfo接口，避免SqlSugar绑定索引器失败
+    public class BaseEntity : INotifyPropertyChanged//, IDataErrorInfo//, IStatusProvider - 移除IDataErrorInfo接口, 避免SqlSugar绑定索引器失败
     {
         #region 属性变更追踪
 
@@ -76,7 +76,7 @@ namespace RUINORERP.Model
 
 
 
-        // 获取变更详情（属性名，原始值，新值）
+        // 获取变更详情（属性名, 原始值, 新值）
         public IEnumerable<(string Name, object Original, object Current)> GetPropertyChanges()
         {
             foreach (var kvp in _changedProperties)
@@ -124,7 +124,7 @@ namespace RUINORERP.Model
         /// 检查特定属性是否有变更
         /// </summary>
         /// <param name="propertyName">属性名称</param>
-        /// <returns>如果属性有变更返回true，否则返回false</returns>
+        /// <returns>如果属性有变更返回true, 否则返回false</returns>
         public bool HasPropertyChanged(string propertyName)
         {
             return _changedProperties.Keys.Contains(propertyName);
@@ -171,8 +171,8 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 状态变更处理（增强版）
-        /// 提供安全、可靠的事件触发机制，确保状态变更通知能够正确传递给所有订阅者
-        /// 关键优化：隔离异常，防止单个订阅者异常影响整体事件传递
+        /// 提供安全、可靠的事件触发机制, 确保状态变更通知能够正确传递给所有订阅者
+        /// 关键优化：隔离异常, 防止单个订阅者异常影响整体事件传递
         /// </summary>
         /// <param name="e">状态转换事件参数</param>
         protected virtual void OnStatusChanged(StateTransitionEventArgs e)
@@ -189,7 +189,7 @@ namespace RUINORERP.Model
 
             try
             {
-                // 优化：获取所有订阅者的委托列表，并逐个安全触发
+                // 优化：获取所有订阅者的委托列表, 并逐个安全触发
                 // 这种方式可以防止某个订阅者抛出异常影响其他订阅者
                 Delegate[] subscribers = StatusChanged.GetInvocationList();
                 foreach (Delegate subscriber in subscribers)
@@ -204,13 +204,13 @@ namespace RUINORERP.Model
                         // 隔离单个订阅者的异常
                         Debug.WriteLine($"状态变更事件订阅者异常: {ex.InnerException?.Message ?? ex.Message}");
                         Debug.WriteLine($"订阅者类型: {subscriber.Method.DeclaringType?.Name}.{subscriber.Method.Name}");
-                        // 继续执行，不影响其他订阅者
+                        // 继续执行, 不影响其他订阅者
                     }
                 }
             }
             catch (Exception ex)
             {
-                // 捕获并记录其他可能的异常，但不中断执行流程
+                // 捕获并记录其他可能的异常, 但不中断执行流程
                 Debug.WriteLine($"触发状态变更事件时发生系统错误: {ex.Message}");
                 Debug.WriteLine($"错误堆栈: {ex.StackTrace}");
             }
@@ -219,7 +219,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// 状态变更事件触发方法（增强版）
         /// 提供安全、高效、可靠的方式触发状态变更事件
-        /// 确保任何状态变更都能被正确处理，无论是通过直接属性修改还是状态管理器操作
+        /// 确保任何状态变更都能被正确处理, 无论是通过直接属性修改还是状态管理器操作
         /// </summary>
         /// <param name="statusType">状态类型</param>
         /// <param name="oldStatus">旧状态值</param>
@@ -234,7 +234,7 @@ namespace RUINORERP.Model
                 return;
             }
 
-            // 增强版状态变更检测，避免不必要的事件触发
+            // 增强版状态变更检测, 避免不必要的事件触发
             bool isChanged;
             if (oldStatus == null && newStatus == null)
             {
@@ -242,20 +242,20 @@ namespace RUINORERP.Model
             }
             else if (oldStatus == null || newStatus == null)
             {
-                isChanged = true; // 一个为null另一个不为null，视为变更
+                isChanged = true; // 一个为null另一个不为null, 视为变更
             }
             else
             {
                 isChanged = !oldStatus.Equals(newStatus); // 值比较
             }
 
-            // 无变更则直接返回，提高性能
+            // 无变更则直接返回, 提高性能
             if (!isChanged)
                 return;
 
             DateTime startTime = DateTime.Now;
 
-            // 设置防重入标志，防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
+            // 设置防重入标志, 防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
             _isProcessingStatusChange = true;
             
             try
@@ -269,7 +269,7 @@ namespace RUINORERP.Model
                     reason,
                     userId);
 
-                // 检查是否有订阅者，避免不必要的事件触发开销
+                // 检查是否有订阅者, 避免不必要的事件触发开销
                 if (StatusChanged != null)
                 {
                     // 直接调用OnStatusChanged处理状态变更
@@ -287,16 +287,16 @@ namespace RUINORERP.Model
             }
             catch (Exception ex)
             {
-                // 增强异常处理，详细记录错误信息
+                // 增强异常处理, 详细记录错误信息
                 Debug.WriteLine($"状态变更触发错误: {ex.Message}");
                 Debug.WriteLine($"异常堆栈: {ex.StackTrace}");
                 Debug.WriteLine($"实体类型: {this.GetType().Name}, 状态类型: {statusType.Name}");
 
-                // 确保异常不会传播，不影响主流程执行
+                // 确保异常不会传播, 不影响主流程执行
             }
             finally
             {
-                // 无论处理成功或失败，都必须清除防重入标志
+                // 无论处理成功或失败, 都必须清除防重入标志
                 _isProcessingStatusChange = false;
             }
         }
@@ -326,7 +326,7 @@ namespace RUINORERP.Model
 
 
         /// <summary>
-        /// 开始业务操作，记录当前状态为原始值
+        /// 开始业务操作, 记录当前状态为原始值
         /// </summary>
         public void BeginOperation()
         {
@@ -337,7 +337,7 @@ namespace RUINORERP.Model
         }
 
         /// <summary>
-        /// 接受变更，将当前值设为新的原始值（保存后调用）
+        /// 接受变更, 将当前值设为新的原始值（保存后调用）
         /// 在保存数据后必须调用AcceptChanges
         /// </summary>
         public void AcceptChanges()
@@ -499,7 +499,7 @@ namespace RUINORERP.Model
                 var type = this.GetType();
                 return _fieldNameListCache.GetOrAdd(type, t => GenerateFieldNameList(t));
             }
-            set { /* 如果需要子类覆盖，可以在这里实现 */ }
+            set { /* 如果需要子类覆盖, 可以在这里实现 */ }
         }
 
 
@@ -514,7 +514,7 @@ namespace RUINORERP.Model
 
         /// <summary>
         /// 生成字段名称列表（优化版本）
-        /// 排除导航属性和忽略字段，提高性能
+        /// 排除导航属性和忽略字段, 提高性能
         /// </summary>
         /// <param name="type">实体类型</param>
         /// <returns>字段名称和描述字典</returns>
@@ -527,7 +527,7 @@ namespace RUINORERP.Model
             
             fieldNameList = new ConcurrentDictionary<string, string>();
             
-            // 优化：先获取所有属性，然后过滤排除导航属性
+            // 优化：先获取所有属性, 然后过滤排除导航属性
             var properties = type.GetProperties()
                 .Where(p => !IsNavigationProperty(p))
                 .ToList();
@@ -609,7 +609,7 @@ namespace RUINORERP.Model
         /// <returns>表名</returns>
         private static string GetTableName(Type type)
         {
-            // 获取SugarTable特性，如果存在则使用指定的表名，否则使用类型名
+            // 获取SugarTable特性, 如果存在则使用指定的表名, 否则使用类型名
             var sugarTable = type.GetCustomAttribute<SugarTable>(false);
             return sugarTable?.TableName ?? type.Name;
         }
@@ -618,7 +618,7 @@ namespace RUINORERP.Model
         /// 生成实体类型的外键关系信息列表
         /// </summary>
         /// <param name="type">实体类型</param>
-        /// <returns>外键关系信息字典，键为属性名</returns>
+        /// <returns>外键关系信息字典, 键为属性名</returns>
         private static Dictionary<string, FKRelationInfo> GenerateFKRelations(Type type)
         {
             var relations = new Dictionary<string, FKRelationInfo>();
@@ -639,7 +639,7 @@ namespace RUINORERP.Model
                         CmbMultiChoice = fkAttr.CmbMultiChoice
                     };
 
-                    // 使用属性名作为字典键，确保不会重复添加
+                    // 使用属性名作为字典键, 确保不会重复添加
                     if (!relations.ContainsKey(property.Name))
                     {
                         relations.Add(property.Name, relationInfo);
@@ -654,20 +654,20 @@ namespace RUINORERP.Model
         /// 根据属性名获取外键关系信息
         /// </summary>
         /// <param name="propertyName">属性名</param>
-        /// <returns>外键关系信息，如果不存在则返回null</returns>
+        /// <returns>外键关系信息, 如果不存在则返回null</returns>
         public virtual FKRelationInfo GetFKRelationByPropertyName(string propertyName)
         {
             var type = this.GetType();
             var tableName = GetTableName(type);
 
-            // 直接从字典中查找，提高性能
+            // 直接从字典中查找, 提高性能
             if (_fkRelationsByTableName.TryGetValue(tableName, out var relations))
             {
                 relations.TryGetValue(propertyName, out var relationInfo);
                 return relationInfo;
             }
 
-            // 如果缓存中没有，则生成并查找
+            // 如果缓存中没有, 则生成并查找
             var generatedRelations = GenerateFKRelations(type);
             _fkRelationsByTableName[tableName] = generatedRelations;
 
@@ -691,7 +691,7 @@ namespace RUINORERP.Model
                 return relations.Values.Where(r => r.FKTableName == tableName).ToList();
             }
 
-            // 如果缓存中没有，则生成并筛选
+            // 如果缓存中没有, 则生成并筛选
             var generatedRelations = GenerateFKRelations(this.GetType());
             _fkRelationsByTableName[entityTypeName] = generatedRelations;
 
@@ -722,8 +722,8 @@ namespace RUINORERP.Model
 
 
         /// <summary>
-        /// 用于转入单时明细是否选中的逻辑，下面的属性后面优化
-        /// 默认不显示，忽略
+        /// 用于转入单时明细是否选中的逻辑, 下面的属性后面优化
+        /// 默认不显示, 忽略
         /// </summary>
         //[SugarColumn(IsIgnore = true, ColumnDescription = "选择")]
         [SugarColumn(IsIgnore = true)]
@@ -789,7 +789,7 @@ namespace RUINORERP.Model
         /// <summary>
         /// Suppress禁止的意思。 
         /// 禁止通知属性已更改
-        /// 默认值为false ，是支持属性更改通知
+        /// 默认值为false , 是支持属性更改通知
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -800,14 +800,14 @@ namespace RUINORERP.Model
         /// <param name="propertyName">属性名</param>
         /// <param name="oldValue">旧值</param>
         /// <param name="newValue">新值</param>
-        // 防重入标志，用于防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
+        // 防重入标志, 用于防止状态变更事件处理过程中再次触发属性变更通知导致的循环调用
         private bool _isProcessingStatusChange = false;
         
         protected virtual void OnPropertyChanged(string propertyName, object oldValue = null, object newValue = null)
         {
             try
             {
-                // 如果正在处理状态变更且触发源是PropertyChanged事件，则直接返回以避免循环调用
+                // 如果正在处理状态变更且触发源是PropertyChanged事件, 则直接返回以避免循环调用
                 if (_isProcessingStatusChange && this.PropertyChanged != null)
                 {
                     return;
@@ -825,10 +825,10 @@ namespace RUINORERP.Model
                     this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
                 }
 
-                // 对于状态属性，只有当值确实发生变化时才触发状态变更通知
+                // 对于状态属性, 只有当值确实发生变化时才触发状态变更通知
                 if (isStatusProperty)
                 {
-                    // 检查值是否实际发生变化，避免重复触发
+                    // 检查值是否实际发生变化, 避免重复触发
                     bool valueChanged = false;
                     if (oldValue == null && newValue == null)
                     {
@@ -851,7 +851,7 @@ namespace RUINORERP.Model
             }
             catch (Exception ex)
             {
-                // 记录异常但不抛出，避免影响主业务流程
+                // 记录异常但不抛出, 避免影响主业务流程
                 System.Diagnostics.Debug.WriteLine($"属性变更通知异常: {ex.Message}");
             }
         }
@@ -862,7 +862,7 @@ namespace RUINORERP.Model
         }
 
         /// <summary>
-        /// 如果没有其他的业务逻辑，对 lambda 表达式比较熟悉的同学可以考虑用以下方法实现属性名称传递 
+        /// 如果没有其他的业务逻辑, 对 lambda 表达式比较熟悉的同学可以考虑用以下方法实现属性名称传递 
         ///  SetProperty(ref _TypeName, value, () => this.TypeName);
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -887,7 +887,7 @@ namespace RUINORERP.Model
             T oldValue = propField;
             propField = value;
 
-            // 仅调用一次完整的属性变更通知，包含旧值和新值信息
+            // 仅调用一次完整的属性变更通知, 包含旧值和新值信息
             this.OnPropertyChanged(propName, oldValue, value);
             HasChanged = true;
         }
@@ -908,14 +908,14 @@ namespace RUINORERP.Model
             T oldValue = storage;
             storage = value;
             
-            // 添加propertyName空值检查，防止反射调用时抛出异常
+            // 添加propertyName空值检查, 防止反射调用时抛出异常
             if (!string.IsNullOrEmpty(propertyName))
             {
                 // 简化变更记录逻辑
                 if (_changedProperties.TryGetValue(propertyName, out var record))
                 {
                     record.CurrentValue = value;
-                    // 若值变回原始值，移除变更记录
+                    // 若值变回原始值, 移除变更记录
                     if (object.Equals(record.OriginalValue, value))
                     {
                         _changedProperties.TryRemove(propertyName, out _);
@@ -1003,7 +1003,7 @@ namespace RUINORERP.Model
 
 
         private ActionStatus _ActionStatus;
-        // 状态变更计数，用于性能监控和调试
+        // 状态变更计数, 用于性能监控和调试
         private int _statusChangeCount;
 
 
@@ -1013,9 +1013,9 @@ namespace RUINORERP.Model
         /// 增强版说明：
         /// 1. 确保任何状态变更都能触发完整的事件通知链
         /// 2. 统一状态变更事件和属性变更事件的触发机制
-        /// 3. 优化事件触发顺序，确保UI能正确响应所有状态变更
-        /// 4. 重要：无论状态变更来自直接属性修改还是通过状态管理器，都能触发相同的事件通知
-        /// 5. 操作状态变更不会将实体标记为HasChanged，因为它只表示UI操作意图而非实际数据变更
+        /// 3. 优化事件触发顺序, 确保UI能正确响应所有状态变更
+        /// 4. 重要：无论状态变更来自直接属性修改还是通过状态管理器, 都能触发相同的事件通知
+        /// 5. 操作状态变更不会将实体标记为HasChanged, 因为它只表示UI操作意图而非实际数据变更
         /// </summary>
         [SugarColumn(IsIgnore = true)]
         [Browsable(false)]
@@ -1033,11 +1033,11 @@ namespace RUINORERP.Model
                 // 记录前一个状态
                 ActionStatus oldStatus = _ActionStatus;
 
-                // 直接设置属性值，不调用SetProperty方法，避免触发变更追踪
+                // 直接设置属性值, 不调用SetProperty方法, 避免触发变更追踪
                 bool wasSuppressed = SuppressNotifyPropertyChanged;
                 try
                 {
-                    // 临时禁止属性变更通知，避免HasChanged被设置为true
+                    // 临时禁止属性变更通知, 避免HasChanged被设置为true
                     SuppressNotifyPropertyChanged = true;
 
                     // 原子操作：设置属性值
@@ -1046,7 +1046,7 @@ namespace RUINORERP.Model
                     // 更新状态变更计数
                     Interlocked.Increment(ref _statusChangeCount);
 
-                    // 再触发PropertyChanged事件，确保任何绑定到该属性的UI元素都能得到更新
+                    // 再触发PropertyChanged事件, 确保任何绑定到该属性的UI元素都能得到更新
                     // 使用安全的事件触发方式
                     OnPropertyChanged(nameof(ActionStatus), oldStatus, value);
                 }
@@ -1082,7 +1082,7 @@ namespace RUINORERP.Model
 
         private ConcurrentDictionary<string, string> _HelpInfo;
         /// <summary>
-        /// 如果有帮助信息，则在子类的分文件中描写
+        /// 如果有帮助信息, 则在子类的分文件中描写
         /// </summary>
         [Description("对应列帮助信息"), Category("自定属性"), Browsable(false)]
         [SugarColumn(IsIgnore = true)]
@@ -1099,8 +1099,8 @@ namespace RUINORERP.Model
         }
 
 
-        // IDataErrorInfo相关代码已移除，避免SqlSugar绑定索引器失败
-        // 如果需要验证功能，可以使用其他方式实现，如数据注解或自定义验证方法
+        // IDataErrorInfo相关代码已移除, 避免SqlSugar绑定索引器失败
+        // 如果需要验证功能, 可以使用其他方式实现, 如数据注解或自定义验证方法
 
         /// <summary>
         /// 取属性名称（列名）
@@ -1176,7 +1176,7 @@ namespace RUINORERP.Model
         #region 提取重点数据
 
         /// <summary>
-        /// 实体，特别是单据有时要保存重点的数据。这里提供一个通用实现
+        /// 实体, 特别是单据有时要保存重点的数据。这里提供一个通用实现
         /// </summary>
         /// <returns></returns>
         public virtual string ToDataContent()
@@ -1192,7 +1192,7 @@ namespace RUINORERP.Model
                 // 获取所有属性
                 var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 
-                // 遍历所有属性，收集需要记录的重点数据
+                // 遍历所有属性, 收集需要记录的重点数据
                 foreach (var property in properties)
                 {
                     // 跳过不应该记录的属性
@@ -1206,7 +1206,7 @@ namespace RUINORERP.Model
                     if (property.PropertyType.IsGenericType &&
                         property.PropertyType.GetGenericTypeDefinition() == typeof(List<>))
                     {
-                        // 对于集合类型，只记录集合中每个元素的ID和其他关键属性
+                        // 对于集合类型, 只记录集合中每个元素的ID和其他关键属性
                         var collection = value as System.Collections.IEnumerable;
                         if (collection != null)
                         {
@@ -1250,7 +1250,7 @@ namespace RUINORERP.Model
                     }
                     else
                     {
-                        // 对于普通属性，直接记录值
+                        // 对于普通属性, 直接记录值
                         keyData[property.Name] = value;
                     }
                 }
@@ -1260,7 +1260,7 @@ namespace RUINORERP.Model
             }
             catch (Exception ex)
             {
-                // 记录错误，但返回空字符串，不影响主业务流程
+                // 记录错误, 但返回空字符串, 不影响主业务流程
                 System.Diagnostics.Debug.WriteLine($"生成数据内容失败: {ex.Message}");
                 return string.Empty;
             }
@@ -1357,7 +1357,7 @@ namespace RUINORERP.Model
                     }
                 }
 
-                // 如果获取失败，返回默认状态
+                // 如果获取失败, 返回默认状态
                 if (statusType == typeof(DataStatus))
                     return DataStatus.草稿;
 
@@ -1381,27 +1381,27 @@ namespace RUINORERP.Model
             if (string.IsNullOrEmpty(propertyName))
                 return false;
 
-            // 使用缓存的属性列表，避免每次都调用反射
+            // 使用缓存的属性列表, 避免每次都调用反射
             var cachedProperties = GetCachedProperties();
             return cachedProperties.Any(p => p.Name == propertyName);
         }
 
         /// <summary>
         /// 获取实体指定属性的值
-        /// 优化版本：使用_propertyCache缓存提高性能，并先检查属性是否存在
+        /// 优化版本：使用_propertyCache缓存提高性能, 并先检查属性是否存在
         /// </summary>
         /// <param name="propertyName">属性名称</param>
-        /// <returns>属性值，若属性不存在则返回null</returns>
+        /// <returns>属性值, 若属性不存在则返回null</returns>
         public virtual object GetPropertyValue(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName))
                 return null;
 
-            // 使用缓存的属性列表，避免每次都调用反射
+            // 使用缓存的属性列表, 避免每次都调用反射
             var cachedProperties = GetCachedProperties();
             var property = cachedProperties.FirstOrDefault(p => p.Name == propertyName);
 
-            // 如果属性存在且可读，则获取其值
+            // 如果属性存在且可读, 则获取其值
             return property?.CanRead == true ? property.GetValue(this) : null;
         }
 

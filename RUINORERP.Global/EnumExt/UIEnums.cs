@@ -32,7 +32,8 @@ namespace RUINORERP.Global
         联查,
         联动,
         结案,//订单这种用结案，订单不用发货了，客户不要了。（不能修改）
-        确认执行,
+        执行,//执行单据操作库存变动
+        反执行,//执行单据操作库存变动
         反结案,
         作废,
         属性,
@@ -81,7 +82,7 @@ namespace RUINORERP.Global
         /// 按钮
         /// </summary>
         Button,
- 
+
         /// <summary>
         /// 链接
         /// </summary>

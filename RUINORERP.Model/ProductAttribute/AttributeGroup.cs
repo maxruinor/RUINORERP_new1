@@ -4,7 +4,7 @@ using System.Linq;
 namespace RUINORERP.Model.ProductAttribute
 {
     /// <summary>
-    /// 属性组类，包含属性信息和选中的属性值
+    /// 属性组类, 包含属性信息和选中的属性值
     /// </summary>
     public class AttributeGroup
     {
@@ -27,7 +27,7 @@ namespace RUINORERP.Model.ProductAttribute
         }
         
         /// <summary>
-        /// 转换为AttributeValuePair列表，兼容AttributeCombination的使用场景
+        /// 转换为AttributeValuePair列表, 兼容AttributeCombination的使用场景
         /// </summary>
         /// <returns>AttributeValuePair列表</returns>
         public List<AttributeValuePair> ToAttributeValuePairList()
@@ -40,7 +40,7 @@ namespace RUINORERP.Model.ProductAttribute
         }
         
         /// <summary>
-        /// 将属性组转换为字符串表示，格式为：属性名称: 属性值1, 属性值2, ...
+        /// 将属性组转换为字符串表示, 格式为：属性名称: 属性值1, 属性值2, ...
         /// </summary>
         /// <returns>属性组的字符串表示</returns>
         public override string ToString()

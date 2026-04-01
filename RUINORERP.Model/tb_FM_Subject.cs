@@ -18,10 +18,10 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 会计科目表，财务系统中使用
+    /// 会计科目表, 财务系统中使用
     /// </summary>
     [Serializable()]
-    [Description("会计科目表，财务系统中使用")]
+    [Description("会计科目表, 财务系统中使用")]
     [SugarTable("tb_FM_Subject")]
     public partial class tb_FM_Subject: BaseEntity, ICloneable
     {
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("会计科目表，财务系统中使用tb_FM_Subject" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("会计科目表, 财务系统中使用tb_FM_Subject" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

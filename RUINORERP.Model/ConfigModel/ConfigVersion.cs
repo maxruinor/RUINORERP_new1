@@ -8,7 +8,7 @@ namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
     /// 配置版本模型
-    /// 用于存储配置的历史版本信息，支持版本控制和回滚
+    /// 用于存储配置的历史版本信息, 支持版本控制和回滚
     /// </summary>
     [Serializable]
     [DisplayName("配置版本")]

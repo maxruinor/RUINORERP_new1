@@ -19,7 +19,7 @@ namespace RUINORERP.Model.Base
     /// <summary>
     /// 用于查询传参数条件的实体基类
     /// </summary>
-    public class BaseEntityDto : DynamicEntityDto,INotifyPropertyChanged//, IDataErrorInfo - 移除IDataErrorInfo接口，避免SqlSugar绑定索引器失败
+    public class BaseEntityDto : DynamicEntityDto,INotifyPropertyChanged//, IDataErrorInfo - 移除IDataErrorInfo接口, 避免SqlSugar绑定索引器失败
     {
        
 
@@ -62,7 +62,7 @@ namespace RUINORERP.Model.Base
         }
 
         /// <summary>
-        /// 如果没有其他的业务逻辑，对 lambda 表达式比较熟悉的同学可以考虑用以下方法实现属性名称传递 
+        /// 如果没有其他的业务逻辑, 对 lambda 表达式比较熟悉的同学可以考虑用以下方法实现属性名称传递 
         ///  SetProperty(ref _TypeName, value, () => this.TypeName);
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -109,7 +109,7 @@ namespace RUINORERP.Model.Base
 
         private ConcurrentDictionary<string, string> _HelpInfo;
         /// <summary>
-        /// 如果有帮助信息，则在子类的分文件中描写
+        /// 如果有帮助信息, 则在子类的分文件中描写
         /// </summary>
         [Description("对应列帮助信息"), Category("自定属性"), Browsable(true)]
         [SugarColumn(IsIgnore = true)]
@@ -132,8 +132,8 @@ namespace RUINORERP.Model.Base
         [SugarColumn(IsIgnore = true)]
         public string Querymsg { get => querymsg; set => querymsg = value; }
 
-        // IDataErrorInfo相关代码已移除，避免SqlSugar绑定索引器失败
-        // 如果需要验证功能，可以使用其他方式实现，如数据注解或自定义验证方法
+        // IDataErrorInfo相关代码已移除, 避免SqlSugar绑定索引器失败
+        // 如果需要验证功能, 可以使用其他方式实现, 如数据注解或自定义验证方法
 
         public bool IsIdValid(decimal? value)
         {

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节
+    /// 制令单的原料明细表 明细对应的是一个树, 结构同BOM, 先把BOM搞好再来实现这里的细节
     /// </summary>
     [Serializable()]
     [Description("制令单明细表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("制令单的原料明细表 明细对应的是一个树，结构同BOM，先把BOM搞好再来实现这里的细节tb_ManufacturingOrderDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("制令单的原料明细表 明细对应的是一个树, 结构同BOM, 先把BOM搞好再来实现这里的细节tb_ManufacturingOrderDetail" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

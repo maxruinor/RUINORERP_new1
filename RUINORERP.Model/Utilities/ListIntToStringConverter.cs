@@ -55,7 +55,7 @@ namespace RUINORERP.Model.Utilities
         /// </summary>
         public SugarParameter ParameterConverter<T>(object value, int parameterIndex)
         {
-            // 参数名称格式：@param + 索引，符合 SqlSugar 规范
+            // 参数名称格式：@param + 索引, 符合 SqlSugar 规范
             string parameterName = $"@param {parameterIndex}";
 
             // 处理空值情况
@@ -72,7 +72,7 @@ namespace RUINORERP.Model.Utilities
             }
 
             // 处理类型不匹配的异常
-            throw new ArgumentException($" 无法转换类型 {value.GetType()} 到字符串，预期类型为 List<int>");
+            throw new ArgumentException($" 无法转换类型 {value.GetType()} 到字符串, 预期类型为 List<int>");
         }
 
         /// <summary>
@@ -152,7 +152,7 @@ namespace RUINORERP.Model.Utilities
         /// </summary>
         public SugarParameter ParameterConverter<T>(object value, int parameterIndex)
         {
-            // 参数名称格式：@param + 索引，符合 SqlSugar 规范
+            // 参数名称格式：@param + 索引, 符合 SqlSugar 规范
             string parameterName = $"@param {parameterIndex}";
 
             // 处理空值情况
@@ -169,7 +169,7 @@ namespace RUINORERP.Model.Utilities
             }
 
             // 处理类型不匹配的异常
-            throw new ArgumentException($" 无法转换类型 {value.GetType()} 到字符串，预期类型为 List<int>");
+            throw new ArgumentException($" 无法转换类型 {value.GetType()} 到字符串, 预期类型为 List<int>");
         }
 
         /// <summary>

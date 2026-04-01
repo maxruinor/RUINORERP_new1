@@ -56,11 +56,11 @@ namespace RUINORERP.Model
                             var descAttr = field?.GetCustomAttribute<DescriptionAttribute>(false);
                             return descAttr?.Description ?? value.ToString();
                         }
-                        return value.ToString(); // 如果值不在枚举中，直接返回数字
+                        return value.ToString(); // 如果值不在枚举中, 直接返回数字
                     })
                     .ToList();
 
-                return string.Join("，", displayTexts);
+                return string.Join(", ", displayTexts);
 
             }
         }
@@ -132,11 +132,11 @@ namespace RUINORERP.Model
         // 序列化为 JSON 字符串保存到数据库
         //  public string JsonConfig => JsonConvert.SerializeObject(BusinessConfig);
 
-        // 辅助属性，用于处理JSON配置
+        // 辅助属性, 用于处理JSON配置
         //[SugarColumn(IsIgnore = true)]
         //public ReminderConfig Config { get; set; }
 
-        //// 辅助属性，不参与JSON序列化
+        //// 辅助属性, 不参与JSON序列化
         //[JsonIgnore]
         //[SugarColumn(IsIgnore = true)]
         //public string NotifyRecipientNames

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识
+    /// BOM配置历史 数据保存在BOM中 只是多份一样, 细微区别用版本号标识
     /// </summary>
     [Serializable()]
     [Description("BOM配置历史")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("BOM配置历史 数据保存在BOM中 只是多份一样，细微区别用版本号标识tb_BOMConfigHistory" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("BOM配置历史 数据保存在BOM中 只是多份一样, 细微区别用版本号标识tb_BOMConfigHistory" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

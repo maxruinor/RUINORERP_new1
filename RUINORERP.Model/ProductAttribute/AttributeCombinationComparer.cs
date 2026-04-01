@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace RUINORERP.Model.ProductAttribute
 {
     /// <summary>
-    /// 属性组合比较器，用于比较两个属性组合是否相同
+    /// 属性组合比较器, 用于比较两个属性组合是否相同
     /// </summary>
     public class AttributeCombinationComparer : IEqualityComparer<AttributeCombination>
     {
@@ -12,7 +12,7 @@ namespace RUINORERP.Model.ProductAttribute
         /// </summary>
         /// <param name="x">第一个属性组合</param>
         /// <param name="y">第二个属性组合</param>
-        /// <returns>如果两个属性组合相同返回true，否则返回false</returns>
+        /// <returns>如果两个属性组合相同返回true, 否则返回false</returns>
         public bool Equals(AttributeCombination x, AttributeCombination y)
         {
             if (x == null || y == null)
@@ -51,7 +51,7 @@ namespace RUINORERP.Model.ProductAttribute
             if (obj == null || obj.Properties.Count == 0)
                 return 0;
 
-            // 生成哈希码，基于属性ID和属性值ID的组合
+            // 生成哈希码, 基于属性ID和属性值ID的组合
             int hashCode = 17;
             foreach (var prop in obj.Properties)
             {

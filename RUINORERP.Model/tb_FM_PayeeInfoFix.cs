@@ -24,7 +24,7 @@ namespace RUINORERP.Model
     /// 这里是一个例子。
     /// 后面按这个规律统一处理。如果实现中带有图片的字段。则需要额外处理
     /// 字段名：RowImage
-    /// 后面如果支持多图则可能是List<key,value> key是图片名，value是图片对象
+    /// 后面如果支持多图则可能是List<key,value> key是图片名, value是图片对象
     /// </summary>
     public partial class tb_FM_PayeeInfo : BaseEntity, ICloneable
     {
@@ -45,7 +45,7 @@ namespace RUINORERP.Model
                 {
                     return Details;
                 }
-                // 处理可能为null的字段，使用空值合并运算符提供默认值
+                // 处理可能为null的字段, 使用空值合并运算符提供默认值
                 string accountType = ((AccountType)Account_type).ToString();
                 string accountName = Account_name ?? "未命名";
                 string accountNo = Account_No ?? "无账号";

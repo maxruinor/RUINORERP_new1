@@ -548,6 +548,10 @@ namespace RUINORERP.UI.BaseForm
                     // 反结案操作是异步的
                     _ = AntiCloseCaseAsync();
                     break;
+                case MenuItemEnums.执行:
+                    // 确认执行操作是异步的
+                    _ = ConfirmExecution();
+                    break;
                 case MenuItemEnums.查询:
                     Query();
                     break;
@@ -643,6 +647,23 @@ namespace RUINORERP.UI.BaseForm
         {
             return null;
         }
+
+        /// <summary>
+        /// 确认执行 - 执行业务单据的具体业务操作（如库存变动、财务记账等）
+        /// 该方法作为业务单据执行具体操作的统一入口，子类可重写实现具体业务逻辑
+        /// </summary>
+        /// <returns>执行结果，true表示执行成功，false表示执行失败</returns>
+        protected virtual Task<bool> ConfirmExecution()
+        {
+            return Task.FromResult(false);
+        }
+
+
+        protected virtual Task<bool> AntiConfirmExecution()
+        {
+            return Task.FromResult(false);
+        }
+
 
         protected virtual void Add()
         {

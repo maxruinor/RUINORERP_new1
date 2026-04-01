@@ -3,7 +3,7 @@
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 表格数据，支持分页
+    /// 表格数据, 支持分页
     /// </summary>
     public class TableModel<T>
     {

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 业务类型 报销，员工借支还款，运费
+    /// 业务类型 报销, 员工借支还款, 运费
     /// </summary>
     [Serializable()]
     [Description("业务类型")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("业务类型 报销，员工借支还款，运费tb_FM_ExpenseType" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("业务类型 报销, 员工借支还款, 运费tb_FM_ExpenseType" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

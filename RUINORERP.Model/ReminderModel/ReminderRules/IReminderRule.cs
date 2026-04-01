@@ -19,7 +19,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderRules
         bool PersistUntilDelivered { get; set; }
 
         /// <summary>
-        /// 通知渠道，枚举值
+        /// 通知渠道, 枚举值
         /// </summary>
         List<int> NotifyChannels { get; set; }
 

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 目标客户-公海客户CRM系统中使用，给成交客户作外键引用
+    /// 目标客户-公海客户CRM系统中使用, 给成交客户作外键引用
     /// </summary>
     [Serializable()]
     [Description("目标客户")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("目标客户-公海客户CRM系统中使用，给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("目标客户-公海客户CRM系统中使用, 给成交客户作外键引用tb_CRM_Customer" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

@@ -4,7 +4,7 @@ namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
     /// 敏感配置特性
-    /// 用于标记配置模型中的敏感字段，这些字段在保存时会被加密
+    /// 用于标记配置模型中的敏感字段, 这些字段在保存时会被加密
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class SensitiveConfigAttribute : Attribute

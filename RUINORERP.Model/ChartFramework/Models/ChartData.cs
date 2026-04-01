@@ -117,7 +117,7 @@ namespace RUINORERP.Model.ChartFramework.Models
         /// <summary>中心标签格式 (如"{Total}项\n{Percent}%"）</summary>
         public string CenterLabelFormat { get; set; } = "{Total}";
 
-        /// <summary>饼图内半径 (0-1，用于环形图)</summary>
+        /// <summary>饼图内半径 (0-1, 用于环形图)</summary>
         public double InnerRadius { get; set; } = 0;
 
         /// <summary>起始角度 (0-360)</summary>

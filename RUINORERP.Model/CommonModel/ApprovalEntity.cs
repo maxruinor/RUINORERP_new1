@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 审核信息实体  将来如果有些字段是辅助的，则用特性标记处理
+    /// 审核信息实体  将来如果有些字段是辅助的, 则用特性标记处理
     /// </summary>
     public class ApprovalEntity
     {

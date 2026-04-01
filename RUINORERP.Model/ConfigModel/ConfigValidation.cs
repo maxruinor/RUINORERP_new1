@@ -14,7 +14,7 @@ namespace RUINORERP.Model.ConfigModel
         public bool IsValid { get; set; } = true;
 
         /// <summary>
-        /// 验证错误列表，键为属性名称，值为错误信息
+        /// 验证错误列表, 键为属性名称, 值为错误信息
         /// </summary>
         public Dictionary<string, string> Errors { get; set; } = new Dictionary<string, string>();
 

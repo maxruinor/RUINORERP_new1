@@ -75,7 +75,7 @@ namespace RUINORERP.Model.Utilities
                 return new SugarParameter(parameterName, serialized, System.Data.DbType.String);
             }
 
-            throw new ArgumentException($"无法转换类型 {value.GetType()}，预期为 List<{typeof(T).Name}>");
+            throw new ArgumentException($"无法转换类型 {value.GetType()}, 预期为 List<{typeof(T).Name}>");
         }
 
         // 将数据库读取的字符串转换为内存中的 List<T>

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞
+    /// 订单装箱单, 针对特别订单详细处理 也用主子表来做。暂时不搞
     /// </summary>
     [Serializable()]
     [Description("订单装箱单")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("订单装箱单，针对特别订单详细处理 也用主子表来做。暂时不搞tb_OrderPacking" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("订单装箱单, 针对特别订单详细处理 也用主子表来做。暂时不搞tb_OrderPacking" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html 
+    /// 审核配置表 对于所有单据审核, 并且提供明细, 每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html 
     /// </summary>
     [Serializable()]
     [Description("审核配置表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("审核配置表 对于所有单据审核，并且提供明细，每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html tb_Approval" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("审核配置表 对于所有单据审核, 并且提供明细, 每个明细通过则主表通过主表中对应一个业务单据的主ID https://www.likecs.com/show-747870.html tb_Approval" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

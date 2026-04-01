@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析
+    /// 生产计划表 应该是分析来的。可能来自于生产需求单, 比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析
     /// </summary>
     [Serializable()]
     [Description("生产计划表")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("生产计划表 应该是分析来的。可能来自于生产需求单，比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析tb_ProductionPlan" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("生产计划表 应该是分析来的。可能来自于生产需求单, 比方系统根据库存情况分析销售情况等也也可以手动。也可以程序分析tb_ProductionPlan" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

@@ -84,7 +84,7 @@ namespace RUINORERP.Model
 
         private object returnObjectAsOtherEntity;
         /// <summary>
-        /// 销售出库审核时，如果生成了应该收款单则返回时放到这里
+        /// 销售出库审核时, 如果生成了应该收款单则返回时放到这里
         /// </summary>
         public object ReturnObjectAsOtherEntity { get => returnObjectAsOtherEntity; set => returnObjectAsOtherEntity = value; }
 

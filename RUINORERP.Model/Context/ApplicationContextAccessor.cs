@@ -15,7 +15,7 @@ namespace RUINORERP.Model.Context
     /// Provides access to the correct current application
     /// context manager instance depending on runtime environment.
     /// 提供对正确的当前应用程序的访问
-    /// 上下文管理器实例，具体取决于运行时环境。
+    /// 上下文管理器实例, 具体取决于运行时环境。
     /// </summary>
     public class ApplicationContextAccessor
     {
@@ -62,7 +62,7 @@ namespace RUINORERP.Model.Context
 
         /// <summary>
         ///获取对正确的当前应用程序的引用
-        ///上下文管理器实例，具体取决于运行时环境。
+        ///上下文管理器实例, 具体取决于运行时环境。
         /// </summary>
         public IContextManager GetContextManager()
         {

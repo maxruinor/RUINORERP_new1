@@ -18,7 +18,7 @@ using RUINORERP.Global.CustomAttribute;
 namespace RUINORERP.Model
 {
     /// <summary>
-    /// 记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录
+    /// 记录收款 与应收的匹配, 核销表 核销记录用于跟踪资金与债权债务的冲抵关系, 确保财务数据可追溯。正常的收款, 支付不需要保存核销记录
     /// </summary>
     [Serializable()]
     [Description("记录收款")]
@@ -30,7 +30,7 @@ namespace RUINORERP.Model
             
             if (!PK_FK_ID_Check())
             {
-                throw new Exception("记录收款 与应收的匹配，核销表 核销记录用于跟踪资金与债权债务的冲抵关系，确保财务数据可追溯。正常的收款，支付不需要保存核销记录tb_FM_PaymentSettlement" + "外键ID与对应主主键名称不一致。请修改数据库");
+                throw new Exception("记录收款 与应收的匹配, 核销表 核销记录用于跟踪资金与债权债务的冲抵关系, 确保财务数据可追溯。正常的收款, 支付不需要保存核销记录tb_FM_PaymentSettlement" + "外键ID与对应主主键名称不一致。请修改数据库");
             }
         }
 

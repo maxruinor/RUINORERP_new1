@@ -1,7 +1,7 @@
 namespace RUINORERP.Model.ProductAttribute
 {
     /// <summary>
-    /// 属性值对类，包含属性和属性值
+    /// 属性值对类, 包含属性和属性值
     /// </summary>
     public class AttributeValuePair
     {
@@ -16,7 +16,7 @@ namespace RUINORERP.Model.ProductAttribute
         public tb_ProdPropertyValue PropertyValue { get; set; }
         
         /// <summary>
-        /// 将属性值对转换为字符串表示，格式为：属性名称:属性值名称
+        /// 将属性值对转换为字符串表示, 格式为：属性名称:属性值名称
         /// </summary>
         /// <returns>属性值对的字符串表示</returns>
         public override string ToString()

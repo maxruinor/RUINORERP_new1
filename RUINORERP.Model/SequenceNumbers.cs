@@ -53,10 +53,10 @@ namespace RUINORERP.Model
 
         private string _SequenceKey;
         /// <summary>
-        /// 序号键，唯一标识一个序号序列
+        /// 序号键, 唯一标识一个序号序列
         /// </summary>
-        [AdvQueryAttribute(ColName = "SequenceKey",ColDesc = "序号键，唯一标识一个序号序列")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "SequenceKey" ,Length=255,IsNullable = false,ColumnDescription = "序号键，唯一标识一个序号序列" )]
+        [AdvQueryAttribute(ColName = "SequenceKey",ColDesc = "序号键, 唯一标识一个序号序列")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "SequenceKey" ,Length=255,IsNullable = false,ColumnDescription = "序号键, 唯一标识一个序号序列" )]
         public string SequenceKey
         { 
             get{return _SequenceKey;}
@@ -123,10 +123,10 @@ namespace RUINORERP.Model
 
         private string _FormatMask;
         /// <summary>
-        /// 格式化掩码，如 000
+        /// 格式化掩码, 如 000
         /// </summary>
-        [AdvQueryAttribute(ColName = "FormatMask",ColDesc = "格式化掩码，如 000")] 
-        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "FormatMask" ,Length=50,IsNullable = true,ColumnDescription = "格式化掩码，如 000" )]
+        [AdvQueryAttribute(ColName = "FormatMask",ColDesc = "格式化掩码, 如 000")] 
+        [SugarColumn(ColumnDataType = "nvarchar", SqlParameterDbType ="String",  ColumnName = "FormatMask" ,Length=50,IsNullable = true,ColumnDescription = "格式化掩码, 如 000" )]
         public string FormatMask
         { 
             get{return _FormatMask;}

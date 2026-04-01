@@ -12,7 +12,7 @@ namespace RUINORERP.Model.ReminderModel.ReminderResults
     {
         public override ReminderBizType BusinessType => ReminderBizType.单据提交审批提醒;
         public override string Title => $"{DocumentType}待审批 - {DocumentNumber}";
-        public override string Summary => $"状态: {DocumentStatus}，创建人: {Creator}";
+        public override string Summary => $"状态: {DocumentStatus}, 创建人: {Creator}";
 
         // 具体业务属性
         public string DocumentType { get; set; } // 如：采购订单、付款申请

@@ -49,7 +49,7 @@ namespace RUINORERP.Model.Context
                 {
                     _isGettingContext = true;
 
-                    // 使用依赖注入获取上下文管理器，避免每次创建新实例
+                    // 使用依赖注入获取上下文管理器, 避免每次创建新实例
                     if (_applicationContextAccessor != null)
                     {
                         var serviceProvider = _applicationContextAccessor.ServiceProvider;
@@ -63,7 +63,7 @@ namespace RUINORERP.Model.Context
                         }
                     }
 
-                    // 降级方案：如果依赖注入不可用，使用线程本地存储
+                    // 降级方案：如果依赖注入不可用, 使用线程本地存储
                     var currentContext = _currentContext.Value;
                     if (currentContext == null)
                     {
@@ -93,7 +93,7 @@ namespace RUINORERP.Model.Context
                 {
                     _isSettingContext = true;
 
-                    // 使用依赖注入获取上下文管理器，避免每次创建新实例
+                    // 使用依赖注入获取上下文管理器, 避免每次创建新实例
                     var accessor = _applicationContextAccessor;
                     if (accessor != null)
                     {
@@ -109,7 +109,7 @@ namespace RUINORERP.Model.Context
                         }
                     }
 
-                    // 降级方案：如果依赖注入不可用，使用线程本地存储
+                    // 降级方案：如果依赖注入不可用, 使用线程本地存储
                     _currentContext.Value = value;
                 }
                 finally
@@ -152,7 +152,7 @@ namespace RUINORERP.Model.Context
 
         private SystemGlobalConfig _systemGlobalConfig;
         /// <summary>
-        /// 这个类中的值，实际是自动生成了json配置文件。并且系统实时监控这个配置文件中的值
+        /// 这个类中的值, 实际是自动生成了json配置文件。并且系统实时监控这个配置文件中的值
         /// </summary>
         public SystemGlobalConfig SystemGlobalConfig
         {
@@ -170,13 +170,13 @@ namespace RUINORERP.Model.Context
                         }
                         catch (Exception)
                         {
-                            // 如果获取服务失败，则创建新实例
+                            // 如果获取服务失败, 则创建新实例
                             _systemGlobalConfig = new SystemGlobalConfig();
                         }
                     }
                     else
                     {
-                        // 如果Current为null，创建新实例
+                        // 如果Current为null, 创建新实例
                         _systemGlobalConfig = new SystemGlobalConfig();
                     }
                 }
@@ -184,7 +184,7 @@ namespace RUINORERP.Model.Context
             }
             set
             {
-                // 简单地更新本地字段，确保值不为null
+                // 简单地更新本地字段, 确保值不为null
                 if (value != null)
                 {
                     _systemGlobalConfig = value;
@@ -196,7 +196,7 @@ namespace RUINORERP.Model.Context
         #region 业务缓存数据  所属项目级
 
         /// <summary>
-        /// 通过项目组分配功能，得到对应的项目组
+        /// 通过项目组分配功能, 得到对应的项目组
         /// </summary>
         public List<tb_ProjectGroup> projectGroups { get; set; }
 
@@ -207,7 +207,7 @@ namespace RUINORERP.Model.Context
         public tb_Currency BaseCurrency { get; set; }
 
         /// <summary>
-        /// 专门保存一下账期的信息，省得比较判断时还要去缓存取
+        /// 专门保存一下账期的信息, 省得比较判断时还要去缓存取
         /// </summary>
         public tb_PaymentMethod PaymentMethodOfPeriod { get; set; }
 
@@ -234,7 +234,7 @@ namespace RUINORERP.Model.Context
         #region 工作流
 
         /// <summary>
-        /// 用于保存注册的工作流，目前暂时用于客户端，后期用于服务端
+        /// 用于保存注册的工作流, 目前暂时用于客户端, 后期用于服务端
         /// </summary>
         public ConcurrentDictionary<string, string> RegistedWorkflowList = new ConcurrentDictionary<string, string>();
 
@@ -287,7 +287,7 @@ namespace RUINORERP.Model.Context
         public string Status { get; set; }
 
         /// <summary>
-        /// 系统级的配置，如果权限中配置了。则使用权限中的
+        /// 系统级的配置, 如果权限中配置了。则使用权限中的
         /// </summary>
         public tb_SystemConfig SysConfig { get; set; }
 
@@ -299,7 +299,7 @@ namespace RUINORERP.Model.Context
 
 
         /// <summary>
-        /// 角色级的属性配置，作用于第一个角色组,即当前角色
+        /// 角色级的属性配置, 作用于第一个角色组,即当前角色
         /// </summary>
         public tb_RolePropertyConfig rolePropertyConfig { set; get; } = new tb_RolePropertyConfig();
 
@@ -340,7 +340,7 @@ namespace RUINORERP.Model.Context
 
 
         /// <summary>
-        /// 实际只使用了部分字段，省事。后面可以单独做一个公共信息实体替换掉TODO
+        /// 实际只使用了部分字段, 省事。后面可以单独做一个公共信息实体替换掉TODO
         ///  这里只是为了异常日志部分。后面可以做一个正常操作的行为跟踪 类似思路。再加上注入
         /// </summary>
         public Logs log { get; set; }
@@ -501,17 +501,17 @@ namespace RUINORERP.Model.Context
 
         #region 服务实例缓存
         /// <summary>
-        /// 服务实例缓存字典，用于缓存已解析的服务实例
+        /// 服务实例缓存字典, 用于缓存已解析的服务实例
         /// </summary>
         private static readonly Dictionary<Type, object> _serviceInstanceCache = new Dictionary<Type, object>();
 
         /// <summary>
-        /// 带名称的服务实例缓存字典，用于缓存已解析的命名服务实例
+        /// 带名称的服务实例缓存字典, 用于缓存已解析的命名服务实例
         /// </summary>
         private static readonly Dictionary<string, object> _namedServiceInstanceCache = new Dictionary<string, object>();
 
         /// <summary>
-        /// 缓存访问锁对象，确保线程安全
+        /// 缓存访问锁对象, 确保线程安全
         /// </summary>
         private static readonly object _cacheLock = new object();
 
@@ -526,7 +526,7 @@ namespace RUINORERP.Model.Context
         private static int _cacheMisses = 0;
 
         /// <summary>
-        /// 最大缓存大小限制，防止内存泄漏
+        /// 最大缓存大小限制, 防止内存泄漏
         /// </summary>
         private const int MaxCacheSize = 1000;
         #endregion
@@ -631,13 +631,13 @@ namespace RUINORERP.Model.Context
                 _cacheMisses++;
             }
 
-            // 缓存未命中，从服务提供者获取实例
+            // 缓存未命中, 从服务提供者获取实例
             var result = CurrentServiceProvider.GetRequiredService<T>();
 
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
-                // 如果缓存已满，移除最旧的条目（这里简单地移除第一个）
+                // 如果缓存已满, 移除最旧的条目（这里简单地移除第一个）
                 if (_serviceInstanceCache.Count >= MaxCacheSize)
                 {
                     var firstKey = _serviceInstanceCache.Keys.First();
@@ -675,13 +675,13 @@ namespace RUINORERP.Model.Context
                 _cacheMisses++;
             }
 
-            // 缓存未命中，从Autofac容器获取实例
+            // 缓存未命中, 从Autofac容器获取实例
             var result = AutofacContainerScope.ResolveNamed<T>(className);
 
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
-                // 如果缓存已满，移除最旧的条目（这里简单地移除第一个）
+                // 如果缓存已满, 移除最旧的条目（这里简单地移除第一个）
                 if (_namedServiceInstanceCache.Count >= MaxCacheSize)
                 {
                     var firstKey = _namedServiceInstanceCache.Keys.First();
@@ -737,13 +737,13 @@ namespace RUINORERP.Model.Context
                 _cacheMisses++;
             }
 
-            // 缓存未命中，从服务提供者获取实例
+            // 缓存未命中, 从服务提供者获取实例
             var result = CurrentServiceProvider.GetRequiredService(serviceType);
 
             // 将实例添加到缓存（简单的LRU实现）
             lock (_cacheLock)
             {
-                // 如果缓存已满，移除最旧的条目（这里简单地移除第一个）
+                // 如果缓存已满, 移除最旧的条目（这里简单地移除第一个）
                 if (_serviceInstanceCache.Count >= MaxCacheSize)
                 {
                     var firstKey = _serviceInstanceCache.Keys.First();

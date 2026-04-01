@@ -37,7 +37,7 @@ namespace RUINORERP.Model.CommonModel
         /// 获取指定业务类型的打印机
         /// </summary>
         /// <param name="bizName">业务名称</param>
-        /// <returns>打印机名称，如果未配置返回null</returns>
+        /// <returns>打印机名称, 如果未配置返回null</returns>
         public string GetPrinterForBizType(string bizName)
         {
             if (BizTypePrinters != null && BizTypePrinters.TryGetValue(bizName, out string printerName))

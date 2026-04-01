@@ -60,12 +60,13 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnRelatedQuery = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripbtnConvertDocuments = new System.Windows.Forms.ToolStripDropDownButton();
             this.toolStripbtnProperty = new System.Windows.Forms.ToolStripButton();
+            this.toolStripbtnBillInfo = new System.Windows.Forms.ToolStripButton();
             this.toolStripbtnClose = new System.Windows.Forms.ToolStripButton();
             this.tsBtnLocked = new System.Windows.Forms.ToolStripButton();
-            this.toolStripbtnBillInfo = new System.Windows.Forms.ToolStripButton();
             this.bwRemoting = new System.ComponentModel.BackgroundWorker();
             this.errorProviderForAllInput = new System.Windows.Forms.ErrorProvider(this.components);
             this.bindingSourceSub = new System.Windows.Forms.BindingSource(this.components);
+            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
             this.BaseToolStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProviderForAllInput)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceSub)).BeginInit();
@@ -91,13 +92,14 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripSeparator1,
             this.toolStripbtnReview,
             this.toolStripBtnReverseReview,
+            this.toolStripbtnClose,
             this.toolStripButtonCaseClosed,
             this.toolStripDropDownbtnFuncation,
             this.toolStripbtnRelatedQuery,
             this.toolStripbtnConvertDocuments,
             this.toolStripbtnProperty,
             this.toolStripbtnBillInfo,
-            this.toolStripbtnClose,
+            this.toolStripButton1,
             this.tsBtnLocked});
             this.BaseToolStrip.Location = new System.Drawing.Point(0, 0);
             this.BaseToolStrip.Name = "BaseToolStrip";
@@ -268,29 +270,30 @@ namespace RUINORERP.UI.BaseForm
             this.toolStripbtnProperty.Size = new System.Drawing.Size(53, 22);
             this.toolStripbtnProperty.Text = "属性";
             // 
+            // toolStripbtnBillInfo
+            // 
+            this.toolStripbtnBillInfo.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnBillInfo.Image")));
+            this.toolStripbtnBillInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripbtnBillInfo.Name = "toolStripbtnBillInfo";
+            this.toolStripbtnBillInfo.Size = new System.Drawing.Size(79, 22);
+            this.toolStripbtnBillInfo.Text = "操作记录";
+            // 
             // toolStripbtnClose
             // 
-            this.toolStripbtnClose.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnClose.Image")));
+            this.toolStripbtnClose.Image = global::RUINORERP.UI.Properties.Resources.yesOk;
             this.toolStripbtnClose.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripbtnClose.Name = "toolStripbtnClose";
-            this.toolStripbtnClose.Size = new System.Drawing.Size(53, 22);
-            this.toolStripbtnClose.Text = "关闭";
+            this.toolStripbtnClose.Size = new System.Drawing.Size(79, 22);
+            this.toolStripbtnClose.Text = "确认执行";
+            this.toolStripbtnClose.ToolTipText = "确认执行";
             // 
             // tsBtnLocked
             // 
             this.tsBtnLocked.Image = global::RUINORERP.UI.Properties.Resources.unlockbill;
             this.tsBtnLocked.Name = "tsBtnLocked";
-            this.tsBtnLocked.Size = new System.Drawing.Size(66, 22);
+            this.tsBtnLocked.Size = new System.Drawing.Size(66, 20);
             this.tsBtnLocked.Text = "已锁定";
             this.tsBtnLocked.Visible = false;
-            // 
-            // toolStripbtnBillInfo
-            // 
-            this.toolStripbtnBillInfo.Image = ((System.Drawing.Image)(resources.GetObject("toolStripbtnProperty.Image")));
-            this.toolStripbtnBillInfo.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripbtnBillInfo.Name = "toolStripbtnBillInfo";
-            this.toolStripbtnBillInfo.Size = new System.Drawing.Size(53, 22);
-            this.toolStripbtnBillInfo.Text = "操作记录";
             // 
             // bwRemoting
             // 
@@ -300,6 +303,14 @@ namespace RUINORERP.UI.BaseForm
             // errorProviderForAllInput
             // 
             this.errorProviderForAllInput.ContainerControl = this;
+            // 
+            // toolStripButton1
+            // 
+            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
+            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButton1.Name = "toolStripButton1";
+            this.toolStripButton1.Size = new System.Drawing.Size(53, 22);
+            this.toolStripButton1.Text = "关闭";
             // 
             // BaseBillEdit
             // 
@@ -350,5 +361,6 @@ namespace RUINORERP.UI.BaseForm
         public System.Windows.Forms.ToolStripDropDownButton toolStripbtnConvertDocuments;
         public System.Windows.Forms.ToolStripButton toolStripBtnCancelSubmit;
         public System.Windows.Forms.ToolStripButton toolStripbtnBillInfo;
+        public System.Windows.Forms.ToolStripButton toolStripButton1;
     }
 }

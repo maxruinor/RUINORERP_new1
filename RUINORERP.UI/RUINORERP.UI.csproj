@@ -903,6 +903,73 @@
     <Compile Include="BusyDialog.Designer.cs">
       <DependentUpon>BusyDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="ChartAnalyzer\CompositeChartBuilder.cs" />
+    <Compile Include="ChartAnalyzer\HighPerformanceChart.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Contracts\IChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Models\ChartInteraction.cs" />
+    <Compile Include="ChartFramework\Core\Models\DataField.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderBase.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderFactory.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\ColumnChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\CustomerChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\DefaultTooltip.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\LineChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Builders\PieChartBuilder.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.Designer.cs">
+      <DependentUpon>ChartQueryPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\Controls\EnhancedChartControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\Controls\EnhancedChartControl.Designer.cs">
+      <DependentUpon>EnhancedChartControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChartFramework\Core\Rendering\GpuAcceleratedRenderer.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\RenderingPipeline.cs" />
+    <Compile Include="ChartFramework\Core\Rendering\Utilities\ThreadSafeChartUpdater.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\BaseChartAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRMDataAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRMPlanCompRateDataAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRM\CRMLeadsAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRM\CustomerAnalysisAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRM\FollowUpPlansAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\CRM\FollowUpRecordsAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\InventoryTurnoverAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\OrderAnalysisAdapter.cs" />
+    <Compile Include="ChartFramework\DataProviders\Adapters\SalesAnalysisAdapter.cs" />
+    <Compile Include="ChartFramework\Interaction\DrillDownService.cs" />
+    <Compile Include="ChartFramework\QueryPanel\QueryPanelGenerator.cs" />
+    <Compile Include="ChartFramework\Rendering\Utilities\ProgressiveLoader.cs" />
+    <Compile Include="ChartFramework\ReportContainer\IReportDefinition.cs" />
+    <Compile Include="ChartFramework\ReportContainer\ReportView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ChartFramework\Shared\ChartPerfMonitor.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\DataProcessing\Pipeline.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\DynamicGroupingExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\Export\ChartExportService.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\UI\ChartContextMenuExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Extensions\UI\ChartDataService.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\ChartExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\ChartTheme.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\StyleExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Theming\ThemeEngine.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ChartHelper.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\DateTimeExtensions.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\DateTimeHelper.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ISOWeekHelper.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\LabelGenerator.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\ListToDataTable.cs" />
+    <Compile Include="ChartFramework\Shared\Utilities\VirtualizationDataProxy.cs" />
     <Compile Include="CommonUI\frmOpinion.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1677,8 +1744,6 @@
     <Compile Include="BI\UCUserInfoList.Designer.cs">
       <DependentUpon>UCUserInfoList.cs</DependentUpon>
     </Compile>
-    <Compile Include="ChartFramework\Core\Models\DimensionConfig.cs" />
-    <Compile Include="ChartFramework\Core\Models\MetricConfig.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartInteractionEventArgs.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Controls\ChartQueryPanel.cs">
       <SubType>UserControl</SubType>
@@ -1688,7 +1753,6 @@
     </Compile>
     <Compile Include="ChartFramework\DataProviders\Adapters\CRMDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\Adapters\CRMPlanCompRateDataAdapter.cs" />
-    <Compile Include="ChartFramework\DataProviders\Adapters\CustomerDataAdapter.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlDataProviderBase.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Utilities\ThreadSafeChartUpdater.cs" />
     <Compile Include="ChartFramework\DataProviders\SqlSugar\SqlBuilder.cs" />
@@ -1705,17 +1769,11 @@
     <Compile Include="ChartFramework\Shared\Utilities\DateTimeHelper.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\DefaultTooltip.cs" />
     <Compile Include="ChartFramework\Shared\Extensions\DynamicGroupingExtensions.cs" />
-    <Compile Include="ChartFramework\Core\Models\Enums.cs" />
-    <Compile Include="ChartFramework\Core\Contracts\IDataProvider.cs" />
     <Compile Include="ChartFramework\Shared\Extensions\DataProcessing\Pipeline.cs" />
     <Compile Include="ChartFramework\Shared\Theming\ChartTheme.cs" />
     <Compile Include="ChartFramework\Shared\Theming\StyleExtensions.cs" />
     <Compile Include="ChartFramework\Shared\Extensions\UI\ChartContextMenuExtensions.cs" />
-    <Compile Include="ChartFramework\Core\Models\ChartData.cs" />
     <Compile Include="ChartFramework\Core\Models\ChartInteraction.cs" />
-    <Compile Include="ChartFramework\Core\Models\DataRequest.cs" />
-    <Compile Include="ChartFramework\Core\Models\DataSeries.cs" />
-    <Compile Include="ChartFramework\Core\Models\FieldFilter.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\ChartBuilderBase.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\LineChartBuilder.cs" />
     <Compile Include="ChartFramework\Core\Rendering\Builders\PieChartBuilder.cs" />
@@ -3748,6 +3806,9 @@
     <Content Include="ResourceFile\Plus.gif" />
     <Content Include="ResourceFile\unlockbill.png" />
     <None Include="ResourceFile\user-available.png" />
+    <Content Include="ResourceFile\yesOk.bmp" />
+    <Content Include="ResourceFile\yesOk.ico" />
+    <Content Include="ResourceFile\yesOk.png" />
     <Content Include="ResourceFile\人民币.png" />
     <None Include="Resources\lockbill.png" />
     <None Include="Resources\toolbarmenu.bmp" />
@@ -5437,9 +5498,7 @@
   <ItemGroup>
     <Folder Include="AM\" />
     <Folder Include="ATechnologyStack\ServiceRegister\" />
-    <Folder Include="ChartAnalyzer\" />
     <Folder Include="ChartFramework\DataProviders\Caching\" />
-    <Folder Include="ChartFramework\Shared\Extensions\Export\" />
     <Folder Include="ChartFramework\Shared\Extensions\SqlSugar\" />
     <Folder Include="IMResources\Icons\" />
     <Folder Include="IMResources\Images\" />

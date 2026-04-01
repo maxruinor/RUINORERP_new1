@@ -56,3 +56,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Models
     }
 
 }
+

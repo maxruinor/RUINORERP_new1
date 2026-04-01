@@ -2,7 +2,7 @@
 using LiveChartsCore.SkiaSharpView;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using RUINORERP.UI.ChartFramework.Extensions.Theming;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using System;
 using System.Collections.Generic;
@@ -28,3 +28,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Contracts
         public event EventHandler<ChartInteractionEventArgs> OnInteraction;
     }
 }
+

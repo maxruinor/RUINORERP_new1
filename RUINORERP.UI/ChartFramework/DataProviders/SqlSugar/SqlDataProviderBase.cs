@@ -1,7 +1,7 @@
 ﻿using LiveChartsCore.SkiaSharpView.WinForms;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
-using RUINORERP.UI.ChartFramework.Core.Models;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -64,3 +64,4 @@ namespace RUINORERP.UI.ChartFramework.Adapters
 
     }
 }
+

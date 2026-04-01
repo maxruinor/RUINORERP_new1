@@ -1,7 +1,7 @@
 ﻿using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using Org.BouncyCastle.Asn1.Crmf;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -226,3 +226,4 @@ namespace RUINORERP.UI.ChartFramework.Rendering.Controls
         }
     }
 }
+

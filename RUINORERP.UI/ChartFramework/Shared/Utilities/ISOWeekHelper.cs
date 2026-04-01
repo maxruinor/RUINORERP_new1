@@ -105,3 +105,4 @@ namespace RUINORERP.UI.ChartFramework.Shared.Utilities
         }
     }
 }
+

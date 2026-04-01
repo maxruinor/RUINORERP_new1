@@ -1,40 +1,35 @@
 ﻿using LiveChartsCore.SkiaSharpView.WinForms;
+using RUINORERP.Model.ChartFramework.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.ChartAnalyzer
 {
-    public class CompositeChartBuilder : ChartBuilderBase
+    /// <summary>
+    /// 复合图表构建器 (已废弃，建议使用新的架构)
+    /// </summary>
+    [Obsolete("请使用新的 ChartBuilderFactory 替代")]
+    public class CompositeChartBuilder
     {
-        private readonly List<ChartBuilderBase> _builders;
+        private readonly List<IDataProvider> _dataProviders;
 
-        public CompositeChartBuilder(params ChartBuilderBase[] builders)
-            : base(null) // 不直接使用数据源
+        public CompositeChartBuilder(params IDataProvider[] dataProviders)
         {
-            _builders = builders.ToList();
+            _dataProviders = dataProviders.ToList();
         }
 
-        public override async Task<CartesianChart> BuildChartAsync(ChartRequest request)
+        public async Task<List<ChartData>> GetDataAsync(DataRequest request)
         {
-            var chart = new CartesianChart();
-
-            foreach (var builder in _builders)
+            var results = new List<ChartData>();
+            foreach (var provider in _dataProviders)
             {
-                var subChart = await builder.BuildChartAsync(request);
-                MergeCharts(chart, subChart);
+                var data = await provider.GetDataAsync(request);
+                results.Add(data);
             }
-
-            return chart;
-        }
-
-        private void MergeCharts(CartesianChart main, CartesianChart sub)
-        {
-            main.Series = main.Series.Concat(sub.Series);
-            main.XAxes = main.XAxes.Concat(sub.XAxes);
-            main.YAxes = main.YAxes.Concat(sub.YAxes);
+            return results;
         }
     }
 }

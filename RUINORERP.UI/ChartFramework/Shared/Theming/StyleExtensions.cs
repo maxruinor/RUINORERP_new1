@@ -1,4 +1,4 @@
-﻿using RUINORERP.UI.ChartFramework.Core;
+﻿using RUINORERP.Model.ChartFramework.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -22,3 +22,4 @@ namespace RUINORERP.UI.ChartFramework.Extensions.Theming
         }
     }
 }
+

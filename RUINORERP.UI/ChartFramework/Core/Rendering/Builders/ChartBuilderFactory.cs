@@ -7,11 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using SkiaSharp;
-using RUINORERP.UI.ChartFramework.Core;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Contracts;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using RUINORERP.UI.ChartFramework.Adapters;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.UI.ChartFramework.Core.Contracts;
 
 
 namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
@@ -38,3 +38,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 
 
 }
+

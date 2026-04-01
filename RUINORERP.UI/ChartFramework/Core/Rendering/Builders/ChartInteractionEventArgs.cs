@@ -1,5 +1,5 @@
-﻿using RUINORERP.UI.ChartFramework.Core.Models;
-using RUINORERP.UI.ChartFramework.Models;
+﻿using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -61,3 +61,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
     }
 }
  
+

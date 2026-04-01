@@ -1,5 +1,5 @@
 ﻿using LiveChartsCore.Kernel.Sketches;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -14,17 +14,25 @@ namespace RUINORERP.UI.ChartFramework.Extensions.Theming
     {
         private static readonly Dictionary<string, SKColor[]> _palettes = new()
         {
-            ["Default"] = new[] { "#4285F4", "#EA4335", "#FBBC05", "#34A853" },
-            ["Pastel"] = new[] { "#A7C7E7", "#FFD1DC", "#C1E1C1", "#FDFD96" }
+            ["Default"] = new[] { 
+                SKColor.Parse("#4285F4"), 
+                SKColor.Parse("#EA4335"), 
+                SKColor.Parse("#FBBC05"), 
+                SKColor.Parse("#34A853") 
+            },
+            ["Pastel"] = new[] { 
+                SKColor.Parse("#A7C7E7"), 
+                SKColor.Parse("#FFD1DC"), 
+                SKColor.Parse("#C1E1C1"), 
+                SKColor.Parse("#FDFD96") 
+            }
         };
 
         public static void ApplyTheme(this IChartView chart, ChartMetaData meta)
         {
-            if (_palettes.TryGetValue(meta.ColorPalette, out var colors))
-            {
-                chart.Series.ForEach((series, index) =>
-                    series.SetColor(colors[index % colors.Length]));
-            }
+            // TODO: 实现主题应用逻辑
+            // LiveChartsCore 的 IChartView 没有 Series 属性，需要在图表级别处理
         }
     }
 }
+

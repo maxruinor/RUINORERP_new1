@@ -7,13 +7,11 @@ using RUINORERP.Business.CommService;
 using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Adapters;
 using RUINORERP.UI.ChartFramework.Core;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
-using RUINORERP.UI.ChartFramework.Core.Models;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using RUINORERP.UI.ChartFramework.DataProviders.SqlSugar;
-using RUINORERP.UI.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using RUINORERP.UI.ChartFramework.Shared.Utilities;
 using SqlSugar;
@@ -24,11 +22,29 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-using ValueType = RUINORERP.UI.ChartFramework.Core.ValueType;
 
 
 namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 {
+    /// <summary>
+    /// 柱状图系列 (UI 层扩展)
+    /// </summary>
+    public class ColumnSeries : DataSeries
+    {
+        public double ColumnWidth { get; set; } = 0.8;
+        public double CornerRadius { get; set; } = 4;
+    }
+
+    /// <summary>
+    /// 折线图系列 (UI 层扩展)
+    /// </summary>
+    public class LineSeries : DataSeries
+    {
+        public double LineSmoothness { get; set; } = 0.5;
+        public bool ShowMarkers { get; set; } = true;
+        public float LineWidth { get; set; } = 2f;
+    }
+
     /// <summary>
     /// 提供数据源
     /// </summary>
@@ -50,7 +66,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
         // return new[] { "Region", "Employee", "ProductCategory" };
         public override IEnumerable<MetricConfig> GetMetrics() => new[]
         {
-            new MetricConfig("Count", "客户数量", MetricType.Count,MetricUnit.人)
+            new MetricConfig("Count", "客户数量", MetricType.Count, MetricUnit.Person)
         };
         //  return new[] { "Count", "Sum", "Average" };
         protected override string PrimaryTableName => "tb_CRM_Customer";
@@ -154,7 +170,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 Title = "CRM系统周统计(按员工)",
                 ChartType = ChartType.Column,
                 IsStacked = false,
-                ValueType = ValueType.Absolute
+                ValueType = RUINORERP.Model.ChartFramework.Models.ValueType.Absolute
             };
 
             // 获取所有周并排序(格式：yyyy-Www)
@@ -278,7 +294,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 Title = "CRM系统月统计(按员工)",
                 ChartType = ChartType.Column,
                 IsStacked = false,
-                ValueType = ValueType.Absolute
+                ValueType = RUINORERP.Model.ChartFramework.Models.ValueType.Absolute
             };
 
             // 获取所有月份并排序（格式：yyyy-MM）
@@ -378,7 +394,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
                 Title = "CRM系统月统计(总计)",
                 ChartType = ChartType.Column,
                 IsStacked = true, // 堆叠显示总计
-                ValueType = ValueType.Absolute
+                ValueType = RUINORERP.Model.ChartFramework.Models.ValueType.Absolute
             };
 
             // 月份标签
@@ -420,7 +436,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             {
                 Title = "CRM指标趋势分析",
                 ChartType = ChartType.Line,
-                ValueType = ValueType.Absolute
+                ValueType = RUINORERP.Model.ChartFramework.Models.ValueType.Absolute
             };
 
             var periods = stats.Select(s => s.Date.ToString("yyyy-MM")).Distinct().OrderBy(p => p).ToList();
@@ -454,7 +470,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             {
                 Title = $"员工绩效对比 ({minDate:yyyy-MM-dd} 至 {maxDate:yyyy-MM-dd})", // 添加时间范围
                 ChartType = ChartType.Bar, // 横向条形图
-                ValueType = ValueType.Absolute,
+                ValueType = RUINORERP.Model.ChartFramework.Models.ValueType.Absolute,
                 // 添加周标签作为副标题
                 SubTitle = $"数据周期：{stats.First().DateRange} 等共 {stats.Select(s => s.WeekLabel).Distinct().Count()} 周"
             };

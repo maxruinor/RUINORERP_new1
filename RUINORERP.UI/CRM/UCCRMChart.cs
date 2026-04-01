@@ -7,30 +7,23 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using LiveChartsCore;
 using RUINORERP.Model;
+using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.UI.ChartFramework.DataProviders.Adapters.CRM;
+using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
+using RUINORERP.UI.ChartFramework.Rendering.Controls;
+using RUINORERP.UI.ChartFramework.DataProviders.Adapters;
+using RUINORERP.Business.Security;
+using RUINORERP.Global;
 using RUINORERP.UI.Common;
-using RUINORERP.UI.ChartAnalyzer;
-using LiveChartsCore.SkiaSharpView.VisualElements;
 using SkiaSharp;
 using LiveChartsCore.Kernel.Sketches;
-using RUINORERP.UI.ChartFramework.Core;
-using RUINORERP.UI.ChartFramework.Models;
-using RUINORERP.UI.ChartFramework.DataProviders.Adapters;
-using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
-using Netron.GraphLib;
-using RUINORERP.Business.Security;
-using ICSharpCode.SharpZipLib.Zip;
-using static RUINORERP.UI.ChartFramework.Models.DataRequest;
-using RUINORERP.Global;
-
 
 namespace RUINORERP.UI.CRM
 {
-    [MenuAttrAssemblyInfo("商机总览", ModuleMenuDefine.模块定义.客户关系, ModuleMenuDefine.客户关系.商机总览)]
     public partial class UCCRMChart : BaseUControl
     {
         public UCCRMChart()
@@ -83,7 +76,7 @@ namespace RUINORERP.UI.CRM
             //cmbTimeType.DisplayMember = "Description";
             //cmbTimeType.ValueMember = "Value";
 
-            DataBindingHelper.BindData4CmbByEnum<DataRequest>(request, t => (int)t.SelectedTimeRange, typeof(TimeSelectType), cmbTimeType, false);
+            DataBindingHelper.BindData4CmbByEnum<DataRequest>(request, t => (int)t.RangeType, typeof(TimeSelectType), cmbTimeType, false);
             DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.StartTime, DtpStart, false);
             DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.EndTime, dtpEnd, false);
 
@@ -102,7 +95,7 @@ namespace RUINORERP.UI.CRM
             };
 
             // 构建图表
-            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerDataAdapter());
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerAnalysisAdapter());
             builder.OnInteraction += (sender, args) =>
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)
@@ -268,7 +261,7 @@ namespace RUINORERP.UI.CRM
                 StartTime = DateTime.Now.AddMonths(-6),
                 EndTime = DateTime.Now
             };
-            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerDataAdapter());
+            var builder = ChartBuilderFactory.CreateBuilder(request, new CustomerAnalysisAdapter());
             builder.OnInteraction += (sender, args) =>
             {
                 if (args.InteractionType == InteractionType.Click && args.DataPoint != null)

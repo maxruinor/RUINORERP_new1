@@ -9,14 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.Common.Extensions;
 using RUINORERP.UI.ChartFramework.Extensions.Theming;
 using SkiaSharp;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.Model.ChartFramework.Contracts;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
-using RUINORERP.UI.ChartFramework.Core.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using LiveChartsCore.SkiaSharpView.VisualElements;
 using RUINORERP.UI.ChartFramework.DataProviders.Adapters;
 using NPOI.POIFS.NIO;
@@ -131,4 +131,5 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         }
     }
 }
+
 

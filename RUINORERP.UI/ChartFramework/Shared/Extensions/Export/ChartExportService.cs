@@ -1,16 +1,17 @@
 ﻿using OfficeOpenXml;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RUINORERP.UI.ChartFramework.Shared.Extensions.Export
 {
-    // Extensions/Export/ChartExportService.cs
+    /// <summary>
+    /// 图表导出服务
+    /// </summary>
     public static class ChartExportService
     {
         public static void ExportToExcel(this ChartData data, string filePath)
@@ -26,17 +27,20 @@ namespace RUINORERP.UI.ChartFramework.Shared.Extensions.Export
             }
 
             // 填充数据
-            for (int row = 0; row < data.MetaData.PrimaryLabels.Length; row++)
+            if (data.CategoryLabels != null)
             {
-                sheet.Cells[row + 2, 1].Value = data.MetaData.PrimaryLabels[row];
-
-                for (int col = 0; col < data.Series.Count; col++)
+                for (int row = 0; row < data.CategoryLabels.Length; row++)
                 {
-                    if (data.Series[col].Values.Count > row)
+                    sheet.Cells[row + 2, 1].Value = data.CategoryLabels[row];
+
+                    for (int col = 0; col < data.Series.Count; col++)
                     {
-                        sheet.Cells[row + 2, col + 2].Value = data.Series[col].Values[row];
-                        sheet.Cells[row + 2, col + 2].Style.Numberformat.Format =
-                            data.MetaData.ValueType == ChartFramework.Core.ValueType.Currency ? "¥#,##0.00" : "#,##0";
+                        if (data.Series[col].Values.Count > row)
+                        {
+                            sheet.Cells[row + 2, col + 2].Value = data.Series[col].Values[row];
+                            sheet.Cells[row + 2, col + 2].Style.Numberformat.Format =
+                                data.ValueType == RUINORERP.Model.ChartFramework.Models.ValueType.Currency ? "¥#,##0.00" : "#,##0";
+                        }
                     }
                 }
             }
@@ -48,14 +52,14 @@ namespace RUINORERP.UI.ChartFramework.Shared.Extensions.Export
         {
             using var dialog = new SaveFileDialog
             {
-                Filter = "Excel文件|*.xlsx",
+                Filter = "Excel 文件|*.xlsx",
                 FileName = $"{data.Title}_{DateTime.Now:yyyyMMdd}.xlsx"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
                 data.ExportToExcel(dialog.FileName);
-                MessageBox.Show($"成功导出到: {dialog.FileName}", "导出完成",
+                MessageBox.Show($"成功导出到：{dialog.FileName}", "导出完成",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }

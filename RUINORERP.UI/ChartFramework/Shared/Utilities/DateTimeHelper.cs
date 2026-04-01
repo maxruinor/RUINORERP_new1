@@ -83,3 +83,4 @@ namespace RUINORERP.UI.ChartAnalyzer
     }
 
 }
+

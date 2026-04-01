@@ -248,3 +248,4 @@
         private Krypton.Toolkit.KryptonComboBox cmbRangeType;
     }
 }
+

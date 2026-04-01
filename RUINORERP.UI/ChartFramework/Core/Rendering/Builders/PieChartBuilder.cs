@@ -12,7 +12,8 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.VisualElements;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using NPOI.POIFS.Crypt.Dsig;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.Model.ChartFramework.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using SkiaSharp;
@@ -300,8 +301,8 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         {
             return data.ValueType switch
             {
-                Core.ValueType.Percentage => value.ToString("P1"),
-                Core.ValueType.Currency => value.ToString("C2"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => value.ToString("P1"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => value.ToString("C2"),
                 _ => value.ToString("N2")
             };
         }
@@ -370,4 +371,5 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         }
     }
 }
+
 

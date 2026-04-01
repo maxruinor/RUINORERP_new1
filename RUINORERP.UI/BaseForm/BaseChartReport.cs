@@ -13,6 +13,7 @@ using RUINORERP.Common.Helper;
 using Krypton.Workspace;
 using Krypton.Navigator;
 using RUINORERP.Model;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINOR.Core;
 using RUINORERP.UI.Common;
 using RUINORERP.UI.BI;

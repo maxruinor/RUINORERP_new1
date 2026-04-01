@@ -9,13 +9,13 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.SkiaSharpView.VisualElements;
 using LiveChartsCore.SkiaSharpView.WinForms;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using SkiaSharp;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.Model.ChartFramework.Contracts;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using RUINORERP.UI.ChartFramework.Shared.Extensions.UI;
-using RUINORERP.UI.ChartFramework.Core.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.Defaults;
 using LiveChartsCore.SkiaSharpView.SKCharts;
@@ -88,7 +88,7 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             new Axis
             {
                 Labeler = value => FormatLabel(value, data),
-                MinStep = data.ValueType ==RUINORERP.UI.ChartFramework.Core.ValueType.Currency ? 100 : 1
+                MinStep = data.ValueType == RUINORERP.Model.ChartFramework.Models.ValueType.Currency ? 100 : 1
             }
         };
         }
@@ -96,8 +96,8 @@ var pieChart = pieBuilder.Build(statusDistributionData)
         {
             return data.ValueType switch
             {
-                RUINORERP.UI.ChartFramework.Core.ValueType.Currency => value.ToString("C2"),
-                RUINORERP.UI.ChartFramework.Core.ValueType.Percentage => value.ToString("P1"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => value.ToString("C2"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => value.ToString("P1"),
                 _ => value.ToString("N0")
             };
         }
@@ -106,8 +106,8 @@ var pieChart = pieBuilder.Build(statusDistributionData)
         {
             return data.ValueType switch
             {
-                Core.ValueType.Currency => (value / 1000).ToString("C0") + "K",
-                Core.ValueType.Percentage => value.ToString("P0"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => (value / 1000).ToString("C0") + "K",
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => value.ToString("P0"),
                 _ => value.ToString("N0")
             };
         }
@@ -207,24 +207,17 @@ var pieChart = pieBuilder.Build(statusDistributionData)
                     Values = series.Values.ToArray(),
                     // Fill = new SolidColorPaint(series.ColorHex.ToSKColor()),
                     Stroke = null,
-                    Rx = 4, // 圆角半径X
-                    Ry = 4, // 圆角半径Y
+                    Rx = 4, // 圆角半径 X
+                    Ry = 4, // 圆角半径 Y
                     MaxBarWidth = 30
                 };
-
+        
                 // 设置堆叠属性
                 //if (data.IsStacked)
                 //{
-                //    columnSeries.se = true; // 使用相同的StackGroup实现堆叠
+                //    columnSeries.StackGroup = 0; // 使用相同的 StackGroup 实现堆叠
                 //}
-
-                // 如果是ColumnSeries类型，应用特定配置
-                if (series is ColumnSeries columnSeriesData)
-                {
-                    columnSeries.Rx = columnSeries.Ry = (float)columnSeriesData.CornerRadius;
-                    columnSeries.MaxBarWidth = (float)(columnSeriesData.ColumnWidth * 50); // 转换为像素值
-                }
-
+        
                 return columnSeries;
             }).ToArray();
         }
@@ -258,40 +251,40 @@ var pieChart = pieBuilder.Build(statusDistributionData)
             };
         }
 
-        // 辅助方法：格式化Y轴数值
-        private string FormatYValue(double value, ValueType valueType)
+        // 辅助方法：格式化 Y 轴数值
+        private string FormatYValue(double value, RUINORERP.Model.ChartFramework.Models.ValueType valueType)
         {
             return valueType switch
             {
-                ValueType.Currency => (value / 1000).ToString("C0") + "K",
-                ValueType.Percentage => value.ToString("P1"),
-                ValueType.Scientific => value.ToString("E2"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => (value / 1000).ToString("C0") + "K",
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => value.ToString("P1"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Scientific => value.ToString("E2"),
                 _ => value.ToString("N0")
             };
         }
-
+        
         // 辅助方法：格式化数据标签
         // 修正后的格式化方法
-        private string FormatDataLabel(LiveChartsCore.Kernel.ChartPoint point, ValueType valueType)
+        private string FormatDataLabel(LiveChartsCore.Kernel.ChartPoint point, RUINORERP.Model.ChartFramework.Models.ValueType valueType)
         {
             // 获取实际数值
             var value = point.Coordinate.PrimaryValue;
             return valueType switch
             {
-                ValueType.Currency => value.ToString("C2"),
-                ValueType.Percentage => value.ToString("P1"),
-                ValueType.Scientific => value.ToString("E2"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => value.ToString("C2"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => value.ToString("P1"),
+                RUINORERP.Model.ChartFramework.Models.ValueType.Scientific => value.ToString("E2"),
                 _ => value.ToString("N2")
             };
         }
-
+        
         // 辅助方法：获取最小步长
-        private double GetMinStep(ValueType valueType)
+        private double GetMinStep(RUINORERP.Model.ChartFramework.Models.ValueType valueType)
         {
             return valueType switch
             {
-                ValueType.Currency => 100,
-                ValueType.Percentage => 0.1,
+                RUINORERP.Model.ChartFramework.Models.ValueType.Currency => 100,
+                RUINORERP.Model.ChartFramework.Models.ValueType.Percentage => 0.1,
                 _ => 0
             };
         }
@@ -335,4 +328,5 @@ var pieChart = pieBuilder.Build(statusDistributionData)
 
 
 }
+
 

@@ -1,7 +1,7 @@
 ﻿using Netron.GraphLib;
 using RUINORERP.Model;
-using RUINORERP.UI.ChartFramework.Core.Models;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.Common;
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Controls
             var timeRangeGroup = new GroupBox { Text = "时间范围", Dock = DockStyle.Top };
             var cmbRangeType = new ComboBox
             {
-                DataSource = Enum.GetValues(typeof(DataRequest.DateTimeRange)),
+                DataSource = Enum.GetValues(typeof(TimeRangeType)),
                 Dock = DockStyle.Left
             };
             //var dtpStart = new DateTimePicker { Format = DateTimePickerFormat.Custom, CustomFormat = "yyyy-MM-dd" };
@@ -64,7 +64,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Controls
             };
             var cmbValueType = new ComboBox
             {
-                DataSource = Enum.GetValues(typeof(ValueType))
+                DataSource = Enum.GetValues(typeof(RUINORERP.Model.ChartFramework.Models.ValueType))
             };
             // ...布局代码...
 
@@ -73,18 +73,15 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Controls
             btnQuery.Click += (s, e) =>
             {
                 var request = BuildRequest();
-                if (request.Validate(out var error))
-                    QueryRequested?.Invoke(this, request);
-                else
-                    MessageBox.Show(error);
+                // TODO: 添加验证逻辑
+                QueryRequested?.Invoke(this, request);
             };
 
 
             //DataBindingHelper.BindData4Cmb<tb_Department>(request, k => k.c, v => v.DepartmentName, cmbDepartment);
             DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.StartTime, dtpStart, false);
             DataBindingHelper.BindData4DataTime<DataRequest>(request, t => t.EndTime, dtpEnd, false);
-            //   DataBindingHelper.BindData4TextBox<tb_Employee>(entity, t => t.JobTitle, txtJobTitle, BindDataType4TextBox.Text, false);
-            DataBindingHelper.BindData4ControlByEnum<DataRequest>(request, t => t.TimeRange, cmbRangeType, BindDataType4Enum.EnumName, typeof(TimeRangeType));
+            DataBindingHelper.BindData4ControlByEnum<DataRequest>(request, t => t.RangeType, cmbRangeType, BindDataType4Enum.EnumName, typeof(TimeRangeType));
             Controls.Add(timeRangeGroup);
             Controls.Add(dimGroup);
             Controls.Add(metricGroup);
@@ -124,10 +121,11 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Controls
         {
             return new List<MetricConfig>
         {
-            new() { FieldName = "Amount", DisplayName = "金额", Unit = MetricUnit.元 },
-            new() { FieldName = "Count", DisplayName = "订单数", Unit = MetricUnit.笔 },
-            new() { FieldName = "CustomerCount", DisplayName = "客户数", Unit = MetricUnit.人 }
+            new() { FieldName = "Amount", DisplayName = "金额", Unit = MetricUnit.Amount },
+            new() { FieldName = "Count", DisplayName = "订单数", Unit = MetricUnit.Count },
+            new() { FieldName = "CustomerCount", DisplayName = "客户数", Unit = MetricUnit.Person }
         };
         }
     }
 }
+

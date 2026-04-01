@@ -50,7 +50,7 @@ using RUINORERP.UI.FM;
 namespace RUINORERP.UI.PSI.INV
 {
     [MenuAttrAssemblyInfo("借出单", ModuleMenuDefine.模块定义.进销存管理, ModuleMenuDefine.进销存管理.借出归还, BizType.借出单)]
-    public partial class UCProdBorrowing : BaseBillEditGeneric<tb_ProdBorrowing, tb_ProdBorrowingDetail>, IPublicEntityObject
+    public partial class UCProdBorrowing : BaseBillEditGeneric<tb_ProdBorrowing, tb_ProdBorrowingDetail>, IPublicEntityObject, IToolStripMenuInfoAuth
     {
         public UCProdBorrowing()
         {
@@ -141,7 +141,11 @@ namespace RUINORERP.UI.PSI.INV
 
 
         }
-
+        public override void AddExcludeMenuList()
+        {
+            //通过付款单来联动结案
+            base.AddExcludeMenuList(MenuItemEnums.确认执行);
+        }
 
         /// <summary>
         /// 如果需要查询条件查询，就要在子类中重写这个方法

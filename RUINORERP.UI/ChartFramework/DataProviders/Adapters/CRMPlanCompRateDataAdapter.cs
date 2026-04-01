@@ -3,21 +3,19 @@ using RUINORERP.Business.Security;
 using RUINORERP.Common.Extensions;
 using RUINORERP.Model;
 using RUINORERP.UI.ChartFramework.Adapters;
-using RUINORERP.UI.ChartFramework.Core.Models;
-using RUINORERP.UI.ChartFramework.Core;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Shared.Utilities;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using ValueType = RUINORERP.UI.ChartFramework.Core.ValueType;
+using LiveChartsCore.SkiaSharpView;
 using RUINORERP.Global.EnumExt.CRM;
 using FastReport.Data;
 using System.Web.UI.WebControls;
 using NSoup.Helper;
+using ValueType = RUINORERP.Model.ChartFramework.Models.ValueType;
 
 namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
 {
@@ -39,7 +37,7 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
         // return new[] { "Region", "Employee", "ProductCategory" };
         public override IEnumerable<MetricConfig> GetMetrics() => new[]
         {
-            new MetricConfig("Count", "客户数量", MetricType.Count,MetricUnit.人)
+            new MetricConfig("Count", "客户数量", MetricType.Count,MetricUnit.Person)
         };
         //  return new[] { "Count", "Sum", "Average" };
         protected override string PrimaryTableName => "tb_CRM_Customer";
@@ -136,17 +134,24 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
             // 设置分类标签和数据
             chartData.CategoryLabels = sortedStats.Select(s => s.DisplayValue).ToArray();
 
-            foreach (var metric in chartData.CategoryLabels)
+            // 暂时注释，等待修复 PieSeries 类型转换问题
+            // foreach (var metric in chartData.CategoryLabels)
+            // {
+            //     chartData.Series.Add(new PieSeries<double>
+            //     {
+            //         Name = metric,
+            //         Values = sortedStats.Where(c => c.DisplayValue == metric).Select(s => (double)s.Count).ToList(),
+            //     });
+            // }
+            
+            // 临时方案：创建一个空的 Series
+            if (sortedStats.Any())
             {
-                chartData.Series.Add(new PieSeries
+                chartData.Series.Add(new DataSeries
                 {
-                    Name = metric,
-                    Values = sortedStats.Where(c => c.DisplayValue == metric).Select(s => (double)s.Count).ToList(),
-                    PointLabels = sortedStats.Where(c => c.DisplayValue == metric).Select(s => s.DisplayValue).ToArray(),
-                    //  DataLabels = true,
-                    // Colors = GetStatusColors(sortedStats.Select(s => s.Status).ToList())
-                }); ;
-
+                    Name = "完成率",
+                    Values = sortedStats.Select(s => (double)s.Count).ToList()
+                });
             }
 
 
@@ -221,3 +226,4 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.Adapters
     }
 
 }
+

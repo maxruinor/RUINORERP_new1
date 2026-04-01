@@ -31,3 +31,4 @@ namespace RUINORERP.UI.ChartFramework.Extensions.Theming
         }
     }
  
+

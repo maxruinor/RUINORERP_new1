@@ -50,3 +50,4 @@ namespace RUINORERP.UI.ChartFramework.Data.Transformers
             => value.ToString("N2", CultureInfo.CurrentUICulture);
     }
 }
+

@@ -1,6 +1,6 @@
 ﻿using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView.WinForms;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,3 +56,4 @@ public class ThreadSafeChartUpdater
    
     }
 }
+

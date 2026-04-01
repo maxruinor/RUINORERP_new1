@@ -1,4 +1,4 @@
-﻿using RUINORERP.UI.ChartFramework.Models;
+﻿using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,3 +42,4 @@ namespace RUINORERP.UI.ChartFramework.Shared.Extensions.DataProcessing
         }
     }
  
+

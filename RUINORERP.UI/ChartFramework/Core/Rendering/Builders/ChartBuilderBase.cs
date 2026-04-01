@@ -8,10 +8,10 @@ using LiveChartsCore.SkiaSharpView.VisualElements;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using RUINORERP.UI.ChartAnalyzer;
 using RUINORERP.UI.ChartFramework.Adapters;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
-using RUINORERP.UI.ChartFramework.Core.Models;
+using RUINORERP.Model.ChartFramework.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Extensions.Theming;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using RUINORERP.UI.ChartFramework.Rendering.Controls;
 using SkiaSharp;
 using System;
@@ -20,6 +20,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RUINORERP.UI.ChartFramework.Core.Contracts;
 
 namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 {
@@ -106,8 +107,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
             }
         }
 
-        private void RaiseInteractionForPiePoint(
-   ChartPoint e)
+        private void RaiseInteractionForPiePoint(ChartPoint e)
         {
             var chartPoint = e;
             var dataPoint = new DataPoint
@@ -115,7 +115,7 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
                 // XValue = chartPoint.SecondaryValue,
                 // YValue = chartPoint.PrimaryValue,
                 Label = chartPoint.Context.Series.Name ?? string.Empty,
-                Tag = chartPoint.Context.Series.Tag
+                Tag = chartPoint.Context.Series.Tag?.ToString() ?? string.Empty
             };
 
             var series = chartPoint.Context.Series;
@@ -211,3 +211,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
 
     }
 }
+

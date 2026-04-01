@@ -1,14 +1,14 @@
 ﻿using LiveChartsCore.Kernel.Sketches;
-using NPOI.SS.UserModel.Charts;
+using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace RUINORERP.UI.ChartFramework.Core.Rendering
 {
-    // Core/Rendering/RenderingPipeline.cs
+    /// <summary>
+    /// 渲染管线 (简化版)
+    /// </summary>
     public class RenderingPipeline
     {
         private readonly List<IRenderingMiddleware> _middlewares = new();
@@ -21,20 +21,17 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering
 
         public Task RenderAsync(IChartView chart, ChartData data)
         {
-            var context = new RenderingContext(chart, data);
-
-            foreach (var middleware in _middlewares)
-            {
-                middleware.Invoke(context);
-                if (context.IsAborted) break;
-            }
-
+            // 简化实现，暂不支持中间件
             return Task.CompletedTask;
         }
     }
 
+    /// <summary>
+    /// 渲染中间件接口
+    /// </summary>
     public interface IRenderingMiddleware
     {
-        void Invoke(RenderingContext context);
+        void Render(IChartView chart, ChartData data);
     }
 }
+

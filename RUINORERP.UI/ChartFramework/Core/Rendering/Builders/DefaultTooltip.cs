@@ -172,3 +172,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         }
     }
 }
+

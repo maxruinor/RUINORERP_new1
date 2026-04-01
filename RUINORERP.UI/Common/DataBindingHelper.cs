@@ -52,6 +52,7 @@ using RUINORERP.Common.CollectionExtension;
 using RUINORERP.Business.Cache;
 using System.Collections.Concurrent;
 using FastReport.Utils;
+using RUINORERP.Model.ChartFramework.Models;
 
 namespace RUINORERP.UI.Common
 {

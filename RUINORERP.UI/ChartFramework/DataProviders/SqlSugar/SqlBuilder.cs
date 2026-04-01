@@ -1,4 +1,4 @@
-﻿using RUINORERP.UI.ChartFramework.Models;
+﻿using RUINORERP.Model.ChartFramework.Models;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -156,3 +156,4 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.SqlSugar
         }
     }
 }
+

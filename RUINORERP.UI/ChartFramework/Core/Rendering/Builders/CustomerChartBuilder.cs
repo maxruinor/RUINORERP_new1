@@ -9,8 +9,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LiveChartsCore.Drawing;
-using RUINORERP.UI.ChartFramework.Models;
-using RUINORERP.UI.ChartFramework.Core.Contracts;
+using RUINORERP.Model.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Contracts;
 using RUINORERP.UI.ChartFramework.Core.Rendering.Builders;
 using LiveChartsCore.SkiaSharpView.WinForms;
 using LiveChartsCore.Kernel.Sketches;
@@ -116,3 +116,4 @@ namespace RUINORERP.UI.ChartFramework.Core.Rendering.Builders
         }
     }
 }
+

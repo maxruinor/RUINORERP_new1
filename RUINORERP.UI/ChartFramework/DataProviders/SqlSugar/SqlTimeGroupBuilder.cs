@@ -1,4 +1,4 @@
-﻿using RUINORERP.UI.ChartFramework.Core;
+﻿using RUINORERP.Model.ChartFramework.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,3 +69,4 @@ namespace RUINORERP.UI.ChartFramework.DataProviders.SqlSugar
     // 使用示例：
     // var groupExpr = SqlTimeGroupBuilder.BuildGroupExpression("CreatedAt", TimeRangeType.Monthly);
 }
+

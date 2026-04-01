@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using SkiaSharp;
 using System.Globalization;
-using RUINORERP.UI.ChartFramework.Core.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using LiveChartsCore.SkiaSharpView.Drawing;
 using LiveChartsCore;
 namespace RUINORERP.UI.ChartFramework.Shared.Theming
@@ -42,4 +42,5 @@ namespace RUINORERP.UI.ChartFramework.Shared.Theming
         //}
     }
 }
+
 

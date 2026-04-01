@@ -1,18 +1,16 @@
 ﻿using LiveChartsCore.Kernel.Sketches;
-using RUINORERP.UI.ChartFramework.Models.ChartFramework.Core.Models;
-using RUINORERP.UI.ChartFramework.Models;
+using RUINORERP.Model.ChartFramework.Models;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RUINORERP.UI.ChartFramework.Rendering
 {
-    // Rendering/GpuAcceleratedRenderer.cs
-    public class GpuAcceleratedRenderer : IChartRenderer
+    /// <summary>
+    /// GPU 加速渲染器 (简化版)
+    /// </summary>
+    public class GpuAcceleratedRenderer
     {
         private readonly SKGLControl _glControl;
         private GRContext _glContext;
@@ -23,28 +21,26 @@ namespace RUINORERP.UI.ChartFramework.Rendering
             _glContext = GRContext.CreateGl();
         }
 
-        public void Render(IChartView chart, ChartDataSet data)
+        public void Render(IChartView chart, ChartData data)
         {
             _glControl.PaintSurface += (sender, e) =>
             {
                 var canvas = e.Surface.Canvas;
                 using var paint = new SKPaint { IsAntialias = true };
 
-                // 使用GPU加速绘制
+                // 使用 GPU 加速绘制
                 canvas.Clear(SKColors.Transparent);
                 foreach (var series in data.Series)
                 {
-                    RenderSeries(_glContext, canvas, series, data.MetaData);
+                    RenderSeries(_glContext, canvas, series);
                 }
             };
         }
 
-        private void RenderSeries(GRContext context, SKCanvas canvas,
-            ChartSeries series, ChartMetaData meta)
+        private void RenderSeries(GRContext context, SKCanvas canvas, DataSeries series)
         {
-            // 使用OpenGL着色器优化绘制
-            using var shader = CreateOptimizedShader(series, meta);
-            // ...GPU特定绘制逻辑
+            // 简化实现
         }
     }
 }
+

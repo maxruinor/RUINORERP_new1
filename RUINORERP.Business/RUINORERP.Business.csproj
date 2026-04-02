@@ -139,6 +139,7 @@
     <Folder Include="Extensions\" />
     <Folder Include="IocExtensions\" />
     <Folder Include="Services\" />
+    <Folder Include="Validator\Tests\" />
   </ItemGroup>
 
   <ItemGroup>

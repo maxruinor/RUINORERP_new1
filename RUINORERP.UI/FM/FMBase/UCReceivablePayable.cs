@@ -245,7 +245,7 @@ namespace RUINORERP.UI.FM
             // 设置默认值（如果允许编辑且没有选择值）
             if (canEdit && entity.PayeeInfoID == null)
             {
-                //设置一个默认值 如果有默认收款账号时
+                //设置一个默认值 如果有默认收款账户时
                 var payeeInfoList = cmbPayeeInfoID.Items.CastToList<tb_FM_PayeeInfo>().Where(c => c.PayeeInfoID != -1).ToList();
                 if (!payeeInfoList.Any(c => c.PayeeInfoID == entity.PayeeInfoID) && entity.CustomerVendor_ID > 0)
                 {
@@ -459,7 +459,8 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4TextBox<tb_FM_ReceivablePayable>(entity, t => t.Remark, txtRemark, BindDataType4TextBox.Text, false);
 
             DataBindingHelper.BindData4CheckBox<tb_FM_ReceivablePayable>(entity, t => t.ApprovalResults, chkApprovalResults, false);
-            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
+            DataBindingHelper.BindData4Cmb<tb_FM_PayeeInfo>(entity, k => k.PayeeInfoID, v => v.DisplayText, cmbPayeeInfoID, 
+                c => c.CustomerVendor_ID.HasValue && c.CustomerVendor_ID.Value == entity.CustomerVendor_ID);
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ARAPStatus, lblDataStatus, BindDataType4Enum.EnumName, typeof(ARAPStatus));
             DataBindingHelper.BindData4ControlByEnum<tb_FM_ReceivablePayable>(entity, t => t.ApprovalStatus, lblReview, BindDataType4Enum.EnumName, typeof(Global.ApprovalStatus));
             // 注意：ShowPrintStatus 已在基类 LoadDataToUI -> UpdateAllUIStates 中统一处理
@@ -867,7 +868,7 @@ namespace RUINORERP.UI.FM
             {
                 case ReceivePaymentType.收款:
                     lblBillText.Text = "应收款单";
-                    lblAccount_id.Text = "收款账号";
+                    lblAccount_id.Text = "收款账户";
                     lblCustomerVendor_ID.Text = "应付单位";
 
 
@@ -878,7 +879,7 @@ namespace RUINORERP.UI.FM
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "应付款单";
-                    lblAccount_id.Text = "付款账号";
+                    lblAccount_id.Text = "付款账户";
                     lblCustomerVendor_ID.Text = "应收单位";
                     // 付款单时明确设置收款信息控件为可见
                     btnInfo.Visible = true;
@@ -1153,13 +1154,13 @@ namespace RUINORERP.UI.FM
                 EditEntity.tb_FM_ReceivablePayableDetails = details;
 
 
-                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
+                //收付款单中的  收款或付款账户中的币别是否与选的币别一致。
                 if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
                 {
                     tb_FM_Account bizcatch = _cacheManager.GetEntity<tb_FM_Account>(EditEntity.Account_id);
                     if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
                     {
-                        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
+                        MessageBox.Show("收付款账户中的币别与当前单据的币别不一致。");
                         return false;
                     }
                 }
@@ -1313,7 +1314,7 @@ namespace RUINORERP.UI.FM
                         {
                             BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
                             frmaddg.CurMenuInfo = this.CurMenuInfo;
-                            frmaddg.Text = "收款账号详情";
+                            frmaddg.Text = "收款账户详情";
                             frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
                             object obj = frmaddg.bindingSourceEdit.AddNew();
                             obj = btninfo.Tag;

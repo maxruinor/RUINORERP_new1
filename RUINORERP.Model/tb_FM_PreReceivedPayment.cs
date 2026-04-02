@@ -70,7 +70,7 @@ namespace RUINORERP.Model
         /// 公司账户
         /// </summary>
         [AdvQueryAttribute(ColName = "Account_id",ColDesc = "公司账户")] 
-        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账户" )]
+        [SugarColumn(ColumnDataType = "bigint", SqlParameterDbType ="Int64",  ColumnName = "Account_id" , DecimalDigits = 0,IsNullable = true,ColumnDescription = "公司账户")]
         [FKRelationAttribute("tb_FM_Account","Account_id")]
         public long? Account_id
         { 

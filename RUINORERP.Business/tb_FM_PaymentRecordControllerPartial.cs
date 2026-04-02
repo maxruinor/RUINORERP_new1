@@ -283,6 +283,7 @@ namespace RUINORERP.Business
                         g => g.Key,
                         g => g.Select(d => d.PaymentDetailId).ToList()
                     );
+
                 //应收付
                 List<tb_FM_ReceivablePayable> receivablePayableUpdateList = new List<tb_FM_ReceivablePayable>();
 
@@ -1017,7 +1018,7 @@ namespace RUINORERP.Business
                                 decimal oldLocalRefund = prePayment.LocalRefundAmount;
                                 decimal oldForeignRefund = prePayment.ForeignRefundAmount;
                                 int oldStatus = prePayment.PrePaymentStatus;
-                                
+
                                 //正数是地，是收预付款的款，所以是等待核销
                                 prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                 prePayment.PrePayDate = DateTime.Now;
@@ -1027,7 +1028,7 @@ namespace RUINORERP.Business
                                 string paymentType = prePayment.ReceivePaymentType.ToString();
                                 // 记录财务审计日志
                                 string auditMessage = $"预收款单收款：本币余额从 {oldLocalBalance} 增加到 {prePayment.LocalBalanceAmount}，外币余额从 {oldForeignBalance} 增加到 {prePayment.ForeignBalanceAmount}，状态从 {oldStatus} 变更为 {prePayment.PrePaymentStatus}。收款金额：本币 {RecordDetail.LocalAmount}，外币 {RecordDetail.ForeignAmount}。关联收款单：{entity.PaymentNo}";
-                                fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(paymentType, prePayment, auditMessage);
+                                await fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(paymentType, prePayment, auditMessage);
 
                                 //预收付的退款操作，对应收付款审核时。要找他对应的正向预收付单。修改状态。和退回金额。
                                 if (RecordDetail.LocalAmount < 0 || RecordDetail.ForeignAmount < 0)
@@ -1038,7 +1039,7 @@ namespace RUINORERP.Business
                                     decimal refundOldLocalRefund = prePayment.LocalRefundAmount;
                                     decimal refundOldForeignRefund = prePayment.ForeignRefundAmount;
                                     int refundOldStatus = prePayment.PrePaymentStatus;
-                                    
+
                                     prePayment.LocalRefundAmount += Math.Abs(RecordDetail.LocalAmount);
                                     prePayment.ForeignRefundAmount += Math.Abs(RecordDetail.ForeignAmount);
                                     prePayment.Remark += $"{System.DateTime.Now.ToString()}退款{Math.Abs(RecordDetail.LocalAmount)}";
@@ -1069,7 +1070,7 @@ namespace RUINORERP.Business
                                     paymentType = prePayment.ReceivePaymentType.ToString();
                                     // 记录退款财务审计日志
                                     string refundAuditMessage = $"预收款单退款：本币余额从 {refundOldLocalBalance} 变更为 {prePayment.LocalBalanceAmount}，外币余额从 {refundOldForeignBalance} 变更为 {prePayment.ForeignBalanceAmount}，本币退款金额从 {refundOldLocalRefund} 增加到 {prePayment.LocalRefundAmount}，外币退款金额从 {refundOldForeignRefund} 增加到 {prePayment.ForeignRefundAmount}，状态从 {refundOldStatus} 变更为 {prePayment.PrePaymentStatus}。退款金额：本币 {Math.Abs(RecordDetail.LocalAmount)}，外币 {Math.Abs(RecordDetail.ForeignAmount)}。关联收款单：{entity.PaymentNo}";
-                                    fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(paymentType, prePayment, refundAuditMessage);
+                                    await fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(paymentType, prePayment, refundAuditMessage);
 
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额
 
@@ -1188,16 +1189,35 @@ namespace RUINORERP.Business
 
                                                 if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount) || prePayment.LocalBalanceAmount == 0)
                                                 {
+                                                    decimal refundAmount = Math.Abs(entity.TotalLocalAmount);
+
                                                     if (purOrder.Deposit == Math.Abs(entity.TotalLocalAmount))
                                                     {
                                                         purOrder.CloseCaseOpinions += $"订金全退，订单取消作废";
                                                         purOrder.DataStatus = (int)DataStatus.作废;
+                                                        purOrder.PayStatus = (int)PayStatus.未付款;
                                                     }
                                                     else
                                                     {
                                                         purOrder.CloseCaseOpinions += $"部分入库，订金部分退款，订单结案";
                                                         purOrder.DataStatus = (int)DataStatus.完结;
                                                     }
+
+                                                    purOrder.Deposit -= refundAmount;
+
+                                                    if (purOrder.Deposit == 0)
+                                                    {
+                                                        purOrder.PayStatus = (int)PayStatus.未付款;
+                                                    }
+                                                    else if (purOrder.Deposit == purOrder.TotalAmount)
+                                                    {
+                                                        purOrder.PayStatus = (int)PayStatus.全额预付;
+                                                    }
+                                                    else
+                                                    {
+                                                        purOrder.PayStatus = (int)PayStatus.部分预付;
+                                                    }
+
                                                     purOrderUpdateList.Add(purOrder);
                                                     #region 更新库存的拟销量
 
@@ -1277,7 +1297,7 @@ namespace RUINORERP.Business
                                                                 .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待核销)
                                                                 .Where(c => c.PreRPID != prePayment.PreRPID)//排除当前的
                                                                 .ToListAsync();
-                                            if (SameOrderPrePayments != null)//为0说明是第一次。从未付款 到部分预付是正常的流程逻辑
+                                            if (SameOrderPrePayments != null && SameOrderPrePayments.Count > 0)//为0说明是第一次。从未付款 到部分预付是正常的流程逻辑
                                             {
                                                 //原来的。加上当前的
                                                 saleOrder.Deposit = SameOrderPrePayments.Sum(c => c.LocalPrepaidAmount) + prePayment.LocalPrepaidAmount;
@@ -1292,19 +1312,24 @@ namespace RUINORERP.Business
                                             if (saleOrder.Deposit == saleOrder.TotalAmount)
                                             {
                                                 saleOrder.PayStatus = (int)PayStatus.全额预付;
-                                                if (entity.Paytype_ID.HasValue)
-                                                {
-                                                    saleOrder.Paytype_ID = entity.Paytype_ID.Value;
-                                                }
                                             }
                                             else
                                             {
                                                 saleOrder.PayStatus = (int)PayStatus.部分预付;
+                                            }
+
+                                            if (!saleOrder.Paytype_ID.HasValue)
+                                            {
                                                 if (entity.Paytype_ID.HasValue)
                                                 {
                                                     saleOrder.Paytype_ID = entity.Paytype_ID.Value;
                                                 }
+                                                else if (prePayment.Paytype_ID.HasValue)
+                                                {
+                                                    saleOrder.Paytype_ID = prePayment.Paytype_ID.Value;
+                                                }
                                             }
+
                                             saleOrderUpdateList.Add(saleOrder);
                                         }
 
@@ -1379,7 +1404,7 @@ namespace RUINORERP.Business
                                                  .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待核销)
                                                  .Where(c => c.PreRPID != prePayment.PreRPID)//排除当前的
                                                  .ToListAsync();
-                                            if (SameOrderPrePayments != null)//为0说明是第一次。从未付款 到部分预付是正常的流程逻辑
+                                            if (SameOrderPrePayments != null && SameOrderPrePayments.Count > 0)//为0说明是第一次。从未付款 到部分预付是正常的流程逻辑
                                             {
                                                 //应收结清，并且结清的金额等于销售出库金额，则修改出库单的状态。同时计算对应订单情况。也更新。
                                                 //原来的。加上当前的
@@ -1392,22 +1417,30 @@ namespace RUINORERP.Business
                                             }
                                             #endregion
 
+
                                             if (purOrder.Deposit == purOrder.TotalAmount)
                                             {
                                                 purOrder.PayStatus = (int)PayStatus.全额预付;
-                                                if (entity.Paytype_ID.HasValue)
-                                                {
-                                                    purOrder.Paytype_ID = entity.Paytype_ID.Value;
-                                                }
                                             }
                                             else
                                             {
                                                 purOrder.PayStatus = (int)PayStatus.部分预付;
+                                            }
+
+                                            if (!purOrder.Paytype_ID.HasValue)
+                                            {
                                                 if (entity.Paytype_ID.HasValue)
                                                 {
                                                     purOrder.Paytype_ID = entity.Paytype_ID.Value;
                                                 }
+                                                else if (prePayment.Paytype_ID.HasValue)
+                                                {
+                                                    purOrder.Paytype_ID = prePayment.Paytype_ID.Value;
+                                                }
                                             }
+
+
+
                                             purOrderUpdateList.Add(purOrder);
                                         }
 
@@ -3059,14 +3092,14 @@ namespace RUINORERP.Business
             bool rs = false;
             RevertCommand command = new RevertCommand();
             ReturnMainSubResults<T> rsms = new ReturnMainSubResults<T>();
-            
+
             // 缓存当前编辑的对象。如果撤销就回原来的值
             T oldobj = CloneHelper.DeepCloneObject<T>((T)model);
-            
+
             // 检查当前是否已在事务中
             bool isInExistingTransaction = _unitOfWorkManage.TranCount > 0;
             bool shouldManageTransaction = UseTran && !isInExistingTransaction;
-            
+
             try
             {
                 tb_FM_PaymentRecord entity = model as tb_FM_PaymentRecord;
@@ -3108,11 +3141,11 @@ namespace RUINORERP.Business
                     _logger.LogDebug("BaseSaveOrUpdateWithChild: 提交事务");
                     _unitOfWorkManage.CommitTran();
                 }
-                
+
                 rsms.ReturnObject = entity as T;
                 entity.PrimaryKeyID = entity.PaymentId;
                 rsms.Succeeded = rs;
-                
+
                 _logger.LogInformation($"收款记录保存成功: PaymentId={entity.PaymentId}, Succeeded={rs}");
             }
             catch (Exception ex)
@@ -3129,7 +3162,7 @@ namespace RUINORERP.Business
                     _logger.LogError(ex, "BaseSaveOrUpdateWithChild: 在现有事务中保存失败，标记回滚");
                     _unitOfWorkManage.MarkForRollback();
                 }
-                
+
                 // 出错后，取消生成的ID等值
                 command.Undo();
                 rsms.ErrorMsg = $"保存失败: {ex.Message}";
@@ -3642,6 +3675,8 @@ namespace RUINORERP.Business
                 {
                     var r = await _unitOfWorkManage.GetDbClient().Updateable<tb_PurOrder>(purOrderUpdateList).UpdateColumns(t => new
                     {
+                        t.Deposit,
+                        t.Paytype_ID,
                         t.ApprovalOpinions,
                         t.DataStatus,
                         t.PayStatus
@@ -3754,7 +3789,7 @@ namespace RUINORERP.Business
             {
                 // 获取审计日志服务
                 var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                
+
                 // 查询应收应付单及其明细，按到期日升序排序（最早优先）
                 List<tb_FM_ReceivablePayable> receivablePayableList = await _appContext.Db.Queryable<tb_FM_ReceivablePayable>()
                      .Includes(c => c.tb_FM_ReceivablePayableDetails)
@@ -3824,7 +3859,7 @@ namespace RUINORERP.Business
                     // 记录财务审计日志
                     string billType = receivablePayable.ReceivePaymentType == (int)ReceivePaymentType.收款 ? "应收款单" : "应付款单";
                     string auditMessage = billType + "付款：本币余额从 " + oldLocalBalance + " 减少到 " + receivablePayable.LocalBalanceAmount + "，本币已付金额从 " + oldLocalPaid + " 增加到 " + receivablePayable.LocalPaidAmount + "，状态从 " + oldStatus + " 变更为 " + (receivablePayable.ARAPStatus ?? 0) + "。付款金额：本币 " + RecordDetail.LocalAmount + "。关联收款单：" + entity.PaymentNo;
-                    fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>(paymentType, receivablePayable, auditMessage);
+                    await fMAuditLog.CreateAuditLog<tb_FM_ReceivablePayable>(paymentType, receivablePayable, auditMessage);
 
                     // 更新源单据状态（写回业务原始单据的完结状态，如销售出库、销售订单等）
                     await UpdateSourceDocumentStatus(receivablePayable, entity, saleOrderUpdateList, saleOutUpdateList, SaleOutReUpdateList, purOrderUpdateList, purEntryUpdateList, purEntryReUpdateList,

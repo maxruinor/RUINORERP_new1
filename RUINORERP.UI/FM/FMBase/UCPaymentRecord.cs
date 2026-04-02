@@ -244,7 +244,9 @@ namespace RUINORERP.UI.FM
             DataBindingHelper.BindData4Label<tb_FM_PaymentRecord>(entity, k => k.LocalPamountInWords, lblMoneyUpper, BindDataType4TextBox.Text, true);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsFromPlatform, chkIsFromPlatform, false);
             DataBindingHelper.BindData4CheckBox<tb_FM_PaymentRecord>(entity, t => t.IsForCommission, chkIsForCommission, false);
-            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID);
+
+            //这里排除账期，因为这里是最后支付环节，都是即时收付款类型的支付方式所以账期支付方式不能在这里使用
+            DataBindingHelper.BindData4Cmb<tb_PaymentMethod>(entity, k => k.Paytype_ID, v => v.Paytype_Name, cmbPaytype_ID, c => c.Cash);
             DataBindingHelper.BindData4Cmb<tb_Employee>(entity, k => k.Employee_ID, v => v.Employee_Name, cmbEmployee_ID, c => c.Is_enabled == true);
 
 

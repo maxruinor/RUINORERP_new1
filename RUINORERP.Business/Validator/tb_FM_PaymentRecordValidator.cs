@@ -1,4 +1,4 @@
-﻿
+
 // **************************************
 // 项目：信息系统
 // 版权：Copyright RUINOR
@@ -6,7 +6,7 @@
 // 时间：11/10/2025 23:38:11
 // **************************************
 using System;
-﻿using SqlSugar;
+using SqlSugar;
 using System.Collections.Generic;
 using RUINORERP.Model;
 using FluentValidation;
@@ -164,4 +164,3 @@ namespace RUINORERP.Business
 }
 
 }
-

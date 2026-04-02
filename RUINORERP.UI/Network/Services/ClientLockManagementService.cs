@@ -592,7 +592,6 @@ namespace RUINORERP.UI.Network.Services
                         {
                             _activeLocks.TryAdd(billId, removedLock);
                             _clientCache.UpdateCacheItem(removedLock);
-                            _logger.LogWarning("解锁响应为空，已恢复本地锁状态: 单据ID={BillId}", billId);
                         }
                         return LockResponseFactory.CreateFailedResponse("响应为空");
                     }

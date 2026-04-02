@@ -10,12 +10,16 @@ namespace RUINORERP.Model.ConfigModel
 {
     /// <summary>
     /// 全局验证配置类,随时根据业务需求进行修改, 来验证单据输入的数据合法性。
-    /// 可以从客户端或服务器端分发这些配置
+    /// 可以从客户端或服务器端分发这些配置1
     /// </summary>
     [Serializable()]
     [DisplayName("全局验证配置")]
     public class GlobalValidatorConfig : BaseConfig
     {
+
+        #region 采购模块
+
+
         /// <summary>
         /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
         /// </summary>
@@ -23,6 +27,8 @@ namespace RUINORERP.Model.ConfigModel
         [Category("采购模块")]
         [Description("采购预交日期设置为必须填写。")]
         public bool 预交日期必填 { get; set; }
+
+        #endregion 采购模块
 
         #region 生产模块
 
@@ -84,13 +90,35 @@ namespace RUINORERP.Model.ConfigModel
 
         #region 财务模块
 
+        /// <summary>
+        /// 预收付款单的收付款账户和付款方式是否必须填写
+        /// 默认值为false，表示在预收付款单中，账户和付款方式可以为空
+        /// 适用于预付款业务场景，允许先创建单据后补充账户信息
+        /// </summary>
+        [JsonProperty("预收付款单账户必填")]
+        [Category("财务模块")]
+        [Description("预收付款单的收付款账户和付款方式是否必须填写。默认否，允许为空")]
+        public bool 预收付款单账户必填 { get; set; } = false;
+
+        /// <summary>
+        /// 收付款单的收付款账户和付款方式是否必须填写
+        /// 默认值为true，表示在收付款单中，账户和付款方式必须填写
+        /// 适用于实际收付款业务场景，要求必须有明确的收付款账户
+        /// </summary>
+        [JsonProperty("收付款单账户必填")]
+        [Category("财务模块")]
+        [Description("收付款单的收付款账户和付款方式是否必须填写。默认真，必须填写")]
+        public bool 收付款单账户必填 { get; set; } = true;
 
         /// <summary>
         /// JsonProperty这个属性值要与真的属性值名称一样。不然不起作用。读取出错。
+        /// 【已弃用】请使用 预收付款单账户必填 和 收付款单账户必填 替代
+        /// 保留此属性以保持向后兼容性
         /// </summary>
         [JsonProperty("收付款账户必填")]
         [Category("财务模块")]
-        [Description("应收款/应付款审核时, 收付款账户信息是否必填")]
+        [Description("【已弃用】应收款/应付款审核时, 收付款账户信息是否必填。请使用预收付款单账户必填和收付款单账户必填")]
+        [Obsolete("请使用 预收付款单账户必填 和 收付款单账户必填 替代")]
         public bool 收付款账户必填 { get; set; } = true;
         
  

@@ -132,8 +132,8 @@ namespace RUINORERP.UI.PSI.PUR
                         }
                     }
                 }
-                if (purOrder.Deposit > 0)
-                {
+                //if (purOrder.Deposit > 0)
+                //{
                     var PreReceivedPayments = await MainForm.Instance.AppContext.Db.Queryable<tb_FM_PreReceivedPayment>()
                                                                     .Where(c => c.PrePaymentStatus >= (int)PrePaymentStatus.待审核
                                                                     && c.CustomerVendor_ID == purOrder.CustomerVendor_ID
@@ -154,7 +154,7 @@ namespace RUINORERP.UI.PSI.PUR
                             toolStripbtnRelatedQuery.DropDownItems.Add(RelatedMenuItem);
                         }
                     }
-                }
+                //}
             }
             await base.LoadRelatedDataToDropDownItemsAsync();
         }

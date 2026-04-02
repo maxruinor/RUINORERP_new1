@@ -4,7 +4,6 @@ using System.Security.Claims;
 using System.ComponentModel;
 using Microsoft.Extensions.DependencyInjection;
 using RUINORERP.Model;
-using SqlSugar;
 using Autofac;
 using System.Collections.Generic;
 using RUINORERP.Model.CommonModel;
@@ -17,6 +16,7 @@ using RUINORERP.Model.ReminderModel;
 using RUINORERP.Model.ReminderModel.ReminderRules;
 using System.Linq;
 using System.Threading;
+using SqlSugar;
 
 namespace RUINORERP.Model.Context
 {

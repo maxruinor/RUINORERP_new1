@@ -2675,6 +2675,7 @@ namespace RUINORERP.UI.BaseForm
             //操作前将数据收集
             this.ValidateChildren(System.Windows.Forms.ValidationConstraints.None);
 
+            ///
             switch (menuItem)
             {
                 case MenuItemEnums.联查:
@@ -3330,6 +3331,120 @@ namespace RUINORERP.UI.BaseForm
                     catch (Exception ex)
                     {
                         MainForm.Instance.uclog.AddLog($"反结案失败：{ex.Message}");
+                    }
+                    break;
+                
+                case MenuItemEnums.执行:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnExecute = FindToolStripButtonByName("toolStripBtnExecute");
+                    try
+                    {
+                        // 使用状态管理架构检查执行权限
+                        var canExecute = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                        if (canExecute == null || !canExecute.Value.CanExecute)
+                        {
+                            var message = canExecute?.Message ?? "无法检查执行权限";
+                            MainForm.Instance.uclog.AddLog($"当前状态下无法执行单据：{message}");
+                            return;
+                        }
+
+                        var lockStatusExecute = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+                        if (!lockStatusExecute.CanPerformCriticalOperations)
+                        {
+                            return;
+                        }
+
+                        // 立即禁用执行按钮，防止重复点击
+                        if (btnExecute != null)
+                        {
+                            btnExecute.Enabled = false;
+                        }
+
+                        await LockBill();
+                        bool rsExecute = await ConfirmExecution();
+                        if (!rsExecute)
+                        {
+                            // 执行失败时恢复执行按钮状态
+                            if (btnExecute != null && EditEntity != null)
+                            {
+                                btnExecute.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnExecute");
+                            }
+                        }
+                        else
+                        {
+                            // 执行成功后更新所有 UI 状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"执行单据失败：{ex.Message}");
+                        // 执行异常时恢复执行按钮状态
+                        if (btnExecute != null && EditEntity != null)
+                        {
+                            btnExecute.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnExecute");
+                        }
+                    }
+                    finally
+                    {
+
+                    }
+                    break;
+                
+                case MenuItemEnums.反执行:
+                    // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
+                    var btnReverseExecute = FindToolStripButtonByName("toolStripBtnReverseExecute");
+                    try
+                    {
+                        // 使用状态管理架构检查反执行权限
+                        var canReverseExecute = StateManager?.CanExecuteActionWithMessage(EditEntity, menuItem);
+                        if (canReverseExecute == null || !canReverseExecute.Value.CanExecute)
+                        {
+                            var message = canReverseExecute?.Message ?? "无法检查反执行权限";
+                            MainForm.Instance.uclog.AddLog($"当前状态下无法反执行单据：{message}");
+                            return;
+                        }
+
+                        var lockStatusReverseExecute = await CheckLockStatusAndUpdateUI(EditEntity.PrimaryKeyID);
+                        if (!lockStatusReverseExecute.CanPerformCriticalOperations)
+                        {
+                            return;
+                        }
+
+                        // 立即禁用反执行按钮，防止重复点击
+                        if (btnReverseExecute != null)
+                        {
+                            btnReverseExecute.Enabled = false;
+                        }
+
+                        await LockBill();
+                        bool rsReverseExecute = await AntiConfirmExecution();
+                        if (!rsReverseExecute)
+                        {
+                            // 反执行失败时恢复反执行按钮状态
+                            if (btnReverseExecute != null && EditEntity != null)
+                            {
+                                btnReverseExecute.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseExecute");
+                            }
+                        }
+                        else
+                        {
+                            // 反执行成功后更新所有 UI 状态，让按钮根据新状态重新评估
+                            UpdateAllUIStates(EditEntity);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MainForm.Instance.uclog.AddLog($"反执行单据失败：{ex.Message}");
+                        // 反执行异常时恢复反执行按钮状态
+                        if (btnReverseExecute != null && EditEntity != null)
+                        {
+                            btnReverseExecute.Enabled = StateManager.GetButtonState(EditEntity, "toolStripBtnReverseExecute");
+                        }
+                    }
+                    finally
+                    {
+
                     }
                     break;
                 case MenuItemEnums.打印:

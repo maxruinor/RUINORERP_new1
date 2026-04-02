@@ -1427,7 +1427,7 @@ namespace RUINORERP.Business
                                                 purOrder.PayStatus = (int)PayStatus.部分预付;
                                             }
 
-                                            if (!purOrder.Paytype_ID.HasValue)
+                                            if (purOrder.Paytype_ID.HasValue)
                                             {
                                                 if (entity.Paytype_ID.HasValue)
                                                 {

@@ -577,13 +577,13 @@ namespace RUINORERP.UI.FM
                     return false;
                 }
 
-                //收付款单中的  收款或付款账号中的币别是否与选的币别一致。
+                //收付款单中的  收款或付款账户中的币别是否与选的币别一致。
                 if (NeedValidated && EditEntity.Currency_ID > 0 && EditEntity.Account_id > 0)
                 {
                     tb_FM_Account bizcatch = _cacheManager.GetEntity<tb_FM_Account>(EditEntity.Account_id);
                     if (bizcatch != null && bizcatch.Currency_ID != EditEntity.Currency_ID)
                     {
-                        MessageBox.Show("收付款账号中的币别与当前单据的币别不一致。");
+                        MessageBox.Show("收付款账户中的币别与当前单据的币别不一致。");
                         return false;
                     }
                 }
@@ -813,7 +813,7 @@ namespace RUINORERP.UI.FM
             {
                 case ReceivePaymentType.收款:
                     lblBillText.Text = "应收款单";
-                    lblAccount_id.Text = "收款账号";
+                    lblAccount_id.Text = "收款账户";
                     lblCustomerVendor_ID.Text = "应付单位";
 
                     btnInfo.Visible = false;
@@ -823,7 +823,7 @@ namespace RUINORERP.UI.FM
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "应付款单";
-                    lblAccount_id.Text = "付款账号";
+                    lblAccount_id.Text = "付款账户";
                     lblCustomerVendor_ID.Text = "应收单位";
                     break;
                 default:
@@ -884,24 +884,24 @@ namespace RUINORERP.UI.FM
             {
                 case ReceivePaymentType.收款:
                     lblBillText.Text = "收款单";
-                    lblAccount_id.Text = "收款账号";
+                    lblAccount_id.Text = "收款账户";
                     //lblPaymentDate.Text = "收款日期";
                     lblCustomerVendor_ID.Text = "付款单位";
                     btnInfo.Visible = false;
                     lblPayeeInfoID.Visible = false;
                     cmbPayeeInfoID.Visible = false;
-                    //kryptonGroupBox收款账号信息.Visible = false;
+                    //kryptonGroupBox收款账户信息.Visible = false;
 
                     break;
                 case ReceivePaymentType.付款:
                     lblBillText.Text = "付款单";
-                    lblAccount_id.Text = "付款账号";
+                    lblAccount_id.Text = "付款账户";
                     //lblPaymentDate.Text = "付款日期";
                     lblCustomerVendor_ID.Text = "收款单位";
                     btnInfo.Visible = true;
                     lblPayeeInfoID.Visible = true;
                     cmbPayeeInfoID.Visible = true;
-                    //kryptonGroupBox收款账号信息.Visible = true;
+                    //kryptonGroupBox收款账户信息.Visible = true;
                     break;
                 default:
                     break;
@@ -965,7 +965,7 @@ namespace RUINORERP.UI.FM
                         {
                             BaseEditGeneric<tb_FM_PayeeInfo> frmaddg = frm as BaseEditGeneric<tb_FM_PayeeInfo>;
                             frmaddg.CurMenuInfo = this.CurMenuInfo;
-                            frmaddg.Text = "收款账号详情";
+                            frmaddg.Text = "收款账户详情";
                             frmaddg.bindingSourceEdit.DataSource = new List<tb_FM_PayeeInfo>();
                             object obj = frmaddg.bindingSourceEdit.AddNew();
                             obj = btninfo.Tag;

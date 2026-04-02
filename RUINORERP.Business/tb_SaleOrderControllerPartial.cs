@@ -283,13 +283,20 @@ namespace RUINORERP.Business
                 
                 _unitOfWorkManage.CommitTran();
                 _logger.LogInformation($"销售订单{entity.SOrderNo}审核：主事务提交成功");
-                
+
                 // 【事务优化】财务独立事务处理（主事务提交后执行）
                 if (needProcessFinance)
                 {
-                    await ProcessFinanceOrderApprovalAsync(orderId, orderNo, isFromPlatform, paytypeId, totalAmount);
+                    var financeResult = await ProcessFinanceOrderApprovalAsync(orderId, orderNo, isFromPlatform, paytypeId, totalAmount);
+                    if (!financeResult.Succeeded)
+                    {
+                        // 财务独立事务处理失败，但主事务已提交成功
+                        // 记录警告日志，通知管理员处理
+                        _logger.LogWarning($"销售订单{entity.SOrderNo}审核：主事务提交成功，但财务独立事务处理失败 - {financeResult.ErrorMsg}");
+                        // 可以选择在这里发送通知或标记订单需要人工处理
+                    }
                 }
-                
+
                 rmrs.ReturnObject = entity as T;
                 rmrs.Succeeded = true;
                 return rmrs;
@@ -321,26 +328,34 @@ namespace RUINORERP.Business
         /// <summary>
         /// 【事务优化】销售订单审核后的财务独立事务处理
         /// 将预收款单生成、审核等操作从主事务中分离，减少主事务持有时间
+        /// 包含补偿机制：当后续步骤失败时，回滚已创建的预收款单
         /// </summary>
-        private async Task ProcessFinanceOrderApprovalAsync(long? orderId, string orderNo, bool isFromPlatform, long? paytypeId, decimal totalAmount)
+        private async Task<ReturnResults<bool>> ProcessFinanceOrderApprovalAsync(long? orderId, string orderNo, bool isFromPlatform, long? paytypeId, decimal totalAmount)
         {
+            ReturnResults<bool> result = new ReturnResults<bool>();
+            tb_FM_PreReceivedPayment savedPrePayment = null;
+            tb_FM_PaymentRecord savedPaymentRecord = null;
+            bool prePaymentSaved = false;
+            bool paymentRecordSaved = false;
+
             try
             {
                 _logger.LogInformation($"销售订单{orderNo}审核：开始处理财务独立事务...");
-                
+
                 var ctrPreReceivedPayment = _appContext.GetRequiredService<tb_FM_PreReceivedPaymentController<tb_FM_PreReceivedPayment>>();
-                
+
                 // 重新加载订单实体
                 var order = await _unitOfWorkManage.GetDbClient().Queryable<tb_SaleOrder>()
                     .Where(c => c.SOrder_ID == orderId)
                     .FirstAsync();
-                
+
                 if (order == null)
                 {
                     _logger.LogError($"销售订单{orderNo}审核：无法重新加载订单实体");
-                    return;
+                    result.ErrorMsg = "无法重新加载订单实体";
+                    return result;
                 }
-                
+
                 // 生成预收款单
                 var PreReceivedPayment = await ctrPreReceivedPayment.BuildPreReceivedPaymentAsync(order);
                 if (PreReceivedPayment.LocalPrepaidAmount > 0)
@@ -349,23 +364,32 @@ namespace RUINORERP.Business
                     if (!rmpay.Succeeded)
                     {
                         _logger.LogError($"销售订单{orderNo}审核：预收款单生成失败 - {rmpay.ErrorMsg}");
-                        return;
+                        result.ErrorMsg = $"预收款单生成失败 - {rmpay.ErrorMsg}";
+                        return result;
                     }
-                    
+
+                    // 记录已保存的预收款单，用于后续补偿
+                    savedPrePayment = rmpay.ReturnObject;
+                    prePaymentSaved = true;
+                    _logger.LogInformation($"销售订单{orderNo}审核：预收款单已保存，ID={savedPrePayment?.PreRPID}");
+
                     // 自动审核预收款
                     if (_appContext.FMConfig.AutoAuditPreReceive)
                     {
                         PreReceivedPayment.ApprovalOpinions = "系统自动审核";
                         PreReceivedPayment.ApprovalStatus = (int)ApprovalStatus.审核通过;
                         PreReceivedPayment.ApprovalResults = true;
-                        
+
                         var autoApproval = await ctrPreReceivedPayment.ApprovalAsync(PreReceivedPayment);
                         if (!autoApproval.Succeeded)
                         {
                             _logger.LogError($"销售订单{orderNo}审核：预收款单自动审核失败 - {autoApproval.ErrorMsg}");
-                            return;
+                            result.ErrorMsg = $"预收款单自动审核失败 - {autoApproval.ErrorMsg}";
+                            // 触发补偿：删除已保存的预收款单
+                            await CompensatePreReceivedPaymentAsync(savedPrePayment?.PreRPID, orderNo);
+                            return result;
                         }
-                        
+
                         if (autoApproval.ReturnObject != null)
                         {
                             FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
@@ -375,69 +399,189 @@ namespace RUINORERP.Business
                         {
                             _logger.LogWarning($"销售订单{orderNo}审核：预收款单审核返回对象为空，跳过审计日志记录");
                         }
-                        
+
                         // 平台订单自动生成并审核收款单
                         if (isFromPlatform && _appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)
                         {
                             var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                             tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-                            
+
+                            if (preReceivedPayment == null)
+                            {
+                                _logger.LogError($"销售订单{orderNo}审核：预收款单审核返回对象为空，无法生成收款单");
+                                result.ErrorMsg = "预收款单审核返回对象为空，无法生成收款单";
+                                // 触发补偿：删除已保存的预收款单
+                                await CompensatePreReceivedPaymentAsync(savedPrePayment?.PreRPID, orderNo);
+                                return result;
+                            }
+
                             tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(
                                 new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
-                            
+
                             var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                            if (rrs.Succeeded)
+                            if (!rrs.Succeeded)
                             {
-                                paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
-                                paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
-                                paymentRecord.ApprovalResults = true;
-                                
-                                var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                var rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
-                                if (!rr.Succeeded)
-                                {
-                                    _logger.LogError($"销售订单{orderNo}审核：收款单自动审核失败 - {rr.ErrorMsg}");
-                                }
+                                _logger.LogError($"销售订单{orderNo}审核：收款单生成失败 - {rrs.ErrorMsg}");
+                                result.ErrorMsg = $"收款单生成失败 - {rrs.ErrorMsg}";
+                                // 触发补偿：删除已保存的预收款单
+                                await CompensatePreReceivedPaymentAsync(savedPrePayment?.PreRPID, orderNo);
+                                return result;
                             }
-                        }
-                        else
-                        {
-                            // 非平台订单，生成收款单但不自动审核
-                            //暂时注释掉，因为自动化的操作表越多。事务死锁死锁的可能性越大，后可提供批量生成功能
-                            /*
-                            try
+
+                            savedPaymentRecord = rrs.ReturnObject;
+                            paymentRecordSaved = true;
+
+                            paymentRecord.ApprovalOpinions = "平台订单，预收款单自动审核成功后，系统自动审核收款单";
+                            paymentRecord.ApprovalStatus = (int)ApprovalStatus.审核通过;
+                            paymentRecord.ApprovalResults = true;
+
+                            var ctrPaymentRecord = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
+                            var rr = await ctrPaymentRecord.ApprovalAsync(paymentRecord);
+                            if (!rr.Succeeded)
                             {
-                                var paymentController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
-                                tb_FM_PreReceivedPayment preReceivedPayment = autoApproval.ReturnObject;
-                                
-                                if (preReceivedPayment != null)
-                                {
-                                    tb_FM_PaymentRecord paymentRecord = await paymentController.BuildPaymentRecord(
-                                        new List<tb_FM_PreReceivedPayment> { preReceivedPayment }, false);
-                                    paymentRecord.ApprovalStatus = (int)ApprovalStatus.未审核;
-                                    paymentRecord.PaymentStatus = (int)PaymentStatus.待审核;
-                                    
-                                    var rrs = await paymentController.BaseSaveOrUpdateWithChild<tb_FM_PaymentRecord>(paymentRecord, false);
-                                    if (rrs.Succeeded)
-                                    {
-                                        _logger.LogInformation($"销售订单{orderNo}审核：收款单生成成功(待审核)");
-                                    }
-                                }
+                                _logger.LogError($"销售订单{orderNo}审核：收款单自动审核失败 - {rr.ErrorMsg}");
+                                result.ErrorMsg = $"收款单自动审核失败 - {rr.ErrorMsg}";
+                                // 触发补偿：删除已保存的收款单和预收款单
+                                await CompensatePaymentRecordAsync(savedPaymentRecord?.PaymentId, orderNo);
+                                await CompensatePreReceivedPaymentAsync(savedPrePayment?.PreRPID, orderNo);
+                                return result;
                             }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "非平台订单生成收款单失败");
-                            }
-                            */
+
+                            _logger.LogInformation($"销售订单{orderNo}审核：收款单自动审核成功，ID={savedPaymentRecord?.PaymentId}");
                         }
                     }
                 }
-                
+
                 _logger.LogInformation($"销售订单{orderNo}审核：财务独立事务处理完成");
+                result.Succeeded = true;
+                result.ReturnObject = true;
+                return result;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"销售订单{orderNo}审核：财务独立事务处理失败 - {ex.Message}");
+                result.ErrorMsg = $"财务独立事务处理失败 - {ex.Message}";
+
+                // 触发补偿：回滚已保存的数据
+                if (paymentRecordSaved)
+                {
+                    await CompensatePaymentRecordAsync(savedPaymentRecord?.PaymentId, orderNo);
+                }
+                if (prePaymentSaved)
+                {
+                    await CompensatePreReceivedPaymentAsync(savedPrePayment?.PreRPID, orderNo);
+                }
+
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// 补偿机制：删除已创建的预收款单
+        /// </summary>
+        private async Task CompensatePreReceivedPaymentAsync(long? preRPID, string orderNo)
+        {
+            if (!preRPID.HasValue)
+            {
+                return;
+            }
+
+            try
+            {
+                _logger.LogWarning($"销售订单{orderNo}审核：触发补偿机制，删除预收款单 {preRPID}");
+
+                // 检查预收款单是否存在且未被核销
+                var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
+                    .Where(c => c.PreRPID == preRPID)
+                    .FirstAsync();
+
+                if (prePayment == null)
+                {
+                    _logger.LogInformation($"销售订单{orderNo}审核：预收款单 {preRPID} 不存在，无需补偿");
+                    return;
+                }
+
+                // 检查是否已被核销（如果已核销则不能删除）
+                if (prePayment.LocalPaidAmount > 0 || prePayment.ForeignPaidAmount > 0)
+                {
+                    _logger.LogError($"销售订单{orderNo}审核：预收款单 {preRPID} 已被核销，无法补偿删除");
+                    return;
+                }
+
+                // 删除预收款单
+                var result = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PreReceivedPayment>()
+                    .Where(c => c.PreRPID == preRPID)
+                    .ExecuteCommandAsync();
+
+                if (result > 0)
+                {
+                    _logger.LogInformation($"销售订单{orderNo}审核：预收款单 {preRPID} 补偿删除成功");
+                }
+                else
+                {
+                    _logger.LogWarning($"销售订单{orderNo}审核：预收款单 {preRPID} 补偿删除未找到记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"销售订单{orderNo}审核：预收款单 {preRPID} 补偿删除失败");
+            }
+        }
+
+        /// <summary>
+        /// 补偿机制：删除已创建的收款单
+        /// </summary>
+        private async Task CompensatePaymentRecordAsync(long? paymentRecordId, string orderNo)
+        {
+            if (!paymentRecordId.HasValue)
+            {
+                return;
+            }
+
+            try
+            {
+                _logger.LogWarning($"销售订单{orderNo}审核：触发补偿机制，删除收款单 {paymentRecordId}");
+
+                // 检查收款单是否存在且未支付
+                var paymentRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecord>()
+                    .Where(c => c.PaymentId == paymentRecordId)
+                    .FirstAsync();
+
+                if (paymentRecord == null)
+                {
+                    _logger.LogInformation($"销售订单{orderNo}审核：收款单 {paymentRecordId} 不存在，无需补偿");
+                    return;
+                }
+
+                // 检查是否已支付（如果已支付则不能删除）
+                if (paymentRecord.PaymentStatus == (int)PaymentStatus.已支付)
+                {
+                    _logger.LogError($"销售订单{orderNo}审核：收款单 {paymentRecordId} 已支付，无法补偿删除");
+                    return;
+                }
+
+                // 先删除收款单明细
+                await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PaymentRecordDetail>()
+                    .Where(c => c.PaymentId == paymentRecordId)
+                    .ExecuteCommandAsync();
+
+                // 删除收款单
+                var result = await _unitOfWorkManage.GetDbClient().Deleteable<tb_FM_PaymentRecord>()
+                    .Where(c => c.PaymentId == paymentRecordId)
+                    .ExecuteCommandAsync();
+
+                if (result > 0)
+                {
+                    _logger.LogInformation($"销售订单{orderNo}审核：收款单 {paymentRecordId} 补偿删除成功");
+                }
+                else
+                {
+                    _logger.LogWarning($"销售订单{orderNo}审核：收款单 {paymentRecordId} 补偿删除未找到记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"销售订单{orderNo}审核：收款单 {paymentRecordId} 补偿删除失败");
             }
         }
            

@@ -768,6 +768,11 @@ namespace RUINORERP.Business.CommService
 
         public void CreateAuditLog<T>(string action, T entity) where T : class
         {
+            if (entity == null)
+            {
+                System.Diagnostics.Debug.WriteLine($"FMAuditLogHelper.CreateAuditLog跳过：实体为null，Action={action}");
+                return;
+            }
             _ = Task.Run(() => CreateAuditLog(action, entity, ""));
         }
 

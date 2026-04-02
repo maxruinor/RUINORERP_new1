@@ -366,8 +366,15 @@ namespace RUINORERP.Business
                             return;
                         }
                         
-                        FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                        fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                        if (autoApproval.ReturnObject != null)
+                        {
+                            FMAuditLogHelper fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
+                            fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>("预收款单自动审核成功", autoApproval.ReturnObject as tb_FM_PreReceivedPayment);
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"销售订单{orderNo}审核：预收款单审核返回对象为空，跳过审计日志记录");
+                        }
                         
                         // 平台订单自动生成并审核收款单
                         if (isFromPlatform && _appContext.FMConfig.AutoAuditReceivePaymentRecordByPlatform)

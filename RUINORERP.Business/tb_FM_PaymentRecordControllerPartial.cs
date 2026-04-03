@@ -1048,11 +1048,10 @@ namespace RUINORERP.Business
                                     //计算余额
                                     decimal localBalance = prePayment.LocalPrepaidAmount - prePayment.LocalPaidAmount - prePayment.LocalRefundAmount;
                                     decimal foreignBalance = prePayment.ForeignPrepaidAmount - prePayment.ForeignPaidAmount - prePayment.ForeignRefundAmount;
-                                    // 使用容差值判断余额是否为0，避免浮点数精度问题
-                                    decimal tolerance = 0.0001m;
 
-                                    //全退了则是 全额退款
-                                    if (prePayment.LocalRefundAmount == prePayment.LocalPrepaidAmount || prePayment.ForeignRefundAmount == prePayment.ForeignPrepaidAmount)
+                                    //全退了则是 全额退款：没有核销，纯退款
+                                    if ((prePayment.LocalPaidAmount == 0 && prePayment.LocalRefundAmount > 0 && Math.Abs(localBalance) <= tolerance) ||
+                                        (prePayment.ForeignPaidAmount == 0 && prePayment.ForeignRefundAmount > 0 && Math.Abs(foreignBalance) <= tolerance))
                                     {
                                         prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额退款;
                                         prePayment.IsAvailable = false;

@@ -443,25 +443,8 @@ namespace RUINORERP.UI.FM
                 }
                 else
                 {
-                    //没有金额可退或状态不符合。
-                    if (item.ForeignBalanceAmount <= 0 && item.LocalBalanceAmount <= 0)
-                    {
-                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}没有可退金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else if (item.ApprovalStatus != (int)ApprovalStatus.审核通过 || !item.ApprovalResults.HasValue || !item.ApprovalResults.Value)
-                    {
-                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}未审核通过，不能转为退款单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}状态为【{(PrePaymentStatus)item.PrePaymentStatus}】，不能转为退款单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                }
-                }
-                else
-                {
                     msg.Append(counter.ToString() + ") ");
-                    msg.Append($"当前应{PaymentType.ToString()}单 {item.PreRPNO}状态为【 {((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单。").Append("\r\n");
+                    msg.Append($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}状态为【{((PrePaymentStatus)item.PrePaymentStatus).ToString()}】 无法生成退款单。").Append("\r\n");
                     counter++;
                 }
             }

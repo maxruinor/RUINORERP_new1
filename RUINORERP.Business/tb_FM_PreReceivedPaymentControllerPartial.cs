@@ -80,7 +80,7 @@ namespace RUINORERP.Business
                     rmrs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反审";
                     return rmrs;
                 }
-                 
+
 
                 var paymentRecordController = _appContext.GetRequiredService<tb_FM_PaymentRecordController<tb_FM_PaymentRecord>>();
                 // 开启事务，保证数据一致性
@@ -202,7 +202,7 @@ namespace RUINORERP.Business
                     }
                 }
 
-               
+
                 var records = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PaymentRecordDetail>()
                     .Includes(c => c.tb_fm_paymentrecord)
                     .Where(c => c.SourceBizType == (int)BizType.预收款单 && c.SourceBilllId == entity.PreRPID)
@@ -274,7 +274,7 @@ namespace RUINORERP.Business
                 entity.ApprovalStatus = (int)ApprovalStatus.审核通过;
                 entity.ApprovalResults = true;
 
-               
+
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();
 
@@ -295,7 +295,7 @@ namespace RUINORERP.Business
                 _unitOfWorkManage.CommitTran();
                 rmrs.Succeeded = true;
                 rmrs.ReturnObject = entity as T;
-           
+
 
                 return rmrs;
             }
@@ -400,7 +400,7 @@ namespace RUINORERP.Business
                     errorBuilder.AppendLine($"来源单号：{billNoGroup.Key}");
                     errorBuilder.AppendLine();
                     errorBuilder.AppendLine($"重复预{PaymentType}单详情：");
-                    
+
                     int index = 1;
                     // 显示所有重复单据的详细信息
                     foreach (var item in items)
@@ -423,7 +423,7 @@ namespace RUINORERP.Business
                     errorBuilder.AppendLine("1. 检查并删除重复的预收款单");
                     errorBuilder.AppendLine("2. 确保每张业务单据只对应一张预收款单");
                     errorBuilder.AppendLine("3. 如需多次预收款，请确保业务来源信息不同");
-                    
+
                     returnResults.ErrorMsg = errorBuilder.ToString();
                     // 其他情况均视为不合法
                     return false;
@@ -490,8 +490,8 @@ namespace RUINORERP.Business
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
                 exchangeRate = 1; // 获取销售订单的汇率
-                                                    // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                    // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                                  // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                  // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
             }
 
             #region 生成预收款
@@ -593,8 +593,8 @@ namespace RUINORERP.Business
             if (_appContext.BaseCurrency.Currency_ID != entity.Currency_ID)
             {
                 exchangeRate = 1; // 获取销售订单的汇率
-                                                    // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
-                                                    // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
+                                  // 这里可以考虑获取最新的汇率，而不是直接使用销售订单的汇率
+                                  // exchangeRate = GetLatestExchangeRate(entity.Currency_ID.Value, _appContext.BaseCurrency.Currency_ID);
             }
 
             #region 生成预付款
@@ -763,6 +763,137 @@ namespace RUINORERP.Business
             }
 
             return list as List<T>;
+        }
+
+        /// <summary>
+        /// 批量结案  预收付款单标记结案，数据状态为9
+        /// 功能仅修改单据状态，不涉及其他业务逻辑处理
+        /// </summary>
+        /// <param name="entitys"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> BatchCloseCaseAsync(List<T> entitys)
+        {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                _unitOfWorkManage.BeginTran();
+                for (int m = 0; m < entitys.Count; m++)
+                {
+                    tb_FM_PreReceivedPayment entity = entitys[m] as tb_FM_PreReceivedPayment;
+                    // 判断当前状态是否可以结案
+                    var currentStatus = (PrePaymentStatus)entity.PrePaymentStatus;
+                    var validateResult = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, PrePaymentStatus.结案);
+                    if (!validateResult.IsSuccess)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以结案";
+                        rs.Succeeded = false;
+                        return rs;
+                    }
+                    // 修改状态为结案
+                    entity.PrePaymentStatus = (int)PrePaymentStatus.结案;
+                    entity.Remark += "【手动结案】";
+                    // 只更新指定列
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
+                    {
+                        it.PrePaymentStatus,
+                        it.Remark
+                    }).ExecuteCommandAsync();
+                }
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, "预收付款单结案失败");
+                rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
+                return rs;
+            }
+        }
+
+        /// <summary>
+        /// 批量反结案  预收付款单标记反结案
+        /// 根据实际的核销和退款情况，恢复到对应的非终态状态：
+        /// - 核销金额=0 且 退款金额=0 → 待核销（未开始使用）
+        /// - 核销金额>0 或 退款金额>0 → 处理中（已部分使用）
+        /// 注意：不会恢复到终态（全额核销、全额退款、混合结清），因为那些是自然结束的终态
+        /// </summary>
+        /// <param name="entitys"></param>
+        /// <returns></returns>
+        public async override Task<ReturnResults<bool>> AntiBatchCloseCaseAsync(List<T> entitys)
+        {
+            ReturnResults<bool> rs = new ReturnResults<bool>();
+            try
+            {
+                _unitOfWorkManage.BeginTran();
+                
+                for (int m = 0; m < entitys.Count; m++)
+                {
+                    tb_FM_PreReceivedPayment entity = entitys[m] as tb_FM_PreReceivedPayment;
+                    
+                    // 判断当前状态是否可以反结案
+                    var currentStatus = (PrePaymentStatus)entity.PrePaymentStatus;
+                    if (currentStatus != PrePaymentStatus.结案)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rs.ErrorMsg = $"只有状态为【结案】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单才可以反结案，当前状态为【{currentStatus.ToString()}】";
+                        rs.Succeeded = false;
+                        return rs;
+                    }
+                    
+                    // 根据实际的核销和退款情况，计算应该恢复到的状态
+                    // 反结案后只能是非终态：待核销或处理中
+                    PrePaymentStatus targetStatus;
+                    
+                    // 判断逻辑：
+                    // 1. 如果有任何核销或退款记录 → 处理中
+                    // 2. 如果没有任何核销和退款 → 待核销
+                    if ((entity.LocalPaidAmount > 0 || entity.ForeignPaidAmount > 0) ||  // 有核销记录
+                        (entity.LocalRefundAmount > 0 || entity.ForeignRefundAmount > 0))  // 有退款记录
+                    {
+                        targetStatus = PrePaymentStatus.处理中;
+                    }
+                    else
+                    {
+                        targetStatus = PrePaymentStatus.待核销;
+                    }
+                    
+                    // 验证状态转换是否合法
+                    var validateResult = StateManager.ValidateBusinessStatusTransitionAsync(currentStatus, targetStatus);
+                    if (!validateResult.IsSuccess)
+                    {
+                        _unitOfWorkManage.RollbackTran();
+                        rs.ErrorMsg = $"状态为【{currentStatus.ToString()}】的{((ReceivePaymentType)entity.ReceivePaymentType).ToString()}单不可以反结案到【{targetStatus.ToString()}】状态";
+                        rs.Succeeded = false;
+                        return rs;
+                    }
+                    
+                    // 修改状态为目标状态
+                    entity.PrePaymentStatus = (int)targetStatus;
+                    entity.Remark += "【手动反结案】";
+                    
+                    // 只更新指定列
+                    await _unitOfWorkManage.GetDbClient().Updateable<tb_FM_PreReceivedPayment>(entity).UpdateColumns(it => new
+                    {
+                        it.PrePaymentStatus,
+                        it.Remark
+                    }).ExecuteCommandAsync();
+                }
+                _unitOfWorkManage.CommitTran();
+                rs.Succeeded = true;
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWorkManage.RollbackTran();
+                _logger.Error(ex, "预收付款单反结案失败");
+                rs.ErrorMsg = ex.Message;
+                rs.Succeeded = false;
+                return rs;
+            }
         }
     }
 }

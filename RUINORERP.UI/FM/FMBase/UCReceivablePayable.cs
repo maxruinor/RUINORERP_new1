@@ -1090,7 +1090,7 @@ namespace RUINORERP.UI.FM
                 MainForm.Instance.uclog.AddLog("请先使用新增或查询加载数据");
                 return;
             }
-            if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改)
+            if (EditEntity.ActionStatus == ActionStatus.新增 || EditEntity.ActionStatus == ActionStatus.修改|| EditEntity.ARAPStatus<=(int)ARAPStatus.待审核)
             {
                 TotalSum();
             }

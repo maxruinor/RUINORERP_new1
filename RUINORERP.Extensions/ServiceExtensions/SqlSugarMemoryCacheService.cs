@@ -97,7 +97,7 @@ namespace RUINORERP.Extensions
 
 
         /// <summary>
-        /// 缓存创建
+        /// 缓存创建11
         /// </summary>
         public V GetOrCreate<V>(string cacheKey, Func<V> create, int cacheDurationInSeconds = int.MaxValue)
         {

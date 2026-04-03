@@ -310,8 +310,7 @@ namespace RUINORERP.Global.EnumExt
 
 
 
-    //要改为：5，7合并为 “处理中”=5 已部分处理，余额>0，加一个“混合结清”=7 部分核销+部分退款，余额=0
-    /// <summary>预付款状态（仅1-8值，全额核销/全额退款为终态）</summary>
+    /// <summary>预付款状态（仅1-8值，全额核销/全额退款/混合结清为终态）</summary>
     public enum PrePaymentStatus
     {
         [Description("草稿")]
@@ -326,14 +325,14 @@ namespace RUINORERP.Global.EnumExt
         [Description("待核销")]
         待核销 = 4,  // 支付完成后状态，待核销， 全新待处理，从未操作过
 
-        [Description("部分核销")]
-        部分核销 = 5,  // 过程态：可继续核销至全额，或发起退款
+        [Description("处理中")]
+        处理中 = 5,  // 过程态：已部分处理（部分核销或部分退款），余额>0，可继续处理
 
         [Description("全额核销")]
         全额核销 = 6,  // 唯一终态1：核销流程结束
 
-        [Description("部分退款")]   
-        部分退款 = 7,  // 过程态：可继续退款至全额
+        [Description("混合结清")]
+        混合结清 = 7,  // 终态：部分核销+部分退款，余额=0
 
         [Description("全额退款")]
         全额退款 = 8   // 唯一终态2：退款流程结束

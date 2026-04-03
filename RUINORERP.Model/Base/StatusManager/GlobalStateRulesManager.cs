@@ -330,10 +330,10 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.草稿] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.草稿 },
                 [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 }, // 审核驳回时可以回到草稿
                 [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销 },
-                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.部分核销, PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
-                [PrePaymentStatus.部分核销] = new List<object> { PrePaymentStatus.全额核销, PrePaymentStatus.部分退款 },
+                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.处理中, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款 },
+                [PrePaymentStatus.处理中] = new List<object> { PrePaymentStatus.待核销, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款, PrePaymentStatus.混合结清 },
                 [PrePaymentStatus.全额核销] = new List<object> { }, // 终态, 不可转换
-                [PrePaymentStatus.部分退款] = new List<object> { PrePaymentStatus.全额退款 },
+                [PrePaymentStatus.混合结清] = new List<object> { }, // 终态, 不可转换
                 [PrePaymentStatus.全额退款] = new List<object> { }  // 终态, 不可转换
             };
         }
@@ -712,9 +712,9 @@ namespace RUINORERP.Model.Base.StatusManager
 
             AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.部分核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.处理中, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.全额核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.部分退款, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.混合结清, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.全额退款, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
         }
 
@@ -1017,9 +1017,9 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.修改, MenuItemEnums.删除, MenuItemEnums.审核, MenuItemEnums.保存 },
                 [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.处理中] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                [PrePaymentStatus.部分退款] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.混合结清] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额退款] = new List<MenuItemEnums> { }
             };
 
@@ -1029,9 +1029,9 @@ namespace RUINORERP.Model.Base.StatusManager
                 [PrePaymentStatus.待审核] = new List<MenuItemEnums> { MenuItemEnums.新增, MenuItemEnums.删除, MenuItemEnums.审核 },
                 [PrePaymentStatus.已生效] = new List<MenuItemEnums> { MenuItemEnums.反审 },
                 [PrePaymentStatus.待核销] = new List<MenuItemEnums> { MenuItemEnums.反审 },
-                [PrePaymentStatus.部分核销] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.处理中] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额核销] = new List<MenuItemEnums> { },
-                [PrePaymentStatus.部分退款] = new List<MenuItemEnums> { },
+                [PrePaymentStatus.混合结清] = new List<MenuItemEnums> { },
                 [PrePaymentStatus.全额退款] = new List<MenuItemEnums> { }
             };
 

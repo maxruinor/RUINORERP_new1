@@ -482,7 +482,7 @@ namespace RUINORERP.Business
                     //DOTO 没有完成
                     //判断 能结案的 是关闭的意思。就是没有收到款 作废
                     // 检查预付款取消
-                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.部分核销;
+                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.处理中;
                     bool hasRelated = false; // 存在核销单
                     bool canCancel = preStatus.CanCancel(hasRelated); // 返回false
 

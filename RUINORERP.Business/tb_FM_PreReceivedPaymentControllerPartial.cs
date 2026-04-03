@@ -47,7 +47,7 @@ namespace RUINORERP.Business
         //{
         //    var targetStatus = IsFullSettlement ?
         //        PrePaymentStatus.全额核销 :
-        //        PrePaymentStatus.部分核销;
+        //        PrePaymentStatus.处理中;
 
         //    bool result = await Submit(targetStatus);
         //    if (result)

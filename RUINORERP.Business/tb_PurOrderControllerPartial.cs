@@ -196,8 +196,9 @@ namespace RUINORERP.Business
                                     rs.Succeeded = false;
                                     return rs;
                                 }
-                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销 
-                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                                else if (PrePayment.PrePaymentStatus == (int)PrePaymentStatus.全额核销
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.处理中
+                                    || PrePayment.PrePaymentStatus == (int)PrePaymentStatus.混合结清)
                                 {
                                     //已核销的预付款，需要撤销核销才能退款
                                     _unitOfWorkManage.RollbackTran();

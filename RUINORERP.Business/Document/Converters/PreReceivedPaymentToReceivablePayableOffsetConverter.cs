@@ -431,11 +431,12 @@ namespace RUINORERP.Business.Document.Converters
                 }
 
                 if (source.PrePaymentStatus != (int)PrePaymentStatus.待核销 &&
-                    source.PrePaymentStatus != (int)PrePaymentStatus.部分核销)
+                    source.PrePaymentStatus != (int)PrePaymentStatus.处理中 &&
+                    source.PrePaymentStatus != (int)PrePaymentStatus.混合结清)
                 {
                     var paymentType = (ReceivePaymentType)source.ReceivePaymentType;
                     result.CanConvert = false;
-                    result.ErrorMessage = $"预{paymentType}单 {source.PreRPNO} 状态不符合抵扣条件，当前状态为【{((PrePaymentStatus)source.PrePaymentStatus).ToString()}】，只能抵扣【待核销】或【部分核销】状态的预收付款单";
+                    result.ErrorMessage = $"预{paymentType}单 {source.PreRPNO} 状态不符合抵扣条件，当前状态为【{((PrePaymentStatus)source.PrePaymentStatus).ToString()}】，只能抵扣【待核销】、【处理中】或【混合结清】状态的预收付款单";
                     return result;
                 }
 

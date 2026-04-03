@@ -1045,31 +1045,41 @@ namespace RUINORERP.Business
                                     prePayment.Remark += $"{System.DateTime.Now.ToString()}退款{Math.Abs(RecordDetail.LocalAmount)}";
                                     //预收的退款操作时。 应该是去找他相同的
                                     #region 通过他的来源单据，找到对应的预收付单
-                                    //有退，有核销 则是  部分核销
-                                    if ((prePayment.LocalPaidAmount > 0 && prePayment.LocalRefundAmount > 0) ||
-                                        (prePayment.ForeignPaidAmount > 0 && prePayment.ForeignRefundAmount > 0))
-                                    {
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
-                                    }
+                                    //计算余额
+                                    decimal localBalance = prePayment.LocalPrepaidAmount - prePayment.LocalPaidAmount - prePayment.LocalRefundAmount;
+                                    decimal foreignBalance = prePayment.ForeignPrepaidAmount - prePayment.ForeignPaidAmount - prePayment.ForeignRefundAmount;
+                                    // 使用容差值判断余额是否为0，避免浮点数精度问题
+                                    decimal tolerance = 0.0001m;
 
-                                    //有退部分,还没有核销，后面可能退，也可能核销掉 则是  部分核销
-                                    if ((prePayment.LocalPaidAmount == 0 && prePayment.LocalRefundAmount > 0 && prePayment.LocalRefundAmount < prePayment.LocalPrepaidAmount) ||
-                                        (prePayment.ForeignPaidAmount == 0 && prePayment.ForeignRefundAmount > 0 && prePayment.ForeignRefundAmount < prePayment.ForeignPrepaidAmount))
-                                    {
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
-                                    }
-                                    //全退了则是 已冲销
+                                    //全退了则是 全额退款
                                     if (prePayment.LocalRefundAmount == prePayment.LocalPrepaidAmount || prePayment.ForeignRefundAmount == prePayment.ForeignPrepaidAmount)
                                     {
-                                        //全退款
                                         prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额退款;
                                         prePayment.IsAvailable = false;
+                                    }
+                                    //有退，有核销 且余额=0 则是 混合结清
+                                    else if ((prePayment.LocalPaidAmount > 0 && prePayment.LocalRefundAmount > 0 && Math.Abs(localBalance) <= tolerance) ||
+                                             (prePayment.ForeignPaidAmount > 0 && prePayment.ForeignRefundAmount > 0 && Math.Abs(foreignBalance) <= tolerance))
+                                    {
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.混合结清;
+                                        prePayment.IsAvailable = false;
+                                    }
+                                    //其他情况（部分核销或部分退款，余额>0）则是 处理中
+                                    else
+                                    {
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.处理中;
                                     }
 
                                     #endregion
                                     paymentType = prePayment.ReceivePaymentType.ToString();
                                     // 记录退款财务审计日志
-                                    string refundAuditMessage = $"预收款单退款：本币余额从 {refundOldLocalBalance} 变更为 {prePayment.LocalBalanceAmount}，外币余额从 {refundOldForeignBalance} 变更为 {prePayment.ForeignBalanceAmount}，本币退款金额从 {refundOldLocalRefund} 增加到 {prePayment.LocalRefundAmount}，外币退款金额从 {refundOldForeignRefund} 增加到 {prePayment.ForeignRefundAmount}，状态从 {refundOldStatus} 变更为 {prePayment.PrePaymentStatus}。退款金额：本币 {Math.Abs(RecordDetail.LocalAmount)}，外币 {Math.Abs(RecordDetail.ForeignAmount)}。关联收款单：{entity.PaymentNo}";
+                                    string refundAuditMessage = $"预收款单退款：状态从【{(PrePaymentStatus)refundOldStatus}】变更为【{(PrePaymentStatus)prePayment.PrePaymentStatus}】，" +
+                                                              $"本币余额从 {refundOldLocalBalance} 变更为 {prePayment.LocalBalanceAmount}，" +
+                                                              $"外币余额从 {refundOldForeignBalance} 变更为 {prePayment.ForeignBalanceAmount}，" +
+                                                              $"本币退款金额从 {refundOldLocalRefund} 增加到 {prePayment.LocalRefundAmount}，" +
+                                                              $"外币退款金额从 {refundOldForeignRefund} 增加到 {prePayment.ForeignRefundAmount}。" +
+                                                              $"退款金额：本币 {Math.Abs(RecordDetail.LocalAmount)}，外币 {Math.Abs(RecordDetail.ForeignAmount)}。" +
+                                                              $"关联收款单：{entity.PaymentNo}";
                                     await fMAuditLog.CreateAuditLog<tb_FM_PreReceivedPayment>(paymentType, prePayment, refundAuditMessage);
 
                                     #region 通过他的来源单据，找到对应的预收付单的收款单。标记为已关闭 !!!!!!!!!! 收款单 有是否反冲标记， 预收付中有退回金额

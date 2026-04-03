@@ -1277,7 +1277,7 @@ namespace RUINORERP.Business
 
             // 检查是否存在未核销的预收款
             var prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                 && x.CustomerVendor_ID == saleOut.CustomerVendor_ID
                 && x.IsAvailable == true
                 && x.SourceBizType == (int)BizType.销售订单

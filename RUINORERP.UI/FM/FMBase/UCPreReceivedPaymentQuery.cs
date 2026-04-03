@@ -127,9 +127,11 @@ namespace RUINORERP.UI.FM
             int counter = 1;
             foreach (var item in selectlist)
             {
-                //只有审核状态才可以转换为收款单  或部分核销，一张预付款  核销了一部分。还有一部分要收取时用部分核销。
+                //只有审核状态才可以转换为收款单  或待核销/处理中/混合结清状态，一张预付款 核销了一部分或已结清。还有一部分要收取时用处理中。
                 bool canConvert = item.ApprovalStatus == (int)ApprovalStatus.审核通过 && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
-                if (canConvert && item.PrePaymentStatus >= (int)PrePaymentStatus.部分核销)
+                if (canConvert && (item.PrePaymentStatus == (int)PrePaymentStatus.待核销 ||
+                                   item.PrePaymentStatus == (int)PrePaymentStatus.处理中 ||
+                                   item.PrePaymentStatus == (int)PrePaymentStatus.混合结清))
                 {
                     RealList.Add(item);
                 }
@@ -428,21 +430,33 @@ namespace RUINORERP.UI.FM
             foreach (var item in selectlist)
             {
                 //预收付时，没有真正付前可以合并一起收付
-                bool canConvert = item.PrePaymentStatus == (int)PrePaymentStatus.待核销
+                //待核销或处理中状态，且已审核通过，且有余额的单据可以转为退款单
+                bool canConvert = (item.PrePaymentStatus == (int)PrePaymentStatus.待核销 ||
+                                   item.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                     && item.ApprovalStatus == (int)ApprovalStatus.审核通过
-                    && item.ApprovalResults.HasValue && item.ApprovalResults.Value;
+                    && item.ApprovalResults.HasValue && item.ApprovalResults.Value
+                    && (item.ForeignBalanceAmount > 0 || item.LocalBalanceAmount > 0);
 
-                if (canConvert || item.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                if (canConvert)
                 {
-                    if (item.ForeignBalanceAmount > 0 || item.LocalBalanceAmount > 0)
+                    RealList.Add(item);
+                }
+                else
+                {
+                    //没有金额可退或状态不符合。
+                    if (item.ForeignBalanceAmount <= 0 && item.LocalBalanceAmount <= 0)
                     {
-                        RealList.Add(item);
+                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}没有可退金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else if (item.ApprovalStatus != (int)ApprovalStatus.审核通过 || !item.ApprovalResults.HasValue || !item.ApprovalResults.Value)
+                    {
+                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}未审核通过，不能转为退款单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     else
                     {
-                        //没有金额可退。
-                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}没有可退金额。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"当前预{((ReceivePaymentType)PaymentType).ToString()}单 {item.PreRPNO}状态为【{(PrePaymentStatus)item.PrePaymentStatus}】，不能转为退款单。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
+                }
                 }
                 else
                 {

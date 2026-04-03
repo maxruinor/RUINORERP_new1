@@ -1204,13 +1204,14 @@ namespace RUINORERP.Business
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePayment.ForeignPaidAmount -= Settlement.SettledForeignAmount;
-                                    if (prePayment.LocalPaidAmount == 0)
+                                    decimal tolerance = 0.0001m; // 使用容差值判断余额是否为 0，避免浮点数精度问题
+                                    if (Math.Abs(prePayment.LocalPaidAmount) <= tolerance)
                                     {
                                         prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                     }
                                     else if (prePayment.LocalPaidAmount < prePayment.LocalBalanceAmount)
                                     {
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.处理中;
                                     }
                                     payable.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     payable.ForeignBalanceAmount += Settlement.SettledForeignAmount;
@@ -1510,13 +1511,14 @@ namespace RUINORERP.Business
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePayment.ForeignPaidAmount -= Settlement.SettledForeignAmount;
-                                    if (prePayment.LocalPaidAmount == 0)
+                                    decimal tolerance = 0.0001m; // 使用容差值判断余额是否为 0，避免浮点数精度问题
+                                    if (Math.Abs(prePayment.LocalPaidAmount) <= tolerance)
                                     {
                                         prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                     }
-                                    else if (prePayment.LocalPaidAmount < prePayment.LocalPrepaidAmount)
+                                    else if (prePayment.LocalPaidAmount < prePayment.LocalBalanceAmount)
                                     {
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.处理中;
                                     }
                                     payable.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     payable.ForeignBalanceAmount += Settlement.SettledForeignAmount;
@@ -1599,13 +1601,14 @@ namespace RUINORERP.Business
                                     prePayment.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     prePayment.LocalPaidAmount -= Settlement.SettledLocalAmount;
                                     prePayment.ForeignPaidAmount -= Settlement.SettledForeignAmount;
-                                    if (prePayment.LocalPaidAmount == 0)
+                                    decimal tolerance = 0.0001m; // 使用容差值判断余额是否为 0，避免浮点数精度问题
+                                    if (Math.Abs(prePayment.LocalPaidAmount) <= tolerance)
                                     {
                                         prePayment.PrePaymentStatus = (int)PrePaymentStatus.待核销;
                                     }
-                                    else if (prePayment.LocalPaidAmount < prePayment.LocalPrepaidAmount)
+                                    else if (prePayment.LocalPaidAmount < prePayment.LocalBalanceAmount)
                                     {
-                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                                        prePayment.PrePaymentStatus = (int)PrePaymentStatus.处理中;
                                     }
                                     payable.LocalBalanceAmount += Settlement.SettledLocalAmount;
                                     payable.ForeignBalanceAmount += Settlement.SettledForeignAmount;
@@ -1900,13 +1903,24 @@ namespace RUINORERP.Business
 
                         // 更新预收款状态
                         int oldStatus = prePayment.PrePaymentStatus;
-                        if (prePayment.LocalBalanceAmount == 0)
+                        decimal tolerance = 0.0001m; // 使用容差值判断余额是否为 0，避免浮点数精度问题
+                        if (Math.Abs(prePayment.LocalBalanceAmount) <= tolerance)
                         {
-                            prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额核销;
+                            // 余额=0 时，判断是否有退款
+                            if (prePayment.LocalRefundAmount > 0 || prePayment.ForeignRefundAmount > 0)
+                            {
+                                // 有退款，则为混合结清
+                                prePayment.PrePaymentStatus = (int)PrePaymentStatus.混合结清;
+                            }
+                            else
+                            {
+                                // 无退款，则为全额核销
+                                prePayment.PrePaymentStatus = (int)PrePaymentStatus.全额核销;
+                            }
                         }
                         else
                         {
-                            prePayment.PrePaymentStatus = (int)PrePaymentStatus.部分核销;
+                            prePayment.PrePaymentStatus = (int)PrePaymentStatus.处理中;
                         }
                         
                         // 记录财务审计日志
@@ -2082,7 +2096,7 @@ namespace RUINORERP.Business
                 {
 
                     prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                       .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                       .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                    && x.CustomerVendor_ID == entity.CustomerVendor_ID
                    && x.IsAvailable == true
                    && x.SourceBizType == (int)BizType.销售订单
@@ -2102,7 +2116,7 @@ namespace RUINORERP.Business
                 if (PurEntry.PurOrder_ID.HasValue)
                 {
                     prePayments = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
-                        .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                        .Where(x => (x.PrePaymentStatus == (int)PrePaymentStatus.待核销 || x.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                       && x.CustomerVendor_ID == entity.CustomerVendor_ID
                       && x.IsAvailable == true
                       && x.SourceBizType == (int)BizType.采购订单
@@ -2162,7 +2176,7 @@ namespace RUINORERP.Business
         {
             var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
                          .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                          .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
                          .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
                          .Where(c => c.LocalBalanceAmount != 0)
@@ -2186,7 +2200,7 @@ namespace RUINORERP.Business
             {
                 var availableAdvances = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
                          .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.待核销 || c.PrePaymentStatus == (int)PrePaymentStatus.处理中)
                          .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
                          .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType)
                          .Where(c => c.LocalBalanceAmount != 0)
@@ -2234,7 +2248,7 @@ namespace RUINORERP.Business
 
             var prePayment = await _unitOfWorkManage.GetDbClient().Queryable<tb_FM_PreReceivedPayment>()
                          .Where(c => c.CustomerVendor_ID == receivablePayable.CustomerVendor_ID && c.IsAvailable == true)
-                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.全额核销 || c.PrePaymentStatus == (int)PrePaymentStatus.部分核销)
+                         .Where(c => c.PrePaymentStatus == (int)PrePaymentStatus.全额核销 || c.PrePaymentStatus == (int)PrePaymentStatus.处理中 || c.PrePaymentStatus == (int)PrePaymentStatus.混合结清)
                          .Where(c => c.Currency_ID == receivablePayable.Currency_ID)
                          .Where(c => c.ReceivePaymentType == receivablePayable.ReceivePaymentType
                           && statementIds.Contains(c.PreRPID)
@@ -3244,7 +3258,7 @@ namespace RUINORERP.Business
                     //DOTO 没有完成
                     //判断 能结案的 是关闭的意思。就是没有收到款 作废
                     // 检查预付款取消
-                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.部分核销;
+                    var preStatus = PrePaymentStatus.已生效 | PrePaymentStatus.处理中;
                     bool hasRelated = false; // 存在核销单
                     bool canCancel = preStatus.CanCancel(hasRelated); // 返回false
 

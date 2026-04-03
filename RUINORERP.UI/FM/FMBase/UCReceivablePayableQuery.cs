@@ -465,7 +465,7 @@ namespace RUINORERP.UI.FM
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
         private async void NewSumDataGridView_撤销预收预付抵扣(object sender, EventArgs e)
         {
-            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //1,查找能抵扣的待核销或处理中的预收付款单数据集合
             //2,抵扣，更新预收付款单和应收应付记录表
             //3,核销记录
 
@@ -619,7 +619,7 @@ namespace RUINORERP.UI.FM
         //如果销售订单审核，预收款审核后 生成的收款单 在没有审核前。就执行销售出库，这时应收没有及时抵扣时，在这里执行抵扣
         private async void NewSumDataGridView_预收预付抵扣(object sender, EventArgs e)
         {
-            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //1,查找能抵扣的待核销或处理中的预收付款单数据集合
             //2,抵扣，更新预收付款单和应收应付记录表
             //3,核销记录
 
@@ -849,7 +849,7 @@ namespace RUINORERP.UI.FM
         //批量智能预收预付抵扣：支持多个应收应付单批量抵扣，每个应收应付单可使用多个预收付款单进行抵扣
         private async void NewSumDataGridView_批量智能预收预付抵扣(object sender, EventArgs e)
         {
-            //1,查找能抵扣的待核销或部分核销的预收付款单数据集合
+            //1,查找能抵扣的待核销或处理中的预收付款单数据集合
             //2,抵扣，更新预收付款单和应收应付记录表
             //3,核销记录
 

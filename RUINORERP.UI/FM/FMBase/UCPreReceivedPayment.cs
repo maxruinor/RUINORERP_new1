@@ -54,8 +54,7 @@ namespace RUINORERP.UI.FM
 
         public override void AddExcludeMenuList()
         {
-            base.AddExcludeMenuList(MenuItemEnums.反结案);
-            base.AddExcludeMenuList(MenuItemEnums.结案);
+            // 移除对结案和反结案菜单项的排除，以便在 UI 中显示这些按钮
         }
         protected override async Task LoadRelatedDataToDropDownItemsAsync()
         {

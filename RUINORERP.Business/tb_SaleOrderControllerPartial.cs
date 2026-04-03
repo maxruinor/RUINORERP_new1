@@ -1774,54 +1774,108 @@ namespace RUINORERP.Business
                     tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
                 }
 
-                //关键修复：如果这个订单已经有【已审核】的出库单，则当前出库单的运费收入应该为 0
-                //只有已审核的出库单才代表运费已经确认收入，草稿状态的出库单不应该影响运费计算
+                // 计算累计已出库数量和当前出库数量
+                decimal totalOrderQty = saleorder.TotalQty;
+                decimal totalDeliveredQty = saleorder.tb_SaleOrderDetails.Sum(c => c.TotalDeliveredQty);
+                decimal currentOutQty = entity.TotalQty;
+                                
+                // 检查是否超量出库
+                if (totalDeliveredQty + currentOutQty > totalOrderQty)
+                {
+                    tipsMsg.Add($"警告：累计出库数量 ({totalDeliveredQty + currentOutQty}) 超过订单总量 ({totalOrderQty})，系统已自动调整出库数量。");
+                    currentOutQty = totalOrderQty - totalDeliveredQty;
+                    if (currentOutQty <= 0)
+                    {
+                        tipsMsg.Add($"订单:{entity.SaleOrderNo}已全部出库，请检查是否正在重复出库！");
+                        return entity;
+                    }
+                    // 调整明细行数量
+                    foreach (var detail in NewDetails)
+                    {
+                        // 计算调整后的数量 (使用 decimal 计算后再转换为 int)
+                        decimal adjustedQty = detail.Quantity * (currentOutQty / entity.TotalQty);
+                        detail.Quantity = (int)Math.Round(adjustedQty, 0, MidpointRounding.AwayFromZero);
+                    }
+                    entity.TotalQty = (int)currentOutQty;
+                }
+                                
+                // 查询该订单已审核出库单的累计运费
+                decimal deliveredFreightIncome = 0;
                 if (saleorder.tb_SaleOuts != null && saleorder.tb_SaleOuts.Count > 0)
                 {
-                    // 检查是否存在已审核的出库单（排除草稿和未审核的）
-                    var auditedSaleOuts = saleorder.tb_SaleOuts
-                        .Where(o => o.DataStatus >= (int)DataStatus.确认 
-                                 && o.ApprovalStatus == (int)ApprovalStatus.审核通过)
-                        .ToList();
+                    deliveredFreightIncome = saleorder.tb_SaleOuts
+                        .Where(o => o.DataStatus >= (int)DataStatus.确认)
+                        .Sum(o => o.FreightIncome);
+                }
+                                
+                // 计算剩余未出库数量对应的运费
+                decimal remainingFreight = saleorder.FreightIncome - deliveredFreightIncome;
+                                
+                // 判断是否为最后一次出库 (剩余数量全部出库)
+                bool isLastOutbound = (totalDeliveredQty + currentOutQty >= totalOrderQty);
+                                
+                if (isLastOutbound)
+                {
+                    // 最后一次出库：使用剩余运费，避免四舍五入误差累积
+                    entity.FreightIncome = remainingFreight;
+                    if (entity.FreightIncome < 0) entity.FreightIncome = 0; // 防止负数
+                }
+                else
+                {
+                    // 非最后一次出库：按当前出库数量比例分摊
+                    decimal currentRatio = totalOrderQty > 0 ? currentOutQty / totalOrderQty : 0;
+                    entity.FreightIncome = saleorder.FreightIncome * currentRatio;
+                }
+                                
+                entity.FreightIncome = entity.FreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                
+                // 如果运费收入大于 0，同时设置运费成本
+                if (entity.FreightIncome > 0)
+                {
+                    entity.FreightCost = entity.FreightIncome;
+                    tipsMsg.Add($"当前出库单分摊运费收入：{entity.FreightIncome}");
                                     
-                    if (auditedSaleOuts.Count > 0)
+                    // 如果是最后一次出库，添加提示信息
+                    if (isLastOutbound)
                     {
-                        if (saleorder.FreightIncome > 0)
-                        {
-                            tipsMsg.Add($"当前订单已有已审核的出库记录，运费收入已经计入前面出库单，当前出库运费收入为零！");
-                            entity.FreightIncome = 0;
-                        }
-                        else
-                        {
-                            tipsMsg.Add($"当前订单已有已审核的出库记录！");
-                        }
-                    }
-                    else
-                    {
-                        // 没有已审核的出库单，保留运费收入
-                        if (saleorder.FreightIncome > 0)
-                        {
-                            tipsMsg.Add($"当前订单是第一次出库（或以前出库单未审核），保留运费收入：{saleorder.FreightIncome}");
-                        }
+                        tipsMsg.Add($"本次为最后一次出库，使用剩余运费 (已扣除之前出库分摊的 {deliveredFreightIncome} 元)");
                     }
                 }
 
                 entity.TotalQty = NewDetails.Sum(c => c.Quantity);
 
-                //默认认为 订单中的运费收入 就是实际发货的运费成本， 可以手动修改覆盖
+                //默认认为 订单中的运费收入 就是实际发货的运费成本，可以手动修改覆盖
                 if (entity.FreightIncome > 0)
                 {
-                    entity.FreightCost = entity.FreightIncome;
                     //根据系统设置中的分摊规则来分配运费收入到明细。
-
+                
                     if (_appContext.SysConfig.FreightAllocationRules == (int)FreightAllocationRules.产品数量占比)
                     {
-                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 总产品数量） 
-                        foreach (var item in NewDetails)
+                        // 单个产品分摊运费 = 整单运费 ×（该产品数量 ÷ 当前出库总数量） 
+                        decimal currentOutTotalQty = NewDetails.Sum(c => c.Quantity);
+                        if (currentOutTotalQty > 0)
                         {
-                            item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity.ToDecimal() / saleorder.TotalQty.ToDecimal());
-                            item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
-                            item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
+                            foreach (var item in NewDetails)
+                            {
+                                item.AllocatedFreightIncome = entity.FreightIncome * (item.Quantity.ToDecimal() / currentOutTotalQty.ToDecimal());
+                                item.AllocatedFreightIncome = item.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                item.FreightAllocationRules = _appContext.SysConfig.FreightAllocationRules;
+                            }
+                                            
+                            // 如果是最后一次出库，确保分摊总和等于主表运费
+                            if (isLastOutbound)
+                            {
+                                decimal allocatedTotal = NewDetails.Sum(d => d.AllocatedFreightIncome);
+                                decimal difference = entity.FreightIncome - allocatedTotal;
+                                                
+                                // 如果存在差额且绝对值大于容差，调整最后一行
+                                if (Math.Abs(difference) > authorizeController.GetAmountCalculationTolerance() && NewDetails.Count > 0)
+                                {
+                                    var lastDetail = NewDetails[NewDetails.Count - 1];
+                                    lastDetail.AllocatedFreightIncome += difference;
+                                    lastDetail.AllocatedFreightIncome = lastDetail.AllocatedFreightIncome.ToRoundDecimalPlaces(authorizeController.GetMoneyDataPrecision());
+                                }
+                            }
                         }
                     }
                 }

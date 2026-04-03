@@ -1181,7 +1181,7 @@ namespace RUINORERP.Model.Base.StatusManager
                 else if (statusType == typeof(PrePaymentStatus))
                 {
                     PrePaymentStatus prepayStatus = (PrePaymentStatus)businessStatus;
-                    return prepayStatus == PrePaymentStatus.全额核销 || prepayStatus == PrePaymentStatus.全额退款;
+                    return prepayStatus == PrePaymentStatus.全额核销 || prepayStatus == PrePaymentStatus.全额退款 || prepayStatus == PrePaymentStatus.混合结清 || prepayStatus == PrePaymentStatus.结案;
                 }
                 else if (statusType == typeof(ARAPStatus))
                 {

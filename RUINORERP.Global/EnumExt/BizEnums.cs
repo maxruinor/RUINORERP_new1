@@ -179,7 +179,7 @@ namespace RUINORERP.Global
     }
 
     /// <summary>
-    /// 运费分摊规则1
+    /// 运费分摊规则
     /// </summary>
     public enum FreightAllocationRules
     {

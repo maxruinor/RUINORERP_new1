@@ -329,12 +329,13 @@ namespace RUINORERP.Model.Base.StatusManager
             {
                 [PrePaymentStatus.草稿] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.草稿 },
                 [PrePaymentStatus.待审核] = new List<object> { PrePaymentStatus.已生效, PrePaymentStatus.草稿 }, // 审核驳回时可以回到草稿
-                [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销 },
-                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.处理中, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款 },
-                [PrePaymentStatus.处理中] = new List<object> { PrePaymentStatus.待核销, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款, PrePaymentStatus.混合结清 },
+                [PrePaymentStatus.已生效] = new List<object> { PrePaymentStatus.待审核, PrePaymentStatus.待核销, PrePaymentStatus.结案 },
+                [PrePaymentStatus.待核销] = new List<object> { PrePaymentStatus.处理中, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款, PrePaymentStatus.结案 },
+                [PrePaymentStatus.处理中] = new List<object> { PrePaymentStatus.待核销, PrePaymentStatus.全额核销, PrePaymentStatus.全额退款, PrePaymentStatus.混合结清, PrePaymentStatus.结案 },
                 [PrePaymentStatus.全额核销] = new List<object> { }, // 终态, 不可转换
                 [PrePaymentStatus.混合结清] = new List<object> { }, // 终态, 不可转换
-                [PrePaymentStatus.全额退款] = new List<object> { }  // 终态, 不可转换
+                [PrePaymentStatus.全额退款] = new List<object> { },  // 终态, 不可转换
+                [PrePaymentStatus.结案] = new List<object> { }  // 终态, 不可转换
             };
         }
 
@@ -710,12 +711,13 @@ namespace RUINORERP.Model.Base.StatusManager
             bool allowModifyInSubmittedState = submitModifyRuleMode == SubmitModifyRuleMode.灵活模式;
             AddStandardButtonRules(PrePaymentStatus.待审核, addEnabled: true, modifyEnabled: allowModifyInSubmittedState, saveEnabled: true, deleteEnabled: allowModifyInSubmittedState, submitEnabled: false, reviewEnabled: true, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
 
-            AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
-            AddStandardButtonRules(PrePaymentStatus.处理中, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.已生效, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: true, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.待核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: true, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.处理中, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: true, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.全额核销, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: true, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.混合结清, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
             AddStandardButtonRules(PrePaymentStatus.全额退款, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: false);
+            AddStandardButtonRules(PrePaymentStatus.结案, addEnabled: false, modifyEnabled: false, saveEnabled: false, deleteEnabled: false, submitEnabled: false, reviewEnabled: false, reverseReviewEnabled: false, caseClosedEnabled: false, antiClosedEnabled: true);
         }
 
         /// <summary>
@@ -1526,6 +1528,8 @@ namespace RUINORERP.Model.Base.StatusManager
                 if (action == MenuItemEnums.提交) return PrePaymentStatus.待审核;
                 if (action == MenuItemEnums.审核) return PrePaymentStatus.已生效;
                 if (action == MenuItemEnums.反审) return PrePaymentStatus.待审核;
+                if (action == MenuItemEnums.结案) return PrePaymentStatus.结案;
+                if (action == MenuItemEnums.反结案) return PrePaymentStatus.已生效;
                 return currentStatus;
             }
 

@@ -97,7 +97,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         }
 
         /// <summary>
-        /// 运费分摊计算：采用"比例分配+余数调整"算法
+        /// 运费分摊计算：采用"比例分配+余数调整"算法1
         /// 确保分摊总和严格等于主表值，最后一行承担所有四舍五入误差
         /// </summary>
         /// <param name="masterPropertyName">主表字段名称（用于日志，当前未使用）</param>
@@ -154,8 +154,8 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                 {
                     // 最后一行：直接使用剩余金额，承担所有四舍五入误差
                     var allocatedValue = remainingAmount.ToRoundDecimalPlaces(precision);
-                    // 确保最后一行也在容差范围内
-                    if (Math.Abs(allocatedValue) <= tolerance)
+                    // 确保最后一行也在容差范围内，但避免将正常的小额运费归零
+                    if (Math.Abs(allocatedValue) <= tolerance && Math.Abs(allocatedValue) < 0.01m)
                     {
                         allocatedValue = 0m;
                     }
@@ -168,8 +168,8 @@ namespace RUINORERP.UI.BusinessService.CalculationService
                     // 非最后一行：按基础值比例分摊
                     var allocatedValue = masterValue * (baseValue / totalBaseValue)
                         .ToRoundDecimalPlaces(precision);
-                    // 确保分摊值在容差范围内
-                    if (Math.Abs(allocatedValue) <= tolerance)
+                    // 确保分摊值在容差范围内，但避免将正常的小额运费归零
+                    if (Math.Abs(allocatedValue) <= tolerance && Math.Abs(allocatedValue) < 0.01m)
                     {
                         allocatedValue = 0m;
                     }

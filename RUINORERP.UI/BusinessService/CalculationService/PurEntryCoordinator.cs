@@ -93,7 +93,7 @@ namespace RUINORERP.UI.BusinessService.CalculationService
         }
 
         /// <summary>
-        /// 运费分摊计算：采用"比例分配+余数调整"算法
+        /// 运费分摊计算：采用"比例分配+余数调整"算法1
         /// 确保分摊总和严格等于主表值，最后一行承担所有四舍五入误差
         /// </summary>
         /// <param name="masterValue">主表运费总额</param>

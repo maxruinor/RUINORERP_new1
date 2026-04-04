@@ -275,7 +275,15 @@ namespace RUINORERP.UI
                         {
                             // 连接成功后启动性能监控（幂等操作）
                             performanceMonitorService.Start();
+                            // 恢复性能数据上报
+                            performanceMonitorService.ResumeUpload();
                             logger?.LogInformation("客户端性能监控已启动（连接成功触发）");
+                        }
+                        else
+                        {
+                            // 断开连接时暂停上报，避免数据丢失
+                            performanceMonitorService.PauseUpload();
+                            logger?.LogInformation("客户端性能监控已暂停（连接断开）");
                         }
                     };
                 }

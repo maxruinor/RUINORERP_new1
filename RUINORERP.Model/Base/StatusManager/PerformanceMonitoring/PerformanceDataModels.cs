@@ -261,6 +261,11 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         public int AvailableIoThreads { get; set; }
 
         /// <summary>
+        /// CPU使用率（百分比）
+        /// </summary>
+        public double CpuUsagePercent { get; set; }
+
+        /// <summary>
         /// 是否触发GC
         /// </summary>
         public bool GCTriggered { get; set; }

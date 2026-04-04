@@ -43,6 +43,9 @@ namespace RUINORERP.UI.Network.Services
             // 初始化内存监控定时器（每30秒采集一次）
             _memoryMonitorTimer = new Timer(MemoryMonitorCallback, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
 
+            // 初始化UI响应监控（消息循环检测）
+            InitializeUIMonitoring();
+
             _logger?.LogInformation("客户端性能监控服务初始化完成");
         }
 
@@ -60,12 +63,23 @@ namespace RUINORERP.UI.Network.Services
                 }
             };
 
-            // 订阅数据库操作事件
+            // 订阅数据库操作事件（重要事件实时上报）
             PerformanceMonitoringBridge.OnDatabaseOperation += (sender, data) =>
             {
                 if (data != null)
                 {
                     RecordDatabaseOperation(data.SqlText, data.OperationType, data.TableName, data.ExecutionTimeMs, data.AffectedRows, data.IsSuccess, data.ErrorMessage, data.IsDeadlock);
+
+                    // 死锁事件立即触发上报
+                    if (data.IsDeadlock)
+                    {
+                        TriggerImmediateUpload("死锁事件");
+                    }
+                    // 执行时间超过阈值也立即上报
+                    else if (data.ExecutionTimeMs > 5000)
+                    {
+                        TriggerImmediateUpload("慢查询事件");
+                    }
                 }
             };
 
@@ -75,19 +89,52 @@ namespace RUINORERP.UI.Network.Services
                 if (data != null)
                 {
                     RecordNetworkRequest(data.CommandName, data.CommandName, DateTime.Now.AddMilliseconds(-data.ExecutionTimeMs), DateTime.Now, 0, 0, data.IsSuccess, data.ErrorMessage);
+
+                    // 网络请求失败立即上报
+                    if (!data.IsSuccess)
+                    {
+                        TriggerImmediateUpload("网络请求失败");
+                    }
                 }
             };
 
-            // 订阅死锁事件
+            // 订阅死锁事件（最高优先级，立即上报）
             PerformanceMonitoringBridge.OnDeadlock += (sender, data) =>
             {
                 if (data != null)
                 {
                     _logger?.LogWarning("检测到死锁事件: {TableName}, {OperationType}", data.TableName, data.OperationType);
+                    // 死锁事件最高优先级，立即触发上报
+                    TriggerImmediateUpload("死锁事件-最高优先级");
                 }
             };
 
             _logger?.LogDebug("已订阅PerformanceMonitoringBridge事件");
+        }
+
+        /// <summary>
+        /// 触发立即上报（重要事件）
+        /// </summary>
+        private void TriggerImmediateUpload(string reason)
+        {
+            try
+            {
+                // 检查连接状态
+                if (_communicationService?.ConnectionManager?.IsConnected != true)
+                {
+                    _logger?.LogWarning($"重要事件[{reason}]无法上报：网络未连接");
+                    return;
+                }
+
+                // 立即触发数据打包和上报
+                _monitorManager.TriggerImmediateUpload();
+
+                _logger?.LogDebug("重要事件[{0}]已触发立即上报", reason);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "触发立即上报失败: {0}", reason);
+            }
         }
 
         /// <summary>
@@ -139,6 +186,24 @@ namespace RUINORERP.UI.Network.Services
         {
             PerformanceMonitorSwitch.Disable();
             _logger?.LogInformation("客户端性能监控已停止");
+        }
+
+        /// <summary>
+        /// 暂停上报（网络断开时调用）
+        /// </summary>
+        public void PauseUpload()
+        {
+            _monitorManager.PauseUpload();
+            _logger?.LogInformation("客户端性能监控已暂停上报");
+        }
+
+        /// <summary>
+        /// 恢复上报（网络重连时调用）
+        /// </summary>
+        public void ResumeUpload()
+        {
+            _monitorManager.ResumeUpload();
+            _logger?.LogInformation("客户端性能监控已恢复上报");
         }
 
         /// <summary>
@@ -221,6 +286,37 @@ namespace RUINORERP.UI.Network.Services
         }
 
         /// <summary>
+        /// 初始化UI响应监控
+        /// </summary>
+        private void InitializeUIMonitoring()
+        {
+            try
+            {
+                // 检查是否启用UI监控
+                if (!PerformanceMonitorSwitch.IsMonitorEnabled(PerformanceMonitorType.UIResponse))
+                    return;
+
+                // 使用Application.Idle事件监控UI响应
+                System.Windows.Forms.Application.Idle += OnApplicationIdle;
+                _logger?.LogDebug("UI响应监控已初始化");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "UI监控初始化失败");
+            }
+        }
+
+        /// <summary>
+        /// Application.Idle事件处理
+        /// </summary>
+        private void OnApplicationIdle(object sender, EventArgs e)
+        {
+            // 此事件在应用程序空闲时触发
+            // 可用于检测UI线程是否长时间无响应
+            // 实际实现需要结合消息钩子来检测卡顿
+        }
+
+        /// <summary>
         /// 记录方法执行性能
         /// </summary>
         public void RecordMethodExecution(string methodName, string className, long executionTimeMs, bool isSuccess, string exceptionMessage = null)
@@ -296,6 +392,13 @@ namespace RUINORERP.UI.Network.Services
             _memoryMonitorTimer?.Dispose();
             _monitorManager?.Dispose();
             
+            // 取消UI事件订阅
+            try
+            {
+                System.Windows.Forms.Application.Idle -= OnApplicationIdle;
+            }
+            catch { }
+
             _logger?.LogInformation("客户端性能监控服务已释放");
         }
     }

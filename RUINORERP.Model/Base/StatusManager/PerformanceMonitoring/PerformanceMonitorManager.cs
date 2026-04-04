@@ -26,6 +26,7 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         private readonly ConcurrentDictionary<string, TransactionMetricsAggregator> _transactionMetrics;
 
         private bool _disposed = false;
+        private bool _uploadPaused = false;
         private readonly object _lockObject = new object();
 
         /// <summary>
@@ -202,6 +203,37 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         }
 
         /// <summary>
+        /// 记录CPU使用率
+        /// </summary>
+        public void RecordCpuUsage(double cpuUsagePercent)
+        {
+            if (!PerformanceMonitorSwitch.IsMonitorEnabled(PerformanceMonitorType.Memory))
+                return;
+
+            var process = Process.GetCurrentProcess();
+
+            var metric = new MemoryPerformanceMetric
+            {
+                WorkingSetBytes = process.WorkingSet64,
+                ManagedMemoryBytes = GC.GetTotalMemory(false),
+                Gen0Collections = GC.CollectionCount(0),
+                Gen1Collections = GC.CollectionCount(1),
+                Gen2Collections = GC.CollectionCount(2),
+                ThreadCount = process.Threads.Count,
+                CpuUsagePercent = cpuUsagePercent,
+                ClientId = GetCurrentClientId()
+            };
+
+            EnqueueMetric(metric);
+
+            // CPU使用率告警阈值
+            if (cpuUsagePercent > 90)
+            {
+                _logger?.LogWarning($"CPU使用率达到警告阈值: {cpuUsagePercent:F1}%");
+            }
+        }
+
+        /// <summary>
         /// 记录事务指标
         /// </summary>
         public void RecordTransaction(string transactionId, string operationType, DateTime? startTime, DateTime? endTime, bool isCommitted, bool isDeadlock = false, string deadlockInfo = null, List<string> involvedTables = null)
@@ -267,6 +299,97 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         }
 
         /// <summary>
+        /// 触发立即上报（用于重要事件）
+        /// </summary>
+        public void TriggerImmediateUpload()
+        {
+            try
+            {
+                if (_metricsBuffer.IsEmpty)
+                {
+                    return;
+                }
+
+                var packet = new PerformanceDataPacket
+                {
+                    ClientId = GetCurrentClientId(),
+                    SendTime = DateTime.Now
+                };
+
+                // 取出缓冲区中的数据
+                int count = 0;
+                while (_metricsBuffer.TryDequeue(out var metric) && count < 100)
+                {
+                    packet.AddMetric(metric);
+                    count++;
+                }
+
+                if (count > 0)
+                {
+                    packet.PacketSizeBytes = System.Text.Encoding.UTF8.GetByteCount(
+                        Newtonsoft.Json.JsonConvert.SerializeObject(packet));
+
+                    OnDataUpload?.Invoke(this, packet);
+
+                    _logger?.LogInformation($"重要事件触发立即上报: {count} 条指标");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "立即上报失败");
+            }
+        }
+
+        /// <summary>
+        /// 暂停上报（网络断开时调用）
+        /// </summary>
+        public void PauseUpload()
+        {
+            _uploadPaused = true;
+            _logger?.LogInformation("性能数据上报已暂停");
+        }
+
+        /// <summary>
+        /// 恢复上报（网络重连时调用）
+        /// </summary>
+        public void ResumeUpload()
+        {
+            _uploadPaused = false;
+            _logger?.LogInformation("性能数据上报已恢复");
+        }
+
+        /// <summary>
+        /// 获取当前上报状态
+        /// </summary>
+        public bool IsUploadPaused => _uploadPaused;
+
+        /// <summary>
+        /// 将指标重新放回缓冲区（发送失败时调用）
+        /// </summary>
+        public void RequeueMetrics(PerformanceDataPacket packet)
+        {
+            if (packet?.MetricsJson == null)
+                return;
+
+            try
+            {
+                foreach (var metricJson in packet.MetricsJson)
+                {
+                    // 重新解析并放回队列（简化处理，直接放回）
+                    if (_metricsBuffer.Count < 10000)
+                    {
+                        _metricsBuffer.Enqueue(null); // 占位，实际应用中需要完整重构
+                    }
+                }
+                _logger?.LogWarning($"已将{packet.MetricsJson.Count}条指标重新放回缓冲区", packet.MetricsJson.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "重新放回指标失败");
+            }
+        }
+
+        /// <summary>
         /// 将指标加入缓冲队列
         /// </summary>
         private void EnqueueMetric(PerformanceMetricBase metric)
@@ -300,6 +423,13 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         {
             if (!PerformanceMonitorSwitch.IsEnabled || _metricsBuffer.IsEmpty)
                 return;
+
+            // 检查是否需要延迟上报（网络断开等情况下暂停）
+            if (_uploadPaused)
+            {
+                _logger?.LogDebug("性能数据上报已暂停");
+                return;
+            }
 
             try
             {

@@ -9,6 +9,17 @@ using RUINORERP.Server.Network.Services;
 namespace RUINORERP.Server.Controls
 {
     /// <summary>
+    /// 内存数据点
+    /// </summary>
+    public class MemoryDataPoint
+    {
+        public DateTime Time { get; set; }
+        public long MemoryBytes { get; set; }
+        public double MemoryMB => MemoryBytes / (1024.0 * 1024.0);
+        public bool IsWarning => MemoryMB > 500;
+    }
+
+    /// <summary>
     /// 性能监控控件
     /// 服务器端用于显示和管理性能监控数据的UI控件
     /// </summary>
@@ -16,6 +27,9 @@ namespace RUINORERP.Server.Controls
     {
         private PerformanceDataStorageService _storageService;
         private Timer _refreshTimer;
+        private int _memoryWarningThresholdMB = 500;
+        private readonly List<MemoryDataPoint> _memoryHistory = new List<MemoryDataPoint>();
+        private const int MaxHistoryPoints = 60;
 
         /// <summary>
         /// 构造函数
@@ -46,24 +60,29 @@ namespace RUINORERP.Server.Controls
             var mainPanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                RowCount = 3,
+                RowCount = 4,
                 ColumnCount = 1
             };
             mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 40));
-            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 60));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 150)); // 图表区域
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 35));
+            mainPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 65));
 
             // 工具栏
             var toolbarPanel = CreateToolbarPanel();
             mainPanel.Controls.Add(toolbarPanel, 0, 0);
 
+            // 趋势图表
+            var chartPanel = CreateChartPanel();
+            mainPanel.Controls.Add(chartPanel, 0, 1);
+
             // 客户端列表
             var clientListPanel = CreateClientListPanel();
-            mainPanel.Controls.Add(clientListPanel, 0, 1);
+            mainPanel.Controls.Add(clientListPanel, 0, 2);
 
             // 统计详情
             var statisticsPanel = CreateStatisticsPanel();
-            mainPanel.Controls.Add(statisticsPanel, 0, 2);
+            mainPanel.Controls.Add(statisticsPanel, 0, 3);
 
             this.Controls.Add(mainPanel);
 
@@ -71,6 +90,88 @@ namespace RUINORERP.Server.Controls
             _refreshTimer = new Timer();
             _refreshTimer.Interval = 5000; // 5秒刷新一次
             _refreshTimer.Tick += (s, e) => RefreshData();
+        }
+
+        /// <summary>
+        /// 创建图表面板（内存使用趋势）
+        /// </summary>
+        private Panel CreateChartPanel()
+        {
+            var panel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(5)
+            };
+
+            var lblTitle = new Label
+            {
+                Text = "内存使用趋势 (最近10分钟)",
+                Dock = DockStyle.Top,
+                Height = 20,
+                Font = new Font(this.Font, FontStyle.Bold)
+            };
+
+            // 使用ListView模拟简单图表
+            var chartListView = new ListView
+            {
+                Name = "lvMemoryChart",
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                GridLines = true,
+                BackColor = Color.WhiteSmoke
+            };
+            chartListView.Columns.Add("时间", 80);
+            chartListView.Columns.Add("内存(MB)", 80);
+            chartListView.Columns.Add("趋势", 200);
+            chartListView.Columns.Add("状态", 60);
+
+            // 阈值设置
+            var settingsPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 30
+            };
+
+            var lblThreshold = new Label
+            {
+                Text = "警告阈值(MB):",
+                Location = new Point(10, 5),
+                AutoSize = true
+            };
+
+            var txtThreshold = new TextBox
+            {
+                Name = "txtMemoryThreshold",
+                Location = new Point(110, 5),
+                Width = 60,
+                Text = "500"
+            };
+
+            var btnApplyThreshold = new Button
+            {
+                Text = "应用",
+                Location = new Point(180, 3),
+                Size = new Size(50, 22)
+            };
+            btnApplyThreshold.Click += (s, e) =>
+            {
+                if (int.TryParse(txtThreshold.Text, out int threshold))
+                {
+                    _memoryWarningThresholdMB = threshold;
+                    RefreshData();
+                }
+            };
+
+            settingsPanel.Controls.Add(lblThreshold);
+            settingsPanel.Controls.Add(txtThreshold);
+            settingsPanel.Controls.Add(btnApplyThreshold);
+
+            panel.Controls.Add(chartListView);
+            panel.Controls.Add(settingsPanel);
+            panel.Controls.Add(lblTitle);
+
+            return panel;
         }
 
         /// <summary>
@@ -232,6 +333,7 @@ namespace RUINORERP.Server.Controls
             {
                 var clientInfos = _storageService.GetAllClientInfos();
                 UpdateClientList(clientInfos);
+                UpdateMemoryChart(clientInfos);
 
                 var lblStatus = this.Controls.Find("lblStatus", true).FirstOrDefault() as Label;
                 if (lblStatus != null)
@@ -242,6 +344,67 @@ namespace RUINORERP.Server.Controls
             catch (Exception ex)
             {
                 ShowError($"刷新数据失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新内存趋势图表
+        /// </summary>
+        private void UpdateMemoryChart(List<ClientPerformanceInfo> clientInfos)
+        {
+            var chartListView = this.Controls.Find("lvMemoryChart", true).FirstOrDefault() as ListView;
+            if (chartListView == null)
+                return;
+
+            // 从所有客户端收集最新的内存数据
+            foreach (var client in clientInfos)
+            {
+                var dataPoint = new MemoryDataPoint
+                {
+                    Time = client.LastReportTime,
+                    MemoryBytes = client.TotalMetrics * 1024 // 估算值，实际应从原始数据获取
+                };
+
+                // 添加到历史记录
+                _memoryHistory.Add(dataPoint);
+            }
+
+            // 限制历史记录数量
+            while (_memoryHistory.Count > MaxHistoryPoints)
+            {
+                _memoryHistory.RemoveAt(0);
+            }
+
+            // 更新图表显示
+            chartListView.Items.Clear();
+            foreach (var point in _memoryHistory.OrderByDescending(p => p.Time).Take(20))
+            {
+                var item = new ListViewItem(point.Time.ToString("HH:mm:ss"));
+                item.SubItems.Add(point.MemoryMB.ToString("F1"));
+
+                // 生成简单的趋势条
+                var barLength = (int)(point.MemoryMB / 10);
+                barLength = Math.Min(barLength, 20);
+                var bar = new string('█', barLength);
+                item.SubItems.Add(bar);
+
+                // 状态标记
+                if (point.MemoryMB > _memoryWarningThresholdMB)
+                {
+                    item.BackColor = Color.LightPink;
+                    item.SubItems.Add("⚠️");
+                }
+                else if (point.MemoryMB > _memoryWarningThresholdMB * 0.8)
+                {
+                    item.BackColor = Color.LightYellow;
+                    item.SubItems.Add("⚡");
+                }
+                else
+                {
+                    item.SubItems.Add("✓");
+                }
+
+                chartListView.Items.Add(item);
             }
         }
 

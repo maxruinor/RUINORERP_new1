@@ -24,6 +24,7 @@ using RUINORERP.UI.Network.ClientCommandHandlers;
 using System.Collections.Generic;
 using RUINORERP.Business.Network;
 using RUINORERP.IServices;
+using RUINORERP.UI.Network.Services;
 
 namespace RUINORERP.UI.Network.DI
 {
@@ -226,6 +227,9 @@ namespace RUINORERP.UI.Network.DI
             // 注册锁管理相关服务
             RegisterLockManagementServices(builder);
 
+            // 注册性能监控服务
+            RegisterPerformanceMonitorServices(builder);
+
             // 注册配置相关服务
             // 注册配置类型
             builder.RegisterType<SystemGlobalConfig>().AsSelf().SingleInstance();
@@ -354,6 +358,31 @@ namespace RUINORERP.UI.Network.DI
                 return null;
             })
             .As<ClientLocalLockCacheService>()
+            .SingleInstance();
+        }
+
+        /// <summary>
+        /// 注册性能监控服务
+        /// </summary>
+        /// <param name="builder">容器构建器</param>
+        private static void RegisterPerformanceMonitorServices(ContainerBuilder builder)
+        {
+            // 注册性能监控配置
+            builder.RegisterType<PerformanceMonitorConfig>().AsSelf().SingleInstance();
+
+            // 注册性能监控管理器
+            builder.RegisterType<Model.Base.StatusManager.PerformanceMonitoring.PerformanceMonitorManager>()
+                .AsSelf()
+                .SingleInstance();
+
+            // 注册ClientPerformanceMonitorService
+            builder.Register(c =>
+            {
+                var logger = c.Resolve<ILogger<ClientPerformanceMonitorService>>();
+                var communicationService = c.Resolve<Lazy<ClientCommunicationService>>();
+                return new ClientPerformanceMonitorService(communicationService, logger);
+            })
+            .AsSelf()
             .SingleInstance();
         }
 

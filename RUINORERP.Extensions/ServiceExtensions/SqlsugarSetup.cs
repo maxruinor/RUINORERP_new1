@@ -194,6 +194,7 @@ namespace RUINORERP.Extensions
                         System.Diagnostics.Debug.WriteLine($"SQL 执行错误：{exception.Message}, SQL: {errorsql}");
                     }
                     
+                    // ✅ 死锁检测与性能监控
                     if (e.InnerException != null && e.InnerException is SqlException sqlEx && sqlEx.Number == 1205)
                     {
                         var deadlockInfo = new
@@ -213,6 +214,25 @@ namespace RUINORERP.Extensions
                         else
                         {
                             System.Diagnostics.Debug.WriteLine($"检测到数据库死锁：{JsonConvert.SerializeObject(deadlockInfo)}");
+                        }
+                        
+                        // ✅ 记录到性能监控系统
+                        try
+                        {
+                            var tableName = ExtractTableNameFromSql(errorsql);
+                            var operation = GetOperationTypeFromSql(errorsql);
+                            
+                            RUINORERP.Repository.UnitOfWorks.TransactionMetrics.RecordDeadlock(
+                                tableName,
+                                operation,
+                                TimeSpan.FromSeconds(30), // 估算等待时间
+                                errorsql,
+                                "Unknown"
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"记录死锁统计失败：{ex.Message}");
                         }
                     }
                 }
@@ -253,18 +273,18 @@ namespace RUINORERP.Extensions
         /// <returns>调用方法的名称</returns>
         // 使用缓存减少堆栈跟踪计算
         private static readonly ConcurrentDictionary<string, string> _methodNameCache = new();
-        
+                
         private static string GetCallerMethodName()
         {
             string callerMethod = "未知方法";
             try
             {
-                // 创建StackTrace对象，跳过3个堆栈帧（当前方法、OnLogExecuting调用和匿名方法）
+                // 创建 StackTrace 对象，跳过 3 个堆栈帧（当前方法、OnLogExecuting 调用和匿名方法）
                 StackTrace stackTrace = new StackTrace(3, false);
                 if (stackTrace.FrameCount > 0)
                 {
                     // 获取第一个非框架方法
-                    for (int i = 0; i < Math.Min(stackTrace.FrameCount, 10); i++) // 限制最多检查10层
+                    for (int i = 0; i < Math.Min(stackTrace.FrameCount, 10); i++) // 限制最多检查 10 层
                     {
                         StackFrame frame = stackTrace.GetFrame(i);
                         MethodBase method = frame.GetMethod();
@@ -274,7 +294,7 @@ namespace RUINORERP.Extensions
                             !method.DeclaringType.FullName.StartsWith("Microsoft"))
                         {
                             string key = $"{method.DeclaringType.FullName}.{method.Name}";
-                            
+                                    
                             // 使用缓存
                             if (_methodNameCache.TryGetValue(key, out var cachedName))
                             {
@@ -290,8 +310,69 @@ namespace RUINORERP.Extensions
                     }
                 }
             }
-            catch { /* 捕获异常以避免影响正常SQL执行 */ }
+            catch { /* 捕获异常以避免影响正常 SQL 执行 */ }
             return callerMethod;
+        }
+                
+        /// <summary>
+        /// 从 SQL 中提取表名（简化版本）
+        /// </summary>
+        private static string ExtractTableNameFromSql(string sql)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(sql)) return "Unknown";
+                        
+                sql = sql.Trim().ToUpper();
+                        
+                // INSERT INTO [TableName]
+                if (sql.StartsWith("INSERT INTO"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(sql, @"INSERT\s+INTO\s+\[?(\w+)\]?");
+                    if (match.Success) return match.Groups[1].Value;
+                }
+                        
+                // UPDATE [TableName]
+                if (sql.StartsWith("UPDATE"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(sql, @"UPDATE\s+\[?(\w+)\]?");
+                    if (match.Success) return match.Groups[1].Value;
+                }
+                        
+                // DELETE FROM [TableName]
+                if (sql.StartsWith("DELETE FROM"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(sql, @"DELETE\s+FROM\s+\[?(\w+)\]?");
+                    if (match.Success) return match.Groups[1].Value;
+                }
+                        
+                // SELECT ... FROM [TableName]
+                if (sql.StartsWith("SELECT"))
+                {
+                    var match = System.Text.RegularExpressions.Regex.Match(sql, @"FROM\s+\[?(\w+)\]?");
+                    if (match.Success) return match.Groups[1].Value;
+                }
+            }
+            catch { }
+                    
+            return "Unknown";
+        }
+                
+        /// <summary>
+        /// 从 SQL 中获取操作类型
+        /// </summary>
+        private static string GetOperationTypeFromSql(string sql)
+        {
+            if (string.IsNullOrEmpty(sql)) return "Unknown";
+                    
+            sql = sql.Trim().ToUpper();
+                    
+            if (sql.StartsWith("INSERT")) return "INSERT";
+            if (sql.StartsWith("UPDATE")) return "UPDATE";
+            if (sql.StartsWith("DELETE")) return "DELETE";
+            if (sql.StartsWith("SELECT")) return "SELECT";
+                    
+            return "Unknown";
         }
 
 

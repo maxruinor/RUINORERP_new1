@@ -18,6 +18,7 @@ using RUINORERP.Model;
 using FluentValidation.Results;
 using RUINORERP.Services;
 using RUINORERP.Model.Base;
+using RUINORERP.Business.Helper;
 using RUINORERP.Common.Extensions;
 using RUINORERP.IServices.BASE;
 using RUINORERP.Model.Context;
@@ -217,6 +218,10 @@ namespace RUINORERP.Business
                     {
                         it.RefundStatus
                     }).ExecuteCommandAsync();
+                }
+                else
+                {
+                    throw new Exception($"创建销售退回单失败：{SaveRs.ErrorMsg}");
                 }
 
                 // 注意信息的完整性
@@ -597,7 +602,13 @@ namespace RUINORERP.Business
                     List<tb_Inventory> invUpdateList = new List<tb_Inventory>();
                     List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
-                    foreach (var group in inventoryGroups)
+                    // 【死锁优化】按 (ProdDetailID, LocationID) 排序，确保所有事务以相同顺序访问资源
+                    var sortedInventoryGroups = inventoryGroups
+                        .OrderBy(g => g.Key.ProdDetailID)
+                        .ThenBy(g => g.Key.LocationID)
+                        .ToList();
+
+                    foreach (var group in sortedInventoryGroups)
                     {
                         var inv = group.Value.Inventory;
                         // 记录原始库存数量，用于计算变化量
@@ -1175,8 +1186,6 @@ namespace RUINORERP.Business
                 // 关键修复：增强异常处理，确保事务正确回滚
                 try
                 {
-                    _logger.LogError(ex, $"销售出库单审核发生异常，开始回滚事务。异常信息: {ex.Message}");
-
                     // 检查当前事务状态，避免重复回滚
                     var transactionState = _unitOfWorkManage.GetTransactionState();
                     if (transactionState.IsActive)
@@ -1446,7 +1455,13 @@ namespace RUINORERP.Business
                 // 处理分组数据，更新库存记录的各字段
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
 
-                foreach (var group in inventoryGroups)
+                // 【死锁优化】按 (ProdDetailID, LocationID) 排序，确保所有事务以相同顺序访问资源
+                var sortedInventoryGroups = inventoryGroups
+                    .OrderBy(g => g.Key.ProdDetailID)
+                    .ThenBy(g => g.Key.LocationID)
+                    .ToList();
+
+                foreach (var group in sortedInventoryGroups)
                 {
                     var inv = group.Value.Inventory;
                     // 记录原始库存数量，用于计算变化量
@@ -1997,3 +2012,4 @@ namespace RUINORERP.Business
 
 
 
+ 

@@ -450,6 +450,7 @@ namespace RUINORERP.Server
                 .AddJsonFile(Path.Combine("SysConfigFiles", nameof(SystemGlobalConfig) + ".json"), optional: false, reloadOnChange: true)
                 .AddJsonFile(Path.Combine("SysConfigFiles", nameof(GlobalValidatorConfig) + ".json"), optional: false, reloadOnChange: true)
                 .AddJsonFile(Path.Combine("SysConfigFiles", nameof(ServerGlobalConfig) + ".json"), optional: false, reloadOnChange: true)
+                .AddJsonFile(Path.Combine("SysConfigFiles", nameof(PerformanceMonitorConfig) + ".json"), optional: true, reloadOnChange: true)
                 // 添加环境变量支持，提高配置灵活性
                 .AddEnvironmentVariables(prefix: "RUINOR_")
                 .Build();
@@ -464,6 +465,7 @@ namespace RUINORERP.Server
             services.Configure<SystemGlobalConfig>(builder.GetSection(nameof(SystemGlobalConfig)));
             services.Configure<GlobalValidatorConfig>(builder.GetSection(nameof(GlobalValidatorConfig)));
             services.Configure<ServerGlobalConfig>(builder.GetSection(nameof(ServerGlobalConfig)));
+            services.Configure<PerformanceMonitorConfig>(builder.GetSection(nameof(PerformanceMonitorConfig)));
 
             // 注册ServerConfig单例实例，使用IOptionsMonitor<T>支持动态更新和配置变更通知
             services.AddSingleton<ServerGlobalConfig>(provider =>
@@ -546,6 +548,29 @@ namespace RUINORERP.Server
                 });
 
                 return validatorConfig;
+            });
+
+            // 注册PerformanceMonitorConfig单例实例，支持配置变更通知
+            services.AddSingleton<PerformanceMonitorConfig>(provider =>
+            {
+                var monitor = provider.GetRequiredService<IOptionsMonitor<PerformanceMonitorConfig>>();
+                var performanceConfig = monitor.CurrentValue;
+
+                // 订阅配置变更事件，实时更新单例实例属性
+                monitor.OnChange(newConfig =>
+                {
+                    // 使用反射更新实例属性而非替换引用
+                    foreach (var property in typeof(PerformanceMonitorConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    {
+                        if (property.CanWrite)
+                        {
+                            var newValue = property.GetValue(newConfig);
+                            property.SetValue(performanceConfig, newValue);
+                        }
+                    }
+                });
+
+                return performanceConfig;
             });
 
             // 确保ConfigManagerService正确注册，使用新的构造函数

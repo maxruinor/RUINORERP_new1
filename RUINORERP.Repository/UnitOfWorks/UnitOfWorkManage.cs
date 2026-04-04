@@ -198,9 +198,10 @@ namespace RUINORERP.Repository.UnitOfWorks
                 _logger.LogWarning("提交请求但无事务上下文");
                 return;
             }
-        
+                
             var dbClient = GetDbClient();
-        
+            var stopwatch = Stopwatch.StartNew(); // 性能监控开始
+                
             // 使用写锁保护事务提交操作
             _rwLock.EnterWriteLock();
             try
@@ -209,7 +210,7 @@ namespace RUINORERP.Repository.UnitOfWorks
                 {
                     return;
                 }
-        
+                
                 // 检查回滚标记
                 if (context.ShouldRollback)
                 {
@@ -218,34 +219,50 @@ namespace RUINORERP.Repository.UnitOfWorks
                     _tranDepth.Value--;
                     return;
                 }
-        
+                
                 // 减少深度
                 context.Depth--;
                 _tranDepth.Value--;
                 context.UpdateActivityTime();
-        
+                
                 // 内层提交：仅更新深度
                 if (context.Depth > 0)
                 {
                     return;
                 }
-        
+                
                 // 最外层提交
                 try
                 {
                     dbClient.Ado.CommitTran();
                     context.Status = TransactionStatus.Committed;
-        
+                    
                     var duration = context.GetDuration().TotalSeconds;
                     if (duration > 10)
                     {
                         _logger.LogWarning($"[Transaction-{context.TransactionId}] 长事务提交耗时：{duration:F2}秒");
                     }
+                            
+                    // ✅ 性能监控：记录事务指标
+                    TransactionMetrics.RecordTransaction(
+                        "commit", 
+                        context.CallerMethod, 
+                        duration, 
+                        true,
+                        ExtractTableName(context)); // 从事务上下文中提取表名
                 }
                 catch (Exception commitEx)
                 {
                     context.Status = TransactionStatus.RolledBack;
                     _logger.LogError(commitEx, $"[Transaction-{context.TransactionId}] 事务提交失败");
+                            
+                    // ✅ 性能监控：记录失败事务
+                    TransactionMetrics.RecordTransaction(
+                        "commit", 
+                        context.CallerMethod, 
+                        stopwatch.Elapsed.TotalSeconds, 
+                        false);
+                            
                     throw;
                 }
                 finally
@@ -257,6 +274,14 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 context.Status = TransactionStatus.RolledBack;
                 ForceRollback(dbClient);
+                        
+                // ✅ 性能监控：记录异常事务
+                TransactionMetrics.RecordTransaction(
+                    "commit", 
+                    context.CallerMethod, 
+                    stopwatch.Elapsed.TotalSeconds, 
+                    false);
+                        
                 throw new InvalidOperationException($"事务提交失败：{ex.Message}", ex);
             }
             finally
@@ -278,6 +303,7 @@ namespace RUINORERP.Repository.UnitOfWorks
             }
         
             var dbClient = GetDbClient();
+            var stopwatch = Stopwatch.StartNew(); // 性能监控开始
         
             // 使用写锁保护事务回滚操作
             _rwLock.EnterWriteLock();
@@ -303,10 +329,26 @@ namespace RUINORERP.Repository.UnitOfWorks
                     {
                         dbClient.Ado.RollbackTran();
                         context.Status = TransactionStatus.RolledBack;
+                        
+                        // ✅ 性能监控：记录回滚事务
+                        TransactionMetrics.RecordTransaction(
+                            "rollback", 
+                            context.CallerMethod, 
+                            stopwatch.Elapsed.TotalSeconds, 
+                            false,
+                            ExtractTableName(context));
                     }
                     catch (Exception rollbackEx)
                     {
                         _logger.LogError(rollbackEx, $"[Transaction-{context.TransactionId}] 事务回滚失败");
+                        
+                        // ✅ 性能监控：记录失败回滚
+                        TransactionMetrics.RecordTransaction(
+                            "rollback", 
+                            context.CallerMethod, 
+                            stopwatch.Elapsed.TotalSeconds, 
+                            false);
+                        
                         throw;
                     }
                 }
@@ -328,6 +370,14 @@ namespace RUINORERP.Repository.UnitOfWorks
             {
                 _logger.LogError(ex, $"[Transaction-{context.TransactionId}] 回滚操作失败");
                 ForceRollback(dbClient);
+                
+                // ✅ 性能监控：记录异常回滚
+                TransactionMetrics.RecordTransaction(
+                    "rollback", 
+                    context.CallerMethod, 
+                    stopwatch.Elapsed.TotalSeconds, 
+                    false);
+                
                 throw new InvalidOperationException($"事务回滚失败：{ex.Message}", ex);
             }
             finally
@@ -657,6 +707,34 @@ namespace RUINORERP.Repository.UnitOfWorks
         /// 事务深度（兼容旧代码）
         /// </summary>
         public int TranCount => _tranDepth.Value;
+        
+        /// <summary>
+        /// 从事务上下文中提取表名（用于性能监控）
+        /// </summary>
+        private string ExtractTableName(TransactionContext context)
+        {
+            try
+            {
+                // 从调用者方法名中提取实体类型
+                if (!string.IsNullOrEmpty(context.CallerMethod))
+                {
+                    // 示例：tb_SaleOutController.RefundProcessAsync
+                    var parts = context.CallerMethod.Split('.');
+                    if (parts.Length > 0)
+                    {
+                        var controllerName = parts[0];
+                        // tb_SaleOutController -> tb_SaleOut
+                        if (controllerName.EndsWith("Controller"))
+                        {
+                            return controllerName.Substring(0, controllerName.Length - 10);
+                        }
+                    }
+                }
+            }
+            catch { }
+            
+            return null;
+        }
 
         /// <summary>
         /// 事务状态快照

@@ -124,6 +124,10 @@ namespace RUINORERP.Server.Controls
                 RegisterConfigType(typeof(SystemGlobalConfig), "SystemGlobalConfig.json", "SystemGlobalConfig");
                 RegisterConfigType(typeof(GlobalValidatorConfig), "GlobalValidatorConfig.json", "GlobalValidatorConfig");
 
+                // 注册性能监控配置
+                RegisterConfigType(typeof(RUINORERP.Model.ConfigModel.PerformanceMonitorConfig),
+                    "PerformanceMonitorConfig.json", "PerformanceMonitorConfig");
+
                 // 可以在这里添加对配置目录的扫描，自动发现新的配置类型
                 ScanConfigDirectoryForNewTypes();
             }

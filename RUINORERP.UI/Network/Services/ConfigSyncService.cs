@@ -277,6 +277,9 @@ namespace RUINORERP.UI.Network.Services
                     case "GlobalValidatorConfig":
                         await UpdateContainerConfigAsync<GlobalValidatorConfig>(configData);
                         break;
+                    case "PerformanceMonitorConfig":
+                        await UpdatePerformanceMonitorConfigAsync(configData);
+                        break;
                     default:
                         _logger?.Debug("未知的配置类型: {ConfigType}", configType);
                         break;
@@ -340,6 +343,55 @@ namespace RUINORERP.UI.Network.Services
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "更新容器配置实例失败: {ConfigType}", typeof(T).Name);
+            }
+        }
+
+        /// <summary>
+        /// 更新性能监控配置并通知相关组件
+        /// </summary>
+        /// <param name="configData">配置数据JSON字符串</param>
+        /// <returns>更新是否成功</returns>
+        private async Task UpdatePerformanceMonitorConfigAsync(string configData)
+        {
+            try
+            {
+                _logger?.LogDebug("开始更新性能监控配置");
+
+                var newConfig = JsonConvert.DeserializeObject<Model.ConfigModel.PerformanceMonitorConfig>(configData);
+
+                if (newConfig == null)
+                {
+                    _logger?.LogError("反序列化性能监控配置失败");
+                    return;
+                }
+
+                var containerConfig = Startup.GetFromFac<Model.ConfigModel.PerformanceMonitorConfig>();
+
+                if (containerConfig != null)
+                {
+                    foreach (var property in typeof(Model.ConfigModel.PerformanceMonitorConfig).GetProperties())
+                    {
+                        if (property.CanRead && property.CanWrite)
+                        {
+                            var value = property.GetValue(newConfig);
+                            property.SetValue(containerConfig, value);
+                        }
+                    }
+
+                    _logger?.LogDebug("成功更新容器中的性能监控配置实例");
+                }
+                else
+                {
+                    _logger?.LogWarning("容器中没有找到性能监控配置实例");
+                }
+
+                RUINORERP.Model.Base.StatusManager.PerformanceMonitoring.PerformanceMonitorSwitch.UpdateConfig(newConfig);
+
+                _logger?.LogInformation("性能监控配置已更新并应用到监控模块，启用状态: {IsEnabled}", newConfig?.IsEnabled ?? false);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "更新性能监控配置失败");
             }
         }
 

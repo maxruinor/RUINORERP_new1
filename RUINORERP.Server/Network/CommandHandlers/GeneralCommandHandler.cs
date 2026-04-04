@@ -75,11 +75,13 @@ namespace RUINORERP.Server.Network.CommandHandlers
             var systemGlobalConfig = Startup.GetFromFac<SystemGlobalConfig>();
             var serverGlobalConfig = Startup.GetFromFac<ServerGlobalConfig>();
             var globalValidatorConfig = Startup.GetFromFac<GlobalValidatorConfig>();
+            var performanceMonitorConfig = Startup.GetFromFac<Model.ConfigModel.PerformanceMonitorConfig>();
             List<BaseConfig> configList = new List<BaseConfig>
             {
                 systemGlobalConfig,
                 serverGlobalConfig,
-                globalValidatorConfig
+                globalValidatorConfig,
+                performanceMonitorConfig
             };
 
             // 创建配置数据字典，同时放入Data和Metadata中确保兼容性

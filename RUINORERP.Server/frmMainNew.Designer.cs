@@ -75,6 +75,7 @@ namespace RUINORERP.Server
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             toolStripButtonDebugMode = new System.Windows.Forms.ToolStripDropDownButton();
             toolStripButtonNetworkMonitor = new System.Windows.Forms.ToolStripDropDownButton();
+            toolStripButtonPerformance = new System.Windows.Forms.ToolStripButton();
             statusStripMain = new System.Windows.Forms.StatusStrip();
             toolStripStatusLabelServerStatus = new System.Windows.Forms.ToolStripStatusLabel();
             toolStripStatusLabelConnectionCount = new System.Windows.Forms.ToolStripStatusLabel();
@@ -255,7 +256,7 @@ namespace RUINORERP.Server
             // 
             // toolStripMain
             // 
-            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig, toolStripButtonSequenceManagement, toolStripButtonSystemCheck, toolStripSeparator2, toolStripButtonDebugMode, toolStripButtonNetworkMonitor });
+            toolStripMain.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripButtonStartServer, toolStripButtonStopServer, toolStripSeparator1, toolStripButtonRefreshData, toolStripButtonUserManagement, toolStripButtonCacheManagement, toolStripButtonWorkflowTest, toolStripButtonSystemConfig, toolStripButtonSequenceManagement, toolStripButtonSystemCheck, toolStripSeparator2, toolStripButtonDebugMode, toolStripButtonNetworkMonitor, toolStripButtonPerformance });
             toolStripMain.Location = new System.Drawing.Point(0, 27);
             toolStripMain.Name = "toolStripMain";
             toolStripMain.Size = new System.Drawing.Size(1167, 25);
@@ -363,6 +364,14 @@ namespace RUINORERP.Server
             toolStripButtonNetworkMonitor.Size = new System.Drawing.Size(69, 22);
             toolStripButtonNetworkMonitor.Text = "网络监控";
             toolStripButtonNetworkMonitor.Click += toolStripButtonNetworkMonitor_Click;
+            // 
+            // toolStripButtonPerformance
+            // 
+            toolStripButtonPerformance.ImageTransparentColor = System.Drawing.Color.Magenta;
+            toolStripButtonPerformance.Name = "toolStripButtonPerformance";
+            toolStripButtonPerformance.Size = new System.Drawing.Size(72, 22);
+            toolStripButtonPerformance.Text = "性能监控";
+            toolStripButtonPerformance.Click += toolStripButtonPerformance_Click;
             // 
             // statusStripMain
             // 
@@ -645,6 +654,7 @@ namespace RUINORERP.Server
         private System.Windows.Forms.ToolStripButton toolStripButtonSequenceManagement;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripDropDownButton toolStripButtonNetworkMonitor;
+        private System.Windows.Forms.ToolStripButton toolStripButtonPerformance;
         private System.Windows.Forms.ToolStripDropDownButton toolStripButtonDebugMode;
     }
 }

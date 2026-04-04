@@ -91,7 +91,7 @@ namespace RUINORERP.Server
     public partial class frmMainNew : Form, IDisposable
     {
         /// <summary>
-        /// 注册时定义好了可以使用的功能模块
+        /// 注册时定义好了可以使用的功能模块1
         /// </summary>
         public List<GlobalFunctionModule> CanUsefunctionModules = new List<GlobalFunctionModule>();
 
@@ -221,6 +221,8 @@ namespace RUINORERP.Server
 
         // 添加内存监控服务字段
         private MemoryMonitoringService _memoryMonitoringService;
+        private PerformanceDataStorageService _performanceDataStorageService;
+        private PerformanceMonitorControl _performanceMonitorControl;
         private bool _disposed = false;
 
         public static frmMainNew Instance
@@ -448,6 +450,65 @@ namespace RUINORERP.Server
         }
 
         /// <summary>
+        /// 性能监控按钮点击事件
+        /// </summary>
+        private void toolStripButtonPerformance_Click(object sender, EventArgs e)
+        {
+            ShowPerformanceMonitorPanel();
+        }
+
+        /// <summary>
+        /// 显示性能监控面板
+        /// </summary>
+        private void ShowPerformanceMonitorPanel()
+        {
+            if (_performanceMonitorControl != null && tabControlMain.TabPages.Contains(tabPagePerformance))
+            {
+                tabControlMain.SelectedTab = tabPagePerformance;
+                return;
+            }
+
+            // 如果性能监控面板不存在，则创建
+            if (_performanceDataStorageService == null)
+            {
+                _performanceDataStorageService = new PerformanceDataStorageService(
+                    Program.ServiceProvider.GetService<ILogger<PerformanceDataStorageService>>()
+                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PerformanceDataStorageService>.Instance);
+            }
+
+            if (_performanceMonitorControl == null)
+            {
+                _performanceMonitorControl = new PerformanceMonitorControl();
+                _performanceMonitorControl.SetStorageService(_performanceDataStorageService);
+            }
+
+            // 创建TabPage（如果不存在）
+            if (tabPagePerformance == null)
+            {
+                tabPagePerformance = new TabPage("性能监控")
+                {
+                    Name = "tabPagePerformance"
+                };
+                tabPagePerformance.Controls.Add(_performanceMonitorControl);
+                _performanceMonitorControl.Dock = DockStyle.Fill;
+            }
+
+            // 如果TabPage不在TabControl中，则添加
+            if (!tabControlMain.TabPages.Contains(tabPagePerformance))
+            {
+                tabControlMain.TabPages.Add(tabPagePerformance);
+            }
+
+            // 选中新添加的TabPage
+            tabControlMain.SelectedTab = tabPagePerformance;
+
+            // 启动自动刷新
+            _performanceMonitorControl.StartAutoRefresh();
+        }
+
+        private TabPage tabPagePerformance;
+
+        /// <summary>
         /// 切换网络监控状态
         /// </summary>
         private void ToggleNetworkMonitoring(object sender, EventArgs e)
@@ -643,6 +704,9 @@ namespace RUINORERP.Server
 
             // 初始化服务器监控选项卡页面（默认显示）
             InitializeDefaultTab();
+
+            // 初始化性能监控开关
+            InitializePerformanceMonitor();
 
             // 启动UI日志处理泵
             StartUiLogPump();
@@ -1254,6 +1318,26 @@ namespace RUINORERP.Server
             catch (Exception ex)
             {
                 PrintErrorLog($"初始化默认选项卡页面时发生错误: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化性能监控开关
+        /// </summary>
+        private void InitializePerformanceMonitor()
+        {
+            try
+            {
+                var configManagerService = Startup.GetFromFac<RUINORERP.Business.Config.IConfigManagerService>();
+                if (configManagerService != null)
+                {
+                    RUINORERP.Model.Base.StatusManager.PerformanceMonitoring.PerformanceMonitorSwitch.Initialize();
+                    PrintInfoLog($"性能监控已初始化，启用状态: {RUINORERP.Model.Base.StatusManager.PerformanceMonitoring.PerformanceMonitorSwitch.IsEnabled}");
+                }
+            }
+            catch (Exception ex)
+            {
+                PrintErrorLog($"初始化性能监控开关失败: {ex.Message}");
             }
         }
 

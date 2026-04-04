@@ -11,6 +11,7 @@ using System.Dynamic;
 using RUINORERP.Business.Config;
 using RUINORERP.Model.ConfigModel;
 using RUINORERP.PacketSpec.Models.Common;
+using RUINORERP.Model.Base.StatusManager.PerformanceMonitoring;
 
 namespace RUINORERP.UI.Network.ClientCommandHandlers
 {
@@ -266,6 +267,33 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                             case "Database":
                                 // 数据库配置特殊处理，这里可以根据实际需求实现
                                 _logger.LogDebug("数据库配置同步请求已接收");
+                                break;
+                            case "PerformanceMonitorConfig":
+                                var performanceConfig = await _configManagerService.LoadConfigFromJsonAsync<PerformanceMonitorConfig>(configDataJson);
+                                bool performanceConfigSaved = await _configManagerService.SaveConfigAsync(performanceConfig);
+                                if (performanceConfigSaved)
+                                {
+                                    _logger.LogDebug("性能监控配置同步并持久化成功");
+                                    var refreshedPerformanceConfig = await _configManagerService.RefreshConfigAsync<PerformanceMonitorConfig>();
+                                    var containerPerformanceConfig = Startup.GetFromFac<PerformanceMonitorConfig>();
+                                    if (containerPerformanceConfig != null)
+                                    {
+                                        foreach (var property in typeof(PerformanceMonitorConfig).GetProperties())
+                                        {
+                                            if (property.CanRead && property.CanWrite)
+                                            {
+                                                var value = property.GetValue(refreshedPerformanceConfig);
+                                                property.SetValue(containerPerformanceConfig, value);
+                                            }
+                                        }
+                                        _logger.LogDebug("PerformanceMonitorConfig已在容器中更新");
+                                    }
+                                    PerformanceMonitorSwitch.Initialize();
+                                }
+                                else
+                                {
+                                    _logger.LogError("性能监控配置同步失败，无法持久化");
+                                }
                                 break;
                             default:
                                 _logger.LogWarning("未知的配置类型: {ConfigType}", configType);

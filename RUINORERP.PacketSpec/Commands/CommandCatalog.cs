@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -99,6 +99,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// 服务器收到此消息后将连接标记为已验证
         /// </summary>
         public const ushort System_WelcomeAck = 0x0011;
+
+        /// <summary>
+        /// 性能数据上报 - 客户端向服务器上报性能监控数据
+        /// </summary>
+        public const ushort System_PerformanceDataUpload = 0x0012;
+
+        /// <summary>
+        /// 性能数据查询 - 查询性能监控数据
+        /// </summary>
+        public const ushort System_PerformanceDataQuery = 0x0013;
+
+        /// <summary>
+        /// 性能统计摘要 - 获取性能统计摘要
+        /// </summary>
+        public const ushort System_PerformanceStatistics = 0x0014;
+
+        /// <summary>
+        /// 性能监控开关控制 - 控制性能监控开关
+        /// </summary>
+        public const ushort System_PerformanceMonitorControl = 0x0015;
+
+        /// <summary>
+        /// 性能监控状态上报 - 客户端上报性能监控状态
+        /// </summary>
+        public const ushort System_PerformanceMonitorStatus = 0x0016;
+
+        /// <summary>
+        /// 性能告警通知 - 服务器向客户端推送性能告警
+        /// </summary>
+        public const ushort System_PerformanceAlertNotification = 0x0017;
+
+        /// <summary>
+        /// 性能实时数据推送 - 服务器推送实时性能数据
+        /// </summary>
+        public const ushort System_PerformanceRealTimeDataPush = 0x0018;
         #endregion
 
         #region 认证命令 (0x01xx)

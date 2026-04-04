@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace RUINORERP.PacketSpec.Commands
 {
@@ -44,6 +44,41 @@ namespace RUINORERP.PacketSpec.Commands
         /// 服务器收到此消息后将连接标记为已验证
         /// </summary>
         public static readonly CommandId WelcomeAck = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_WelcomeAck & 0xFF));
+
+        /// <summary>
+        /// 性能数据上报 - 客户端向服务器上报性能监控数据
+        /// </summary>
+        public static readonly CommandId PerformanceDataUpload = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceDataUpload & 0xFF));
+
+        /// <summary>
+        /// 性能数据查询 - 查询性能监控数据
+        /// </summary>
+        public static readonly CommandId PerformanceDataQuery = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceDataQuery & 0xFF));
+
+        /// <summary>
+        /// 性能统计摘要 - 获取性能统计摘要
+        /// </summary>
+        public static readonly CommandId PerformanceStatistics = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceStatistics & 0xFF));
+
+        /// <summary>
+        /// 性能监控开关控制 - 控制性能监控开关
+        /// </summary>
+        public static readonly CommandId PerformanceMonitorControl = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceMonitorControl & 0xFF));
+
+        /// <summary>
+        /// 性能监控状态上报 - 客户端上报性能监控状态
+        /// </summary>
+        public static readonly CommandId PerformanceMonitorStatus = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceMonitorStatus & 0xFF));
+
+        /// <summary>
+        /// 性能告警通知 - 服务器向客户端推送性能告警
+        /// </summary>
+        public static readonly CommandId PerformanceAlertNotification = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceAlertNotification & 0xFF));
+
+        /// <summary>
+        /// 性能实时数据推送 - 服务器推送实时性能数据
+        /// </summary>
+        public static readonly CommandId PerformanceRealTimeDataPush = new CommandId(CommandCategory.System, (byte)(CommandCatalog.System_PerformanceRealTimeDataPush & 0xFF));
         #endregion
 
         /// <summary>

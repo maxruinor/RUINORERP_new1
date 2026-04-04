@@ -1003,6 +1003,8 @@ namespace RUINORERP.UI
                             MainForm.Instance.PrintInfoLog("配置文件请求发送成功，等待服务器响应");
                         }
 
+                        // 初始化性能监控模块
+                        InitializePerformanceMonitoring();
                     }
                 }
                 catch (Exception ex)
@@ -1124,6 +1126,38 @@ namespace RUINORERP.UI
             {
                 MainForm.Instance.logger?.LogError(ex, "保存用户配置失败");
                 // 不抛出异常，因为这不影响登录成功
+            }
+        }
+
+        /// <summary>
+        /// 初始化性能监控模块
+        /// 在登录成功并完成配置同步后调用
+        /// </summary>
+        private void InitializePerformanceMonitoring()
+        {
+            try
+            {
+                var logger = MainForm.Instance?.logger;
+                logger?.LogDebug("开始初始化性能监控模块...");
+
+                // 获取性能监控服务（通过DI容器）
+                var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
+                if (performanceMonitorService != null)
+                {
+                    // 启动性能监控服务（包含Manager的启动）
+                    performanceMonitorService.Start();
+                    logger?.LogInformation("客户端性能监控服务已启动");
+                }
+                else
+                {
+                    logger?.LogWarning("未找到客户端性能监控服务实例");
+                }
+
+                logger?.LogInformation("性能监控模块初始化完成");
+            }
+            catch (Exception ex)
+            {
+                MainForm.Instance?.logger?.LogError(ex, "初始化性能监控模块失败");
             }
         }
     }

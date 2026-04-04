@@ -469,11 +469,10 @@ namespace RUINORERP.Server
             }
 
             // 如果性能监控面板不存在，则创建
+            // 从DI容器获取性能数据存储服务（单例，与CommandHandler使用同一实例）
             if (_performanceDataStorageService == null)
             {
-                _performanceDataStorageService = new PerformanceDataStorageService(
-                    Program.ServiceProvider.GetService<ILogger<PerformanceDataStorageService>>()
-                    ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PerformanceDataStorageService>.Instance);
+                _performanceDataStorageService = Program.ServiceProvider.GetService<PerformanceDataStorageService>();
             }
 
             if (_performanceMonitorControl == null)

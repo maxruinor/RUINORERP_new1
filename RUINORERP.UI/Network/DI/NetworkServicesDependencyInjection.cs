@@ -379,7 +379,7 @@ namespace RUINORERP.UI.Network.DI
             builder.Register(c =>
             {
                 var logger = c.Resolve<ILogger<ClientPerformanceMonitorService>>();
-                var communicationService = c.Resolve<Lazy<ClientCommunicationService>>();
+                var communicationService = c.Resolve<IClientCommunicationService>();
                 return new ClientPerformanceMonitorService(communicationService, logger);
             })
             .AsSelf()

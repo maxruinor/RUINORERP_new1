@@ -77,6 +77,7 @@ using RUINORERP.Business.Cache;
 using RUINORERP.Server.Services;
 using RUINORERP.Server.Network.Monitoring;
 using RUINORERP.Server.Network.Core;
+using RUINORERP.Server.Network.Services;
 using RUINORERP.Server.Services.BizCode;
 using RUINORERP.Business.BNR;
 using RUINORERP.Business.Config;
@@ -384,6 +385,11 @@ namespace RUINORERP.Server
             #region 网络服务配置
             // 配置网络服务容器
             builder.ConfigureNetworkServicesContainer();
+
+            // 注册性能数据存储服务（单例，确保UI和CommandHandler使用同一实例）
+            builder.RegisterType<PerformanceDataStorageService>()
+                .AsSelf()
+                .SingleInstance();
             #endregion
 
             // 将Microsoft.Extensions.DependencyInjection服务注入到Autofac容器中

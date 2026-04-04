@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RUINORERP.Model.Base.StatusManager.PerformanceMonitoring;
+using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Commands.CommandDefinitions;
 using RUINORERP.PacketSpec.Models.Core;
 
@@ -95,22 +96,31 @@ namespace RUINORERP.UI.Network.Services
         private bool _isStarted = false;
 
         /// <summary>
-        /// 启动性能监控
+        /// 启动或更新性能监控
+        /// 根据当前配置决定是否启用监控
         /// </summary>
         public void Start()
         {
             // 幂等性检查：避免重复启动
             if (_isStarted)
             {
-                _logger?.LogDebug("客户端性能监控已经启动，跳过重复初始化");
+                _logger?.LogDebug("性能监控已经启动，跳过");
                 return;
             }
 
+            // 重新初始化配置（从配置文件或服务器配置加载最新设置）
             PerformanceMonitorSwitch.Initialize();
-            PerformanceMonitorSwitch.Enable();
+
+            // 如果配置中禁用了监控，不启用
+            if (!PerformanceMonitorSwitch.IsEnabled)
+            {
+                _logger?.LogInformation("性能监控在配置中被禁用，不启动监控");
+                _isStarted = true; // 标记已处理，避免重复检查
+                return;
+            }
 
             _isStarted = true;
-            _logger?.LogInformation("客户端性能监控已启动");
+            _logger?.LogInformation("客户端性能监控已启动（已启用状态）");
         }
 
         /// <summary>
@@ -174,9 +184,10 @@ namespace RUINORERP.UI.Network.Services
                 var response = await _communicationService.SendCommandWithResponseAsync<PerformanceDataUploadResponse>(
                     SystemCommands.PerformanceDataUpload,
                     request,
-                    TimeSpan.FromSeconds(10));
+                    CancellationToken.None,
+                    10000);
 
-                if (response?.Success == true)
+                if (response?.IsSuccess == true)
                 {
                     _logger?.LogDebug($"性能数据上报成功: {request.MetricCount} 条指标");
                 }
@@ -256,8 +267,15 @@ namespace RUINORERP.UI.Network.Services
         {
             try
             {
-                // 从通信服务获取本地IP
-                return _communicationService?.GetLocalIpAddress() ?? "Unknown";
+                var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+                foreach (var ip in host.AddressList)
+                {
+                    if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                    {
+                        return ip.ToString();
+                    }
+                }
+                return "127.0.0.1";
             }
             catch
             {

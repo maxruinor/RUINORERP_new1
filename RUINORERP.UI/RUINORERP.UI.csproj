@@ -2409,6 +2409,7 @@
     <Compile Include="Network\Services\ImageCacheService.cs" />
     <Compile Include="Network\Services\IMessageSender.cs" />
     <Compile Include="Network\Services\ClientLockManagementService.cs" />
+    <Compile Include="Network\Services\ClientPerformanceMonitorService.cs" />
     <Compile Include="Network\Services\LockRecoveryManager.cs" />
     <Compile Include="Network\Services\LockStatusNotificationService.cs" />
     <Compile Include="Network\Services\MessageNotificationService.cs" />

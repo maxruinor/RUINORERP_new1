@@ -166,11 +166,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     _logger.LogDebug($"开始处理配置同步，配置类型: {configType}");
                     _logger.LogDebug($"配置版本: {version}, 强制应用: {forceApply}");
 
-                    // 完全使用新的配置管理服务处理配置同步，移除对过时的UIConfigManager的依赖
+                    // 完全使用新的配置管理服务处理配置同步,移除对过时的UIConfigManager的依赖
                     try
                     {
-                        _logger.LogDebug("使用新的配置管理服务处理配置同步，配置类型: {ConfigType}", configType);
-
+                        _logger.LogDebug("使用新的配置管理服务处理配置同步,配置类型: {ConfigType}", configType);
+                    
                         // 根据配置类型使用相应的泛型方法
                         switch (configType)
                         {
@@ -180,28 +180,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool systemConfigSaved = await _configManagerService.SaveConfigAsync(systemConfig);
                                 if (systemConfigSaved)
                                 {
-                                    _logger.LogDebug("系统全局配置同步并持久化成功");
-                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
-                                    SystemGlobalConfig refreshedSystemConfig = await _configManagerService.RefreshConfigAsync<SystemGlobalConfig>();
-                                    // 获取容器中的SystemGlobalConfig实例并更新其属性
-                                    var containerSystemConfig = Startup.GetFromFac<SystemGlobalConfig>();
-                                    if (containerSystemConfig != null)
-                                    {
-                                        // 使用反射将新配置的值复制到容器中的实例
-                                        foreach (var property in typeof(SystemGlobalConfig).GetProperties())
-                                        {
-                                            if (property.CanRead && property.CanWrite)
-                                            {
-                                                var value = property.GetValue(refreshedSystemConfig);
-                                                property.SetValue(containerSystemConfig, value);
-                                            }
-                                        }
-                                        _logger.LogDebug("SystemGlobalConfig已在容器中更新");
-                                    }
+                                    _logger.LogDebug("系统全局配置同步并持久化成功,IOptionsMonitor将自动触发更新");
                                 }
                                 else
                                 {
-                                    _logger.LogError("系统全局配置同步失败，无法持久化");
+                                    _logger.LogError("系统全局配置同步失败,无法持久化");
                                 }
                                 break;
                             case "GlobalValidatorConfig":
@@ -210,28 +193,11 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool validatorConfigSaved = await _configManagerService.SaveConfigAsync(validatorConfig);
                                 if (validatorConfigSaved)
                                 {
-                                    _logger.LogDebug("验证配置同步并持久化成功");
-                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
-                                    GlobalValidatorConfig refreshedValidatorConfig = await _configManagerService.RefreshConfigAsync<GlobalValidatorConfig>();
-                                    // 获取容器中的GlobalValidatorConfig实例并更新其属性
-                                    var containerGlobalConfig = Startup.GetFromFac<GlobalValidatorConfig>();
-                                    if (containerGlobalConfig != null)
-                                    {
-                                        // 使用反射将新配置的值复制到容器中的实例
-                                        foreach (var property in typeof(GlobalValidatorConfig).GetProperties())
-                                        {
-                                            if (property.CanRead && property.CanWrite)
-                                            {
-                                                var value = property.GetValue(refreshedValidatorConfig);
-                                                property.SetValue(containerGlobalConfig, value);
-                                            }
-                                        }
-                                        _logger.LogDebug("GlobalValidatorConfig已在容器中更新");
-                                    }
+                                    _logger.LogDebug("验证配置同步并持久化成功,IOptionsMonitor将自动触发更新");
                                 }
                                 else
                                 {
-                                    _logger.LogError("验证配置同步失败，无法持久化");
+                                    _logger.LogError("验证配置同步失败,无法持久化");
                                 }
                                 break;
                             case "ServerGlobalConfig":
@@ -240,32 +206,15 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool serverConfigSaved = await _configManagerService.SaveConfigAsync(serverConfig);
                                 if (serverConfigSaved)
                                 {
-                                    _logger.LogDebug("服务器配置同步并持久化成功");
-                                    // 刷新配置，确保所有依赖该配置的服务获取到最新值
-                                    ServerGlobalConfig refreshedServerConfig = await _configManagerService.RefreshConfigAsync<ServerGlobalConfig>();
-                                    // 获取容器中的ServerGlobalConfig实例并更新其属性
-                                    var containerServerConfig = Startup.GetFromFac<ServerGlobalConfig>();
-                                    if (containerServerConfig != null)
-                                    {
-                                        // 使用反射将新配置的值复制到容器中的实例
-                                        foreach (var property in typeof(ServerGlobalConfig).GetProperties())
-                                        {
-                                            if (property.CanRead && property.CanWrite)
-                                            {
-                                                var value = property.GetValue(refreshedServerConfig);
-                                                property.SetValue(containerServerConfig, value);
-                                            }
-                                        }
-                                        _logger.LogDebug("ServerGlobalConfig已在容器中更新");
-                                    }
+                                    _logger.LogDebug("服务器配置同步并持久化成功,IOptionsMonitor将自动触发更新");
                                 }
                                 else
                                 {
-                                    _logger.LogError("服务器配置同步失败，无法持久化");
+                                    _logger.LogError("服务器配置同步失败,无法持久化");
                                 }
                                 break;
                             case "Database":
-                                // 数据库配置特殊处理，这里可以根据实际需求实现
+                                // 数据库配置特殊处理,这里可以根据实际需求实现
                                 _logger.LogDebug("数据库配置同步请求已接收");
                                 break;
                             case "PerformanceMonitorConfig":
@@ -273,35 +222,22 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                                 bool performanceConfigSaved = await _configManagerService.SaveConfigAsync(performanceConfig);
                                 if (performanceConfigSaved)
                                 {
-                                    _logger.LogDebug("性能监控配置同步并持久化成功");
-                                    var refreshedPerformanceConfig = await _configManagerService.RefreshConfigAsync<PerformanceMonitorConfig>();
-                                    var containerPerformanceConfig = Startup.GetFromFac<PerformanceMonitorConfig>();
-                                    if (containerPerformanceConfig != null)
-                                    {
-                                        foreach (var property in typeof(PerformanceMonitorConfig).GetProperties())
-                                        {
-                                            if (property.CanRead && property.CanWrite)
-                                            {
-                                                var value = property.GetValue(refreshedPerformanceConfig);
-                                                property.SetValue(containerPerformanceConfig, value);
-                                            }
-                                        }
-                                        _logger.LogDebug("PerformanceMonitorConfig已在容器中更新");
-                                    }
+                                    _logger.LogDebug("性能监控配置同步并持久化成功,IOptionsMonitor将自动触发更新");
+                                    // PerformanceMonitorSwitch需要手动重新初始化
                                     PerformanceMonitorSwitch.Initialize();
                                 }
                                 else
                                 {
-                                    _logger.LogError("性能监控配置同步失败，无法持久化");
+                                    _logger.LogError("性能监控配置同步失败,无法持久化");
                                 }
                                 break;
                             default:
                                 _logger.LogWarning("未知的配置类型: {ConfigType}", configType);
-
+                    
                                 // 尝试作为自定义配置处理
                                 try
                                 {
-                                    // 对于自定义配置，我们可以记录日志并提供扩展点
+                                    // 对于自定义配置,我们可以记录日志并提供扩展点
                                     _logger.LogDebug("尝试处理自定义配置类型: {ConfigType}", configType);
                                 }
                                 catch (Exception ex)
@@ -313,7 +249,7 @@ namespace RUINORERP.UI.Network.ClientCommandHandlers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "使用配置管理服务处理配置同步时发生异常，配置类型: {ConfigType}", configType);
+                        _logger.LogError(ex, "使用配置管理服务处理配置同步时发生异常,配置类型: {ConfigType}", configType);
                     }
 
                     _logger.LogDebug($"配置同步已处理，配置类型: {configType}");

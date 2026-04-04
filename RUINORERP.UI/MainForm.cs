@@ -252,6 +252,43 @@ namespace RUINORERP.UI
         }
 
         /// <summary>
+        /// 初始化性能监控模块
+        /// 在客户端启动时调用，连接成功后自动开始上报数据
+        /// </summary>
+        private void InitializePerformanceMonitoring(ClientCommunicationService communicationService)
+        {
+            try
+            {
+                var performanceMonitorService = Startup.GetFromFac<RUINORERP.UI.Network.Services.ClientPerformanceMonitorService>();
+                if (performanceMonitorService == null)
+                {
+                    logger?.LogWarning("未找到客户端性能监控服务实例");
+                    return;
+                }
+
+                // 订阅连接状态事件，连接成功后自动启动监控
+                if (communicationService != null)
+                {
+                    communicationService.ConnectionStateChanged += (connected) =>
+                    {
+                        if (connected)
+                        {
+                            // 连接成功后启动性能监控（幂等操作）
+                            performanceMonitorService.Start();
+                            logger?.LogInformation("客户端性能监控已启动（连接成功触发）");
+                        }
+                    };
+                }
+
+                logger?.LogDebug("性能监控模块初始化完成，等待连接成功后自动启动");
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError(ex, "初始化性能监控模块失败");
+            }
+        }
+
+        /// <summary>
         /// 处理心跳失败达到阈值事件
         /// 当连续心跳失败次数达到阈值时，仅通知用户，不强制锁定系统
         /// 这个要全面分析。为什么状态一直是登陆中，并且显示不稳定。实现不可能不稳定。在局域网中。基本都是稳定的
@@ -479,7 +516,6 @@ namespace RUINORERP.UI
             // 通过依赖注入获取核心组件
             communicationService = Startup.ServiceProvider.GetService<ClientCommunicationService>();
 
-
             // 订阅重连失败事件，当重连失败时自动进入注销锁定状态
             if (communicationService != null)
             {
@@ -488,6 +524,9 @@ namespace RUINORERP.UI
                 communicationService.HeartbeatFailureThresholdReached += OnHeartbeatFailureThresholdReached;
             }
             #endregion
+
+            // 初始化性能监控模块（在连接成功后会立即开始上报数据）
+            InitializePerformanceMonitoring(communicationService);
 
 
             // 注意：不再禁用跨线程检查，确保所有UI操作都在UI线程执行

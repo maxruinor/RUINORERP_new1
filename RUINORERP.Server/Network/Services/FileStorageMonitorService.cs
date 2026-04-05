@@ -64,16 +64,44 @@ namespace RUINORERP.Server.Network.Services
 
             _logger.LogInformation("启动文件存储监控服务,间隔: {Minutes}分钟", MonitorIntervalMinutes);
 
-            // 立即执行一次检查
-            _ = Task.Run(async () => await CheckStorageSpaceAsync());
+            // 立即执行一次检查（添加异常处理）
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await CheckStorageSpaceAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "启动时立即检查存储空间失败");
+                }
+            });
 
-            // 启动定时器
+            // 启动定时器（使用同步回调，避免async void问题）
             _monitorTimer = new Timer(
-                async _ => await CheckStorageSpaceAsync(),
+                _ => OnTimerElapsed(),
                 null,
                 TimeSpan.FromMinutes(MonitorIntervalMinutes),
                 TimeSpan.FromMinutes(MonitorIntervalMinutes)
             );
+        }
+
+        /// <summary>
+        /// 定时器回调处理
+        /// </summary>
+        private void OnTimerElapsed()
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await CheckStorageSpaceAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "定时检查存储空间失败");
+                }
+            });
         }
 
         /// <summary>

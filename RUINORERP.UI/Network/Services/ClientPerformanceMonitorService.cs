@@ -122,18 +122,18 @@ namespace RUINORERP.UI.Network.Services
                 // 检查连接状态
                 if (_communicationService?.ConnectionManager?.IsConnected != true)
                 {
-                    _logger?.LogWarning($"重要事件[{reason}]无法上报：网络未连接");
+                    _logger?.LogWarning("重要事件无法上报: {Reason}, 网络未连接", reason ?? "未知");
                     return;
                 }
 
                 // 立即触发数据打包和上报
                 _monitorManager.TriggerImmediateUpload();
 
-                _logger?.LogDebug("重要事件[{0}]已触发立即上报", reason);
+                _logger?.LogDebug("重要事件已触发立即上报: {Reason}", reason ?? "未知");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "触发立即上报失败: {0}", reason);
+                _logger?.LogError(ex, "触发立即上报失败: {Reason}", reason ?? "未知");
             }
         }
 

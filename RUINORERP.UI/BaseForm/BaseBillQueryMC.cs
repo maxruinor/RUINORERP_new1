@@ -4,7 +4,6 @@ using Krypton.Navigator;
 using Krypton.Toolkit;
 using Krypton.Workspace;
 using Microsoft.Extensions.Logging;
-using NPOI.SS.Formula.Functions;
 using RUINOR.Core;
 using RUINORERP.Business;
 using RUINORERP.Business.BizMapperService;
@@ -1844,7 +1843,7 @@ namespace RUINORERP.UI.BaseForm
                     MainForm.Instance.PrintInfoLog($"{ae.bizName}:{ae.BillNo}审核失败,请联系管理员！", Color.Red);
                     MessageBox.Show($"{ae.bizName}:{ae.BillNo}反审核失败。\r\n {rmr.ErrorMsg}", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-                MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
+              await  MainForm.Instance.AuditLogHelper.CreateAuditLog<M>("反审", EditEntity, $"反审原因{ae.ApprovalOpinions}" + $"结果:{(ae.ApprovalResults ? "通过" : "拒绝")},{rmr.ErrorMsg}");
 
             }
             return ae;
@@ -1853,9 +1852,160 @@ namespace RUINORERP.UI.BaseForm
 
 
 
-        public virtual Task<bool> CloseCase(List<M> EditEntitys)
+        public virtual async Task<bool> CloseCase(List<M> EditEntitys)
         {
-            return null;
+            #region 参数验证
+            if (EditEntitys == null || EditEntitys.Count == 0)
+            {
+                MessageBox.Show("请选择要结案的单据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            // 过滤有效实体
+            List<M> validEntities = EditEntitys.Where(e => e != null).ToList();
+            if (validEntities.Count == 0)
+            {
+                MessageBox.Show("没有有效的单据数据！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            #endregion
+
+            #region 实体状态验证
+            List<M> needCloseCases = new List<M>();
+
+            foreach (var EditEntity in validEntities)
+            {
+                // 检查数据是否被修改
+                if (EditEntity is BaseEntity baseEntity)
+                {
+                    if (baseEntity.HasChanged == true && baseEntity.GetEffectiveChanges().Count > 0)
+                    {
+                        string billNo = GetBillNo(EditEntity);
+                        MessageBox.Show($"单据【{billNo}】数据已经被修改，不能结案。\r\n请【保存】或【刷新】后重试！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        continue;
+                    }
+                }
+
+                // 使用StateManager进行状态验证
+                if (StateManager != null && EditEntity is BaseEntity)
+                {
+                    var (canCloseCase, message) = StateManager.CanExecuteActionWithMessage(EditEntity as BaseEntity, MenuItemEnums.结案);
+                    if (!canCloseCase)
+                    {
+                        string billNo = GetBillNo(EditEntity);
+                        MainForm.Instance.uclog.AddLog($"单据【{billNo}】结案验证失败: {message}");
+                        continue;
+                    }
+                }
+
+                needCloseCases.Add(EditEntity);
+            }
+
+            if (needCloseCases.Count == 0)
+            {
+                MainForm.Instance.PrintInfoLog("没有满足结案条件的单据，请检查单据状态！");
+                return false;
+            }
+            #endregion
+
+            #region 弹出结案意见窗体
+            CommonUI.frmOpinion frm = new CommonUI.frmOpinion();
+            frm.FormTitle = "结案确认";
+            frm.OpinionLabelText = "结案意见：";
+            frm.ShowCloseCaseImage = false;
+            
+            ApprovalEntity ae = new ApprovalEntity();
+            ae.ApprovalResults = true;
+            ae.Approver_by = MainForm.Instance.AppContext.CurUserInfo.UserInfo.User_ID;
+            ae.CloseCaseOpinions = "批量结案";
+            frm.BindData(ae);
+
+            if (frm.ShowDialog() != DialogResult.OK)
+            {
+                return false;
+            }
+
+            // 获取结案意见
+            string closeCaseOpinion = frm.OpinionText;
+            #endregion
+
+            #region 执行批量结案
+            try
+            {
+                // 通过泛型方式获取业务Controller
+                var controllerType = typeof(M).Name + "Controller";
+                var controller = Startup.GetFromFacByName<BaseController<M>>(controllerType);
+                
+                if (controller == null)
+                {
+                    MessageBox.Show($"未找到对应的业务控制器: {controllerType}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                // 调用业务层的批量结案方法
+                var result = await controller.BatchCloseCaseAsync(needCloseCases);
+
+                if (result.Succeeded)
+                {
+                    // 记录操作日志
+                    foreach (var entity in needCloseCases)
+                    {
+                        string billNo = GetBillNo(entity);
+                        await MainForm.Instance.auditLogHelper?.CreateAuditLog<M>("结案", entity, $"结案意见: {closeCaseOpinion}");
+                    }
+
+                    MainForm.Instance.PrintInfoLog($"批量结案操作成功！共处理 {needCloseCases.Count} 条数据。", Color.Green);
+                    MainForm.Instance.logger?.LogInformation($"批量结案成功，数量: {needCloseCases.Count}");
+
+                    // 刷新列表
+                    Query(QueryDtoProxy); 
+                    
+                    return true;
+                }
+                else
+                {
+                    string errorMsg = string.IsNullOrEmpty(result.ErrorMsg) ? "未知错误" : result.ErrorMsg;
+                    MessageBox.Show($"结案操作失败！\n\n失败原因：{errorMsg}\n\n如无法解决，请联系管理员！",
+                        "结案失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    
+                    MainForm.Instance.PrintInfoLog($"批量结案操作失败，原因是: {result.ErrorMsg}", Color.Red);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"结案操作发生异常！\n\n异常信息：{ex.Message}\n\n如无法解决，请联系管理员！",
+                    "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                MainForm.Instance.logger?.LogError(ex, "批量结案操作异常");
+                return false;
+            }
+            #endregion
+        }
+
+        /// <summary>
+        /// 获取单据编号
+        /// </summary>
+        private string GetBillNo(M entity)
+        {
+            try
+            {
+                if (entity == null) return "未知";
+                
+                // 尝试通过反射获取BillNo属性
+                var billNoProperty = typeof(M).GetProperty("BillNo");
+                if (billNoProperty != null)
+                {
+                    var value = billNoProperty.GetValue(entity);
+                    return value?.ToString() ?? "未知";
+                }
+                
+                return "未知";
+            }
+            catch
+            {
+                return "未知";
+            }
         }
 
 
@@ -3090,6 +3240,15 @@ namespace RUINORERP.UI.BaseForm
                 {
                     List<M> list = rawList ?? new List<M>();
 
+                    // 清空查询结果的变更标记，避免误报数据已修改
+                    foreach (var item in list)
+                    {
+                        if (item is BaseEntity baseEntity)
+                        {
+                            baseEntity.AcceptChanges();
+                        }
+                    }
+
                     // 确保在UI线程更新绑定源
                     this.BeginInvoke(new Action(() =>
                     {
@@ -3820,6 +3979,15 @@ namespace RUINORERP.UI.BaseForm
             // 绑定子表数据
             if (listDetails != null && listDetails.Count > 0)
             {
+                // 清空子表查询结果的变更标记，避免误报数据已修改
+                foreach (var item in listDetails)
+                {
+                    if (item is BaseEntity baseEntity)
+                    {
+                        baseEntity.AcceptChanges();
+                    }
+                }
+
                 _UCBillChildQuery.bindingSourceChild.DataSource = listDetails;
                 _UCBillChildQuery.newSumDataGridViewChild.DataSource = listDetails;
                 ShowChildSum();

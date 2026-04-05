@@ -90,10 +90,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Linq.Expressions;
 using System.Management;
 using System.Management.Instrumentation;
-using System.Reflection;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -3731,7 +3729,7 @@ namespace RUINORERP.UI.BaseForm
 
 
         /// <summary>
-        /// 结案处理1
+        /// 结案处理2
         /// 一般会自动结案，但是有些需要人工结案
         /// </summary>
         /// <returns></returns>

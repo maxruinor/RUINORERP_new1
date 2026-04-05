@@ -1329,6 +1329,25 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
+                // 检查预收订金是否超过订单本币总金额
+                if (NeedValidated && EditEntity.Deposit > 0 && EditEntity.TotalAmount > 0)
+                {
+                    if (EditEntity.Deposit > EditEntity.TotalAmount)
+                    {
+                        decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
+                        string message = $"预收订金金额大于订单本币总金额，当前为超额收取！\n\n" +
+                                       $"订单本币总金额：{EditEntity.TotalAmount:N2} 元\n" +
+                                       $"预收订金金额：{EditEntity.Deposit:N2} 元\n" +
+                                       $"超额金额：{overAmount:N2} 元\n\n" +
+                                       $"是否确定继续保存？";
+                        
+                        if (MessageBox.Show(this, message, "超额收取确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                        {
+                            return false;
+                        }
+                    }
+                }
+
                 if (NeedValidated)
                 {
                     //1 2  4  8  大于等于 4 就是审核或结案了

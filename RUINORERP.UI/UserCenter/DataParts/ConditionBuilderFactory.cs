@@ -1,4 +1,4 @@
-﻿using RUINORERP.Global.EnumExt;
+using RUINORERP.Global.EnumExt;
 using RUINORERP.Global;
 using RUINORERP.UI.ATechnologyStack;
 using SqlSugar;
@@ -329,6 +329,35 @@ namespace RUINORERP.UI.UserCenter.DataParts
                         CSharpTypeName = "int"
                     },
                      new ConditionalModel
+                    {
+                        FieldName = "isdeleted",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = "False",
+                        CSharpTypeName = "bool"
+                    }
+                }
+            },
+            new ConditionGroup
+            {
+                Identifier = identifier,
+                StatusName = "处理中",
+                Conditions = new List<IConditionalModel>
+                {
+                    new ConditionalModel
+                    {
+                        FieldName = nameof(ReceivePaymentType),
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)paymentType).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
+                    {
+                        FieldName = "PrePaymentStatus",
+                        ConditionalType = ConditionalType.Equal,
+                        FieldValue = ((int)PrePaymentStatus.处理中).ToString(),
+                        CSharpTypeName = "int"
+                    },
+                    new ConditionalModel
                     {
                         FieldName = "isdeleted",
                         ConditionalType = ConditionalType.Equal,

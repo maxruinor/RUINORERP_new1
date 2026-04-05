@@ -940,8 +940,7 @@ namespace RUINORERP.UI.PSI.SAL
             }
 
 
-
-            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount)
+            if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit != EditEntity.TotalAmount && EditEntity.Deposit == 0)
             {
                 EditEntity.Deposit = EditEntity.TotalAmount;
             }
@@ -1082,17 +1081,6 @@ namespace RUINORERP.UI.PSI.SAL
 
 
                 }
-                if (EditEntity.PayStatus == (int)PayStatus.全额预付)
-                {
-                    //超付情况时，只是提示
-                    if (EditEntity.Deposit > EditEntity.TotalAmount)
-                    {
-                        if (MessageBox.Show("全额预付时，订金大于总金额。你确定客户要超额付款吗？", "提示", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk) == DialogResult.No)
-                        {
-                            return false;
-                        }
-                    }
-                }
             }
 
 
@@ -1178,20 +1166,7 @@ namespace RUINORERP.UI.PSI.SAL
                     }
                 }
 
-                //如果没有有效的明细。直接提示
-                if (NeedValidated && details.Count == 0)
-                {
-                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
-
                 #endregion
-                //如果没有有效的明细。直接提示
-                if (NeedValidated && details.Count == 0)
-                {
-                    MessageBox.Show("请录入有效明细记录！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
                 if (NeedValidated && (EditEntity.FreightIncome > 0 && EditEntity.TotalAmount != detailentity.Sum(c => c.SubtotalTransAmount) + EditEntity.FreightIncome))
                 {
                     MessageBox.Show("销售总金额需要包含运费。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -1332,19 +1307,28 @@ namespace RUINORERP.UI.PSI.SAL
                 // 检查预收订金是否超过订单本币总金额
                 if (NeedValidated && EditEntity.Deposit > 0 && EditEntity.TotalAmount > 0)
                 {
+                    // 超额检查：订金 > 总金额
                     if (EditEntity.Deposit > EditEntity.TotalAmount)
                     {
                         decimal overAmount = EditEntity.Deposit - EditEntity.TotalAmount;
-                        string message = $"预收订金金额大于订单本币总金额，当前为超额收取！\n\n" +
+                        string message = $"预收订金金额大于订单本币总金额，当前为超额付款！\n\n" +
                                        $"订单本币总金额：{EditEntity.TotalAmount:N2} 元\n" +
                                        $"预收订金金额：{EditEntity.Deposit:N2} 元\n" +
                                        $"超额金额：{overAmount:N2} 元\n\n" +
-                                       $"是否确定继续保存？";
-                        
-                        if (MessageBox.Show(this, message, "超额收取确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                                       $"点击【是】将保持超额订金金额\n" +
+                                       $"点击【否】将自动调整为订单本币总金额";
+
+                        if (MessageBox.Show(this, message, "超额付款确认", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.No)
                         {
-                            return false;
+                            EditEntity.Deposit = EditEntity.TotalAmount;
+                            MainForm.Instance.uclog.AddLog($"预收订金已自动调整为订单本币总金额: {EditEntity.TotalAmount:N2} 元");
                         }
+                    }
+                    // 差额检查：订金 < 总金额（与全额预付不符）
+                    else if (EditEntity.PayStatus == (int)PayStatus.全额预付 && EditEntity.Deposit < EditEntity.TotalAmount)
+                    {
+                        decimal diffAmount = EditEntity.TotalAmount - EditEntity.Deposit;
+                        MainForm.Instance.uclog.AddLog($"【提示】选择【全额预付】但订金小于订单总金额，差额: {diffAmount:N2} 元");
                     }
                 }
 
@@ -1708,7 +1692,23 @@ namespace RUINORERP.UI.PSI.SAL
 
         private void cmbPayStatus_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // 选择"全额预付"时，自动设置订金 = 订单总金额
+            if (EditEntity != null && cmbPayStatus.SelectedValue is int payStatus)
+            {
+                if (payStatus == (int)PayStatus.全额预付 && EditEntity.TotalAmount > 0)
+                {
+                    EditEntity.Deposit = EditEntity.TotalAmount;
 
+                    // 更新控件显示
+                    if (txtDeposit != null)
+                    {
+                        txtDeposit.Text = EditEntity.Deposit.ToString();
+                    }
+
+                    // 显示自动调整提示
+                    MainForm.Instance.uclog.AddLog($"已选择【全额预付】，订金自动设置为订单总金额: {EditEntity.TotalAmount:N2} 元");
+                }
+            }
         }
 
         private void kryptonPanelMainInfo_Paint(object sender, PaintEventArgs e)

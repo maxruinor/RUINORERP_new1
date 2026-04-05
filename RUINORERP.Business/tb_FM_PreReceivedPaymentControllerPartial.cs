@@ -152,6 +152,22 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                // 检测是否为死锁异常
+                bool isDeadlock = IsDeadlockException(ex);
+                
+                if (isDeadlock)
+                {
+                    _logger.LogWarning($"检测到死锁 - 预收款单号: {entity?.PreRPNO}, 异常消息: {ex.Message}");
+                    
+                    // 记录死锁相关信息
+                    TransactionMetrics.RecordDeadlock(
+                        "tb_FM_PreReceivedPayment", 
+                        "AntiApproval", 
+                        TimeSpan.FromSeconds(0), 
+                        ex.Message,
+                        entity?.PreRPNO);
+                }
+                
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
@@ -301,6 +317,22 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                // 检测是否为死锁异常
+                bool isDeadlock = IsDeadlockException(ex);
+                
+                if (isDeadlock)
+                {
+                    _logger.LogWarning($"检测到死锁 - 预收款单号: {entity?.PreRPNO}, 异常消息: {ex.Message}");
+                    
+                    // 记录死锁相关信息
+                    TransactionMetrics.RecordDeadlock(
+                        "tb_FM_PreReceivedPayment", 
+                        "Approval", 
+                        TimeSpan.FromSeconds(0), 
+                        ex.Message,
+                        entity?.PreRPNO);
+                }
+                
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
@@ -894,6 +926,22 @@ namespace RUINORERP.Business
                 rs.Succeeded = false;
                 return rs;
             }
+        }
+        
+        /// <summary>
+        /// 检测是否为死锁异常
+        /// </summary>
+        private bool IsDeadlockException(Exception ex)
+        {
+            if (ex == null) return false;
+            
+            string message = ex.Message.ToLower();
+            return message.Contains("deadlock") || 
+                   message.Contains("1205") ||  // MySQL/SQL Server 死锁错误码
+                   message.Contains("1092") ||  // MySQL kill query 错误
+                   message.Contains("lock") ||
+                   message.Contains("timeout") ||
+                   message.Contains("was deadlocked");
         }
     }
 }

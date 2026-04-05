@@ -1577,6 +1577,22 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                // 检测是否为死锁异常
+                bool isDeadlock = IsDeadlockException(ex);
+                
+                if (isDeadlock)
+                {
+                    _logger.LogWarning($"检测到死锁 - 收款单号: {entity?.PaymentNo}, 异常消息: {ex.Message}");
+                    
+                    // 记录死锁相关信息
+                    TransactionMetrics.RecordDeadlock(
+                        "tb_FM_PaymentRecord", 
+                        "Approval", 
+                        TimeSpan.FromSeconds(0), 
+                        ex.Message,
+                        entity?.PaymentNo);
+                }
+                
                 _unitOfWorkManage.RollbackTran();
                 _logger.Error(ex, EntityDataExtractor.ExtractDataContent(entity));
                 rmrs.ErrorMsg = ex.Message;
@@ -3530,6 +3546,24 @@ namespace RUINORERP.Business
         {
             try
             {
+                // 【死锁优化】按 ID 排序所有批量更新列表，确保所有事务以相同顺序访问资源
+                expenseClaimUpdateList = expenseClaimUpdateList.OrderBy(t => t.ClaimMainID).ToList();
+                finishedGoodsInvUpdateList = finishedGoodsInvUpdateList.OrderBy(t => t.FG_ID).ToList();
+                statementUpdateList = statementUpdateList.OrderBy(t => t.StatementId).ToList();
+                statementDetailUpdateList = statementDetailUpdateList.OrderBy(t => t.StatementDetailId).ToList();
+                oldPaymentUpdateList = oldPaymentUpdateList.OrderBy(t => t.PaymentId).ToList();
+                otherExpenseUpdateList = otherExpenseUpdateList.OrderBy(t => t.ExpenseMainID).ToList();
+                priceAdjustmentUpdateList = priceAdjustmentUpdateList.OrderBy(t => t.AdjustId).ToList();
+                purEntryReUpdateList = purEntryReUpdateList.OrderBy(t => t.PurEntryRe_ID).ToList();
+                saleOutReUpdateList = saleOutReUpdateList.OrderBy(t => t.SaleOutRe_ID).ToList();
+                saleOutUpdateList = saleOutUpdateList.OrderBy(t => t.SaleOut_MainID).ToList();
+                repairOrderUpdateList = repairOrderUpdateList.OrderBy(t => t.RepairOrderID).ToList();
+                saleOrderUpdateList = saleOrderUpdateList.OrderBy(t => t.SOrder_ID).ToList();
+                purEntryUpdateList = purEntryUpdateList.OrderBy(t => t.PurEntryID).ToList();
+                purOrderUpdateList = purOrderUpdateList.OrderBy(t => t.PurOrder_ID).ToList();
+                receivablePayableUpdateList = receivablePayableUpdateList.OrderBy(t => t.ARAPId).ToList();
+                preReceivedPaymentUpdateList = preReceivedPaymentUpdateList.OrderBy(t => t.PreRPID).ToList();
+                
                 // 更新费用报销单
                 if (expenseClaimUpdateList.Any())
                 {
@@ -3885,6 +3919,22 @@ namespace RUINORERP.Business
         }
 
         #endregion
+
+        /// <summary>
+        /// 检测是否为死锁异常
+        /// </summary>
+        private bool IsDeadlockException(Exception ex)
+        {
+            if (ex == null) return false;
+            
+            string message = ex.Message.ToLower();
+            return message.Contains("deadlock") || 
+                   message.Contains("1205") ||  // MySQL/SQL Server 死锁错误码
+                   message.Contains("1092") ||  // MySQL kill query 错误
+                   message.Contains("lock") ||
+                   message.Contains("timeout") ||
+                   message.Contains("was deadlocked");
+        }
 
     }
 

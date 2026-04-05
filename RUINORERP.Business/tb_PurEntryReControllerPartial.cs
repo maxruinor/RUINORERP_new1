@@ -150,7 +150,11 @@ namespace RUINORERP.Business
 
                 invUpdateList.Add(inv);
             }
-                int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
+            
+            // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+            invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
+            
+            int InvUpdateCounter = await _unitOfWorkManage.GetDbClient().Updateable(invUpdateList).ExecuteCommandAsync();
             if (InvUpdateCounter == 0)
             {
                 _unitOfWorkManage.RollbackTran();
@@ -425,6 +429,9 @@ public async override Task<ReturnResults<T>> AntiApprovalAsync(T ObjectEntity)
             #endregion
             invUpdateList.Add(inv);
         }
+        
+        // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+        invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
         DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
         var Counter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);

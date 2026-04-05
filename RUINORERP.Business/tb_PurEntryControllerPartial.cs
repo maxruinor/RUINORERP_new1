@@ -434,6 +434,9 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
+                
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
                 // 处理分组数据，更新库存记录的各字段
                 List<tb_InventoryTransaction> transactionList = new List<tb_InventoryTransaction>();
@@ -746,6 +749,9 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
+                
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
                 // 开启事务，保证数据一致性
                 _unitOfWorkManage.BeginTran();

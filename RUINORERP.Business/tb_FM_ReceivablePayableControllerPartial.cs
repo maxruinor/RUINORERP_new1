@@ -1848,7 +1848,11 @@ namespace RUINORERP.Business
                 }
                 var settlementController = _appContext.GetRequiredService<tb_FM_PaymentSettlementController<tb_FM_PaymentSettlement>>();
                 var fMAuditLog = _appContext.GetRequiredService<FMAuditLogHelper>();
-                foreach (var prePayment in prePayments)
+                
+                // 【死锁优化】按 PreRPID 排序，确保所有事务以相同顺序访问预收款资源
+                var sortedPrePayments = prePayments.OrderBy(p => p.PreRPID).ToList();
+                
+                foreach (var prePayment in sortedPrePayments)
                 {
                     // 应收款已全部抵扣，退出循环
                     if (remainingLocal <= 0 && remainingForeign <= 0) break;
@@ -2023,9 +2027,10 @@ namespace RUINORERP.Business
                 }
 
 
-                if (prePayments.Any())
+                // 【死锁优化】批量更新预收款单（已排序）
+                if (sortedPrePayments.Any())
                 {
-                    await _unitOfWorkManage.GetDbClient().Updateable(prePayments).UpdateColumns(
+                    await _unitOfWorkManage.GetDbClient().Updateable(sortedPrePayments).UpdateColumns(
                     it => new
                     {
                         it.LocalBalanceAmount,
@@ -2058,6 +2063,22 @@ namespace RUINORERP.Business
             }
             catch (Exception ex)
             {
+                // 检测是否为死锁异常
+                bool isDeadlock = IsDeadlockException(ex);
+                
+                if (isDeadlock && UseTransaction)
+                {
+                    _logger.LogWarning($"检测到死锁 - 应收应付单号: {entity?.ARAPNo}, 异常消息: {ex.Message}");
+                    
+                    // 记录死锁相关信息
+                    TransactionMetrics.RecordDeadlock(
+                        "tb_FM_ReceivablePayable", 
+                        "ApplyManualPaymentAllocation", 
+                        TimeSpan.FromSeconds(0), 
+                        ex.Message,
+                        entity?.ARAPNo);
+                }
+                
                 if (UseTransaction)
                 {
                     _unitOfWorkManage.RollbackTran();
@@ -3323,7 +3344,21 @@ namespace RUINORERP.Business
             return list as List<T>;
         }
 
-
+        /// <summary>
+        /// 检测是否为死锁异常
+        /// </summary>
+        private bool IsDeadlockException(Exception ex)
+        {
+            if (ex == null) return false;
+            
+            string message = ex.Message.ToLower();
+            return message.Contains("deadlock") || 
+                   message.Contains("1205") ||  // MySQL/SQL Server 死锁错误码
+                   message.Contains("1092") ||  // MySQL kill query 错误
+                   message.Contains("lock") ||
+                   message.Contains("timeout") ||
+                   message.Contains("was deadlocked");
+        }
 
 
     }

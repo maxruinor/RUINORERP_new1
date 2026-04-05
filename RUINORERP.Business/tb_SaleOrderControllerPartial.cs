@@ -224,6 +224,9 @@ namespace RUINORERP.Business
                     invList.Add(inv);
                 }
                 
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invList = invList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
+                
                 #endregion
                 
                 // 付款状态验证（在事务外执行）
@@ -1384,6 +1387,9 @@ namespace RUINORERP.Business
                     inv.Inv_SubtotalCostMoney = inv.Inv_Cost * inv.Quantity; // 需确保 Inv_Cost 有值
                     invUpdateList.Add(inv);
                 }
+                
+                // 【死锁优化】按 (ProdDetailID, Location_ID) 排序，确保所有事务以相同顺序访问库存资源
+                invUpdateList = invUpdateList.OrderBy(i => i.ProdDetailID).ThenBy(i => i.Location_ID).ToList();
 
                 DbHelper<tb_Inventory> dbHelper = _appContext.GetRequiredService<DbHelper<tb_Inventory>>();
                 var InvUpdateCounter = await dbHelper.BaseDefaultAddElseUpdateAsync(invUpdateList);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -71,11 +71,14 @@ namespace RUINORERP.Extensions
             StaticConfig.DynamicExpressionParserType = typeof(DynamicExpressionParser);
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
 
+            // 检查连接字符串是否已包含连接池配置，如果没有则添加默认值
+            string finalConnectionString = EnsureConnectionPoolSettings(connectString);
+
             SqlSugarScope sqlSugar = new SqlSugarScope(
                 new ConnectionConfig
                 {
                     DbType = SqlSugar.DbType.SqlServer,
-                    ConnectionString = connectString,
+                    ConnectionString = finalConnectionString,
                     IsAutoCloseConnection = true,
                     InitKeyType = InitKeyType.Attribute,
                     ConfigureExternalServices = new ConfigureExternalServices
@@ -114,13 +117,16 @@ namespace RUINORERP.Extensions
                 throw new ArgumentException($"配置键 '{dbName}' 未找到或连接字符串为空", nameof(dbName));
             }
 
+            // 检查连接字符串是否已包含连接池配置，如果没有则添加默认值
+            string finalConnectionString = EnsureConnectionPoolSettings(connectString);
+            
             var memoryCache = new MemoryCache(new MemoryCacheOptions());
             
             SqlSugarScope sqlSugar = new SqlSugarScope(
                 new ConnectionConfig
                 {
                     DbType = SqlSugar.DbType.SqlServer,
-                    ConnectionString = connectString,
+                    ConnectionString = finalConnectionString,
                     IsAutoCloseConnection = true,
                     ConfigureExternalServices = new ConfigureExternalServices
                     {
@@ -375,8 +381,62 @@ namespace RUINORERP.Extensions
             return "Unknown";
         }
 
+        /// <summary>
+        /// 确保连接字符串包含连接池配置
+        /// 针对高并发场景（50-100客户端），优化SQL Server连接池配置
+        /// 超时参数说明：
+        /// - Connect Timeout: 连接超时（建立连接等待时间），默认15秒
+        /// - Connection Lifetime: 连接最大生命周期（秒）
+        /// 注意：Command Timeout 不是连接字符串参数，应通过 SqlSugar API 设置
+        /// </summary>
+        /// <param name="connectionString">原始连接字符串</param>
+        /// <returns>包含连接池配置的连接字符串</returns>
+        private static string EnsureConnectionPoolSettings(string connectionString)
+        {
+            if (string.IsNullOrEmpty(connectionString))
+                return connectionString;
 
+            // 检查是否已包含连接池配置
+            bool hasPooling = connectionString.IndexOf("Pooling", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool hasMaxPoolSize = connectionString.IndexOf("Max Pool Size", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool hasMinPoolSize = connectionString.IndexOf("Min Pool Size", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool hasConnectTimeout = connectionString.IndexOf("Connect Timeout", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    connectionString.IndexOf("Connection Timeout", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool hasConnectionLifetime = connectionString.IndexOf("Connection Lifetime", StringComparison.OrdinalIgnoreCase) >= 0;
 
+            if (!hasPooling && !hasMaxPoolSize)
+            {
+                // 默认启用连接池
+                connectionString += ";Pooling=true";
+            }
+
+            // 为高并发场景设置合理的连接池大小
+            // 默认最大连接数为100，最小为10，可根据实际情况调整
+            if (!hasMaxPoolSize)
+            {
+                connectionString += ";Max Pool Size=100";
+            }
+
+            if (!hasMinPoolSize)
+            {
+                connectionString += ";Min Pool Size=10";
+            }
+
+            // 设置连接超时（默认30秒）- 连接建立等待时间
+            if (!hasConnectTimeout)
+            {
+                connectionString += ";Connect Timeout=30";
+            }
+
+            // 设置连接生命周期（默认300秒 = 5分钟）
+            // 避免长时间占用连接，促进连接复用
+            if (!hasConnectionLifetime)
+            {
+                connectionString += ";Connection Lifetime=300";
+            }
+
+            return connectionString;
+        }
 
 
 

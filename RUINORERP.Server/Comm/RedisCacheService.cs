@@ -19,7 +19,6 @@ namespace RUINORERP.Server.Comm
         private readonly ILogger<RedisCacheService> _logger;
         private readonly CacheStatistics _statistics = new CacheStatistics();
         private readonly SemaphoreSlim _syncLock = new SemaphoreSlim(1, 1);
-        private readonly Random _random = new Random();
 
         /// <summary>
         /// 缓存穿透防护-空值缓存时间
@@ -305,10 +304,11 @@ namespace RUINORERP.Server.Comm
 
         /// <summary>
         /// 获取随机过期时间（雪崩防护）
+        /// 使用Random.Shared确保线程安全
         /// </summary>
         private TimeSpan GetRandomExpiry(TimeSpan baseExpiry)
         {
-            var jitter = TimeSpan.FromTicks((long)(baseExpiry.Ticks * JitterRatio * (2 * _random.NextDouble() - 1)));
+            var jitter = TimeSpan.FromTicks((long)(baseExpiry.Ticks * JitterRatio * (2 * Random.Shared.NextDouble() - 1)));
             return baseExpiry + jitter;
         }
 

@@ -358,11 +358,23 @@ namespace RUINORERP.Server
                     var json = System.IO.File.ReadAllText(jsonpath);
                     loader.LoadDefinition(json, Deserializers.Json);
 
-                    // 启动host服务，避免重复启动
+                    // 启动host服务，避免重复启动，增加异常处理保护
                     if (!serviceStarted)
                     {
-                        host.Start();
-                        serviceStarted = true;
+                        try
+                        {
+                            host.Start();
+                            serviceStarted = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            // 工作流启动失败不应阻止程序运行，但需要记录警告
+                            Console.WriteLine($"警告: 工作流服务启动失败 - {ex.Message}");
+                            #if DEBUG
+                            System.Diagnostics.Debug.WriteLine($"工作流服务启动失败: {ex.Message}\n{ex.StackTrace}");
+                            #endif
+                            // 不设置serviceStarted为true，让程序继续运行
+                        }
                     }
                     WorkflowHost = host;
 

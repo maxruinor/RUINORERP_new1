@@ -28,6 +28,7 @@ using RUINORERP.Extensions.AOP;
 using RUINORERP.Business;
 using RUINORERP.Common.CustomAttribute;
 using SqlSugar;
+using StackExchange.Redis;
 using RUINORERP.Model;
 using AutoMapper;
 using RUINORERP.Model.Context;
@@ -297,7 +298,16 @@ namespace RUINORERP.Server
                     }
 
                     var redisLogger = sp.GetRequiredService<ILogger<RUINORERP.Server.Comm.RedisCacheService>>();
-                    var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnectionString);
+                    
+                    // 优化Redis连接配置参数，提高高并发下的稳定性
+                    var options = ConfigurationOptions.Parse(redisConnectionString);
+                    options.AbortOnConnectFail = false; // 允许重连，不因连接失败而终止
+                    options.ConnectTimeout = 5000;      // 连接超时5秒
+                    options.SyncTimeout = 3000;         // 同步操作超时3秒
+                    options.ConnectRetry = 3;           // 重试连接次数
+                    options.ReconnectRetryPolicy = new LinearRetry(1000); // 线性重试策略，每1秒重试一次
+                    
+                    var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(options);
                     return new RUINORERP.Server.Comm.RedisCacheService(multiplexer, redisLogger);
                 }
                 catch

@@ -165,6 +165,8 @@ namespace RUINORERP.Server.Comm
                     if (cachedValue == "null" || cachedValue == "NULL")
                     {
                         _logger.LogDebug("Cache hit (null value): {Key}", key);
+                        _statistics.RecordHit(key);
+                        return default; // 返回默认值，避免重复查询数据库
                     }
                     else
                     {

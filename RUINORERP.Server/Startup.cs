@@ -498,6 +498,7 @@ namespace RUINORERP.Server
                 }
 
                 // 订阅配置变更事件，实时更新单例实例属性
+                // 注意：由于是单例注册，OnChange只会被调用一次，不会造成内存泄漏
                 monitor.OnChange(newConfig =>
                 {
                     // 解析新配置的环境变量

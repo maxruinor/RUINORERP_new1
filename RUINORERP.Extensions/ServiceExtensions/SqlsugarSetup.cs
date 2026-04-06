@@ -279,6 +279,7 @@ namespace RUINORERP.Extensions
         /// <returns>调用方法的名称</returns>
         // 使用缓存减少堆栈跟踪计算
         private static readonly ConcurrentDictionary<string, string> _methodNameCache = new();
+        private const int MaxCacheSize = 10000; // 最大缓存条目数，防止内存泄漏
                 
         private static string GetCallerMethodName()
         {
@@ -309,6 +310,18 @@ namespace RUINORERP.Extensions
                             else
                             {
                                 callerMethod = $"{method.DeclaringType.Name}.{method.Name}";
+                                
+                                // 防止缓存无限增长：如果超过最大容量，清理部分旧缓存
+                                if (_methodNameCache.Count >= MaxCacheSize)
+                                {
+                                    // 简单策略：清除一半的缓存项
+                                    var keysToRemove = _methodNameCache.Keys.Take(MaxCacheSize / 2).ToList();
+                                    foreach (var k in keysToRemove)
+                                    {
+                                        _methodNameCache.TryRemove(k, out _);
+                                    }
+                                }
+                                
                                 _methodNameCache.TryAdd(key, callerMethod);
                             }
                             break;

@@ -255,6 +255,24 @@ namespace RUINORERP.Business
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 #endregion
 
+                // 声明价格记录 Lookup（用于后续循环中获取最新价格）
+                ILookup<long, tb_PriceRecord> priceRecordLookup = null;
+
+                #region 【优化】批量预加载采购价格记录，避免循环内查询（事务外）
+                // 使用 ToLookup 支持同一产品多条历史价格记录
+                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID.HasValue && prodDetailIds.Count > 0)
+                {
+                    var priceRecordList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_PriceRecord>()
+                        .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID &&
+                                    prodDetailIds.Contains(c.ProdDetailID))
+                        .OrderByDescending(c => c.PurDate)
+                        .ToListAsync();
+
+                    priceRecordLookup = priceRecordList.ToLookup(p => p.ProdDetailID);
+                }
+                #endregion
+
                 // 遍历销售订单明细，聚合数据
                 foreach (var child in entity.tb_PurEntryDetails)
                 {
@@ -406,10 +424,16 @@ namespace RUINORERP.Business
                     #region 更新采购价格记录表
 
                     //注意这里的人是指采购订单录入的人。不是采购入库的人。
-                    tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
-                    tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == group.Key.ProdDetailID).FirstAsync();
-                    //如果存在则更新，否则插入
+                    // ✅ 从预加载的 Lookup 中获取最新价格（按时间倒序，第一条即为最新）
+                    tb_PriceRecord priceRecord = null;
+                    if (priceRecordLookup != null)
+                    {
+                        var priceRecordsForProduct = priceRecordLookup[group.Key.ProdDetailID];
+                        if (priceRecordsForProduct != null && priceRecordsForProduct.Any())
+                        {
+                            priceRecord = priceRecordsForProduct.First();
+                        }
+                    }
                     if (priceRecord == null)
                     {
                         priceRecord = new tb_PriceRecord();
@@ -634,6 +658,24 @@ namespace RUINORERP.Business
                 var invDict = inventoryList.ToDictionary(i => (i.ProdDetailID, i.Location_ID));
                 #endregion
 
+                // 声明价格记录 Lookup（用于后续循环中获取最新价格）
+                ILookup<long, tb_PriceRecord> priceRecordLookup = null;
+
+                #region 【优化】批量预加载采购价格记录，避免循环内查询（事务外）
+                // 使用 ToLookup 支持同一产品多条历史价格记录
+                if (entity.tb_purorder != null && entity.tb_purorder.Employee_ID.HasValue && prodDetailIds.Count > 0)
+                {
+                    var priceRecordList = await _unitOfWorkManage.GetDbClient()
+                        .Queryable<tb_PriceRecord>()
+                        .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID &&
+                                    prodDetailIds.Contains(c.ProdDetailID))
+                        .OrderByDescending(c => c.PurDate)
+                        .ToListAsync();
+
+                    priceRecordLookup = priceRecordList.ToLookup(p => p.ProdDetailID);
+                }
+                #endregion
+
                 // 遍历销售订单明细，聚合数据
                 foreach (var child in entity.tb_PurEntryDetails)
                 {
@@ -721,10 +763,16 @@ namespace RUINORERP.Business
                     #region 更新采购价格
 
                     //注意这里的人是指采购订单录入的人。不是采购入库的人。
-                    tb_PriceRecordController<tb_PriceRecord> ctrPriceRecord = _appContext.GetRequiredService<tb_PriceRecordController<tb_PriceRecord>>();
-                    tb_PriceRecord priceRecord = await _unitOfWorkManage.GetDbClient().Queryable<tb_PriceRecord>()
-                    .Where(c => c.Employee_ID == entity.tb_purorder.Employee_ID && c.ProdDetailID == group.Key.ProdDetailID).FirstAsync();
-                    //如果存在则更新，否则插入
+                    // ✅ 从预加载的 Lookup 中获取最新价格（按时间倒序，第一条即为最新）
+                    tb_PriceRecord priceRecord = null;
+                    if (priceRecordLookup != null)
+                    {
+                        var priceRecordsForProduct = priceRecordLookup[group.Key.ProdDetailID];
+                        if (priceRecordsForProduct != null && priceRecordsForProduct.Any())
+                        {
+                            priceRecord = priceRecordsForProduct.First();
+                        }
+                    }
                     if (priceRecord == null)
                     {
                         priceRecord = new tb_PriceRecord();

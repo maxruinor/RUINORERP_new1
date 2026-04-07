@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows.Forms;
 using RUINORERP.Model.Base.StatusManager.PerformanceMonitoring;
 using RUINORERP.Server.Network.Services;
+using RUINORERP.Server.Network.Monitoring; // ✅ 添加监控命名空间
 
 namespace RUINORERP.Server.Controls
 {
@@ -26,6 +27,7 @@ namespace RUINORERP.Server.Controls
     public partial class PerformanceMonitorControl : UserControl
     {
         private PerformanceDataStorageService _storageService;
+        private ServerLockManager _lockManager; // ✅ 添加锁管理器引用
         private Timer _refreshTimer;
         private int _memoryWarningThresholdMB = 500;
         private readonly List<MemoryDataPoint> _memoryHistory = new List<MemoryDataPoint>();
@@ -47,6 +49,14 @@ namespace RUINORERP.Server.Controls
         {
             _storageService = storageService;
             RefreshData();
+        }
+
+        /// <summary>
+        /// ✅ 设置锁管理器（用于获取单据锁定监控数据）
+        /// </summary>
+        public void SetLockManager(ServerLockManager lockManager)
+        {
+            _lockManager = lockManager;
         }
 
         /// <summary>
@@ -268,6 +278,8 @@ namespace RUINORERP.Server.Controls
             listView.Columns.Add("内存", 80);
             listView.Columns.Add("事务", 80);
             listView.Columns.Add("死锁", 80);
+            // ✅ 添加单据锁定监控列
+            listView.Columns.Add("单据锁定", 100);
 
             listView.SelectedIndexChanged += (s, e) =>
             {
@@ -433,6 +445,17 @@ namespace RUINORERP.Server.Controls
                 item.SubItems.Add(GetMetricTypeCount(info, PerformanceMonitorType.Memory).ToString("N0"));
                 item.SubItems.Add(GetMetricTypeCount(info, PerformanceMonitorType.Transaction).ToString("N0"));
                 item.SubItems.Add(GetMetricTypeCount(info, PerformanceMonitorType.Deadlock).ToString("N0"));
+                
+                // ✅ 如果是服务器端，显示单据锁定监控数据
+                if (info.ClientId == "Server")
+                {
+                    var lockMetrics = GetDocumentLockMetrics();
+                    item.SubItems.Add($"活跃:{lockMetrics.ActiveLockCount} 超时:{lockMetrics.LockTimeoutCount}");
+                }
+                else
+                {
+                    item.SubItems.Add("-");
+                }
 
                 listView.Items.Add(item);
             }
@@ -446,6 +469,25 @@ namespace RUINORERP.Server.Controls
             if (info.MetricTypeCounts.TryGetValue(type, out var count))
                 return count;
             return 0;
+        }
+
+        /// <summary>
+        /// ✅ 获取单据锁定监控指标
+        /// </summary>
+        private DocumentLockMetric GetDocumentLockMetrics()
+        {
+            if (_lockManager != null)
+            {
+                return _lockManager.GetDocumentLockMetrics();
+            }
+            
+            // 如果没有锁管理器，返回默认值
+            return new DocumentLockMetric
+            {
+                Timestamp = DateTime.Now,
+                ClientId = "Server",
+                MachineName = Environment.MachineName
+            };
         }
 
         /// <summary>
@@ -532,6 +574,34 @@ namespace RUINORERP.Server.Controls
                                 sb.AppendLine($"  最后死锁: {summary.DeadlockSummary.LastDeadlockTime.Value:yyyy-MM-dd HH:mm:ss}");
                             }
                         }
+                    }
+
+                    // ✅ 如果是服务器端，显示单据锁定监控数据
+                    if (clientId == "Server" && _lockManager != null)
+                    {
+                        var lockMetrics = GetDocumentLockMetrics();
+                        sb.AppendLine();
+                        sb.AppendLine("=== 单据锁定监控（服务器端） ===");
+                        sb.AppendLine($"  活跃锁数量: {lockMetrics.ActiveLockCount}");
+                        sb.AppendLine($"  过期锁数量: {lockMetrics.ExpiredLockCount}");
+                        sb.AppendLine($"  孤儿锁数量: {lockMetrics.OrphanedLockCount}");
+                        sb.AppendLine($"  待处理解锁请求: {lockMetrics.PendingUnlockRequestCount}");
+                        sb.AppendLine();
+                        sb.AppendLine("  --- 锁操作统计 ---");
+                        sb.AppendLine($"  锁获取成功次数: {lockMetrics.LockAcquireSuccessCount:N0}");
+                        sb.AppendLine($"  锁冲突次数: {lockMetrics.LockConflictCount:N0}");
+                        sb.AppendLine($"  锁超时次数: {lockMetrics.LockTimeoutCount:N0}");
+                        sb.AppendLine($"  锁超时率: {lockMetrics.LockTimeoutRate:F2}%");
+                        sb.AppendLine();
+                        sb.AppendLine("  --- 广播统计 ---");
+                        sb.AppendLine($"  广播总次数: {lockMetrics.BroadcastTotalCount:N0}");
+                        sb.AppendLine($"  广播成功次数: {lockMetrics.BroadcastSuccessCount:N0}");
+                        sb.AppendLine($"  广播失败次数: {lockMetrics.BroadcastFailedCount:N0}");
+                        sb.AppendLine($"  广播成功率: {lockMetrics.BroadcastSuccessRate:F2}%");
+                        sb.AppendLine();
+                        sb.AppendLine("  --- 锁持有时间 ---");
+                        sb.AppendLine($"  平均持有时间: {lockMetrics.AverageLockHoldTimeSeconds:F2}秒");
+                        sb.AppendLine($"  最大持有时间: {lockMetrics.MaxLockHoldTimeSeconds:F2}秒");
                     }
 
                     textBox.Text = sb.ToString();

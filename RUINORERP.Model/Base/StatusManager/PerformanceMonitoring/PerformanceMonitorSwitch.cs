@@ -297,7 +297,13 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         /// <summary>
         /// 死锁检测
         /// </summary>
-        Deadlock = 8
+        Deadlock = 8,
+
+        /// <summary>
+        /// 单据锁定监控（服务器端）
+        /// 包括锁超时率、孤儿锁数量、广播成功率等指标
+        /// </summary>
+        DocumentLock = 9
     }
 
     /// <summary>

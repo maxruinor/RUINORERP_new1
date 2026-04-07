@@ -129,52 +129,49 @@ namespace RUINORERP.Server.Network.Services
 
                 var orphanedCount = 0;
                 var now = DateTime.Now;
+                var processedBills = new HashSet<long>(); // ✅ 避免重复处理
 
                 foreach (var lockInfo in serverLockInfos)
                 {
-                    // 检查锁是否过期
+                    // ✅ 跳过已处理的单据
+                    if (processedBills.Contains(lockInfo.BillID))
+                        continue;
+
+                    bool isOrphaned = false;
+                    string reason = "";
+
+                    // 检查条件1：锁已过期且会话不活跃
                     if (lockInfo.ExpireTime < now)
                     {
-                        // 检查会话是否仍然活跃
                         if (!_clientSessions.ContainsKey(lockInfo.SessionId) ||
                             !_clientSessions[lockInfo.SessionId].IsActive)
                         {
-                            // 释放孤儿锁
-                            await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
-                            orphanedCount++;
-
-                            _logger.LogWarning("清理孤儿锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
-                                lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
+                            isOrphaned = true;
+                            reason = "锁已过期且会话不活跃";
                         }
                     }
-                }
-
-                // 检测会话已断开但锁仍然存在的情况
-                foreach (var lockInfo in serverLockInfos)
-                {
-                    // 检查会话是否仍然存在
-                    if (!_clientSessions.ContainsKey(lockInfo.SessionId))
+                    // 检查条件2：会话不存在
+                    else if (!_clientSessions.ContainsKey(lockInfo.SessionId))
                     {
-                        // 会话不存在，释放锁
+                        isOrphaned = true;
+                        reason = "会话不存在";
+                    }
+                    // 检查条件3：会话不活跃
+                    else if (!_clientSessions[lockInfo.SessionId].IsActive)
+                    {
+                        isOrphaned = true;
+                        reason = "会话不活跃";
+                    }
+
+                    // 执行清理
+                    if (isOrphaned)
+                    {
                         await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
                         orphanedCount++;
+                        processedBills.Add(lockInfo.BillID);
 
-                        _logger.LogWarning("清理不存在会话的锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
-                            lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
-                    }
-                    else
-                    {
-                        // 检查会话是否仍然活跃
-                        var sessionInfo = _clientSessions[lockInfo.SessionId];
-                        if (!sessionInfo.IsActive)
-                        {
-                            // 会话不活跃，释放锁
-                            await _lockManager.ForceUnlockAsync($"lock:document:{lockInfo.BillID}", lockInfo.LockedUserId);
-                            orphanedCount++;
-
-                            _logger.LogWarning("清理不活跃会话的锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}",
-                                lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId);
-                        }
+                        _logger.LogWarning("清理孤儿锁: BillId={BillId}, UserId={UserId}, SessionId={SessionId}, 原因={Reason}",
+                            lockInfo.BillID, lockInfo.LockedUserId, lockInfo.SessionId, reason);
                     }
                 }
 

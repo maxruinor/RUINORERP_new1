@@ -2813,7 +2813,8 @@ namespace RUINORERP.UI.BaseForm
                         {
                             return;
                         }
-                        if (lockStatusModify.LockInfo == null)
+                        // ✅ 修复：使用 IsLocked 判断，而非 LockInfo == null
+                        if (!lockStatusModify.IsLocked)
                         {
                             var locked = await LockBill();
                             if (!locked && EditEntity.PrimaryKeyID > 0)
@@ -3331,7 +3332,7 @@ namespace RUINORERP.UI.BaseForm
                         MainForm.Instance.uclog.AddLog($"反结案失败：{ex.Message}");
                     }
                     break;
-                
+
                 case MenuItemEnums.执行:
                     // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
                     var btnExecute = FindToolStripButtonByName("toolStripBtnExecute");
@@ -3388,7 +3389,7 @@ namespace RUINORERP.UI.BaseForm
 
                     }
                     break;
-                
+
                 case MenuItemEnums.反执行:
                     // 声明变量在 try 块外部，以便在 catch 和 finally 中访问
                     var btnReverseExecute = FindToolStripButtonByName("toolStripBtnReverseExecute");
@@ -7337,7 +7338,7 @@ namespace RUINORERP.UI.BaseForm
                     // 更新缓存属性
                     lockInfo.LastUpdateTime = DateTime.Now;
                     lockInfo.ExpireTime = DateTime.Now.AddMinutes(10); // 10分钟缓存
-                    
+
                     // ✅ 调用UpdateCacheItem实际更新缓存
                     cacheService.UpdateCacheItem(lockInfo);
                 }
@@ -7352,8 +7353,12 @@ namespace RUINORERP.UI.BaseForm
 
         /// <summary>
         /// 更新锁定UI显示（优化版）
-        /// v2.1.0优化：增加网络延迟容错、状态清晰度提升、边界条件处理
-        /// 统一管理锁定按钮的显示状态和提示信息，使用统一的锁状态图片标识
+        /// 统一管理锁定按钮的显示状态和提示信息
+        /// 
+        /// 显示策略：
+        /// 1. 新增单据（pkid <= 0）：隐藏按钮
+        /// 2. 仅查看模式：隐藏按钮
+        /// 3. 编辑模式：显示按钮（根据锁定状态显示不同样式）
         /// </summary>
         /// <param name="isLocked">是否被锁定</param>
         /// <param name="lockInfo">锁定信息</param>
@@ -7369,33 +7374,66 @@ namespace RUINORERP.UI.BaseForm
                     return;
                 }
 
-                // 始终显示锁状态按钮，无论是否锁定
+                // ✅ 获取当前单据ID，判断是否为新增单据
+                string PKCol = BaseUIHelper.GetEntityPrimaryKey<T>();
+                long currentBillId = 0;
+
+                if (EditEntity != null)
+                {
+                    currentBillId = (long)ReflectionHelper.GetPropertyValue(EditEntity, PKCol);
+                }
+
+                // ✅ 策略1：新增单据（pkid <= 0）→ 隐藏按钮
+                if (currentBillId <= 0)
+                {
+                    tsBtnLocked.Visible = false;
+                    _currentLockInfo = null;
+                    StopLockStatusRefresh();
+                    UpdateStatusBarLockInfo("");
+                    return;
+                }
+
+                // ✅ 策略2：仅查看模式 → 隐藏按钮
+                // 判断逻辑：如果"修改"操作不可执行，说明处于查看/只读模式
+                var canModifyResult = StateManager?.CanExecuteActionWithMessage(EditEntity, MenuItemEnums.修改);
+                bool isViewMode = !canModifyResult.HasValue || !canModifyResult.Value.CanExecute;
+
+                if (isViewMode)
+                {
+                    tsBtnLocked.Visible = false;
+                    _currentLockInfo = null;
+                    StopLockStatusRefresh();
+                    UpdateStatusBarLockInfo("");
+                    return;
+                }
+
+                // ✅ 策略3：编辑模式 → 显示按钮
                 tsBtnLocked.Visible = true;
                 tsBtnLocked.Tag = lockInfo;
 
                 // 未锁定状态
                 if (!isLocked || lockInfo == null)
                 {
-                    UpdateUnlockedState();
-                    return;
+                    _currentLockInfo = null;
+                    StopLockStatusRefresh();
+
+                    tsBtnLocked.Image = Properties.Resources.unlockbill;
+                    tsBtnLocked.Text = "🔓 未锁定";
+                    tsBtnLocked.ToolTipText = "💡 提示：点击锁定后可编辑单据\n⚠️ 其他用户将无法同时编辑";
+                    tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
+                    tsBtnLocked.ForeColor = System.Drawing.Color.DarkGreen;
+                    tsBtnLocked.Enabled = true; // ✅ 未锁定时可以点击锁定
+                    UpdateStatusBarLockInfo("🔓 单据未锁定，点击按钮可锁定并编辑");
                 }
-
-                // 已锁定状态
-                _currentLockInfo = lockInfo;
-                StartLockStatusRefresh();
-
-                var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
-
-                // 用户未登录
-                if (currentUserId == 0)
+                else
                 {
-                    UpdateNotLoggedInState();
-                    return;
+                    // 已锁定状态 - 统一显示锁定用户信息
+                    _currentLockInfo = lockInfo;
+                    StartLockStatusRefresh();
+                    UpdateLockedStateUI(lockInfo);
                 }
 
-                // 更新已锁定状态
-                bool isSelfLock = lockInfo.LockedUserId == currentUserId;
-                UpdateLockedState(lockInfo, isSelfLock);
+                SetButtonDisplayProperties();
             }
             catch (Exception ex)
             {
@@ -7405,85 +7443,63 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 更新未锁定状态UI
-        /// </summary>
-        private void UpdateUnlockedState()
-        {
-            _currentLockInfo = null;
-            StopLockStatusRefresh();
-
-            tsBtnLocked.Image = Properties.Resources.unlockbill;
-            tsBtnLocked.ToolTipText = "🔓 锁定状态：单据未被锁定\n💡 提示：您可以编辑此单据";
-            tsBtnLocked.Text = "未锁定";
-            tsBtnLocked.BackColor = System.Drawing.Color.LightBlue;
-            tsBtnLocked.ForeColor = System.Drawing.Color.Black;
-            tsBtnLocked.Enabled = false;
-            UpdateStatusBarLockInfo("🔓 单据未被锁定，可以编辑");
-            SetButtonDisplayProperties();
-        }
-
-        /// <summary>
-        /// 更新用户未登录状态UI
-        /// </summary>
-        private void UpdateNotLoggedInState()
-        {
-            tsBtnLocked.Image = Properties.Resources.Lockbill;
-            tsBtnLocked.ToolTipText = "⚠️ 锁定状态：用户未登录\n💡 请重新登录后查看状态";
-            tsBtnLocked.Text = "状态未知";
-            tsBtnLocked.BackColor = System.Drawing.Color.LightGray;
-            tsBtnLocked.ForeColor = System.Drawing.Color.Black;
-            tsBtnLocked.Enabled = false;
-            UpdateStatusBarLockInfo("⚠️ 用户未登录，无法获取锁定状态");
-            StopLockStatusRefresh();
-            SetButtonDisplayProperties();
-        }
-
-        /// <summary>
-        /// 更新已锁定状态UI
+        /// 更新已锁定状态UI（简化版）
+        /// 统一显示格式：即使是自己锁定也显示用户名
         /// </summary>
         /// <param name="lockInfo">锁信息</param>
-        /// <param name="isSelfLock">是否为当前用户锁定</param>
-        private void UpdateLockedState(LockInfo lockInfo, bool isSelfLock)
+        private void UpdateLockedStateUI(LockInfo lockInfo)
         {
+            if (lockInfo == null) return;
+
+            // 获取当前用户ID判断是否为自己锁定
+            var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
+            bool isSelfLock = lockInfo.LockedUserId == currentUserId;
+
+            // 计算锁定时长
+            string lockDuration = BillLockHelper.CalculateLockDuration(lockInfo.LockTime);
             string lockTimeStr = lockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
-            string lockDuration = CalculateLockDuration(lockInfo.LockTime);
             string expireTimeStr = lockInfo.ExpireTime.HasValue ?
                 $"⏰ 过期时间：{lockInfo.ExpireTime.Value:yyyy-MM-dd HH:mm:ss}" :
                 "⏰ 过期时间：未知";
 
+            // 设置图标：自己锁定用解锁图标，他人锁定用锁定图标
             tsBtnLocked.Image = isSelfLock ?
                 Properties.Resources.unlockbill :
                 Properties.Resources.Lockbill;
 
+            // 统一显示格式：都显示锁定用户
+            tsBtnLocked.Text = isSelfLock ?
+                $"已锁定({lockInfo.LockedUserName})" :
+                $"已锁定({lockInfo.LockedUserName})";
+
+            // 构建ToolTip提示文本
+            string statusPrefix = isSelfLock ? "您已锁定" : "单据已被锁定";
+            string tipHint = isSelfLock ?
+                "💡 提示：关闭单据自动解锁" :
+                "💡 提示：点击可请求解锁";
+
+            tsBtnLocked.ToolTipText = $"🔒 锁定状态：{statusPrefix}\n" +
+                                    $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
+                                    $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                    $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                    $"{expireTimeStr}\n" +
+                                    $"{tipHint}";
+
+            // 设置颜色：自己锁定绿色，他人锁定红色
             if (isSelfLock)
             {
-                tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
-                                        $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
-                                        $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                        $"⏱️ 已锁定时长：{lockDuration}\n" +
-                                        $"{expireTimeStr}\n" +
-                                        $"💡 提示：关闭单据自动解锁";
                 tsBtnLocked.BackColor = System.Drawing.Color.LightGreen;
                 tsBtnLocked.ForeColor = System.Drawing.Color.Black;
-                tsBtnLocked.Text = "已锁定(自己)";
-                UpdateStatusBarLockInfo($"✅ 已锁定(自己) - {lockInfo.LockedUserName} - {lockDuration}");
+                UpdateStatusBarLockInfo($"✅ 已锁定({lockInfo.LockedUserName}) - {lockDuration}");
             }
             else
             {
-                tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
-                                        $"👤 锁定用户：{lockInfo.LockedUserName}\n" +
-                                        $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                        $"⏱️ 已锁定时长：{lockDuration}\n" +
-                                        $"{expireTimeStr}\n" +
-                                        $"💡 提示：点击可请求解锁";
                 tsBtnLocked.BackColor = System.Drawing.Color.LightCoral;
                 tsBtnLocked.ForeColor = System.Drawing.Color.White;
-                tsBtnLocked.Text = $"已锁定({lockInfo.LockedUserName})";
                 UpdateStatusBarLockInfo($"🔒 已锁定({lockInfo.LockedUserName}) - {lockDuration}");
             }
 
             tsBtnLocked.Enabled = true;
-            SetButtonDisplayProperties();
         }
 
         /// <summary>
@@ -7497,35 +7513,6 @@ namespace RUINORERP.UI.BaseForm
         }
 
 
-
-        /// <summary>
-        /// 计算锁定时长
-        /// </summary>
-        /// <param name="lockTime">锁定时间</param>
-        /// <returns>格式化的锁定时长字符串</returns>
-        private string CalculateLockDuration(DateTime lockTime)
-        {
-            try
-            {
-                var duration = DateTime.Now - lockTime;
-                if (duration.TotalHours >= 1)
-                {
-                    return $"{(int)duration.TotalHours}小时{duration.Minutes}分钟";
-                }
-                else if (duration.TotalMinutes >= 1)
-                {
-                    return $"{duration.Minutes}分钟";
-                }
-                else
-                {
-                    return $"{duration.Seconds}秒";
-                }
-            }
-            catch
-            {
-                return "未知";
-            }
-        }
 
         /// <summary>
         /// 更新状态栏锁定信息（优化版）
@@ -7618,7 +7605,7 @@ namespace RUINORERP.UI.BaseForm
         }
 
         /// <summary>
-        /// 刷新锁定时长显示
+        /// 刷新锁定时长显示（简化版）
         /// 更新按钮提示文本和状态栏中的锁定时长信息
         /// </summary>
         private void RefreshLockDurationDisplay()
@@ -7626,49 +7613,37 @@ namespace RUINORERP.UI.BaseForm
             try
             {
                 if (_currentLockInfo == null || tsBtnLocked == null)
-                {
                     return;
-                }
 
-                // 重新计算锁定时长
-                string lockDuration = CalculateLockDuration(_currentLockInfo.LockTime);
+                // 获取当前用户ID判断是否为自己锁定
+                var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
+                bool isSelfLock = _currentLockInfo.LockedUserId == currentUserId;
+
+                // 使用公共工具类计算时长
+                string lockDuration = BillLockHelper.CalculateLockDuration(_currentLockInfo.LockTime);
                 string lockTimeStr = _currentLockInfo.LockTime.ToString("yyyy-MM-dd HH:mm:ss");
                 string expireTimeStr = _currentLockInfo.ExpireTime.HasValue ?
                     $"⏰ 过期时间：{_currentLockInfo.ExpireTime.Value:yyyy-MM-dd HH:mm:ss}" :
                     "⏰ 过期时间：未知";
 
-                // 获取当前用户ID
-                var currentUserId = MainForm.Instance?.AppContext?.CurUserInfo?.UserInfo?.User_ID ?? 0;
-                bool isSelfLock = _currentLockInfo.LockedUserId == currentUserId;
+                // 构建ToolTip提示文本
+                string statusPrefix = isSelfLock ? "您已锁定" : "单据已被锁定";
+                string tipHint = isSelfLock ?
+                    "💡 提示：关闭单据自动解锁" :
+                    "💡 提示：点击可请求解锁";
 
-                // 更新工具提示
-                if (isSelfLock)
-                {
-                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：您已锁定此单据\n" +
-                                            $"👤 锁定用户：{_currentLockInfo.LockedUserName}\n" +
-                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                            $"⏱️ 已锁定时长：{lockDuration}\n" +
-                                            $"{expireTimeStr}\n" +
-                                            $"💡 提示：关闭单据自动解锁";
+                tsBtnLocked.ToolTipText = $"🔒 锁定状态：{statusPrefix}\n" +
+                                        $"👤 锁定用户：{_currentLockInfo.LockedUserName}\n" +
+                                        $"⏰ 锁定时间：{lockTimeStr}\n" +
+                                        $"⏱️ 已锁定时长：{lockDuration}\n" +
+                                        $"{expireTimeStr}\n" +
+                                        $"{tipHint}";
 
-                    // 更新状态栏
-                    UpdateStatusBarLockInfo($"✅ 已锁定(自己) - {_currentLockInfo.LockedUserName} - {lockDuration}");
-                }
-                else
-                {
-                    tsBtnLocked.ToolTipText = $"🔒 锁定状态：单据已被锁定\n" +
-                                            $"👤 锁定用户：{_currentLockInfo.LockedUserName}\n" +
-                                            $"⏰ 锁定时间：{lockTimeStr}\n" +
-                                            $"⏱️ 已锁定时长：{lockDuration}\n" +
-                                            $"{expireTimeStr}\n" +
-                                            $"💡 提示：点击可请求解锁";
-
-                    // 更新状态栏
-                    UpdateStatusBarLockInfo($"🔒 已锁定({_currentLockInfo.LockedUserName}) - {lockDuration}");
-                }
-
-                logger?.LogDebug("锁定时长已刷新: 单据ID={BillId}, 时长={Duration}",
-                    _currentLockInfo.BillID, lockDuration);
+                // 更新状态栏
+                string statusText = isSelfLock ?
+                    $"✅ 已锁定({_currentLockInfo.LockedUserName}) - {lockDuration}" :
+                    $"🔒 已锁定({_currentLockInfo.LockedUserName}) - {lockDuration}";
+                UpdateStatusBarLockInfo(statusText);
             }
             catch (Exception ex)
             {

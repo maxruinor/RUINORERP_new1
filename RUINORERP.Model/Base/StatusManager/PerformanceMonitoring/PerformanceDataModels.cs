@@ -40,6 +40,23 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         /// 进程ID
         /// </summary>
         public int ProcessId { get; set; } = Process.GetCurrentProcess().Id;
+
+        /// <summary>
+        /// 转换为字典（用于JSON序列化）
+        /// </summary>
+        /// <returns>包含所有属性的字典</returns>
+        public virtual Dictionary<string, object> ToDictionary()
+        {
+            return new Dictionary<string, object>
+            {
+                [nameof(MetricId)] = MetricId,
+                [nameof(ClientId)] = ClientId,
+                [nameof(MetricType)] = MetricType,
+                [nameof(Timestamp)] = Timestamp,
+                [nameof(MachineName)] = MachineName,
+                [nameof(ProcessId)] = ProcessId
+            };
+        }
     }
 
     /// <summary>
@@ -533,6 +550,7 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
                 PerformanceMonitorType.UIResponse => JsonConvert.DeserializeObject<UIResponseMetric>(json),
                 PerformanceMonitorType.Transaction => JsonConvert.DeserializeObject<TransactionMetric>(json),
                 PerformanceMonitorType.Deadlock => JsonConvert.DeserializeObject<DeadlockMetric>(json),
+                PerformanceMonitorType.DocumentLock => JsonConvert.DeserializeObject<DocumentLockMetric>(json),
                 _ => null
             };
         }
@@ -682,5 +700,117 @@ namespace RUINORERP.Model.Base.StatusManager.PerformanceMonitoring
         public DateTime? FirstDeadlockTime { get; set; }
         public DateTime? LastDeadlockTime { get; set; }
         public Dictionary<string, int> DeadlockResourceCounts { get; set; } = new Dictionary<string, int>();
+    }
+
+    /// <summary>
+    /// 单据锁定性能指标
+    /// 用于监控服务器端单据锁定系统的运行状态
+    /// </summary>
+    public class DocumentLockMetric : PerformanceMetricBase
+    {
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        public DocumentLockMetric()
+        {
+            MetricType = PerformanceMonitorType.DocumentLock;
+        }
+
+        /// <summary>
+        /// 当前活跃锁数量
+        /// </summary>
+        public int ActiveLockCount { get; set; }
+
+        /// <summary>
+        /// 过期锁数量（待清理）
+        /// </summary>
+        public int ExpiredLockCount { get; set; }
+
+        /// <summary>
+        /// 孤儿锁数量（会话断开但锁仍存在）
+        /// </summary>
+        public int OrphanedLockCount { get; set; }
+
+        /// <summary>
+        /// 待处理的解锁请求数量
+        /// </summary>
+        public int PendingUnlockRequestCount { get; set; }
+
+        /// <summary>
+        /// 锁超时次数（统计周期内）
+        /// </summary>
+        public long LockTimeoutCount { get; set; }
+
+        /// <summary>
+        /// 锁成功获取次数（统计周期内）
+        /// </summary>
+        public long LockAcquireSuccessCount { get; set; }
+
+        /// <summary>
+        /// 锁冲突次数（统计周期内）
+        /// </summary>
+        public long LockConflictCount { get; set; }
+
+        /// <summary>
+        /// 广播总次数（统计周期内）
+        /// </summary>
+        public long BroadcastTotalCount { get; set; }
+
+        /// <summary>
+        /// 广播成功次数（统计周期内）
+        /// </summary>
+        public long BroadcastSuccessCount { get; set; }
+
+        /// <summary>
+        /// 广播失败次数（统计周期内）
+        /// </summary>
+        public long BroadcastFailedCount { get; set; }
+
+        /// <summary>
+        /// 平均锁持有时间（秒）
+        /// </summary>
+        public double AverageLockHoldTimeSeconds { get; set; }
+
+        /// <summary>
+        /// 最大锁持有时间（秒）
+        /// </summary>
+        public long MaxLockHoldTimeSeconds { get; set; }
+
+        /// <summary>
+        /// 锁超时率（百分比）= LockTimeoutCount / LockAcquireSuccessCount * 100
+        /// </summary>
+        public double LockTimeoutRate => LockAcquireSuccessCount > 0 
+            ? (double)LockTimeoutCount / LockAcquireSuccessCount * 100 
+            : 0;
+
+        /// <summary>
+        /// 广播成功率（百分比）= BroadcastSuccessCount / BroadcastTotalCount * 100
+        /// </summary>
+        public double BroadcastSuccessRate => BroadcastTotalCount > 0 
+            ? (double)BroadcastSuccessCount / BroadcastTotalCount * 100 
+            : 100;
+
+        /// <summary>
+        /// 转换为字典（用于JSON序列化）
+        /// </summary>
+        public override Dictionary<string, object> ToDictionary()
+        {
+            var dict = base.ToDictionary();
+            dict[nameof(ActiveLockCount)] = ActiveLockCount;
+            dict[nameof(ExpiredLockCount)] = ExpiredLockCount;
+            dict[nameof(OrphanedLockCount)] = OrphanedLockCount;
+            dict[nameof(PendingUnlockRequestCount)] = PendingUnlockRequestCount;
+            dict[nameof(LockTimeoutCount)] = LockTimeoutCount;
+            dict[nameof(LockAcquireSuccessCount)] = LockAcquireSuccessCount;
+            dict[nameof(LockConflictCount)] = LockConflictCount;
+            dict[nameof(BroadcastTotalCount)] = BroadcastTotalCount;
+            dict[nameof(BroadcastSuccessCount)] = BroadcastSuccessCount;
+            dict[nameof(BroadcastFailedCount)] = BroadcastFailedCount;
+            dict[nameof(AverageLockHoldTimeSeconds)] = AverageLockHoldTimeSeconds;
+            dict[nameof(MaxLockHoldTimeSeconds)] = MaxLockHoldTimeSeconds;
+            dict[nameof(LockTimeoutRate)] = Math.Round(LockTimeoutRate, 2);
+            dict[nameof(BroadcastSuccessRate)] = Math.Round(BroadcastSuccessRate, 2);
+            return dict;
+        }
     }
 }

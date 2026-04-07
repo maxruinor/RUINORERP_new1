@@ -1,12 +1,14 @@
 using Azure.Core;
 using Microsoft.Extensions.Logging;
 using RUINORERP.Global;
+using RUINORERP.Model.Base.StatusManager.PerformanceMonitoring;
 using RUINORERP.PacketSpec.Commands;
 using RUINORERP.PacketSpec.Models.Lock;
 using RUINORERP.PacketSpec.Models.Message;
 using RUINORERP.PacketSpec.Models.Requests;
 using RUINORERP.Server.Network.Interfaces.Services;
 using RUINORERP.Server.Network.Models;
+using RUINORERP.Server.Network.Monitoring; // ✅ 添加监控命名空间
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,6 +42,9 @@ namespace RUINORERP.Server.Network.Services
         private readonly ISessionService _sessionService;
         private readonly ILogger<ServerLockManager> _logger;
         private readonly OrphanedLockDetector _orphanedLockDetector;
+        
+        // ✅ 单据锁定监控数据收集器
+        private readonly DocumentLockMetricsCollector _metricsCollector;
 
         // 简化的单一数据结构 - 按单据ID索引
         private readonly ConcurrentDictionary<long, LockInfo> _documentLocks;
@@ -158,37 +163,76 @@ namespace RUINORERP.Server.Network.Services
 
                 // 获取所有用户会话
                 var sessions = _sessionService.GetAllUserSessions();
+                
+                if (sessions == null || !sessions.Any())
+                    return;
 
-                // 向所有会话发送消息并等待响应
+                // ✅ P1-1修复：使用并行发送，限制并发度
                 int successCount = 0;
+                int totalCount = sessions.Count();
+                var maxConcurrency = Math.Min(totalCount, 20); // 最多20个并发
+                var semaphore = new SemaphoreSlim(maxConcurrency);
+                var tasks = new List<Task>();
+
                 foreach (var session in sessions)
                 {
                     if (session is SessionInfo sessionInfo)
                     {
-                        if (NeedReponse)
+                        tasks.Add(Task.Run(async () =>
                         {
-                            var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
-                            session.SessionID,
-                         LockCommands.BroadcastLockStatus,
-                            broadcastData
-                             );
-
-                            if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
+                            await semaphore.WaitAsync();
+                            try
                             {
-                                successCount++;
-                            }
-                        }
-                        else
-                        {
-                            var responsePacket = await _sessionService.SendCommandAsync(session.SessionID, LockCommands.BroadcastLockStatus, broadcastData);
-                        }
+                                if (NeedReponse)
+                                {
+                                    var responsePacket = await _sessionService.SendCommandAndWaitForResponseAsync(
+                                        session.SessionID,
+                                        LockCommands.BroadcastLockStatus,
+                                        broadcastData
+                                    );
 
+                                    if (responsePacket?.Response is MessageResponse response && response.IsSuccess)
+                                    {
+                                        Interlocked.Increment(ref successCount);
+                                    }
+                                }
+                                else
+                                {
+                                    await _sessionService.SendCommandAsync(
+                                        session.SessionID, 
+                                        LockCommands.BroadcastLockStatus, 
+                                        broadcastData
+                                    );
+                                    // 无响应模式下，假设发送成功即视为成功
+                                    Interlocked.Increment(ref successCount);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "向会话 {SessionId} 广播锁状态失败", session.SessionID);
+                            }
+                            finally
+                            {
+                                semaphore.Release();
+                            }
+                        }));
                     }
                 }
+
+                // 等待所有任务完成（带超时）
+                if (tasks.Count > 0)
+                {
+                    await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
+                }
+                
+                // ✅ 记录广播统计
+                _metricsCollector.RecordBroadcast(successCount == totalCount);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"广播锁定状态变化到所有客户端时发生异常: {ex.Message}");
+                // ✅ 记录广播失败
+                _metricsCollector.RecordBroadcast(false);
             }
         }
 
@@ -209,6 +253,9 @@ namespace RUINORERP.Server.Network.Services
 
             // 初始化核心数据结构
             _documentLocks = new ConcurrentDictionary<long, LockInfo>();
+            
+            // ✅ 初始化监控数据收集器
+            _metricsCollector = new DocumentLockMetricsCollector();
 
             // 初始化孤儿锁检测器
             // 注意：这里通过LoggerFactory创建特定于OrphanedLockDetector的日志记录器
@@ -406,6 +453,10 @@ namespace RUINORERP.Server.Network.Services
                 {
                     _logger.LogDebug("成功释放锁 {BillId}, 锁持有者: {UserId}",
                         lockInfo.BillID, lockInfo.LockedUserId);
+
+                    // ✅ 记录锁释放和持有时间
+                    var holdTimeSeconds = (DateTime.Now - existingLock.LockTime).TotalSeconds;
+                    _metricsCollector.RecordLockReleased(holdTimeSeconds);
 
                     // 边界条件：确保锁状态为未锁定后再广播
                     existingLock.IsLocked = false;
@@ -707,18 +758,25 @@ namespace RUINORERP.Server.Network.Services
                 }
             }
 
-            // 移除过期锁
+            // 移除过期锁并广播
             foreach (var (billId, lockInfo) in expiredLocks)
             {
                 if (_documentLocks.TryRemove(billId, out _))
                 {
-                    // _logger.LogInformation("清理过期锁 {BillId}, 锁主: {UserId}, 锁定时间: {LockTime}",billId, lockInfo.UserId, lockInfo.LockTime);
+                    _logger.LogDebug("清理过期锁 {BillId}, 锁主: {UserId}", billId, lockInfo.LockedUserId);
+                    
+                    // ✅ 记录锁超时
+                    _metricsCollector.RecordLockTimeout();
+                    
+                    // 广播锁状态更新（标记为未锁定）
+                    lockInfo.IsLocked = false;
+                    await BroadcastLockStatusAsync(lockInfo);
                 }
             }
 
             if (expiredLocks.Count > 0)
             {
-                //  _logger.LogInformation("清理了 {Count} 个过期锁", expiredLocks.Count);
+                _logger.LogInformation("清理了 {Count} 个过期锁", expiredLocks.Count);
             }
 
             await Task.CompletedTask;
@@ -818,24 +876,38 @@ namespace RUINORERP.Server.Network.Services
                     .ToList();
 
                 int unlockedCount = 0;
-                var unlockTasks = locksToUnlock.Select(async billId =>
+                var failedCount = 0;
+                
+                // ✅ P1-2修复：分批处理，每批最多50个
+                const int batchSize = 50;
+                for (int i = 0; i < locksToUnlock.Count; i += batchSize)
                 {
-                    var result = await ExecuteUnlockAsync(billId, userId, false, "按业务类型解锁");
-                    if (result.IsSuccess)
-                        unlockedCount++;
-                    return result;
-                });
+                    var batch = locksToUnlock.Skip(i).Take(batchSize).ToList();
+                    
+                    var batchTasks = batch.Select(async billId =>
+                    {
+                        var result = await ExecuteUnlockAsync(billId, userId, false, "按业务类型解锁");
+                        if (result.IsSuccess)
+                            Interlocked.Increment(ref unlockedCount);
+                        else
+                            Interlocked.Increment(ref failedCount);
+                        return result;
+                    });
 
-                // 并行执行解锁操作
-                await Task.WhenAll(unlockTasks);
+                    await Task.WhenAll(batchTasks);
+                    
+                    // 批次间短暂延迟，避免过载
+                    if (i + batchSize < locksToUnlock.Count)
+                        await Task.Delay(100);
+                }
 
-                _logger.LogDebug("根据业务类型解锁单据完成: 用户ID={UserId}, 业务类型={BizType}, 成功解锁={UnlockedCount}个单据",
-                    userId, bizType, unlockedCount);
+                _logger.LogDebug("根据业务类型解锁单据完成: 用户ID={UserId}, 业务类型={BizType}, 成功={Unlocked}, 失败={Failed}",
+                    userId, bizType, unlockedCount, failedCount);
 
                 return new LockResponse
                 {
                     IsSuccess = true,
-                    Message = $"成功解锁{unlockedCount}个{(BizType)bizType}类型的单据",
+                    Message = $"成功解锁{unlockedCount}个{(BizType)bizType}类型的单据，失败{failedCount}个",
                     LockInfo = null // 批量操作不返回具体锁信息
                 };
             }
@@ -1355,11 +1427,10 @@ namespace RUINORERP.Server.Network.Services
                         {
                             // 同一用户的重复锁定请求，返回成功（幂等性）
                             _logger.LogDebug("单据 {BillId} 已被当前用户锁定，返回成功（幂等）", lockInfo.BillID);
-
-                            // 更新心跳时间，避免锁过期
-                            existingLock.UpdateHeartbeat();
-                            existingLock.ExpireTime = existingLock.LockTime.AddMinutes(30);
-
+                        
+                            // ✅ 刷新锁的过期时间（基于当前时间重新计算30分钟）
+                            existingLock.RefreshExpireTime((int)TimeSpan.FromMinutes(30).TotalMilliseconds);
+                        
                             return new LockResponse
                             {
                                 IsSuccess = true,
@@ -1427,6 +1498,9 @@ namespace RUINORERP.Server.Network.Services
                 // 添加到锁集合（原子操作，确保并发安全）
                 if (_documentLocks.TryAdd(lockInfo.BillID, serverLockInfo))
                 {
+                    // ✅ 记录锁获取成功
+                    _metricsCollector.RecordLockAcquired();
+                    
                     // 广播锁定状态更新
                     await BroadcastLockStatusAsync(serverLockInfo);
 
@@ -1447,6 +1521,9 @@ namespace RUINORERP.Server.Network.Services
                     {
                         _logger.LogDebug("单据 {BillId} 锁定失败（并发）: 已被用户 {UserId} 锁定",
                             lockInfo.BillID, newExistingLock.LockedUserId);
+
+                        // ✅ 记录锁冲突
+                        _metricsCollector.RecordLockConflict();
 
                         return new LockResponse
                         {
@@ -1925,6 +2002,45 @@ namespace RUINORERP.Server.Network.Services
             {
                 _logger.LogError(ex, "获取孤儿锁数量时发生异常");
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// ✅ 获取单据锁定监控指标（供PerformanceMonitorControl使用）
+        /// </summary>
+        /// <returns>单据锁定性能指标</returns>
+        public DocumentLockMetric GetDocumentLockMetrics()
+        {
+            try
+            {
+                var now = DateTime.Now;
+                
+                // 统计各种状态的锁数量
+                var allLocks = _documentLocks.Values.ToList();
+                int activeLockCount = allLocks.Count(l => l.IsLocked && !l.IsExpired);
+                int expiredLockCount = allLocks.Count(l => l.IsExpired);
+                int orphanedLockCount = GetOrphanedLockCount();
+                int pendingUnlockRequestCount = _unlockRequests.Count(r => !r.Value.IsExpired);
+
+                // 收集监控指标
+                var metric = _metricsCollector.CollectMetrics(
+                    activeLockCount,
+                    expiredLockCount,
+                    orphanedLockCount,
+                    pendingUnlockRequestCount
+                );
+
+                return metric;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "获取单据锁定监控指标时发生异常");
+                return new DocumentLockMetric
+                {
+                    Timestamp = DateTime.Now,
+                    ClientId = "Server",
+                    MachineName = Environment.MachineName
+                };
             }
         }
 
